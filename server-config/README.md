@@ -34,3 +34,6 @@ You can still start one by hand from the server console (`start admin`).
 Allowed for everyone while the `dev` setting `*dev.open` is `true` (the default); otherwise only accounts with
 `admin_level > 0`. Commands: `/additem <uname>`, `/rollloot`, `/stats`, `/sethp <n>`, `/setfood <n>`, `/setbleed <n>`,
 `/dbtest`, `/rr <resource>` (also `rr <resource>` in the server console).
+
+**Never run `dev` with `*dev.open=true` on a server other people can reach**: anyone could spawn items, set stats and
+restart resources.

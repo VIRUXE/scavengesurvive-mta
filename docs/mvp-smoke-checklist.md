@@ -2,6 +2,7 @@
 
 Setup: `pwsh server-config/run-local.ps1 -Reset`. Client A and client B connect to `127.0.0.1:22003`.
 On one PC, start the second client with MTA's multiple-instance option, or use a second machine on the LAN.
+The two clients need different MTA nicknames: the account name is the nickname, and one account allows one session.
 Record pass/fail and the date. **Any failing step becomes a fix in the task that owns the resource** (lib 4, data 5,
 ui 6, auth 7, character 8, items 9, loot 10, hud 11, weapons 12, dev/config 13), with a regression test where one fits.
 
@@ -28,7 +29,7 @@ ui 6, auth 7, character 8, items 9, loot 10, hud 11, weapons 12, dev/config 13),
    (`/stats` on B). B reconnects while bleeding: the bleed bar is still there. Keep shooting: B dies, and B's items
    drop where B died.
 10. **Loot.** A goes to Los Santos (e.g. Grove Street) and runs `/rollloot`. Items appear at upstream spawn points
-    (labels within ~2 s). Drive ~500 m away: the objects unload. Come back: they reload with the same ids.
+    (labels within ~2 s). Run ~500 m away: the objects unload. Come back: they reload with the same ids.
 11. **Restarts.** A holds an item. Server console `rr items`: the item is still in A's hand, and world items reappear
     with no duplicates. `rr character`: `/stats` is unchanged (±1 tick). `rr auth`: the login window reappears on
    both clients. Then `shutdown` and
