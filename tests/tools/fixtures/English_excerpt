@@ -1,0 +1,6 @@
+LANGCHANGE= >  {C_YELLOW}Language changed to English!
+WOUNDEDMSSG=Wounded: %s~n~Severity: %s
+TELEPORTEDT= >  %P{C_YELLOW} Has teleported to you
+BANNEDMESSG= >  {C_RED}You are banned! {C_YELLOW}Reason: {C_BLUE}%s
+ITEMTWKBTNE=Edit: ~k~~SNEAK_ABOUT~
+M9Pistol_T=Press {KEYTEXT_RELOAD} to reload, press {KEYTEXT_PUT_AWAY} to holster and hold {KEYTEXT_DROP_ITEM} to remove ammo

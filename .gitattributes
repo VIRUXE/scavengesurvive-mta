@@ -11,3 +11,5 @@
 *.dff binary
 *.txd binary
 *.col binary
+# converter fixtures are byte-exact upstream excerpts (the .ltb one is CRLF on purpose)
+tests/tools/fixtures/** -text
