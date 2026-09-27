@@ -1,0 +1,19 @@
+<meta>
+    <info author="scavengesurvive-mta" type="gamemode" name="character" description="Characters: spawn, survival tick, death" version="0.1.0"/>
+    <min_mta_version server="1.6.0" client="1.6.0"/>
+    <include resource="lib"/>
+    <include resource="auth"/>
+    <script src="shared/events.lua" type="shared"/>
+    <script src="server/main.lua" type="server"/>
+    <script src="server/tick.lua" type="server"/>
+    <script src="server/death.lua" type="server"/>
+    <script src="client/deathscreen.lua" type="client"/>
+    <file src="shared/logic/survival.lua"/>
+    <file src="shared/logic/spawnpoints.lua"/>
+    <export function="getCharacterId" type="server"/>
+    <export function="getPlayerByCharacterId" type="server"/>
+    <export function="getInventoryContainerId" type="server"/>
+    <export function="getStats" type="server"/>
+    <export function="modifyStat" type="server"/>
+    <export function="killCharacter" type="server"/>
+</meta>

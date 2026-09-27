@@ -1,0 +1,8 @@
+addEvent("onPlayerAuthenticated", false)
+addEvent("onPlayerLoggedOut", false)
+addEvent("onCharacterSpawned", false)
+addEvent("onCharacterDied", false)
+addEvent("onCharacterStatsChanged", false)
+addEvent("onCharacterRequestRespawn", true)
+addEvent("onClientCharacterStats", true)
+addEvent("onClientCharacterDeathScreen", true)
