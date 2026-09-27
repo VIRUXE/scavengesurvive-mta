@@ -1,0 +1,16 @@
+<meta>
+    <info author="scavengesurvive-mta" type="script" name="dev" description="Developer commands for local testing" version="0.1.0"/>
+    <min_mta_version server="1.6.0" client="1.6.0"/>
+    <include resource="lib"/>
+    <include resource="auth"/>
+    <include resource="character"/>
+    <include resource="items"/>
+    <include resource="loot"/>
+    <script src="server/main.lua" type="server"/>
+    <aclrequest>
+        <right name="function.restartResource" access="true"/>
+    </aclrequest>
+    <settings>
+        <setting name="*open" value="true" friendlyname="Everyone may use dev commands"/>
+    </settings>
+</meta>

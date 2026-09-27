@@ -1,0 +1,13 @@
+<!-- Startup order for mtaserver.conf. Only lines starting with <resource are used. -->
+<resources>
+    <resource src="lib" startup="1" protected="0"/>
+    <resource src="data" startup="1" protected="0"/>
+    <resource src="ui" startup="1" protected="0"/>
+    <resource src="auth" startup="1" protected="0"/>
+    <resource src="character" startup="1" protected="0"/>
+    <resource src="items" startup="1" protected="0"/>
+    <resource src="loot" startup="1" protected="0"/>
+    <resource src="weapons" startup="1" protected="0"/>
+    <resource src="hud" startup="1" protected="0"/>
+    <resource src="dev" startup="1" protected="0"/>
+</resources>

@@ -1,6 +1,8 @@
 """Apply migrations, procedures, events and seeds to a MariaDB database.
 
 Usage: python -m tools.sqltool --db NAME [--host H --port P --user U --password PW] [--reset] apply
+A migration NNNN_name.sql is skipped when version NNNN is already in schema_migrations, so apply can run
+again without --reset; procedures, events (CREATE OR REPLACE) and seeds (idempotent) run every time.
 Migrations/seeds are split on a semicolon that ends a line; procedure and event files are sent whole
 (one CREATE OR REPLACE statement per file, no DELIMITER).
 """
@@ -33,6 +35,15 @@ def connect(args, database):
                            database=database, autocommit=True, charset="utf8mb4")
 
 
+def applied_versions(cur, db: str) -> set[int]:
+    cur.execute("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=%s AND table_name='schema_migrations'",
+                (db,))
+    if cur.fetchone()[0] == 0:
+        return set()  # the first migration creates the table
+    cur.execute("SELECT version FROM schema_migrations")
+    return {int(r[0]) for r in cur.fetchall()}
+
+
 def apply(args) -> None:
     if args.reset:
         with connect(args, None) as c, c.cursor() as cur:
@@ -40,7 +51,10 @@ def apply(args) -> None:
     with connect(args, None) as c, c.cursor() as cur:
         cur.execute(f"CREATE DATABASE IF NOT EXISTS `{args.db}` CHARACTER SET utf8mb4 COLLATE utf8mb4_uca1400_ai_ci")
     with connect(args, args.db) as c, c.cursor() as cur:
+        done = applied_versions(cur, args.db)
         for f in sorted((SQL / "migrations").glob("*.sql")):
+            if int(f.name.split("_", 1)[0]) in done:
+                continue
             for st in statements(f.read_text(encoding="utf-8")):
                 cur.execute(st)
         for sub in ("procedures", "events"):

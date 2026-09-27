@@ -1,0 +1,7 @@
+<settings>
+    <setting name="*lib.db_host" value="127.0.0.1"/>
+    <setting name="*lib.db_port" value="3306"/>
+    <setting name="*lib.db_name" value="scavengesurvive"/>
+    <setting name="*lib.db_user" value="root"/>
+    <setting name="*lib.db_pass" value=""/>
+</settings>
