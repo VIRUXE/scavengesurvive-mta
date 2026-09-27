@@ -1,0 +1,19 @@
+<meta>
+    <info author="scavengesurvive-mta" type="script" name="lib" description="Shared modules: db, net, rpc, util" version="0.1.0"/>
+    <min_mta_version server="1.6.0" client="1.6.0"/>
+    <download_priority_group>100</download_priority_group>
+    <script src="server/main.lua" type="server"/>
+    <file src="modules/db.lua"/>
+    <file src="modules/net.lua"/>
+    <file src="modules/rpc.lua"/>
+    <file src="modules/util.lua"/>
+    <file src="modules/events_registry.lua"/>
+    <export function="getModule" type="server"/>
+    <settings>
+        <setting name="*db_host" value="127.0.0.1" friendlyname="DB host"/>
+        <setting name="*db_port" value="3306" friendlyname="DB port"/>
+        <setting name="*db_name" value="scavengesurvive" friendlyname="DB name"/>
+        <setting name="*db_user" value="root" friendlyname="DB user"/>
+        <setting name="*db_pass" value="" friendlyname="DB password"/>
+    </settings>
+</meta>

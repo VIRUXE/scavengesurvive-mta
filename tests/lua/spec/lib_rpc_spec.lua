@@ -1,0 +1,10 @@
+local mock = require("tests.lua.helpers.mta_mock")
+local load = require("tests.lua.helpers.load_module")
+describe("lib.rpc", function()
+    it("returns false,'down' when the resource is not running and forwards otherwise", function()
+        mock.install(); local rpc = load("rpc")
+        mock.resources = { items = "res:items" }; mock.exports = { getHeld = function(p) return "item-" .. p end }
+        assert.same({ false, "down" }, { rpc.call("loot", "rollSpawn", 1) })
+        assert.same({ true, "item-p1" }, { rpc.call("items", "getHeld", "p1") })
+    end)
+end)
