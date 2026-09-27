@@ -68,27 +68,48 @@ if (Test-Path -LiteralPath $link) {
     New-Item -ItemType Junction -Path $link -Target $target | Out-Null
 }
 
-# (f) ACL: our resources may call loadstring (lib modules; the stock Default ACL denies it); dev may call restartResource
+# (f) ACL: our resources may call loadstring (lib modules; the stock Default ACL denies it); dev may call restartResource.
+# Edited with the XML parser because the server re-saves acl.xml in its own format; the ScavengeSurvive group and ACL
+# are removed and rebuilt from resources.xml on every run.
 $acl = Join-Path $Dm "acl.xml"
 if (-not (Test-Path -LiteralPath "$acl.stock")) { Copy-Item -LiteralPath $acl -Destination "$acl.stock" }
 $aclOld = [IO.File]::ReadAllText($acl)
-$nl = if ($aclOld.Contains("`r`n")) { "`r`n" } else { "`n" }
-# the group is rebuilt from resources.xml on every run (the server re-saves acl.xml in its own format)
-$aclText = [regex]::Replace($aclOld, '(?ms)^[ \t]*<group name="ScavengeSurvive">.*?</group>[ \t]*\r?\n', '')
-$aclText = [regex]::Replace($aclText, '(?ms)^[ \t]*<acl name="ScavengeSurvive">[ \t]*\r?\n.*?</acl>[ \t]*\r?\n', '')
-$names = Get-Content -LiteralPath (Join-Path $PSScriptRoot "resources.xml") | ForEach-Object { if ($_ -match '^\s*<resource\s+src="([^"]+)"') { $Matches[1] } }
-$ssBlock = (@('    <group name="ScavengeSurvive">', '        <acl name="ScavengeSurvive"></acl>') +
-    ($names | ForEach-Object { "        <object name=""resource.$_""></object>" }) +
-    @('    </group>', '    <acl name="ScavengeSurvive">', '        <right name="function.loadstring" access="true"></right>', '    </acl>', '')) -join $nl
-$defaultRx = [regex]::new('(?m)^[ \t]*<acl name="Default">')
-if (-not $defaultRx.IsMatch($aclText)) { throw "acl.xml has no Default ACL" }
-$aclText = $defaultRx.Replace($aclText, { param($m) $ssBlock + $m.Value }, 1)
-$devInAdmin = '(?s)<group name="Admin">(?:(?!</group>).)*<object name="resource\.dev"'
-if ($aclText -notmatch $devInAdmin) {
-    $adminRx = [regex]::new('(?m)^([ \t]*)<group name="Admin">[ \t]*\r?\n')
-    $aclText = $adminRx.Replace($aclText, { param($m) $m.Value + $m.Groups[1].Value + "    <object name=""resource.dev""></object>$nl" }, 1)
-    if ($aclText -notmatch $devInAdmin) { throw "acl.xml has no Admin group" }
+$doc = [xml]::new()
+$doc.LoadXml($aclOld)
+$root = $doc.DocumentElement
+function New-AclElement([string]$Tag, [Collections.IDictionary]$Attrs) {
+    $e = $doc.CreateElement($Tag)
+    foreach ($k in $Attrs.Keys) { $e.SetAttribute($k, $Attrs[$k]) }
+    $e.IsEmpty = $false # <x></x>, as the server writes it
+    return $e
 }
+foreach ($node in @($root.SelectNodes('group[@name="ScavengeSurvive"] | acl[@name="ScavengeSurvive"]'))) { [void]$root.RemoveChild($node) }
+$names = ([xml](Get-Content -LiteralPath (Join-Path $PSScriptRoot "resources.xml") -Raw)).resources.resource | ForEach-Object { $_.src }
+$group = New-AclElement "group" ([ordered]@{ name = "ScavengeSurvive" })
+[void]$group.AppendChild((New-AclElement "acl" ([ordered]@{ name = "ScavengeSurvive" })))
+foreach ($n in $names) { [void]$group.AppendChild((New-AclElement "object" ([ordered]@{ name = "resource.$n" }))) }
+$ssAcl = New-AclElement "acl" ([ordered]@{ name = "ScavengeSurvive" })
+[void]$ssAcl.AppendChild((New-AclElement "right" ([ordered]@{ name = "function.loadstring"; access = "true" })))
+$default = $root.SelectSingleNode('acl[@name="Default"]')
+if (-not $default) { throw "acl.xml has no Default ACL" }
+[void]$root.InsertBefore($group, $default)
+[void]$root.InsertBefore($ssAcl, $default)
+$admin = $root.SelectSingleNode('group[@name="Admin"]')
+if (-not $admin) { throw "acl.xml has no Admin group" }
+if (-not $admin.SelectSingleNode('object[@name="resource.dev"]')) {
+    [void]$admin.AppendChild((New-AclElement "object" ([ordered]@{ name = "resource.dev" })))
+}
+$ws = [Xml.XmlWriterSettings]::new()
+$ws.Indent = $true
+$ws.IndentChars = "    "
+$ws.NewLineChars = if ($aclOld.Contains("`r`n")) { "`r`n" } else { "`n" }
+$ws.Encoding = $Utf8
+$ws.OmitXmlDeclaration = $doc.FirstChild.NodeType -ne [Xml.XmlNodeType]::XmlDeclaration
+$ms = [IO.MemoryStream]::new()
+$xw = [Xml.XmlWriter]::Create($ms, $ws)
+$doc.Save($xw)
+$xw.Dispose()
+$aclText = $Utf8.GetString($ms.ToArray()) + $ws.NewLineChars
 if ($aclText -ne $aclOld) { [IO.File]::WriteAllText($acl, $aclText, $Utf8) }
 
 # (g) start

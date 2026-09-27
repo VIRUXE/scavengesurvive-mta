@@ -14,6 +14,8 @@ and starts it. Every step is safe to run again. Stop the server first; the scrip
 6. Edits `acl.xml` (original saved as `acl.xml.stock`): rebuilds a `ScavengeSurvive` group holding every resource in
    `resources.xml` with an ACL granting `function.loadstring` (the stock `Default` ACL denies it, and every resource
    loads `lib` modules with `loadstring`), and adds `resource.dev` to the `Admin` group so `/rr` can restart resources.
+   **Security:** `function.loadstring` is a code-execution right. In production, grant it only to exactly these
+   resources (as the script does) and review the grant.
 7. Starts `MTA Server.exe` (skip with `-NoStart`).
 
 The stock resources (`[admin]`, `[gameplay]`, `[managers]`, …) are still on disk but no longer start.
