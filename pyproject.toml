@@ -9,6 +9,7 @@ dev = ["pytest>=8"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests/tools", "tests/sql"]
+pythonpath = ["."]
 
 [tool.setuptools]
 packages = ["tools", "tools.convert"]
