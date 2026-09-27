@@ -2,7 +2,7 @@ max_retries = 3
 timeout = 20
 accept = ["200..=299", "403", "429"]
 exclude_all_private = true
-exclude_path = ["docs/superpowers", "\.lua/", "node_modules"]
+exclude_path = ['docs/superpowers', '\.lua/', 'node_modules']
 exclude = [
   '^https?://(localhost|127\.0\.0\.1)',
   '^https://github\.com/settings',
