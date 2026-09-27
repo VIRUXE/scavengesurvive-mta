@@ -33,9 +33,6 @@ addEventHandler("onResourceStart", resourceRoot, function()
             return getPlayerIP(p)
         end,
     })
-    for _, p in ipairs(getElementsByType("player")) do
-        prompt(p)
-    end
 end)
 
 function prompt(player)
@@ -54,13 +51,14 @@ function prompt(player)
     end)
 end
 
-addEventHandler("onPlayerJoin", root, function()
-    setTimer(function(p)
-        if isElement(p) then
-            prompt(p)
-        end
-    end, 1000, 1, source)
-end)
+-- The client asks for the prompt once its auth script runs: a server-side join/start timer can fire before the
+-- client has added onClientAuthPrompt, and MTA drops such events. Also covers `restart auth` (clients restart too).
+net.handler("onAuthRequestReady", function(player)
+    if session[player] or pending[player] then
+        return
+    end
+    prompt(player)
+end, { rate = 2 })
 
 local function finish(player, ok, code, account)
     pending[player] = nil

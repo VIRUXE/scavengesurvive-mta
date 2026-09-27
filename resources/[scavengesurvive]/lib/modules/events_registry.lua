@@ -4,6 +4,7 @@ return {
     onPlayerLoggedOut = false,
     onAuthRequestLogin = true,
     onAuthRequestRegister = true,
+    onAuthRequestReady = true,
     onClientAuthPrompt = true,
     onClientAuthResult = true,
     onCharacterSpawned = false,

@@ -34,6 +34,9 @@ local function build(m)
     end, false)
 end
 
+addEventHandler("onClientResourceStart", resourceRoot, function()
+    triggerServerEvent("onAuthRequestReady", localPlayer)
+end)
 addEventHandler("onClientAuthPrompt", root, function(m)
     build(m)
 end)
