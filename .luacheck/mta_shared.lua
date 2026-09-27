@@ -1,0 +1,18 @@
+return { read_globals = {
+    "addEvent", "addEventHandler", "removeEventHandler", "triggerEvent", "cancelEvent", "wasEventCancelled",
+    "getCancelReason", "setTimer", "killTimer", "isTimer", "getTickCount", "getRealTime", "outputDebugString",
+    "outputChatBox", "outputServerLog", "outputConsole", "getResourceName", "getThisResource", "getResourceFromName",
+    "getResourceRootElement", "getResourceState", "call", "exports", "resourceRoot", "root", "source", "client",
+    "this", "eventName", "sourceResource", "isElement", "getElementType", "getElementPosition", "setElementPosition",
+    "getElementRotation", "setElementRotation", "getElementDimension", "setElementDimension", "getElementInterior",
+    "setElementInterior", "getElementData", "setElementData", "getElementsByType", "destroyElement", "createObject",
+    "createColSphere", "attachElements", "detachElements", "getElementHealth", "setElementHealth", "getElementModel",
+    "setElementModel", "isElementWithinColShape", "getDistanceBetweenPoints3D", "getDistanceBetweenPoints2D",
+    "toJSON", "fromJSON", "split", "gettok", "utf8", "getPlayerName", "getPlayerSerial", "getPlayerIP",
+    "getPlayerPing", "getPedWeapon", "getPedTotalAmmo", "getPedAmmoInClip", "getPedOccupiedVehicle", "isPedDead",
+    "getPedArmor", "setPedArmor", "setPedAnimation", "getElementVelocity", "setElementVelocity", "getElementParent",
+    "getElementChildren", "fileOpen", "fileRead", "fileClose", "fileGetSize", "fileExists", "get", "set",
+    "createBlip", "createMarker", "createPickup", "getElementByID", "setElementID", "getElementAlpha",
+    "setElementAlpha", "setElementFrozen", "isElementFrozen", "setElementCollisionsEnabled", "getElementBoundingBox",
+    "getPlayerFromName", "getElementsWithinRange", "getRootElement", "getPedSkin", "setPedSkin", "getPlayerCount",
+} }

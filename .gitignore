@@ -1,0 +1,12 @@
+.lua/
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+*.egg-info/
+server-config/local.settings.xml
+server-config/run/
+resources/[scavengesurvive]/models/files/
+*.zip
+luacov.*
+.luacheckcache
