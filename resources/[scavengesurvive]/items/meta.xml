@@ -1,0 +1,22 @@
+<meta>
+    <info author="scavengesurvive-mta" type="script" name="items" description="Item graph: world items, hands, inventory, bags, use" version="0.1.0"/>
+    <min_mta_version server="1.6.0" client="1.6.0"/>
+    <include resource="lib"/>
+    <include resource="data"/>
+    <include resource="ui"/>
+    <include resource="character"/>
+    <script src="shared/events.lua" type="shared"/>
+    <script src="server/main.lua" type="server"/>
+    <script src="server/world.lua" type="server"/>
+    <script src="server/hands.lua" type="server"/>
+    <script src="server/containers.lua" type="server"/>
+    <script src="server/use.lua" type="server"/>
+    <script src="client/world.lua" type="client"/>
+    <script src="client/inventory.lua" type="client"/>
+    <file src="shared/logic/geometry.lua"/>
+    <file src="shared/logic/diff.lua"/>
+    <export function="getHeld" type="server"/>
+    <export function="createStartingItems" type="server"/>
+    <export function="refreshPlayer" type="server"/>
+    <export function="destroyItem" type="server"/>
+</meta>

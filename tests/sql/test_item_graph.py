@@ -127,3 +127,15 @@ def test_concurrent_pickup_exactly_one_winner(db):
         for t in threads:
             t.join()
         assert results.count("OK") == 1 and set(results) <= {"OK", "NOT_IN_WORLD", "HANDS_FULL"}, results
+
+
+def test_create_in_container_and_destroy(db, character):
+    ch, cid = character["character_id"], character["inventory_container_id"]
+    ok, code, payload = call(db, "item_create_in_container", "T_Knife", cid)
+    assert code == "OK" and payload["slot"] == 0
+    assert call(db, "item_create_in_container", "Nope", cid)[1] == "UNKNOWN_TYPE"
+    assert call(db, "item_destroy", payload["item_id"], 999999)[1] == "NOT_OWNED"
+    assert call(db, "item_destroy", payload["item_id"], ch)[1] == "OK"
+    with db.cursor() as cur:
+        cur.execute("SELECT COUNT(*) AS n FROM items WHERE id=%s", (payload["item_id"],))
+        assert cur.fetchone()["n"] == 0
