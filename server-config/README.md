@@ -20,6 +20,7 @@ The stock resources (`[admin]`, `[gameplay]`, `[managers]`, …) are still on di
 You can still start one by hand from the server console (`start admin`).
 
 ## Revert to the stock server
+
 1. Stop the server.
 2. `Copy-Item mtaserver.conf.stock mtaserver.conf -Force` and `Copy-Item acl.xml.stock acl.xml -Force` in `mods\deathmatch`.
 3. Delete `mods\deathmatch\settings.xml`.
@@ -27,6 +28,7 @@ You can still start one by hand from the server console (`start admin`).
 5. Optional: `mariadb -u root -e "DROP DATABASE scavengesurvive"`.
 
 ## Dev commands (resource `dev`)
+
 Allowed for everyone while the `dev` setting `*dev.open` is `true` (the default); otherwise only accounts with
 `admin_level > 0`. Commands: `/additem <uname>`, `/rollloot`, `/stats`, `/sethp <n>`, `/setfood <n>`, `/setbleed <n>`,
 `/dbtest`, `/rr <resource>` (also `rr <resource>` in the server console).
