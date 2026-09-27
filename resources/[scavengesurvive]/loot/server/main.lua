@@ -10,6 +10,7 @@ end
 local settings = {}
 local tableCache = {}
 local busy = {}
+local warnedTables = {}
 
 local function lootTable(name)
     if tableCache[name] == nil then
@@ -21,17 +22,21 @@ end
 local function rollSpawn(s)
     local tbl = lootTable(s.table_name)
     if not tbl then
-        return util.log("loot", "warn", "unknown loot table %s at spawn %d", s.table_name, s.id)
+        -- disable the spawn so it is never re-selected; warn once per table name
+        if not warnedTables[s.table_name] then
+            warnedTables[s.table_name] = true
+            util.log("loot", "warn", "unknown loot table %s (spawn %d and others disabled)", s.table_name, s.id)
+        end
+        db.exec("UPDATE loot_spawns SET enabled = 0 WHERE id = ?", { s.id })
+        return
     end
     local mult = tonumber(settings["loot.spawn_multiplier"]) or 1.0
     local unames = roll.pick(tbl, s.size, s.weight, mult, math.random)
-    local despawn = tonumber(settings["loot.despawn_minutes"]) or 120
     local reroll = tonumber(settings["loot.reroll_minutes"]) or 30
     for i, uname in ipairs(unames) do
         if exports.data:itemType(uname) then
             local ang = math.rad(i * (360 / #unames))
             local x, y = s.x + math.cos(ang) * 0.6, s.y + math.sin(ang) * 0.6
-            local despawnAt = os.date("!%Y-%m-%d %H:%M:%S", os.time() + despawn * 60)
             -- hitpoints and data are NULL; n is required because of the embedded nils
             local params = {
                 uname,
@@ -44,7 +49,7 @@ local function rollSpawn(s)
                 s.interior,
                 s.dimension,
                 s.id,
-                despawnAt,
+                s.despawn_at, -- computed by the DB (the only clock) in rollNear's SELECT
                 n = 11,
             }
             db.call("item_create", params, function(res)
@@ -65,7 +70,9 @@ end
 -- previous roll remains in the world.
 function rollNear(x, y, radius)
     local batch = tonumber(settings["loot.roll_batch"]) or 300
-    local sql = "SELECT s.id, s.x, s.y, s.z, s.table_name, s.weight, s.size, s.interior, s.dimension "
+    local despawn = tonumber(settings["loot.despawn_minutes"]) or 120
+    local sql = "SELECT s.id, s.x, s.y, s.z, s.table_name, s.weight, s.size, s.interior, s.dimension, "
+        .. "DATE_FORMAT(DATE_ADD(NOW(), INTERVAL ? MINUTE), '%Y-%m-%d %H:%i:%s') AS despawn_at "
         .. "FROM loot_spawns s "
         .. "JOIN loot_spawn_state st ON st.spawn_id = s.id WHERE s.enabled = 1 AND st.next_roll_at <= NOW() "
         .. "AND NOT EXISTS (SELECT 1 FROM items i WHERE i.loot_spawn_id = s.id) "
@@ -83,7 +90,7 @@ function rollNear(x, y, radius)
             y - radius,
             batch
         )
-    db.query(sql, {}, function(rows)
+    db.query(sql, { despawn }, function(rows)
         if not rows then
             return
         end
