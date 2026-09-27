@@ -10,7 +10,9 @@ do
 end
 
 local session = {} -- player -> account table
+local pending = {} -- player -> true while a login/register request is in flight
 local accounts
+local warnedNoDb = false
 
 addEventHandler("onResourceStart", resourceRoot, function()
     if not db.connect("auth") then
@@ -37,6 +39,13 @@ addEventHandler("onResourceStart", resourceRoot, function()
 end)
 
 function prompt(player)
+    if not accounts then
+        if not warnedNoDb then
+            warnedNoDb = true
+            util.log("auth", "warn", "database unavailable; players cannot authenticate")
+        end
+        return
+    end
     accounts.lookup(getPlayerName(player), function(row)
         if not isElement(player) then
             return
@@ -54,6 +63,7 @@ addEventHandler("onPlayerJoin", root, function()
 end)
 
 local function finish(player, ok, code, account)
+    pending[player] = nil
     if not isElement(player) then
         return
     end
@@ -72,18 +82,20 @@ local function finish(player, ok, code, account)
 end
 
 net.handler("onAuthRequestLogin", function(player, password)
-    if session[player] then
+    if session[player] or pending[player] or not accounts then
         return
     end
+    pending[player] = true
     accounts.login(player, getPlayerName(player), tostring(password), function(ok, code, account)
         finish(player, ok, code, account)
     end)
 end, { rate = 2 })
 
 net.handler("onAuthRequestRegister", function(player, password)
-    if session[player] then
+    if session[player] or pending[player] or not accounts then
         return
     end
+    pending[player] = true
     accounts.register(player, getPlayerName(player), tostring(password), function(ok, code, account)
         finish(player, ok, code, account)
     end)
@@ -96,6 +108,7 @@ addEventHandler("onPlayerQuit", root, function()
         db.exec("UPDATE connection_log SET left_at = NOW() WHERE account_id = ? AND left_at IS NULL", { account.id })
     end
     session[source] = nil
+    pending[source] = nil
     if accounts then
         accounts.forget(source)
     end

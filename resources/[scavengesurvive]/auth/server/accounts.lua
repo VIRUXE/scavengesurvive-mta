@@ -37,6 +37,9 @@ function accounts.new(deps)
     end
 
     function self.register(player, name, pw, cb)
+        if not rules.validateName(name) then
+            return cb(false, "BAD_NAME")
+        end
         local ok, reason = rules.validatePassword(pw)
         if not ok then
             return cb(false, reason)

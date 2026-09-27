@@ -49,6 +49,14 @@ describe("auth flow", function()
         mock.answer(1, { { id = 1, name = "Bob", password_hash = "x", admin_level = 0, lang = "en", active = 1 } })
         assert.equals("EXISTS", code)
     end)
+    it("refuses registration with an invalid MTA name", function()
+        local code
+        acc.register("p1", "has space", "secret", function(_, c)
+            code = c
+        end)
+        assert.equals("BAD_NAME", code)
+        assert.equals(0, #mock.queries)
+    end)
     it("logs in with the right password and locks after 5 failures", function()
         local codes = {}
         local row =
