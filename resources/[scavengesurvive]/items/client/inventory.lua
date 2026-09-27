@@ -15,10 +15,6 @@ local TOASTS = {
     SELF_CONTAINMENT = "It does not fit inside itself",
 }
 
-addEventHandler("onClientItemsHeld", root, function(item)
-    Held = item
-end)
-
 addEventHandler("onClientItemsToast", root, function(code)
     exports.ui:toast(TOASTS[code] or tostring(code))
 end)
@@ -41,11 +37,44 @@ local function rowsFor(list, prefix)
     return rows
 end
 
-addEventHandler("onClientItemsInventory", root, function(p)
-    local rows = rowsFor(p.inventory, "")
+local lastInventory
+
+-- the held item is the first row (Eat for food, Drop); inventory and bag rows follow
+local function buildRows(p)
+    local rows = {}
+    if Held then
+        local t = exports.data:itemType(Held.uname)
+        local actions = {}
+        if t and t.category == "food" then
+            actions[#actions + 1] = { id = "use", label = "Eat" }
+        end
+        actions[#actions + 1] = { id = "drop", label = "Drop" }
+        rows[1] = {
+            id = Held.id,
+            label = "[hand] " .. itemName(Held.uname),
+            sub = tostring(Held.hp) .. " hp",
+            actions = actions,
+        }
+    end
+    for _, r in ipairs(rowsFor(p.inventory, "")) do
+        rows[#rows + 1] = r
+    end
     for _, r in ipairs(rowsFor(p.bag or {}, "[bag] ")) do
         rows[#rows + 1] = r
     end
+    return rows
+end
+
+addEventHandler("onClientItemsHeld", root, function(item)
+    Held = item
+    if lastInventory then
+        exports.ui:listUpdate("inventory", buildRows(lastInventory))
+    end
+end)
+
+addEventHandler("onClientItemsInventory", root, function(p)
+    lastInventory = p
+    local rows = buildRows(p)
     local title = string.format("Inventory %d/%d", p.capacity.inv.used, p.capacity.inv.size)
     if p.capacity.bag then
         title = title .. string.format("  Bag %d/%d", p.capacity.bag.used, p.capacity.bag.size)
@@ -62,5 +91,7 @@ addEventHandler("onClientUiListAction", root, function(listId, rowId, actionId)
         triggerServerEvent("onItemsRequestTake", localPlayer, rowId)
     elseif actionId == "use" then
         triggerServerEvent("onItemsRequestUse", localPlayer, rowId)
+    elseif actionId == "drop" then
+        triggerServerEvent("onItemsRequestDrop", localPlayer)
     end
 end)

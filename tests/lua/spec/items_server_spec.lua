@@ -68,6 +68,52 @@ describe("items server sql builders", function()
         end
         assert.is_nil(Items.held["p1"])
     end)
+    describe("setHeld weapons", function()
+        local given
+        local types = {
+            M9Pistol = { mtaModel = 346, category = "weapon", categoryData = { baseWeapon = 22, magSize = 10 } },
+            Knife = { mtaModel = 335, category = "weapon", categoryData = { baseWeapon = 4, magSize = 14 } },
+        }
+        before_each(function()
+            local load = require("tests.lua.helpers.load_module")
+            mock.settings = {}
+            Items.db, Items.net, Items.util = load("db"), load("net"), load("util")
+            Items.sent, Items.held, Items.heldObject = {}, {}, {}
+            Items.type = function(uname)
+                return types[uname]
+            end
+            given = {}
+            _G.createObject = function()
+                return "obj"
+            end
+            _G.attachElements, _G.setElementCollisionsEnabled, _G.destroyElement =
+                function() end, function() end, function() end
+            _G.setElementInterior, _G.setElementDimension = function() end, function() end
+            _G.getElementInterior, _G.getElementDimension = function()
+                return 0
+            end, function()
+                return 0
+            end
+            _G.takeWeapon = function() end
+            _G.giveWeapon = function(_, w, ammo)
+                given[#given + 1] = { w, ammo }
+            end
+            dofile("resources/[scavengesurvive]/items/server/hands.lua")
+            mock.addElement("p1")
+        end)
+        it("gives a firearm without a stored magazine a full one", function()
+            Items.setHeld("p1", { id = 1, uname = "M9Pistol", hp = 1, data = {} })
+            assert.same({ { 22, 10 } }, given)
+        end)
+        it("gives vanilla melee exactly one", function()
+            Items.setHeld("p1", { id = 2, uname = "Knife", hp = 1 })
+            assert.same({ { 4, 1 } }, given)
+        end)
+        it("keeps a stored magazine count", function()
+            Items.setHeld("p1", { id = 3, uname = "M9Pistol", hp = 1, data = { mag = 4 } })
+            assert.same({ { 22, 4 } }, given)
+        end)
+    end)
     it("orders nearest-first with a distance cap", function()
         local sql = Items.findNearestSql(1, 2, 2.0)
         assert.matches("ST_Distance%(p.pos, POINT%(1, 2%)%) <= 2", sql)
