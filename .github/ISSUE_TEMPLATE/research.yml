@@ -1,0 +1,24 @@
+name: Research spike
+description: A timeboxed question whose answer becomes an ADR or a doc section
+labels: [kind/research]
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why it matters (what decision waits on it)
+  - type: dropdown
+    id: timebox
+    attributes:
+      label: Timebox
+      options: [2 hours, 1 day, 3 days]
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Expected outcome
+      value: "ADR in docs/adr/ or a section in docs/ with the measured result"

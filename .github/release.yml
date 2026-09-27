@@ -1,0 +1,16 @@
+changelog:
+  exclude:
+    labels: [status/needs-info]
+  categories:
+    - title: Features
+      labels: [kind/feature]
+    - title: Bug fixes
+      labels: [kind/bug]
+    - title: Documentation
+      labels: [kind/docs]
+    - title: Research
+      labels: [kind/research]
+    - title: Maintenance
+      labels: [kind/chore]
+    - title: Other changes
+      labels: ["*"]

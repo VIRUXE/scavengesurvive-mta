@@ -1,0 +1,26 @@
+name: Bug
+description: Something behaves wrong on the server or in the tooling
+labels: [kind/bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: "1. Log in  2. Pick up a Knife  3. …"
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Commit or release tag
+  - type: textarea
+    id: log
+    attributes:
+      label: Server / client debug log (debugscript 3)
+      render: text

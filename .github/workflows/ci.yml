@@ -1,0 +1,102 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  luacheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: leafo/gh-actions-lua@v13
+        with:
+          luaVersion: "5.1.5"
+      - uses: leafo/gh-actions-luarocks@v6
+      - run: luarocks install luacheck
+      - run: luacheck resources
+  stylua:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: JohnnyMorganz/stylua-action@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          version: 2.5.2
+          args: --check resources
+  busted:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: leafo/gh-actions-lua@v13
+        with:
+          luaVersion: "5.1.5"
+      - uses: leafo/gh-actions-luarocks@v6
+      - run: luarocks install busted && luarocks install luacov && luarocks install dkjson
+      - run: busted --coverage tests/lua
+      - name: Coverage summary
+        if: always()
+        run: |
+          luacov
+          { echo '### luacov'; echo '```'; sed -n '/^Summary/,$p' luacov.report.out; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+  tools:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - run: python -m pip install -e ".[dev]"
+      - run: python -m pytest tests/tools -q
+  sql:
+    runs-on: ubuntu-latest
+    services:
+      mariadb:
+        image: mariadb:12
+        env:
+          MARIADB_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s --health-timeout=5s --health-retries=20
+    env:
+      SS_DB_HOST: 127.0.0.1
+      SS_DB_PORT: "3306"
+      SS_DB_USER: root
+      SS_DB_PASSWORD: root
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - run: python -m pip install -e ".[dev]"
+      - name: Enable the event scheduler
+        run: >-
+          python -c "import pymysql; c = pymysql.connect(host='127.0.0.1', user='root', password='root');
+          cur = c.cursor(); cur.execute('SET GLOBAL event_scheduler = ON');
+          cur.execute('SELECT @@event_scheduler'); print('event_scheduler =', cur.fetchone()[0])"
+      - run: python -m pytest tests/sql -q
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: DavidAnson/markdownlint-cli2-action@v24
+        with:
+          globs: |
+            **/*.md
+            #docs/superpowers/**
+            #.lua/**
+      - uses: lycheeverse/lychee-action@v2
+        with:
+          args: --config lychee.toml --no-progress './**/*.md'
+          fail: true
