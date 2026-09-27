@@ -16,4 +16,5 @@
     <export function="getStats" type="server"/>
     <export function="modifyStat" type="server"/>
     <export function="killCharacter" type="server"/>
+    <export function="applyWound" type="server"/>
 </meta>

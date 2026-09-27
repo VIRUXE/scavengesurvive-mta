@@ -1,0 +1,13 @@
+<meta>
+    <info author="scavengesurvive-mta" type="script" name="weapons" description="Server-authoritative wound model (MVP-lite)" version="0.1.0"/>
+    <min_mta_version server="1.6.0" client="1.6.0"/>
+    <include resource="lib"/>
+    <include resource="data"/>
+    <include resource="character"/>
+    <include resource="items"/>
+    <include resource="ui"/>
+    <script src="shared/events.lua" type="shared"/>
+    <script src="server/main.lua" type="server"/>
+    <script src="client/damage.lua" type="client"/>
+    <file src="shared/logic/wound.lua"/>
+</meta>

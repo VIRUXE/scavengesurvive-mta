@@ -214,3 +214,25 @@ end
 function killCharacter(player, cause, killer)
     return Character.die(player, cause, killer)
 end
+
+function applyWound(player, bleedAdd, hpLoss, killer, cause)
+    local st = Character.byPlayer[player]
+    if not st or st.dead then
+        return false
+    end
+    bleedAdd = math.max(0, tonumber(bleedAdd) or 0)
+    hpLoss = math.max(0, tonumber(hpLoss) or 0)
+    -- only a bleeding wound counts: the survival tick stops bleeding at wounds == 0
+    if bleedAdd > 0 then
+        st.bleed = math.min(1.0, st.bleed + bleedAdd)
+        st.wounds = st.wounds + 1
+    end
+    st.hp = math.max(0, st.hp - hpLoss)
+    st.dirty = true
+    setElementHealth(player, math.max(1, st.hp))
+    Character.sendStats(player, true)
+    if st.hp <= 0 then
+        Character.die(player, cause or "killed", isElement(killer) and killer or false)
+    end
+    return true
+end
