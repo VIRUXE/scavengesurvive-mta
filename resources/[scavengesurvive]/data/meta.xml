@@ -1,0 +1,26 @@
+<meta>
+    <info author="scavengesurvive-mta" type="script" name="data" description="Static gamemode data (items, loot tables, languages)" version="0.1.0"/>
+    <min_mta_version server="1.6.0" client="1.6.0"/>
+    <download_priority_group>95</download_priority_group>
+    <include resource="lib"/>
+    <script src="shared/lang.lua" type="shared"/>
+    <script src="shared/api.lua" type="shared"/>
+    <file src="model_map.lua"/>
+    <file src="generated/item_types.lua"/>
+    <file src="generated/loot_tables.lua"/>
+    <file src="generated/lang_en.lua"/>
+    <file src="generated/lang_es.lua"/>
+    <file src="generated/lang_fr.lua"/>
+    <file src="generated/lang_pt.lua"/>
+    <file src="generated/lang_ptbr.lua"/>
+    <file src="generated/lang_ru.lua"/>
+    <file src="generated/lang_ro.lua"/>
+    <file src="generated/lang_id.lua"/>
+    <file src="generated/lang_bhs.lua"/>
+    <file src="generated/lang_cs.lua"/>
+    <export function="itemType" type="shared"/>
+    <export function="itemTypes" type="shared"/>
+    <export function="lootTable" type="shared"/>
+    <export function="calibreBleed" type="shared"/>
+    <export function="t" type="shared"/>
+</meta>
