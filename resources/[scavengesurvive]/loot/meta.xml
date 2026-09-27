@@ -1,0 +1,11 @@
+<meta>
+    <info author="scavengesurvive-mta" type="script" name="loot" description="Static loot spawns rolled near players" version="0.1.0"/>
+    <min_mta_version server="1.6.0" client="1.6.0"/>
+    <include resource="lib"/>
+    <include resource="data"/>
+    <include resource="character"/>
+    <script src="shared/events.lua" type="shared"/>
+    <script src="server/main.lua" type="server"/>
+    <file src="shared/logic/roll.lua"/>
+    <export function="rollNear" type="server"/>
+</meta>
