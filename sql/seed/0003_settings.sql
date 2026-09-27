@@ -5,7 +5,7 @@ INSERT INTO settings (skey, svalue) VALUES
 ('items.sync_radius','150'),
 ('loot.despawn_minutes','120'),
 ('loot.reroll_minutes','30'),
-('loot.roll_batch','300'),
+('loot.roll_batch','100'),
 ('loot.spawn_multiplier','1.0'),
 ('player.combat_log_window','30'),
 ('player.login_freeze_time','8'),

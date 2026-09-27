@@ -192,7 +192,8 @@ All under `resources/[scavengesurvive]/`. Cross-resource contract: **pass ids (i
 - Type mapping to Lua: INT/BIGINT → number (exact ≤2^53); **FLOAT/DOUBLE → 32-bit float** (≈7 significant digits; fine for GTA coordinates ±3000 at ~0.0002 precision, not for anything else) ⇒ store money/counters as integers, `CAST(x AS DECIMAL(12,4))` when precision matters; **DECIMAL/SUM/AVG → string** (`tonumber`); **NULL → `false`**; JSON/TEXT/BLOB → binary-safe string (`fromJSON`); DATETIME/ENUM → string; BIT → raw bytes (`col+0`); **GEOMETRY → raw SRID+WKB bytes** ⇒ always `SELECT ST_X(pos), ST_Y(pos)` or `ST_AsText(pos)`.
 - One worker thread per **queue name** (default queue = host string), strict FIFO across all resources on that queue; `share=1` (default is **0**) shares the connection across resources only when host+user+full option string match; shared connection = shared session state (avoid `@vars`/temp tables). `dbConnect` blocks (call once at resource start); `dbExec` swallows errors (debug warning only) ⇒ wrap with `dbQuery`+callback; `dbPoll` returns `nil` (pending) / `false, code, msg` / `rows, affected, insertId`. `suppress=1062` honoured for mysql. Warnings above 20 connections or 200 jobs/10 s (soft). `database_credentials_protection=1` blocks `fileOpen` on script files of DB-using resources.
 
-**Connection (every resource, identical string so `share=1` matches):**
+**Connection (every resource, same options; as built, `tag=<resource>` makes the strings differ, so `share=1` does not
+match and each resource has its own connection, ordered by the shared `queue=game` worker):**
 ```lua
 dbConnect("mysql", "dbname=scavengesurvive;host=127.0.0.1;port=3306;charset=utf8mb4", user, pass,
           "share=1;batch=0;autoreconnect=1;multi_statements=0;queue=game;log=1;tag=game;suppress=1062")

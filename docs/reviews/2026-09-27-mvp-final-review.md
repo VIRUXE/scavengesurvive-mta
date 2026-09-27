@@ -202,3 +202,40 @@ steps 9 and 2 fail outright or unpredictably. I1 and I2 are checklist steps that
 code or by changing the checklist. I3 is a cheap one-liner that closes the relog-heals-bleeding exploit, which step 9
 invites. The architecture, the cross-resource contracts, the procedures and the tooling are sound. None of the Minor
 items block the playtest.
+
+---
+
+## Follow-up (fixes after this review)
+
+- **C1** `items/server/hands.lua`: a weapon without a stored `data.mag` gets `categoryData.magSize` rounds (vanilla
+  melee 1..15 gets 1). Busted cases cover the firearm, melee and stored-magazine paths.
+- **C2** `auth`: the client sends `onAuthRequestReady` (remote, through `net.handler`) from `onClientResourceStart`,
+  and the server prompts only then. The `onPlayerJoin` timer and the `onResourceStart` prompt loop are gone, so
+  `restart auth` is covered by the clients restarting the script.
+- **I1** `items/client/inventory.lua`: the held item is the first row (`[hand] …`, **Eat** for food, **Drop**), and the
+  list refreshes whenever the held item changes.
+- **I2** `items/server/hands.lua`: `Items.setWorn`/`Items.rebuildWorn` attach the worn bag to the player's back (root
+  offset). Rebuilt on start/spawn, removed on death, quit and stop.
+- **I2b** `items/server/containers.lua`: the wear `UPDATE` has a `NOT EXISTS` guard, so a second bag is 0 affected
+  rows and never a logged 1062.
+- **I3** `character`: `survival.woundsOnLoad(bleed)` gives a loaded character one wound when its bleed is above the
+  new-spawn token bleed (0.0001), so relogging no longer cures bleeding. Busted covers both sides.
+- The checklist steps 6, 7, 9 and 11 now exercise these fixes.
+- **Minor items**, second pass:
+  - 1: death drop passes `z - 0.9`.
+  - 2: `character_death_drop` sets `despawn_at` from `loot.despawn_minutes`.
+  - 3: a respawn needs a committed `character_death_drop`.
+  - 4: one session per account (`ALREADY_ONLINE`).
+  - 5: failed logins are counted per serial for 10 minutes.
+  - 6: register/login stop with `GONE` when the player quit during bcrypt.
+  - 7: the `share=1` wording is fixed in CLAUDE.md, the spec and `db.lua`.
+  - 8: the client sends `onItemsRequestReady` on start and gets a fresh sync plus its held item.
+  - 9: server-config README warns about `dev.open`.
+  - 10: `survival.deathCause`.
+  - 11: `character_flush` saves interior and dimension.
+  - 12: HUD is hidden before the first stats and while dead.
+  - 13: `net` buckets are per player and dropped on quit.
+  - 14: `loot.roll_batch` is 100.
+  - 15: docs fixed.
+  - 16: tests added for `setHeld` weapons, `Character` death/respawn flows and the bag container. The weapons hit
+    handler and the `toJSON` wrapping are still untested.

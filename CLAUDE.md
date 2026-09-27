@@ -15,7 +15,8 @@ Scavenge & Survive ported to MTA:SA 1.6 (Lua 5.1) with MariaDB 12.2. Design spec
 
 - Events: `on<Domain><Thing><Verb>`; client→server `on<Domain>Request<Verb>` and server→client `onClient<Domain><Verb>` are registered with `addEvent(name, true)` (MTA only delivers `triggerServerEvent`/`triggerClientEvent` to events whose receiving side allows remote triggering); purely local events (e.g. `onClientUiListAction`, `onPlayerAuthenticated`) use `false`. Every resource declares every event it triggers or handles in `shared/events.lua`.
 - Remote handlers are registered through `net.handler(...)` from `lib`; trust only the `client` global.
-- DB: identical connection string in every resource (`lib/modules/db.lua`), `batch=0`; anything touching more than one row is a stored procedure returning `SELECT ok, code, payload`.
+- DB: same connection options in every resource (`lib/modules/db.lua`), `batch=0`. The per-resource `tag=` makes the
+  strings differ, so `share=1` never shares: one connection per resource, ordered by the common `queue=game` worker; anything touching more than one row is a stored procedure returning `SELECT ok, code, payload`.
 - Stored procedures: `SET TRANSACTION ISOLATION LEVEL READ COMMITTED;` before every `START TRANSACTION` (MariaDB 12 deadlocks/`1020` under REPEATABLE READ with `FOR UPDATE` races); numbers in `JSON_OBJECT` payloads are wrapped in `CAST(x AS SIGNED)` (procedure variables serialise as strings otherwise); compare possibly-NULL ownership columns with `<=>`.
 - DB rows: NULL arrives as `false`; DECIMAL as string; FLOAT is 32-bit; never select raw POINT (`ST_X/ST_Y`); every `?` in SQL text is a placeholder (`CHAR(63)` for a literal).
 - Client never calls `setElementData`. Server-set element data uses `"deny"`. `elementdata_whitelisted=1`.

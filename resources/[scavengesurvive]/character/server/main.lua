@@ -21,6 +21,7 @@ Character = {
     byId = {},
     lastSpawn = {},
     creating = {},
+    awaitingRespawn = {}, -- player -> true once the last death's character_death_drop committed
     settings = {},
 }
 
@@ -43,7 +44,7 @@ local function spawnFromRow(player, row, isNew)
         hp = row.hp,
         food = row.food,
         bleed = row.bleed,
-        wounds = 0,
+        wounds = survival.woundsOnLoad(row.bleed),
         dirty = false,
         inventoryContainerId = row.inventory_container_id,
         lastSent = { hp = -1, food = -1, bleed = -1 },
@@ -139,14 +140,15 @@ addEventHandler("onPlayerAuthenticated", root, function(accountId)
 end)
 
 net.handler("onCharacterRequestRespawn", function(player)
-    local st = Character.byPlayer[player]
-    if st and st.hp > 0 then
+    -- only after a finished death: character_create would retire an alive character without dropping its items
+    if Character.byPlayer[player] or not Character.awaitingRespawn[player] then
         return
     end
     local accountId = exports.auth:getAccountId(player)
     if not accountId then
         return
     end
+    Character.awaitingRespawn[player] = nil
     triggerClientEvent(player, "onClientCharacterDeathScreen", player, false)
     Character.createAndSpawn(player, accountId, survival.RESPAWN)
 end, { rate = 1 })
@@ -160,6 +162,7 @@ local function forget(player)
     Character.byPlayer[player] = nil
     Character.lastSpawn[player] = nil
     Character.creating[player] = nil
+    Character.awaitingRespawn[player] = nil
 end
 addEventHandler("onPlayerQuit", root, function()
     forget(source)

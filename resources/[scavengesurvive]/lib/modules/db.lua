@@ -1,4 +1,6 @@
 local db = { conn = false, tag = "game" }
+-- tag=<resource> makes each string unique, so share=1 never matches: each resource gets its own connection and
+-- ordering comes from queue=game (one FIFO worker thread for all of them)
 local OPTIONS = "share=1;batch=0;autoreconnect=1;multi_statements=0;queue=game;log=1;suppress=1062;tag="
 
 local function setting(key)

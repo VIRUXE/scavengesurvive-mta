@@ -23,13 +23,14 @@ setTimer(function()
             local vx, vy, vz = getElementVelocity(player)
             local speed = math.sqrt(vx * vx + vy * vy + vz * vz)
             local mult = Character.survival.movementMultiplier(speed, getPedOccupiedVehicle(player) ~= false)
+            local bleedBefore = st.bleed
             local s, events = Character.survival.tick(st, mult, math.random)
             st.hp, st.food, st.bleed, st.dirty = s.hp, s.food, s.bleed, true
             setElementHealth(player, math.max(1, st.hp))
             Character.sendStats(player, false)
             for _, e in ipairs(events) do
                 if e == "died" then
-                    Character.die(player, st.food <= 0 and "starvation" or "bleeding", false)
+                    Character.die(player, Character.survival.deathCause(bleedBefore, st.food), false)
                 end
             end
         end
@@ -56,7 +57,18 @@ function Character.flushAll(force)
         if isElement(player) and (st.dirty or force) and st.hp > 0 and not st.dead then
             local x, y, z = getElementPosition(player)
             local _, _, rz = getElementRotation(player)
-            rows[#rows + 1] = { id = st.id, hp = st.hp, food = st.food, bleed = st.bleed, x = x, y = y, z = z, rz = rz }
+            rows[#rows + 1] = {
+                id = st.id,
+                hp = st.hp,
+                food = st.food,
+                bleed = st.bleed,
+                x = x,
+                y = y,
+                z = z,
+                rz = rz,
+                interior = getElementInterior(player),
+                dimension = getElementDimension(player),
+            }
             st.dirty = false
         end
     end

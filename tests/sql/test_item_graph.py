@@ -95,6 +95,10 @@ def test_death_drops_everything_and_marks_dead(db, character):
         assert cur.fetchone()["alive"] == 0
         cur.execute("SELECT COUNT(*) AS n FROM items WHERE id IN (%s,%s) AND x IS NOT NULL", (a, b))
         assert cur.fetchone()["n"] == 2
+        # corpse items despawn like loot (seeded loot.despawn_minutes, default 120)
+        cur.execute("SELECT COUNT(*) AS n FROM items WHERE id IN (%s,%s) AND despawn_at > NOW() + INTERVAL 1 MINUTE",
+                    (a, b))
+        assert cur.fetchone()["n"] == 2
 
 
 def test_concurrent_pickup_exactly_one_winner(db):
@@ -139,3 +143,12 @@ def test_create_in_container_and_destroy(db, character):
     with db.cursor() as cur:
         cur.execute("SELECT COUNT(*) AS n FROM items WHERE id=%s", (payload["item_id"],))
         assert cur.fetchone()["n"] == 0
+
+
+def test_create_bag_in_container_gets_its_own_container(db, character):
+    cid = character["inventory_container_id"]
+    ok, code, payload = call(db, "item_create_in_container", "T_Satchel", cid)
+    assert code == "OK"
+    with db.cursor() as cur:
+        cur.execute("SELECT kind, size FROM containers WHERE owner_item_id=%s", (payload["item_id"],))
+        assert cur.fetchone() == {"kind": "bag", "size": 7}

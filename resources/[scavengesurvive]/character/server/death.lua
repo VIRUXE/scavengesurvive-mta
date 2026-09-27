@@ -5,13 +5,17 @@ function Character.die(player, cause, killer)
     end
     st.dead, st.hp = true, 0
     local x, y, z = getElementPosition(player)
-    local params = { st.id, x, y, z, getElementInterior(player), getElementDimension(player) }
+    -- items rest on the ground like a dropped item (the ped position is ~1 m above it)
+    local params = { st.id, x, y, z - 0.9, getElementInterior(player), getElementDimension(player) }
     Character.db.call("character_death_drop", params, function(res, ctx)
         if not isElement(ctx.player) then
             return
         end
         if not res or not res.ok then
+            -- the character stays alive in the DB; a reconnect loads it again instead of orphaning its items
             Character.util.log("character", "error", "death_drop failed for %d", ctx.charId)
+        else
+            Character.awaitingRespawn[ctx.player] = true
         end
         triggerEvent("onCharacterDied", ctx.player, ctx.charId, ctx.cause, ctx.killer)
         if Character.byId[ctx.charId] == ctx.player then

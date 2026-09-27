@@ -32,10 +32,8 @@ addEventHandler("onResourceStart", resourceRoot, function()
         ip = function(p)
             return getPlayerIP(p)
         end,
+        present = isElement,
     })
-    for _, p in ipairs(getElementsByType("player")) do
-        prompt(p)
-    end
 end)
 
 function prompt(player)
@@ -54,13 +52,14 @@ function prompt(player)
     end)
 end
 
-addEventHandler("onPlayerJoin", root, function()
-    setTimer(function(p)
-        if isElement(p) then
-            prompt(p)
-        end
-    end, 1000, 1, source)
-end)
+-- The client asks for the prompt once its auth script runs: a server-side join/start timer can fire before the
+-- client has added onClientAuthPrompt, and MTA drops such events. Also covers `restart auth` (clients restart too).
+net.handler("onAuthRequestReady", function(player)
+    if session[player] or pending[player] then
+        return
+    end
+    prompt(player)
+end, { rate = 2 })
 
 local function finish(player, ok, code, account)
     pending[player] = nil
@@ -70,6 +69,13 @@ local function finish(player, ok, code, account)
     if not ok then
         triggerClientEvent(player, "onClientAuthResult", player, false, code)
         return
+    end
+    -- one session per account: a second client (e.g. after /nick) must not control the same character
+    for other, acc in pairs(session) do
+        if acc.id == account.id and other ~= player then
+            triggerClientEvent(player, "onClientAuthResult", player, false, "ALREADY_ONLINE")
+            return
+        end
     end
     session[player] = account
     db.exec(
@@ -109,9 +115,6 @@ addEventHandler("onPlayerQuit", root, function()
     end
     session[source] = nil
     pending[source] = nil
-    if accounts then
-        accounts.forget(source)
-    end
 end)
 
 function getAccountId(player)

@@ -22,6 +22,9 @@ describe("auth flow", function()
             ip = function()
                 return "127.0.0.1"
             end,
+            present = function(p)
+                return mock.elements[p] == true
+            end,
         })
         mock.addElement("p1")
     end)
@@ -89,5 +92,36 @@ describe("auth flow", function()
         assert.equals(2, got[3].adminLevel)
         assert.equals("pt", got[3].lang)
         assert.matches("UPDATE accounts SET last_login_at", mock.queries[2].sql)
+    end)
+    it("keeps the login lock across a reconnect (same serial) until the window passes", function()
+        local row =
+            { id = 7, name = "Bob", password_hash = "$2y$hash-of-secret", admin_level = 0, lang = "en", active = 1 }
+        for _ = 1, 5 do
+            acc.login("p1", "Bob", "wrong", function() end)
+            mock.answer(#mock.queries, { row })
+        end
+        mock.removeElement("p1")
+        mock.addElement("p2")
+        local code
+        acc.login("p2", "Bob", "secret", function(_, c)
+            code = c
+        end)
+        assert.equals("TOO_MANY_ATTEMPTS", code)
+        mock.tick = mock.tick + 10 * 60 * 1000
+        acc.login("p2", "Bob", "secret", function(_, c)
+            code = c
+        end)
+        mock.answer(#mock.queries, { row })
+        assert.equals("OK", code)
+    end)
+    it("does not touch a player who quit while the password was being hashed", function()
+        local code
+        acc.register("p1", "Bob", "secret", function(_, c)
+            code = c
+        end)
+        mock.removeElement("p1")
+        mock.answer(1, {})
+        assert.equals("GONE", code)
+        assert.equals(1, #mock.queries)
     end)
 end)

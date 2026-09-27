@@ -1,10 +1,23 @@
 -- File scope: only Items.net.handler registrations (busted loads this file under the MTA mock).
 local HAND_OFFSET = { 0.1, 0.35, 0.15 }
+local BACK_OFFSET = { 0, -0.2, 0.25, 0, 0, 180 }
 local FALLBACK_MODEL = 1271
 
 local function baseWeapon(t)
     local w = t and t.category == "weapon" and t.categoryData and t.categoryData.baseWeapon
     return w and w > 0 and w or nil
+end
+
+-- MVP has no ammo model: an item without a stored magazine is given a full one (vanilla melee 1..15 always 1)
+local function startingAmmo(t, w, data)
+    local mag = tonumber(data.mag)
+    if mag then
+        return mag
+    end
+    if w <= 15 then
+        return 1
+    end
+    return math.max(1, tonumber(t.categoryData.magSize) or 1)
 end
 
 local function decodeData(data)
@@ -15,8 +28,9 @@ local function decodeData(data)
 end
 Items.decodeData = decodeData
 
-local function makeHeldObject(player, item)
-    local t = Items.type(item.uname)
+-- offset = { x, y, z, rx, ry, rz } relative to the player's root
+local function makeAttachedObject(player, uname, offset)
+    local t = Items.type(uname)
     local obj = createObject(t and t.mtaModel or FALLBACK_MODEL, 0, 0, 0)
     if not obj then
         obj = createObject(FALLBACK_MODEL, 0, 0, 0)
@@ -27,17 +41,48 @@ local function makeHeldObject(player, item)
     setElementCollisionsEnabled(obj, false)
     setElementInterior(obj, getElementInterior(player))
     setElementDimension(obj, getElementDimension(player))
-    attachElements(
-        obj,
-        player,
-        HAND_OFFSET[1],
-        HAND_OFFSET[2],
-        HAND_OFFSET[3],
-        t and t.attrx or 0,
-        t and t.attry or 0,
-        t and t.attrz or 0
-    )
+    attachElements(obj, player, unpack(offset))
     return obj
+end
+
+local function makeHeldObject(player, item)
+    local t = Items.type(item.uname)
+    local o = HAND_OFFSET
+    return makeAttachedObject(
+        player,
+        item.uname,
+        { o[1], o[2], o[3], t and t.attrx or 0, t and t.attry or 0, t and t.attrz or 0 }
+    )
+end
+
+-- The worn bag is shown on the player's back (root-attached, so it does not follow the spine in animations).
+function Items.setWorn(player, uname)
+    local obj = Items.wornObject[player]
+    if obj and isElement(obj) then
+        destroyElement(obj)
+    end
+    Items.wornObject[player] = nil
+    if uname and isElement(player) then
+        Items.wornObject[player] = makeAttachedObject(player, uname, BACK_OFFSET)
+    end
+end
+
+function Items.rebuildWorn(player)
+    local charId = Items.charId(player)
+    if not charId then
+        return
+    end
+    Items.db.one(
+        "SELECT type_uname AS uname FROM items WHERE holder_char_id = ? AND holder_kind = 'bag'",
+        { charId },
+        function(row, ctx)
+            if not isElement(ctx.player) or row == false then
+                return
+            end
+            Items.setWorn(ctx.player, row and row.uname or nil)
+        end,
+        { player = player }
+    )
 end
 
 function Items.clearHeld(player)
@@ -65,10 +110,10 @@ function Items.setHeld(player, item)
     if item then
         Items.held[player] = item
         Items.heldObject[player] = makeHeldObject(player, item)
-        local w = baseWeapon(Items.type(item.uname))
+        local t = Items.type(item.uname)
+        local w = baseWeapon(t)
         if w then
-            local data = item.data or {}
-            giveWeapon(player, w, tonumber(data.mag) or 0, true)
+            giveWeapon(player, w, startingAmmo(t, w, item.data or {}), true)
         end
     end
     triggerClientEvent(
