@@ -30,6 +30,17 @@ function survival.woundsOnLoad(bleed)
     return (tonumber(bleed) or 0) > survival.NEW.bleed and 1 or 0
 end
 
+-- A tick only drains HP through bleeding (bleed > 0 at its start) or hunger (food < 20).
+function survival.deathCause(bleedBefore, food)
+    if bleedBefore > 0 then
+        return "bleeding"
+    end
+    if food < 20 then
+        return "starvation"
+    end
+    return "unknown"
+end
+
 -- rng() must return a float in [0,1)
 function survival.tick(state, movementMult, rng)
     local s = { hp = state.hp, food = state.food, bleed = state.bleed, wounds = state.wounds or 0 }

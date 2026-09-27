@@ -17,3 +17,13 @@ def test_character_flush_ignores_dead(db, character):
     call(db, "character_death_drop", ch, 0.0, 0.0, 3.0, 0, 0)
     ok, code, payload = call(db, "character_flush", f'[[{{"id":{ch},"hp":99,"food":99,"bleed":0,"x":0,"y":0,"z":0,"rz":0}}]]')
     assert payload["updated"] == 0
+
+
+def test_character_flush_saves_interior_and_dimension(db, character):
+    ch = character["character_id"]
+    rows = f'[[{{"id":{ch},"hp":50,"food":50,"bleed":0,"x":1,"y":2,"z":3,"rz":4,"interior":3,"dimension":77}}]]'
+    ok, code, payload = call(db, "character_flush", rows)
+    assert payload["updated"] == 1
+    with db.cursor() as cur:
+        cur.execute("SELECT interior, dimension FROM characters WHERE id=%s", (ch,))
+        assert cur.fetchone() == {"interior": 3, "dimension": 77}

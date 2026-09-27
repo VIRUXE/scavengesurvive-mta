@@ -95,6 +95,10 @@ def test_death_drops_everything_and_marks_dead(db, character):
         assert cur.fetchone()["alive"] == 0
         cur.execute("SELECT COUNT(*) AS n FROM items WHERE id IN (%s,%s) AND x IS NOT NULL", (a, b))
         assert cur.fetchone()["n"] == 2
+        # corpse items despawn like loot (seeded loot.despawn_minutes, default 120)
+        cur.execute("SELECT COUNT(*) AS n FROM items WHERE id IN (%s,%s) AND despawn_at > NOW() + INTERVAL 1 MINUTE",
+                    (a, b))
+        assert cur.fetchone()["n"] == 2
 
 
 def test_concurrent_pickup_exactly_one_winner(db):
