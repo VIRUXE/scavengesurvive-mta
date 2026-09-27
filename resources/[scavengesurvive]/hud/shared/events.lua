@@ -1,0 +1,6 @@
+addEvent("onClientCharacterStats", true)
+addEvent("onClientItemsHeld", true)
+addEvent("onItemsRequestPickup", true)
+addEvent("onItemsRequestDrop", true)
+addEvent("onItemsRequestPutAway", true)
+addEvent("onItemsRequestOpenInventory", true)

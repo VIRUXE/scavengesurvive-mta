@@ -1,0 +1,13 @@
+<meta>
+    <info author="scavengesurvive-mta" type="script" name="hud" description="Status bars, held item, key binds" version="0.1.0"/>
+    <min_mta_version server="1.6.0" client="1.6.0"/>
+    <download_priority_group>80</download_priority_group>
+    <include resource="lib"/>
+    <include resource="data"/>
+    <include resource="ui"/>
+    <include resource="items"/>
+    <script src="shared/events.lua" type="shared"/>
+    <script src="client/main.lua" type="client"/>
+    <script src="client/keys.lua" type="client"/>
+    <file src="shared/logic/bars.lua"/>
+</meta>
