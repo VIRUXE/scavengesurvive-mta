@@ -1,0 +1,6 @@
+addEvent("onPlayerAuthenticated", false)
+addEvent("onPlayerLoggedOut", false)
+addEvent("onAuthRequestLogin", true)
+addEvent("onAuthRequestRegister", true)
+addEvent("onClientAuthPrompt", false)
+addEvent("onClientAuthResult", false)
