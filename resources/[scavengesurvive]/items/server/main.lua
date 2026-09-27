@@ -72,6 +72,23 @@ addEventHandler("onResourceStart", resourceRoot, function()
     end
 end)
 
+-- Sent by the client once its items scripts run. Events sent before that (the first sync or the held item after
+-- `restart items`) were dropped, so the client's view starts from scratch.
+net.handler("onItemsRequestReady", function(player)
+    if not Items.charId(player) then
+        return
+    end
+    Items.sent[player] = {}
+    Items.syncPlayer(player)
+    local item = Items.held[player]
+    triggerClientEvent(
+        player,
+        "onClientItemsHeld",
+        player,
+        item and { id = item.id, uname = item.uname, hp = item.hp } or false
+    )
+end, { rate = 2 })
+
 addEventHandler("onCharacterSpawned", root, function()
     -- keep an existing sent-set: the client still shows those objects, the diff stays exact
     Items.sent[source] = Items.sent[source] or {}

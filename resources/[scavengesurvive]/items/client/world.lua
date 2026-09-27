@@ -69,6 +69,10 @@ addEventHandler("onClientRender", root, function()
     end
 end)
 
+addEventHandler("onClientResourceStart", resourceRoot, function()
+    triggerServerEvent("onItemsRequestReady", localPlayer)
+end)
+
 addEventHandler("onClientResourceStop", resourceRoot, function()
     for id in pairs(objects) do
         forget(id)

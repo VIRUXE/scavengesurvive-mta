@@ -69,7 +69,7 @@ end
 -- Rolls due spawns inside a box around (x, y): spawns are due when next_roll_at has passed and no item from the
 -- previous roll remains in the world.
 function rollNear(x, y, radius)
-    local batch = tonumber(settings["loot.roll_batch"]) or 300
+    local batch = tonumber(settings["loot.roll_batch"]) or 100
     local despawn = tonumber(settings["loot.despawn_minutes"]) or 120
     local sql = "SELECT s.id, s.x, s.y, s.z, s.table_name, s.weight, s.size, s.interior, s.dimension, "
         .. "DATE_FORMAT(DATE_ADD(NOW(), INTERVAL ? MINUTE), '%Y-%m-%d %H:%i:%s') AS despawn_at "

@@ -1,12 +1,19 @@
 local net = { buckets = {}, tokens = {} }
 
+local quitHandlerAdded = false
+
+-- buckets[player][event]; dropped on quit so a later player that reuses the element never inherits them
 local function allowed(player, name, rate)
     local now = getTickCount()
-    local key = tostring(player) .. "|" .. name
-    local b = net.buckets[key]
+    local byEvent = net.buckets[player]
+    if not byEvent then
+        byEvent = {}
+        net.buckets[player] = byEvent
+    end
+    local b = byEvent[name]
     if not b or now - b.start >= 1000 then
         b = { start = now, n = 0 }
-        net.buckets[key] = b
+        byEvent[name] = b
     end
     b.n = b.n + 1
     return b.n <= rate
@@ -16,6 +23,12 @@ function net.handler(name, fn, opts)
     opts = opts or {}
     local rate = opts.rate or 10
     addEvent(name, true)
+    if not quitHandlerAdded then
+        quitHandlerAdded = true
+        addEventHandler("onPlayerQuit", root, function()
+            net.buckets[source] = nil
+        end)
+    end
     addEventHandler(name, root, function(...)
         if not isElement(client) or client ~= source then
             return

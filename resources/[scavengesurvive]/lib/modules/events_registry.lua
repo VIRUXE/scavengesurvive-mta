@@ -23,6 +23,7 @@ return {
     onItemsRequestTake = true,
     onItemsRequestOpenInventory = true,
     onItemsRequestUse = true,
+    onItemsRequestReady = true,
     onClientItemsSync = true,
     onClientItemsHeld = true,
     onClientItemsInventory = true,

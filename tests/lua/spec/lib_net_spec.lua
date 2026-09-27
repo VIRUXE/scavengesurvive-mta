@@ -21,6 +21,16 @@ describe("lib.net", function()
         mock.fire("onItemsRequestDrop")
         assert.equals(3, seen)
     end)
+    it("drops a player's rate buckets on quit", function()
+        mock.tick = 0
+        net.handler("onItemsRequestUse", function() end, { rate = 1 })
+        _G.client, _G.source = "p1", "p1"
+        mock.fire("onItemsRequestUse")
+        assert.is_not_nil(net.buckets.p1)
+        _G.source = "p1"
+        mock.fire("onPlayerQuit")
+        assert.is_nil(net.buckets.p1)
+    end)
     it("issues one-shot tokens that expire", function()
         local tok = net.issueToken("p1", "inv", 30)
         assert.is_false(net.consumeToken("p2", "inv", tok))

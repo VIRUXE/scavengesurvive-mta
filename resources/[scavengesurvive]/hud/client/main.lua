@@ -7,7 +7,7 @@ do
 end
 local sw, sh = guiGetScreenSize()
 local scale = math.max(0.75, sh / 1080)
-local stats = { hp = 100, food = 80, bleed = 0 }
+local stats = false -- nothing is drawn before the first character stats arrive (login screen)
 local held = false
 local typeCache = {}
 
@@ -43,6 +43,9 @@ local function bar(l, index, kind, value)
 end
 
 addEventHandler("onClientRender", root, function()
+    if not stats or isPedDead(localPlayer) then
+        return
+    end
     local l = bars.layout(sw, sh, scale)
     bar(l, 0, "hp", stats.hp)
     bar(l, 1, "food", stats.food)
