@@ -32,6 +32,7 @@ addEventHandler("onResourceStart", resourceRoot, function()
         ip = function(p)
             return getPlayerIP(p)
         end,
+        present = isElement,
     })
 end)
 
@@ -68,6 +69,13 @@ local function finish(player, ok, code, account)
     if not ok then
         triggerClientEvent(player, "onClientAuthResult", player, false, code)
         return
+    end
+    -- one session per account: a second client (e.g. after /nick) must not control the same character
+    for other, acc in pairs(session) do
+        if acc.id == account.id and other ~= player then
+            triggerClientEvent(player, "onClientAuthResult", player, false, "ALREADY_ONLINE")
+            return
+        end
     end
     session[player] = account
     db.exec(
@@ -107,9 +115,6 @@ addEventHandler("onPlayerQuit", root, function()
     end
     session[source] = nil
     pending[source] = nil
-    if accounts then
-        accounts.forget(source)
-    end
 end)
 
 function getAccountId(player)
