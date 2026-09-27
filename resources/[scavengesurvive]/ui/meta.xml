@@ -1,0 +1,19 @@
+<meta>
+    <info author="scavengesurvive-mta" type="script" name="ui" description="dx UI kit: toasts, hold progress, action lists" version="0.1.0"/>
+    <min_mta_version server="1.6.0" client="1.6.0"/>
+    <download_priority_group>90</download_priority_group>
+    <include resource="lib"/>
+    <script src="shared/events.lua" type="shared"/>
+    <script src="client/main.lua" type="client"/>
+    <script src="client/toast.lua" type="client"/>
+    <script src="client/progress.lua" type="client"/>
+    <script src="client/list.lua" type="client"/>
+    <file src="shared/logic/listlayout.lua"/>
+    <export function="toast" type="client"/>
+    <export function="progressStart" type="client"/>
+    <export function="progressCancel" type="client"/>
+    <export function="listOpen" type="client"/>
+    <export function="listUpdate" type="client"/>
+    <export function="listClose" type="client"/>
+    <export function="listIsOpen" type="client"/>
+</meta>

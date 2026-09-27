@@ -16,5 +16,5 @@ return { read_globals = {
     "setElementStreamable", "createBuilding", "removeWorldModel", "setOcclusionsEnabled", "xmlLoadFile",
     "xmlCreateFile", "xmlUnloadFile", "xmlNodeGetValue", "xmlNodeSetValue", "xmlSaveFile", "getKeyBoundToCommand",
     "setElementCollidableWith", "engineStreamingRequestModel", "getPedControlState", "setPedControlState",
-    "getElementDistanceFromCentreOfMassToBaseOfModel", "setPlayerNametagShowing",
+    "getElementDistanceFromCentreOfMassToBaseOfModel", "setPlayerNametagShowing", "tocolor",
 } }
