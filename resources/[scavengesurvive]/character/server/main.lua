@@ -43,7 +43,7 @@ local function spawnFromRow(player, row, isNew)
         hp = row.hp,
         food = row.food,
         bleed = row.bleed,
-        wounds = 0,
+        wounds = survival.woundsOnLoad(row.bleed),
         dirty = false,
         inventoryContainerId = row.inventory_container_id,
         lastSent = { hp = -1, food = -1, bleed = -1 },

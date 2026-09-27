@@ -24,6 +24,12 @@ function survival.movementMultiplier(speed, inVehicle)
     return 2.2
 end
 
+-- The wound count is not persisted: a loaded character that is really bleeding keeps one wound, so the tick
+-- does not stop the bleed (relog would cure it otherwise). The new-spawn token bleed is not a wound.
+function survival.woundsOnLoad(bleed)
+    return (tonumber(bleed) or 0) > survival.NEW.bleed and 1 or 0
+end
+
 -- rng() must return a float in [0,1)
 function survival.tick(state, movementMult, rng)
     local s = { hp = state.hp, food = state.food, bleed = state.bleed, wounds = state.wounds or 0 }
