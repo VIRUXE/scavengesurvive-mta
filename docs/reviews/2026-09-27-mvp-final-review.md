@@ -221,3 +221,21 @@ items block the playtest.
 - **I3** `character`: `survival.woundsOnLoad(bleed)` gives a loaded character one wound when its bleed is above the
   new-spawn token bleed (0.0001), so relogging no longer cures bleeding. Busted covers both sides.
 - The checklist steps 6, 7, 9 and 11 now exercise these fixes.
+- **Minor items**, second pass:
+  - 1: death drop passes `z - 0.9`.
+  - 2: `character_death_drop` sets `despawn_at` from `loot.despawn_minutes`.
+  - 3: a respawn needs a committed `character_death_drop`.
+  - 4: one session per account (`ALREADY_ONLINE`).
+  - 5: failed logins are counted per serial for 10 minutes.
+  - 6: register/login stop with `GONE` when the player quit during bcrypt.
+  - 7: the `share=1` wording is fixed in CLAUDE.md, the spec and `db.lua`.
+  - 8: the client sends `onItemsRequestReady` on start and gets a fresh sync plus its held item.
+  - 9: server-config README warns about `dev.open`.
+  - 10: `survival.deathCause`.
+  - 11: `character_flush` saves interior and dimension.
+  - 12: HUD is hidden before the first stats and while dead.
+  - 13: `net` buckets are per player and dropped on quit.
+  - 14: `loot.roll_batch` is 100.
+  - 15: docs fixed.
+  - 16: tests added for `setHeld` weapons, `Character` death/respawn flows and the bag container. The weapons hit
+    handler and the `toJSON` wrapping are still untested.
