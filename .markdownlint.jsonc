@@ -1,7 +1,0 @@
-{
-  "default": true,
-  "MD013": false, // line length: prose paragraphs and tables are long by design
-  "MD024": { "siblings_only": true }, // repeated "Steps"/"Rollback" headings in runbooks
-  "MD033": false, // README badges and <details>
-  "MD041": false // wiki pages and templates may not start with an H1
-}

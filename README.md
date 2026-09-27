@@ -8,6 +8,8 @@ Status: MVP in progress. Design: `docs/superpowers/specs/`. Plan: `docs/superpow
 1. `pwsh tools/setup-dev.ps1`
 2. MariaDB 12.x running locally; MTA:SA 1.6 client + server installed.
 3. `pwsh server-config/run-local.ps1`, then connect to `127.0.0.1:22003`.
+4. Before committing: `.lua/bin/busted tests/lua`, `.lua/bin/luacheck resources`, `stylua --check resources`, `pytest -q`.
+   There is no CI; commits go straight to `main`.
 
 ## Toolchain notes
 
