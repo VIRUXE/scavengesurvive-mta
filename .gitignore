@@ -6,8 +6,9 @@ __pycache__/
 *.egg-info/
 server-config/local.settings.xml
 server-config/run/
-resources/[scavengesurvive]/models/files/
+# brackets are a character class in gitignore patterns; escape them
+resources/\[scavengesurvive\]/models/files/
+resources/\[scavengesurvive\]/dev/screenshots/
 *.zip
 luacov.*
 .luacheckcache
-resources/[scavengesurvive]/dev/screenshots/
