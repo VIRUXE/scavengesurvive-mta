@@ -24,6 +24,16 @@ function survival.movementMultiplier(speed, inVehicle)
     return 2.2
 end
 
+-- Wound count for a character loaded from the DB. Only the bleed rate is persisted, and the tick
+-- stops bleeding at wounds == 0, so a bleeding character gets one wound back instead of a free cure
+-- on relog. A new character's seed bleed (NEW.bleed) is not a wound.
+function survival.loadWounds(bleed, isNew)
+    if isNew then
+        return 0
+    end
+    return (tonumber(bleed) or 0) > 0 and 1 or 0
+end
+
 -- rng() must return a float in [0,1)
 function survival.tick(state, movementMult, rng)
     local s = { hp = state.hp, food = state.food, bleed = state.bleed, wounds = state.wounds or 0 }

@@ -29,6 +29,16 @@ describe("survival tick", function()
         local t = survival.tick({ hp = 50, food = 100, bleed = 0.2, wounds = 0 }, 1.0, rng({ 0.1, 0.1 }))
         assert.equals(0, t.bleed) -- no wounds => bleeding stops (upstream guard)
     end)
+    it("keeps a loaded character bleeding (one wound) so a relog is not a cure", function()
+        assert.equals(1, survival.loadWounds(0.2, false))
+        assert.equals(1, survival.loadWounds("0.2", false)) -- DECIMAL arrives as a string
+        assert.equals(0, survival.loadWounds(0, false))
+        assert.equals(0, survival.loadWounds(false, false)) -- NULL arrives as false
+        assert.equals(0, survival.loadWounds(survival.NEW.bleed, true))
+        local s =
+            survival.tick({ hp = 50, food = 100, bleed = 0.2, wounds = survival.loadWounds(0.2) }, 1.0, rng({ 0.1 }))
+        assert.is_true(s.bleed > 0)
+    end)
     it("reports death at 0 hp", function()
         local s, events = survival.tick({ hp = 0.5, food = 0, bleed = 0, wounds = 0 }, 1.0, rng({ 0.99 }))
         assert.equals(0, s.hp)
