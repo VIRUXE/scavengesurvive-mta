@@ -7,5 +7,6 @@ return { read_globals = {
     "toggleControl", "toggleAllControls", "setPlayerHudComponentVisible", "showChat", "setPlayerBlurLevel",
     "setPedStat", "getPlayerIdleTime", "setPlayerMuted", "setTime", "setMinuteDuration", "setWeather",
     "createVehicle", "setElementVisibleTo", "setPlayerNametagShowing", "setPlayerNametagText", "getPlayerTeam",
-    "resendPlayerACInfo", "getPlayerVersion", "setPlayerWantedLevel", "restartResource",
+    "resendPlayerACInfo", "getPlayerVersion", "setPlayerWantedLevel", "restartResource", "startResource",
+    "stopResource", "shutdown", "executeCommandHandler", "getAccount", "addAccount", "setAccountPassword",
 } }

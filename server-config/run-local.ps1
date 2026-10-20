@@ -34,6 +34,10 @@ if ($LASTEXITCODE -ne 0) { throw "mariadb failed ($LASTEXITCODE)" }
 $local = Join-Path $PSScriptRoot "local.settings.xml"
 if (-not (Test-Path -LiteralPath $local)) {
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot "local.settings.example.xml") -Destination $local
+    # the HTTP rcon account (dev resource) gets a random password; it never leaves this git-ignored file
+    $rnd = -join ((48..57 + 65..90 + 97..122) | Get-Random -Count 24 | ForEach-Object { [char]$_ })
+    $txt = [IO.File]::ReadAllText($local).Replace('<setting name="*dev.http_pass" value=""/>', "<setting name=`"*dev.http_pass`" value=`"$rnd`"/>")
+    [IO.File]::WriteAllText($local, $txt, $Utf8)
     Write-Host "Created $local from the example; edit it if your DB needs a password."
 }
 Copy-Item -LiteralPath $local -Destination (Join-Path $Dm "settings.xml") -Force
@@ -55,6 +59,7 @@ $text = Set-ConfValue $text "elementdata_whitelisted" "1"
 $text = Set-ConfValue $text "fpslimit" "60"
 $text = Set-ConfValue $text "scriptdebugloglevel" "3"
 $text = Set-ConfValue $text "servername" "Scavenge and Survive (dev)"
+$text = Set-ConfValue $text "ase" "0" # dev server with open dev commands: never advertise it on the master list
 [IO.File]::WriteAllText($conf, $text, $Utf8)
 
 # (e) junction the resource group into the server
@@ -95,6 +100,19 @@ $default = $root.SelectSingleNode('acl[@name="Default"]')
 if (-not $default) { throw "acl.xml has no Default ACL" }
 [void]$root.InsertBefore($group, $default)
 [void]$root.InsertBefore($ssAcl, $default)
+# (f2) HTTP rcon: the account named by *dev.http_user gets a group whose only right is general.http; what it may do is
+# decided by the dev resource's rcon export, not by the ACL.
+foreach ($node in @($root.SelectNodes('group[@name="ScavengeSurviveHttp"] | acl[@name="ScavengeSurviveHttp"]'))) { [void]$root.RemoveChild($node) }
+$httpUser = (([xml](Get-Content -LiteralPath $local -Raw)).settings.setting | Where-Object { $_.name -eq "*dev.http_user" }).value
+if ($httpUser) {
+    $hg = New-AclElement "group" ([ordered]@{ name = "ScavengeSurviveHttp" })
+    [void]$hg.AppendChild((New-AclElement "acl" ([ordered]@{ name = "ScavengeSurviveHttp" })))
+    [void]$hg.AppendChild((New-AclElement "object" ([ordered]@{ name = "user.$httpUser" })))
+    $ha = New-AclElement "acl" ([ordered]@{ name = "ScavengeSurviveHttp" })
+    [void]$ha.AppendChild((New-AclElement "right" ([ordered]@{ name = "general.http"; access = "true" })))
+    [void]$root.InsertBefore($hg, $default)
+    [void]$root.InsertBefore($ha, $default)
+}
 $admin = $root.SelectSingleNode('group[@name="Admin"]')
 if (-not $admin) { throw "acl.xml has no Admin group" }
 if (-not $admin.SelectSingleNode('object[@name="resource.dev"]')) {

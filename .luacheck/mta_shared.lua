@@ -12,7 +12,7 @@ return { read_globals = {
     "getPlayerPing", "getPedWeapon", "getPedTotalAmmo", "getPedAmmoInClip", "getPedOccupiedVehicle", "isPedDead",
     "getPedArmor", "setPedArmor", "setPedAnimation", "getElementVelocity", "setElementVelocity", "getElementParent",
     "getElementChildren", "fileOpen", "fileRead", "fileClose", "fileGetSize", "fileExists", "get", "set",
-    "createBlip", "createMarker", "createPickup", "getElementByID", "setElementID", "getElementAlpha",
+    "createBlip", "createMarker", "createPickup", "getElementByID", "setElementID", "getElementID", "getElementAlpha",
     "setElementAlpha", "setElementFrozen", "isElementFrozen", "setElementCollisionsEnabled", "getElementBoundingBox",
     "getPlayerFromName", "getElementsWithinRange", "getRootElement", "getPedSkin", "setPedSkin", "getPlayerCount",
 } }

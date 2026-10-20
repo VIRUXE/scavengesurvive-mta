@@ -4,4 +4,7 @@
     <setting name="*lib.db_name" value="scavengesurvive"/>
     <setting name="*lib.db_user" value="root"/>
     <setting name="*lib.db_pass" value=""/>
+    <!-- HTTP rcon for scripts/agents (server-config/rcon.ps1); run-local.ps1 fills in a random password -->
+    <setting name="*dev.http_user" value="rcon"/>
+    <setting name="*dev.http_pass" value=""/>
 </settings>

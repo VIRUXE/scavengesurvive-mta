@@ -7,10 +7,19 @@
     <include resource="items"/>
     <include resource="loot"/>
     <script src="server/main.lua" type="server"/>
+    <export function="rcon" type="server" http="true"/>
     <aclrequest>
         <right name="function.restartResource" access="true"/>
+        <right name="function.startResource" access="true"/>
+        <right name="function.stopResource" access="true"/>
+        <right name="function.shutdown" access="true"/>
+        <right name="function.executeCommandHandler" access="true"/>
+        <right name="function.addAccount" access="true"/>
+        <right name="function.setAccountPassword" access="true"/>
     </aclrequest>
     <settings>
         <setting name="*open" value="true" friendlyname="Everyone may use dev commands"/>
+        <setting name="*http_user" value="rcon" friendlyname="Account for the HTTP rcon export"/>
+        <setting name="*http_pass" value="" friendlyname="Its password; empty disables the rcon account"/>
     </settings>
 </meta>

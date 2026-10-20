@@ -9,7 +9,8 @@ and starts it. Every step is safe to run again. Stop the server first; the scrip
    if missing. `local.settings.xml` is git-ignored: put the DB password there, never in the example.
 4. Rebuilds `mods\deathmatch\mtaserver.conf` from `mtaserver.conf.stock` (saved on the first run): removes every stock
    `<resource>` line, adds the lines from `resources.xml`, and sets `elementdata_whitelisted=1`, `fpslimit=60`,
-   `scriptdebugloglevel=3`, `servername`.
+   `scriptdebugloglevel=3`, `servername`, and `ase=0` so the dev server (open dev commands) is never advertised on the
+   master list.
 5. Junctions `mods\deathmatch\resources\[scavengesurvive]` to this repo, so edits are live after `restart <name>`.
 6. Edits `acl.xml` (original saved as `acl.xml.stock`): rebuilds a `ScavengeSurvive` group holding every resource in
    `resources.xml` with an ACL granting `function.loadstring` (the stock `Default` ACL denies it, and every resource
@@ -28,6 +29,20 @@ You can still start one by hand from the server console (`start admin`).
 3. Delete `mods\deathmatch\settings.xml`.
 4. Remove the junction without touching the repo: `(Get-Item -LiteralPath 'mods\deathmatch\resources\[scavengesurvive]').Delete()`.
 5. Optional: `mariadb -u root -e "DROP DATABASE scavengesurvive"`.
+
+## HTTP rcon (resource `dev`)
+
+MTA has no RCON. The `dev` resource exports `rcon(line)` over the server's HTTP port (22005) so scripts and LLM agents
+can drive a local test server: `pwsh server-config/rcon.ps1 <command>` posts the line to `/dev/call/rcon` with HTTP
+Basic auth and prints the reply. Commands: `help`, `players`, `start|stop|restart|rr <resource>`,
+`cmd <player> <command> [args]` (runs a chat command as that player, e.g. `cmd Bob additem M9Pistol`), `say <text>`,
+`lua <code>`, `shutdown`.
+
+The account is `*dev.http_user` / `*dev.http_pass` from `local.settings.xml` (`run-local.ps1` fills in a random
+password when it creates the file; `dev` creates or re-passwords the MTA account on start). Its ACL group
+`ScavengeSurviveHttp` grants only `general.http`, so the export alone decides what it can do. **Security:** `lua` is
+server-side code execution behind a plain-HTTP password; the HTTP port binds every interface, so keep this on a
+machine or LAN you trust, and set `*dev.http_pass` empty to disable the account.
 
 ## Dev commands (resource `dev`)
 

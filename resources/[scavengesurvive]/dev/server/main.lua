@@ -118,6 +118,123 @@ command("rr", function(p, name)
     say(p, "restartResource(%s) -> %s", name, tostring(restartResource(res)))
 end, true)
 
+-- HTTP "rcon" (MTA has no RCON): POST http://127.0.0.1:22005/dev/call/rcon with a JSON array holding one command
+-- line, HTTP Basic auth as the account named by *dev.http_user (created below from *dev.http_pass; run-local.ps1
+-- puts it in an ACL group that only grants general.http). Returns { ok, output = { lines } }.
+-- Client: pwsh server-config/rcon.ps1 <command>. Built for scripts and LLM agents driving a local test server.
+local RCON_HELP = {
+    "help                          this list",
+    "players                       connected players: name, character id, position",
+    "start|stop|restart|rr <res>   resource control (rr = restart)",
+    "cmd <player> <command> [args] run a chat command as that player, e.g. cmd Bob additem M9Pistol",
+    "say <text>                    chat message to everyone",
+    "lua <code>                    run server-side Lua and print its return values, e.g. lua return getPlayerCount()",
+    "shutdown                      stop the server",
+}
+local RESOURCE_VERBS = { start = startResource, stop = stopResource, restart = restartResource, rr = restartResource }
+
+local function describe(v)
+    if type(v) == "table" then
+        return toJSON(v)
+    end
+    if isElement(v) then
+        return getElementType(v) .. ":" .. (getElementType(v) == "player" and getPlayerName(v) or getElementID(v))
+    end
+    return tostring(v)
+end
+
+function rcon(line)
+    local verb, rest = tostring(line or ""):match("^%s*(%S+)%s*(.-)%s*$")
+    local out, ok = {}, true
+    local function put(fmt, ...)
+        out[#out + 1] = string.format(fmt, ...)
+    end
+    if not verb or verb == "help" then
+        for _, l in ipairs(RCON_HELP) do
+            put("%s", l)
+        end
+    elseif verb == "players" then
+        for _, p in ipairs(getElementsByType("player")) do
+            local x, y, z = getElementPosition(p)
+            put(
+                "%s char=%s pos=%.1f,%.1f,%.1f",
+                getPlayerName(p),
+                tostring(exports.character:getCharacterId(p)),
+                x,
+                y,
+                z
+            )
+        end
+        if #out == 0 then
+            put("no players")
+        end
+    elseif RESOURCE_VERBS[verb] then
+        local res = rest ~= "" and getResourceFromName(rest)
+        if not res then
+            ok = false
+            put("unknown resource '%s'", rest)
+        else
+            local r = RESOURCE_VERBS[verb](res)
+            ok = r == true
+            put("%s %s -> %s", verb, rest, tostring(r))
+        end
+    elseif verb == "cmd" then
+        local who, cmd, args = rest:match("^(%S+)%s+(%S+)%s*(.-)$")
+        local p = who and getPlayerFromName(who)
+        if not p then
+            ok = false
+            put("no player '%s' (usage: cmd <player> <command> [args])", tostring(who))
+        else
+            ok = executeCommandHandler(cmd, p, args ~= "" and args or nil) == true
+            put("%s ran /%s %s -> %s (the reply went to that player's chat)", who, cmd, args, tostring(ok))
+        end
+    elseif verb == "say" then
+        outputChatBox("[rcon] " .. rest, root, 255, 200, 80)
+        put("sent")
+    elseif verb == "lua" then
+        local chunk, err = loadstring(rest, "=rcon")
+        if not chunk then
+            ok = false
+            put("compile error: %s", tostring(err))
+        else
+            local r = { pcall(chunk) }
+            ok = table.remove(r, 1) == true
+            if not ok then
+                put("runtime error: %s", tostring(r[1]))
+            elseif #r == 0 then
+                put("ok (no return values)")
+            else
+                for i = 1, #r do
+                    put("[%d] %s", i, describe(r[i]))
+                end
+            end
+        end
+    elseif verb == "shutdown" then
+        put("shutting down")
+        setTimer(function()
+            shutdown("rcon")
+        end, 500, 1)
+    else
+        ok = false
+        put("unknown command '%s'; try help", verb)
+    end
+    return { ok = ok, output = out }
+end
+
+local function ensureRconAccount()
+    local user, pass = get("http_user"), get("http_pass")
+    if not user or user == "" or not pass or pass == "" then
+        return outputServerLog("[dev] rcon disabled: set *dev.http_user and *dev.http_pass in settings.xml")
+    end
+    local acc = getAccount(user) or addAccount(user, pass)
+    if not acc then
+        return outputServerLog("[dev] rcon: could not create account '" .. user .. "'")
+    end
+    setAccountPassword(acc, pass) -- keep internal.db in step with settings.xml
+    outputServerLog("[dev] rcon ready: POST /dev/call/rcon on the HTTP port as account '" .. user .. "'")
+end
+
 addEventHandler("onResourceStart", resourceRoot, function()
     ready = db.connect("dev")
+    ensureRconAccount()
 end)

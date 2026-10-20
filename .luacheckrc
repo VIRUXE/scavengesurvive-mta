@@ -18,3 +18,4 @@ files["resources/**/character/server/**"] = { std = "lua51+mta_shared+mta_server
 files["resources/**/items/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "Items", "getHeld", "createStartingItems", "refreshPlayer", "destroyItem" } }
 files["resources/**/items/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "Held" } }
 files["resources/**/loot/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "rollNear" } }
+files["resources/**/dev/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "rcon" } }
