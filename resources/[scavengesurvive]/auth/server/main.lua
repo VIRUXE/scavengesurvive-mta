@@ -33,9 +33,6 @@ addEventHandler("onResourceStart", resourceRoot, function()
             return getPlayerIP(p)
         end,
     })
-    for _, p in ipairs(getElementsByType("player")) do
-        prompt(p)
-    end
 end)
 
 function prompt(player)
@@ -54,12 +51,13 @@ function prompt(player)
     end)
 end
 
-addEventHandler("onPlayerJoin", root, function()
-    setTimer(function(p)
-        if isElement(p) then
-            prompt(p)
-        end
-    end, 1000, 1, source)
+-- MTA drops a client event the client has not added yet, so the prompt waits until auth's client
+-- scripts run on that player: onPlayerResourceStart fires then, on join and again for every
+-- connected player when auth restarts.
+addEventHandler("onPlayerResourceStart", root, function(res)
+    if res == getThisResource() and not session[source] then
+        prompt(source)
+    end
 end)
 
 local function finish(player, ok, code, account)
