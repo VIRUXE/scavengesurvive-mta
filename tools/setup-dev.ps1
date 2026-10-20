@@ -6,6 +6,9 @@ python -m pip install -e ".[dev]" | Out-Null
 # hererocks runs LuaRocks' install.bat from its temp dir; that fails when cwd is excluded from exe lookup.
 Remove-Item Env:NoDefaultCurrentDirectoryInExePath -ErrorAction SilentlyContinue
 if (-not (Test-Path ".lua/bin/lua.exe")) { python -m hererocks .lua -l 5.1.5 -r latest }
+# hererocks' MinGW config links native rocks against MSVCR80, which no modern Windows has; the WinLibs
+# toolchain is UCRT-based, so link against that instead (busted needs lfs/luasystem/lua-term).
+if ((& .lua/bin/luarocks.bat config variables.CC) -match "gcc") { & .lua/bin/luarocks.bat config variables.MSVCRT ucrt }
 & .lua/bin/luarocks.bat install busted
 & .lua/bin/luarocks.bat install luacheck
 & .lua/bin/luarocks.bat install luacov

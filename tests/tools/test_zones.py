@@ -7,8 +7,14 @@ from tools.convert import zones
 FX = Path(__file__).parent / "fixtures"
 
 
+def read_raw(path):
+    # keep the fixture's line endings as-is (Path.read_text(newline=...) needs Python 3.13; pyproject allows 3.11)
+    with path.open(encoding="utf-8", newline="") as f:
+        return f.read()
+
+
 def test_parses_five_and_six_argument_forms():
-    rows = zones.parse_zone((FX / "zone_excerpt.pwn").read_text(newline=""), zone="ls")
+    rows = zones.parse_zone(read_raw(FX / "zone_excerpt.pwn"), zone="ls")
     assert rows[0] == {"x": 2241.932128, "y": -1258.510009, "z": 22.936239, "table": "world_civilian",
                        "weight": 20.0, "size": 3, "zone": "ls", "dimension": 0, "interior": 0}
     assert rows[1]["size"] == -1 and rows[1]["weight"] == 20.0
@@ -16,7 +22,7 @@ def test_parses_five_and_six_argument_forms():
 
 
 def test_sql_seed_chunks_and_point():
-    rows = zones.parse_zone((FX / "zone_excerpt.pwn").read_text(newline=""), zone="ls")
+    rows = zones.parse_zone(read_raw(FX / "zone_excerpt.pwn"), zone="ls")
     sql = zones.render_sql(rows)
     assert "POINT(2241.932128, -1258.510009)" in sql and sql.count("INSERT INTO loot_spawns") == 1
     assert "INSERT INTO loot_spawn_state" in sql
