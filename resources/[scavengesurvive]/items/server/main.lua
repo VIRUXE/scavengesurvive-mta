@@ -1,7 +1,17 @@
 local db = loadstring(exports.lib:getModule("db"), "=lib/db.lua")()
 local net = loadstring(exports.lib:getModule("net"), "=lib/net.lua")()
 local util = loadstring(exports.lib:getModule("util"), "=lib/util.lua")()
-Items = { db = db, net = net, util = util, settings = {}, sent = {}, held = {}, heldObject = {}, typeCache = {} }
+Items = {
+    db = db,
+    net = net,
+    util = util,
+    settings = {},
+    sent = {},
+    held = {},
+    heldObject = {},
+    wornObject = {},
+    typeCache = {},
+}
 
 function Items.type(uname)
     if Items.typeCache[uname] == nil then
@@ -52,11 +62,11 @@ addEventHandler("onResourceStart", resourceRoot, function()
     db.settings(function(map)
         Items.settings = map
     end)
-    -- restart: every spawned character gets its held item back and a fresh world projection
+    -- restart: every spawned character gets its held item and worn bag back and a fresh world projection
     for _, p in ipairs(getElementsByType("player")) do
         if Items.charId(p) then
             Items.sent[p] = {}
-            Items.rebuildHeld(p)
+            Items.rebuildCarried(p)
         end
     end
 end)
@@ -64,22 +74,27 @@ end)
 addEventHandler("onCharacterSpawned", root, function()
     -- keep an existing sent-set: the client still shows those objects, the diff stays exact
     Items.sent[source] = Items.sent[source] or {}
-    Items.rebuildHeld(source)
+    Items.rebuildCarried(source)
 end)
 
 addEventHandler("onCharacterDied", root, function()
     -- character_death_drop already moved everything to the world; the next sync projects it
     Items.setHeld(source, nil)
+    Items.setWorn(source, nil)
 end)
 
 addEventHandler("onPlayerQuit", root, function()
     Items.clearHeld(source)
+    Items.setWorn(source, nil)
     Items.sent[source] = nil
 end)
 
 addEventHandler("onResourceStop", resourceRoot, function()
     for p in pairs(Items.heldObject) do
         Items.clearHeld(p)
+    end
+    for p in pairs(Items.wornObject) do
+        Items.setWorn(p, nil)
     end
 end)
 

@@ -65,6 +65,19 @@ def test_cannot_put_bag_inside_itself(db, character):
     assert call(db, "container_put", bag, ch, bag_container)[1] == "SELF_CONTAINMENT"
 
 
+def test_wear_bag_refuses_a_second_one_without_an_error(db, character):
+    ch = character["character_id"]
+    bags = [make_world_item(db, "T_Satchel") for _ in range(2)]
+    assert call(db, "bag_wear", bags[0], ch)[1] == "NOT_HELD"
+    assert call(db, "item_pickup", bags[0], ch)[1] == "OK"
+    assert call(db, "bag_wear", bags[0], ch)[1] == "OK"
+    assert call(db, "item_pickup", bags[1], ch)[1] == "OK"
+    assert call(db, "bag_wear", bags[1], ch)[1] == "BAG_SLOT_USED"
+    with db.cursor() as cur:
+        cur.execute("SELECT holder_kind FROM items WHERE id IN (%s,%s) ORDER BY id", tuple(bags))
+        assert [r["holder_kind"] for r in cur.fetchall()] == ["bag", "held"]
+
+
 def test_other_characters_inventory_refused(db, character):
     ch = character["character_id"]
     with db.cursor() as cur:

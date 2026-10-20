@@ -30,24 +30,19 @@ local function put(player, charId, itemId, containerId, onFull)
 end
 
 local function wearBag(player, charId, item)
-    Items.db.exec(
-        "UPDATE items SET holder_kind = 'bag' WHERE id = ? AND holder_char_id = ? AND holder_kind = 'held'",
-        { item.id, charId },
-        function(ok, ctx, affected)
-            if not isElement(ctx.player) then
-                return
-            end
-            if ok and affected == 1 then
-                Items.setHeld(ctx.player, nil)
-                triggerEvent("onItemMoved", ctx.player, ctx.itemId, "held", "bag")
-                Items.toast(ctx.player, "BAG_WORN")
-            else
-                -- uq_items_holder_kind: a second worn bag fails with 1062 (suppressed in the log)
-                Items.toast(ctx.player, "BAG_SLOT_USED")
-            end
-        end,
-        { player = player, itemId = item.id }
-    )
+    -- bag_wear refuses a second bag with BAG_SLOT_USED instead of tripping uq_items_holder_kind (1062 in the log)
+    Items.db.call("bag_wear", { item.id, charId }, function(res, ctx)
+        if not isElement(ctx.player) then
+            return
+        end
+        if not res or not res.ok then
+            return Items.toast(ctx.player, res and res.code or "DB_ERROR")
+        end
+        Items.setHeld(ctx.player, nil)
+        Items.setWorn(ctx.player, ctx.item)
+        triggerEvent("onItemMoved", ctx.player, ctx.item.id, "held", "bag")
+        Items.toast(ctx.player, "BAG_WORN")
+    end, { player = player, item = item })
 end
 
 Items.net.handler("onItemsRequestPutAway", function(player)

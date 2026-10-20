@@ -1,11 +1,31 @@
 -- File scope: only Items.net.handler registrations (busted loads this file under the MTA mock).
 local HAND_OFFSET = { 0.1, 0.35, 0.15 }
+-- a worn bag sits on the back; the offset is player-relative (bone attachment is post-MVP)
+local BACK_OFFSET = { 0, -0.25, 0.15 }
+local BACK_ROTATION = { 0, 0, 0 }
 local FALLBACK_MODEL = 1271
+local VANILLA_MELEE_MAX = 15
 
 local function baseWeapon(t)
     local w = t and t.category == "weapon" and t.categoryData and t.categoryData.baseWeapon
     return w and w > 0 and w or nil
 end
+
+-- The MVP has no ammo or reload model, so a firearm without data.mag is held with a full magazine
+-- (GTA will not fire a weapon given with 0 rounds). Vanilla melee ids always get 1.
+local function ammoFor(t, data)
+    local mag = tonumber(data and data.mag)
+    if mag and mag > 0 then
+        return mag
+    end
+    local w = baseWeapon(t)
+    if w and w <= VANILLA_MELEE_MAX then
+        return 1
+    end
+    local size = tonumber(t and t.categoryData and t.categoryData.magSize)
+    return (size and size > 0) and size or 1
+end
+Items.ammoFor = ammoFor
 
 local function decodeData(data)
     if data and data ~= false and data ~= "" then
@@ -15,7 +35,7 @@ local function decodeData(data)
 end
 Items.decodeData = decodeData
 
-local function makeHeldObject(player, item)
+local function makeAttachedObject(player, item, offset, rotation)
     local t = Items.type(item.uname)
     local obj = createObject(t and t.mtaModel or FALLBACK_MODEL, 0, 0, 0)
     if not obj then
@@ -27,17 +47,26 @@ local function makeHeldObject(player, item)
     setElementCollisionsEnabled(obj, false)
     setElementInterior(obj, getElementInterior(player))
     setElementDimension(obj, getElementDimension(player))
-    attachElements(
-        obj,
-        player,
-        HAND_OFFSET[1],
-        HAND_OFFSET[2],
-        HAND_OFFSET[3],
-        t and t.attrx or 0,
-        t and t.attry or 0,
-        t and t.attrz or 0
-    )
+    attachElements(obj, player, offset[1], offset[2], offset[3], rotation[1], rotation[2], rotation[3])
     return obj
+end
+
+local function makeHeldObject(player, item)
+    local t = Items.type(item.uname)
+    local rotation = { t and t.attrx or 0, t and t.attry or 0, t and t.attrz or 0 }
+    return makeAttachedObject(player, item, HAND_OFFSET, rotation)
+end
+
+-- item = { id, uname, hp, data } or nil: the bag object shown on the player's back
+function Items.setWorn(player, item)
+    local obj = Items.wornObject[player]
+    if obj and isElement(obj) then
+        destroyElement(obj)
+    end
+    Items.wornObject[player] = nil
+    if item and isElement(player) then
+        Items.wornObject[player] = makeAttachedObject(player, item, BACK_OFFSET, BACK_ROTATION)
+    end
 end
 
 function Items.clearHeld(player)
@@ -65,10 +94,10 @@ function Items.setHeld(player, item)
     if item then
         Items.held[player] = item
         Items.heldObject[player] = makeHeldObject(player, item)
-        local w = baseWeapon(Items.type(item.uname))
+        local t = Items.type(item.uname)
+        local w = baseWeapon(t)
         if w then
-            local data = item.data or {}
-            giveWeapon(player, w, tonumber(data.mag) or 0, true)
+            giveWeapon(player, w, ammoFor(t, item.data), true)
         end
     end
     triggerClientEvent(
@@ -79,23 +108,31 @@ function Items.setHeld(player, item)
     )
 end
 
-function Items.rebuildHeld(player)
+-- Restores the held item and the worn bag from the DB (spawn and resource restart).
+function Items.rebuildCarried(player)
     local charId = Items.charId(player)
     if not charId then
         return
     end
-    Items.db.one(
-        "SELECT id, type_uname AS uname, hitpoints AS hp, data FROM items "
-            .. "WHERE holder_char_id = ? AND holder_kind = 'held'",
+    Items.db.query(
+        "SELECT id, type_uname AS uname, hitpoints AS hp, data, holder_kind AS kind FROM items "
+            .. "WHERE holder_char_id = ? AND holder_kind IN ('held', 'bag')",
         { charId },
-        function(row, ctx)
-            if not isElement(ctx.player) or row == false then
+        function(rows, ctx)
+            if not isElement(ctx.player) or rows == false then
                 return
             end
-            if row then
+            local held, bag
+            for _, row in ipairs(rows) do
                 row.data = decodeData(row.data)
+                if row.kind == "bag" then
+                    bag = row
+                else
+                    held = row
+                end
             end
-            Items.setHeld(ctx.player, row)
+            Items.setHeld(ctx.player, held)
+            Items.setWorn(ctx.player, bag)
         end,
         { player = player }
     )

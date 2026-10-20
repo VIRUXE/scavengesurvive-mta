@@ -44,7 +44,7 @@ describe("items server sql builders", function()
         mock.settings = {}
         Items.db, Items.net, Items.util = load("db"), load("net"), load("util")
         Items.db.connect("items")
-        Items.sent, Items.held, Items.heldObject, Items.typeCache = {}, {}, {}, {}
+        Items.sent, Items.held, Items.heldObject, Items.wornObject, Items.typeCache = {}, {}, {}, {}, {}
         Items.type = function()
             return { mtaModel = 335, category = "generic" }
         end
@@ -60,13 +60,60 @@ describe("items server sql builders", function()
             function() end, function() end, function() end
         dofile("resources/[scavengesurvive]/items/server/hands.lua")
         mock.addElement("p1")
-        Items.rebuildHeld("p1")
+        Items.rebuildCarried("p1")
         mock.removeElement("p1")
-        mock.answer(#mock.queries, { { id = 5, uname = "Knife", hp = 1, data = false } })
+        mock.answer(#mock.queries, { { id = 5, uname = "Knife", hp = 1, data = false, kind = "held" } })
         for _, c in ipairs(mock.calls) do
             assert.not_equals("createObject", c[1])
         end
         assert.is_nil(Items.held["p1"])
+    end)
+    it("gives a held firearm a full magazine when the item carries no ammo", function()
+        local load = require("tests.lua.helpers.load_module")
+        mock.settings = {}
+        Items.db, Items.net, Items.util = load("db"), load("net"), load("util")
+        Items.sent, Items.held, Items.heldObject, Items.wornObject, Items.typeCache = {}, {}, {}, {}, {}
+        local types = {
+            M9Pistol = { mtaModel = 346, category = "weapon", categoryData = { baseWeapon = 22, magSize = 10 } },
+            Knife = { mtaModel = 335, category = "weapon", categoryData = { baseWeapon = 4, magSize = 14 } },
+            Grenade = { mtaModel = 342, category = "weapon", categoryData = { baseWeapon = 16, magSize = 0 } },
+            Wrench = { mtaModel = 18633, category = "generic" },
+        }
+        Items.type = function(uname)
+            return types[uname]
+        end
+        Items.charId = function()
+            return 7
+        end
+        Items.toast = function() end
+        _G.createObject = function()
+            return "obj"
+        end
+        _G.attachElements, _G.setElementCollisionsEnabled, _G.destroyElement =
+            function() end, function() end, function() end
+        _G.setElementInterior, _G.setElementDimension, _G.getElementInterior, _G.getElementDimension =
+            function() end, function() end, function()
+                return 0
+            end, function()
+                return 0
+            end
+        local given = {}
+        _G.giveWeapon = function(player, weapon, ammo, setCurrent)
+            given[#given + 1] = { player, weapon, ammo, setCurrent }
+        end
+        _G.takeWeapon = function() end
+        dofile("resources/[scavengesurvive]/items/server/hands.lua")
+        mock.addElement("p1")
+        Items.setHeld("p1", { id = 1, uname = "M9Pistol", hp = 1, data = {} })
+        Items.setHeld("p1", { id = 2, uname = "M9Pistol", hp = 1, data = { mag = 3 } })
+        Items.setHeld("p1", { id = 3, uname = "Knife", hp = 1, data = {} })
+        Items.setHeld("p1", { id = 4, uname = "Grenade", hp = 1, data = {} })
+        Items.setHeld("p1", { id = 5, uname = "Wrench", hp = 1, data = {} })
+        assert.same({ "p1", 22, 10, true }, given[1])
+        assert.same({ "p1", 22, 3, true }, given[2])
+        assert.same({ "p1", 4, 1, true }, given[3])
+        assert.same({ "p1", 16, 1, true }, given[4])
+        assert.equals(4, #given)
     end)
     it("orders nearest-first with a distance cap", function()
         local sql = Items.findNearestSql(1, 2, 2.0)
