@@ -58,8 +58,10 @@ Found and fixed on the way:
     upstream SA-MP attach data (`items/client/attach.lua`). Held items use the type's `boneid` + `attx/y/z` +
     `attrx/y/z`; bags use the per-skin `bag_offsets` (spine; position, rotation, scale) the converter now reads from
     `SetBagOffsetsForSkin`, falling back to the lowest defined skin where upstream would leave the bag invisible.
-    GTA weapons are not doubled: a held firearm/vanilla melee is drawn by the game itself. The SA-MP→GTA bone map and
-    the X·Y·Z rotation order are empirical; revisit if a type looks mirrored.
+    GTA weapons are not doubled: a held firearm/vanilla melee is drawn by the game itself. Rotation follows SA-MP's
+    client (`CPlayerPed::ProcessAttachedObjects`: `RwMatrixRotate` about X, then Y, then Z, pre-concatenated on the
+    bone matrix), i.e. object-space `Rz·Ry·Rx`; the first attempt used `Rx·Ry·Rz` and held the wrench by the wrong
+    end. The SA-MP→GTA bone map is empirical.
   - New `models` resource: the SA-MP object models the item types use, copied out of the SA-MP client's `SAMP.img`
     by `tools/extract_samp_models.py` (`manifest.lua` + `files/`, committed). Each client allocates ids with
     `engineRequestModel("object")`, imports SA-MP's own `.txd` where it ships one and otherwise binds the model to the

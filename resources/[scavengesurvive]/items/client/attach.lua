@@ -35,17 +35,28 @@ local function itemType(uname)
     return typeCache[uname] or nil
 end
 
--- 4x4 row-major with the position in row 4 (getElementMatrix layout); v_world = v_local * L * B
+local function mul3(a, b)
+    local m = {}
+    for i = 1, 3 do
+        m[i] = {}
+        for j = 1, 3 do
+            m[i][j] = a[i][1] * b[1][j] + a[i][2] * b[2][j] + a[i][3] * b[3][j]
+        end
+    end
+    return m
+end
+
+-- 4x4 row-major with the position in row 4 (getElementMatrix layout); v_world = v_local * L * B.
+-- SA-MP's client applies RwMatrixRotate(bone, X), then Y, then Z, each pre-concatenated (rotation in the bone's
+-- local space), so the object-space rotation is Rz * Ry * Rx: a vertex is rotated about Z first, then Y, then X.
 local function rotationMatrix(rx, ry, rz)
     local cx, sx = math.cos(math.rad(rx)), math.sin(math.rad(rx))
     local cy, sy = math.cos(math.rad(ry)), math.sin(math.rad(ry))
     local cz, sz = math.cos(math.rad(rz)), math.sin(math.rad(rz))
-    -- R = Rx * Ry * Rz (row vectors): rotate about X first, then Y, then Z
-    return {
-        { cy * cz, cy * sz, -sy },
-        { sx * sy * cz - cx * sz, sx * sy * sz + cx * cz, sx * cy },
-        { cx * sy * cz + sx * sz, cx * sy * sz - sx * cz, cx * cy },
-    }
+    local X = { { 1, 0, 0 }, { 0, cx, sx }, { 0, -sx, cx } }
+    local Y = { { cy, 0, -sy }, { 0, 1, 0 }, { sy, 0, cy } }
+    local Z = { { cz, sz, 0 }, { -sz, cz, 0 }, { 0, 0, 1 } }
+    return mul3(mul3(Z, Y), X)
 end
 
 local function multiply(l, b)
