@@ -48,4 +48,10 @@ Found and fixed on the way:
   in the `ScavengeSurvive` ACL so no request is ever pending.
 - The HUD draws on the black screen before the camera fades in (review minor 12), seen in a screenshot taken 9 s after
   join. Still open.
-- The bag sits on the lower back; raise `BACK_OFFSET` z if it should ride higher. Open.
+- **Attached item models are not at their correct offsets (open, next up).** `items/server/hands.lua` attaches the held
+  object and the worn bag to the *player element* (`attachElements` with a fixed `HAND_OFFSET` / `BACK_OFFSET`), so items
+  float beside the hip instead of sitting in the hand or on the back, and they do not follow animations. Upstream
+  positions every item with SA-MP bone attachments, and the converted data already carries `boneid`, `attx/y/z` and
+  `attrx/y/z` per type (the spec's "apparel via bone attach", M6). Plan: client-side bone attachment driven by
+  `getElementBoneMatrix` (MTA 1.6, `onClientPedsProcessed`), server publishing attachment details to clients; map
+  SA-MP bone ids to GTA bone ids; worn bags on the spine with their own offsets.
