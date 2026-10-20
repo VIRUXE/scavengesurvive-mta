@@ -3,6 +3,7 @@
     <min_mta_version server="1.6.0" client="1.6.0"/>
     <include resource="lib"/>
     <include resource="data"/>
+    <include resource="models"/>
     <include resource="ui"/>
     <include resource="character"/>
     <script src="shared/events.lua" type="shared"/>
@@ -11,7 +12,9 @@
     <script src="server/hands.lua" type="server"/>
     <script src="server/containers.lua" type="server"/>
     <script src="server/use.lua" type="server"/>
+    <script src="client/models.lua" type="client"/>
     <script src="client/world.lua" type="client"/>
+    <script src="client/attach.lua" type="client"/>
     <script src="client/inventory.lua" type="client"/>
     <file src="shared/logic/geometry.lua"/>
     <file src="shared/logic/diff.lua"/>

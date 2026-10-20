@@ -32,6 +32,9 @@ def test_categories_are_attached():
     assert types["HotDog"]["categoryData"] == {"maxBites": 4, "biteValue": 18.0, "canCook": True, "canRawInfect": True, "destroyOnEnd": True}
     assert types["Bottle"]["categoryData"]["capacity"] == 0.5 and types["Bottle"]["categoryData"]["liquids"][0] == ["Water", 100.0]
     assert types["Satchel"]["category"] == "bag" and types["Satchel"]["categoryData"]["bag_size"] == 7
+    offsets = types["Satchel"]["categoryData"]["bag_offsets"]
+    assert offsets["60"][0] == -0.211999 and offsets["60"][8] == 1.356999  # the later line for skin 60 wins
+    assert offsets["170"][3] == -9.900006 and len(offsets) == 2
     assert types["MediumBox"]["category"] == "safebox" and types["MediumBox"]["categoryData"]["size"] == 10
     assert types["_calibres"]["9mm"] == 0.25
 
@@ -44,7 +47,10 @@ def test_lua_and_sql_output_are_deterministic_and_complete():
     assert 'M.byUname.Knife = { attrx = 0.0' in lua and 'uname = "Knife"' in lua
     assert 'M.order = { "NULL", "Knife"' in lua
     # upstream: item_Satchel = DefineItemType("Small Bag", "Satchel", 363, 2, ..., .maxhitpoints = 2)
-    assert "ON DUPLICATE KEY UPDATE" in sql and "('Satchel','Small Bag',363,2,2,'bag','{\"bag_name\": \"Small Bag\", \"bag_size\": 7}')" in sql
+    assert "ON DUPLICATE KEY UPDATE" in sql
+    assert ("('Satchel','Small Bag',363,2,2,'bag','{\"bag_name\": \"Small Bag\", \"bag_offsets\": {\"170\": [-0.244999, "
+            "-0.067, 0.007999, -9.900006, 5.099997, 1.5, 1.243002, 1.282998, 1.274001], \"60\": [-0.211999, -0.048999, "
+            "-0.029, 0.0, -2.400002, 0.0, 1.148, 1.388001, 1.356999]}, \"bag_size\": 7}')") in sql
 
 
 def test_calibres_with_the_same_display_name_stay_distinct():

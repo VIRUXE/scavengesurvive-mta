@@ -13,9 +13,13 @@ Upstream asks that credits, including in-game credit messages, are kept.
 
 ## SA-MP custom object models
 
-SA-MP's object models (ids 18631–19999) are covered by the SA-MP licence, which forbids redistribution.
-This repository never contains them; `resources/[scavengesurvive]/models/files/` is git-ignored and is
-filled by `tools/extract-samp-models.ps1` from a locally installed SA-MP client (post-MVP).
+`resources/[scavengesurvive]/models/files/` holds the SA-MP custom object models (ids 11682–11753 and
+18631–19999) that the gamemode's item types use, copied unchanged out of the SA-MP 0.3.7 client's `SAMP.img` by
+`tools/extract_samp_models.py`, plus the handful of vanilla GTA:SA texture dictionaries those models reference that
+no vanilla model owns (copied from the game's own archives). SA-MP's object definitions (`tools/data/samp.ide`:
+id, model, texture dictionary, draw distance) are SA-MP's as well. These assets belong to the SA-MP team and
+Rockstar Games respectively and are included so the gamemode runs as upstream designed it; they are not covered
+by this repository's licence.
 
 ## Everything else
 

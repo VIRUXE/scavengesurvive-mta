@@ -8,8 +8,7 @@ Items = {
     settings = {},
     sent = {},
     held = {},
-    heldObject = {},
-    wornObject = {},
+    worn = {},
     typeCache = {},
 }
 
@@ -90,10 +89,10 @@ addEventHandler("onPlayerQuit", root, function()
 end)
 
 addEventHandler("onResourceStop", resourceRoot, function()
-    for p in pairs(Items.heldObject) do
+    for p in pairs(Items.held) do
         Items.clearHeld(p)
     end
-    for p in pairs(Items.wornObject) do
+    for p in pairs(Items.worn) do
         Items.setWorn(p, nil)
     end
 end)

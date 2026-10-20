@@ -2,6 +2,7 @@
 <resources>
     <resource src="lib" startup="1" protected="0"/>
     <resource src="data" startup="1" protected="0"/>
+    <resource src="models" startup="1" protected="0"/>
     <resource src="ui" startup="1" protected="0"/>
     <resource src="auth" startup="1" protected="0"/>
     <resource src="character" startup="1" protected="0"/>

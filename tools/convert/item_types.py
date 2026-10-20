@@ -20,7 +20,9 @@ AMMO_RE = re.compile(r"DefineItemTypeAmmo\((.*?)\);", re.S)
 FOOD_RE = re.compile(r"DefineFoodItem\((.*?)\);", re.S)
 LIQUID_RE = re.compile(r"DefineLiquidContainerItem\((.*?)\);", re.S)
 SAFEBOX_RE = re.compile(r"DefineSafeboxType\((.*?)\);", re.S)
-BAG_RE = re.compile(r"DefineBagType\((.*?)\);", re.S)
+# bags: DefineBagType(name, item_X, size) followed by SetBagOffsetsForSkin(tmp, skin, x, y, z, rx, ry, rz, sx, sy, sz)
+# lines for that bag (worn on SA-MP bone 1, the spine); a later line for the same skin overrides an earlier one
+BAG_RE = re.compile(r"DefineBagType\((.*?)\);|SetBagOffsetsForSkin\((.*?)\);", re.S)
 
 WEAPON_IDS = {
     "WEAPON_BRASSKNUCKLE": 1, "WEAPON_GOLFCLUB": 2, "WEAPON_NITESTICK": 3, "WEAPON_KNIFE": 4, "WEAPON_BAT": 5,
@@ -157,11 +159,17 @@ def apply_categories(types: dict[str, dict], init_src: str, apparel_src: str) ->
         t = target(a)
         if t:
             t["category"], t["categoryData"] = "safebox", {"size": int(coerce(a[1]))}
-    for argstr in BAG_RE.findall(apparel_src):
-        a = split_args(argstr)
-        t = by_symbol.get(a[1].strip())
-        if t:
-            t["category"], t["categoryData"] = "bag", {"bag_name": coerce(a[0]), "bag_size": int(coerce(a[2]))}
+    bag = None
+    for define, offsets in BAG_RE.findall(apparel_src):
+        if define:
+            a = split_args(define)
+            bag = by_symbol.get(a[1].strip())
+            if bag:
+                bag["category"] = "bag"
+                bag["categoryData"] = {"bag_name": coerce(a[0]), "bag_size": int(coerce(a[2])), "bag_offsets": {}}
+        elif bag:
+            a = split_args(offsets)
+            bag["categoryData"]["bag_offsets"][str(int(coerce(a[1])))] = [float(coerce(v)) for v in a[2:11]]
     types["_calibres"] = {v["id"]: v["bleed"] for v in calibres.values()}
     types["_calibre_names"] = {v["id"]: v["name"] for v in calibres.values()}
 

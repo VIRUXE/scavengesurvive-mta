@@ -1,0 +1,59 @@
+import struct
+
+from tools import extract_samp_models as m
+
+
+def _img(path, files):
+    """Write a VER2 IMG with the given {name: bytes}; every entry is sector-aligned."""
+    count = len(files)
+    dir_size = 8 + 32 * count
+    data_start = (dir_size + m.SECTOR - 1) // m.SECTOR * m.SECTOR
+    entries, blobs, offset = [], [], data_start
+    for name, blob in files.items():
+        sectors = (len(blob) + m.SECTOR - 1) // m.SECTOR
+        entries.append(struct.pack("<IHH24s", offset // m.SECTOR, sectors, 0, name.encode()))
+        blobs.append(blob.ljust(sectors * m.SECTOR, b"\0"))
+        offset += sectors * m.SECTOR
+    path.write_bytes((b"VER2" + struct.pack("<I", count) + b"".join(entries)).ljust(data_start, b"\0") + b"".join(blobs))
+
+
+IDE = """# comment
+18633, GTASAWrench1, MatTextures, 100, 0
+19554, Beanie1, ogloc, 100, 0
+19581, MarcosFryingPan1, lee_kitch, 100, 0
+19901, AnimTube, MatTextures, AnimTube, 299, 0
+"""
+
+
+def test_img_index_and_entry_round_trip(tmp_path):
+    img = tmp_path / "SAMP.img"
+    _img(img, {"GTASAWrench1.dff": b"wrench-dff", "MatTextures.txd": b"mat-txd" * 400})
+    index = m.read_img_index(img)
+    assert set(index) == {"gtasawrench1.dff", "mattextures.txd"}
+    assert m.read_img_entry(img, index["gtasawrench1.dff"]).rstrip(b"\0") == b"wrench-dff"
+    assert m.read_img_entry(img, index["mattextures.txd"]).rstrip(b"\0") == b"mat-txd" * 400
+
+
+def test_plan_picks_samp_txd_then_vanilla_owner_then_vanilla_archive():
+    ide = m.parse_ide(IDE)
+    assert ide[18633] == ("GTASAWrench1", "MatTextures", 100) and 19901 not in ide  # animated objects have 6 fields
+    samp_index = {"gtasawrench1.dff": (0, 1), "mattextures.txd": (0, 1), "beanie1.dff": (0, 1),
+                  "marcosfryingpan1.dff": (0, 1)}
+    owners = {"lee_kitch": 3961}
+    used = m.models_used('M.byUname.Wrench = { model = 18633 }\nM.byUname.Beanie = { model = 19554, modelz = 0 }\n'
+                         'M.byUname.Pan = { model = 19581 }\nM.byUname.Knife = { model = 335 }\n'
+                         'M.byUname.Lost = { model = 19999 }')
+    assert used == [335, 18633, 19554, 19581, 19999]
+    entries, problems = m.plan(ide, used, samp_index, owners, {"gta3": {"ogloc.txd": (0, 1)}})
+    assert entries[18633]["txd"] == "mattextures" and entries[18633]["src"]["txd"] == ("samp", "mattextures.txd")
+    assert entries[19581]["txdModel"] == 3961 and "txd" not in entries[19581]
+    assert entries[19554]["txd"] == "ogloc" and entries[19554]["src"]["txd"] == ("gta3", "ogloc.txd")
+    assert 335 not in entries and problems == ["19999: not in samp.ide"]
+    manifest = m.render_manifest(entries)
+    assert manifest.startswith(m.HEADER + "\nreturn {\n")
+    assert '    [18633] = { dff = "gtasawrench1", txd = "mattextures", dist = 100 },' in manifest
+    assert '    [19581] = { dff = "marcosfryingpan1", txdModel = 3961, dist = 100 },' in manifest
+    meta = m.render_meta(entries)
+    assert meta.count("<file src=\"files/") == 5 and '<file src="files/ogloc.txd"/>' in meta
+    assert '<export function="resolve" type="client"/>' in meta
+    assert m.render_manifest(entries) == manifest  # deterministic

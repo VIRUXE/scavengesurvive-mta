@@ -14,5 +14,6 @@ addEvent("onClientItemsSync", true)
 addEvent("onClientItemsHeld", true)
 addEvent("onClientItemsInventory", true)
 addEvent("onClientItemsToast", true)
+addEvent("onClientSampModelsChanged", false) -- fired by the models resource on every client
 addEvent("onClientUiListAction", false)
 addEvent("onClientUiListClosed", false)

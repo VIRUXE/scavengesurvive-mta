@@ -48,10 +48,23 @@ Found and fixed on the way:
   in the `ScavengeSurvive` ACL so no request is ever pending.
 - The HUD draws on the black screen before the camera fades in (review minor 12), seen in a screenshot taken 9 s after
   join. Still open.
-- **Attached item models are not at their correct offsets (open, next up).** `items/server/hands.lua` attaches the held
-  object and the worn bag to the *player element* (`attachElements` with a fixed `HAND_OFFSET` / `BACK_OFFSET`), so items
-  float beside the hip instead of sitting in the hand or on the back, and they do not follow animations. Upstream
-  positions every item with SA-MP bone attachments, and the converted data already carries `boneid`, `attx/y/z` and
-  `attrx/y/z` per type (the spec's "apparel via bone attach", M6). Plan: client-side bone attachment driven by
-  `getElementBoneMatrix` (MTA 1.6, `onClientPedsProcessed`), server publishing attachment details to clients; map
-  SA-MP bone ids to GTA bone ids; worn bags on the spine with their own offsets.
+- **Attached item models were not at their correct offsets, and SA-MP-only items showed stand-in models — fixed.**
+  `hands.lua` used to attach server objects to the *player element* with a fixed hand/back offset, so items floated
+  beside the hip and ignored animations; and every SA-MP custom model (the wrench, bags, food, hats: 128 of the 245
+  models the item types use) was drawn as a vanilla stand-in from `data/model_map.lua` (a ball for the wrench).
+  Now:
+  - The server only publishes what is carried (`items.held` / `items.bag` element data, `"deny"` policy); every
+    client places its own objects on the bones each `onClientPedsProcessed` from `getElementBoneMatrix` and the
+    upstream SA-MP attach data (`items/client/attach.lua`). Held items use the type's `boneid` + `attx/y/z` +
+    `attrx/y/z`; bags use the per-skin `bag_offsets` (spine; position, rotation, scale) the converter now reads from
+    `SetBagOffsetsForSkin`, falling back to the lowest defined skin where upstream would leave the bag invisible.
+    GTA weapons are not doubled: a held firearm/vanilla melee is drawn by the game itself. The SA-MP→GTA bone map and
+    the X·Y·Z rotation order are empirical; revisit if a type looks mirrored.
+  - New `models` resource: the SA-MP object models the item types use, copied out of the SA-MP client's `SAMP.img`
+    by `tools/extract_samp_models.py` (`manifest.lua` + `files/`, committed). Each client allocates ids with
+    `engineRequestModel("object")`, imports SA-MP's own `.txd` where it ships one and otherwise binds the model to the
+    vanilla TXD via `engineGetModelTXDID`/`engineSetModelTXDID` of a vanilla model that already uses it (39 models;
+    7 more take a vanilla TXD no vanilla model owns, copied from the game's archives). Allocated ids differ per
+    client, so `items` resolves them locally (`ItemModels.forType`) and re-picks models on
+    `onClientSampModelsChanged`; `items` now includes `models`.
+  Verified by screenshot (satchel between the shoulder blades; the real wrench in the right hand).

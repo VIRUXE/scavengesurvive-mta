@@ -1,4 +1,3 @@
-local FALLBACK_MODEL = 1271
 local objects = {} -- id -> { obj, uname, hp, x, y, z, name }
 local typeCache = {}
 
@@ -28,8 +27,8 @@ addEventHandler("onClientItemsSync", resourceRoot, function(delta)
             local t = itemType(r.uname)
             local z = r.z + (t and t.modelz or 0)
             local rx, ry = t and t.rotx or 0, t and t.roty or 0
-            local obj = createObject(t and t.mtaModel or FALLBACK_MODEL, r.x, r.y, z, rx, ry, r.rz or 0)
-                or createObject(FALLBACK_MODEL, r.x, r.y, z, rx, ry, r.rz or 0)
+            local obj = createObject(ItemModels.forType(t), r.x, r.y, z, rx, ry, r.rz or 0)
+                or createObject(ItemModels.FALLBACK, r.x, r.y, z, rx, ry, r.rz or 0)
             if obj then
                 setElementCollisionsEnabled(obj, false)
                 setElementInterior(obj, r.interior or 0)
@@ -40,6 +39,15 @@ addEventHandler("onClientItemsSync", resourceRoot, function(delta)
         end
     end
 end)
+
+-- the SA-MP model pack came or went: world objects switch between real models and stand-ins in place
+ItemModels.refreshers[#ItemModels.refreshers + 1] = function()
+    for _, e in pairs(objects) do
+        if isElement(e.obj) then
+            setElementModel(e.obj, ItemModels.forType(itemType(e.uname)))
+        end
+    end
+end
 
 addEventHandler("onClientRender", root, function()
     local px, py, pz = getElementPosition(localPlayer)

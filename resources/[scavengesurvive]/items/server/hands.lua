@@ -1,9 +1,6 @@
 -- File scope: only Items.net.handler registrations (busted loads this file under the MTA mock).
-local HAND_OFFSET = { 0.1, 0.35, 0.15 }
--- a worn bag sits on the back; the offset is player-relative (bone attachment is post-MVP)
-local BACK_OFFSET = { 0, -0.25, 0.15 }
-local BACK_ROTATION = { 0, 0, 0 }
-local FALLBACK_MODEL = 1271
+-- What a player carries is published as protected element data ("items.held" / "items.bag" = type uname or
+-- false); every client draws its own bone-attached objects from it (client/attach.lua).
 local VANILLA_MELEE_MAX = 15
 
 local function baseWeapon(t)
@@ -35,46 +32,21 @@ local function decodeData(data)
 end
 Items.decodeData = decodeData
 
-local function makeAttachedObject(player, item, offset, rotation)
-    local t = Items.type(item.uname)
-    local obj = createObject(t and t.mtaModel or FALLBACK_MODEL, 0, 0, 0)
-    if not obj then
-        obj = createObject(FALLBACK_MODEL, 0, 0, 0)
+local function publish(player, key, item)
+    if isElement(player) then
+        setElementData(player, key, item and item.uname or false, "broadcast", "deny")
     end
-    if not obj then
-        return nil
-    end
-    setElementCollisionsEnabled(obj, false)
-    setElementInterior(obj, getElementInterior(player))
-    setElementDimension(obj, getElementDimension(player))
-    attachElements(obj, player, offset[1], offset[2], offset[3], rotation[1], rotation[2], rotation[3])
-    return obj
 end
+Items.publish = publish
 
-local function makeHeldObject(player, item)
-    local t = Items.type(item.uname)
-    local rotation = { t and t.attrx or 0, t and t.attry or 0, t and t.attrz or 0 }
-    return makeAttachedObject(player, item, HAND_OFFSET, rotation)
-end
-
--- item = { id, uname, hp, data } or nil: the bag object shown on the player's back
+-- item = { id, uname, hp, data } or nil: the bag worn on the back
 function Items.setWorn(player, item)
-    local obj = Items.wornObject[player]
-    if obj and isElement(obj) then
-        destroyElement(obj)
-    end
-    Items.wornObject[player] = nil
-    if item and isElement(player) then
-        Items.wornObject[player] = makeAttachedObject(player, item, BACK_OFFSET, BACK_ROTATION)
-    end
+    Items.worn[player] = item
+    publish(player, "items.bag", item)
 end
 
 function Items.clearHeld(player)
-    local obj = Items.heldObject[player]
-    if obj and isElement(obj) then
-        destroyElement(obj)
-    end
-    Items.heldObject[player] = nil
+    publish(player, "items.held", nil)
     local item = Items.held[player]
     if item and isElement(player) then
         local w = baseWeapon(Items.type(item.uname))
@@ -93,7 +65,7 @@ function Items.setHeld(player, item)
     end
     if item then
         Items.held[player] = item
-        Items.heldObject[player] = makeHeldObject(player, item)
+        publish(player, "items.held", item)
         local t = Items.type(item.uname)
         local w = baseWeapon(t)
         if w then

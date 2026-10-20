@@ -22,6 +22,9 @@ function M.install()
     _G.triggerClientEvent = record("triggerClientEvent")
     _G.cancelEvent = record("cancelEvent")
     _G.isElement = function(e) return M.elements[e] == true end
+    M.elementData = {}
+    _G.setElementData = function(e, key, value) M.calls[#M.calls + 1] = { "setElementData", e, key, value }; M.elementData[e] = M.elementData[e] or {}; M.elementData[e][key] = value; return true end
+    _G.getElementData = function(e, key) local d = M.elementData[e]; if d == nil or d[key] == nil then return false end; return d[key] end
     _G.getElementType = function(e) return M.elements[e] and "player" or false end
     _G.getResourceName = function() return "test" end
     _G.getThisResource = function() return "res:test" end

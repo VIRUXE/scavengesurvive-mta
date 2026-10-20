@@ -21,7 +21,10 @@ Scavenge & Survive ported to MTA:SA 1.6 (Lua 5.1) with MariaDB 13.0 (12.2 also v
 - Client never calls `setElementData`. Server-set element data uses `"deny"`. `elementdata_whitelisted=1`.
 - Pure logic lives in `shared/logic/*.lua` and never calls MTA functions at file scope, so busted can `dofile` it with `tests/lua/helpers/mta_mock.lua`.
 - Style: `stylua` and `luacheck` clean before every commit. Conventional commits (`feat(items): …`).
-- Never commit `server-config/local.settings.xml` (holds the DB password) or anything under `models/files/`.
+- Never commit `server-config/local.settings.xml` (holds the DB password).
+- SA-MP-only object models (ids 11682–11753, 18631+) live in the `models` resource (`manifest.lua` + `files/`, both
+  committed). When an item type starts using one that is not in the pack, run `python -m tools.extract_samp_models`
+  on a box with a SA-MP client and commit the result. Clients create item objects with `ItemModels.forType(t)`.
 
 ## Commands
 

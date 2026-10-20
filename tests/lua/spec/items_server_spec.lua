@@ -44,7 +44,7 @@ describe("items server sql builders", function()
         mock.settings = {}
         Items.db, Items.net, Items.util = load("db"), load("net"), load("util")
         Items.db.connect("items")
-        Items.sent, Items.held, Items.heldObject, Items.wornObject, Items.typeCache = {}, {}, {}, {}, {}
+        Items.sent, Items.held, Items.worn, Items.typeCache = {}, {}, {}, {}
         Items.type = function()
             return { mtaModel = 335, category = "generic" }
         end
@@ -72,7 +72,7 @@ describe("items server sql builders", function()
         local load = require("tests.lua.helpers.load_module")
         mock.settings = {}
         Items.db, Items.net, Items.util = load("db"), load("net"), load("util")
-        Items.sent, Items.held, Items.heldObject, Items.wornObject, Items.typeCache = {}, {}, {}, {}, {}
+        Items.sent, Items.held, Items.worn, Items.typeCache = {}, {}, {}, {}
         local types = {
             M9Pistol = { mtaModel = 346, category = "weapon", categoryData = { baseWeapon = 22, magSize = 10 } },
             Knife = { mtaModel = 335, category = "weapon", categoryData = { baseWeapon = 4, magSize = 14 } },

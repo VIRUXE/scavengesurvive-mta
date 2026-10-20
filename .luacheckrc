@@ -16,6 +16,7 @@ files["resources/**/ui/**"] = { std = "lua51+mta_shared+mta_client", globals = {
 files["resources/**/auth/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "prompt", "getAccountId", "getAdminLevel", "getLanguage", "isAuthenticated" } }
 files["resources/**/character/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "Character", "getCharacterId", "getPlayerByCharacterId", "getInventoryContainerId", "getStats", "modifyStat", "killCharacter", "applyWound" } }
 files["resources/**/items/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "Items", "getHeld", "createStartingItems", "refreshPlayer", "destroyItem" } }
-files["resources/**/items/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "Held" } }
+files["resources/**/items/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "Held", "ItemModels" } }
+files["resources/**/models/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "resolve" } }
 files["resources/**/loot/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "rollNear" } }
 files["resources/**/dev/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "rcon" } }
