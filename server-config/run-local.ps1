@@ -2,7 +2,7 @@
 [CmdletBinding()]
 param(
     [string]$MtaServer = "C:\Program Files (x86)\MTA San Andreas 1.6\server",
-    [string]$MariaDb = "C:\Program Files\MariaDB 12.2\bin\mariadb.exe",
+    [string]$MariaDb = "mariadb", # resolved through PATH
     [string]$DbUser = "root",
     [string]$DbPassword = "",
     [string]$DbName = "scavengesurvive",
@@ -26,6 +26,7 @@ try { & python @sqlArgs "apply"; if ($LASTEXITCODE -ne 0) { throw "sqltool faile
 # (b) the despawn/cleanup events in sql/events need the scheduler
 $dbAuth = @("-u", $DbUser)
 if ($DbPassword) { $dbAuth += "--password=$DbPassword" }
+if (-not (Get-Command $MariaDb -ErrorAction SilentlyContinue)) { throw "No '$MariaDb' on PATH; add MariaDB's bin directory or pass -MariaDb <path>" }
 & $MariaDb @dbAuth -e "SET GLOBAL event_scheduler = ON;"
 if ($LASTEXITCODE -ne 0) { throw "mariadb failed ($LASTEXITCODE)" }
 

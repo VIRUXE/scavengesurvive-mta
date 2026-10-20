@@ -21,4 +21,5 @@ C++ Build Tools are installed (verified with Visual Studio Community 2026). With
 LuaRocks from hererocks' `MSVCR80` link default to `ucrt`; a native rock that still imports `MSVCR80.dll` fails to
 load with "The specified module could not be found" — rebuild it with `.lua/bin/luarocks.bat build <rock> --force`).
 MariaDB installs as a Windows service from winget: `winget install -e --id MariaDB.Server --override "/qn
-SERVICENAME=MariaDB ADDLOCAL=ALL PORT=3306"` (root with no password, which is the project default).
+SERVICENAME=MariaDB ADDLOCAL=ALL PORT=3306"` (root with no password, which is the project default). The MSI does not add
+its `bin` to `PATH`; add it, since `run-local.ps1` and the smoke checklist call `mariadb` by name.
