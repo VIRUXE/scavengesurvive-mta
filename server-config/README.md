@@ -36,7 +36,8 @@ MTA has no RCON. The `dev` resource exports `rcon(line)` over the server's HTTP 
 can drive a local test server: `pwsh server-config/rcon.ps1 <command>` posts the line to `/dev/call/rcon` with HTTP
 Basic auth and prints the reply. Commands: `help`, `players`, `start|stop|restart|rr <resource>`,
 `cmd <player> <command> [args]` (runs a chat command as that player, e.g. `cmd Bob additem M9Pistol`), `say <text>`,
-`lua <code>`, `shutdown`.
+`lua <code>`, `screenshot <player> [w h]` (the client renders a frame and uploads it to `dev/screenshots/`, git-ignored;
+the client must not be minimised), `shutdown`.
 
 The account is `*dev.http_user` / `*dev.http_pass` from `local.settings.xml` (`run-local.ps1` fills in a random
 password when it creates the file; `dev` creates or re-passwords the MTA account on start). Its ACL group

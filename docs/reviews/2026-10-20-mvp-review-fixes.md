@@ -26,3 +26,26 @@ Each entry names the ruling where the review offered a choice.
   MTA nicknames, since the account name is the nickname (review minor 15).
 - Not touched: the spec and plan still carry the original `data.mag or 0` line and the "share=1 matches" wording the
   review called stale; they are the historical record and this file is the correction.
+
+## Live playtest, 2026-10-21 (one client, driven through `rcon.ps1`)
+
+| Check | Result |
+| --- | --- |
+| Step 1 boot | `212 loaded, 0 failed`, ready, no `ERROR`, 5 DB connections |
+| Step 2 login prompt (C2) | window arrived on first join and on every rejoin |
+| C1 ammo | held M9: weapon 22, 10 rounds in clip |
+| I2 / I2b bag | `Satchel=bag` in DB, model 363 attached at the back offset (screenshot), second bag never needed |
+| I1 eat from hand | `[hand] Hot Dog` → Eat: item destroyed, food 77.4 → 100 |
+| I3 bleeding survives reload | `rr character`: 0.298 → 0.297 with `wounds = 1`; real relog: 0.277 → 0.273 with `wounds = 1` |
+
+Found and fixed on the way:
+
+- **Y also opened team chat.** MTA binds `y` to `chatbox teamsay` by default and `hud` only binds `putaway` when the key is
+  free, so one press did both. `hud` now unbinds the chat on start and restores it on stop (the gamemode has no teams).
+- `rcon screenshot <player>` was added for the bag check. Two lessons: the function is `takePlayerScreenShot` (capital S;
+  a wrong name made the server file a *pending, denying* `aclrequest` that outlived the typo), and its default upload cap
+  is 5 kB/s, so a 1080p frame took a minute until the call passed a higher bandwidth. `run-local.ps1` grants the right
+  in the `ScavengeSurvive` ACL so no request is ever pending.
+- The HUD draws on the black screen before the camera fades in (review minor 12), seen in a screenshot taken 9 s after
+  join. Still open.
+- The bag sits on the lower back; raise `BACK_OFFSET` z if it should ride higher. Open.

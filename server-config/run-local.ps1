@@ -96,6 +96,8 @@ $group = New-AclElement "group" ([ordered]@{ name = "ScavengeSurvive" })
 foreach ($n in $names) { [void]$group.AppendChild((New-AclElement "object" ([ordered]@{ name = "resource.$n" }))) }
 $ssAcl = New-AclElement "acl" ([ordered]@{ name = "ScavengeSurvive" })
 [void]$ssAcl.AppendChild((New-AclElement "right" ([ordered]@{ name = "function.loadstring"; access = "true" })))
+# dev's rcon "screenshot" verb; granted here so the server never files it as a pending (denying) aclrequest
+[void]$ssAcl.AppendChild((New-AclElement "right" ([ordered]@{ name = "function.takePlayerScreenShot"; access = "true" })))
 $default = $root.SelectSingleNode('acl[@name="Default"]')
 if (-not $default) { throw "acl.xml has no Default ACL" }
 [void]$root.InsertBefore($group, $default)

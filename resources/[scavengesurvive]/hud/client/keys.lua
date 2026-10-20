@@ -33,6 +33,8 @@ end)
 
 local DEFAULTS = { interact = "f", dropitem = "n", putaway = "y", inventory = "h" }
 addEventHandler("onClientResourceStart", resourceRoot, function()
+    -- MTA binds Y to team chat by default; the gamemode has no teams, so Y is ours (restored on stop)
+    unbindKey("y", "down", "chatbox")
     for cmd, key in pairs(DEFAULTS) do
         if not getKeyBoundToCommand(cmd) then
             bindKey(key, "down", cmd)
@@ -44,4 +46,8 @@ addEventHandler("onClientResourceStart", resourceRoot, function()
     setPlayerHudComponentVisible("clock", false)
     setPlayerHudComponentVisible("weapon", false)
     setPlayerHudComponentVisible("ammo", false)
+end)
+
+addEventHandler("onClientResourceStop", resourceRoot, function()
+    bindKey("y", "down", "chatbox", "teamsay")
 end)

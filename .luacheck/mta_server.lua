@@ -9,4 +9,5 @@ return { read_globals = {
     "createVehicle", "setElementVisibleTo", "setPlayerNametagShowing", "setPlayerNametagText", "getPlayerTeam",
     "resendPlayerACInfo", "getPlayerVersion", "setPlayerWantedLevel", "restartResource", "startResource",
     "stopResource", "shutdown", "executeCommandHandler", "getAccount", "addAccount", "setAccountPassword",
+    "takePlayerScreenShot", "fileCreate", "fileWrite",
 } }

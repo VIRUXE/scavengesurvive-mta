@@ -129,6 +129,7 @@ local RCON_HELP = {
     "cmd <player> <command> [args] run a chat command as that player, e.g. cmd Bob additem M9Pistol",
     "say <text>                    chat message to everyone",
     "lua <code>                    run server-side Lua and print its return values, e.g. lua return getPlayerCount()",
+    "screenshot <player> [w h]     ask that client for a screenshot; saved as dev/screenshots/<player>-<time>.jpg",
     "shutdown                      stop the server",
 }
 local RESOURCE_VERBS = { start = startResource, stop = stopResource, restart = restartResource, rr = restartResource }
@@ -209,6 +210,18 @@ function rcon(line)
                 end
             end
         end
+    elseif verb == "screenshot" then
+        local who, w, h = rest:match("^(%S+)%s*(%d*)%s*(%d*)$")
+        local p = who and getPlayerFromName(who)
+        if not p then
+            ok = false
+            put("no player '%s' (usage: screenshot <player> [width height])", tostring(who))
+        else
+            local tag = string.format("%s-%s", who, getRealTime().timestamp)
+            -- local server: lift the default 5 kB/s upload cap so a 1080p frame arrives in a second, not a minute
+            ok = takePlayerScreenShot(p, tonumber(w) or 1280, tonumber(h) or 720, tag, 90, 5000000, 50000) == true
+            put("requested %s -> %s; the client uploads it within a few seconds", tag, tostring(ok))
+        end
     elseif verb == "shutdown" then
         put("shutting down")
         setTimer(function()
@@ -220,6 +233,25 @@ function rcon(line)
     end
     return { ok = ok, output = out }
 end
+
+-- the client renders the frame and uploads it (works in exclusive fullscreen, unlike a desktop capture);
+-- the resource directory is junctioned to the repo, so screenshots/ is git-ignored
+addEventHandler("onPlayerScreenShot", root, function(res, status, data, _, tag)
+    if res ~= getThisResource() then
+        return
+    end
+    if status ~= "ok" then
+        return outputServerLog(string.format("[dev] screenshot %s from %s: %s", tag, getPlayerName(source), status))
+    end
+    local path = "screenshots/" .. tag .. ".jpg"
+    local f = fileCreate(path)
+    if not f then
+        return outputServerLog("[dev] screenshot: cannot create " .. path)
+    end
+    fileWrite(f, data)
+    fileClose(f)
+    outputServerLog(string.format("[dev] screenshot saved: dev/%s (%d bytes)", path, #data))
+end)
 
 local function ensureRconAccount()
     local user, pass = get("http_user"), get("http_pass")

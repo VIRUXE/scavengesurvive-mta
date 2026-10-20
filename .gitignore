@@ -10,3 +10,4 @@ resources/[scavengesurvive]/models/files/
 *.zip
 luacov.*
 .luacheckcache
+resources/[scavengesurvive]/dev/screenshots/
