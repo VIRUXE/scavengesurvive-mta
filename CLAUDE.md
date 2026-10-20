@@ -1,6 +1,6 @@
 # scavengesurvive-mta — conventions
 
-Scavenge & Survive ported to MTA:SA 1.6 (Lua 5.1) with MariaDB 12.2. Design spec:
+Scavenge & Survive ported to MTA:SA 1.6 (Lua 5.1) with MariaDB 13.0 (12.2 also verified). Design spec:
 `docs/superpowers/specs/2026-09-27-scavengesurvive-mta-port-design.md` (Appendix A = upstream behaviour, Appendix B = verified MTA facts).
 
 ## Layout
@@ -26,5 +26,5 @@ Scavenge & Survive ported to MTA:SA 1.6 (Lua 5.1) with MariaDB 12.2. Design spec
 ## Commands
 
 - `pwsh tools/setup-dev.ps1` — hererocks Lua 5.1 + busted/luacheck/luacov, stylua, Python deps.
-- `.lua/bin/busted tests/lua` · `.lua/bin/luacheck resources` · `stylua --check resources` · `pytest -q`
+- `.lua/bin/busted.bat tests/lua` · `.lua/bin/luacheck.bat resources` · `stylua --check resources` · `pytest -q`
 - `pwsh server-config/run-local.ps1` — create DB, migrate, seed, link resources into the MTA server, start it.
