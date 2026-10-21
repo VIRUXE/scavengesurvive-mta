@@ -9,4 +9,6 @@
    the local checks are the gate.
 
 New code is released under the Unlicense. Converted upstream data stays MPL-2.0 (`THIRD_PARTY_NOTICES.md`).
-Never commit SA-MP model files or passwords.
+Never commit passwords (`server-config/local.settings.xml`). The SA-MP object models under
+`resources/[scavengesurvive]/models/files/` are committed on purpose; regenerate them with
+`python -m tools.extract_samp_models` when item types need models that are not in the pack yet.
