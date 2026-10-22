@@ -32,7 +32,10 @@ ui 6, auth 7, character 8, items 9, loot 10, hud 11, weapons 12, dev/config 13),
     with no duplicates. `rr character`: `/stats` is unchanged (±1 tick). Then `shutdown` and
     `pwsh server-config/run-local.ps1` (no `-Reset`). A logs in with the same character, position, stats and inventory.
 
-## Post-MVP steps (added as features land; not yet run live)
+## Post-MVP steps (added as features land)
+
+Results of the 2026-10-22 run: docs/reviews/2026-10-22-live-checks.md (13 and 14 pass; 12 needs a second PC, since
+MTA's launcher passes a second `mtasa://` to the already running client instead of opening another one).
 
 12. **Combat log** (#26). A shoots B once. B disconnects within 30 s: everyone's chat shows "B combat logged!",
     `scripts.log` has `combat-logged (last hit by A)`, B's items lie where B stood, and B's next login creates a
