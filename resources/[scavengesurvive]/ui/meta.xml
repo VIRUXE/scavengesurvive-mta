@@ -5,10 +5,10 @@
     <include resource="lib"/>
     <script src="shared/events.lua" type="shared"/>
     <script src="client/main.lua" type="client"/>
-    <script src="client/toast.lua" type="client"/>
-    <script src="client/progress.lua" type="client"/>
-    <script src="client/list.lua" type="client"/>
     <file src="shared/logic/listlayout.lua"/>
+    <file src="client/toast.lua"/>
+    <file src="client/progress.lua"/>
+    <file src="client/list.lua"/>
     <export function="toast" type="client"/>
     <export function="progressStart" type="client"/>
     <export function="progressCancel" type="client"/>

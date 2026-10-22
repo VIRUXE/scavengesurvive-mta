@@ -12,7 +12,7 @@ stds.mta_server = dofile(".luacheck/mta_server.lua")
 stds.mta_client = dofile(".luacheck/mta_client.lua")
 files["resources/**/lib/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "getModule" } }
 files["resources/**/data/**"] = { std = "lua51+mta_shared", globals = { "Data", "itemType", "itemTypes", "lootTable", "calibreBleed", "vehicleType", "vehicleTypes", "t" } }
-files["resources/**/ui/**"] = { std = "lua51+mta_shared+mta_client", globals = { "UI", "toast", "progressStart", "progressCancel", "listOpen", "listUpdate", "listClose", "listIsOpen" } }
+files["resources/**/ui/**"] = { std = "lua51+mta_shared+mta_client", globals = { "toast", "progressStart", "progressCancel", "listOpen", "listUpdate", "listClose", "listIsOpen" } }
 files["resources/**/auth/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "prompt", "getAccountId", "getAdminLevel", "getLanguage", "isAuthenticated" } }
 files["resources/**/character/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "getCharacterId", "getPlayerByCharacterId", "getInventoryContainerId", "getStats", "modifyStat", "killCharacter", "applyWound" } }
 files["resources/**/items/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "getHeld", "createStartingItems", "refreshPlayer", "destroyItem" } }
