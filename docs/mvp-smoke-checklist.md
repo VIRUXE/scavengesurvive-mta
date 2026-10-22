@@ -54,3 +54,8 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
     `/rr maps`: the world is rebuilt once (no doubled objects). An object with both rx and ry non-zero (e.g. the
     `17039` rocks in RC) sits like it does in SA-MP, which answers #55; if it does not, the rotation order needs
     converting. Join time and FPS near Grove Street go into the #19 comment.
+15. **Loot vehicles** (#30). First boot logs `[vehicles] rolled 2017 spawn points: N vehicles` with N around 80
+    (4 %). `/vehcount` matches. Drive one: it starts battered, the engine is off until you start it, some are
+    locked, tanks are near empty (no fuel use yet). `rr vehicles`: the same vehicles come back where they were
+    left (`N vehicles rebuilt from the database`). `/vehrespawn` drops them all and rolls a fresh set. Blow one
+    up: the wreck disappears after 30 s and `/vehcount` drops by one.

@@ -1,4 +1,7 @@
 return { read_globals = {
+    -- vehicles
+    "setVehicleColor", "setVehicleEngineState", "setVehicleLocked", "isVehicleLocked", "setVehiclePanelState",
+    "setVehicleDoorState", "setVehicleLightState", "setVehicleWheelStates", "getVehicleOccupant", "getElementHealth",
     "addEvent", "addEventHandler", "removeEventHandler", "triggerEvent", "cancelEvent", "wasEventCancelled",
     "getCancelReason", "setTimer", "killTimer", "isTimer", "getTickCount", "getRealTime", "outputDebugString",
     "outputChatBox", "outputServerLog", "outputConsole", "getResourceName", "getThisResource", "getResourceFromName",

@@ -7,7 +7,7 @@ from tests.sql.conftest import call
 def test_migration_recorded(db):
     with db.cursor() as cur:
         cur.execute("SELECT version, name FROM schema_migrations ORDER BY version")
-        assert [r["name"] for r in cur.fetchall()] == ["init", "vehicle_spawns"]
+        assert [r["name"] for r in cur.fetchall()] == ["init", "vehicle_spawns", "vehicles"]
 
 
 def test_vehicle_spawns_seeded_from_every_vpl(db):

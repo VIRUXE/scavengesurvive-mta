@@ -81,6 +81,19 @@ command("rollloot", function(p)
     say(p, "rollNear(%.0f, %.0f, 400) requested; due spawns appear within a few seconds", x, y)
 end)
 
+command("vehcount", function(p)
+    say(p, "%d loot vehicles", exports.vehicles:countVehicles())
+end, true)
+
+command("vehrespawn", function(p)
+    local ok = exports.vehicles:respawnAll()
+    say(
+        p,
+        ok and "all loot vehicles dropped; rolling the spawn points again (count in the server log)"
+            or "a roll is already running"
+    )
+end, true)
+
 command("stats", function(p)
     local st = exports.character:getStats(p)
     if not st then

@@ -1,0 +1,12 @@
+<meta>
+    <info author="scavengesurvive-mta" type="script" name="vehicles" description="Loot vehicles rolled over the upstream spawn points, persisted in MariaDB" version="0.1.0"/>
+    <min_mta_version server="1.6.0" client="1.6.0"/>
+    <include resource="lib"/>
+    <include resource="data"/>
+    <script src="shared/events.lua" type="shared"/>
+    <script src="server/main.lua" type="server"/>
+    <file src="shared/logic/spawn.lua"/>
+    <export function="getVehicleDbId" type="server"/>
+    <export function="countVehicles" type="server"/>
+    <export function="respawnAll" type="server"/>
+</meta>

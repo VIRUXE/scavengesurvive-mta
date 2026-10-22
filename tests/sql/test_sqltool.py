@@ -26,7 +26,7 @@ def test_apply_twice_without_reset_keeps_data():
             cur.execute("SELECT COUNT(*) FROM accounts WHERE name='keepme'")
             assert cur.fetchone()[0] == 1
             cur.execute("SELECT version FROM schema_migrations ORDER BY version")
-            assert [r[0] for r in cur.fetchall()] == [1, 2]
+            assert [r[0] for r in cur.fetchall()] == [1, 2, 3]
     finally:
         with conn.cursor() as cur:
             cur.execute(f"DROP DATABASE IF EXISTS `{DB}`")
