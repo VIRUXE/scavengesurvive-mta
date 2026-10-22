@@ -7,10 +7,10 @@ local FONTS = { [0] = "diploma", [1] = "default-bold", [2] = "bankgothic", [3] =
 -- Line pitch in canvas units per 1.0 of letter-size Y (measured on the 720p footage: 0.3/1.5 -> 22 px).
 local LINE_UNITS = 9.8
 -- dxDrawText line height in pixels at scale 1 for each font.
-local DX_LINE_PX = { ["default-bold"] = 15, bankgothic = 16, diploma = 17, pricedown = 17 }
+local DX_LINE_PX = { ["default-bold"] = 15, bankgothic = 22, diploma = 17, pricedown = 17 }
 -- Horizontal correction per font at the textdraw's native 1:4 letter aspect, measured against the footage:
 -- MTA's Bank Gothic is much wider than GTA's condensed font 2, Tahoma Bold narrower than GTA's font 1.
-local X_FACTOR = { ["default-bold"] = 1.5, bankgothic = 0.72, diploma = 1, pricedown = 1 }
+local X_FACTOR = { ["default-bold"] = 1.5, bankgothic = 0.95, diploma = 1, pricedown = 1 }
 local NATIVE_ASPECT = 0.25 -- letter-size X / Y at which the glyphs keep their native shape (0.5 / 2.0)
 -- Vertical correction: Bank Gothic glyphs are taller for their line pitch than GTA's font 2.
 local Y_FACTOR = { bankgothic = 0.85 }

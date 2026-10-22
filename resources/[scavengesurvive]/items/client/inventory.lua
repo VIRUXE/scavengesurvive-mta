@@ -52,10 +52,17 @@ return function()
         return rows
     end
 
+    local function bagName(p)
+        local uname = p.capacity and p.capacity.bag and p.capacity.bag.uname
+        local t = uname and itemType(uname)
+        return t and t.name or "Bag"
+    end
+
     local function open(p)
         local title, rows
+        local bname = bagName(p)
         if view == "bag" and p.bag then
-            title = string.format("Bag (%d/%d)", p.capacity.bag.used, p.capacity.bag.size)
+            title = string.format("%s (%d/%d)", bname, p.capacity.bag.used, p.capacity.bag.size)
             rows = rowsFor(p.bag, p.capacity.bag)
             rows[#rows + 1] = { id = "nav:inventory", label = "My Inventory >" }
         else
@@ -63,7 +70,7 @@ return function()
             title = string.format("Inventory (%d/%d)", p.capacity.inv.used, p.capacity.inv.size)
             rows = rowsFor(p.inventory, p.capacity.inv)
             if p.bag then
-                rows[#rows + 1] = { id = "nav:bag", label = "Bag >" }
+                rows[#rows + 1] = { id = "nav:bag", label = bname .. " >" }
             end
         end
         exports.ui:listOpen("inventory", title, rows)

@@ -5,7 +5,7 @@ return function(ctx)
     local itemType, charId, toast = ctx.type, ctx.charId, ctx.toast
     local M = {}
 
-    local CONTAINERS_SQL = "SELECT c.id, c.kind, c.size FROM containers c "
+    local CONTAINERS_SQL = "SELECT c.id, c.kind, c.size, owner.type_uname AS uname FROM containers c "
         .. "LEFT JOIN items owner ON owner.id = c.owner_item_id "
         .. "WHERE c.owner_char_id = ? OR (owner.holder_char_id = ? AND owner.holder_kind = 'bag')"
 
@@ -99,7 +99,7 @@ return function(ctx)
                     payload.capacity.inv.size = cont.size
                 else
                     payload.bag = {}
-                    payload.capacity.bag = { used = 0, size = cont.size }
+                    payload.capacity.bag = { used = 0, size = cont.size, uname = cont.uname }
                     byId[cont.id] = { rows = payload.bag, cap = payload.capacity.bag }
                 end
                 ids[#ids + 1] = string.format("%d", cont.id)
