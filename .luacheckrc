@@ -18,8 +18,8 @@ files["resources/**/character/server/**"] = { std = "lua51+mta_shared+mta_server
 files["resources/**/items/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "Items", "getHeld", "createStartingItems", "refreshPlayer", "destroyItem" } }
 files["resources/**/items/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "Held", "ItemModels" } }
 files["resources/**/models/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "resolve" } }
--- restoreWorldModel / engineSetPoolCapacity postdate the generated .luacheck/mta_client.lua list
-files["resources/**/maps/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "Maps", "getMapStats" }, read_globals = { "restoreWorldModel", "engineSetPoolCapacity" } }
+-- restoreWorldModel postdates the generated .luacheck/mta_client.lua list
+files["resources/**/maps/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "Maps", "getMapStats" }, read_globals = { "restoreWorldModel" } }
 files["resources/**/maps/data/**"] = { std = "lua51", max_line_length = false }
 files["resources/**/loot/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "rollNear" } }
 files["resources/**/world/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "getWeather", "setGlobalWeather" } }

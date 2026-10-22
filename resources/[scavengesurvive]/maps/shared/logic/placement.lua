@@ -39,12 +39,6 @@ function placement.kind(o, sampId)
     return "building"
 end
 
--- building pool size to request before creating n buildings (MTA's default is 13000 and grows on demand)
-function placement.poolCapacity(buildings, default)
-    default = default or 13000
-    return math.max(default, buildings + 1000)
-end
-
 -- counts per kind for a zone's object list; resolve(model) -> loaded id or false
 function placement.tally(objects, resolve)
     local t = { building = 0, object = 0, skip = 0 }

@@ -131,7 +131,6 @@ addEventHandler("onClientResourceStart", resourceRoot, function()
         zones[#zones + 1] = zone
     end
     table.sort(zones)
-    local buildings = 0
     for _, zone in ipairs(zones) do
         local data = readLua("data/" .. zone .. ".lua")
         if data then
@@ -139,15 +138,13 @@ addEventHandler("onClientResourceStart", resourceRoot, function()
             for _, o in ipairs(data.objects or {}) do
                 queue[#queue + 1] = o
             end
-            buildings = buildings + placement.tally(data.objects or {}, sampModel).building
         end
     end
     if #Maps.removed > 0 then
         setOcclusionsEnabled(false) -- removed world models leave their occluders behind otherwise
     end
-    if engineSetPoolCapacity then
-        pcall(engineSetPoolCapacity, "building", placement.poolCapacity(buildings))
-    end
+    -- the building pool is left to MTA, which grows it on demand: re-applying a capacity on a restart shrank a
+    -- pool that was in use and crashed the client (2026-10-22)
     startBuilding(queue)
 end)
 
