@@ -3,9 +3,9 @@
     <min_mta_version server="1.6.0" client="1.6.0"/>
     <download_priority_group>95</download_priority_group>
     <include resource="lib"/>
-    <script src="shared/lang.lua" type="shared"/>
     <script src="shared/api.lua" type="shared"/>
     <file src="model_map.lua"/>
+    <file src="shared/lang.lua"/>
     <file src="generated/item_types.lua"/>
     <file src="generated/loot_tables.lua"/>
     <file src="generated/vehicle_types.lua"/>

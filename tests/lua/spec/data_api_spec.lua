@@ -1,5 +1,6 @@
 local mock = require("tests.lua.helpers.mta_mock")
 describe("Data api", function()
+    local Data
     before_each(function()
         mock.install()
         -- emulate MTA file access for the loader
@@ -8,9 +9,7 @@ describe("Data api", function()
         _G.fileGetSize = function(f) local cur = f:seek(); local size = f:seek("end"); f:seek("set", cur); return size end
         _G.fileRead = function(f, n) return f:read(n) end
         _G.fileClose = function(f) f:close() end
-        _G.Data = nil
-        dofile("resources/[scavengesurvive]/data/shared/lang.lua")
-        dofile("resources/[scavengesurvive]/data/shared/api.lua")
+        Data = dofile("resources/[scavengesurvive]/data/shared/api.lua")
     end)
     it("exposes item types with resolved models", function()
         local knife = Data.itemType("Knife")

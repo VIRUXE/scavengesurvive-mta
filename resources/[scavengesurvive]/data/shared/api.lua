@@ -1,5 +1,7 @@
-Data = Data or {}
-Data._raw = Data._raw or {}
+-- Static gamemode data: item types, loot tables, vehicle types and translations from data/generated.
+-- Everything lives in this local table; the exports at the bottom are the only globals, and the file
+-- returns the table so busted can load it (tests/lua/spec/data_api_spec.lua).
+local Data = {}
 
 local function readSource(path)
     local f = fileOpen(path, true)
@@ -13,21 +15,20 @@ local function loadGenerated(name)
     if not fileExists(path) then
         return nil
     end
-    local mod = assert(loadstring(readSource(path), "=data/" .. path))()
-    Data._raw[name] = mod
-    return mod
+    return assert(loadstring(readSource(path), "=data/" .. path))()
 end
 
 local function loadModelMap()
     return assert(loadstring(readSource("model_map.lua"), "=data/model_map.lua"))()
 end
 
+local LANGUAGES = assert(loadstring(readSource("shared/lang.lua"), "=data/shared/lang.lua"))()
 local modelMap = loadModelMap()
 local items = assert(loadGenerated("item_types"), "data: generated/item_types.lua missing")
 local loot = assert(loadGenerated("loot_tables"), "data: generated/loot_tables.lua missing")
 local vehicles = assert(loadGenerated("vehicle_types"), "data: generated/vehicle_types.lua missing")
 local langs = {}
-for _, code in ipairs(Data.LANGUAGES) do
+for _, code in ipairs(LANGUAGES) do
     langs[code] = loadGenerated("lang_" .. code) or {}
 end
 
@@ -61,7 +62,7 @@ function Data.vehicleTypes()
 end
 
 function Data.languages()
-    return Data.LANGUAGES
+    return LANGUAGES
 end
 
 function Data.t(lang, key, ...)
@@ -103,3 +104,5 @@ end
 function t(lang, key, ...)
     return Data.t(lang, key, ...)
 end
+
+return Data
