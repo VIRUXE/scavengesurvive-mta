@@ -1,255 +1,259 @@
 -- Held items and worn bags as client-side objects placed on the player's bones every frame, from the upstream
 -- SA-MP attach data (item type: boneid + attx/y/z + attrx/y/z; bag: per-skin spine offsets with scale).
 -- The server only publishes what is carried: element data "items.held" / "items.bag" = type uname or false.
-local SLOTS = { ["items.held"] = "held", ["items.bag"] = "bag" }
--- SA-MP SetPlayerAttachedObject bone -> GTA:SA bone id (getElementBoneMatrix)
-local SAMP_BONE = {
-    [1] = 3, -- spine -> BONE_SPINE1
-    [2] = 8, -- head
-    [3] = 32, -- left upper arm
-    [4] = 22, -- right upper arm
-    [5] = 34, -- left hand (BONE_LEFTWRIST is the hand bone)
-    [6] = 24, -- right hand
-    [7] = 41, -- left thigh
-    [8] = 51, -- right thigh
-    [9] = 43, -- left foot
-    [10] = 53, -- right foot
-    [11] = 52, -- right calf
-    [12] = 42, -- left calf
-    [13] = 33, -- left forearm
-    [14] = 23, -- right forearm
-    [15] = 31, -- left clavicle
-    [16] = 21, -- right clavicle
-    [17] = 5, -- neck
-    [18] = 7, -- jaw
-}
-local BAG_BONE = 1 -- upstream wears every bag on the spine
-
-local tracked = {} -- player -> { held = attachment, bag = attachment }
-local typeCache = {}
-
-local function itemType(uname)
-    if typeCache[uname] == nil then
-        typeCache[uname] = exports.data:itemType(uname) or false
-    end
-    return typeCache[uname] or nil
-end
-
-local function mul3(a, b)
-    local m = {}
-    for i = 1, 3 do
-        m[i] = {}
-        for j = 1, 3 do
-            m[i][j] = a[i][1] * b[1][j] + a[i][2] * b[2][j] + a[i][3] * b[3][j]
-        end
-    end
-    return m
-end
-
--- 4x4 row-major with the position in row 4 (getElementMatrix layout); v_world = v_local * L * B.
--- SA-MP's client applies RwMatrixRotate(bone, X), then Y, then Z, each pre-concatenated (rotation in the bone's
--- local space), so the object-space rotation is Rz * Ry * Rx: a vertex is rotated about Z first, then Y, then X.
-local function rotationMatrix(rx, ry, rz)
-    local cx, sx = math.cos(math.rad(rx)), math.sin(math.rad(rx))
-    local cy, sy = math.cos(math.rad(ry)), math.sin(math.rad(ry))
-    local cz, sz = math.cos(math.rad(rz)), math.sin(math.rad(rz))
-    local X = { { 1, 0, 0 }, { 0, cx, sx }, { 0, -sx, cx } }
-    local Y = { { cy, 0, -sy }, { 0, 1, 0 }, { sy, 0, cy } }
-    local Z = { { cz, sz, 0 }, { -sz, cz, 0 }, { 0, 0, 1 } }
-    return mul3(mul3(Z, Y), X)
-end
-
-local function multiply(l, b)
-    local w = {}
-    for i = 1, 4 do
-        w[i] = {}
-        for j = 1, 3 do
-            local s = l[i][1] * b[1][j] + l[i][2] * b[2][j] + l[i][3] * b[3][j]
-            if i == 4 then
-                s = s + b[4][j]
-            end
-            w[i][j] = s
-        end
-        w[i][4] = i == 4 and 1 or 0
-    end
-    return w
-end
-
--- offsets = { x, y, z, rx, ry, rz }
-local function attachment(uname, bone, offsets, scale)
-    local t = itemType(uname)
-    local obj = createObject(ItemModels.forType(t), 0, 0, 0) or createObject(ItemModels.FALLBACK, 0, 0, 0)
-    if not obj then
-        return nil
-    end
-    setElementCollisionsEnabled(obj, false)
-    if scale then
-        setObjectScale(obj, scale[1], scale[2], scale[3])
-    end
-    local r = rotationMatrix(offsets[4], offsets[5], offsets[6])
-    local l = { r[1], r[2], r[3], { offsets[1], offsets[2], offsets[3] } }
-    return {
-        obj = obj,
-        uname = uname,
-        bone = SAMP_BONE[bone] or SAMP_BONE[6],
-        localMatrix = l,
-        interior = -1,
-        dimension = -1,
+-- ctx = { models } from client/main.lua (client/models.lua).
+return function(ctx)
+    local models = ctx.models
+    local SLOTS = { ["items.held"] = "held", ["items.bag"] = "bag" }
+    -- SA-MP SetPlayerAttachedObject bone -> GTA:SA bone id (getElementBoneMatrix)
+    local SAMP_BONE = {
+        [1] = 3, -- spine -> BONE_SPINE1
+        [2] = 8, -- head
+        [3] = 32, -- left upper arm
+        [4] = 22, -- right upper arm
+        [5] = 34, -- left hand (BONE_LEFTWRIST is the hand bone)
+        [6] = 24, -- right hand
+        [7] = 41, -- left thigh
+        [8] = 51, -- right thigh
+        [9] = 43, -- left foot
+        [10] = 53, -- right foot
+        [11] = 52, -- right calf
+        [12] = 42, -- left calf
+        [13] = 33, -- left forearm
+        [14] = 23, -- right forearm
+        [15] = 31, -- left clavicle
+        [16] = 21, -- right clavicle
+        [17] = 5, -- neck
+        [18] = 7, -- jaw
     }
-end
+    local BAG_BONE = 1 -- upstream wears every bag on the spine
 
-local function heldAttachment(uname)
-    local t = itemType(uname)
-    -- GTA draws real weapons in the hand itself (the server gives the weapon); only custom models are attached
-    if t and t.category == "weapon" and t.categoryData and (t.categoryData.baseWeapon or 0) > 0 then
-        return nil
+    local tracked = {} -- player -> { held = attachment, bag = attachment }
+    local typeCache = {}
+
+    local function itemType(uname)
+        if typeCache[uname] == nil then
+            typeCache[uname] = exports.data:itemType(uname) or false
+        end
+        return typeCache[uname] or nil
     end
-    local o = {
-        t and t.attx or 0,
-        t and t.atty or 0,
-        t and t.attz or 0,
-        t and t.attrx or 0,
-        t and t.attry or 0,
-        t and t.attrz or 0,
-    }
-    return attachment(uname, t and t.boneid or 6, o)
-end
 
-local function bagAttachment(uname, player)
-    local t = itemType(uname)
-    local bySkin = t and t.categoryData and t.categoryData.bag_offsets or {}
-    local skin = getElementModel(player)
-    local o = bySkin[skin] or bySkin[tostring(skin)]
-    if not o then
-        -- upstream leaves unknown skins invisible (zero scale); the lowest defined skin is the closest substitute
-        local best
-        for k, v in pairs(bySkin) do
-            local n = tonumber(k)
-            if n and (not best or n < best) then
-                best, o = n, v
+    local function mul3(a, b)
+        local m = {}
+        for i = 1, 3 do
+            m[i] = {}
+            for j = 1, 3 do
+                m[i][j] = a[i][1] * b[1][j] + a[i][2] * b[2][j] + a[i][3] * b[3][j]
             end
         end
+        return m
     end
-    if not o then
-        o = { 0, 0, 0, 0, 0, 0, 1, 1, 1 }
-    end
-    return attachment(uname, BAG_BONE, o, { o[7] or 1, o[8] or 1, o[9] or 1 })
-end
 
-local function clearSlot(player, slot)
-    local slots = tracked[player]
-    local a = slots and slots[slot]
-    if a then
-        if isElement(a.obj) then
-            destroyElement(a.obj)
-        end
-        slots[slot] = nil
+    -- 4x4 row-major with the position in row 4 (getElementMatrix layout); v_world = v_local * L * B.
+    -- SA-MP's client applies RwMatrixRotate(bone, X), then Y, then Z, each pre-concatenated (rotation in the bone's
+    -- local space), so the object-space rotation is Rz * Ry * Rx: a vertex is rotated about Z first, then Y, then X.
+    local function rotationMatrix(rx, ry, rz)
+        local cx, sx = math.cos(math.rad(rx)), math.sin(math.rad(rx))
+        local cy, sy = math.cos(math.rad(ry)), math.sin(math.rad(ry))
+        local cz, sz = math.cos(math.rad(rz)), math.sin(math.rad(rz))
+        local X = { { 1, 0, 0 }, { 0, cx, sx }, { 0, -sx, cx } }
+        local Y = { { cy, 0, -sy }, { 0, 1, 0 }, { sy, 0, cy } }
+        local Z = { { cz, sz, 0 }, { -sz, cz, 0 }, { 0, 0, 1 } }
+        return mul3(mul3(Z, Y), X)
     end
-end
 
-local function setSlot(player, slot, uname)
-    clearSlot(player, slot)
-    if not uname or uname == false then
-        return
-    end
-    tracked[player] = tracked[player] or {}
-    tracked[player][slot] = slot == "bag" and bagAttachment(uname, player) or heldAttachment(uname)
-end
-
-local function forgetPlayer(player)
-    if tracked[player] then
-        clearSlot(player, "held")
-        clearSlot(player, "bag")
-        tracked[player] = nil
-    end
-end
-
-local function trackPlayer(player)
-    for key, slot in pairs(SLOTS) do
-        local uname = getElementData(player, key)
-        setSlot(player, slot, uname)
-    end
-end
-
-local function place(a, player)
-    local b = getElementBoneMatrix(player, a.bone)
-    if not b then
-        return
-    end
-    setElementMatrix(a.obj, multiply(a.localMatrix, b))
-    local int, dim = getElementInterior(player), getElementDimension(player)
-    if int ~= a.interior or dim ~= a.dimension then
-        a.interior, a.dimension = int, dim
-        setElementInterior(a.obj, int)
-        setElementDimension(a.obj, dim)
-    end
-end
-
--- the SA-MP model pack came or went: attached objects switch between real models and stand-ins in place
-ItemModels.refreshers[#ItemModels.refreshers + 1] = function()
-    for _, slots in pairs(tracked) do
-        for _, a in pairs(slots) do
-            if isElement(a.obj) then
-                setElementModel(a.obj, ItemModels.forType(itemType(a.uname)))
+    local function multiply(l, b)
+        local w = {}
+        for i = 1, 4 do
+            w[i] = {}
+            for j = 1, 3 do
+                local s = l[i][1] * b[1][j] + l[i][2] * b[2][j] + l[i][3] * b[3][j]
+                if i == 4 then
+                    s = s + b[4][j]
+                end
+                w[i][j] = s
             end
+            w[i][4] = i == 4 and 1 or 0
         end
+        return w
     end
-end
 
-addEventHandler("onClientPedsProcessed", root, function()
-    for player, slots in pairs(tracked) do
-        if isElement(player) and (player == localPlayer or isElementStreamedIn(player)) then
-            for _, a in pairs(slots) do
-                if isElement(a.obj) then
-                    place(a, player)
+    -- offsets = { x, y, z, rx, ry, rz }
+    local function attachment(uname, bone, offsets, scale)
+        local t = itemType(uname)
+        local obj = createObject(models.forType(t), 0, 0, 0) or createObject(models.FALLBACK, 0, 0, 0)
+        if not obj then
+            return nil
+        end
+        setElementCollisionsEnabled(obj, false)
+        if scale then
+            setObjectScale(obj, scale[1], scale[2], scale[3])
+        end
+        local r = rotationMatrix(offsets[4], offsets[5], offsets[6])
+        local l = { r[1], r[2], r[3], { offsets[1], offsets[2], offsets[3] } }
+        return {
+            obj = obj,
+            uname = uname,
+            bone = SAMP_BONE[bone] or SAMP_BONE[6],
+            localMatrix = l,
+            interior = -1,
+            dimension = -1,
+        }
+    end
+
+    local function heldAttachment(uname)
+        local t = itemType(uname)
+        -- GTA draws real weapons in the hand itself (the server gives the weapon); only custom models are attached
+        if t and t.category == "weapon" and t.categoryData and (t.categoryData.baseWeapon or 0) > 0 then
+            return nil
+        end
+        local o = {
+            t and t.attx or 0,
+            t and t.atty or 0,
+            t and t.attz or 0,
+            t and t.attrx or 0,
+            t and t.attry or 0,
+            t and t.attrz or 0,
+        }
+        return attachment(uname, t and t.boneid or 6, o)
+    end
+
+    local function bagAttachment(uname, player)
+        local t = itemType(uname)
+        local bySkin = t and t.categoryData and t.categoryData.bag_offsets or {}
+        local skin = getElementModel(player)
+        local o = bySkin[skin] or bySkin[tostring(skin)]
+        if not o then
+            -- upstream leaves unknown skins invisible (zero scale); the lowest defined skin is the closest substitute
+            local best
+            for k, v in pairs(bySkin) do
+                local n = tonumber(k)
+                if n and (not best or n < best) then
+                    best, o = n, v
                 end
             end
         end
+        if not o then
+            o = { 0, 0, 0, 0, 0, 0, 1, 1, 1 }
+        end
+        return attachment(uname, BAG_BONE, o, { o[7] or 1, o[8] or 1, o[9] or 1 })
     end
-end)
 
-addEventHandler("onClientElementDataChange", root, function(key, _, value)
-    local slot = SLOTS[key]
-    if not slot or getElementType(source) ~= "player" then
-        return
+    local function clearSlot(player, slot)
+        local slots = tracked[player]
+        local a = slots and slots[slot]
+        if a then
+            if isElement(a.obj) then
+                destroyElement(a.obj)
+            end
+            slots[slot] = nil
+        end
     end
-    if source == localPlayer or isElementStreamedIn(source) then
-        setSlot(source, slot, value)
-    end
-end)
 
-addEventHandler("onClientElementStreamIn", root, function()
-    if getElementType(source) == "player" then
-        trackPlayer(source)
+    local function setSlot(player, slot, uname)
+        clearSlot(player, slot)
+        if not uname or uname == false then
+            return
+        end
+        tracked[player] = tracked[player] or {}
+        tracked[player][slot] = slot == "bag" and bagAttachment(uname, player) or heldAttachment(uname)
     end
-end)
 
-addEventHandler("onClientElementStreamOut", root, function()
-    if getElementType(source) == "player" then
+    local function forgetPlayer(player)
+        if tracked[player] then
+            clearSlot(player, "held")
+            clearSlot(player, "bag")
+            tracked[player] = nil
+        end
+    end
+
+    local function trackPlayer(player)
+        for key, slot in pairs(SLOTS) do
+            local uname = getElementData(player, key)
+            setSlot(player, slot, uname)
+        end
+    end
+
+    local function place(a, player)
+        local b = getElementBoneMatrix(player, a.bone)
+        if not b then
+            return
+        end
+        setElementMatrix(a.obj, multiply(a.localMatrix, b))
+        local int, dim = getElementInterior(player), getElementDimension(player)
+        if int ~= a.interior or dim ~= a.dimension then
+            a.interior, a.dimension = int, dim
+            setElementInterior(a.obj, int)
+            setElementDimension(a.obj, dim)
+        end
+    end
+
+    -- the SA-MP model pack came or went: attached objects switch between real models and stand-ins in place
+    models.onChanged(function()
+        for _, slots in pairs(tracked) do
+            for _, a in pairs(slots) do
+                if isElement(a.obj) then
+                    setElementModel(a.obj, models.forType(itemType(a.uname)))
+                end
+            end
+        end
+    end)
+
+    addEventHandler("onClientPedsProcessed", root, function()
+        for player, slots in pairs(tracked) do
+            if isElement(player) and (player == localPlayer or isElementStreamedIn(player)) then
+                for _, a in pairs(slots) do
+                    if isElement(a.obj) then
+                        place(a, player)
+                    end
+                end
+            end
+        end
+    end)
+
+    addEventHandler("onClientElementDataChange", root, function(key, _, value)
+        local slot = SLOTS[key]
+        if not slot or getElementType(source) ~= "player" then
+            return
+        end
+        if source == localPlayer or isElementStreamedIn(source) then
+            setSlot(source, slot, value)
+        end
+    end)
+
+    addEventHandler("onClientElementStreamIn", root, function()
+        if getElementType(source) == "player" then
+            trackPlayer(source)
+        end
+    end)
+
+    addEventHandler("onClientElementStreamOut", root, function()
+        if getElementType(source) == "player" then
+            forgetPlayer(source)
+        end
+    end)
+
+    addEventHandler("onClientPlayerQuit", root, function()
         forgetPlayer(source)
-    end
-end)
+    end)
 
-addEventHandler("onClientPlayerQuit", root, function()
-    forgetPlayer(source)
-end)
+    -- a skin change moves the bag offsets
+    addEventHandler("onClientElementModelChange", root, function()
+        if getElementType(source) == "player" and tracked[source] and tracked[source].bag then
+            setSlot(source, "bag", getElementData(source, "items.bag"))
+        end
+    end)
 
--- a skin change moves the bag offsets
-addEventHandler("onClientElementModelChange", root, function()
-    if getElementType(source) == "player" and tracked[source] and tracked[source].bag then
-        setSlot(source, "bag", getElementData(source, "items.bag"))
-    end
-end)
+    addEventHandler("onClientResourceStart", resourceRoot, function()
+        for _, p in ipairs(getElementsByType("player", root, true)) do
+            trackPlayer(p)
+        end
+        trackPlayer(localPlayer)
+    end)
 
-addEventHandler("onClientResourceStart", resourceRoot, function()
-    for _, p in ipairs(getElementsByType("player", root, true)) do
-        trackPlayer(p)
-    end
-    trackPlayer(localPlayer)
-end)
-
-addEventHandler("onClientResourceStop", resourceRoot, function()
-    for player in pairs(tracked) do
-        forgetPlayer(player)
-    end
-end)
+    addEventHandler("onClientResourceStop", resourceRoot, function()
+        for player in pairs(tracked) do
+            forgetPlayer(player)
+        end
+    end)
+end
