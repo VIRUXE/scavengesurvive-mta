@@ -67,6 +67,11 @@ measured pixel-by-pixel with Pillow against the 1280×720 reference frames from 
 - `exports.maps:getZoneAt` returned `ls`, `sf`, `lv`, `rc`, `fc`, `bc`, `tr` for landmarks in all seven zones and `false` at `(3500, -3500)`.
 - `rcon.ps1 players` reported `ClaudeD char=6 zone=bc pos=181.9,1162.5,14.8`; moving `ClaudeD` to `(2495, -1687, 13.5)` fired `onPlayerZoneLeave("bc")` then `onPlayerZoneEnter("ls")` and updated `/zone` and `rcon players` to `zone=ls`.
 
+## SA-MP model collisions and house-shell swing doors (#18, #19, 60d4749)
+
+- **SA-MP collisions missing (`models`):** `SAMP.img` contains only `.dff`/`.txd`, while SA-MP's collisions live in `SAMPCOL.img`'s multi-model `allsampcols.col` archive (`COLL`/`COL2`/`COL3`/`COL4` chunks). `tools/extract_samp_models.py` (`parse_col_library`) now splits the 209 matching single-model `.col` files (~302 KB total) into `models/files/<dff>.col`, and `models/client/main.lua` loads and replaces each collision before TXD and DFF (`COL -> TXD -> DFF`). Live-verified: `models: 209 SA-MP models loaded` (0 failures), player stands on ocean rig floor `19377` at `(3984.2, -1.56, 15.8)` and enters Willowfield house shells (`lshouse1`–`3` at `(2665, -2005, 14)`).
+- **House-shell doors rigid (`maps`):** the 551 placed house/interior doors (`1491`, `1492`, `1494`, `1499`, `1502`, plus `1523` — GTA:SA's `object.dat` `6:SWINGDOOR` models) were previously created as static `createBuilding`s (or frozen `createObject`s). `placement.isSwingDoor` now routes them to `createObject` and leaves them unfrozen (`maps: 8313 buildings, 14898 objects, 0 SA-MP models skipped, 0 failed, 127 removals in 1193 ms`), so they swing open on their hinges.
+
 ## Still open
 
 - Rotation spike #55: no anomaly observed, but there was no SA-MP side by side; the data passes rx/ry/rz through.
