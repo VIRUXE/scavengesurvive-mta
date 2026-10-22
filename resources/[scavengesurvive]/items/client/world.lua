@@ -2,6 +2,7 @@
 -- ctx = { models } from client/main.lua (client/models.lua).
 return function(ctx)
     local models = ctx.models
+    local ammo = ctx.ammo
     local objects = {} -- id -> { obj, uname, hp, x, y, z, name }
     local typeCache = {}
 
@@ -10,6 +11,23 @@ return function(ctx)
             typeCache[uname] = exports.data:itemType(uname) or false
         end
         return typeCache[uname] or nil
+    end
+
+    local function calibreName(cal)
+        return exports.data:calibreName(cal)
+    end
+
+    local function defaultAmmo(cal)
+        local list = cal and exports.data:ammoTypesForCalibre(cal)
+        return list and list[1] or nil
+    end
+
+    local function formatName(t, r)
+        if ammo and t then
+            local defA = t.categoryData and defaultAmmo(t.categoryData.calibre) or nil
+            return ammo.displayName(t, r.data, itemType, calibreName, defA)
+        end
+        return t and t.name or r.uname
     end
 
     local function forget(id)
@@ -38,8 +56,15 @@ return function(ctx)
                     setElementInterior(obj, r.interior or 0)
                     setElementDimension(obj, r.dimension or 0)
                 end
-                objects[r.id] =
-                    { obj = obj, uname = r.uname, hp = r.hp, x = r.x, y = r.y, z = r.z, name = t and t.name or r.uname }
+                objects[r.id] = {
+                    obj = obj,
+                    uname = r.uname,
+                    hp = r.hp,
+                    x = r.x,
+                    y = r.y,
+                    z = r.z,
+                    name = formatName(t, r),
+                }
             end
         end
     end)

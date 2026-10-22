@@ -61,8 +61,15 @@ local function hitBleed(attacker, weapon, dist)
     if wound.isMeleeWeapon(weapon) then
         return cd.muzzleVelocity
     end
+    local mag = held.data and held.data.mag
+    if mag ~= nil and (tonumber(mag) or 0) <= 0 then
+        return nil
+    end
     local calibreBleed = exports.data:calibreBleed(cd.calibre) or 0.25
-    return wound.firearm(cd.muzzleVelocity, dist, calibreBleed, 1.0)
+    local ammoUname = held.data and held.data.ammoItem
+    local ammoDef = ammoUname and itemType(ammoUname) or nil
+    local ammoBleedMult = (ammoDef and ammoDef.categoryData and tonumber(ammoDef.categoryData.bleedMult)) or 1.0
+    return wound.firearm(cd.muzzleVelocity, dist, calibreBleed, ammoBleedMult)
 end
 
 net.handler("onWeaponsRequestHit", function(victim, attacker, weapon, bodypart, loss)

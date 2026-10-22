@@ -1,11 +1,15 @@
 -- Hands and the worn bag: what a player carries is published as protected element data ("items.held" /
--- "items.bag" = type uname or false); every client draws its own bone-attached objects from it (client/attach.lua).
--- ctx = { db, net, state, geometry, type, charId, toast, world } built by server/main.lua; state.held / state.worn
--- are shared with it. Busted loads this file with fake deps (tests/lua/spec/items_server_spec.lua).
+-- "items.bag" = type uname or false; "items.ammo" = loaded ammoItem uname or false); every client draws
+-- its own bone-attached objects and bullet tracers from it (client/attach.lua, weapons/client/tracer.lua).
+-- ctx = { db, net, state, geometry, ammo, type, defaultAmmo, charId, toast, world } built by server/main.lua;
+-- state.held / state.worn are shared with it. Busted loads this file with fake deps.
 return function(ctx)
     local db, net, state, geometry, world = ctx.db, ctx.net, ctx.state, ctx.geometry, ctx.world
-    local itemType, charId, toast = ctx.type, ctx.charId, ctx.toast
+    local ammo = ctx.ammo
+    local itemType, defaultAmmo, charId, toast = ctx.type, ctx.defaultAmmo, ctx.charId, ctx.toast
     local VANILLA_MELEE_MAX = 15
+    local RELOAD_COOLDOWN_MS = 1000
+    local lastReload = {}
     local M = {}
 
     local function baseWeapon(t)
@@ -13,12 +17,18 @@ return function(ctx)
         return w and w > 0 and w or nil
     end
 
-    -- The MVP has no ammo or reload model, so a firearm without data.mag is held with a full magazine
-    -- (GTA will not fire a weapon given with 0 rounds). Vanilla melee ids always get 1.
+    local function defAmmoFor(t)
+        if defaultAmmo and t and t.categoryData and t.categoryData.calibre then
+            return defaultAmmo(t.categoryData.calibre)
+        end
+        return nil
+    end
+
+    -- A firearm with explicit data.mag uses that count (0 when unloaded); without data.mag it defaults
+    -- to a full magazine (backwards compatibility for /additem and legacy items). Vanilla melee ids always get 1.
     local function ammoFor(t, data)
-        local mag = tonumber(data and data.mag)
-        if mag and mag > 0 then
-            return mag
+        if data and data.mag ~= nil then
+            return math.max(0, math.floor(tonumber(data.mag) or 0))
         end
         local w = baseWeapon(t)
         if w and w <= VANILLA_MELEE_MAX then
@@ -44,6 +54,13 @@ return function(ctx)
     end
     M.publish = publish
 
+    local function publishAmmo(player, item)
+        if isElement(player) then
+            local loaded = item and item.data and item.data.ammoItem or false
+            setElementData(player, "items.ammo", loaded, "broadcast", "deny")
+        end
+    end
+
     -- item = { id, uname, hp, data } or nil: the bag worn on the back
     function M.setWorn(player, item)
         state.worn[player] = item
@@ -52,6 +69,7 @@ return function(ctx)
 
     function M.clearHeld(player)
         publish(player, "items.held", nil)
+        publishAmmo(player, nil)
         local item = state.held[player]
         if item and isElement(player) then
             local w = baseWeapon(itemType(item.uname))
@@ -62,27 +80,76 @@ return function(ctx)
         state.held[player] = nil
     end
 
-    -- item = { id, uname, hp, data } or nil; the client only ever sees { id, uname, hp }
+    -- item = { id, uname, hp, data } or nil; client receives { id, uname, hp, data }
     function M.setHeld(player, item)
         M.clearHeld(player)
         if not isElement(player) then
             return
         end
         if item then
+            local t = itemType(item.uname)
+            if ammo and ammo.isCalibreWeapon(t) then
+                local defA = defAmmoFor(t)
+                local ws = ammo.weaponState(t, item.data, defA)
+                if ws.mag == 0 and ws.reserve > 0 then
+                    local _, reloaded = ammo.reload(t, ws, defA)
+                    ws = reloaded
+                end
+                item.data = ws
+            end
             state.held[player] = item
             publish(player, "items.held", item)
-            local t = itemType(item.uname)
+            publishAmmo(player, item)
             local w = baseWeapon(t)
             if w then
-                giveWeapon(player, w, ammoFor(t, item.data), true)
+                local rounds = ammoFor(t, item.data)
+                if rounds > 0 then
+                    giveWeapon(player, w, rounds, true)
+                    if setWeaponAmmo then
+                        setWeaponAmmo(player, w, rounds, rounds)
+                    end
+                else
+                    takeWeapon(player, w)
+                    toast(player, "WEAPNOAMMOL")
+                end
             end
         end
         triggerClientEvent(
             player,
             "onClientItemsHeld",
             player,
-            item and { id = item.id, uname = item.uname, hp = item.hp } or false
+            item and { id = item.id, uname = item.uname, hp = item.hp, data = item.data } or false
         )
+    end
+
+    local function syncHeldData(player, item, nextData)
+        item.data = nextData
+        publishAmmo(player, item)
+        if ammo then
+            db.exec("UPDATE items SET data = ? WHERE id = ?", { ammo.encodeData(nextData), item.id })
+        end
+        local t = itemType(item.uname)
+        local w = baseWeapon(t)
+        if w and isElement(player) then
+            local rounds = ammoFor(t, nextData)
+            if rounds > 0 then
+                giveWeapon(player, w, rounds, true)
+                if setWeaponAmmo then
+                    setWeaponAmmo(player, w, rounds, rounds)
+                end
+            else
+                takeWeapon(player, w)
+                toast(player, "WEAPNOAMMOL")
+            end
+        end
+        if isElement(player) then
+            triggerClientEvent(
+                player,
+                "onClientItemsHeld",
+                player,
+                { id = item.id, uname = item.uname, hp = item.hp, data = item.data }
+            )
+        end
     end
 
     -- Restores the held item and the worn bag from the DB (spawn and resource restart).
@@ -115,12 +182,177 @@ return function(ctx)
         )
     end
 
+    addEventHandler("onPlayerWeaponFire", root, function()
+        if not ammo then
+            return
+        end
+        local item = state.held[source]
+        if not item then
+            return
+        end
+        local t = itemType(item.uname)
+        if not ammo.isCalibreWeapon(t) then
+            return
+        end
+        local ok, nextData, autoReloaded = ammo.fire(t, item.data, defAmmoFor(t))
+        if not ok then
+            return
+        end
+        if autoReloaded and setPedAnimation then
+            setPedAnimation(source, "COLT45", "colt45_reload", -1, false, false, false, false)
+        end
+        syncHeldData(source, item, nextData)
+    end)
+
+    net.handler("onItemsRequestReload", function(player)
+        if not ammo then
+            return
+        end
+        local item = state.held[player]
+        if not item then
+            return
+        end
+        local now = getTickCount()
+        if lastReload[player] and now - lastReload[player] < RELOAD_COOLDOWN_MS then
+            return
+        end
+        local t = itemType(item.uname)
+        if not ammo.isCalibreWeapon(t) then
+            return
+        end
+        local ok, nextData = ammo.reload(t, item.data, defAmmoFor(t))
+        if not ok then
+            return
+        end
+        lastReload[player] = now
+        if setPedAnimation then
+            setPedAnimation(player, "COLT45", "colt45_reload", -1, false, false, false, false)
+        end
+        syncHeldData(player, item, nextData)
+    end, { rate = 3 })
+
+    net.handler("onItemsRequestUnload", function(player)
+        if not ammo then
+            return
+        end
+        local cid, item = charId(player), state.held[player]
+        if not cid or not item then
+            return
+        end
+        local t = itemType(item.uname)
+        if not ammo.isCalibreWeapon(t) then
+            return
+        end
+        local ok, unloadedState, spawned = ammo.unload(t, item.data, defAmmoFor(t))
+        if not ok then
+            return toast(player, unloadedState)
+        end
+        local x, y, z = getElementPosition(player)
+        local _, _, rz = getElementRotation(player)
+        local dx, dy = geometry.dropPosition(x, y, rz, 0.5)
+        local params = {
+            cid,
+            item.id,
+            ammo.encodeData(unloadedState),
+            spawned.uname,
+            ammo.encodeData(spawned.data),
+            dx,
+            dy,
+            z - 0.9,
+            rz,
+            getElementInterior(player),
+            getElementDimension(player),
+        }
+        db.call("weapon_unload", params, function(res, c)
+            if not isElement(c.player) then
+                return
+            end
+            if not res or not res.ok then
+                return toast(c.player, res and res.code or "DB_ERROR")
+            end
+            local cur = state.held[c.player]
+            if cur and cur.id == c.itemId then
+                syncHeldData(c.player, cur, c.unloadedState)
+            end
+            if setPedAnimation then
+                setPedAnimation(c.player, "COLT45", "colt45_reload", -1, false, false, false, false)
+            end
+            world.syncPlayer(c.player)
+            if res.payload and res.payload.ammo_item_id then
+                triggerEvent("onItemCreated", resourceRoot, res.payload.ammo_item_id)
+            end
+        end, { player = player, itemId = item.id, unloadedState = unloadedState })
+    end, { rate = 3 })
+
+    local function tryTransferFromWorld(player, cid, held, heldType, row)
+        local worldType = itemType(row.uname)
+        if not ammo or (not ammo.isCalibreWeapon(worldType) and not ammo.isAmmoItem(worldType)) then
+            return toast(player, "HANDS_FULL")
+        end
+        local worldData = decodeData(row.data)
+        local defA = defAmmoFor(heldType) or defAmmoFor(worldType)
+        local ok, code, nextHeld, nextWorld, moved, delWorld, delHeld =
+            ammo.interactTransfer(heldType, held.data, worldType, worldData, defA)
+        if not ok then
+            return toast(player, code)
+        end
+        if moved <= 0 then
+            return toast(player, "HANDS_FULL")
+        end
+        local params = {
+            cid,
+            held.id,
+            row.id,
+            ammo.encodeData(nextHeld),
+            ammo.encodeData(nextWorld),
+            delWorld and 1 or 0,
+            delHeld and 1 or 0,
+        }
+        db.call("item_transfer_world", params, function(res, c)
+            if res and res.ok then
+                world.forgetEverywhere(c.worldId)
+                if c.delWorld then
+                    triggerEvent("onItemDestroyed", resourceRoot, c.worldId)
+                end
+            end
+            if not isElement(c.player) then
+                return
+            end
+            if not res or not res.ok then
+                return toast(c.player, res and res.code or "DB_ERROR")
+            end
+            if c.delHeld then
+                M.setHeld(c.player, nil)
+                triggerEvent("onItemDestroyed", resourceRoot, c.held.id)
+            else
+                M.setHeld(c.player, { id = c.held.id, uname = c.held.uname, hp = c.held.hp, data = c.nextHeld })
+            end
+            if not c.delWorld then
+                world.syncPlayer(c.player)
+            end
+            if setPedAnimation then
+                setPedAnimation(c.player, "COLT45", "colt45_reload", -1, false, false, false, false)
+            end
+            toast(c.player, string.format("AMTRANS:%d", c.moved))
+        end, {
+            player = player,
+            held = held,
+            worldId = row.id,
+            nextHeld = nextHeld,
+            delWorld = delWorld,
+            delHeld = delHeld,
+            moved = moved,
+        })
+    end
+
     net.handler("onItemsRequestPickup", function(player)
         local cid = charId(player)
         if not cid then
             return
         end
-        if state.held[player] then
+        local held = state.held[player]
+        local heldType = held and itemType(held.uname) or nil
+        if held and (not ammo or (not ammo.isCalibreWeapon(heldType) and not ammo.isAmmoItem(heldType))) then
             return toast(player, "HANDS_FULL")
         end
         local x, y = getElementPosition(player)
@@ -129,6 +361,11 @@ return function(ctx)
         db.one(sql, {}, function(row, c)
             if not isElement(c.player) or not row then
                 return
+            end
+            local curHeld = state.held[c.player]
+            if curHeld then
+                local curType = itemType(curHeld.uname)
+                return tryTransferFromWorld(c.player, c.charId, curHeld, curType, row)
             end
             db.call("item_pickup", { row.id, c.charId }, function(res, c2)
                 if res and res.ok then

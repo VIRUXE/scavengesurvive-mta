@@ -34,14 +34,18 @@ local function rollSpawn(s)
     local unames = roll.pick(tbl, s.size, s.weight, mult, math.random)
     local reroll = tonumber(settings["loot.reroll_minutes"]) or 30
     for i, uname in ipairs(unames) do
-        if exports.data:itemType(uname) then
+        local def = exports.data:itemType(uname)
+        if def then
             local ang = math.rad(i * (360 / #unames))
             local x, y = s.x + math.cos(ang) * 0.6, s.y + math.sin(ang) * 0.6
-            -- hitpoints and data are NULL; n is required because of the embedded nils
+            local cal = def.categoryData and def.categoryData.calibre
+            local ammoTypes = cal and exports.data:ammoTypesForCalibre(cal) or nil
+            local dataJson = roll.initialItemData(def, s.table_name, ammoTypes, math.random)
+            -- hitpoints is NULL; n is required because of the embedded nils
             local params = {
                 uname,
                 nil,
-                nil,
+                dataJson,
                 x,
                 y,
                 s.z + 0.1032,

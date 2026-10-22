@@ -11,6 +11,7 @@
     <script src="client/main.lua" type="client"/>
     <file src="shared/logic/geometry.lua"/>
     <file src="shared/logic/diff.lua"/>
+    <file src="shared/logic/ammo.lua"/>
     <file src="client/models.lua"/>
     <file src="client/world.lua"/>
     <file src="client/attach.lua"/>

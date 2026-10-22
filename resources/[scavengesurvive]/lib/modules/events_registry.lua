@@ -22,6 +22,8 @@ return {
     onItemsRequestTake = true,
     onItemsRequestOpenInventory = true,
     onItemsRequestUse = true,
+    onItemsRequestReload = true,
+    onItemsRequestUnload = true,
     onClientItemsSync = true,
     onClientItemsHeld = true,
     onClientItemsInventory = true,

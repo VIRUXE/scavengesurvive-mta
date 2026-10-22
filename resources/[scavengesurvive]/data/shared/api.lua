@@ -36,6 +36,16 @@ for _, def in pairs(items.byUname) do
     def.mtaModel, def.sampOnly = modelMap.resolve(def.model)
 end
 
+local ammoByCalibre = {}
+for _, uname in ipairs(items.order) do
+    local def = items.byUname[uname]
+    if def and def.category == "ammo" and def.categoryData and def.categoryData.calibre then
+        local cal = def.categoryData.calibre
+        ammoByCalibre[cal] = ammoByCalibre[cal] or {}
+        ammoByCalibre[cal][#ammoByCalibre[cal] + 1] = uname
+    end
+end
+
 function Data.itemType(uname)
     return items.byUname[uname]
 end
@@ -50,6 +60,14 @@ end
 
 function Data.calibreBleed(name)
     return items.calibres[name]
+end
+
+function Data.calibreName(name)
+    return items.calibreNames[name]
+end
+
+function Data.ammoTypesForCalibre(name)
+    return ammoByCalibre[name] or {}
 end
 
 -- vehicle types by uname (Bobcat, Police1, BfInject, ...); display names repeat, so unameByName resolves them
@@ -91,6 +109,14 @@ end
 
 function calibreBleed(name)
     return Data.calibreBleed(name)
+end
+
+function calibreName(name)
+    return Data.calibreName(name)
+end
+
+function ammoTypesForCalibre(name)
+    return Data.ammoTypesForCalibre(name)
 end
 
 function vehicleType(uname)

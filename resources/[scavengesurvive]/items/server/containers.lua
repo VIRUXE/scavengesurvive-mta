@@ -107,7 +107,7 @@ return function(ctx)
             if #ids == 0 then
                 return triggerClientEvent(c.player, "onClientItemsInventory", c.player, payload)
             end
-            local sql = "SELECT i.id, i.type_uname AS uname, i.hitpoints AS hp, i.container_id AS cid, "
+            local sql = "SELECT i.id, i.type_uname AS uname, i.hitpoints AS hp, i.data, i.container_id AS cid, "
                 .. "t.size AS isize, t.category FROM items i JOIN item_types t ON t.uname = i.type_uname "
                 .. "WHERE i.container_id IN ("
                 .. table.concat(ids, ",")
@@ -119,7 +119,13 @@ return function(ctx)
                 for _, r in ipairs(rows) do
                     local target = byId[r.cid]
                     if target then
-                        target.rows[#target.rows + 1] = { id = r.id, uname = r.uname, hp = r.hp, category = r.category }
+                        target.rows[#target.rows + 1] = {
+                            id = r.id,
+                            uname = r.uname,
+                            hp = r.hp,
+                            category = r.category,
+                            data = hands.decodeData(r.data),
+                        }
                         target.cap.used = target.cap.used + (tonumber(r.isize) or 1)
                     end
                 end

@@ -11,7 +11,7 @@ stds.mta_shared = dofile(".luacheck/mta_shared.lua")
 stds.mta_server = dofile(".luacheck/mta_server.lua")
 stds.mta_client = dofile(".luacheck/mta_client.lua")
 files["resources/**/lib/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "getModule" } }
-files["resources/**/data/**"] = { std = "lua51+mta_shared", globals = { "itemType", "itemTypes", "lootTable", "calibreBleed", "vehicleType", "vehicleTypes", "t" } }
+files["resources/**/data/**"] = { std = "lua51+mta_shared", globals = { "itemType", "itemTypes", "lootTable", "calibreBleed", "calibreName", "ammoTypesForCalibre", "vehicleType", "vehicleTypes", "t" } }
 files["resources/**/ui/**"] = { std = "lua51+mta_shared+mta_client", globals = { "actionTextShow", "actionTextHide", "toast", "progressStart", "progressCancel", "listOpen", "listUpdate", "listClose", "listIsOpen" } }
 -- getTime/getVehicleEngineState/getVehicleName/getVehicleOccupant postdate the generated .luacheck/mta_client.lua list
 files["resources/**/hud/client/**"] = { std = "lua51+mta_shared+mta_client", read_globals = { "getTime", "getVehicleEngineState", "getVehicleName", "getVehicleOccupant" } }

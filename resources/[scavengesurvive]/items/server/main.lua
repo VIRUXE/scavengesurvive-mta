@@ -9,6 +9,7 @@ local function loadFile(path)
 end
 local geometry = loadFile("shared/logic/geometry.lua")
 local diff = loadFile("shared/logic/diff.lua")
+local ammo = loadFile("shared/logic/ammo.lua")
 
 -- Per-player item state, shared with the server modules (they capture this table).
 local state = {
@@ -24,6 +25,11 @@ local function itemType(uname)
         state.typeCache[uname] = exports.data:itemType(uname) or false
     end
     return state.typeCache[uname] or nil
+end
+
+local function defaultAmmo(calibre)
+    local list = calibre and exports.data:ammoTypesForCalibre(calibre)
+    return list and list[1] or nil
 end
 
 local function charId(player)
@@ -43,7 +49,9 @@ local hands = loadFile("server/hands.lua")({
     net = net,
     state = state,
     geometry = geometry,
+    ammo = ammo,
     type = itemType,
+    defaultAmmo = defaultAmmo,
     charId = charId,
     toast = toast,
     world = world,
@@ -139,7 +147,7 @@ end)
 
 function getHeld(player)
     local item = state.held[player]
-    return item and { id = item.id, uname = item.uname, hp = item.hp } or false
+    return item and { id = item.id, uname = item.uname, hp = item.hp, data = item.data } or false
 end
 
 function refreshPlayer(player)

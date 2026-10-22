@@ -37,7 +37,7 @@ local STOCK = {
     radio = false,
 }
 -- Actions the port implements; the rest of upstream's lines wait for their features.
-local SUPPORTS = { eat = true }
+local SUPPORTS = { eat = true, reload = true, unload = true }
 
 local state = {
     spawned = false,
@@ -93,7 +93,7 @@ local function refreshKeys()
         putaway = keyName("putaway", "y"),
         drop = keyName("dropitem", "n"),
         inventory = keyName("inventory", "h"),
-        reload = "R",
+        reload = keyName("reloadweapon", "r"),
         engine = "Y",
         lights = "N",
         doors = "2",
@@ -120,7 +120,15 @@ end)
 addEventHandler("onClientItemsHeld", root, function(item)
     if item then
         local t = itemType(item.uname)
-        state.held = { id = item.id, uname = item.uname, category = t and t.category or "generic" }
+        local cd = t and t.categoryData or nil
+        state.held = {
+            id = item.id,
+            uname = item.uname,
+            category = t and t.category or "generic",
+            data = item.data,
+            calibre = cd and cd.calibre or nil,
+            liquid = cd and cd.liquid or false,
+        }
     else
         state.held = false
     end
@@ -132,12 +140,12 @@ local function drawHunger()
 end
 
 local function drawAmmo()
-    local weapon = getPedWeapon(localPlayer)
-    if not weapon or weapon == 0 or not state.held then
+    local held = state.held
+    if not held or held.category ~= "weapon" or not held.calibre or held.liquid then
         return
     end
-    local clip = getPedAmmoInClip(localPlayer) or 0
-    local reserve = math.max(0, (getPedTotalAmmo(localPlayer) or 0) - clip)
+    local clip = tonumber(held.data and held.data.mag) or 0
+    local reserve = tonumber(held.data and held.data.reserve) or 0
     draw.text({
         text = string.format("%d/%d", clip, reserve),
         x = 520.41,
@@ -154,13 +162,13 @@ end
 
 local function drawKeyActions(driver)
     local held = state.held
-    local t = held and itemType(held.uname)
+    local isCalibreWep = held and held.category == "weapon" and held.calibre ~= nil and not held.liquid or false
     local lines = keyactions.lines({
         spawned = true,
         uiOpen = uiListIsOpen(),
         knockedOut = false,
         driver = driver,
-        held = held and { uname = held.uname, category = held.category, isWeapon = t and t.category == "weapon" },
+        held = held and { uname = held.uname, category = held.category, isWeapon = isCalibreWep },
         nearPlayer = false,
         supports = SUPPORTS,
     }, state.keys)

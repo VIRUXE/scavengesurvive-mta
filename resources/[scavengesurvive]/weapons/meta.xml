@@ -9,5 +9,7 @@
     <script src="shared/events.lua" type="shared"/>
     <script src="server/main.lua" type="server"/>
     <script src="client/damage.lua" type="client"/>
+    <script src="client/tracer.lua" type="client"/>
     <file src="shared/logic/wound.lua"/>
+    <file src="shared/logic/tracer.lua"/>
 </meta>

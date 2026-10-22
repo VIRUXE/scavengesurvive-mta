@@ -1,7 +1,8 @@
 -- The inventory and bag dialogs (inventory-dialog.inc / container-dialog.inc through the ui resource) and the
 -- action-text messages the server sends. The hand is not listed: upstream shows it in the gear tiles, and the
 -- held item is used, put away or dropped with the keys.
-return function()
+return function(ctx)
+    local ammo = ctx and ctx.ammo
     local MESSAGES = {
         HANDS_FULL = "You are already holding an item",
         NOT_IN_WORLD = "It is gone",
@@ -16,6 +17,11 @@ return function()
         NOT_OWNED = "Not yours",
         NOT_IN_CONTAINER = "It is not there any more",
         SELF_CONTAINMENT = "It does not fit inside itself",
+        WEAPNOAMMOL = "There is no ammo loaded in this weapon",
+        WEAPAUNLOAD = "Weapon is already unloaded",
+        AMWRONGCALI = "Calibre does not match weapon",
+        AMDIFFATYPE = "Ammo type does not match weapon's loaded ammo",
+        AMMIXINTINS = "You cannot mix two ammo types in one tin",
     }
     local view = "inventory" -- which dialog is up: "inventory" or "bag"
     local last = nil -- the last payload, re-rendered when the view switches
@@ -28,11 +34,31 @@ return function()
     end)
 
     addEventHandler("onClientItemsToast", root, function(code)
-        exports.ui:actionTextShow(MESSAGES[code] or tostring(code), 3000)
+        local n = type(code) == "string" and code:match("^AMTRANS:(%d+)$")
+        local msg = n and string.format("Transferred %d rounds", tonumber(n) or 0) or MESSAGES[code] or tostring(code)
+        exports.ui:actionTextShow(msg, 3000)
     end)
 
     local function itemType(uname)
         return exports.data:itemType(uname)
+    end
+
+    local function calibreName(cal)
+        return exports.data:calibreName(cal)
+    end
+
+    local function defaultAmmo(cal)
+        local list = cal and exports.data:ammoTypesForCalibre(cal)
+        return list and list[1] or nil
+    end
+
+    local function formatLabel(t, it)
+        local name = t and t.name or it.uname
+        if ammo and t then
+            local defA = t.categoryData and defaultAmmo(t.categoryData.calibre) or nil
+            name = ammo.displayName(t, it.data, itemType, calibreName, defA)
+        end
+        return string.format("[%02d]%s", t and t.size or 1, name)
     end
 
     -- "[%02d]%s": the type size then the name, one "<Empty>" per free slot
@@ -42,7 +68,7 @@ return function()
             local t = itemType(it.uname)
             rows[#rows + 1] = {
                 id = it.id,
-                label = string.format("[%02d]%s", t and t.size or 1, t and t.name or it.uname),
+                label = formatLabel(t, it),
                 actions = { { id = "take", label = "Equip" }, { id = "use", label = "Use" } },
             }
         end

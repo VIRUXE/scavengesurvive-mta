@@ -23,6 +23,8 @@
     <export function="itemTypes" type="shared"/>
     <export function="lootTable" type="shared"/>
     <export function="calibreBleed" type="shared"/>
+    <export function="calibreName" type="shared"/>
+    <export function="ammoTypesForCalibre" type="shared"/>
     <export function="vehicleType" type="shared"/>
     <export function="vehicleTypes" type="shared"/>
     <export function="t" type="shared"/>

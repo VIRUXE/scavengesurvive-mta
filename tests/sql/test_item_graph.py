@@ -152,3 +152,51 @@ def test_create_in_container_and_destroy(db, character):
     with db.cursor() as cur:
         cur.execute("SELECT COUNT(*) AS n FROM items WHERE id=%s", (payload["item_id"],))
         assert cur.fetchone()["n"] == 0
+
+
+def test_transfer_world_and_weapon_unload(db, character):
+    ch = character["character_id"]
+    wep = make_world_item(db, "T_Knife", 5.0, 6.0, 3.0)
+    tin = make_world_item(db, "T_Wrench", 5.5, 6.0, 3.0)
+    assert call(db, "item_pickup", wep, ch)[1] == "OK"
+    ok, code, payload = call(
+        db,
+        "item_transfer_world",
+        ch,
+        wep,
+        tin,
+        '{"mag":10,"reserve":0,"ammoItem":"Ammo9mm"}',
+        '{"rounds":0}',
+        1,
+        0,
+    )
+    assert (ok, code) == (1, "OK") and payload["deleted_world"] == 1
+    with db.cursor() as cur:
+        cur.execute("SELECT COUNT(*) AS n FROM items WHERE id=%s", (tin,))
+        assert cur.fetchone()["n"] == 0
+        cur.execute("SELECT COUNT(*) AS n FROM world_items_pos WHERE item_id=%s", (tin,))
+        assert cur.fetchone()["n"] == 0
+
+    ok_u, code_u, payload_u = call(
+        db,
+        "weapon_unload",
+        ch,
+        wep,
+        '{"mag":0,"reserve":0}',
+        "T_Wrench",
+        '{"rounds":10}',
+        5.0,
+        6.5,
+        3.0,
+        0.0,
+        0,
+        0,
+    )
+    assert (ok_u, code_u) == (1, "OK")
+    ammo_id = payload_u["ammo_item_id"]
+    with db.cursor() as cur:
+        cur.execute("SELECT data FROM items WHERE id=%s", (wep,))
+        assert "0" in cur.fetchone()["data"]
+        cur.execute("SELECT type_uname, x FROM items WHERE id=%s", (ammo_id,))
+        row = cur.fetchone()
+        assert row["type_uname"] == "T_Wrench" and row["x"] == 5.0
