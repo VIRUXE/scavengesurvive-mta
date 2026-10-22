@@ -1,5 +1,5 @@
 <meta>
-    <info author="scavengesurvive-mta" type="script" name="hud" description="Status bars, held item, key binds" version="0.1.0"/>
+    <info author="scavengesurvive-mta" type="script" name="hud" description="Stock HUD, hunger bar, ammo, key actions, watch, vehicle panel, key binds" version="0.2.0"/>
     <min_mta_version server="1.6.0" client="1.6.0"/>
     <download_priority_group>80</download_priority_group>
     <include resource="lib"/>
@@ -8,6 +8,9 @@
     <include resource="items"/>
     <script src="shared/events.lua" type="shared"/>
     <script src="client/main.lua" type="client"/>
-    <script src="client/keys.lua" type="client"/>
+    <file src="client/keys.lua"/>
     <file src="shared/logic/bars.lua"/>
+    <file src="shared/logic/keyactions.lua"/>
+    <file src="shared/logic/watch.lua"/>
+    <file src="shared/logic/vehiclepanel.lua"/>
 </meta>

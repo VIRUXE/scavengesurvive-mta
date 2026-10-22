@@ -1,14 +1,18 @@
 <meta>
-    <info author="scavengesurvive-mta" type="script" name="ui" description="dx UI kit: toasts, hold progress, action lists" version="0.1.0"/>
+    <info author="scavengesurvive-mta" type="script" name="ui" description="dx UI kit: action text, hold bar, SA-MP style list dialog" version="0.2.0"/>
     <min_mta_version server="1.6.0" client="1.6.0"/>
     <download_priority_group>90</download_priority_group>
     <include resource="lib"/>
     <script src="shared/events.lua" type="shared"/>
     <script src="client/main.lua" type="client"/>
-    <file src="shared/logic/listlayout.lua"/>
-    <file src="client/toast.lua"/>
+    <file src="shared/logic/canvas.lua"/>
+    <file src="shared/logic/dialog.lua"/>
+    <file src="client/draw.lua"/>
+    <file src="client/actiontext.lua"/>
     <file src="client/progress.lua"/>
     <file src="client/list.lua"/>
+    <export function="actionTextShow" type="client"/>
+    <export function="actionTextHide" type="client"/>
     <export function="toast" type="client"/>
     <export function="progressStart" type="client"/>
     <export function="progressCancel" type="client"/>

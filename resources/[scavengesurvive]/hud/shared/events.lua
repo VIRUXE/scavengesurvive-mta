@@ -1,6 +1,8 @@
 addEvent("onClientCharacterStats", true)
+addEvent("onClientCharacterDeathScreen", true)
 addEvent("onClientItemsHeld", true)
 addEvent("onItemsRequestPickup", true)
 addEvent("onItemsRequestDrop", true)
 addEvent("onItemsRequestPutAway", true)
+addEvent("onItemsRequestUse", true)
 addEvent("onItemsRequestOpenInventory", true)

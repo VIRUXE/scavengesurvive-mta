@@ -1,10 +1,11 @@
--- Inventory list (through the ui resource) and the toasts the server sends; tracks the held item for the list.
+-- The inventory and bag dialogs (inventory-dialog.inc / container-dialog.inc through the ui resource) and the
+-- action-text messages the server sends. The hand is not listed: upstream shows it in the gear tiles, and the
+-- held item is used, put away or dropped with the keys.
 return function()
-    local held = false
-    local TOASTS = {
-        HANDS_FULL = "Your hands are full",
+    local MESSAGES = {
+        HANDS_FULL = "You are already holding an item",
         NOT_IN_WORLD = "It is gone",
-        CONTAINER_FULL = "No space",
+        CONTAINER_FULL = "Extra slots required",
         PUT_AWAY = "Put away",
         BAG_WORN = "You put on the bag",
         BAG_SLOT_USED = "You already wear a bag",
@@ -16,83 +17,86 @@ return function()
         NOT_IN_CONTAINER = "It is not there any more",
         SELF_CONTAINMENT = "It does not fit inside itself",
     }
+    local view = "inventory" -- which dialog is up: "inventory" or "bag"
+    local last = nil -- the last payload, re-rendered when the view switches
 
-    addEventHandler("onClientItemsHeld", root, function(item)
-        held = item
-        -- the open list shows the held item as its first row: ask for a fresh one
+    addEventHandler("onClientItemsHeld", root, function()
+        -- the dialog's contents depend on the hand (Equip empties a slot): ask for a fresh one
         if exports.ui:listIsOpen() then
             triggerServerEvent("onItemsRequestOpenInventory", localPlayer)
         end
     end)
 
     addEventHandler("onClientItemsToast", root, function(code)
-        exports.ui:toast(TOASTS[code] or tostring(code))
+        exports.ui:actionTextShow(MESSAGES[code] or tostring(code), 3000)
     end)
 
-    local function itemName(uname)
-        local t = exports.data:itemType(uname)
-        return t and t.name or uname
+    local function itemType(uname)
+        return exports.data:itemType(uname)
     end
 
-    local function rowsFor(list, prefix)
+    -- "[%02d]%s": the type size then the name, one "<Empty>" per free slot
+    local function rowsFor(list, cap)
         local rows = {}
         for _, it in ipairs(list or {}) do
-            local actions = { { id = "take", label = "Take" } }
-            if it.category == "food" then
-                actions[#actions + 1] = { id = "use", label = "Eat" }
-            end
-            rows[#rows + 1] =
-                { id = it.id, label = prefix .. itemName(it.uname), sub = tostring(it.hp) .. " hp", actions = actions }
+            local t = itemType(it.uname)
+            rows[#rows + 1] = {
+                id = it.id,
+                label = string.format("[%02d]%s", t and t.size or 1, t and t.name or it.uname),
+                actions = { { id = "take", label = "Equip" }, { id = "use", label = "Use" } },
+            }
+        end
+        for _ = 1, math.max(0, (cap.size or 0) - (cap.used or 0)) do
+            rows[#rows + 1] = { label = "<Empty>", empty = true }
         end
         return rows
     end
 
-    -- the held item leads the list so food can be eaten from the hand (Eat), or put away / dropped
-    local function heldRow()
-        if not held then
-            return nil
+    local function open(p)
+        local title, rows
+        if view == "bag" and p.bag then
+            title = string.format("Bag (%d/%d)", p.capacity.bag.used, p.capacity.bag.size)
+            rows = rowsFor(p.bag, p.capacity.bag)
+            rows[#rows + 1] = { id = "nav:inventory", label = "My Inventory >" }
+        else
+            view = "inventory"
+            title = string.format("Inventory (%d/%d)", p.capacity.inv.used, p.capacity.inv.size)
+            rows = rowsFor(p.inventory, p.capacity.inv)
+            if p.bag then
+                rows[#rows + 1] = { id = "nav:bag", label = "Bag >" }
+            end
         end
-        local t = exports.data:itemType(held.uname)
-        local actions = { { id = "putaway", label = "Put away" }, { id = "drop", label = "Drop" } }
-        if t and t.category == "food" then
-            table.insert(actions, 1, { id = "use", label = "Eat" })
-        end
-        return {
-            id = held.id,
-            label = "[hand] " .. itemName(held.uname),
-            sub = tostring(held.hp) .. " hp",
-            actions = actions,
-        }
+        exports.ui:listOpen("inventory", title, rows)
     end
 
     addEventHandler("onClientItemsInventory", root, function(p)
-        local rows = { heldRow() }
-        for _, r in ipairs(rowsFor(p.inventory, "")) do
-            rows[#rows + 1] = r
-        end
-        for _, r in ipairs(rowsFor(p.bag or {}, "[bag] ")) do
-            rows[#rows + 1] = r
-        end
-        local title = string.format("Inventory %d/%d", p.capacity.inv.used, p.capacity.inv.size)
-        if p.capacity.bag then
-            title = title .. string.format("  Bag %d/%d", p.capacity.bag.used, p.capacity.bag.size)
-        end
-        -- reopen (not listUpdate) so the capacity title stays current
-        exports.ui:listOpen("inventory", title, rows)
+        last = p
+        open(p)
     end)
 
     addEventHandler("onClientUiListAction", root, function(listId, rowId, actionId)
         if listId ~= "inventory" then
             return
         end
-        if actionId == "take" then
+        if actionId == "select" then
+            if rowId == "nav:bag" then
+                view = "bag"
+            elseif rowId == "nav:inventory" then
+                view = "inventory"
+            end
+            if last then
+                open(last)
+            end
+        elseif actionId == "take" then
             triggerServerEvent("onItemsRequestTake", localPlayer, rowId)
         elseif actionId == "use" then
             triggerServerEvent("onItemsRequestUse", localPlayer, rowId)
-        elseif actionId == "putaway" then
-            triggerServerEvent("onItemsRequestPutAway", localPlayer)
-        elseif actionId == "drop" then
-            triggerServerEvent("onItemsRequestDrop", localPlayer)
+        end
+    end)
+
+    addEventHandler("onClientUiListClosed", root, function(listId)
+        if listId == "inventory" then
+            view = "inventory"
         end
     end)
 end

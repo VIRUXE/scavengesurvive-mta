@@ -1,27 +1,42 @@
--- Action list panel: rows with a label, a sub text and per-row action buttons; one list open at a time.
--- ctx = { sw, sh, scale, font, layout } from client/main.lua; layout is shared/logic/listlayout.lua.
+-- The SA-MP list dialog in dx: title "(used/size)", rows with a red selected row, scrollbar, two buttons.
+-- Level 1 lists the rows the caller gave; the left button on a row with actions opens level 2, a second dialog
+-- titled with the row label listing its actions with Accept/Back (inventory-dialog.inc / container-dialog.inc).
+-- A row without actions is a navigation row: the left button emits actionId "select" for it.
+-- Emits onClientUiListAction(listId, rowId, actionId) and onClientUiListClosed(listId). One dialog at a time.
 return function(ctx)
-    local layout = ctx.layout
-    local state = nil
+    local dialog, canvas, c = ctx.dialog, ctx.canvas, ctx.c
+    local COL = {
+        box = tocolor(0, 0, 0, 215),
+        list = tocolor(0, 0, 0, 240),
+        selected = tocolor(139, 26, 30, 255),
+        text = tocolor(255, 255, 255, 255),
+        empty = tocolor(200, 200, 200, 255),
+        button = tocolor(45, 45, 45, 255),
+        border = tocolor(190, 190, 190, 255),
+        scroll = tocolor(60, 60, 60, 255),
+        thumb = tocolor(150, 150, 150, 255),
+    }
+    local DEFAULT_BUTTONS = { "Options", "Close" }
+    local OPTION_BUTTONS = { "Accept", "Back" }
+    local state = nil -- { base = dialog state, options = dialog state | nil }
     local M = {}
 
-    local function recompute()
-        state.computed = layout.compute(state.rows, state.expanded, ctx.sw, ctx.sh, ctx.scale)
+    local function current()
+        return state and (state.options or state.base)
     end
 
-    function M.open(listId, title, rows)
-        state = { id = listId, title = title, rows = rows, expanded = nil }
-        recompute()
+    function M.open(listId, title, rows, buttons)
+        state = { base = dialog.new(listId, title, rows, buttons or DEFAULT_BUTTONS) }
         showCursor(true)
         return true
     end
 
     function M.update(listId, rows)
-        if not state or state.id ~= listId then
+        if not state or state.base.id ~= listId then
             return false
         end
-        state.rows = rows
-        recompute()
+        dialog.setRows(state.base, rows)
+        state.options = nil
         return true
     end
 
@@ -29,7 +44,7 @@ return function(ctx)
         if not state then
             return false
         end
-        local id = state.id
+        local id = state.base.id
         state = nil
         showCursor(false)
         triggerEvent("onClientUiListClosed", root, id)
@@ -40,99 +55,147 @@ return function(ctx)
         return state ~= nil
     end
 
-    function M.draw()
-        local c = state.computed
-        dxDrawRectangle(c.panel.x, c.panel.y, c.panel.w, c.panel.h, tocolor(10, 10, 10, 220))
-        dxDrawText(
-            state.title,
-            c.title.x,
-            c.title.y,
-            c.panel.x + c.panel.w,
-            c.title.y + c.title.h,
-            tocolor(255, 255, 255),
-            ctx.scale * 1.1,
-            ctx.font,
-            "left",
-            "center"
-        )
-        dxDrawText(
-            "X",
-            c.close.x,
-            c.close.y,
-            c.close.x + c.close.w,
-            c.close.y + c.close.h,
-            tocolor(255, 90, 90),
-            ctx.scale,
-            ctx.font,
-            "center",
-            "center"
-        )
-        for i, row in ipairs(c.rows) do
-            local r = state.rows[i]
-            local bg = (row.id == state.expanded) and tocolor(60, 60, 60, 200) or tocolor(30, 30, 30, 200)
-            dxDrawRectangle(row.x, row.y, row.w, row.h - 2, bg)
-            dxDrawText(
-                r.label,
-                row.x + 8,
-                row.y,
-                row.x + row.w,
-                row.y + row.h,
-                tocolor(255, 255, 255),
-                ctx.scale,
-                ctx.font,
-                "left",
-                "center"
-            )
-            dxDrawText(
-                r.sub or "",
-                row.x,
-                row.y,
-                row.x + row.w - 8,
-                row.y + row.h,
-                tocolor(180, 180, 180),
-                ctx.scale * 0.9,
-                ctx.font,
-                "right",
-                "center"
-            )
+    local function leftButton()
+        local st = current()
+        local row = dialog.selectedRow(st)
+        if not row then
+            return
+        end
+        if state.options then
+            triggerEvent("onClientUiListAction", root, state.base.id, state.options.rowId, row.id)
+            state.options = nil
+            return
+        end
+        if row.actions and #row.actions > 0 then
+            local rows = {}
             for _, a in ipairs(row.actions) do
-                dxDrawRectangle(a.x, a.y, a.w, a.h, tocolor(80, 120, 80, 220))
-                dxDrawText(
-                    a.label,
-                    a.x,
-                    a.y,
-                    a.x + a.w,
-                    a.y + a.h,
-                    tocolor(255, 255, 255),
-                    ctx.scale,
-                    ctx.font,
-                    "center",
-                    "center"
-                )
+                rows[#rows + 1] = { id = a.id, label = a.label }
             end
+            state.options = dialog.new(state.base.id, row.label, rows, OPTION_BUTTONS)
+            state.options.rowId = row.id
+        else
+            triggerEvent("onClientUiListAction", root, state.base.id, row.id, "select")
         end
     end
 
-    addEventHandler("onClientClick", root, function(button, pressState, ax, ay)
-        if not state or button ~= "left" or pressState ~= "down" then
+    local function rightButton()
+        if state.options then
+            state.options = nil
+        else
+            M.close()
+        end
+    end
+
+    local function rect(r, colour)
+        dxDrawRectangle(r.x, r.y, r.w, r.h, colour)
+    end
+
+    local function button(r, label)
+        rect(r, COL.button)
+        dxDrawLine(r.x, r.y, r.x + r.w, r.y, COL.border)
+        dxDrawLine(r.x, r.y + r.h, r.x + r.w, r.y + r.h, COL.border)
+        dxDrawLine(r.x, r.y, r.x, r.y + r.h, COL.border)
+        dxDrawLine(r.x + r.w, r.y, r.x + r.w, r.y + r.h, COL.border)
+        local scale = canvas.textScale(c, 1.3, 1)
+        dxDrawText(label, r.x, r.y, r.x + r.w, r.y + r.h, COL.text, scale, canvas.font(1), "center", "center")
+    end
+
+    function M.draw()
+        local st = current()
+        if not st then
             return
         end
-        local kind, rowId, actionId = layout.hit(state.computed, ax, ay)
-        if kind == "close" then
-            M.close()
-        elseif kind == "row" then
-            state.expanded = (state.expanded ~= rowId) and rowId or nil
-            recompute()
-        elseif kind == "action" then
-            triggerEvent("onClientUiListAction", root, state.id, rowId, actionId)
+        local L = dialog.layout(c.sw, c.sh, c.s)
+        rect(L.box, COL.box)
+        local titleScale = canvas.textScale(c, 1.4, 1)
+        dxDrawText(st.title, L.title.x, L.title.y, L.box.x + L.box.w, L.list.y, COL.text, titleScale, canvas.font(1))
+        rect(L.list, COL.list)
+        local rowScale = canvas.textScale(c, 1.2, 1)
+        for _, v in ipairs(dialog.visibleRows(st, L)) do
+            if v.index == st.selected then
+                rect(v, COL.selected)
+            end
+            local colour = v.row.empty and COL.empty or COL.text
+            dxDrawText(
+                v.row.label,
+                v.x + L.textPad,
+                v.y,
+                v.x + v.w,
+                v.y + v.h,
+                colour,
+                rowScale,
+                canvas.font(1),
+                "left",
+                "center",
+                true
+            )
+        end
+        rect(L.scroll, COL.scroll)
+        local thumb = dialog.thumb(st, L)
+        if thumb then
+            rect(thumb, COL.thumb)
+        end
+        local b = st.buttons or DEFAULT_BUTTONS
+        button(L.left, b[1])
+        button(L.right, b[2])
+    end
+
+    addEventHandler("onClientClick", root, function(btn, pressState, ax, ay)
+        local st = current()
+        if not st or btn ~= "left" or pressState ~= "down" then
+            return
+        end
+        local L = dialog.layout(c.sw, c.sh, c.s)
+        local kind, index = dialog.hit(st, L, ax, ay)
+        if kind == "row" then
+            if not st.rows[index].empty then
+                st.selected = index
+            end
+        elseif kind == "left" then
+            leftButton()
+        elseif kind == "right" then
+            rightButton()
+        elseif kind == "scrollUp" then
+            dialog.scrollBy(st, -1)
+        elseif kind == "scrollDown" then
+            dialog.scrollBy(st, 1)
+        end
+    end)
+
+    addEventHandler("onClientDoubleClick", root, function(btn, ax, ay)
+        local st = current()
+        if not st or btn ~= "left" then
+            return
+        end
+        local L = dialog.layout(c.sw, c.sh, c.s)
+        local kind, index = dialog.hit(st, L, ax, ay)
+        if kind == "row" and not st.rows[index].empty then
+            st.selected = index
+            leftButton()
         end
     end)
 
     addEventHandler("onClientKey", root, function(key, press)
-        if state and press and key == "escape" then
-            M.close()
-            cancelEvent()
+        local st = current()
+        if not st or not press then
+            return
         end
+        if key == "arrow_u" then
+            dialog.move(st, -1)
+        elseif key == "arrow_d" then
+            dialog.move(st, 1)
+        elseif key == "mouse_wheel_up" then
+            dialog.scrollBy(st, -1)
+        elseif key == "mouse_wheel_down" then
+            dialog.scrollBy(st, 1)
+        elseif key == "enter" then
+            leftButton()
+        elseif key == "escape" or key == "backspace" then
+            rightButton()
+        else
+            return
+        end
+        cancelEvent()
     end)
 
     return M

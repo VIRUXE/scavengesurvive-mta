@@ -1,0 +1,88 @@
+-- The key-actions list (core/ui/key-actions.pwn, _UpdateKeyActions): which "KEY verb" lines the HUD shows for the
+-- player's state and held item. Ported line for line; a line whose action the port does not implement yet is
+-- gated by ctx.supports so the HUD never advertises a key that does nothing.
+local M = {}
+
+-- Per-item verbs on the interact key (upstream's single-item table), by item type uname.
+M.SPECIAL = {
+    Sign = "Place sign",
+    Armour = "Wear armour",
+    Crowbar = "Deconstruct",
+    Shield = "Place shield",
+    Wheel = "Repair vehicle wheel",
+    Clothes = "Wear clothes",
+    Pills = "Take Pills",
+    HerpDerp = "Herp-a-derp",
+}
+
+-- ctx = {
+--   spawned, uiOpen, knockedOut, hudOff, driver, nearTrunk, nearBonnet, nearPlayer, cuffedNearby, hasBag,
+--   held = false | { uname, category, isWeapon },
+--   supports = { [capability] = true },   -- eat, drink, openbag, wearbag, special, holster, reload, unload, give,
+--                                         -- removebag, uncuff, trunk, repair, engine, lights, doors, radio
+-- }
+-- keys = { interact, putaway, drop, inventory, reload, engine, lights, doors, radio } (display names)
+-- Returns { { key = "F", text = "Open Trunk" }, ... } in upstream order.
+function M.lines(ctx, keys)
+    local out = {}
+    local supports = ctx.supports or {}
+    local function add(key, text, cap)
+        if cap == nil or supports[cap] then
+            out[#out + 1] = { key = keys[key] or "?", text = text }
+        end
+    end
+    if not ctx.spawned or ctx.uiOpen or ctx.knockedOut or ctx.hudOff then
+        return out
+    end
+    if ctx.driver then
+        add("engine", "Toggle engine", "engine")
+        add("lights", "Toggle lights", "lights")
+        add("doors", "Toggle locks", "doors")
+        add("radio", "Open radio", "radio")
+        return out
+    end
+    if ctx.nearTrunk then
+        add("interact", "Open Trunk", "trunk")
+    end
+    if ctx.nearBonnet then
+        add("interact", "Repair with tool", "repair")
+    end
+    local h = ctx.held
+    if not h then
+        if ctx.cuffedNearby then
+            add("interact", "Remove handcuffs", "uncuff")
+        end
+        add("inventory", "Open inventory")
+        if ctx.hasBag then
+            add("drop", "Remove bag", "removebag")
+        end
+        return out
+    end
+    if M.SPECIAL[h.uname] then
+        add("interact", M.SPECIAL[h.uname], "special")
+    elseif h.category == "food" then
+        add("interact", "Eat", "eat")
+    elseif h.category == "bag" then
+        add("interact", "Open satchel", "openbag")
+        add("putaway", "Wear", "wearbag")
+    elseif h.category == "liquid" then
+        add("interact", "Drink", "drink")
+    end
+    if h.isWeapon then
+        out = {} -- upstream clears the list for weapons
+        add("putaway", supports.holster and "Holster weapon" or "Put away")
+        add("reload", "Reload", "reload")
+        add("drop", "(Hold) Unload", "unload")
+    else
+        add("putaway", "Put away")
+    end
+    if ctx.nearPlayer and supports.give then
+        add("drop", "Give item")
+    else
+        add("drop", "Drop item")
+    end
+    add("inventory", "Open inventory")
+    return out
+end
+
+return M

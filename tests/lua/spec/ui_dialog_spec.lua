@@ -1,0 +1,66 @@
+local dialog = dofile("resources/[scavengesurvive]/ui/shared/logic/dialog.lua")
+local function rows(n, empties)
+    local out = {}
+    for i = 1, n do
+        out[#out + 1] = { id = i, label = string.format("[01]Item %d", i), actions = { { id = "take", label = "Equip" } } }
+    end
+    for _ = 1, empties or 0 do
+        out[#out + 1] = { label = "<Empty>", empty = true }
+    end
+    return out
+end
+describe("ui dialog", function()
+    it("centres the box and measures like the footage (420 x 305 px at 720p)", function()
+        local L = dialog.layout(1280, 720, 1.5)
+        assert.equals(420, L.box.w)
+        assert.is_true(math.abs(L.box.h - 304.5) < 1)
+        assert.equals(430, L.box.x)
+        assert.equals(18, L.rowH)
+        assert.is_true(L.left.x + L.left.w < 640 and L.right.x > 640)
+    end)
+    it("selects the first selectable row and skips empties", function()
+        local st = dialog.new("inv", "Inventory (2/5)", rows(0, 3))
+        assert.equals(0, st.selected)
+        st = dialog.new("inv", "Inventory (2/5)", rows(2, 3))
+        assert.equals(1, st.selected)
+        dialog.move(st, 1)
+        assert.equals(2, st.selected)
+        dialog.move(st, 1) -- next rows are empty: stays
+        assert.equals(2, st.selected)
+        dialog.move(st, -1)
+        assert.equals(1, st.selected)
+    end)
+    it("scrolls to keep the selection visible and clamps", function()
+        local st = dialog.new("c", "Crate (24/48)", rows(30))
+        for _ = 1, 20 do
+            dialog.move(st, 1)
+        end
+        assert.equals(21, st.selected)
+        assert.equals(21 - dialog.VISIBLE, st.scroll)
+        dialog.scrollBy(st, 100)
+        assert.equals(30 - dialog.VISIBLE, st.scroll)
+        local L = dialog.layout(1280, 720, 1.5)
+        assert.equals(dialog.VISIBLE, #dialog.visibleRows(st, L))
+        assert.is_not_nil(dialog.thumb(st, L))
+        assert.is_nil(dialog.thumb(dialog.new("x", "t", rows(3)), L))
+    end)
+    it("hit-tests rows and buttons", function()
+        local st = dialog.new("inv", "Inventory (2/5)", rows(2, 3))
+        local L = dialog.layout(1280, 720, 1.5)
+        local v = dialog.visibleRows(st, L)
+        assert.same({ "row", 2 }, { dialog.hit(st, L, v[2].x + 2, v[2].y + 2) })
+        assert.equals("left", (dialog.hit(st, L, L.left.x + 1, L.left.y + 1)))
+        assert.equals("right", (dialog.hit(st, L, L.right.x + 1, L.right.y + 1)))
+        assert.equals("scrollDown", (dialog.hit(st, L, L.scrollDown.x + 1, L.scrollDown.y + 1)))
+        assert.equals("box", (dialog.hit(st, L, L.box.x + 1, L.box.y + 1)))
+        assert.is_nil((dialog.hit(st, L, 1, 1)))
+    end)
+    it("keeps the selection across an update when it is still selectable", function()
+        local st = dialog.new("inv", "t", rows(3))
+        dialog.move(st, 1)
+        dialog.setRows(st, rows(3))
+        assert.equals(2, st.selected)
+        dialog.setRows(st, rows(0, 2))
+        assert.equals(0, st.selected)
+    end)
+end)

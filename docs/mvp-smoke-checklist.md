@@ -10,20 +10,20 @@ ui 6, auth 7, character 8, items 9, loot 10, hud 11, weapons 12, dev/config 13),
    connections!` with no `ERROR` or `Access denied` line (MTA does not log each resource it starts at boot).
    `rg -n "ERROR" "…/mods/deathmatch/logs/scripts.log"` returns nothing. `mariadb -u root -e "SELECT COUNT(*) FROM
    information_schema.processlist WHERE db='scavengesurvive'"` shows 5 (auth, character, items, loot, dev).
-2. **Account.** A registers, logs in and spawns on the shoreline. The HUD shows hp/food bars, and **H** lists a Knife.
+2. **Account.** A registers, logs in and spawns on the shoreline. The HUD shows the stock health bar, the hunger bar under it, the watch bottom-left and the key list on the right; **H** opens the inventory dialog listing `[01]Knife`.
    Relog and log in again with the same password.
 3. **DB round trip.** A: `/dbtest` prints `dbtest: <n> ms ok=false code=UNKNOWN_TYPE` with n < 50.
 4. **Pick up / drop.** A: `/additem Wrench`. Within 2 s a "Wrench" label appears at the item. **F** picks it up
-   (held name on the HUD), **N** drops it at your feet, **F** picks it up again. B sees each change.
-5. **Inventory.** A: **Y** puts the Wrench away. **H** lists it, and **Take** puts it back in hand. Repeat `/additem` +
-   **Y** until the toast says "No space". The item that does not fit stays in hand.
+   (the key list changes to Put away / Drop item), **N** drops it at your feet, **F** picks it up again. B sees each change.
+5. **Inventory.** A: **Y** puts the Wrench away. **H** lists it, and **Options → Equip** puts it back in hand. Repeat `/additem` +
+   **Y** until the action text says "Extra slots required". The item that does not fit stays in hand.
 6. **Bag.** A: `/additem Satchel`, **F**, **Y**: the satchel is worn (visible on the back for B). Put more items away
-   than the inventory holds. They overflow into the bag, and **H** shows both lists.
-7. **Food.** A: `/additem HotDog`, **F**, **H** → **Eat**. `/stats` food goes up, and the item is consumed.
+   than the inventory holds. They overflow into the bag, and **H** shows a `Bag >` row that opens the bag dialog.
+7. **Food.** A: `/additem HotDog`, **F** (the key list shows `F Eat`), **F** again. `/stats` food goes up, and the item is consumed.
 8. **Starvation death.** A: `/setfood 0`, `/sethp 3`. Within seconds the death screen shows the cause. **Play Again**
    spawns a new character (`/stats` hp=100 food=40) with an AntiSepBandage in **H**. B walks to the corpse spot
    and sees A's old items on the ground.
-9. **PvP.** A: `/additem M9Pistol`, **F**, shoots B. B gets a toast, a bleed bar appears on B's HUD, and B's hp drains
+9. **PvP.** A: `/additem M9Pistol`, **F**, shoots B. B gets the wound action text, B's screen darkens as hp drops below 40, and B's hp drains
    (`/stats` on B). Keep shooting: B dies, and B's items drop where B died.
 10. **Loot.** A goes to Los Santos (e.g. Grove Street) and runs `/rollloot`. Items appear at upstream spawn points
     (labels within ~2 s). Run ~500 m away (the MVP has no vehicles): the objects unload. Come back: they reload

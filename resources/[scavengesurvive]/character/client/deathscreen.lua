@@ -1,35 +1,34 @@
+-- The death screen (core/player/death.pwn): a black screen with two small boxed lines, "YOU ARE DEAD!" at
+-- 320,300 (font 1, 0.50/2.00) and the clickable ">Play Again<" at 320,323 (0.37/1.60), box colour 0x00000055.
+-- Measured on the footage the two boxes merge into one 204 x 46 unit box.
 local showing, cause = false, nil
 local sw, sh = guiGetScreenSize()
+local s = sh / 480
+local BLACK = tocolor(0, 0, 0, 255)
+local BOX = tocolor(0, 0, 0, 0x55)
+local GREY = tocolor(255, 255, 255, 180)
+local WHITE = tocolor(255, 255, 255, 255)
+local LINE_UNITS = 9.8
+local FONT = "default-bold"
+local box = { x = 218, y = 321, w = 204, h = 46 }
+local button = { x = 218, y = 345, w = 204, h = 16 }
+
+local function text(str, yUnits, letterY, colour)
+    local scale = letterY * LINE_UNITS * s / 15
+    local x1, x2 = sw / 2 - 300 * s, sw / 2 + 300 * s
+    local y = yUnits * s
+    dxDrawText(str, x1 + 1, y + 1, x2 + 1, y + 1, BLACK, scale, FONT, "center", "top")
+    dxDrawText(str, x1, y, x2, y, colour, scale, FONT, "center", "top")
+end
 
 local function draw()
-    local s = sh / 1080
-    dxDrawRectangle(0, 0, sw, sh, tocolor(0, 0, 0, 170))
-    dxDrawText(
-        "YOU ARE DEAD",
-        0,
-        sh * 0.35,
-        sw,
-        sh * 0.45,
-        tocolor(200, 30, 30),
-        3 * s,
-        "default-bold",
-        "center",
-        "center"
-    )
-    local line = cause and ("Cause: " .. cause) or ""
-    dxDrawText(line, 0, sh * 0.46, sw, sh * 0.5, tocolor(220, 220, 220), s, "default-bold", "center", "center")
-    dxDrawText(
-        "> Play Again <",
-        0,
-        sh * 0.55,
-        sw,
-        sh * 0.6,
-        tocolor(255, 255, 255),
-        1.5 * s,
-        "default-bold",
-        "center",
-        "center"
-    )
+    dxDrawRectangle(0, 0, sw, sh, BLACK)
+    dxDrawRectangle(sw / 2 + (box.x - 320) * s, box.y * s, box.w * s, box.h * s, BOX)
+    text("YOU ARE DEAD!", 327, 2.0, GREY)
+    text(">Play Again<", 349, 1.6, WHITE)
+    if cause then
+        text(cause, 372, 1.2, GREY)
+    end
 end
 
 addEventHandler("onClientCharacterDeathScreen", root, function(show, c)
@@ -50,11 +49,12 @@ addEventHandler("onClientCharacterDeathScreen", root, function(show, c)
     end
 end)
 
-addEventHandler("onClientClick", root, function(button, state, _, ay)
-    if not showing or button ~= "left" or state ~= "down" then
+addEventHandler("onClientClick", root, function(btn, state, ax, ay)
+    if not showing or btn ~= "left" or state ~= "down" then
         return
     end
-    if ay > sh * 0.55 and ay < sh * 0.6 then
+    local bx = sw / 2 + (button.x - 320) * s
+    if ax >= bx and ax <= bx + button.w * s and ay >= button.y * s and ay <= (button.y + button.h) * s then
         triggerServerEvent("onCharacterRequestRespawn", localPlayer)
     end
 end)

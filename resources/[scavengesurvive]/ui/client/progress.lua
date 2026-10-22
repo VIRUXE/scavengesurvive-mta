@@ -1,11 +1,12 @@
--- Hold-progress bar (one at a time) with a label above it.
--- ctx = { sw, sh, scale, font } from client/main.lua.
+-- The hold-action bar (core/ui/hold-action.pwn): a progress2 bar at 291,345 of 57.5 x 5.19 units in GREY
+-- (0xAFAFAFFF), one at a time, no label. The server times the action; the client only animates the fill.
 return function(ctx)
+    local draw = ctx.draw
     local progress = nil
     local M = {}
 
-    function M.start(label, durationMs)
-        progress = { label = label, start = getTickCount(), duration = durationMs }
+    function M.start(_label, durationMs)
+        progress = { start = getTickCount(), duration = math.max(1, tonumber(durationMs) or 1) }
         return true
     end
 
@@ -23,22 +24,7 @@ return function(ctx)
             progress = nil
             return
         end
-        local w, h = 260 * ctx.scale, 14 * ctx.scale
-        local x, y = (ctx.sw - w) / 2, ctx.sh * 0.72
-        dxDrawRectangle(x - 2, y - 2, w + 4, h + 4, tocolor(0, 0, 0, 180))
-        dxDrawRectangle(x, y, w * frac, h, tocolor(220, 60, 40, 230))
-        dxDrawText(
-            progress.label,
-            x,
-            y - 20 * ctx.scale,
-            x + w,
-            y,
-            tocolor(255, 255, 255, 230),
-            ctx.scale,
-            ctx.font,
-            "center",
-            "top"
-        )
+        draw.progressBar(291, 345, 57.5, 5.19, frac, 0xAF, 0xAF, 0xAF, 0xFF, "center")
     end
 
     return M
