@@ -25,6 +25,7 @@ end
 local modelMap = loadModelMap()
 local items = assert(loadGenerated("item_types"), "data: generated/item_types.lua missing")
 local loot = assert(loadGenerated("loot_tables"), "data: generated/loot_tables.lua missing")
+local vehicles = assert(loadGenerated("vehicle_types"), "data: generated/vehicle_types.lua missing")
 local langs = {}
 for _, code in ipairs(Data.LANGUAGES) do
     langs[code] = loadGenerated("lang_" .. code) or {}
@@ -48,6 +49,15 @@ end
 
 function Data.calibreBleed(name)
     return items.calibres[name]
+end
+
+-- vehicle types by uname (Bobcat, Police1, BfInject, ...); display names repeat, so unameByName resolves them
+function Data.vehicleType(uname)
+    return vehicles.byUname[uname] or vehicles.byUname[vehicles.unameByName[string.lower(tostring(uname))] or false]
+end
+
+function Data.vehicleTypes()
+    return vehicles.order
 end
 
 function Data.languages()
@@ -80,6 +90,14 @@ end
 
 function calibreBleed(name)
     return Data.calibreBleed(name)
+end
+
+function vehicleType(uname)
+    return Data.vehicleType(uname)
+end
+
+function vehicleTypes()
+    return Data.vehicleTypes()
 end
 
 function t(lang, key, ...)

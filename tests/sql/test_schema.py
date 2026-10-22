@@ -7,7 +7,18 @@ from tests.sql.conftest import call
 def test_migration_recorded(db):
     with db.cursor() as cur:
         cur.execute("SELECT version, name FROM schema_migrations ORDER BY version")
-        assert [r["name"] for r in cur.fetchall()] == ["init"]
+        assert [r["name"] for r in cur.fetchall()] == ["init", "vehicle_spawns"]
+
+
+def test_vehicle_spawns_seeded_from_every_vpl(db):
+    with db.cursor() as cur:
+        cur.execute("SELECT COUNT(*) AS n, COUNT(DISTINCT file) AS files, SUM(type_name IS NOT NULL) AS typed "
+                    "FROM vehicle_spawns")
+        row = cur.fetchone()
+        assert row["n"] == 2017 and row["files"] == 73 and row["typed"] == 48  # 2018 upstream lines minus 'Coach'
+        cur.execute("SELECT ST_X(pos) AS x, x AS cx FROM vehicle_spawns LIMIT 1")
+        r = cur.fetchone()
+        assert abs(r["x"] - r["cx"]) < 1e-3
 
 
 def test_items_exactly_one_location_enforced(db):

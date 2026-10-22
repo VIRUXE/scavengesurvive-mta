@@ -18,5 +18,6 @@ INSERT INTO settings (skey, svalue) VALUES
 ('spawn.res_bleed','0'),
 ('spawn.res_blood','100'),
 ('spawn.res_food','40'),
-('spawn.res_items','AntiSepBandage')
+('spawn.res_items','AntiSepBandage'),
+('vehicles.spawn_chance','4.0')
 ON DUPLICATE KEY UPDATE svalue = svalue;

@@ -4,7 +4,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from . import item_types, lang, loot_tables, maps, settings, zones
+from . import item_types, lang, loot_tables, maps, settings, vspawn, zones
 from .common import read_text
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -17,7 +17,7 @@ SAMP_ONLY = lambda model: model >= 18631 or 11682 <= model <= 11753  # noqa: E73
 
 def main(argv=None) -> int:
     p = argparse.ArgumentParser(prog="python -m tools.convert")
-    p.add_argument("kind", choices=["all", "items", "loot", "zones", "lang", "maps"])
+    p.add_argument("kind", choices=["all", "items", "loot", "zones", "lang", "maps", "vspawn"])
     p.add_argument("--src", default=str(ROOT.parent / "ScavengeSurvive"))
     args = p.parse_args(argv)
     DATA.mkdir(parents=True, exist_ok=True)
@@ -36,6 +36,13 @@ def main(argv=None) -> int:
         print(f"zones: {len(zones.convert(args.src, SEED))} loot spawns")
     if args.kind in ("all", "lang"):
         print("lang:", lang.convert(args.src, DATA))
+    if args.kind in ("all", "vspawn"):
+        types, rows, dropped = vspawn.convert(args.src, DATA, SEED)
+        for d in dropped:
+            print(f"vspawn: dropped {d} (upstream skips it too)")
+        typed = sum(1 for r in rows if r["type"])
+        files = len({r["file"] for r in rows})
+        print(f"vspawn: {len(types)} vehicle types, {len(rows)} spawns ({typed} explicit types) from {files} files")
     if args.kind in ("all", "maps"):
         zones_ = maps.convert(args.src, MAPS, MAPS_REPORT)
         n = sum(len(z["objects"]) for z in zones_.values())

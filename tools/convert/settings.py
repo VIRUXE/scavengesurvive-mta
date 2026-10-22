@@ -10,6 +10,7 @@ SETTINGS = {
     "spawn.new_items": "Knife", "spawn.res_blood": "100", "spawn.res_food": "40", "spawn.res_bleed": "0",
     "spawn.res_items": "AntiSepBandage", "loot.spawn_multiplier": "1.0", "loot.despawn_minutes": "120",
     "loot.reroll_minutes": "30", "loot.roll_batch": "300", "items.sync_radius": "150", "items.pickup_radius": "2.0",
+    "vehicles.spawn_chance": "4.0",
 }
 
 
