@@ -10,7 +10,7 @@ do
     placement = assert(loadstring(src, "=maps/placement.lua"))()
 end
 
-Maps = {
+local state = {
     stats = { buildings = 0, objects = 0, skipped = 0, removals = 0, pending = 0, failed = 0, ms = 0 },
     elements = {}, -- every created element, for the stop path
     sampObjects = {}, -- { element = e, model = sampModel } to swap models when the pack (re)loads
@@ -46,8 +46,8 @@ local function place(o)
     local samp = placement.isSampModel(o[1]) and sampModel(o[1]) or nil
     local kind = placement.kind(o, samp)
     if kind == "skip" then
-        Maps.stats.skipped = Maps.stats.skipped + 1
-        Maps.skippedRows[#Maps.skippedRows + 1] = o
+        state.stats.skipped = state.stats.skipped + 1
+        state.skippedRows[#state.skippedRows + 1] = o
         return
     end
     local model = samp or o[1]
@@ -64,23 +64,23 @@ local function place(o)
         end
     end
     if not e then
-        Maps.stats.failed = Maps.stats.failed + 1
+        state.stats.failed = state.stats.failed + 1
         return
     end
-    Maps.elements[#Maps.elements + 1] = e
+    state.elements[#state.elements + 1] = e
     if samp then
-        Maps.sampObjects[#Maps.sampObjects + 1] = { element = e, model = o[1] }
+        state.sampObjects[#state.sampObjects + 1] = { element = e, model = o[1] }
     end
     if kind == "building" then
-        Maps.stats.buildings = Maps.stats.buildings + 1
+        state.stats.buildings = state.stats.buildings + 1
     else
-        Maps.stats.objects = Maps.stats.objects + 1
+        state.stats.objects = state.stats.objects + 1
     end
 end
 
 local function startBuilding(rows)
     queue, queueIndex, started = rows, 1, getTickCount()
-    Maps.stats.pending = #queue
+    state.stats.pending = #queue
     if #queue > 0 and not building then
         building = true
         addEventHandler("onClientPreRender", root, step)
@@ -93,12 +93,12 @@ function step()
         place(queue[queueIndex])
         queueIndex = queueIndex + 1
     end
-    Maps.stats.pending = #queue - queueIndex + 1
+    state.stats.pending = #queue - queueIndex + 1
     if queueIndex > #queue then
         removeEventHandler("onClientPreRender", root, step)
         building = false
-        Maps.stats.ms = getTickCount() - started
-        local s = Maps.stats
+        state.stats.ms = getTickCount() - started
+        local s = state.stats
         outputDebugString(
             ("maps: %d buildings, %d objects, %d SA-MP models skipped, %d failed, %d removals in %d ms"):format(
                 s.buildings,
@@ -118,8 +118,8 @@ local function removeWorld(rows)
     for _, r in ipairs(rows) do
         -- MTA argument order: model, radius, x, y, z (SA-MP: model, x, y, z, radius)
         if removeWorldModel(r[1], r[5], r[2], r[3], r[4]) then
-            Maps.removed[#Maps.removed + 1] = r
-            Maps.stats.removals = Maps.stats.removals + 1
+            state.removed[#state.removed + 1] = r
+            state.stats.removals = state.stats.removals + 1
         end
     end
 end
@@ -140,7 +140,7 @@ addEventHandler("onClientResourceStart", resourceRoot, function()
             end
         end
     end
-    if #Maps.removed > 0 then
+    if #state.removed > 0 then
         setOcclusionsEnabled(false) -- removed world models leave their occluders behind otherwise
     end
     -- the building pool is left to MTA, which grows it on demand: re-applying a capacity on a restart shrank a
@@ -151,7 +151,7 @@ end)
 -- the SA-MP model pack (re)loaded or is stopping: swap the models of the objects that use it, and place the rows
 -- that were skipped because the pack was not loaded yet (the pack downloads before maps, but not always first)
 addEventHandler("onClientSampModelsChanged", root, function()
-    for _, entry in ipairs(Maps.sampObjects) do
+    for _, entry in ipairs(state.sampObjects) do
         if isElement(entry.element) then
             local id = sampModel(entry.model)
             if id then
@@ -159,9 +159,9 @@ addEventHandler("onClientSampModelsChanged", root, function()
             end
         end
     end
-    if #Maps.skippedRows > 0 and not building then
-        local rows = Maps.skippedRows
-        Maps.skippedRows, Maps.stats.skipped = {}, 0
+    if #state.skippedRows > 0 and not building then
+        local rows = state.skippedRows
+        state.skippedRows, state.stats.skipped = {}, 0
         startBuilding(rows)
     end
 end)
@@ -170,16 +170,16 @@ addEventHandler("onClientResourceStop", resourceRoot, function()
     if building then
         removeEventHandler("onClientPreRender", root, step)
     end
-    for _, r in ipairs(Maps.removed) do
+    for _, r in ipairs(state.removed) do
         restoreWorldModel(r[1], r[5], r[2], r[3], r[4])
     end
-    if #Maps.removed > 0 then
+    if #state.removed > 0 then
         setOcclusionsEnabled(true)
     end
     -- elements die with the resource; the tables only matter for stats
-    Maps.elements, Maps.sampObjects, Maps.removed = {}, {}, {}
+    state.elements, state.sampObjects, state.removed = {}, {}, {}
 end)
 
 function getMapStats()
-    return Maps.stats
+    return state.stats
 end
