@@ -60,7 +60,9 @@ local function place(o)
             local dim, int = placement.where(o[8], o[9])
             setElementDimension(e, dim)
             setElementInterior(e, int)
-            setElementFrozen(e, true)
+            if not placement.isSwingDoor(model) then
+                setElementFrozen(e, true)
+            end
         end
     end
     if not e then

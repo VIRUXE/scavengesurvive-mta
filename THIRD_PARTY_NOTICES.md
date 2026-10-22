@@ -18,7 +18,8 @@ licensed CC BY-SA 4.0 (see `LICENSE-CC-BY-SA-4.0`), except `maps/data/zones.lua`
 ## SA-MP custom object models
 
 `resources/[scavengesurvive]/models/files/` holds the SA-MP custom object models (ids 11682–11753 and
-18631–19999) that the gamemode's item types use, copied unchanged out of the SA-MP 0.3.7 client's `SAMP.img` by
+18631–19999) that the gamemode's item types and maps use, copied unchanged out of the SA-MP 0.3.7 client's
+`SAMP.img` (`.dff` and `.txd`) and `SAMPCOL.img` (`allsampcols.col`, split into single-model `.col` files) by
 `tools/extract_samp_models.py`, plus the handful of vanilla GTA:SA texture dictionaries those models reference that
 no vanilla model owns (copied from the game's own archives). SA-MP's object definitions (`tools/data/samp.ide`:
 id, model, texture dictionary, draw distance) are SA-MP's as well. These assets belong to the SA-MP team and

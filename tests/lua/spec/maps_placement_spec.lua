@@ -14,7 +14,7 @@ describe("maps placement", function()
         assert.equals("building", placement.kind(row(3168, 100, 200), nil))
         assert.equals("building", placement.kind(row(3168, 2999.9, -2999.9, 0, 0), nil))
     end)
-    it("uses objects beyond the building limit, in interiors or other worlds, and for default.ide models", function()
+    it("uses objects beyond the building limit, in interiors or other worlds, and for default.ide or swing-door models", function()
         assert.equals("object", placement.kind(row(3168, 3000.1, 0), nil))
         assert.equals("object", placement.kind(row(3168, 0, -3000.1), nil))
         assert.equals("object", placement.kind(row(3168, 0, 0, -1, 1), nil))
@@ -22,6 +22,11 @@ describe("maps placement", function()
         assert.equals("object", placement.kind(row(342, 0, 0), nil)) -- grenade model
         assert.equals("object", placement.kind(row(397, 0, 0), nil))
         assert.equals("building", placement.kind(row(398, 0, 0), nil))
+        for _, door in ipairs({ 1491, 1492, 1494, 1499, 1502, 1523 }) do
+            assert.is_true(placement.isSwingDoor(door))
+            assert.equals("object", placement.kind(row(door, 100, 200), nil))
+        end
+        assert.is_false(placement.isSwingDoor(1495)) -- object.dat 7:LOCKDOOR
     end)
     it("skips SA-MP models without a loaded replacement and never makes them buildings", function()
         assert.equals("skip", placement.kind(row(19312, 0, 0), nil))

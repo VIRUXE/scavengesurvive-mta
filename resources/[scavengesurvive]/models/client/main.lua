@@ -1,10 +1,10 @@
 -- Loads the SA-MP custom object models listed in manifest.lua (written by tools/extract_samp_models.py together
--- with the git-ignored files/) into client-allocated model ids. Allocated ids differ per client, so nothing is
+-- with files/) into client-allocated model ids. Allocated ids differ per client, so nothing is
 -- shared through the server: other resources ask exports.models:resolve(sampModel) on their own client and listen
 -- for onClientSampModelsChanged (fired after loading and again before unloading) to swap their objects' models.
 local ids = {} -- SA-MP model -> allocated MTA model
 local allocated = {}
-local keep = {} -- dff/txd elements stay alive while the models are in use
+local keep = {} -- col/dff/txd elements stay alive while the models are in use
 
 addEvent("onClientSampModelsChanged", false)
 
@@ -29,13 +29,19 @@ local function loadTxd(name, cache)
     return cache[name]
 end
 
--- e = { dff, txd | txdModel, dist }: own texture dictionary file, or the TXD of a vanilla model that already uses it
+-- e = { dff, txd | txdModel, dist }: own texture dictionary file, or the TXD of a vanilla model that already uses it.
+-- MTA requires COL -> TXD -> DFF order when replacing a model's assets.
 local function loadModel(e, txds)
     local id = engineRequestModel("object")
     if not id then
         return nil, "no free model id"
     end
     allocated[#allocated + 1] = id
+    local col = engineLoadCOL("files/" .. e.dff .. ".col")
+    if not col or not engineReplaceCOL(col, id) then
+        return nil, "col " .. e.dff
+    end
+    keep[#keep + 1] = col
     if e.txd then
         local txd = loadTxd(e.txd, txds)
         if not txd or not engineImportTXD(txd, id) then

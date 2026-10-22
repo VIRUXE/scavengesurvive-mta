@@ -4,9 +4,23 @@ local placement = {}
 placement.BUILDING_LIMIT = 3000 -- createBuilding rejects |x| or |y| beyond this (the ocean rigs are objects)
 placement.OBJECT_MODEL_MAX = 397 -- default.ide models (weapons etc.): createBuilding rejects part of this range
 placement.FRAME_BUDGET_MS = 5 -- build time spent per frame while the world is being created
+-- GTA:SA object.dat 6:SWINGDOOR models (dynamic2.ide Gen_doorINT01..05, Gen_doorEXT10): createBuilding makes them
+-- rigid walls, and setElementFrozen locks their hinge, so they must be unfrozen CObjects to swing open.
+placement.SWING_DOORS = {
+    [1491] = true,
+    [1492] = true,
+    [1494] = true,
+    [1499] = true,
+    [1502] = true,
+    [1523] = true,
+}
 
 function placement.isSampModel(model)
     return model >= 18631 or (model >= 11682 and model <= 11753)
+end
+
+function placement.isSwingDoor(model)
+    return placement.SWING_DOORS[model] == true
 end
 
 -- SA-MP virtual world / interior (-1 = any) -> MTA dimension / interior
@@ -33,7 +47,7 @@ function placement.kind(o, sampId)
     if dim ~= 0 or int ~= 0 then
         return "object"
     end
-    if model <= placement.OBJECT_MODEL_MAX then
+    if model <= placement.OBJECT_MODEL_MAX or placement.isSwingDoor(model) then
         return "object"
     end
     return "building"
