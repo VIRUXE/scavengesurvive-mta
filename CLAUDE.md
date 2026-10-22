@@ -21,6 +21,8 @@ Scavenge & Survive ported to MTA:SA 1.6 (Lua 5.1) with MariaDB 13.0 (12.2 also v
 - DB rows: NULL arrives as `false`; DECIMAL as string; FLOAT is 32-bit; never select raw POINT (`ST_X/ST_Y`); every `?` in SQL text is a placeholder (`CHAR(63)` for a literal).
 - Client never calls `setElementData`. Server-set element data uses `"deny"`. `elementdata_whitelisted=1`.
 - Pure logic lives in `shared/logic/*.lua` and never calls MTA functions at file scope, so busted can `dofile` it with `tests/lua/helpers/mta_mock.lua`.
+- No global tables used as static classes or singletons for a resource's state (`Maps = { stats = {}, … }`, `Character.byPlayer`): new code keeps state in file-local tables or closures, returns a module table, and passes state as arguments. The older `Character`/`Items`/`UI` globals are converted when their resource is reworked, not in passing.
+- Never call `engineSetPoolCapacity("building", …)`: MTA grows the building pool on demand, and re-applying a capacity on a resource restart shrank a pool in use and crashed the client (2026-10-22).
 - Style: `stylua` and `luacheck` clean before every commit. Conventional commits (`feat(items): …`).
 - Never commit `server-config/local.settings.xml` (holds the DB password).
 - SA-MP-only object models (ids 11682–11753, 18631+) live in the `models` resource (`manifest.lua` + `files/`, both
