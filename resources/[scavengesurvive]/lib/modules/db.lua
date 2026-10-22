@@ -43,6 +43,8 @@ local function poll(qh, sql)
     return rows, a, b
 end
 
+-- params.n: Lua 5.1 cannot count a table with trailing nils, so a caller binding NULL in the last placeholder
+-- passes n (otherwise the last ? stays unbound and MTA sends it as text)
 function db.query(sql, params, cb, ctx)
     params = params or {}
     return dbQuery(function(qh)
@@ -50,7 +52,7 @@ function db.query(sql, params, cb, ctx)
         if cb then
             cb(rows, ctx)
         end
-    end, {}, db.conn, sql, unpack(params))
+    end, {}, db.conn, sql, unpack(params, 1, params.n or #params))
 end
 
 function db.one(sql, params, cb, ctx)
@@ -69,7 +71,7 @@ function db.exec(sql, params, cb, ctx)
         if cb then
             cb(rows ~= false, ctx, affected, insertId)
         end
-    end, {}, db.conn, sql, unpack(params))
+    end, {}, db.conn, sql, unpack(params, 1, params.n or #params))
 end
 
 function db.call(proc, params, cb, ctx)

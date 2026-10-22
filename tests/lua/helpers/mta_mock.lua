@@ -41,7 +41,7 @@ function M.install()
     M.queries = {}
     _G.dbConnect = function() return "conn" end
     _G.dbQuery = function(cb, args, conn, sql, ...)
-        local q = { cb = cb, args = args, sql = sql, params = { ... }, conn = conn }
+        local q = { cb = cb, args = args, sql = sql, params = { ... }, nparams = select("#", ...), conn = conn }
         M.queries[#M.queries + 1] = q
         return q
     end
