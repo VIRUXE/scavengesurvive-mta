@@ -44,3 +44,10 @@ ui 6, auth 7, character 8, items 9, loot 10, hud 11, weapons 12, dev/config 13),
     pace with it. `scripts.log` has one `[world] weather N (NAME) at start` line per boot, never `SANDSTORM_DESERT`
     (19). `/weather` prints the current id; `/weather rainy_sf` rains for A and B; `/weather 19` is a sandstorm;
     `/weather 20` is refused. `rr world` picks a fresh weather and the clock stays right.
+14. **Static maps** (#19). On join the client debug console (F8) shows `maps: N buildings, M objects, K SA-MP models
+    skipped, 0 failed, 127 removals in T ms` with no `createBuilding` errors; note N, M, K and T. Grove Street is
+    fortified (LS/Fort Defiance) and the Los Santos docks have the fence line (LS/DocksBuildingNorth). Walk through
+    one removed building spot (`removals` in `maps/data/LS.lua`): the vanilla model is gone and nothing flickers.
+    `/rr maps`: the world is rebuilt once (no doubled objects). An object with both rx and ry non-zero (e.g. the
+    `17039` rocks in RC) sits like it does in SA-MP, which answers #55; if it does not, the rotation order needs
+    converting. Join time and FPS near Grove Street go into the #19 comment.

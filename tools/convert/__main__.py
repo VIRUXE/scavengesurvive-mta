@@ -4,18 +4,20 @@ import argparse
 import sys
 from pathlib import Path
 
-from . import item_types, lang, loot_tables, settings, zones
+from . import item_types, lang, loot_tables, maps, settings, zones
 from .common import read_text
 
 ROOT = Path(__file__).resolve().parents[2]
 DATA = ROOT / "resources" / "[scavengesurvive]" / "data" / "generated"
 SEED = ROOT / "sql" / "seed"
+MAPS = ROOT / "resources" / "[scavengesurvive]" / "maps"
+MAPS_REPORT = ROOT / "docs" / "maps-census.md"
 SAMP_ONLY = lambda model: model >= 18631 or 11682 <= model <= 11753  # noqa: E731
 
 
 def main(argv=None) -> int:
     p = argparse.ArgumentParser(prog="python -m tools.convert")
-    p.add_argument("kind", choices=["all", "items", "loot", "zones", "lang"])
+    p.add_argument("kind", choices=["all", "items", "loot", "zones", "lang", "maps"])
     p.add_argument("--src", default=str(ROOT.parent / "ScavengeSurvive"))
     args = p.parse_args(argv)
     DATA.mkdir(parents=True, exist_ok=True)
@@ -34,6 +36,11 @@ def main(argv=None) -> int:
         print(f"zones: {len(zones.convert(args.src, SEED))} loot spawns")
     if args.kind in ("all", "lang"):
         print("lang:", lang.convert(args.src, DATA))
+    if args.kind in ("all", "maps"):
+        zones_ = maps.convert(args.src, MAPS, MAPS_REPORT)
+        n = sum(len(z["objects"]) for z in zones_.values())
+        print(f"maps: {len(zones_)} zones, {n} objects, {sum(len(z['removals']) for z in zones_.values())} removals"
+              f" -> {MAPS_REPORT.relative_to(ROOT)}")
     return 0
 
 

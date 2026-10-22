@@ -1,0 +1,22 @@
+<meta>
+    <info author="scavengesurvive-mta" type="script" name="maps" description="Upstream static maps built client-side (createBuilding)" version="0.1.0"/>
+    <min_mta_version server="1.6.0" client="1.6.0"/>
+    <download_priority_group>85</download_priority_group>
+    <include resource="lib"/>
+    <include resource="models"/>
+    <script src="shared/events.lua" type="shared"/>
+    <script src="client/main.lua" type="client"/>
+    <file src="shared/logic/placement.lua"/>
+    <file src="data/index.lua"/>
+    <file src="data/BC.lua"/>
+    <file src="data/COLFIX.lua"/>
+    <file src="data/FC.lua"/>
+    <file src="data/GEN.lua"/>
+    <file src="data/LS.lua"/>
+    <file src="data/LV.lua"/>
+    <file src="data/OCEAN.lua"/>
+    <file src="data/RC.lua"/>
+    <file src="data/SF.lua"/>
+    <file src="data/TR.lua"/>
+    <export function="getMapStats" type="client"/>
+</meta>

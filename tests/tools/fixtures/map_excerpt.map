@@ -1,0 +1,14 @@
+0, 0, 350
+// From MapFix by OstGot (2015)
+CreateObject(11692, 199.344, 1943.79, 18.2031, 0, 0, 0);
+RemoveBuildingForPlayer(i, 16203, 199.344, 1943.79, 18.2031, 250.0); // Land
+RemoveBuildingForPlayer(i, 16590, 199.344, 1943.79, 18.2031, 250.0); // Land LOD
+options(0, 0, 350)
+CreateObject(19312, 191.141, 1870.04, 21.4766, 0, 0, 0);
+CreateDynamicObject(3168, -640.5, 2717.2, 71.4, 0.0, 0.0, 42.0, -1, 0, -1, 7.0);
+CreateDynamicObject(2938, 2527.4, -1683.4, 1014.4, 0.0, 270.0, 90.0, 7.0);
+SetDynamicObjectMaterial(, 0, 0, "none", "none", 0x00000000);
+objmat(1, 16503, "desert", "des_redrock1", 0)
+CreateObject(1811, 490.11706542969, 784.48461914063, -22.448837280273, 0, 0, 23.631530761719);0, 0, 6000
+CreateObject(17039, -2383.73120, -1961.55701, 301.00522,   0.00000, 0.00000, 170.23491);CreateObject(17039, -2000.56604, -1555.09705, 128.20189,   -4.98000, 4.48200, 40.20380);
+SetObjectMaterial(objectid, 0, 5145, "docks_las2", "dockwall1", 0xFFFFFFFF);
