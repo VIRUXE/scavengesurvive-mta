@@ -1,10 +1,18 @@
 <meta>
-    <info author="scavengesurvive-mta" type="script" name="models" description="SA-MP custom object models (assets extracted locally, never committed)" version="0.1.0"/>
+    <info author="scavengesurvive-mta" type="script" name="models" description="SA-MP custom object models used by the item types and the maps" version="0.1.0"/>
     <min_mta_version server="1.6.0" client="1.6.0"/>
     <download_priority_group>90</download_priority_group>
     <script src="client/main.lua" type="client"/>
     <file src="manifest.lua"/>
+    <file src="files/7_11_sign01.dff"/>
+    <file src="files/7_11_sign04.dff"/>
+    <file src="files/a51building1.dff"/>
+    <file src="files/a51building2.dff"/>
     <file src="files/a51building2grgdoor.dff"/>
+    <file src="files/a51building3.dff"/>
+    <file src="files/a51fencing.dff"/>
+    <file src="files/a51fencing.txd"/>
+    <file src="files/a51landbit1.dff"/>
     <file src="files/alcoholbottle1.dff"/>
     <file src="files/alcoholbottle2.dff"/>
     <file src="files/alcoholbottle3.dff"/>
@@ -20,6 +28,8 @@
     <file src="files/bandagepack1.dff"/>
     <file src="files/bandages.txd"/>
     <file src="files/barbeque1.dff"/>
+    <file src="files/bassguitar01.dff"/>
+    <file src="files/bassguitar01.txd"/>
     <file src="files/bdupsmask1.dff"/>
     <file src="files/beanie1.dff"/>
     <file src="files/beerkeg1.dff"/>
@@ -41,6 +51,8 @@
     <file src="files/cerealbox1.dff"/>
     <file src="files/cerealbox2.dff"/>
     <file src="files/classy.txd"/>
+    <file src="files/concrete1mx1mx25m.dff"/>
+    <file src="files/concretebits.txd"/>
     <file src="files/cowboyhat2.dff"/>
     <file src="files/cowboyhats.txd"/>
     <file src="files/cross1.dff"/>
@@ -55,6 +67,8 @@
     <file src="files/cutscenelighterfl.dff"/>
     <file src="files/cutsceneremote1.dff"/>
     <file src="files/cutscenetoolbox1.dff"/>
+    <file src="files/dillimoregasext1.dff"/>
+    <file src="files/dillimoregasint1.dff"/>
     <file src="files/doorkey1.dff"/>
     <file src="files/doorkey1.txd"/>
     <file src="files/easter_egg05.dff"/>
@@ -70,6 +84,8 @@
     <file src="files/fishingrod.txd"/>
     <file src="files/flashlight1.dff"/>
     <file src="files/flashlight1.txd"/>
+    <file src="files/flyingv01.dff"/>
+    <file src="files/flyingv01.txd"/>
     <file src="files/forsale01.txd"/>
     <file src="files/forsale02.dff"/>
     <file src="files/gasmask01.dff"/>
@@ -84,6 +100,8 @@
     <file src="files/handcuffs01.dff"/>
     <file src="files/hatboater3.dff"/>
     <file src="files/hatbowler1.dff"/>
+    <file src="files/headphones.txd"/>
+    <file src="files/headphones02.dff"/>
     <file src="files/hikerbackpack1.dff"/>
     <file src="files/hockeymask1.dff"/>
     <file src="files/holdalledited1.dff"/>
@@ -98,6 +116,31 @@
     <file src="files/laserpointer1.txd"/>
     <file src="files/legham1.dff"/>
     <file src="files/legham1.txd"/>
+    <file src="files/lsacarpark1.dff"/>
+    <file src="files/lsacarpark1.txd"/>
+    <file src="files/lsappartments1.dff"/>
+    <file src="files/lsappartments1.txd"/>
+    <file src="files/lshouse1.dff"/>
+    <file src="files/lshouse1int.dff"/>
+    <file src="files/lshouse2.dff"/>
+    <file src="files/lshouse2int.dff"/>
+    <file src="files/lshouse3.dff"/>
+    <file src="files/lshouse3int.dff"/>
+    <file src="files/lshouse4.dff"/>
+    <file src="files/lshouse4int.dff"/>
+    <file src="files/lsmall_shop01.dff"/>
+    <file src="files/lsmall_shops.txd"/>
+    <file src="files/lsmall_window01.dff"/>
+    <file src="files/lsprisonwalls1.dff"/>
+    <file src="files/lvhouse1.dff"/>
+    <file src="files/lvhouse1int.dff"/>
+    <file src="files/lvhouse2.dff"/>
+    <file src="files/lvhouse2int.dff"/>
+    <file src="files/lvhouse3.dff"/>
+    <file src="files/lvhouse3int.dff"/>
+    <file src="files/lvhouse4.dff"/>
+    <file src="files/lvhouse4int.dff"/>
+    <file src="files/mallb_law02.dff"/>
     <file src="files/marcosfryingpan1.dff"/>
     <file src="files/marcosknife1.dff"/>
     <file src="files/marcossaucepan1.dff"/>
@@ -129,6 +172,7 @@
     <file src="files/metalpanels.txd"/>
     <file src="files/microphone1.dff"/>
     <file src="files/microphone1.txd"/>
+    <file src="files/mifenceblocks1.dff"/>
     <file src="files/milkbottle1.dff"/>
     <file src="files/milkcarton1.dff"/>
     <file src="files/mkwallovencabinet1.dff"/>
@@ -152,6 +196,7 @@
     <file src="files/pizza1.dff"/>
     <file src="files/pizzabox1.dff"/>
     <file src="files/pizzahat1.dff"/>
+    <file src="files/police_lights01.dff"/>
     <file src="files/police_things.txd"/>
     <file src="files/policecap1.dff"/>
     <file src="files/policehelmet1.dff"/>
@@ -170,6 +215,18 @@
     <file src="files/saucebottle2.dff"/>
     <file src="files/screwdriver1.dff"/>
     <file src="files/sexymask1.dff"/>
+    <file src="files/sfbuilding1.txd"/>
+    <file src="files/sfbuilding1inside.dff"/>
+    <file src="files/sfbuilding1land.dff"/>
+    <file src="files/sfbuilding1outside.dff"/>
+    <file src="files/sfhouse1.dff"/>
+    <file src="files/sfhouse1int.dff"/>
+    <file src="files/sfhouse2.dff"/>
+    <file src="files/sfhouse2int.dff"/>
+    <file src="files/sfhouse3.dff"/>
+    <file src="files/sfhouse3int.dff"/>
+    <file src="files/sfhouse4.dff"/>
+    <file src="files/sfhouse4int.dff"/>
     <file src="files/sledgehammer1.dff"/>
     <file src="files/sledgehammer1.txd"/>
     <file src="files/strawhat1.dff"/>
@@ -182,17 +239,52 @@
     <file src="files/theparrot1.dff"/>
     <file src="files/tomato1.dff"/>
     <file src="files/tophat01.dff"/>
+    <file src="files/tube100m90bend1.dff"/>
+    <file src="files/tube200m1.dff"/>
+    <file src="files/tube25m1.dff"/>
+    <file src="files/tube50mtsection1.dff"/>
+    <file src="files/tube5m45bend1.dff"/>
+    <file src="files/tubetopipe1.dff"/>
+    <file src="files/wall001.dff"/>
+    <file src="files/wall003.dff"/>
+    <file src="files/wall005.dff"/>
+    <file src="files/wall008.dff"/>
+    <file src="files/wall010.dff"/>
+    <file src="files/wall011.dff"/>
+    <file src="files/wall012.dff"/>
+    <file src="files/wall013.dff"/>
     <file src="files/wall019.dff"/>
+    <file src="files/wall024.dff"/>
+    <file src="files/wall025.dff"/>
+    <file src="files/wall031.dff"/>
+    <file src="files/wall033.dff"/>
+    <file src="files/wall041.dff"/>
+    <file src="files/wall042.dff"/>
     <file src="files/wall046.dff"/>
+    <file src="files/wall047.dff"/>
+    <file src="files/wall049.dff"/>
+    <file src="files/wall059.dff"/>
+    <file src="files/wall084.dff"/>
+    <file src="files/wall095.dff"/>
+    <file src="files/wall096.dff"/>
+    <file src="files/wall103.dff"/>
+    <file src="files/wall104.dff"/>
+    <file src="files/warlock01.dff"/>
+    <file src="files/warlock01.txd"/>
     <file src="files/wboot1.dff"/>
     <file src="files/weddingcake1.dff"/>
     <file src="files/weddingcake1.txd"/>
+    <file src="files/wellsfargobuild1.dff"/>
     <file src="files/whitephone.dff"/>
     <file src="files/whitephone.txd"/>
+    <file src="files/window001.dff"/>
     <file src="files/witcheshat1.dff"/>
     <file src="files/witcheshat1.txd"/>
     <file src="files/wooziessword1.dff"/>
     <file src="files/wrench1.dff"/>
     <file src="files/wrench1.txd"/>
+    <file src="files/zombotechbuilding1.dff"/>
+    <file src="files/zombotechlab1.dff"/>
+    <file src="files/zombotechlab1.txd"/>
     <export function="resolve" type="client"/>
 </meta>

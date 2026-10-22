@@ -14,10 +14,12 @@ Maps = {
     stats = { buildings = 0, objects = 0, skipped = 0, removals = 0, pending = 0, failed = 0, ms = 0 },
     elements = {}, -- every created element, for the stop path
     sampObjects = {}, -- { element = e, model = sampModel } to swap models when the pack (re)loads
+    skippedRows = {}, -- SA-MP rows placed nowhere yet; re-queued when the pack loads
     removed = {}, -- removeWorldModel rows applied, restored on stop
 }
 local queue, queueIndex, started = {}, 1, 0
 local building = false
+local step
 
 local function readLua(path)
     local f = fileOpen(path, true)
@@ -45,6 +47,7 @@ local function place(o)
     local kind = placement.kind(o, samp)
     if kind == "skip" then
         Maps.stats.skipped = Maps.stats.skipped + 1
+        Maps.skippedRows[#Maps.skippedRows + 1] = o
         return
     end
     local model = samp or o[1]
@@ -75,7 +78,16 @@ local function place(o)
     end
 end
 
-local function step()
+local function startBuilding(rows)
+    queue, queueIndex, started = rows, 1, getTickCount()
+    Maps.stats.pending = #queue
+    if #queue > 0 and not building then
+        building = true
+        addEventHandler("onClientPreRender", root, step)
+    end
+end
+
+function step()
     local deadline = getTickCount() + placement.FRAME_BUDGET_MS
     while queueIndex <= #queue and getTickCount() < deadline do
         place(queue[queueIndex])
@@ -136,15 +148,11 @@ addEventHandler("onClientResourceStart", resourceRoot, function()
     if engineSetPoolCapacity then
         pcall(engineSetPoolCapacity, "building", placement.poolCapacity(buildings))
     end
-    started = getTickCount()
-    Maps.stats.pending = #queue
-    if #queue > 0 then
-        building = true
-        addEventHandler("onClientPreRender", root, step)
-    end
+    startBuilding(queue)
 end)
 
--- the SA-MP model pack (re)loaded or is stopping: swap the models of the objects that use it
+-- the SA-MP model pack (re)loaded or is stopping: swap the models of the objects that use it, and place the rows
+-- that were skipped because the pack was not loaded yet (the pack downloads before maps, but not always first)
 addEventHandler("onClientSampModelsChanged", root, function()
     for _, entry in ipairs(Maps.sampObjects) do
         if isElement(entry.element) then
@@ -153,6 +161,11 @@ addEventHandler("onClientSampModelsChanged", root, function()
                 setElementModel(entry.element, id)
             end
         end
+    end
+    if #Maps.skippedRows > 0 and not building then
+        local rows = Maps.skippedRows
+        Maps.skippedRows, Maps.stats.skipped = {}, 0
+        startBuilding(rows)
     end
 end)
 

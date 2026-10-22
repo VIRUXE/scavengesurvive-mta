@@ -57,3 +57,20 @@ def test_plan_picks_samp_txd_then_vanilla_owner_then_vanilla_archive():
     assert meta.count("<file src=\"files/") == 5 and '<file src="files/ogloc.txd"/>' in meta
     assert '<export function="resolve" type="client"/>' in meta
     assert m.render_manifest(entries) == manifest  # deterministic
+
+
+def test_map_models_are_read_from_object_rows_only(tmp_path):
+    lua = ("return {\n    objects = {\n        { 19312, 191.141, 1870.04, 21.4766, 0, 0, 0, -1, -1, 350.0 },\n"
+           "        { 3168, 1.0, 2.0, 3.0, 0, 0, 0, -1, -1, 350.0 },\n    },\n    removals = {\n"
+           "        { 16203, 199.344, 1943.79, 18.2031, 250.0 },\n    },\n    materials = {\n"
+           '        { args = "objectid, 0, 5145", call = "SetObjectMaterial", object = 6 },\n    },\n}\n')
+    # removals look the same as objects, so a vanilla removal id is harmless: plan() keeps SA-MP ids only
+    assert m.map_models_used(lua) == [3168, 16203, 19312]
+    items = tmp_path / "item_types.lua"
+    items.write_text("M.byUname.Wrench = { model = 18633 }\n", encoding="utf-8")
+    maps = tmp_path / "maps"
+    maps.mkdir()
+    (maps / "LS.lua").write_text(lua, encoding="utf-8")
+    (maps / "index.lua").write_text("return { LS = { objects = 2, removals = 1 } }\n", encoding="utf-8")
+    assert m.all_models_used(items, maps) == [3168, 16203, 18633, 19312]
+    assert m.all_models_used(items, tmp_path / "missing") == [18633]
