@@ -125,3 +125,10 @@ setTimer(function()
         end
     end
 end, 15000, 0)
+
+addEventHandler("onPlayerZoneEnter", root, function()
+    if exports.character:getCharacterId(source) then
+        local x, y = getElementPosition(source)
+        rollNear(x, y, 400)
+    end
+end)

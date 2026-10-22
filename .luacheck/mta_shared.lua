@@ -9,7 +9,7 @@ return { read_globals = {
     "this", "eventName", "sourceResource", "isElement", "getElementType", "getElementPosition", "setElementPosition",
     "getElementRotation", "setElementRotation", "getElementDimension", "setElementDimension", "getElementInterior",
     "setElementInterior", "getElementData", "setElementData", "getElementsByType", "destroyElement", "createObject",
-    "createColSphere", "attachElements", "detachElements", "getElementHealth", "setElementHealth", "getElementModel",
+    "createColSphere", "createColPolygon", "setColPolygonHeight", "isInsideColShape", "attachElements", "detachElements", "getElementHealth", "setElementHealth", "getElementModel",
     "setElementModel", "isElementWithinColShape", "getDistanceBetweenPoints3D", "getDistanceBetweenPoints2D",
     "toJSON", "fromJSON", "split", "gettok", "utf8", "getPlayerName", "getPlayerSerial", "getPlayerIP",
     "getPlayerPing", "getPedWeapon", "getPedTotalAmmo", "getPedAmmoInClip", "getPedOccupiedVehicle", "isPedDead",

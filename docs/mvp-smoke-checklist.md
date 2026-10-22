@@ -60,3 +60,6 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
     fuel, speed and the vehicle name in Bank Gothic. `rr vehicles`: the same vehicles come back where they were
     left (`N vehicles rebuilt from the database`). `/vehrespawn` drops them all and rolls a fresh set. Blow one
     up: the wreck disappears after 30 s and `/vehcount` drops by one.
+16. **Zone colshapes** (#65). Boot logs `[maps] 7 zone colshapes created`. `/zone` prints the player's current zone
+    (`ls`, `sf`, `lv`, `rc`, `fc`, `bc`, `tr`); `/zone 2495 -1687` prints `ls`; `rcon.ps1 players` includes `zone=<z>`.
+    Crossing a zone border emits `onPlayerZoneLeave` and `onPlayerZoneEnter` and rolls due loot near the player.

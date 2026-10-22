@@ -12,6 +12,7 @@ MTA has no per-object material replacement, so the loader ignores them.
 """
 from __future__ import annotations
 
+import json
 import re
 from collections import Counter
 from pathlib import Path
@@ -21,6 +22,9 @@ from .. import gen_vanilla_objects
 
 MAPS_HEADER = ("-- Derived from Southclaws/ScavengeSurvive scriptfiles/maps (CC BY-SA 4.0). See THIRD_PARTY_NOTICES.md\n"
                "-- GENERATED FILE - do not edit; run: python -m tools.convert maps\n")
+ZONES_HEADER = ("-- Derived from Southclaws/ScavengeSurvive pyss/data/regions.json (MPL-2.0). See THIRD_PARTY_NOTICES.md\n"
+                "-- GENERATED FILE - do not edit; run: python -m tools.convert maps\n")
+ZONE_NAMES = ("ls", "sf", "lv", "rc", "fc", "bc", "tr")
 CALL_RE = re.compile(r"^([A-Za-z_][A-Za-z0-9_]*)\s*\(([^)]*)\)(.*)$", re.S)
 NUM_RE = re.compile(r"^" + NUM + r"$")
 SAMP_IDE = Path(__file__).resolve().parents[1] / "data" / "samp.ide"
@@ -137,19 +141,56 @@ def render_zone_lua(zone: str, files: list[str], objects: list, removals: list, 
     return "\n".join(out)
 
 
+def signed_area(pts: list[list[float]]) -> float:
+    n = len(pts)
+    return 0.5 * sum(pts[i][0] * pts[(i + 1) % n][1] - pts[(i + 1) % n][0] * pts[i][1] for i in range(n))
+
+
+def parse_regions(text: str) -> dict[str, list[list[float]]]:
+    """Top-level zone polygons from pyss/data/regions.json -> {zone_lower: [[x, y], ...]}
+    with duplicate closing vertex stripped and vertices wound counter-clockwise for createColPolygon."""
+    raw = json.loads(text)
+    out: dict[str, list[list[float]]] = {}
+    for name in ZONE_NAMES:
+        pts = raw.get(name.upper()) or raw.get(name)
+        if not pts:
+            continue
+        norm = [[float(p[0]), float(p[1])] for p in pts]
+        if len(norm) > 1 and norm[0] == norm[-1]:
+            norm = norm[:-1]
+        if len(norm) >= 3 and signed_area(norm) < 0:
+            norm = list(reversed(norm))
+        out[name] = norm
+    return out
+
+
+def render_zones_lua(zone_polys: dict[str, list[list[float]]]) -> str:
+    out = [ZONES_HEADER, "return {"]
+    for zone in sorted(zone_polys):
+        out.append(f"    {zone} = {lua_value(zone_polys[zone])},")
+    out += ["}", ""]
+    return "\n".join(out)
+
+
 def render_meta(zones: list[str]) -> str:
     lines = ['<meta>',
-             '    <info author="scavengesurvive-mta" type="script" name="maps" description="Upstream static maps built client-side (createBuilding)" version="0.1.0"/>',
+             '    <info author="scavengesurvive-mta" type="script" name="maps" description="Upstream static maps built client-side (createBuilding) and server zone colshapes" version="0.1.0"/>',
              '    <min_mta_version server="1.6.0" client="1.6.0-9.22410"/>',  # createBuilding
              '    <download_priority_group>85</download_priority_group>',
              '    <include resource="lib"/>',
              '    <include resource="models"/>',
              '    <script src="shared/events.lua" type="shared"/>',
+             '    <script src="server/main.lua" type="server"/>',
              '    <script src="client/main.lua" type="client"/>',
              '    <file src="shared/logic/placement.lua"/>',
+             '    <file src="shared/logic/zones.lua"/>',
+             '    <file src="data/zones.lua"/>',
              '    <file src="data/index.lua"/>']
     lines += [f'    <file src="data/{z}.lua"/>' for z in zones]
-    lines += ['    <export function="getMapStats" type="client"/>', '</meta>', '']
+    lines += ['    <export function="getZoneAt" type="server"/>',
+              '    <export function="getPlayerZone" type="server"/>',
+              '    <export function="getMapStats" type="client"/>',
+              '</meta>', '']
     return "\n".join(lines)
 
 
@@ -236,6 +277,9 @@ def convert(src_root, out_resource, out_report=None) -> dict:
                    render_zone_lua(zone, z["files"], z["objects"], z["removals"], z["materials"]))
     index = {zone: {"objects": len(zones[zone]["objects"]), "removals": len(zones[zone]["removals"])}
              for zone in sorted(zones)}
+    regions_path = Path(src_root) / "pyss" / "data" / "regions.json"
+    zone_polys = parse_regions(read_text(regions_path)) if regions_path.is_file() else {}
+    write_text(out_resource / "data" / "zones.lua", render_zones_lua(zone_polys))
     write_text(out_resource / "data" / "index.lua", MAPS_HEADER + "return " + lua_value(index) + "\n")
     write_text(out_resource / "meta.xml", render_meta(sorted(zones)))
     if out_report:

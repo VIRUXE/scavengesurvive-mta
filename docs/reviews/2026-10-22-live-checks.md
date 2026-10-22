@@ -61,7 +61,12 @@ measured pixel-by-pixel with Pillow against the 1280×720 reference frames from 
 - **Bag row and title hardcoded to `"Bag"` (649aeb7):** `items/server/containers.lua` now includes `owner.type_uname` in `capacity.bag` so `items/client/inventory.lua` shows the worn bag's display name (`"Daypack >"` and `"Daypack (0/8)"`).
 - **Death screen hid the camera and box (649aeb7):** `character/client/deathscreen.lua` drew a `255`-alpha opaque black rectangle under the `0x55` box and lacked the font-1 horizontal stretch. Switched to upstream's rendering order (rising camera → `0x55` box + shadowed white lines with `1.25×` horizontal stretch → `185`-alpha brightness overlay, with hover highlight above the overlay).
 
+## Zone colshapes and `getZoneAt` (#65)
+
+- `rr maps` created 7 `createColPolygon` colshapes (`ls`, `sf`, `lv`, `rc`, `fc`, `bc`, `tr`) with counter-clockwise winding and `setColPolygonHeight(-1000, false)` (verified `isInsideColShape(c, 2495, -1687, -50)` = true for LS).
+- `exports.maps:getZoneAt` returned `ls`, `sf`, `lv`, `rc`, `fc`, `bc`, `tr` for landmarks in all seven zones and `false` at `(3500, -3500)`.
+- `rcon.ps1 players` reported `ClaudeD char=6 zone=bc pos=181.9,1162.5,14.8`; moving `ClaudeD` to `(2495, -1687, 13.5)` fired `onPlayerZoneLeave("bc")` then `onPlayerZoneEnter("ls")` and updated `/zone` and `rcon players` to `zone=ls`.
+
 ## Still open
 
 - Rotation spike #55: no anomaly observed, but there was no SA-MP side by side; the data passes rx/ry/rz through.
-- Zone colshapes / `getZoneAt` from the spec's `maps` row are not part of the maps resource yet (#65).

@@ -2,6 +2,7 @@
     <info author="scavengesurvive-mta" type="script" name="dev" description="Developer commands for local testing" version="0.1.0"/>
     <min_mta_version server="1.6.0" client="1.6.0"/>
     <include resource="lib"/>
+    <include resource="maps"/>
     <include resource="auth"/>
     <include resource="character"/>
     <include resource="items"/>

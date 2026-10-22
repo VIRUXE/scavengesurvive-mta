@@ -117,6 +117,21 @@ command("weather", function(p, idOrName)
     say(p, "weather = %d", id)
 end, true)
 
+command("zone", function(p, xArg, yArg)
+    if xArg and yArg then
+        local x, y = tonumber(xArg), tonumber(yArg)
+        if not x or not y then
+            return say(p, "usage: /zone [x y]")
+        end
+        return say(p, "zone(%.1f, %.1f) = %s", x, y, tostring(exports.maps:getZoneAt(x, y) or "none"))
+    end
+    if getElementType(p) ~= "player" then
+        return say(p, "usage: /zone <x> <y>")
+    end
+    local x, y = getElementPosition(p)
+    say(p, "zone = %s (%.1f, %.1f)", tostring(exports.maps:getPlayerZone(p) or "none"), x, y)
+end, true)
+
 command("dbtest", function(p)
     if not ready then
         return say(p, "db not connected")
@@ -183,9 +198,10 @@ function rcon(line)
         for _, p in ipairs(getElementsByType("player")) do
             local x, y, z = getElementPosition(p)
             put(
-                "%s char=%s pos=%.1f,%.1f,%.1f",
+                "%s char=%s zone=%s pos=%.1f,%.1f,%.1f",
                 getPlayerName(p),
                 tostring(exports.character:getCharacterId(p)),
+                tostring(exports.maps:getPlayerZone(p) or "none"),
                 x,
                 y,
                 z

@@ -9,7 +9,7 @@ Scavenge & Survive ported to MTA:SA 1.6 (Lua 5.1) with MariaDB 13.0 (12.2 also v
 - `lib` resource serves modules: `local db = loadstring(exports.lib:getModule("db"), "=lib/db.lua")()`.
 - `sql/migrations/NNNN_name.sql` (DDL, plain statements), `sql/procedures/*.sql` (one `CREATE OR REPLACE PROCEDURE` per file, no DELIMITER), `sql/events/*.sql`, `sql/seed/*.sql` (generated).
 - `tools/convert/*.py` — deterministic converters from `../ScavengeSurvive` into `data/generated/` + `sql/seed/`;
-  `maps.py` writes `maps/data/<ZONE>.lua`, `maps/meta.xml` and `docs/maps-census.md` (all generated, all committed).
+  `maps.py` writes `maps/data/<ZONE>.lua`, `maps/data/zones.lua`, `maps/meta.xml` and `docs/maps-census.md` (all generated, all committed).
 - `tests/lua` (busted), `tests/tools` (pytest), `tests/sql` (pytest + live MariaDB database `scavengesurvive_test`).
 
 ## Rules

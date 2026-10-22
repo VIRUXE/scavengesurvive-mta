@@ -20,7 +20,7 @@ physical item on the ground, wounds bleed, and death drops it all.
 | M0 Bootstrap & Data | ✅ | 302 item types, 15 loot tables, 11,062 loot points, 10 languages, 66 vehicle types and 2,017 vehicle points converted from upstream; migrations, procedures and seeds applied by one script |
 | M1 Auth & Character | ✅ | Register/login, permadeath, hunger and bleeding ticks, death drops, anti-combat-log, SA-MP HUD (watch, hunger bar, key actions, brightness overlay, death screen) |
 | M2 Items & Inventory | ✅ | Hands, 6-slot inventory, bags worn on the back, containers, food, SA-MP list dialogs; held items and bags on real bones with the SA-MP models |
-| M3 Loot & World | 🟡 | Loot rolling near players, all 221 upstream maps built client-side (23,211 objects), weather and a real-time clock. Left: zone colshapes, wild trees (deferred) |
+| M3 Loot & World | ✅ | Loot rolling near players, all 221 upstream maps built client-side (23,211 objects), 7 server zone colshapes (`getZoneAt`, `onPlayerZoneEnter/Leave`), weather and a real-time clock (wild trees deferred) |
 | M4 Weapons & Damage | 🟡 | Server-authoritative wound model with calibre and distance falloff. Left: ammo and magazines, knockouts, tracers, parity checklist |
 | M5 Vehicles | 🟡 | Loot vehicles rolled over the upstream points, battered and near-empty, persisted across restarts. Left: fuel use, locks, trunks, trailers |
 | M6 Crafting, Building, Apparel | ⬜ | |

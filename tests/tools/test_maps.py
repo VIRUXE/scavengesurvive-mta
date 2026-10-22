@@ -88,6 +88,21 @@ def test_vanilla_ranges_round_trip(tmp_path):
     assert gen_vanilla_objects.parse_object_ids("objs\n5390, a, b, 150, 0\nend\ncars\n400, x\nend\ntobj\n1, t, t, 100, 0, 20, 6\nend\n") == {5390, 1}
 
 
+def test_parse_regions_strips_closing_point_and_winds_ccw():
+    raw = '''{
+        "LS": [[0, 0], [10, 0], [10, 10], [0, 10], [0, 0]],
+        "SF": [[0, 0], [0, 10], [10, 10], [10, 0], [0, 0]],
+        "FC_East": [[1, 1], [2, 1], [2, 2], [1, 1]]
+    }'''
+    polys = maps.parse_regions(raw)
+    assert set(polys) == {"ls", "sf"}
+    assert len(polys["ls"]) == 4 and len(polys["sf"]) == 4
+    assert maps.signed_area(polys["ls"]) > 0
+    assert maps.signed_area(polys["sf"]) > 0
+    lua = maps.render_zones_lua(polys)
+    assert lua.startswith(maps.ZONES_HEADER) and "ls = {" in lua and "sf = {" in lua
+
+
 def test_convert_writes_zone_files_meta_and_census(tmp_path):
     src = tmp_path / "upstream" / "scriptfiles" / "maps"
     (src / "LS").mkdir(parents=True)
@@ -101,6 +116,8 @@ def test_convert_writes_zone_files_meta_and_census(tmp_path):
     assert list(zones) == ["LS"] and zones["LS"]["files"] == ["LS/A.map", "LS/B.map"]
     assert len(zones["LS"]["objects"]) == 7
     assert (out / "data" / "LS.lua").is_file() and (out / "data" / "index.lua").is_file()
-    assert '<file src="data/LS.lua"/>' in (out / "meta.xml").read_text()
+    assert (out / "data" / "zones.lua").is_file()
+    meta = (out / "meta.xml").read_text()
+    assert '<file src="data/LS.lua"/>' in meta and '<export function="getZoneAt" type="server"/>' in meta
     text = report.read_text(encoding="utf-8")
     assert "| LS | 2 | 7 |" in text and "| 11692 |" in text
