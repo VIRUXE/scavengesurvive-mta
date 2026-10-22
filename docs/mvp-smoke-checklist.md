@@ -63,3 +63,20 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
 16. **Zone colshapes** (#65). Boot logs `[maps] 7 zone colshapes created`. `/zone` prints the player's current zone
     (`ls`, `sf`, `lv`, `rc`, `fc`, `bc`, `tr`); `/zone 2495 -1687` prints `ls`; `rcon.ps1 players` includes `zone=<z>`.
     Crossing a zone border emits `onPlayerZoneLeave` and `onPlayerZoneEnter` and rolls due loot near the player.
+17. **Ammo calibres, magazines and reloading** (#24). A: `/additem M9Pistol` and `/additem Ammo9mm`. Pick up `M9Pistol`:
+    it starts unloaded (`"There is no ammo loaded in this weapon"` action text, `0/0` under the weapon icon, and
+    `[02]M9 Pistol (0/0, 9mm, Unloaded)` in **H**). Stand over the `Ammo9mm` tin and press **F**: rounds transfer into
+    the pistol (`"Transferred 16 rounds"`, `16/16` under the weapon icon, `[02]M9 Pistol (16/16, 9mm, FMJ)`). Fire 4
+    rounds (`12/16`) and press **R** (`reloadweapon`): the reload animation plays and the counter updates to `16/12`.
+    Hold **N** (`dropitem`) for 300 ms: the pistol unloads (`0/0`) and drops an `Ammo9mm` tin (`(28, 9mm, FMJ)`) on the
+    ground. Tapping **N** briefly still drops the pistol itself.
+18. **Bullet tracers** (#27). A: `/additem M16Rifle` and `/additem Ammo556Tracer`, load and fire. Both A and B see a
+    white-to-yellow 3D tracer streak (`dxDrawLine3D`) starting 2 m ahead of the muzzle and travelling at 800 m/s toward
+    the hit point. Firing standard `Ammo556` or `Ammo9mm` draws no tracer.
+19. **Knockout, handcuffs and disarm** (#25, #28). A hits B with a blunt weapon (`BaseballBat` / `Club`) or shoots B in
+    the head/legs until a knockout triggers (or run `exports.character:knockOutPlayer(B, 10000)` via `rcon.ps1 lua`): B
+    collapses (`PED:KO_shot_front`), controls are disabled, the `progress2` countdown bar fills across B's screen, and B
+    wakes up (`PED:getup_front`) when it finishes. While B is knocked out holding a weapon, A presses **F** with empty
+    hands within 2 m to disarm B (`"Disarmed player"`, item moves to A's hands). A equips `HandCuffs` (visible on the
+    right-hand bone) and presses **F** near B (unarmed): B's hands lock behind the back and controls are disabled; A
+    sees `F Remove handcuffs` with empty hands and pressing **F** uncuffs B and returns `HandCuffs` to A's hands.
