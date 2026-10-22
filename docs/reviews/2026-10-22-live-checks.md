@@ -18,6 +18,22 @@ from rcon, frames taken with `rcon screenshot`.
   building pool on demand, so the second call shrank a pool that was in use. The call is gone (f28581b); the
   restart now rebuilds in 0.9 s.
 
+## Later the same day: refactor and loot vehicles
+
+- **Module-local state refactor (#66, 0e6f0d8…a3dfc64).** Every resource restarted live without errors during the
+  work; afterwards a fresh client (ClaudeD) registered through the GUI, the HUD drew, `/additem HotDog` put a
+  labelled SA-MP-model item on the ground, and the maps built again (`8844 buildings … 1452 ms`): the `ui`, `hud`,
+  `items` and `maps` client modules work in-game after the conversion.
+- **Loot vehicles (#30, a45e089).** First boot: `rolled 2017 spawn points: 71 vehicles` (27 locked, avg health 421,
+  avg fuel 2.96); `rr vehicles`: `71 vehicles rebuilt from the database`; `respawnAll`: a fresh 60; a battered,
+  smoking Blista stands where its row says. Checklist step 15 passes for roll, rebuild and respawn; driving,
+  explosion cleanup and `/vehcount` in chat were not watched.
+- **Found and fixed:** the first roll lost every vehicle without damage data (boats, bikes, helicopters) because
+  `db.exec` unpacked its parameters with `#params`, dropping the trailing nil, so the JSON column got the text `?`
+  and refused it. `db.query`/`db.exec` now honour `params.n` like `db.call` (f9ce851).
+- **Design question raised:** wrecks never respawn and loot points re-roll forever; proposal in
+  docs/adr/0001-scarcity-respawn.md (status Proposed).
+
 ## Still open
 
 - HUD draws on the black screen before the camera fades in (review minor 12), seen again on the first join frame.
