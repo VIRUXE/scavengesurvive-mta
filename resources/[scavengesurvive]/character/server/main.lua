@@ -47,7 +47,9 @@ local function clearStatuses(player, restoreControls)
         setElementData(player, "character.cuffed", false, "broadcast", "deny")
         if restoreControls then
             toggleAllControls(player, true, true, false)
-            triggerClientEvent(player, "onClientCharacterKnockout", player, 0)
+            if ko then
+                triggerClientEvent(player, "onClientCharacterKnockout", player, 0)
+            end
         end
     end
 end
@@ -86,9 +88,6 @@ local function spawnFromRow(player, row, isNew)
     setElementHealth(player, math.max(1, st.hp))
     setCameraTarget(player, player)
     fadeCamera(player, true)
-    setPlayerHudComponentVisible(player, "all", false)
-    setPlayerHudComponentVisible(player, "radar", true)
-    setPlayerHudComponentVisible(player, "crosshair", true)
     triggerEvent("onCharacterSpawned", player, row.id, isNew)
     if isNew then
         startingItems(row.id, row.hp == survival.NEW.hp)

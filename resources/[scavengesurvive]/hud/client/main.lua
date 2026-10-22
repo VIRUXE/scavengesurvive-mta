@@ -148,8 +148,8 @@ local function drawAmmo()
     local reserve = tonumber(held.data and held.data.reserve) or 0
     draw.text({
         text = string.format("%d/%d", clip, reserve),
-        x = 520.41,
-        y = 62.65,
+        x = bars.AMMO.x,
+        y = bars.AMMO.y,
         font = 1,
         lx = 0.278,
         ly = 1.372,

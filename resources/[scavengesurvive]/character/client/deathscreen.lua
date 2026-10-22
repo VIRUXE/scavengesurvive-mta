@@ -98,7 +98,7 @@ addEventHandler("onClientCharacterKnockout", root, function(durationMs)
     end
     if (tonumber(durationMs) or 0) > 0 then
         exports.ui:listClose()
-        exports.ui:progressStart(durationMs, "Knocked out")
+        exports.ui:progressStart("Knocked out", durationMs)
     else
         exports.ui:progressCancel()
     end
