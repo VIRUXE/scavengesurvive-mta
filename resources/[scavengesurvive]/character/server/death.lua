@@ -1,4 +1,5 @@
-function Character.die(player, cause, killer)
+-- silent: the player is leaving (combat log); no kill animation and no death screen, only the drop
+function Character.die(player, cause, killer, silent)
     local st = Character.byPlayer[player]
     if not st or st.dead then
         return false
@@ -22,6 +23,9 @@ function Character.die(player, cause, killer)
             Character.byPlayer[ctx.player] = nil
         end
     end, { player = player, st = st, charId = st.id, cause = cause, killer = killer })
+    if silent then
+        return true
+    end
     if not isPedDead(player) then
         killPed(player, isElement(killer) and killer or nil)
     end

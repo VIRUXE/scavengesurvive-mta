@@ -31,3 +31,12 @@ ui 6, auth 7, character 8, items 9, loot 10, hud 11, weapons 12, dev/config 13),
 11. **Restarts.** A holds an item. Server console `rr items`: the item is still in A's hand, and world items reappear
     with no duplicates. `rr character`: `/stats` is unchanged (±1 tick). Then `shutdown` and
     `pwsh server-config/run-local.ps1` (no `-Reset`). A logs in with the same character, position, stats and inventory.
+
+## Post-MVP steps (added as features land; not yet run live)
+
+12. **Combat log** (#26). A shoots B once. B disconnects within 30 s: everyone's chat shows "B combat logged!",
+    `scripts.log` has `combat-logged (last hit by A)`, B's items lie where B stood, and B's next login creates a
+    new character. Repeat, but B waits 31 s before quitting: B logs back in with the same character. Then shoot B
+    and `kick` B from the console within 30 s: B must keep the character (a kick is not a combat log). Finally
+    shoot B and `shutdown` within 30 s: note the quit reason MTA reports in `server.log`; if the shutdown counts
+    as a combat log, the stop path needs the same guard as a kick.

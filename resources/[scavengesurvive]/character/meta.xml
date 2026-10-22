@@ -10,6 +10,7 @@
     <script src="client/deathscreen.lua" type="client"/>
     <file src="shared/logic/survival.lua"/>
     <file src="shared/logic/spawnpoints.lua"/>
+    <file src="shared/logic/combatlog.lua"/>
     <export function="getCharacterId" type="server"/>
     <export function="getPlayerByCharacterId" type="server"/>
     <export function="getInventoryContainerId" type="server"/>

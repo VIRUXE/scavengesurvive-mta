@@ -99,10 +99,11 @@ net.handler("onAuthRequestRegister", function(player, password)
     end)
 end, { rate = 2 })
 
-addEventHandler("onPlayerQuit", root, function()
+addEventHandler("onPlayerQuit", root, function(reason)
     local account = session[source]
     if account then
-        triggerEvent("onPlayerLoggedOut", source, account.id)
+        -- the quit reason travels with the event: character decides whether a leaving player combat-logged
+        triggerEvent("onPlayerLoggedOut", source, account.id, reason)
         db.exec("UPDATE connection_log SET left_at = NOW() WHERE account_id = ? AND left_at IS NULL", { account.id })
     end
     session[source] = nil

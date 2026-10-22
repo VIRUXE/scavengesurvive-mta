@@ -10,6 +10,7 @@ local function loadFile(path)
 end
 local survival = loadFile("shared/logic/survival.lua")
 local spawnpoints = loadFile("shared/logic/spawnpoints.lua")
+local combatlog = loadFile("shared/logic/combatlog.lua")
 
 Character = {
     db = db,
@@ -17,6 +18,8 @@ Character = {
     util = util,
     survival = survival,
     spawnpoints = spawnpoints,
+    combatlog = combatlog,
+    combat = combatlog.new(),
     byPlayer = {},
     byId = {},
     lastSpawn = {},
@@ -49,6 +52,7 @@ local function spawnFromRow(player, row, isNew)
         lastSent = { hp = -1, food = -1, bleed = -1 },
     }
     Character.byPlayer[player], Character.byId[row.id] = st, player
+    combatlog.reset(Character.combat, player)
     spawnPlayer(player, row.x, row.y, row.z, row.rz, row.skin, row.interior or 0, row.dimension or 0)
     setElementHealth(player, math.max(1, st.hp))
     setCameraTarget(player, player)
@@ -151,21 +155,43 @@ net.handler("onCharacterRequestRespawn", function(player)
     Character.createAndSpawn(player, accountId, survival.RESPAWN)
 end, { rate = 1 })
 
-local function forget(player)
+-- A player who leaves (quit, timeout) within the combat-log window of being hurt, while the attacker is still
+-- online, dies where they stood and drops everything (upstream accounts.pwn logout path). The character is still
+-- in memory and the element still valid here, so death_drop runs with the real position.
+local function combatLogged(player, st, quitReason)
+    if st.dead or not combatlog.countsAsLogout(quitReason) then
+        return false
+    end
+    local window = tonumber(Character.settings["player.combat_log_window"]) or combatlog.DEFAULT_WINDOW_S
+    local attacker = combatlog.attackerOf(Character.combat, player, getTickCount(), window, isElement)
+    if not attacker then
+        return false
+    end
+    util.log("character", "info", "%s combat-logged (last hit by %s)", getPlayerName(player), getPlayerName(attacker))
+    outputChatBox(string.format("%s combat logged!", getPlayerName(player)), root, 255, 220, 0)
+    return Character.die(player, "combatlog", attacker, true)
+end
+
+local function forget(player, quitReason)
     local st = Character.byPlayer[player]
     if st then
-        Character.flushOne(player, st)
+        if not combatLogged(player, st, quitReason) then
+            Character.flushOne(player, st)
+        end
         Character.byId[st.id] = nil
     end
+    combatlog.forget(Character.combat, player)
     Character.byPlayer[player] = nil
     Character.lastSpawn[player] = nil
     Character.creating[player] = nil
 end
-addEventHandler("onPlayerQuit", root, function()
-    forget(source)
+-- auth's own onPlayerQuit handler runs first (it started first) and raises onPlayerLoggedOut with the quit reason,
+-- so that is where a quitting player is seen; the direct onPlayerQuit handler covers a player who never logged in.
+addEventHandler("onPlayerQuit", root, function(reason)
+    forget(source, reason)
 end)
-addEventHandler("onPlayerLoggedOut", root, function()
-    forget(source)
+addEventHandler("onPlayerLoggedOut", root, function(_, quitReason)
+    forget(source, quitReason)
 end)
 addEventHandler("onResourceStop", resourceRoot, function()
     Character.flushAll(true)
@@ -229,6 +255,8 @@ function applyWound(player, bleedAdd, hpLoss, killer, cause)
     end
     st.hp = math.max(0, st.hp - hpLoss)
     st.dirty = true
+    local byPlayer = isElement(killer) and getElementType(killer) == "player" and killer ~= player
+    combatlog.damaged(Character.combat, player, byPlayer and killer or nil, getTickCount())
     setElementHealth(player, math.max(1, st.hp))
     Character.sendStats(player, true)
     if st.hp <= 0 then
