@@ -3,6 +3,8 @@ survival.NEW = { hp = 90, food = 80, bleed = 0.0001 }
 survival.RESPAWN = { hp = 100, food = 40, bleed = 0 }
 survival.IDLE_FOOD_RATE = 0.004
 survival.REGEN_PER_FOOD = 0.001925925
+survival.MAX_KNOCKOUT_MS = 120000
+survival.MIN_KNOCKOUT_MS = 1500
 
 local function clamp(v, lo, hi)
     return math.max(lo, math.min(hi, v))
@@ -68,6 +70,15 @@ function survival.tick(state, movementMult, rng)
         events[#events + 1] = "died"
     end
     return s, events
+end
+
+function survival.knockoutAdd(remainingMs, addMs)
+    local rem = math.max(0, math.floor(tonumber(remainingMs) or 0))
+    local add = math.max(0, math.floor(tonumber(addMs) or 0))
+    if rem <= 0 and add <= survival.MIN_KNOCKOUT_MS then
+        return 0
+    end
+    return clamp(rem + add, 0, survival.MAX_KNOCKOUT_MS)
 end
 
 return survival

@@ -12,6 +12,7 @@ return {
     onCharacterRequestRespawn = true,
     onClientCharacterStats = true,
     onClientCharacterDeathScreen = true,
+    onClientCharacterKnockout = true,
     onItemCreated = false,
     onItemMoved = false,
     onItemDestroyed = false,

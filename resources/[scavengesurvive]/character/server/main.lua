@@ -20,7 +20,38 @@ local state = {
     creating = {}, -- players with a character_create in flight
     settings = {}, -- gamemode settings map (db.settings)
     combat = combatlog.new(),
+    knockout = {}, -- player -> { untilTick, timer }
+    cuffed = {}, -- player -> true
 }
+local CUFF_CONTROLS = {
+    "fire",
+    "aim_weapon",
+    "action",
+    "jump",
+    "sprint",
+    "enter_exit",
+    "enter_passenger",
+    "next_weapon",
+    "previous_weapon",
+}
+
+local function clearStatuses(player, restoreControls)
+    local ko = state.knockout[player]
+    if ko and isTimer(ko.timer) then
+        killTimer(ko.timer)
+    end
+    state.knockout[player] = nil
+    state.cuffed[player] = nil
+    if isElement(player) then
+        setElementData(player, "character.knockedOut", false, "broadcast", "deny")
+        setElementData(player, "character.cuffed", false, "broadcast", "deny")
+        if restoreControls then
+            toggleAllControls(player, true, true, false)
+            triggerClientEvent(player, "onClientCharacterKnockout", player, 0)
+        end
+    end
+end
+state.clearStatuses = clearStatuses
 local death = loadFile("server/death.lua")({ db = db, util = util, state = state })
 local tick = loadFile("server/tick.lua")({ db = db, util = util, survival = survival, state = state, die = death.die })
 
@@ -50,6 +81,7 @@ local function spawnFromRow(player, row, isNew)
     }
     state.byPlayer[player], state.byId[row.id] = st, player
     combatlog.reset(state.combat, player)
+    clearStatuses(player, true)
     spawnPlayer(player, row.x, row.y, row.z, row.rz, row.skin, row.interior or 0, row.dimension or 0)
     setElementHealth(player, math.max(1, st.hp))
     setCameraTarget(player, player)
@@ -178,6 +210,7 @@ local function forget(player, quitReason)
         state.byId[st.id] = nil
     end
     combatlog.forget(state.combat, player)
+    clearStatuses(player, false)
     state.byPlayer[player] = nil
     state.lastSpawn[player] = nil
     state.creating[player] = nil
@@ -260,4 +293,91 @@ function applyWound(player, bleedAdd, hpLoss, killer, cause)
         death.die(player, cause or "killed", isElement(killer) and killer or false)
     end
     return true
+end
+
+function wakeUpPlayer(player)
+    local ko = state.knockout[player]
+    if ko and isTimer(ko.timer) then
+        killTimer(ko.timer)
+    end
+    state.knockout[player] = nil
+    if not isElement(player) then
+        return false
+    end
+    setElementData(player, "character.knockedOut", false, "broadcast", "deny")
+    triggerClientEvent(player, "onClientCharacterKnockout", player, 0)
+    local st = state.byPlayer[player]
+    if st and not st.dead and not isPedDead(player) then
+        toggleAllControls(player, true, true, false)
+        if state.cuffed[player] then
+            for _, ctrl in ipairs(CUFF_CONTROLS) do
+                toggleControl(player, ctrl, false)
+            end
+        end
+        setPedAnimation(player, "PED", "GETUP_FRONT", 1000, false, true, true, false)
+    end
+    return true
+end
+
+function knockOutPlayer(player, durationMs)
+    if not isElement(player) or isPedDead(player) then
+        return false
+    end
+    local st = state.byPlayer[player]
+    if not st or st.dead then
+        return false
+    end
+    local now = getTickCount()
+    local cur = state.knockout[player]
+    local rem = cur and math.max(0, cur.untilTick - now) or 0
+    local total = survival.knockoutAdd(rem, durationMs)
+    if total <= 0 then
+        return false
+    end
+    if cur and isTimer(cur.timer) then
+        killTimer(cur.timer)
+    end
+    local timer = setTimer(function(p)
+        if isElement(p) then
+            wakeUpPlayer(p)
+        end
+    end, total, 1, player)
+    state.knockout[player] = { untilTick = now + total, timer = timer }
+    setElementData(player, "character.knockedOut", true, "broadcast", "deny")
+    toggleAllControls(player, false, true, false)
+    if getPedOccupiedVehicle(player) then
+        setPedAnimation(player, "PED", "CAR_DEAD_LHS", -1, false, false, false, true)
+    else
+        setPedAnimation(player, "PED", "KO_SHOT_STOM", -1, false, false, false, true)
+    end
+    triggerClientEvent(player, "onClientCharacterKnockout", player, total)
+    return true
+end
+
+function isKnockedOut(player)
+    local ko = state.knockout[player]
+    return ko ~= nil and getTickCount() < ko.untilTick
+end
+
+function setPlayerCuffed(player, toggle)
+    if not isElement(player) then
+        return false
+    end
+    local st = state.byPlayer[player]
+    if not st or st.dead then
+        return false
+    end
+    local flag = toggle == true
+    state.cuffed[player] = flag or nil
+    setElementData(player, "character.cuffed", flag, "broadcast", "deny")
+    if not isKnockedOut(player) then
+        for _, ctrl in ipairs(CUFF_CONTROLS) do
+            toggleControl(player, ctrl, not flag)
+        end
+    end
+    return true
+end
+
+function isPlayerCuffed(player)
+    return state.cuffed[player] == true
 end

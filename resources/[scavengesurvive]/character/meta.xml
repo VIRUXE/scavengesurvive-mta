@@ -3,6 +3,7 @@
     <min_mta_version server="1.6.0" client="1.6.0"/>
     <include resource="lib"/>
     <include resource="auth"/>
+    <include resource="ui"/>
     <script src="shared/events.lua" type="shared"/>
     <script src="server/main.lua" type="server"/>
     <script src="client/deathscreen.lua" type="client"/>
@@ -16,4 +17,9 @@
     <export function="modifyStat" type="server"/>
     <export function="killCharacter" type="server"/>
     <export function="applyWound" type="server"/>
+    <export function="knockOutPlayer" type="server"/>
+    <export function="wakeUpPlayer" type="server"/>
+    <export function="isKnockedOut" type="server"/>
+    <export function="setPlayerCuffed" type="server"/>
+    <export function="isPlayerCuffed" type="server"/>
 </meta>

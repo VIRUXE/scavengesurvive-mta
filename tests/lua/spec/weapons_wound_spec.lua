@@ -50,4 +50,95 @@ describe("weapons wound", function()
         assert.equals("killed", wound.cause(22))
         assert.is_true(wound.isEnvironmental(51)); assert.is_true(wound.isEnvironmental(49)); assert.is_false(wound.isEnvironmental(22))
     end)
+    it("computes upstream firearm knockout multipliers, knockout chance, and duration", function()
+        local v = wound.firearmVelocity(330, 10)
+        near((v / 50.0) * 1.5, wound.firearmKnock(330, 10, 1.5))
+
+        -- damage.pwn:141: knockmult * (((woundcount + 1) * 0.2) * ((totalbleedrate * 50) + 1))
+        near(9.9 * 2.0 * ((2 * 0.2) * ((0.1 * 50) + 1)), wound.knockoutChance(2.0, 9, 1, 0.1))
+
+        -- damage.pwn:148: floatround((knockmult * 0.2) * ((woundcount + 1) * ((totalbleedrate * 10) + 1) * (110 - hp) + (200 * (110 - hp))))
+        local expected = math.floor((9.9 * 2.0 * 0.2) * (2 * ((0.1 * 10) + 1) * 30 + (200 * 30)) + 0.5)
+        assert.equals(expected, wound.knockoutDuration(2.0, 9, 1, 0.1, 80))
+        assert.equals(0, wound.knockoutDuration(0.1, 3, 0, 0, 108)) -- <= 1500ms threshold ignored
+        assert.equals(120000, wound.knockoutDuration(50.0, 9, 5, 1.0, 10)) -- capped at 120000ms
+    end)
+
+    it("matches SA-MP init.pwn calibre bleed rates, firearm muzzle velocities, and ammo multipliers (#28)", function()
+        local items = dofile("resources/[scavengesurvive]/data/generated/item_types.lua")
+        -- All 11 calibres from init.pwn:1038-1048
+        local expectedCalibres = {
+            ["9mm"] = 0.25,
+            ["50cae"] = 0.73,
+            ["12g"] = 0.31,
+            ["556"] = 0.19,
+            ["357"] = 0.36,
+            ["762"] = 0.32,
+            rpg = 0.0,
+            fuel = 0.0,
+            film = 0.0,
+            ["50bmg"] = 0.63,
+            ["308"] = 0.43,
+        }
+        for cal, bleed in pairs(expectedCalibres) do
+            near(bleed, items.calibres[cal])
+        end
+
+        -- Representative firearms from init.pwn:1136-1163
+        local expectedFirearms = {
+            M9Pistol = { base = 22, cal = "9mm", vel = 330.0, mag = 10, res = 1 },
+            M9PistolSD = { base = 23, cal = "9mm", vel = 295.0, mag = 10, res = 1 },
+            DesertEagle = { base = 24, cal = "357", vel = 420.0, mag = 7, res = 2 },
+            PumpShotgun = { base = 25, cal = "12g", vel = 475.0, mag = 6, res = 1 },
+            Sawnoff = { base = 26, cal = "12g", vel = 265.0, mag = 2, res = 6 },
+            Spas12 = { base = 27, cal = "12g", vel = 480.0, mag = 6, res = 1 },
+            Mac10 = { base = 28, cal = "9mm", vel = 376.0, mag = 32, res = 1 },
+            MP5 = { base = 29, cal = "9mm", vel = 400.0, mag = 30, res = 1 },
+            WASR3Rifle = { base = 30, cal = "556", vel = 943.0, mag = 30, res = 1 },
+            M16Rifle = { base = 31, cal = "556", vel = 948.0, mag = 30, res = 1 },
+            Tec9 = { base = 32, cal = "9mm", vel = 360.0, mag = 36, res = 1 },
+            SemiAutoRifle = { base = 33, cal = "357", vel = 829.0, mag = 5, res = 1 },
+            SniperRifle = { base = 34, cal = "357", vel = 864.0, mag = 5, res = 1 },
+            AK47Rifle = { base = 30, cal = "762", vel = 715.0, mag = 30, res = 1 },
+            M77RMRifle = { base = 33, cal = "357", vel = 823.0, mag = 1, res = 9 },
+            DogsBreath = { base = 24, cal = "50bmg", vel = 888.8, mag = 1, res = 9 },
+            Model70Rifle = { base = 34, cal = "308", vel = 860.6, mag = 1, res = 9 },
+            LenKnocksRifle = { base = 34, cal = "50bmg", vel = 938.5, mag = 1, res = 4 },
+        }
+        for uname, exp in pairs(expectedFirearms) do
+            local cd = items.byUname[uname].categoryData
+            assert.equals(exp.base, cd.baseWeapon)
+            assert.equals(exp.cal, cd.calibre)
+            near(exp.vel, cd.muzzleVelocity)
+            assert.equals(exp.mag, cd.magSize)
+            assert.equals(exp.res, cd.maxReserveMags)
+        end
+
+        -- All ammo multipliers from init.pwn:1198-1213
+        local expectedAmmo = {
+            Ammo9mm = { cal = "9mm", bld = 1.0, ko = 1.0, pen = 0.2, rounds = 20 },
+            Ammo50 = { cal = "50cae", bld = 1.0, ko = 1.5, pen = 0.9, rounds = 28 },
+            AmmoBuck = { cal = "12g", bld = 1.1, ko = 1.8, pen = 0.5, rounds = 24 },
+            Ammo556 = { cal = "556", bld = 1.1, ko = 1.2, pen = 0.8, rounds = 30 },
+            Ammo357 = { cal = "357", bld = 1.2, ko = 1.1, pen = 0.9, rounds = 10 },
+            AmmoRocket = { cal = "rpg", bld = 1.0, ko = 1.0, pen = 1.0, rounds = 1 },
+            Ammo9mmFMJ = { cal = "9mm", bld = 1.2, ko = 0.5, pen = 0.8, rounds = 20 },
+            AmmoFlechette = { cal = "12g", bld = 1.6, ko = 0.6, pen = 0.2, rounds = 8 },
+            AmmoHomeBuck = { cal = "12g", bld = 1.6, ko = 0.4, pen = 0.3, rounds = 14 },
+            Ammo556Tracer = { cal = "556", bld = 0.9, ko = 1.1, pen = 0.5, rounds = 30 },
+            Ammo556HP = { cal = "556", bld = 1.3, ko = 1.6, pen = 0.4, rounds = 30 },
+            Ammo357Tracer = { cal = "357", bld = 1.2, ko = 1.1, pen = 0.6, rounds = 10 },
+            Ammo762 = { cal = "762", bld = 1.3, ko = 1.1, pen = 0.9, rounds = 30 },
+            Ammo50BMG = { cal = "50bmg", bld = 1.8, ko = 1.8, pen = 1.0, rounds = 16 },
+            Ammo308 = { cal = "308", bld = 1.2, ko = 1.1, pen = 0.8, rounds = 10 },
+        }
+        for uname, exp in pairs(expectedAmmo) do
+            local cd = items.byUname[uname].categoryData
+            assert.equals(exp.cal, cd.calibre)
+            near(exp.bld, cd.bleedMult)
+            near(exp.ko, cd.koMult)
+            near(exp.pen, cd.penetration)
+            assert.equals(exp.rounds, cd.rounds)
+        end
+    end)
 end)

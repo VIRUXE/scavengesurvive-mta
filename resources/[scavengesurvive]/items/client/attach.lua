@@ -4,7 +4,7 @@
 -- ctx = { models } from client/main.lua (client/models.lua).
 return function(ctx)
     local models = ctx.models
-    local SLOTS = { ["items.held"] = "held", ["items.bag"] = "bag" }
+    local SLOTS = { ["items.held"] = "held", ["items.bag"] = "bag", ["character.cuffed"] = "cuffs" }
     -- SA-MP SetPlayerAttachedObject bone -> GTA:SA bone id (getElementBoneMatrix)
     local SAMP_BONE = {
         [1] = 3, -- spine -> BONE_SPINE1
@@ -150,19 +150,30 @@ return function(ctx)
         end
     end
 
+    local function cuffAttachment()
+        return attachment("HandCuffs", 6, { 0.030, 0.048, -0.017, -8.7, -25.8, 83.8 }, { 1.027, 3.037, 1.622 })
+    end
+
     local function setSlot(player, slot, uname)
         clearSlot(player, slot)
         if not uname or uname == false then
             return
         end
         tracked[player] = tracked[player] or {}
-        tracked[player][slot] = slot == "bag" and bagAttachment(uname, player) or heldAttachment(uname)
+        if slot == "bag" then
+            tracked[player][slot] = bagAttachment(uname, player)
+        elseif slot == "cuffs" then
+            tracked[player][slot] = cuffAttachment()
+        else
+            tracked[player][slot] = heldAttachment(uname)
+        end
     end
 
     local function forgetPlayer(player)
         if tracked[player] then
             clearSlot(player, "held")
             clearSlot(player, "bag")
+            clearSlot(player, "cuffs")
             tracked[player] = nil
         end
     end

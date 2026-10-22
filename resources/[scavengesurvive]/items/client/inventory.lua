@@ -22,6 +22,9 @@ return function(ctx)
         AMWRONGCALI = "Calibre does not match weapon",
         AMDIFFATYPE = "Ammo type does not match weapon's loaded ammo",
         AMMIXINTINS = "You cannot mix two ammo types in one tin",
+        CUFFED = "Handcuffed player",
+        UNCUFFED = "Removed handcuffs",
+        DISARMED = "Disarmed player",
     }
     local view = "inventory" -- which dialog is up: "inventory" or "bag"
     local last = nil -- the last payload, re-rendered when the view switches

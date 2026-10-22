@@ -90,3 +90,16 @@ addEventHandler("onClientClick", root, function(btn, state, ax, ay)
         triggerServerEvent("onCharacterRequestRespawn", localPlayer)
     end
 end)
+
+addEventHandler("onClientCharacterKnockout", root, function(durationMs)
+    local ui = getResourceFromName("ui")
+    if not ui or getResourceState(ui) ~= "running" then
+        return
+    end
+    if (tonumber(durationMs) or 0) > 0 then
+        exports.ui:listClose()
+        exports.ui:progressStart(durationMs, "Knocked out")
+    else
+        exports.ui:progressCancel()
+    end
+end)

@@ -2,6 +2,9 @@ local wound = {}
 wound.DEFAULT_RANGE = 35
 wound.RANGE_TOLERANCE = 5
 wound.FIST_BLEED = 0.001
+wound.FIST_KNOCK = 0.5
+wound.MAX_KNOCKOUT_MS = 120000
+wound.MIN_KNOCKOUT_MS = 1500
 wound.RANGE = {
     [0] = 2, -- melee: upstream 2.0 m cone
     [22] = 35,
@@ -46,16 +49,44 @@ end
 
 -- upstream damage-firearm.pwn: v = muzzleVel - dist^(1 - muzzleVel/11300)
 --   bleed = calibreBleed * v/1000 * ammoBleedMult
-function wound.firearm(muzzleVelocity, distance, calibreBleed, ammoBleedMult)
+--   knockMult = (v/50) * ammoKoMult
+function wound.firearmVelocity(muzzleVelocity, distance)
     local v = muzzleVelocity - math.max(0, distance) ^ (1 - muzzleVelocity / 11300)
     if v ~= v or v < 0 then
         v = 0
     end
-    return calibreBleed * v / 1000 * (ammoBleedMult or 1.0)
+    return v
+end
+
+function wound.firearm(muzzleVelocity, distance, calibreBleed, ammoBleedMult)
+    return calibreBleed * wound.firearmVelocity(muzzleVelocity, distance) / 1000 * (ammoBleedMult or 1.0)
+end
+
+function wound.firearmKnock(muzzleVelocity, distance, ammoKoMult)
+    return (wound.firearmVelocity(muzzleVelocity, distance) / 50.0) * (ammoKoMult or 1.0)
 end
 
 function wound.bodypartKnock(bodypart)
     return KNOCK[bodypart] or 1.0
+end
+
+-- upstream damage.pwn:141, 208
+function wound.knockoutChance(knockMult, bodypart, woundCount, totalBleedRate)
+    local km = (tonumber(knockMult) or 0) * wound.bodypartKnock(bodypart)
+    return km * ((((tonumber(woundCount) or 0) + 1) * 0.2) * (((tonumber(totalBleedRate) or 0) * 50) + 1))
+end
+
+-- upstream damage.pwn:148-153
+function wound.knockoutDuration(knockMult, bodypart, woundCount, totalBleedRate, hp)
+    local km = (tonumber(knockMult) or 0) * wound.bodypartKnock(bodypart)
+    local wc = (tonumber(woundCount) or 0) + 1
+    local tb = tonumber(totalBleedRate) or 0
+    local remHp = math.max(0, 110.0 - (tonumber(hp) or 100.0))
+    local ms = math.floor((km * 0.2) * (wc * ((tb * 10) + 1) * remHp + (200 * remHp)) + 0.5)
+    if ms <= wound.MIN_KNOCKOUT_MS then
+        return 0
+    end
+    return math.min(wound.MAX_KNOCKOUT_MS, ms)
 end
 
 -- MVP: knockouts are post-MVP, so a headshot doubles bleed instead

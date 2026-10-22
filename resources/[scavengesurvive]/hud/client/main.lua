@@ -37,7 +37,7 @@ local STOCK = {
     radio = false,
 }
 -- Actions the port implements; the rest of upstream's lines wait for their features.
-local SUPPORTS = { eat = true, reload = true, unload = true }
+local SUPPORTS = { eat = true, reload = true, unload = true, uncuff = true }
 
 local state = {
     spawned = false,
@@ -160,16 +160,36 @@ local function drawAmmo()
     })
 end
 
+local function hasCuffedPlayerNearby()
+    local px, py, pz = getElementPosition(localPlayer)
+    local int, dim = getElementInterior(localPlayer), getElementDimension(localPlayer)
+    for _, p in ipairs(getElementsByType("player", root, true)) do
+        if
+            p ~= localPlayer
+            and getElementData(p, "character.cuffed") == true
+            and getElementInterior(p) == int
+            and getElementDimension(p) == dim
+        then
+            local tx, ty, tz = getElementPosition(p)
+            if getDistanceBetweenPoints3D(px, py, pz, tx, ty, tz) <= 2.0 then
+                return true
+            end
+        end
+    end
+    return false
+end
+
 local function drawKeyActions(driver)
     local held = state.held
     local isCalibreWep = held and held.category == "weapon" and held.calibre ~= nil and not held.liquid or false
     local lines = keyactions.lines({
         spawned = true,
         uiOpen = uiListIsOpen(),
-        knockedOut = false,
+        knockedOut = getElementData(localPlayer, "character.knockedOut") == true,
         driver = driver,
         held = held and { uname = held.uname, category = held.category, isWeapon = isCalibreWep },
         nearPlayer = false,
+        cuffedNearby = not held and hasCuffedPlayerNearby() or false,
         supports = SUPPORTS,
     }, state.keys)
     local scale = canvas.textScale(c, 1.5, 1)

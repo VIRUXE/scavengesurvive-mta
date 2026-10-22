@@ -44,18 +44,7 @@ end
 
 local world =
     loadFile("server/world.lua")({ db = db, state = state, geometry = geometry, diff = diff, charId = charId })
-local hands = loadFile("server/hands.lua")({
-    db = db,
-    net = net,
-    state = state,
-    geometry = geometry,
-    ammo = ammo,
-    type = itemType,
-    defaultAmmo = defaultAmmo,
-    charId = charId,
-    toast = toast,
-    world = world,
-})
+local hands
 
 -- Deletes an item the player owns (held, in their inventory or worn bag). cb(ok) runs only while the player exists.
 local function destroy(itemId, player, cb)
@@ -81,6 +70,40 @@ local function destroy(itemId, player, cb)
     end, { player = player, itemId = itemId, cb = cb })
     return true
 end
+
+local function isKnockedOut(player)
+    return exports.character:isKnockedOut(player) == true
+end
+
+local function isPlayerCuffed(player)
+    return exports.character:isPlayerCuffed(player) == true
+end
+
+local function setPlayerCuffed(player, toggle)
+    return exports.character:setPlayerCuffed(player, toggle)
+end
+
+local function isIncapacitated(player)
+    return isKnockedOut(player) or isPlayerCuffed(player)
+end
+
+hands = loadFile("server/hands.lua")({
+    db = db,
+    net = net,
+    state = state,
+    geometry = geometry,
+    ammo = ammo,
+    type = itemType,
+    defaultAmmo = defaultAmmo,
+    charId = charId,
+    toast = toast,
+    world = world,
+    destroy = destroy,
+    isIncapacitated = isIncapacitated,
+    isKnockedOut = isKnockedOut,
+    isPlayerCuffed = isPlayerCuffed,
+    setPlayerCuffed = setPlayerCuffed,
+})
 
 local containers = loadFile("server/containers.lua")({
     db = db,

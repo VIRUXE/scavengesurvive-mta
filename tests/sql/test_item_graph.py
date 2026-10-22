@@ -200,3 +200,21 @@ def test_transfer_world_and_weapon_unload(db, character):
         cur.execute("SELECT type_uname, x FROM items WHERE id=%s", (ammo_id,))
         row = cur.fetchone()
         assert row["type_uname"] == "T_Wrench" and row["x"] == 5.0
+
+
+def test_disarm_and_create_held(db, character):
+    ch = character["character_id"]
+    with db.cursor() as cur:
+        cur.execute("INSERT INTO accounts (name, password_hash) VALUES (CONCAT('d', UUID_SHORT()), REPEAT('x', 60))")
+        other = call(db, "character_create", cur.lastrowid, 0, 0.0, 0.0, 3.0, 0.0, 100.0, 80.0, 0.0)[2]["character_id"]
+    ok_c, code_c, payload_c = call(db, "item_create_held", "T_Knife", other)
+    assert (ok_c, code_c) == (1, "OK")
+    knife_id = payload_c["item_id"]
+    assert call(db, "item_create_held", "T_Knife", other)[1] == "HANDS_FULL"
+
+    ok_d, code_d, _ = call(db, "item_disarm", ch, other, knife_id)
+    assert (ok_d, code_d) == (1, "OK")
+    with db.cursor() as cur:
+        cur.execute("SELECT holder_char_id, holder_kind FROM items WHERE id=%s", (knife_id,))
+        row = cur.fetchone()
+        assert row["holder_char_id"] == ch and row["holder_kind"] == "held"

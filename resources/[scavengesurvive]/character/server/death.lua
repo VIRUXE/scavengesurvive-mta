@@ -11,6 +11,9 @@ return function(ctx)
             return false
         end
         st.dead, st.hp = true, 0
+        if state.clearStatuses then
+            state.clearStatuses(player, not silent)
+        end
         local x, y, z = getElementPosition(player)
         local params = { st.id, x, y, z, getElementInterior(player), getElementDimension(player) }
         db.call("character_death_drop", params, function(res, c)

@@ -51,15 +51,15 @@ local function hitBleed(attacker, weapon, dist)
     local cd = t and t.category == "weapon" and t.categoryData or nil
     if weapon == 0 then
         if cd and cd.melee then
-            return cd.bleed
+            return cd.bleed, tonumber(cd.knockout) or 1.0
         end
-        return wound.FIST_BLEED
+        return wound.FIST_BLEED, wound.FIST_KNOCK
     end
     if not cd or cd.melee or cd.baseWeapon ~= weapon then
         return nil
     end
     if wound.isMeleeWeapon(weapon) then
-        return cd.muzzleVelocity
+        return cd.muzzleVelocity, (tonumber(cd.magSize) or 0) / 10.0
     end
     local mag = held.data and held.data.mag
     if mag ~= nil and (tonumber(mag) or 0) <= 0 then
@@ -69,7 +69,9 @@ local function hitBleed(attacker, weapon, dist)
     local ammoUname = held.data and held.data.ammoItem
     local ammoDef = ammoUname and itemType(ammoUname) or nil
     local ammoBleedMult = (ammoDef and ammoDef.categoryData and tonumber(ammoDef.categoryData.bleedMult)) or 1.0
-    return wound.firearm(cd.muzzleVelocity, dist, calibreBleed, ammoBleedMult)
+    local ammoKoMult = (ammoDef and ammoDef.categoryData and tonumber(ammoDef.categoryData.koMult)) or 1.0
+    return wound.firearm(cd.muzzleVelocity, dist, calibreBleed, ammoBleedMult),
+        wound.firearmKnock(cd.muzzleVelocity, dist, ammoKoMult)
 end
 
 net.handler("onWeaponsRequestHit", function(victim, attacker, weapon, bodypart, loss)
@@ -85,7 +87,12 @@ net.handler("onWeaponsRequestHit", function(victim, attacker, weapon, bodypart, 
     if not isPlayer(attacker) or attacker == victim or wound.isEnvironmental(weapon) then
         return environmental(victim, weapon, bodypart, loss)
     end
-    if not exports.character:getCharacterId(attacker) or isPedDead(attacker) then
+    if
+        not exports.character:getCharacterId(attacker)
+        or isPedDead(attacker)
+        or exports.character:isKnockedOut(attacker)
+        or exports.character:isPlayerCuffed(attacker)
+    then
         return
     end
     if getElementDimension(attacker) ~= getElementDimension(victim) then
@@ -121,7 +128,7 @@ net.handler("onWeaponsRequestHit", function(victim, attacker, weapon, bodypart, 
         return
     end
 
-    local bleed = hitBleed(attacker, weapon, dist)
+    local bleed, knockMult = hitBleed(attacker, weapon, dist)
     if not bleed or bleed <= 0 then
         return
     end
@@ -129,6 +136,16 @@ net.handler("onWeaponsRequestHit", function(victim, attacker, weapon, bodypart, 
     bleed = wound.bodypartBleed(bleed, bodypart)
     local hp = wound.hpLoss(bleed)
     exports.character:applyWound(victim, bleed, hp, attacker, "killed")
+    local st = exports.character:getStats(victim)
+    if st and st.hp > 0 then
+        local chance = wound.knockoutChance(knockMult, bodypart, st.wounds, st.bleed)
+        if math.random() * 100 < chance then
+            local koMs = wound.knockoutDuration(knockMult, bodypart, st.wounds, st.bleed, st.hp)
+            if koMs > 0 then
+                exports.character:knockOutPlayer(victim, koMs)
+            end
+        end
+    end
     report(victim, bleed, hp, bodypart)
     util.log(
         "weapons",

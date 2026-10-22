@@ -7,6 +7,8 @@ return function(ctx)
     local db, net, state, geometry, world = ctx.db, ctx.net, ctx.state, ctx.geometry, ctx.world
     local ammo = ctx.ammo
     local itemType, defaultAmmo, charId, toast = ctx.type, ctx.defaultAmmo, ctx.charId, ctx.toast
+    local isIncapacitated = ctx.isIncapacitated
+    local isKnockedOut, isPlayerCuffed, setPlayerCuffed = ctx.isKnockedOut, ctx.isPlayerCuffed, ctx.setPlayerCuffed
     local VANILLA_MELEE_MAX = 15
     local RELOAD_COOLDOWN_MS = 1000
     local lastReload = {}
@@ -205,7 +207,7 @@ return function(ctx)
     end)
 
     net.handler("onItemsRequestReload", function(player)
-        if not ammo then
+        if not ammo or (isIncapacitated and isIncapacitated(player)) then
             return
         end
         local item = state.held[player]
@@ -232,7 +234,7 @@ return function(ctx)
     end, { rate = 3 })
 
     net.handler("onItemsRequestUnload", function(player)
-        if not ammo then
+        if not ammo or (isIncapacitated and isIncapacitated(player)) then
             return
         end
         local cid, item = charId(player), state.held[player]
@@ -345,12 +347,99 @@ return function(ctx)
         })
     end
 
+    local function findNearbyPlayer(player, maxDist)
+        if not getElementsByType or not getDistanceBetweenPoints3D then
+            return nil
+        end
+        local px, py, pz = getElementPosition(player)
+        local int, dim = getElementInterior(player), getElementDimension(player)
+        local best, bestDist = nil, maxDist
+        for _, p in ipairs(getElementsByType("player")) do
+            if
+                p ~= player
+                and charId(p)
+                and not isPedDead(p)
+                and getElementInterior(p) == int
+                and getElementDimension(p) == dim
+            then
+                local tx, ty, tz = getElementPosition(p)
+                local d = getDistanceBetweenPoints3D(px, py, pz, tx, ty, tz)
+                if d <= bestDist then
+                    best, bestDist = p, d
+                end
+            end
+        end
+        return best
+    end
+
+    local function tryPlayerInteraction(player, cid, held)
+        local target = findNearbyPlayer(player, 2.0)
+        if not target then
+            return false
+        end
+        if
+            held
+            and held.uname == "HandCuffs"
+            and ctx.destroy
+            and setPlayerCuffed
+            and isPlayerCuffed
+            and not isPlayerCuffed(target)
+            and not state.held[target]
+        then
+            ctx.destroy(held.id, player, function(ok)
+                if ok and isElement(target) then
+                    setPlayerCuffed(target, true)
+                    if isElement(player) then
+                        toast(player, "CUFFED")
+                    end
+                end
+            end)
+            return true
+        end
+        if not held and isPlayerCuffed and setPlayerCuffed and isPlayerCuffed(target) then
+            db.call("item_create_held", { "HandCuffs", cid }, function(res, c)
+                if not isElement(c.player) or not res or not res.ok then
+                    return
+                end
+                if isElement(c.target) then
+                    setPlayerCuffed(c.target, false)
+                end
+                M.setHeld(c.player, { id = res.payload.item_id, uname = "HandCuffs", hp = 5, data = {} })
+                triggerEvent("onItemCreated", resourceRoot, res.payload.item_id)
+                toast(c.player, "UNCUFFED")
+            end, { player = player, target = target })
+            return true
+        end
+        if not held and isKnockedOut and isKnockedOut(target) and state.held[target] then
+            local tItem = state.held[target]
+            local tCid = charId(target)
+            if tCid then
+                db.call("item_disarm", { cid, tCid, tItem.id }, function(res, c)
+                    if not isElement(c.player) or not res or not res.ok then
+                        return
+                    end
+                    if isElement(c.target) and state.held[c.target] and state.held[c.target].id == c.item.id then
+                        M.setHeld(c.target, nil)
+                    end
+                    M.setHeld(c.player, c.item)
+                    triggerEvent("onItemMoved", c.player, c.item.id, "held", "held")
+                    toast(c.player, "DISARMED")
+                end, { player = player, target = target, item = tItem })
+                return true
+            end
+        end
+        return false
+    end
+
     net.handler("onItemsRequestPickup", function(player)
         local cid = charId(player)
-        if not cid then
+        if not cid or (isIncapacitated and isIncapacitated(player)) then
             return
         end
         local held = state.held[player]
+        if tryPlayerInteraction(player, cid, held) then
+            return
+        end
         local heldType = held and itemType(held.uname) or nil
         if held and (not ammo or (not ammo.isCalibreWeapon(heldType) and not ammo.isAmmoItem(heldType))) then
             return toast(player, "HANDS_FULL")
@@ -388,7 +477,7 @@ return function(ctx)
 
     net.handler("onItemsRequestDrop", function(player)
         local cid, item = charId(player), state.held[player]
-        if not cid then
+        if not cid or (isIncapacitated and isIncapacitated(player)) then
             return
         end
         if not item then
