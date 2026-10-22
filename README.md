@@ -82,6 +82,7 @@ pytest -q
 | `docs/reviews/` | Review and live-check records with what was found and fixed |
 | `docs/mvp-smoke-checklist.md` | The playtest checklist, extended as features land |
 | `docs/maps-census.md` | Generated: every upstream map object classified vanilla / SA-MP-only |
+| `docs/ui-reference-samp.md` | Every SA-MP UI element with upstream geometry, footage evidence and its MTA recipe; gap list vs the current resources |
 | `server-config/README.md` | Local server setup, HTTP rcon, dev commands |
 | `THIRD_PARTY_NOTICES.md` | Upstream data (MPL-2.0), maps (CC BY-SA 4.0), SA-MP models |
 
