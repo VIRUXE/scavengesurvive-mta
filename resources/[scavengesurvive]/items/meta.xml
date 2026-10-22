@@ -8,10 +8,6 @@
     <include resource="character"/>
     <script src="shared/events.lua" type="shared"/>
     <script src="server/main.lua" type="server"/>
-    <script src="server/world.lua" type="server"/>
-    <script src="server/hands.lua" type="server"/>
-    <script src="server/containers.lua" type="server"/>
-    <script src="server/use.lua" type="server"/>
     <script src="client/models.lua" type="client"/>
     <script src="client/world.lua" type="client"/>
     <script src="client/attach.lua" type="client"/>
