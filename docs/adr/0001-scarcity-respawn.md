@@ -20,10 +20,12 @@ deficit, per-point cooldowns, and placement away from players.
    of the first roll over the 2,017 points (about 80). Loot: per zone, the item count the seed produced on its
    first roll. Everything alive counts: world items, items in containers, items players carry, vehicles players
    parked. Hoarding reduces what respawns for everyone.
-2. **Refill proportional to the deficit.** Every `refill_interval` (5 min): `deficit = cap − alive`;
-   `spawns = floor(deficit × refill_rate × interval / 1 h)` with `refill_rate` default 0.10 (10 % of the deficit per
-   hour, exponential approach, half-life about 7 h). The accumulated fractional remainder carries over so small
-   deficits still refill. Never above the cap.
+2. **Refill proportional to the deficit, with a floor.** Every `refill_interval` (5 min): `deficit = cap − alive`;
+   `spawns = floor(max(deficit × refill_rate, cap × refill_floor) × interval / 1 h)` with `refill_rate` default 0.10
+   (10 % of the deficit per hour, exponential approach, half-life about 7 h) and `refill_floor` default 0.02 (a
+   trickle of 2 % of the cap per hour that spawns even when hoarding keeps the deficit small, so a newcomer finds
+   something within the hour). The accumulated fractional remainder carries over so small deficits still refill.
+   Never above the cap, floor included.
 3. **Cooldown on empty, with jitter.** When a point's spawn is consumed (last item picked up, vehicle destroyed or
    driven more than `leave_radius` from its point), the point gets `next_roll_at = now + cooldown × (1 ± jitter)`:
    vehicles 6 h ± 33 %, loot 60 min ± 50 %.
@@ -35,8 +37,8 @@ deficit, per-point cooldowns, and placement away from players.
    used-up items free their slot immediately.
 6. **State in the DB, numbers in settings.** `loot_spawn_state.next_roll_at` already exists; add
    `vehicle_spawn_state(spawn_id, next_roll_at)` and a `world_budget(category, zone, cap, remainder)` row per
-   category/zone written on the first roll. Settings: `loot.cap_multiplier`, `loot.refill_rate`, `loot.cooldown_minutes`,
-   `loot.cooldown_jitter`, `vehicles.cap_multiplier`, `vehicles.refill_rate`, `vehicles.cooldown_hours`,
+   category/zone written on the first roll. Settings: `loot.cap_multiplier`, `loot.refill_rate`, `loot.refill_floor`, `loot.count_carried`, `loot.cooldown_minutes`,
+   `loot.cooldown_jitter`, `vehicles.cap_multiplier`, `vehicles.refill_rate`, `vehicles.refill_floor`, `vehicles.cooldown_hours`,
    `vehicles.cooldown_jitter`, `vehicles.abandon_days`, `world.min_player_distance`, `world.refill_interval_s`.
 
 ## Consequences
@@ -47,7 +49,11 @@ deficit, per-point cooldowns, and placement away from players.
 - The `loot` roller changes from "re-roll empty points every 30 min" to "spend the budget on cooled points"; the
   `vehicles` resource changes from a one-shot roll to the same refill loop; both need the consumed-point hook.
   `/vehrespawn` stays as the dev reset.
-- Counting player-carried items toward the loot cap needs one aggregate query per zone per interval
-  (`items` joined to `characters` positions); if it proves costly, count world + container items only (setting).
+- **Hoarding is deliberate scarcity.** Carried items and parked vehicles count against the cap, so a clan
+  stockpile slows respawns for the whole server; the floor keeps the map from looking dead, and a lost base or a
+  death returns its stock to the economy through drops and despawn. Counting only world and container items was
+  rejected: a pickup would free its slot and resources would become unlimited again, only delayed.
+  `loot.count_carried` (default on) exists for a server owner who wants the softer rule. The carried count is one
+  aggregate query per zone per interval (`items` joined to `characters` positions).
 - Risk: with a low refill rate a looted-out hub stays empty for hours by design; the jitter and the random point
   choice spread refills instead of refilling the hub first. Tune `refill_rate` and `cooldown` on the playtest.
