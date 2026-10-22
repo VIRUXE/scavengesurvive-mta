@@ -5,8 +5,6 @@
     <include resource="auth"/>
     <script src="shared/events.lua" type="shared"/>
     <script src="server/main.lua" type="server"/>
-    <script src="server/tick.lua" type="server"/>
-    <script src="server/death.lua" type="server"/>
     <script src="client/deathscreen.lua" type="client"/>
     <file src="shared/logic/survival.lua"/>
     <file src="shared/logic/spawnpoints.lua"/>

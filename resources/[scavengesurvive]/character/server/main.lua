@@ -12,20 +12,17 @@ local survival = loadFile("shared/logic/survival.lua")
 local spawnpoints = loadFile("shared/logic/spawnpoints.lua")
 local combatlog = loadFile("shared/logic/combatlog.lua")
 
-Character = {
-    db = db,
-    net = net,
-    util = util,
-    survival = survival,
-    spawnpoints = spawnpoints,
-    combatlog = combatlog,
+-- Every spawned character, shared with the tick and death modules (they capture this table).
+local state = {
+    byPlayer = {}, -- player -> { id, hp, food, bleed, wounds, dirty, dead, inventoryContainerId, lastSent }
+    byId = {}, -- character id -> player
+    lastSpawn = {}, -- player -> last spawnpoint index (no two spawns in a row at the same place)
+    creating = {}, -- players with a character_create in flight
+    settings = {}, -- gamemode settings map (db.settings)
     combat = combatlog.new(),
-    byPlayer = {},
-    byId = {},
-    lastSpawn = {},
-    creating = {},
-    settings = {},
 }
+local death = loadFile("server/death.lua")({ db = db, util = util, state = state })
+local tick = loadFile("server/tick.lua")({ db = db, util = util, survival = survival, state = state, die = death.die })
 
 local function rngInt(n)
     return math.random(1, n)
@@ -33,7 +30,7 @@ end
 
 local function startingItems(charId, isNew)
     local key = isNew and "spawn.new_items" or "spawn.res_items"
-    local unames = util.split(Character.settings[key] or (isNew and "Knife" or "AntiSepBandage"), ",")
+    local unames = util.split(state.settings[key] or (isNew and "Knife" or "AntiSepBandage"), ",")
     local ok = rpc.call("items", "createStartingItems", charId, unames)
     if not ok then
         util.log("character", "warn", "items resource down; no starting items for %d", charId)
@@ -51,8 +48,8 @@ local function spawnFromRow(player, row, isNew)
         inventoryContainerId = row.inventory_container_id,
         lastSent = { hp = -1, food = -1, bleed = -1 },
     }
-    Character.byPlayer[player], Character.byId[row.id] = st, player
-    combatlog.reset(Character.combat, player)
+    state.byPlayer[player], state.byId[row.id] = st, player
+    combatlog.reset(state.combat, player)
     spawnPlayer(player, row.x, row.y, row.z, row.rz, row.skin, row.interior or 0, row.dimension or 0)
     setElementHealth(player, math.max(1, st.hp))
     setCameraTarget(player, player)
@@ -64,21 +61,21 @@ local function spawnFromRow(player, row, isNew)
     if isNew then
         startingItems(row.id, row.hp == survival.NEW.hp)
     end
-    Character.sendStats(player, true)
+    tick.sendStats(player, true)
 end
 
-function Character.createAndSpawn(player, accountId, stats)
+local function createAndSpawn(player, accountId, stats)
     -- one character_create in flight per player (a second one would retire the first)
-    if Character.creating[player] then
+    if state.creating[player] then
         return
     end
-    Character.creating[player] = true
-    local idx, x, y, z, rz = spawnpoints.pick(Character.lastSpawn[player], rngInt)
-    Character.lastSpawn[player] = idx
+    state.creating[player] = true
+    local idx, x, y, z, rz = spawnpoints.pick(state.lastSpawn[player], rngInt)
+    state.lastSpawn[player] = idx
     local skin = spawnpoints.randomSkin(rngInt)
     local params = { accountId, skin, x, y, z, rz, stats.hp, stats.food, stats.bleed }
     db.call("character_create", params, function(res, ctx)
-        Character.creating[ctx.player] = nil
+        state.creating[ctx.player] = nil
         if not isElement(ctx.player) then
             return
         end
@@ -115,7 +112,7 @@ local function loadOrCreate(player, accountId)
             if row then
                 return spawnFromRow(ctx.player, row, false)
             end
-            Character.createAndSpawn(ctx.player, accountId, survival.NEW)
+            createAndSpawn(ctx.player, accountId, survival.NEW)
         end,
         { player = player }
     )
@@ -128,7 +125,7 @@ addEventHandler("onResourceStart", resourceRoot, function()
     setGameType("Scavenge & Survive")
     setMapName("San Andreas")
     db.settings(function(map)
-        Character.settings = map
+        state.settings = map
     end)
     for _, p in ipairs(getElementsByType("player")) do
         local accountId = exports.auth:getAccountId(p)
@@ -143,7 +140,7 @@ addEventHandler("onPlayerAuthenticated", root, function(accountId)
 end)
 
 net.handler("onCharacterRequestRespawn", function(player)
-    local st = Character.byPlayer[player]
+    local st = state.byPlayer[player]
     if st and st.hp > 0 then
         return
     end
@@ -152,7 +149,7 @@ net.handler("onCharacterRequestRespawn", function(player)
         return
     end
     triggerClientEvent(player, "onClientCharacterDeathScreen", player, false)
-    Character.createAndSpawn(player, accountId, survival.RESPAWN)
+    createAndSpawn(player, accountId, survival.RESPAWN)
 end, { rate = 1 })
 
 -- A player who leaves (quit, timeout) within the combat-log window of being hurt, while the attacker is still
@@ -162,28 +159,28 @@ local function combatLogged(player, st, quitReason)
     if st.dead or not combatlog.countsAsLogout(quitReason) then
         return false
     end
-    local window = tonumber(Character.settings["player.combat_log_window"]) or combatlog.DEFAULT_WINDOW_S
-    local attacker = combatlog.attackerOf(Character.combat, player, getTickCount(), window, isElement)
+    local window = tonumber(state.settings["player.combat_log_window"]) or combatlog.DEFAULT_WINDOW_S
+    local attacker = combatlog.attackerOf(state.combat, player, getTickCount(), window, isElement)
     if not attacker then
         return false
     end
     util.log("character", "info", "%s combat-logged (last hit by %s)", getPlayerName(player), getPlayerName(attacker))
     outputChatBox(string.format("%s combat logged!", getPlayerName(player)), root, 255, 220, 0)
-    return Character.die(player, "combatlog", attacker, true)
+    return death.die(player, "combatlog", attacker, true)
 end
 
 local function forget(player, quitReason)
-    local st = Character.byPlayer[player]
+    local st = state.byPlayer[player]
     if st then
         if not combatLogged(player, st, quitReason) then
-            Character.flushOne(player, st)
+            tick.flushOne(player, st)
         end
-        Character.byId[st.id] = nil
+        state.byId[st.id] = nil
     end
-    combatlog.forget(Character.combat, player)
-    Character.byPlayer[player] = nil
-    Character.lastSpawn[player] = nil
-    Character.creating[player] = nil
+    combatlog.forget(state.combat, player)
+    state.byPlayer[player] = nil
+    state.lastSpawn[player] = nil
+    state.creating[player] = nil
 end
 -- auth's own onPlayerQuit handler runs first (it started first) and raises onPlayerLoggedOut with the quit reason,
 -- so that is where a quitting player is seen; the direct onPlayerQuit handler covers a player who never logged in.
@@ -194,30 +191,30 @@ addEventHandler("onPlayerLoggedOut", root, function(_, quitReason)
     forget(source, quitReason)
 end)
 addEventHandler("onResourceStop", resourceRoot, function()
-    Character.flushAll(true)
+    tick.flushAll(true)
 end)
 
 function getCharacterId(player)
-    local st = Character.byPlayer[player]
+    local st = state.byPlayer[player]
     return st and st.id or false
 end
 
 function getPlayerByCharacterId(id)
-    return Character.byId[id] or false
+    return state.byId[id] or false
 end
 
 function getInventoryContainerId(player)
-    local st = Character.byPlayer[player]
+    local st = state.byPlayer[player]
     return st and st.inventoryContainerId or false
 end
 
 function getStats(player)
-    local st = Character.byPlayer[player]
+    local st = state.byPlayer[player]
     return st and { hp = st.hp, food = st.food, bleed = st.bleed, wounds = st.wounds } or false
 end
 
 function modifyStat(player, key, delta)
-    local st = Character.byPlayer[player]
+    local st = state.byPlayer[player]
     if not st or (key ~= "hp" and key ~= "food" and key ~= "bleed") then
         return false
     end
@@ -230,19 +227,19 @@ function modifyStat(player, key, delta)
     if key == "hp" then
         setElementHealth(player, math.max(1, st.hp))
     end
-    Character.sendStats(player, false)
+    tick.sendStats(player, false)
     if st.hp <= 0 then
-        Character.die(player, "stat", false)
+        death.die(player, "stat", false)
     end
     return st[key]
 end
 
 function killCharacter(player, cause, killer)
-    return Character.die(player, cause, killer)
+    return death.die(player, cause, killer)
 end
 
 function applyWound(player, bleedAdd, hpLoss, killer, cause)
-    local st = Character.byPlayer[player]
+    local st = state.byPlayer[player]
     if not st or st.dead then
         return false
     end
@@ -256,11 +253,11 @@ function applyWound(player, bleedAdd, hpLoss, killer, cause)
     st.hp = math.max(0, st.hp - hpLoss)
     st.dirty = true
     local byPlayer = isElement(killer) and getElementType(killer) == "player" and killer ~= player
-    combatlog.damaged(Character.combat, player, byPlayer and killer or nil, getTickCount())
+    combatlog.damaged(state.combat, player, byPlayer and killer or nil, getTickCount())
     setElementHealth(player, math.max(1, st.hp))
-    Character.sendStats(player, true)
+    tick.sendStats(player, true)
     if st.hp <= 0 then
-        Character.die(player, cause or "killed", isElement(killer) and killer or false)
+        death.die(player, cause or "killed", isElement(killer) and killer or false)
     end
     return true
 end
