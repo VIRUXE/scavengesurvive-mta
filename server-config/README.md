@@ -35,7 +35,9 @@ You can still start one by hand from the server console (`start admin`).
 MTA has no RCON. The `dev` resource exports `rcon(line)` over the server's HTTP port (22005) so scripts and LLM agents
 can drive a local test server: `pwsh server-config/rcon.ps1 <command>` posts the line to `/dev/call/rcon` with HTTP
 Basic auth and prints the reply. Commands: `help`, `players`, `start|stop|restart|rr <resource>`,
-`cmd <player> <command> [args]` (runs a chat command as that player, e.g. `cmd Bob additem M9Pistol`), `say <text>`,
+`cmd <player> <command> [args]` (runs a chat command as that player, e.g. `cmd Bob additem M9Pistol`),
+`key <player> <command|key>` (runs a bound client command like `interact`, `putaway`, `dropitem`, `inventory` or
+dispatches a client key press like `arrow_u`, `arrow_d`, `enter`, `escape`), `say <text>`,
 `lua <code>`, `screenshot <player> [w h]` (the client renders a frame and uploads it to `dev/screenshots/`, git-ignored;
 the client must not be minimised), `shutdown`.
 

@@ -154,7 +154,7 @@ local RCON_HELP = {
     "say <text>                    chat message to everyone",
     "lua <code>                    run server-side Lua and print its return values, e.g. lua return getPlayerCount()",
     "screenshot <player> [w h]     ask that client for a screenshot; saved as dev/screenshots/<player>-<time>.jpg",
-    "key <player> <command>        run a bound command on that client as if its key was pressed (e.g. interact)",
+    "key <player> <command|key>    run a bound command (interact, inventory) or client key (arrow_d, enter, escape)",
     "shutdown                      stop the server",
 }
 local RESOURCE_VERBS = { start = startResource, stop = stopResource, restart = restartResource, rr = restartResource }

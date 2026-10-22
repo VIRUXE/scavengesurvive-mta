@@ -10,7 +10,7 @@ ui 6, auth 7, character 8, items 9, loot 10, hud 11, weapons 12, dev/config 13),
    connections!` with no `ERROR` or `Access denied` line (MTA does not log each resource it starts at boot).
    `rg -n "ERROR" "…/mods/deathmatch/logs/scripts.log"` returns nothing. `mariadb -u root -e "SELECT COUNT(*) FROM
    information_schema.processlist WHERE db='scavengesurvive'"` shows 5 (auth, character, items, loot, dev).
-2. **Account.** A registers, logs in and spawns on the shoreline. The HUD shows the stock health bar, the hunger bar under it, the watch bottom-left and the key list on the right; **H** opens the inventory dialog listing `[01]Knife`.
+2. **Account.** A registers, logs in and spawns on the shoreline. The HUD shows the stock health bar, the hunger bar above it, the watch bottom-left and the key list on the right; **H** opens the inventory dialog listing `[01]Knife`.
    Relog and log in again with the same password.
 3. **DB round trip.** A: `/dbtest` prints `dbtest: <n> ms ok=false code=UNKNOWN_TYPE` with n < 50.
 4. **Pick up / drop.** A: `/additem Wrench`. Within 2 s a "Wrench" label appears at the item. **F** picks it up
@@ -18,9 +18,9 @@ ui 6, auth 7, character 8, items 9, loot 10, hud 11, weapons 12, dev/config 13),
 5. **Inventory.** A: **Y** puts the Wrench away. **H** lists it, and **Options → Equip** puts it back in hand. Repeat `/additem` +
    **Y** until the action text says "Extra slots required". The item that does not fit stays in hand.
 6. **Bag.** A: `/additem Satchel`, **F**, **Y**: the satchel is worn (visible on the back for B). Put more items away
-   than the inventory holds. They overflow into the bag, and **H** shows a `Bag >` row that opens the bag dialog.
+   than the inventory holds. They overflow into the bag, and **H** shows a `Satchel >` row that opens the `Satchel (used/size)` dialog.
 7. **Food.** A: `/additem HotDog`, **F** (the key list shows `F Eat`), **F** again. `/stats` food goes up, and the item is consumed.
-8. **Starvation death.** A: `/setfood 0`, `/sethp 3`. Within seconds the death screen shows the cause. **Play Again**
+8. **Starvation death.** A: `/setfood 0`, `/sethp 3`. Within seconds the death screen shows the rising camera and boxed `YOU ARE DEAD!` / `>Play Again<` lines under the darkened overlay. **Play Again**
    spawns a new character (`/stats` hp=100 food=40) with an AntiSepBandage in **H**. B walks to the corpse spot
    and sees A's old items on the ground.
 9. **PvP.** A: `/additem M9Pistol`, **F**, shoots B. B gets the wound action text, B's screen darkens as hp drops below 40, and B's hp drains
@@ -56,6 +56,7 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
     converting. Join time and FPS near Grove Street go into the #19 comment.
 15. **Loot vehicles** (#30). First boot logs `[vehicles] rolled 2017 spawn points: N vehicles` with N around 80
     (4 %). `/vehcount` matches. Drive one: it starts battered, the engine is off until you start it, some are
-    locked, tanks are near empty (no fuel use yet). `rr vehicles`: the same vehicles come back where they were
+    locked, tanks are near empty (no fuel use yet), and the bottom-right vehicle panel shows `DOR`, `ENG`, `DMG`,
+    fuel, speed and the vehicle name in Bank Gothic. `rr vehicles`: the same vehicles come back where they were
     left (`N vehicles rebuilt from the database`). `/vehrespawn` drops them all and rolls a fresh set. Blow one
     up: the wreck disappears after 30 s and `/vehcount` drops by one.
