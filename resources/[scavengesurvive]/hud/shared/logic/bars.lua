@@ -1,8 +1,10 @@
 -- Hunger bar (core/char/food.pwn, progress2) and the brightness overlay (core/player/brightness.pwn).
 local bars = {}
 
--- CreatePlayerProgressBar(548, 36, 62, 3.2, 0x1FF81FFF, 100): a short bar under the stock HUD, right-anchored.
-bars.HUNGER = { x = 548, y = 36, w = 62, h = 3.2, r = 0x1F, g = 0xF8, b = 0x1F, a = 0xFF, max = 100 }
+-- CreatePlayerProgressBar(548, 36, 62, 3.2, 0x1FF81FFF, 100): the width of the stock health bar, 20 units above
+-- it (SA-MP's health bar sits at 548..610 x 56). MTA draws the GTA HUD lower and wider: at 1080p the health bar
+-- is 1645..1816 x 222..235 px = 517.8..593.8 x 98.7 units right-anchored, so the same relation gives this.
+bars.HUNGER = { x = 517.8, y = 78.7, w = 76, h = 3.2, r = 0x1F, g = 0xF8, b = 0x1F, a = 0xFF, max = 100 }
 
 function bars.fill(value, max)
     if not max or max <= 0 then

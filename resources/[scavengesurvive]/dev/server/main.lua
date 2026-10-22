@@ -154,6 +154,7 @@ local RCON_HELP = {
     "say <text>                    chat message to everyone",
     "lua <code>                    run server-side Lua and print its return values, e.g. lua return getPlayerCount()",
     "screenshot <player> [w h]     ask that client for a screenshot; saved as dev/screenshots/<player>-<time>.jpg",
+    "key <player> <command>        run a bound command on that client as if its key was pressed (e.g. interact)",
     "shutdown                      stop the server",
 }
 local RESOURCE_VERBS = { start = startResource, stop = stopResource, restart = restartResource, rr = restartResource }
@@ -245,6 +246,16 @@ function rcon(line)
             -- local server: lift the default 5 kB/s upload cap so a 1080p frame arrives in a second, not a minute
             ok = takePlayerScreenShot(p, tonumber(w) or 1280, tonumber(h) or 720, tag, 90, 5000000, 50000) == true
             put("requested %s -> %s; the client uploads it within a few seconds", tag, tostring(ok))
+        end
+    elseif verb == "key" then
+        local who, bound = rest:match("^(%S+)%s+(%S+)$")
+        local p = who and getPlayerFromName(who)
+        if not p then
+            ok = false
+            put("usage: key <player> <command>")
+        else
+            triggerClientEvent(p, "onClientDevKey", p, bound)
+            put("%s pressed %s", who, bound)
         end
     elseif verb == "shutdown" then
         put("shutting down")

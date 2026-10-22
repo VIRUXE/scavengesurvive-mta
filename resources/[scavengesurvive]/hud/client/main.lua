@@ -68,6 +68,15 @@ local function vehicleType(uname)
     return vehicleTypeCache[uname] or nil
 end
 
+-- ui may be restarting while we draw: a failed export call must not kill the render handler
+local function uiListIsOpen()
+    local ui = getResourceFromName("ui")
+    if not ui or getResourceState(ui) ~= "running" then
+        return false
+    end
+    return exports.ui:listIsOpen() == true
+end
+
 local function applyStockHud()
     for component, visible in pairs(STOCK) do
         setPlayerHudComponentVisible(component, visible)
@@ -148,7 +157,7 @@ local function drawKeyActions(driver)
     local t = held and itemType(held.uname)
     local lines = keyactions.lines({
         spawned = true,
-        uiOpen = exports.ui:listIsOpen(),
+        uiOpen = uiListIsOpen(),
         knockedOut = false,
         driver = driver,
         held = held and { uname = held.uname, category = held.category, isWeapon = t and t.category == "weapon" },
@@ -159,7 +168,7 @@ local function drawKeyActions(driver)
     local font = canvas.font(1)
     local y = 120
     for _, line in ipairs(lines) do
-        local verbWidth = dxGetTextWidth(" " .. line.text, scale, font)
+        local verbWidth = dxGetTextWidth(" " .. line.text, scale * canvas.xScale(1, 0.3, 1.5), font)
         draw.text({ text = line.text, x = 618, y = y, ly = 1.5, colour = WHITE, align = "right", outline = 1 })
         draw.text({
             text = line.key,
@@ -271,6 +280,7 @@ end)
 
 addEventHandler("onClientResourceStart", resourceRoot, function()
     setPlayerHudComponentVisible("all", false)
+    triggerServerEvent("onHudRequestState", localPlayer) -- a restarted hud asks for the stats and the hand
     refreshKeys()
     setTimer(refreshKeys, 1000, 0)
     setTimer(function()

@@ -10,16 +10,23 @@ return function(ctx)
             or isPedDead(localPlayer)
         )
     end
+    local function listIsOpen()
+        local ui = getResourceFromName("ui")
+        if not ui or getResourceState(ui) ~= "running" then
+            return false
+        end
+        return exports.ui:listIsOpen() == true
+    end
     local function request(eventName)
         return function()
-            if not guard() or exports.ui:listIsOpen() then
+            if not guard() or listIsOpen() then
                 return
             end
             triggerServerEvent(eventName, localPlayer)
         end
     end
     addCommandHandler("interact", function()
-        if not guard() or exports.ui:listIsOpen() then
+        if not guard() or listIsOpen() then
             return
         end
         local held = ctx.getHeld()
@@ -34,7 +41,7 @@ return function(ctx)
         if not guard() then
             return
         end
-        if exports.ui:listIsOpen() then
+        if listIsOpen() then
             return exports.ui:listClose()
         end
         triggerServerEvent("onItemsRequestOpenInventory", localPlayer)

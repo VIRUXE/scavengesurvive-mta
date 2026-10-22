@@ -8,6 +8,12 @@ local FONTS = { [0] = "diploma", [1] = "default-bold", [2] = "bankgothic", [3] =
 local LINE_UNITS = 9.8
 -- dxDrawText line height in pixels at scale 1 for each font.
 local DX_LINE_PX = { ["default-bold"] = 15, bankgothic = 16, diploma = 17, pricedown = 17 }
+-- Horizontal correction per font at the textdraw's native 1:4 letter aspect, measured against the footage:
+-- MTA's Bank Gothic is much wider than GTA's condensed font 2, Tahoma Bold narrower than GTA's font 1.
+local X_FACTOR = { ["default-bold"] = 1.5, bankgothic = 0.72, diploma = 1, pricedown = 1 }
+local NATIVE_ASPECT = 0.25 -- letter-size X / Y at which the glyphs keep their native shape (0.5 / 2.0)
+-- Vertical correction: Bank Gothic glyphs are taller for their line pitch than GTA's font 2.
+local Y_FACTOR = { bankgothic = 0.85 }
 
 function canvas.new(screenW, screenH)
     return { sw = screenW, sh = screenH, s = screenH / 480 }
@@ -42,7 +48,14 @@ end
 
 -- dxDrawText scale that gives a textdraw of letter-size Y its line pitch.
 function canvas.textScale(c, letterY, fontId)
-    return canvas.lineHeight(c, letterY) / (DX_LINE_PX[canvas.font(fontId)] or 15)
+    local font = canvas.font(fontId)
+    return canvas.lineHeight(c, letterY) / (DX_LINE_PX[font] or 15) * (Y_FACTOR[font] or 1)
+end
+
+-- Horizontal scale relative to the vertical one for a textdraw letter size (X, Y) in the given font.
+function canvas.xScale(fontId, lx, ly)
+    local factor = X_FACTOR[canvas.font(fontId)] or 1
+    return factor * ((lx or 0.3) / (ly or 1.5)) / NATIVE_ASPECT
 end
 
 -- SA-MP 0xRRGGBBAA -> r, g, b, a

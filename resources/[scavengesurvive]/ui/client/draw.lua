@@ -12,7 +12,8 @@ return function(ctx)
     function M.text(td)
         local fontId = td.font or 1
         local font = canvas.font(fontId)
-        local scale = canvas.textScale(c, td.ly or 1.5, fontId)
+        local scaleY = canvas.textScale(c, td.ly or 1.5, fontId)
+        local scaleX = scaleY * canvas.xScale(fontId, td.lx, td.ly)
         local align = td.align or "left"
         local px = canvas.x(c, td.x, td.anchor or align) + (td.dx or 0)
         local py = canvas.y(c, td.y)
@@ -32,15 +33,32 @@ return function(ctx)
         end
         local wrap = w > 0
         local d = math.max(1, math.floor(c.s + 0.5))
-        if (td.outline or 0) > 0 then
-            dxDrawText(text, left - d, py, right - d, py + FAR, BLACK, scale, font, align, "top", false, wrap)
-            dxDrawText(text, left + d, py, right + d, py + FAR, BLACK, scale, font, align, "top", false, wrap)
-            dxDrawText(text, left, py - d, right, py - d + FAR, BLACK, scale, font, align, "top", false, wrap)
-            dxDrawText(text, left, py + d, right, py + d + FAR, BLACK, scale, font, align, "top", false, wrap)
-        elseif (td.shadow or 0) > 0 then
-            dxDrawText(text, left + d, py + d, right + d, py + d + FAR, BLACK, scale, font, align, "top", false, wrap)
+        local function at(ox, oy, colour)
+            dxDrawText(
+                text,
+                left + ox,
+                py + oy,
+                right + ox,
+                py + oy + FAR,
+                colour,
+                scaleX,
+                scaleY,
+                font,
+                align,
+                "top",
+                false,
+                wrap
+            )
         end
-        dxDrawText(text, left, py, right, py + FAR, td.colour, scale, font, align, "top", false, wrap)
+        if (td.outline or 0) > 0 then
+            at(-d, 0, BLACK)
+            at(d, 0, BLACK)
+            at(0, -d, BLACK)
+            at(0, d, BLACK)
+        elseif (td.shadow or 0) > 0 then
+            at(d, d, BLACK)
+        end
+        at(0, 0, td.colour)
     end
 
     -- Box in canvas units; anchor as for canvas.x.

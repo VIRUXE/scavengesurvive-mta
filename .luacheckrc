@@ -25,4 +25,5 @@ files["resources/**/maps/data/**"] = { std = "lua51", max_line_length = false }
 files["resources/**/loot/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "rollNear" } }
 files["resources/**/world/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "getWeather", "setGlobalWeather" } }
 files["resources/**/dev/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "rcon" } }
+files["resources/**/dev/client/**"] = { std = "lua51+mta_shared+mta_client", read_globals = { "executeCommandHandler" } }
 files["resources/**/vehicles/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "getVehicleDbId", "countVehicles", "respawnAll" } }
