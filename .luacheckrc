@@ -19,4 +19,5 @@ files["resources/**/items/server/**"] = { std = "lua51+mta_shared+mta_server", g
 files["resources/**/items/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "Held", "ItemModels" } }
 files["resources/**/models/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "resolve" } }
 files["resources/**/loot/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "rollNear" } }
+files["resources/**/world/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "getWeather", "setGlobalWeather" } }
 files["resources/**/dev/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "rcon" } }

@@ -40,3 +40,7 @@ ui 6, auth 7, character 8, items 9, loot 10, hud 11, weapons 12, dev/config 13),
     and `kick` B from the console within 30 s: B must keep the character (a kick is not a combat log). Finally
     shoot B and `shutdown` within 30 s: note the quit reason MTA reports in `server.log`; if the shutdown counts
     as a combat log, the stop path needs the same guard as a kick.
+13. **Weather and clock** (#21). On join the in-game clock matches the host PC's clock (within a minute) and keeps
+    pace with it. `scripts.log` has one `[world] weather N (NAME) at start` line per boot, never `SANDSTORM_DESERT`
+    (19). `/weather` prints the current id; `/weather rainy_sf` rains for A and B; `/weather 19` is a sandstorm;
+    `/weather 20` is refused. `rr world` picks a fresh weather and the clock stays right.

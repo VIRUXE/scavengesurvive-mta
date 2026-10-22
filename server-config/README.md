@@ -48,5 +48,5 @@ machine or LAN you trust, and set `*dev.http_pass` empty to disable the account.
 ## Dev commands (resource `dev`)
 
 Allowed for everyone while the `dev` setting `*dev.open` is `true` (the default); otherwise only accounts with
-`admin_level > 0`. Commands: `/additem <uname>`, `/rollloot`, `/stats`, `/sethp <n>`, `/setfood <n>`, `/setbleed <n>`,
+`admin_level > 0`. Commands: `/additem <uname>`, `/rollloot`, `/stats`, `/sethp <n>`, `/setfood <n>`, `/setbleed <n>`, `/weather [id|NAME]`,
 `/dbtest`, `/rr <resource>` (also `rr <resource>` in the server console).

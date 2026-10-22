@@ -27,6 +27,7 @@ return {
     onClientItemsInventory = true,
     onClientItemsToast = true,
     onLootSpawned = false,
+    onWorldWeatherChanged = false,
     onClientUiListAction = false,
     onClientUiListClosed = false,
     onWeaponsRequestHit = true,

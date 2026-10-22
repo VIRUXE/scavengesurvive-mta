@@ -93,6 +93,17 @@ command("sethp", setStat("hp", 100))
 command("setfood", setStat("food", 100))
 command("setbleed", setStat("bleed", 1))
 
+command("weather", function(p, idOrName)
+    if not idOrName then
+        return say(p, "weather = %s; usage: /weather <0..19|NAME>", tostring(exports.world:getWeather()))
+    end
+    local id = exports.world:setGlobalWeather(idOrName)
+    if not id then
+        return say(p, "unknown weather %s", idOrName)
+    end
+    say(p, "weather = %d", id)
+end, true)
+
 command("dbtest", function(p)
     if not ready then
         return say(p, "db not connected")

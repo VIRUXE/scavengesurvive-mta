@@ -1,0 +1,1 @@
+addEvent("onWorldWeatherChanged", false)
