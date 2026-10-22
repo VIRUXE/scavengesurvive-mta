@@ -177,7 +177,7 @@ def render_meta(entries) -> str:
         "<meta>",
         '    <info author="scavengesurvive-mta" type="script" name="models" '
         'description="SA-MP custom object models used by the item types and the maps" version="0.1.0"/>',
-        '    <min_mta_version server="1.6.0" client="1.6.0"/>',
+        '    <min_mta_version server="1.6.0" client="1.6.0-9.21695"/>',  # engineGetModelTXDID
         "    <download_priority_group>90</download_priority_group>",
         '    <script src="client/main.lua" type="client"/>',
         '    <file src="manifest.lua"/>',

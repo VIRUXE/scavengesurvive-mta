@@ -140,7 +140,7 @@ def render_zone_lua(zone: str, files: list[str], objects: list, removals: list, 
 def render_meta(zones: list[str]) -> str:
     lines = ['<meta>',
              '    <info author="scavengesurvive-mta" type="script" name="maps" description="Upstream static maps built client-side (createBuilding)" version="0.1.0"/>',
-             '    <min_mta_version server="1.6.0" client="1.6.0"/>',
+             '    <min_mta_version server="1.6.0" client="1.6.0-9.22410"/>',  # createBuilding
              '    <download_priority_group>85</download_priority_group>',
              '    <include resource="lib"/>',
              '    <include resource="models"/>',
