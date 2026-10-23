@@ -501,5 +501,31 @@
     <file src="files/zombotechlab1.col"/>
     <file src="files/zombotechlab1.dff"/>
     <file src="files/zombotechlab1.txd"/>
+    <file src="peds.lua"/>
+    <file src="files/army_nohat.dff"/>
+    <file src="files/bikdrug_nohat.dff"/>
+    <file src="files/bikera_nohat.dff"/>
+    <file src="files/bikerb_nohat.dff"/>
+    <file src="files/csher_nohat.dff"/>
+    <file src="files/cwmyfr_nohat.dff"/>
+    <file src="files/dsher_nohat.dff"/>
+    <file src="files/dwayne_nohat.dff"/>
+    <file src="files/hmogar_nohat.dff"/>
+    <file src="files/lafd1_nohat.dff"/>
+    <file src="files/lapdm1_nohat.dff"/>
+    <file src="files/lvfd1_nohat.dff"/>
+    <file src="files/lvpdm1_nohat.dff"/>
+    <file src="files/maccer_nohat.dff"/>
+    <file src="files/sffd1_nohat.dff"/>
+    <file src="files/sfpdm1_nohat.dff"/>
+    <file src="files/smokev_nohat.dff"/>
+    <file src="files/swat_nohat.dff"/>
+    <file src="files/tenpen_nohat.dff"/>
+    <file src="files/wfyburg_nohat.dff"/>
+    <file src="files/wmygol1_nohat.dff"/>
+    <file src="files/wmygol2_nohat.dff"/>
+    <file src="files/wmypizz_nohat.dff"/>
+    <file src="files/wmyplt_nohat.dff"/>
     <export function="resolve" type="client"/>
+    <export function="hatlessSkin" type="client"/>
 </meta>

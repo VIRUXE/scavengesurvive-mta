@@ -18,7 +18,7 @@ files["resources/**/hud/client/**"] = { std = "lua51+mta_shared+mta_client", glo
 files["resources/**/auth/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "prompt", "getAccountId", "getAdminLevel", "getLanguage", "isAuthenticated", "setSessionAdminLevel", "setWhitelistEnabled", "isWhitelistEnabled" } }
 files["resources/**/character/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "getCharacterId", "getPlayerByCharacterId", "getInventoryContainerId", "getStats", "modifyStat", "killCharacter", "applyWound", "knockOutPlayer", "wakeUpPlayer", "isKnockedOut", "setPlayerCuffed", "isPlayerCuffed" } }
 files["resources/**/items/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "getHeld", "setHeld", "clearHeld", "openTrunkContainer", "closeTrunk", "openWorldContainer", "openSupplyContainer", "closeContainer", "updateHeldData", "createStartingItems", "refreshPlayer", "destroyItem", "destroyWorldItem", "destroyContainerItem", "resendWorldItem", "isFemaleSkin" } }
-files["resources/**/models/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "resolve" } }
+files["resources/**/models/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "resolve", "hatlessSkin" } }
 -- restoreWorldModel postdates the generated .luacheck/mta_client.lua list
 files["resources/**/maps/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "getZoneAt", "getPlayerZone" } }
 files["resources/**/maps/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "getMapStats" }, read_globals = { "restoreWorldModel" } }

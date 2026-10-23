@@ -199,7 +199,15 @@ def files_needed(entries) -> list[str]:
     return sorted(names)
 
 
-def render_meta(entries) -> str:
+def ped_files(out_dir: Path) -> list[str]:
+    """DFF files of the hatless ped variants listed in <out_dir>/peds.lua (tools/extract_ped_models.py)."""
+    peds = out_dir / "peds.lua"
+    if not peds.is_file():
+        return []
+    return sorted(f"{name}.dff" for name in re.findall(r'dff = "([^"]+)"', peds.read_text(encoding="ascii")))
+
+
+def render_meta(entries, peds: list[str] = ()) -> str:
     lines = [
         "<meta>",
         '    <info author="scavengesurvive-mta" type="script" name="models" '
@@ -210,8 +218,29 @@ def render_meta(entries) -> str:
         '    <file src="manifest.lua"/>',
     ]
     lines += [f'    <file src="files/{name}"/>' for name in files_needed(entries)]
-    lines += ['    <export function="resolve" type="client"/>', "</meta>"]
+    if peds:
+        lines.append('    <file src="peds.lua"/>')
+        lines += [f'    <file src="files/{name}"/>' for name in peds]
+    lines += ['    <export function="resolve" type="client"/>', '    <export function="hatlessSkin" type="client"/>']
+    lines.append("</meta>")
     return "\n".join(lines) + "\n"
+
+
+def write_meta(out_dir: Path) -> None:
+    """Regenerates meta.xml from the manifests on disk (manifest.lua for objects, peds.lua for hatless peds)."""
+    entries = {}
+    manifest = out_dir / "manifest.lua"
+    if manifest.is_file():
+        for dff, txd, txd_model in re.findall(
+            r'dff = "([^"]+)"(?:, txd = "([^"]+)")?(?:, txdModel = (\d+))?', manifest.read_text(encoding="ascii")
+        ):
+            e = {"dff": dff}
+            if txd:
+                e["txd"] = txd
+            if txd_model:
+                e["txdModel"] = int(txd_model)
+            entries[dff] = e
+    (out_dir / "meta.xml").write_text(render_meta(entries, ped_files(out_dir)), encoding="ascii", newline="\n")
 
 
 def detect_gta() -> Path | None:
@@ -284,7 +313,7 @@ def main(argv=None) -> int:
                 path, index = archives[archive]
                 target.write_bytes(read_img_entry(path, index[name]))
     (args.out / "manifest.lua").write_text(render_manifest(entries), encoding="ascii", newline="\n")
-    (args.out / "meta.xml").write_text(render_meta(entries), encoding="ascii", newline="\n")
+    (args.out / "meta.xml").write_text(render_meta(entries, ped_files(args.out)), encoding="ascii", newline="\n")
     return 1 if problems else 0
 
 

@@ -64,6 +64,40 @@ local function loadModel(e, txds)
     return id
 end
 
+-- Hatless ped variants (peds.lua, written by tools/extract_ped_models.py): a copy of a skin whose mesh carries
+-- its own hat, cap or helmet, with that headgear cut away so a worn hat sits clean. The variant shares the base
+-- skin's TXD and animations; items swaps a player onto it locally while a hat is worn (#75).
+local hatless = {} -- base skin -> allocated ped model
+
+local function readLuaFile(name)
+    local f = fileOpen(name, true)
+    if not f then
+        return {}
+    end
+    local src = fileRead(f, fileGetSize(f))
+    fileClose(f)
+    local chunk = loadstring(src, "=models/" .. name)
+    return chunk and chunk() or {}
+end
+
+local function loadPed(base, e)
+    local id = engineRequestModel("ped", base)
+    if not id then
+        return nil, "no free ped model id"
+    end
+    allocated[#allocated + 1] = id
+    local txdId = engineGetModelTXDID(base)
+    if not txdId or not engineSetModelTXDID(id, txdId) then
+        return nil, "txd of skin " .. base
+    end
+    local dff = engineLoadDFF("files/" .. e.dff .. ".dff")
+    if not dff or not engineReplaceModel(dff, id) then
+        return nil, "dff " .. e.dff
+    end
+    keep[#keep + 1] = dff
+    return id
+end
+
 addEventHandler("onClientResourceStart", resourceRoot, function()
     local txds, count, failed = {}, 0, {}
     for sampModel, e in pairs(readManifest()) do
@@ -75,13 +109,24 @@ addEventHandler("onClientResourceStart", resourceRoot, function()
             failed[#failed + 1] = sampModel .. " (" .. err .. ")"
         end
     end
+    local peds = 0
+    for base, e in pairs(readLuaFile("peds.lua")) do
+        local id, err = loadPed(base, e)
+        if id then
+            hatless[base] = id
+            peds = peds + 1
+        else
+            failed[#failed + 1] = "skin " .. base .. " (" .. err .. ")"
+        end
+    end
     local suffix = #failed > 0 and (", failed: " .. table.concat(failed, ", ")) or ""
-    outputDebugString(("models: %d SA-MP models loaded%s"):format(count, suffix), #failed > 0 and 2 or 3)
+    local msg = ("models: %d SA-MP models and %d hatless skins loaded%s"):format(count, peds, suffix)
+    outputDebugString(msg, #failed > 0 and 2 or 3)
     triggerEvent("sampModelsChanged", root)
 end)
 
 addEventHandler("onClientResourceStop", resourceRoot, function()
-    ids = {}
+    ids, hatless = {}, {}
     triggerEvent("sampModelsChanged", root) -- users fall back to stand-ins before the ids go away
     for _, id in ipairs(allocated) do
         engineFreeModel(id)
@@ -92,4 +137,9 @@ end)
 -- SA-MP model id -> this client's model id, or false while the model is not loaded
 function resolve(sampModel)
     return ids[sampModel] or false
+end
+
+-- base skin -> this client's hatless variant of it, or false when the skin has none (or the pack is not loaded)
+function hatlessSkin(skin)
+    return hatless[skin] or false
 end

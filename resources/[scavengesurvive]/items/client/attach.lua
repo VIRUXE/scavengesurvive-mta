@@ -141,6 +141,39 @@ return function(ctx)
         return attachment(uname, t and t.boneid or 6, o)
     end
 
+    -- Skins whose mesh carries its own hat, cap or helmet have a hatless twin in the models pack (peds.lua, #75).
+    -- While such a player wears a hat this client shows the twin instead, locally: setElementModel on this side
+    -- is never synced, so the server and every other client keep seeing the real skin. swapped[player] holds the
+    -- real skin meanwhile, and every per-skin row is looked up by it.
+    local swapped = {} -- player -> base skin while shown on its hatless twin
+    local swapping = false
+
+    local function baseSkin(player)
+        return swapped[player] or getElementModel(player)
+    end
+
+    local function setModelLocally(player, model)
+        swapping = true
+        setElementModel(player, model)
+        swapping = false
+    end
+
+    local function applyHatSwap(player, uname)
+        local base = baseSkin(player)
+        local twin = uname and exports.models:hatlessSkin(base)
+        if twin then
+            swapped[player] = base
+            if getElementModel(player) ~= twin then
+                setModelLocally(player, twin)
+            end
+        elseif swapped[player] then
+            swapped[player] = nil
+            if getElementModel(player) ~= base then
+                setModelLocally(player, base)
+            end
+        end
+    end
+
     local function bagOffsetsOf(uname)
         local t = itemType(uname)
         return t and t.categoryData and t.categoryData.bag_offsets
@@ -148,7 +181,7 @@ return function(ctx)
 
     local function bagAttachment(uname, player)
         -- the wearer's upstream row, or a similar skin's (shared/logic/apparel.lua bagConfig, skins.lua)
-        local cfg = apparel and apparel.bagConfig(uname, getElementModel(player), bagOffsetsOf)
+        local cfg = apparel and apparel.bagConfig(uname, baseSkin(player), bagOffsetsOf)
         local o = cfg and cfg.offsets or { 0, 0, 0, 0, 0, 0 }
         return attachment(uname, BAG_BONE, o, cfg and cfg.scale or { 1, 1, 1 })
     end
@@ -177,7 +210,7 @@ return function(ctx)
         if not apparel then
             return nil
         end
-        local cfg = apparel.attachConfig(slot, uname, getElementModel(player), wearOffsetsOf)
+        local cfg = apparel.attachConfig(slot, uname, baseSkin(player), wearOffsetsOf)
         if not cfg then
             return nil
         end
@@ -186,6 +219,9 @@ return function(ctx)
 
     local function setSlot(player, slot, uname)
         clearSlot(player, slot)
+        if slot == "hat" then
+            applyHatSwap(player, uname or nil)
+        end
         if not uname or uname == false then
             return
         end
@@ -212,6 +248,13 @@ return function(ctx)
             end
             tracked[player] = nil
         end
+        if swapped[player] then
+            local base = swapped[player]
+            swapped[player] = nil
+            if isElement(player) then
+                setModelLocally(player, base)
+            end
+        end
     end
 
     local function trackPlayer(player)
@@ -237,11 +280,15 @@ return function(ctx)
 
     -- the SA-MP model pack came or went: attached objects switch between real models and stand-ins in place
     models.onChanged(function()
-        for _, slots in pairs(tracked) do
+        for player, slots in pairs(tracked) do
             for _, a in pairs(slots) do
                 if isElement(a.obj) then
                     setElementModel(a.obj, models.forType(itemType(a.uname)))
                 end
+            end
+            -- hatless twins came or went with the pack
+            if isElement(player) then
+                applyHatSwap(player, slots.hat and slots.hat.uname or nil)
             end
         end
     end)
@@ -288,7 +335,11 @@ return function(ctx)
     local PER_SKIN =
         { ["items.bag"] = "bag", ["items.hat"] = "hat", ["items.mask"] = "mask", ["items.armour"] = "armour" }
     addEventHandler("onClientElementModelChange", root, function()
-        if getElementType(source) == "player" and tracked[source] then
+        if swapping or getElementType(source) ~= "player" then
+            return -- our own switch to or from a hatless twin changes no row
+        end
+        swapped[source] = nil -- the server gave the player a new real skin
+        if tracked[source] then
             for key, slot in pairs(PER_SKIN) do
                 if tracked[source][slot] then
                     setSlot(source, slot, getElementData(source, key))
@@ -327,7 +378,7 @@ return function(ctx)
         return {
             slot = slot,
             uname = a.uname,
-            skin = getElementModel(localPlayer),
+            skin = baseSkin(localPlayer),
             bone = a.sampBone,
             gtaBone = a.bone,
             offsets = { unpack(a.offsets, 1, 6) },

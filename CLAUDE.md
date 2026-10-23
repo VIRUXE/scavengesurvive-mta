@@ -38,6 +38,10 @@ Scavenge & Survive ported to MTA:SA 1.6 (Lua 5.1) with MariaDB 13.0 (12.2 also v
   on a box with a SA-MP client and commit the result. Clients create item objects with `ItemModels.forType(t)`;
   SA-MP models that clients build structures from (the pitched tent's panels and poles) are listed in
   `STRUCTURE_MODELS` in that tool and resolved with `ItemModels.forSamp(id)`.
+- Skins whose mesh carries its own hat or helmet have a hatless twin in `models` (`peds.lua` + `files/<name>_nohat.dff`,
+  built by `python -m tools.extract_ped_models` from `gta3.img` with Blender + DragonFF, see
+  `docs/runbooks/add-hatless-skin.md`); `items` shows the twin on each client while a hat is worn, the server never
+  changes the skin.
 
 ## Commands
 
