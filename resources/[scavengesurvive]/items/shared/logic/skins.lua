@@ -27,8 +27,12 @@ local CHAINS = {
     fh = { 131, 191, 93, 192, 233, 193, 90, 157, 201, 298, 141 },
 }
 
--- Build class per model where it is not the gender's average; sorted by eye on the contact sheets.
+-- Build class per model where it is not the gender's average; sorted by eye on the contact sheets: the heavy men
+-- (Big Bear 5, 15, the bodyguards 24 and 25, 57, 95, 168, 253, Big Smoke 269, 308) take the mechanic's wider rows.
 local BUILD = {}
+for id in ("5 15 24 25 57 95 168 253 269 308"):gmatch("%d+") do
+    BUILD[tonumber(id)] = "mh"
+end
 
 function M.isValid(id)
     return type(id) == "number" and id >= 0 and id <= 312 and id % 1 == 0 and not INVALID[id]
