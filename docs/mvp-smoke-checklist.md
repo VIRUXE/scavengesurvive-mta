@@ -37,7 +37,8 @@ ui 6, auth 7, character 8, items 9, loot 10, hud 11, weapons 12, dev/config 13),
 Results of the 2026-10-22 run: docs/reviews/2026-10-22-live-checks.md (13 and 14 pass; 12 needs a second PC, since
 MTA's launcher passes a second `mtasa://` to the already running client instead of opening another one).
 
-12. **Combat log** (#26). A shoots B once. B disconnects within 30 s: everyone's chat shows "B combat logged!",
+12. **Combat log** (#26). A shoots B once: B's watch text turns red and goes white again after 30 s (or at once
+    when A quits). B disconnects within 30 s: everyone's chat shows "B combat logged!",
     `scripts.log` has `combat-logged (last hit by A)`, B's items lie where B stood, and B's next login creates a
     new character. Repeat, but B waits 31 s before quitting: B logs back in with the same character. Then shoot B
     and `kick` B from the console within 30 s: B must keep the character (a kick is not a combat log). Finally
