@@ -14,7 +14,10 @@ and starts it. Every step is safe to run again. Stop the server first; the scrip
 5. Junctions `mods\deathmatch\resources\[scavengesurvive]` to this repo, so edits are live after `restart <name>`.
 6. Edits `acl.xml` (original saved as `acl.xml.stock`): rebuilds a `ScavengeSurvive` group holding every resource in
    `resources.xml` with an ACL granting `function.loadstring` (the stock `Default` ACL denies it, and every resource
-   loads `lib` modules with `loadstring`), and adds `resource.dev` to the `Admin` group so `/rr` can restart resources.
+   loads `lib` modules with `loadstring`), `function.takePlayerScreenShot` (dev's `screenshot`), `function.kickPlayer`
+   (auth kicks banned and non-whitelisted players, staff kicks on `/kick`, `/ban`, `/warn`) and
+   `function.restartResource` (staff `/restart`), and adds `resource.dev` to the `Admin` group so `/rr` can restart
+   resources. A resource added to `resources.xml` only gets these rights on the next run (stopped server).
    **Security:** `function.loadstring` is a code-execution right. In production, grant it only to exactly these
    resources (as the script does) and review the grant.
 7. Starts `MTA Server.exe` (skip with `-NoStart`).
@@ -52,3 +55,10 @@ machine or LAN you trust, and set `*dev.http_pass` empty to disable the account.
 Allowed for everyone while the `dev` setting `*dev.open` is `true` (the default); otherwise only accounts with
 `admin_level > 0`. Commands: `/additem <uname>`, `/rollloot`, `/stats`, `/sethp <n>`, `/setfood <n>`, `/setbleed <n>`, `/weather [id|NAME]`, `/zone [x y]`, `/vehcount`, `/vehrespawn`,
 `/dbtest`, `/rr <resource>` (also `rr <resource>` in the server console).
+
+## Staff commands (resource `staff`)
+
+Gated by `accounts.admin_level` (1 Game Master … 5 Developer); the server console counts as level 5. Give yourself a
+level with `mariadb -u root scavengesurvive -e "UPDATE accounts SET admin_level = 5 WHERE name = 'You'"` and relog,
+then `/acmds` lists what you may use. Full table, upstream rules and deviations: `docs/staff-commands.md`.
+`rcon.ps1 cmd <player> ban Someone 1d reason` runs a staff command as that player (their level applies).

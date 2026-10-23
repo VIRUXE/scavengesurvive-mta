@@ -11,12 +11,18 @@ Scavenge & Survive ported to MTA:SA 1.6 (Lua 5.1) with MariaDB 13.0 (12.2 also v
 - `tools/convert/*.py` — deterministic converters from `../ScavengeSurvive` into `data/generated/` + `sql/seed/`;
   `maps.py` writes `maps/data/<ZONE>.lua`, `maps/data/zones.lua`, `maps/meta.xml` and `docs/maps-census.md` (all generated, all committed).
 - `tests/lua` (busted), `tests/tools` (pytest), `tests/sql` (pytest + live MariaDB database `scavengesurvive_test`).
+- `docs/runbooks/` (operations), `docs/staff-commands.md` (staff parity table), `docs/reviews/<date>-*.md` (live checks).
 
 ## Rules
 
 - Events: `on<Domain><Thing><Verb>`; client→server `on<Domain>Request<Verb>` and server→client `onClient<Domain><Verb>` are registered with `addEvent(name, true)` (MTA only delivers `triggerServerEvent`/`triggerClientEvent` to events whose receiving side allows remote triggering); purely local events (e.g. `onClientUiListAction`, `onPlayerAuthenticated`) use `false`. Every resource declares every event it triggers or handles in `shared/events.lua`.
 - Remote handlers are registered through `net.handler(...)` from `lib`; trust only the `client` global.
 - DB: identical connection string in every resource (`lib/modules/db.lua`), `batch=0`; anything touching more than one row is a stored procedure returning `SELECT ok, code, payload`.
+- Migrations that `ALTER` a system-versioned table (`accounts`, `items`, `bans`) start with
+  `SET SESSION system_versioning_alter_history = KEEP;` (MariaDB error 4119 otherwise).
+- Staff tooling lives in the `staff` resource (levels from `accounts.admin_level`, every action in `staff_actions`); a
+  new privileged command goes through `ctx.command({ name, level, fn })` there, never into `dev`. Bans are MariaDB rows
+  enforced by `auth` on join; never `banPlayer`/`addBan`.
 - Stored procedures: `SET TRANSACTION ISOLATION LEVEL READ COMMITTED;` before every `START TRANSACTION` (MariaDB 12 deadlocks/`1020` under REPEATABLE READ with `FOR UPDATE` races); numbers in `JSON_OBJECT` payloads are wrapped in `CAST(x AS SIGNED)` (procedure variables serialise as strings otherwise); compare possibly-NULL ownership columns with `<=>`.
 - DB rows: NULL arrives as `false`; DECIMAL as string; FLOAT is 32-bit; never select raw POINT (`ST_X/ST_Y`); every `?` in SQL text is a placeholder (`CHAR(63)` for a literal).
 - Client never calls `setElementData`. Server-set element data uses `"deny"`. `elementdata_whitelisted=1`.

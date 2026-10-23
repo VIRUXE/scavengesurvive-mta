@@ -113,3 +113,32 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
       - Keypad security: Hold `Keypad` item and press **F** on defence: installs keypad and opens 12-key Keypad UI to set 4-digit code. Interacting with locked defence opens Keypad UI: enter 4-digit code with mouse/numpad, press `>` (Enter); correct code grants access and swings door open for 5 seconds; wrong code plays error sound.
       - `LockBreaker` & `HackDevice`: Hold `LockBreaker` on locked door -> 10s break action removes lock. Hold `HackDevice` on keypad -> 8s bypass timer swings door open.
       - `PlotPole`: Placing `PlotPole` creates 20m claimed territory colshape: entering displays `PLOTPOLEENT` action text; leaving displays `PLOTPOLEEXT`.
+22. **Staff & Ops** (#41, #42, #43, #44). Give A level 4 (`UPDATE accounts SET admin_level = 4 WHERE name = 'A'`,
+    relog) and leave B at level 0.
+    - a. **Boot and gate.** `scripts.log` has no `Access denied` for `staff`; B types `/acmds` and gets MTA's unknown
+      command notice; A's `/acmds` opens the list dialog with the Lead, Administrator, Moderator and Game Master groups.
+    - b. **Mute.** A: `/mute B 30s testing`. B sees `Muted from global chat for 30 seconds`, B's chat lines do not
+      appear for A and B gets `You are muted. Time remaining: …`; after 30 s B sees `You are now un-muted`. `/mute B
+      forever x`, B relogs: still muted; `/unmute B` lifts it. `staff_actions` has `mute` and `unmute` rows.
+    - c. **Warn and ban.** A: `/warn B reason` five times. The fifth prints `reached 5 warnings and was banned for
+      24h`, B is kicked and on rejoin sees the three ban lines (`You are banned …`, `Reason: Getting 5 warnings`,
+      `Unban: <tomorrow>`) and is kicked after a second; `accounts.warnings` for B is 0 again. A: `/unban B`; B joins.
+      `/ban B 10m test` with B online kicks B; `/banned B` and `/banlist` show the ban; the `Unban` row action lifts it.
+      Offline: `/ban Nobody 1h x` fails with `does not exist`; `/ban <offline account> forever x` records the account's
+      last IP and serial (`SELECT ip, serial FROM bans`).
+    - d. **Whitelist.** A: `/whitelist on`; B relogs and is kicked after a successful login with `not whitelisted`;
+      `/whitelist add B`, B logs in; `/whitelist ?` and `/whitelist list` show B; `/whitelist off`.
+    - e. **Reports.** B: `/report A testing report`, `/report near hello`, and after A kills B `/report killer x`.
+      A sees `B reported …` lines and `/reports` lists `[new] B (PLY ID)` rows; `View` prints the details and clears
+      the marker, `Go to position` needs duty, `Delete` removes the row, `/deletereports` clears the read ones.
+    - f. **Duty, teleports, spectate.** A: `/goto B` is refused off duty; `/duty` swaps A's skin to 217/211, name
+      tags appear over B, and B's shots no longer wound A (`/stats` on A unchanged); `/goto B`, `/get B`, `/gotopos
+      0 0 5` move the right player; `/spec B` makes A invisible to B, A's screen shows the `Spectating B` banner and
+      the arrow keys cycle; `/free` returns A to where they stood; `/duty` off restores the skin.
+    - g. **Freeze, kick request, staff chat.** A: `/freeze B 5` holds B for five seconds (`Frozen by admin for 5
+      seconds`); `/a hello` is visible to A only; with a level-5 account C online, A's `/kick B x` becomes a request
+      line on C's screen instead of a kick.
+    - h. **Accounts.** `/profile B`, `/history B`, `/aliases B`, `/ip B`, `/adminlist`, `/players` print or list
+      without errors; `/setadmin B 1` promotes B live (B's `/acmds` works without relog); `/setactive B 0` kicks B and
+      blocks B's login (`INACTIVE`); `/setactive B 1`; `/resetpassword B newpass` lets B log in with the new password;
+      `/setmotd Welcome` is shown to B on login and `/setmotd off` clears it; `/restart world` restarts the resource.
