@@ -61,3 +61,14 @@ Durations (`/mute`, `/ban`): a bare number is seconds; `10m`, `2h`, `3d`, `2w`, 
 - `sql/schema.sql` (`bans`, `whitelist`, `reports`, `staff_actions`, `accounts.warnings/muted/mute_until`), `sql/procedures/staff_{ban,unban,warn}.sql`, `sql/events/0002_expire_bans.sql`
   (pytest: `tests/sql/test_staff.py`).
 - ACL: `function.kickPlayer` and `function.restartResource` on the `ScavengeSurvive` ACL (`server-config/run-local.ps1`).
+
+## Names MTA owns: `/kick`, `/ban`, `/mute`, `/unmute`, `/restart`
+
+These five are MTA server console commands too, or names the stock Default ACL denies to every player as
+`command.<name>`. A player typing one reaches the server's hardcoded handler first (gated by that right, "ACL:
+Access denied" otherwise) and a script handler never runs. So `staff/client/main.lua` registers them client-side
+and forwards the arguments through `staffCommandIssued`; the server dispatches to the same registry entry after
+the level gate, and cancels `onPlayerCommand` for those names so MTA neither runs its own kick/ban nor prints
+the denial. The set is `logic.CHAT_BRIDGED` (`shared/logic/staff.lua`); a new command with one of MTA's
+names goes there. `executeCommandHandler` applies the same ACL check, so `rcon.ps1 cmd <player> kick …` falls
+back to `exports.staff:runCommand(player, name, args)` (live run: `docs/reviews/2026-10-23-m7-live.md`).

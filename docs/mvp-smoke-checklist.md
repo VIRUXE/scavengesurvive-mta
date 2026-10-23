@@ -115,7 +115,10 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
       - `LockBreaker` & `HackDevice`: Hold `LockBreaker` on locked door -> 10s break action removes lock. Hold `HackDevice` on keypad -> 8s bypass timer swings door open.
       - `PlotPole`: Placing `PlotPole` creates 20m claimed territory colshape: entering displays `PLOTPOLEENT` action text; leaving displays `PLOTPOLEEXT`.
 22. **Staff & Ops** (#41, #42, #43, #44). Give A level 4 (`UPDATE accounts SET admin_level = 4 WHERE name = 'A'`,
-    relog) and leave B at level 0.
+    relog) and leave B at level 0. One-client run of 2026-10-23: `docs/reviews/2026-10-23-m7-live.md` (a, c, d, e, g, h
+    and the self-only parts of b and f pass; the kick/ban/mute of B, the whitelist and warning kicks, spectate, duty
+    immunity, the kick request and the MOTD on login still need the second PC). Driving A by script: replies are read
+    with `rcon.ps1 chat A`, since screenshots never include the chat box.
     - a. **Boot and gate.** `scripts.log` has no `Access denied` for `staff`; B types `/acmds` and gets MTA's unknown
       command notice; A's `/acmds` opens the list dialog with the Lead, Administrator, Moderator and Game Master groups.
     - b. **Mute.** A: `/mute B 30s testing`. B sees `Muted from global chat for 30 seconds`, B's chat lines do not
