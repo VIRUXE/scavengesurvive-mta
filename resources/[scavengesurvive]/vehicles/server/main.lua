@@ -93,6 +93,20 @@ local function playerPositions()
     return out
 end
 
+-- Entering a vehicle or opening its trunk stamps last_used_at (at most once per USED_TICK_MS); the abandon rule
+-- only removes vehicles nobody has touched that way for vehicles.abandon_days.
+local function markUsed(v)
+    local i = info[v]
+    if not i then
+        return
+    end
+    local now = getTickCount()
+    if now - i.usedTick >= USED_TICK_MS then
+        i.usedTick = now
+        db.exec("UPDATE vehicles SET last_used_at = NOW() WHERE id = ?", { i.id })
+    end
+end
+
 local function toast(player, code)
     if isElement(player) then
         triggerClientEvent(player, "toastShown", player, code)
@@ -791,6 +805,7 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
             return toast(player, "NO_TRUNK")
         end
         setVehicleDoorOpenRatio(vehicle, 1, 1, 500)
+        markUsed(vehicle)
         local tname = string.format("%s Trunk", vt and vt.name or "Vehicle")
         exports.items:openTrunkContainer(player, vehicle, inf.containerId, tname, vt and vt.trunkSize or 40)
         return
@@ -854,17 +869,8 @@ net.handler("trunkCloseRequested", function(player)
     end
 end, { rate = 3 })
 
--- Entering a vehicle stamps last_used_at (at most once per USED_TICK_MS), which the abandon rule reads
 addEventHandler("onVehicleEnter", resourceRoot, function()
-    local i = info[source]
-    if not i then
-        return
-    end
-    local now = getTickCount()
-    if now - i.usedTick >= USED_TICK_MS then
-        i.usedTick = now
-        db.exec("UPDATE vehicles SET last_used_at = NOW() WHERE id = ?", { i.id })
-    end
+    markUsed(source)
 end)
 
 addEventHandler("onPlayerQuit", root, function()

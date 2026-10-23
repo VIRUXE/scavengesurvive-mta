@@ -73,8 +73,9 @@ deficit, per-point cooldowns, and placement away from players.
   `vehicles.abandon_days`), computes `budget.refill` against `COUNT(*) FROM vehicles`, and spawns on random cooled
   points with no vehicle still on them and no player within `world.min_player_distance`, with the per-point chance
   forced to 100 (the type's own chance still applies). The minute flush marks `left_spawn` the first time a vehicle
-  is more than `vehicles.leave_radius` from its point and cools the point; an explosion cools it too;
-  `onVehicleEnter` stamps `last_used_at` at most every 5 minutes. `/vehrespawn` clears the spawn state and rolls a
+  is more than `vehicles.leave_radius` from its point and cools the point; an explosion cools it too; entering the
+  vehicle or opening its trunk stamps `last_used_at` at most every 5 minutes, so a parked stash truck whose trunk is
+  visited stays. Removing a vehicle deletes its trunk container and everything in it (the same cascade a wreck has). `/vehrespawn` clears the spawn state and rolls a
   fresh budget. A world rolled before the budget existed gets `cap = vehicles alive` on the first tick.
 - **Loot** (`loot/server/main.lua`): a `world_budget('loot', zone)` row per zone with
   `cap = enabled points × loot.items_per_point × loot.cap_multiplier`, `allowance = cap` on creation (the world

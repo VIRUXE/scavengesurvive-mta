@@ -64,8 +64,8 @@ Refill every `world.refill_interval_s` (300): `loot.refill_rate` / `vehicles.ref
 hour) with a floor of `loot.refill_floor` / `vehicles.refill_floor` (0.02 of the cap per hour). Cooldown of a consumed
 point: `loot.cooldown_minutes` (60) ± `loot.cooldown_jitter` (0.5); `vehicles.cooldown_hours` (6) ±
 `vehicles.cooldown_jitter` (0.33). Nothing respawns within `world.min_player_distance` (150 m) of a player. A vehicle
-driven more than `vehicles.leave_radius` (100 m) from its point frees the point and is removed after
-`vehicles.abandon_days` (3) without anyone entering it. `loot.count_carried` (1) counts items players carry against
+driven more than `vehicles.leave_radius` (100 m) from its point frees the point and is removed, trunk contents
+included, after `vehicles.abandon_days` (3) without anyone entering it or opening its trunk. `loot.count_carried` (1) counts items players carry against
 their zone; set it to `0` to count only items in the world and in containers. Lower the multipliers for a harsher world.
 
 ## Player commands
