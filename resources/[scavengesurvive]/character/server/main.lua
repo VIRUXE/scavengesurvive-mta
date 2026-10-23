@@ -57,6 +57,18 @@ state.clearStatuses = clearStatuses
 local death = loadFile("server/death.lua")({ db = db, util = util, state = state })
 local tick = loadFile("server/tick.lua")({ db = db, util = util, survival = survival, state = state, die = death.die })
 
+-- The client's watch turns red while the combat-log window is open (upstream IsPlayerCombatLogging reads the
+-- same damage clock); ms = 0 turns it white again.
+local function sendCombatWindow(player, ms)
+    if isElement(player) then
+        triggerClientEvent(player, "combatWindowChanged", player, ms)
+    end
+end
+
+local function combatWindowS()
+    return tonumber(state.settings["player.combat_log_window"]) or combatlog.DEFAULT_WINDOW_S
+end
+
 local function rngInt(n)
     return math.random(1, n)
 end
@@ -83,6 +95,7 @@ local function spawnFromRow(player, row, isNew)
     }
     state.byPlayer[player], state.byId[row.id] = st, player
     combatlog.reset(state.combat, player)
+    sendCombatWindow(player, 0)
     clearStatuses(player, true)
     spawnPlayer(player, row.x, row.y, row.z, row.rz, row.skin, row.interior or 0, row.dimension or 0)
     setElementHealth(player, math.max(1, st.hp))
@@ -190,7 +203,7 @@ local function combatLogged(player, st, quitReason)
     if st.dead or not combatlog.countsAsLogout(quitReason) then
         return false
     end
-    local window = tonumber(state.settings["player.combat_log_window"]) or combatlog.DEFAULT_WINDOW_S
+    local window = combatWindowS()
     local attacker = combatlog.attackerOf(state.combat, player, getTickCount(), window, isElement)
     if not attacker then
         return false
@@ -208,7 +221,10 @@ local function forget(player, quitReason)
         end
         state.byId[st.id] = nil
     end
-    combatlog.forget(state.combat, player)
+    local released = combatlog.forget(state.combat, player)
+    if released then
+        sendCombatWindow(released, 0) -- the attacker left: the victim's watch turns white again
+    end
     clearStatuses(player, false)
     state.byPlayer[player] = nil
     state.lastSpawn[player] = nil
@@ -286,6 +302,9 @@ function applyWound(player, bleedAdd, hpLoss, killer, cause)
     st.dirty = true
     local byPlayer = isElement(killer) and getElementType(killer) == "player" and killer ~= player
     combatlog.damaged(state.combat, player, byPlayer and killer or nil, getTickCount())
+    if byPlayer then
+        sendCombatWindow(player, combatWindowS() * 1000)
+    end
     setElementHealth(player, math.max(1, st.hp))
     tick.sendStats(player, true)
     if st.hp <= 0 then

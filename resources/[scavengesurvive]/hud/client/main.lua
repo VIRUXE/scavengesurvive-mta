@@ -45,7 +45,7 @@ local state = {
     stats = { hp = 100, food = 100, bleed = 0 },
     held = false, -- { id, uname, category }
     brightness = 0,
-    combatLogging = false,
+    combatUntil = 0, -- getTickCount() until which the watch is red (combatWindowChanged from character)
     frequency = watch.DEFAULT_FREQUENCY,
     keys = {},
     hidden = false, -- setHidden(true): the dev studio wants clean screenshots
@@ -108,6 +108,11 @@ addEventHandler("characterStatsSynced", root, function(s)
         state.spawned, state.dead = true, false
         applyStockHud()
     end
+end)
+
+addEventHandler("combatWindowChanged", root, function(ms)
+    ms = tonumber(ms) or 0
+    state.combatUntil = ms > 0 and getTickCount() + ms or 0
 end)
 
 addEventHandler("chatRadioChanged", root, function(freq)
@@ -227,7 +232,7 @@ local function drawWatch(vehicle)
     local _, _, angle = getElementRotation(vehicle or localPlayer)
     local hour, minute = getTime()
     local G = watch.GEOMETRY
-    local r, g, b = watch.colour(state.combatLogging)
+    local r, g, b = watch.colour(state.combatUntil > getTickCount())
     local colour = tocolor(r, g, b, 255)
     dxDrawCircle(canvas.x(c, G.cx), canvas.y(c, G.cy), canvas.len(c, G.ry), 0, 360, BLACK, BLACK, 64, G.rx / G.ry)
     draw.text({

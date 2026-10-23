@@ -13,6 +13,7 @@ return {
     characterStatsSynced = true,
     deathScreenShown = true,
     knockedOut = true,
+    combatWindowChanged = true,
     itemCreated = false,
     itemMoved = false,
     itemDestroyed = false,

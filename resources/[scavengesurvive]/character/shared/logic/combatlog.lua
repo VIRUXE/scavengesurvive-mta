@@ -46,15 +46,18 @@ function combatlog.countsAsLogout(reason)
 end
 
 -- On disconnect: drop the player's own record and release the victim they last hit (upstream OnPlayerDisconnect),
--- so a quitting attacker never leaves a dangling reference.
+-- so a quitting attacker never leaves a dangling reference. Returns the victim released, if any.
 function combatlog.forget(state, player)
     local victim = state.lastAttacked[player]
+    local released = nil
     if victim and state.lastAttacker[victim] == player then
         state.lastAttacker[victim] = nil
+        released = victim
     end
     state.lastAttacked[player] = nil
     state.lastDamage[player] = nil
     state.lastAttacker[player] = nil
+    return released
 end
 
 return combatlog

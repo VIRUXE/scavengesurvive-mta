@@ -42,13 +42,14 @@ describe("anti-combat-log", function()
     end)
     it("releases the victim when the attacker disconnects", function()
         combatlog.damaged(st, "B", "A", 0)
-        combatlog.forget(st, "A")
+        assert.equals("B", combatlog.forget(st, "A")) -- the caller tells B's watch to turn white again
         assert.is_nil(st.lastAttacker.B)
         assert.is_nil(st.lastAttacked.A)
+        assert.is_nil(combatlog.forget(st, "B")) -- nobody to release
         -- a later attacker is not released by the first one's departure
         combatlog.damaged(st, "B", "A", 0)
         combatlog.damaged(st, "B", "C", 10)
-        combatlog.forget(st, "A")
+        assert.is_nil(combatlog.forget(st, "A"))
         assert.equals("C", st.lastAttacker.B)
     end)
     it("counts quits, timeouts and unknown reasons, never kicks or bans", function()
