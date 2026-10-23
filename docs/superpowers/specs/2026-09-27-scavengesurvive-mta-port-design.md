@@ -64,7 +64,8 @@ Legend: **Port** = reimplement behaviour in Lua · **Replace** = MTA-native mech
 | `core/server/weather.pwn`, `info-message.pwn`, `text-tags.pwn` | Port | |
 | `world/zones/*` (12k lines of spawn data), `scriptfiles/maps`, `vspawn`, `loot/*.ltb`, `languages` | Convert | Python converters → seed SQL / `.map` XML / Lua data |
 | `SAmin.hmap` (MapAndreas) | Drop | `getGroundPosition` / `processLineOfSight` |
-| `world/puzzles/*`, `xmas.pwn`, `houseloot.pwn` | Defer | content after core parity |
+| `world/puzzles/*`, `xmas.pwn` | Defer | content after core parity |
+| `world/houseloot.pwn` | Port (2026-10-23, `tools/convert/houseloot.py`) | hollow-house offsets reproduced at convert time into `loot_spawns` (seed 0006); upstream's per-start 50 % coin is a deterministic half by position |
 | `world-bs/`, `world-wasteland/` | Drop | alternate maps not used by entry file |
 | ziplines, ladders, linegen libs | Port (medium) | objects + `moveObject` + animations; no native support |
 | `filterscripts/*` (TextDrawEditor, object-loader…) | Drop | MTA `editor` resource covers dev tooling |

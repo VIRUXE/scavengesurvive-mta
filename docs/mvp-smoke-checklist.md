@@ -174,3 +174,7 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
     - d. **Persistence and guards.** A relogs: frequency and mode are back (`characters.radio_freq`, `chat_mode`).
       A sends three messages inside a second: `Muted from global chat for 30 seconds for chat flooding`, chat is
       refused, `/profile A` shows muted, and 30 s later `You are now un-muted`. A level-0 account cannot `/a`.
+25. **House loot** (#48). Walk into a hollow house in San Fierro (e.g. the Ocean Flats block, model 19490 at
+    -2787.6, -161.0): `world_civilian` items lie at the upstream offsets inside half of the houses (seed
+    `0006_house_loot.sql`, 116 points, ids above 11062); `rollloot` nearby re-rolls them like any spawn, and the
+    other half of the houses stay empty every time (deterministic selection by position).

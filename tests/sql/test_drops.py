@@ -19,3 +19,13 @@ def test_drop_settings_seeded(db):
         rows = {r["skey"]: r["svalue"] for r in cur.fetchall()}
         assert rows == {"loot.supply_tick_s": "60", "loot.supply_cooldown_s": "600", "loot.cache_interval_s": "1500",
                         "loot.cache_jitter_s": "600", "loot.cache_min_players": "4", "loot.drop_point_reuse_hours": "24"}
+
+
+def test_house_loot_points_seeded_in_hollow_houses(db):
+    with db.cursor() as cur:
+        cur.execute("SELECT COUNT(*) AS n, COUNT(DISTINCT zone) AS zones FROM loot_spawns "
+                    "WHERE table_name = 'world_civilian' AND size = 3 AND weight = 20 AND id > 11062")
+        r = cur.fetchone()
+        assert r["n"] > 50 and r["zones"] >= 1  # seed 0006: half of the 65 hollow houses (all SF today), 3-4 points each
+        cur.execute("SELECT COUNT(*) AS n FROM loot_spawns s LEFT JOIN loot_spawn_state st ON st.spawn_id = s.id WHERE st.spawn_id IS NULL")
+        assert cur.fetchone()["n"] == 0

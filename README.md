@@ -25,7 +25,7 @@ physical item on the ground, wounds bleed, and death drops it all.
 | M5 Vehicles | ✅ | Fuel simulation and drain, driver controls (Y engine, N lights), locks, crowbar lock-breaking, locksmith key cutting, bonnet repair stages, petrol can refuelling, trunk container dialogs, and trailers via /tow |
 | M6 Crafting, Building, Apparel | ✅ | Apparel bone attachment (hats, masks, armour, holster), body preview & 6 gear tiles in inventory UI, safebox & tent persistent containers, in-hand combine, ground construction, workbench crafting, defences with door swing poses, 12-key dx keypad with 4-digit code and plot pole 20m claimed territory protection |
 | M7 Staff & Ops | ✅ | Staff levels 1-5 with 38 commands (`/acmds`), reports, mutes, freeze, spectate, duty, MariaDB bans by name/IP/serial, whitelist, action log, runbooks (live checks of the player-facing steps pending) |
-| M8 Content & Polish | 🔶 | Done: supply drops and weapons caches, chat modes (local 40 m / global / radio by frequency / admin) with the dx radio panel. Open: house loot, ziplines and ladders, languages QA |
+| M8 Content & Polish | 🔶 | Done: supply drops and weapons caches, chat modes (local 40 m / global / radio by frequency / admin) with the dx radio panel, house loot in the hollow houses. Open: ziplines and ladders, languages QA |
 
 Progress is tracked in the [issues](https://github.com/VIRUXE/scavengesurvive-mta/issues) and the
 [project board](https://github.com/users/VIRUXE/projects/3); each milestone is an epic there.

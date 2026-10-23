@@ -4,7 +4,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from . import item_types, lang, loot_tables, maps, settings, vspawn, zones
+from . import houseloot, item_types, lang, loot_tables, maps, settings, vspawn, zones
 from .common import read_text
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -34,6 +34,7 @@ def main(argv=None) -> int:
         print(f"loot: {len(loot_tables.convert(args.src, DATA, unames))} tables")
     if args.kind in ("all", "zones"):
         print(f"zones: {len(zones.convert(args.src, SEED))} loot spawns")
+        print(f"house loot: {len(houseloot.convert(args.src, SEED))} loot points in half of the hollow houses")
     if args.kind in ("all", "lang"):
         print("lang:", lang.convert(args.src, DATA))
     if args.kind in ("all", "vspawn"):
