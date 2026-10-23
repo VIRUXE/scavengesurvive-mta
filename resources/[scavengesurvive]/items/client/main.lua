@@ -11,7 +11,8 @@ local apparel = loadModule("shared/logic/apparel.lua")
 local models = loadModule("client/models.lua")()
 loadModule("client/world.lua")({ models = models, ammo = ammo })
 local attach = loadModule("client/attach.lua")({ models = models, apparel = apparel })
-loadModule("client/inventory.lua")({ ammo = ammo, apparel = apparel })
+local preview = loadModule("client/preview.lua")({ logic = loadModule("shared/logic/preview.lua") })
+loadModule("client/inventory.lua")({ ammo = ammo, apparel = apparel, models = models, preview = preview })
 
 -- client exports for the attachedit resource: preview offsets on the local player's own attachments
 function setAttachPreview(slot, offsets, scale)

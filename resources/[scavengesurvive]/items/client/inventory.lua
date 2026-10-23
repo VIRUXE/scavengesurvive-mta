@@ -3,6 +3,8 @@
 return function(ctx)
     local ammo = ctx and ctx.ammo
     local apparel = ctx and ctx.apparel
+    local models = ctx and ctx.models -- client/models.lua: which model id draws an item type on this client
+    local preview = ctx and ctx.preview -- client/preview.lua: live dxDrawModel3D previews inside the gear tiles
     local MESSAGES = {
         HANDS_FULL = "You are already holding an item",
         NOT_IN_WORLD = "It is gone",
@@ -238,17 +240,51 @@ return function(ctx)
         dxDrawLine(x + w, y, x + w, y + h, tocolor(190, 190, 190, 255))
     end
 
+    -- Tiles: a title bar on top of a see-through square (the preview model shows through, upstream filled the
+    -- tile 0xFFFFFF08) and a caption below, two columns by three rows to the right of the dialog.
+    local TILE_TITLE_H, TILE_CAPTION_H = 14, 20
     local function getLayout()
         local sw, sh = guiGetScreenSize()
         local s = sh / 480
         local dialogW, dialogH = 280 * s, 203 * s
         local dialogX, dialogY = (sw - dialogW) / 2, (sh - dialogH) / 2
-        local panelW, panelH = 135 * s, dialogH
-        local panelX, panelY = dialogX - panelW - 10 * s, dialogY
-        local gearX, gearY = dialogX + dialogW + 10 * s, dialogY
-        local tileW, tileH = 65 * s, 65 * s
-        local gap = 6 * s
-        return s, panelX, panelY, panelW, panelH, gearX, gearY, tileW, tileH, gap
+        local L = { s = s, panelW = 135 * s, panelH = dialogH, panelY = dialogY, gearY = dialogY }
+        L.panelX = dialogX - L.panelW - 10 * s
+        L.gearX = dialogX + dialogW + 10 * s
+        L.tileW, L.tileH, L.gap = 65 * s, 65 * s, 6 * s
+        L.titleH, L.captionH = TILE_TITLE_H * s, TILE_CAPTION_H * s
+        L.pitchX, L.pitchY = L.tileW + L.gap, L.tileH + L.captionH + L.gap
+        return L
+    end
+
+    local function gearSlots()
+        local gear = last.gear or {}
+        return {
+            { id = "hat", name = "HEAD", item = gear.hat, col = 0, row = 0 },
+            { id = "mask", name = "FACE", item = gear.mask, col = 1, row = 0 },
+            { id = "held", name = "HAND", item = last.held, col = 0, row = 1 },
+            { id = "holster", name = "HOLSTER", item = gear.holster, col = 1, row = 1 },
+            { id = "armour", name = "TORSO", item = gear.armour, col = 0, row = 2 },
+            { id = "bag", name = "BACK", item = last.capacity and last.capacity.bag, col = 1, row = 2 },
+        }
+    end
+
+    local function tileRect(L, sl)
+        return L.gearX + sl.col * L.pitchX, L.gearY + sl.row * L.pitchY, L.tileW, L.tileH
+    end
+
+    -- upstream caption: the item name in capitals, "<EMPTY>", the hand slot as "(size) NAME" with weapon state
+    local function tileCaption(sl)
+        if not sl.item then
+            return "<EMPTY>"
+        end
+        local t = itemType(sl.item.uname)
+        local name = t and t.name or sl.item.uname
+        if sl.id == "held" then
+            local state = (formatLabel(t, sl.item):gsub("^%[%d+%]", ""))
+            name = string.format("(%02d) %s", t and t.size or 1, state)
+        end
+        return string.upper(name)
     end
 
     local function renderBodyPanel(px, py, pw, ph, s)
@@ -341,83 +377,58 @@ return function(ctx)
         )
     end
 
-    local function renderGearTiles(gx, gy, tw, th, gap, s)
-        local slots = {
-            { id = "hat", name = "HEAD", item = last.gear and last.gear.hat, col = 0, row = 0 },
-            { id = "mask", name = "FACE", item = last.gear and last.gear.mask, col = 1, row = 0 },
-            { id = "held", name = "HAND", item = last.held, col = 0, row = 1 },
-            { id = "holster", name = "HOLSTER", item = last.gear and last.gear.holster, col = 1, row = 1 },
-            { id = "armour", name = "TORSO", item = last.gear and last.gear.armour, col = 0, row = 2 },
-            { id = "bag", name = "BACK", item = last.capacity and last.capacity.bag, col = 1, row = 2 },
-        }
+    local function drawTileFrame(x, y, w, h)
+        dxDrawRectangle(x, y, w, h, tocolor(255, 255, 255, 8))
+        dxDrawLine(x, y, x + w, y, tocolor(190, 190, 190, 255))
+        dxDrawLine(x, y + h, x + w, y + h, tocolor(190, 190, 190, 255))
+        dxDrawLine(x, y, x, y + h, tocolor(190, 190, 190, 255))
+        dxDrawLine(x + w, y, x + w, y + h, tocolor(190, 190, 190, 255))
+    end
 
-        for _, sl in ipairs(slots) do
-            local tx = gx + sl.col * (tw + gap)
-            local ty = gy + sl.row * (th + gap)
-            drawPanel(tx, ty, tw, th)
-
-            dxDrawRectangle(tx, ty, tw, 14 * s, tocolor(70, 70, 70, 255))
-            dxDrawText(
-                sl.name,
-                tx,
-                ty,
-                tx + tw,
-                ty + 14 * s,
-                tocolor(255, 255, 255, 255),
-                0.85 * s,
-                "default-bold",
-                "center",
-                "center"
-            )
-
-            local iname = "<EMPTY>"
-            if sl.item then
-                local itDef = itemType(sl.item.uname)
-                iname = itDef and itDef.name or sl.item.uname
+    -- Draws the six tiles and hands the models to the preview module, which draws them in world space under the
+    -- see-through tile centres on the next pre-render.
+    local function renderGearTiles(L)
+        local s = L.s
+        local white, grey = tocolor(255, 255, 255, 255), tocolor(150, 150, 150, 255)
+        local entries = {}
+        for _, sl in ipairs(gearSlots()) do
+            local tx, ty, tw, th = tileRect(L, sl)
+            drawTileFrame(tx, ty, tw, th)
+            dxDrawRectangle(tx, ty, tw, L.titleH, tocolor(70, 70, 70, 255))
+            dxDrawText(sl.name, tx, ty, tx + tw, ty + L.titleH, white, 0.85 * s, "default-bold", "center", "center")
+            local t = sl.item and itemType(sl.item.uname)
+            if t and preview and models then
+                local area = preview.logic.area(tx, ty, tw, th, L.titleH)
+                entries[#entries + 1] = { model = models.forType(t), area = area }
             end
-            local icol = sl.item and tocolor(255, 255, 255, 255) or tocolor(150, 150, 150, 255)
-            dxDrawText(
-                iname,
-                tx + 2,
-                ty + 16 * s,
-                tx + tw - 2,
-                ty + th - 2,
-                icol,
-                0.8 * s,
-                "default-bold",
-                "center",
-                "center",
-                true,
-                true
-            )
+            local cx0, cx1, cy0, cy1 = tx - 5 * s, tx + tw + 5 * s, ty + th + 2 * s, ty + th + L.captionH
+            local col = sl.item and white or grey
+            dxDrawText(tileCaption(sl), cx0, cy0, cx1, cy1, col, 0.65 * s, "default-bold", "center", "top", true, true)
+        end
+        if preview then
+            preview.show(entries)
         end
     end
 
     addEventHandler("onClientRender", root, function()
         if not last or not exports.ui:listIsOpen() then
+            if preview then
+                preview.hide()
+            end
             return
         end
-        local s, px, py, pw, ph, gx, gy, tw, th, gap = getLayout()
-        renderBodyPanel(px, py, pw, ph, s)
-        renderGearTiles(gx, gy, tw, th, gap, s)
+        local L = getLayout()
+        renderBodyPanel(L.panelX, L.panelY, L.panelW, L.panelH, L.s)
+        renderGearTiles(L)
     end)
 
     addEventHandler("onClientClick", root, function(btn, pressState, mx, my)
         if btn ~= "left" or pressState ~= "down" or not last or not exports.ui:listIsOpen() then
             return
         end
-        local _, _, _, _, _, gx, gy, tw, th, gap = getLayout()
-        local slots = {
-            { id = "hat", col = 0, row = 0 },
-            { id = "mask", col = 1, row = 0 },
-            { id = "held", col = 0, row = 1 },
-            { id = "holster", col = 1, row = 1 },
-            { id = "armour", col = 0, row = 2 },
-            { id = "bag", col = 1, row = 2 },
-        }
-        for _, sl in ipairs(slots) do
-            local tx = gx + sl.col * (tw + gap)
-            local ty = gy + sl.row * (th + gap)
+        local L = getLayout()
+        for _, sl in ipairs(gearSlots()) do
+            local tx, ty, tw, th = tileRect(L, sl)
             if mx >= tx and mx <= tx + tw and my >= ty and my <= ty + th then
                 if sl.id == "bag" and last.bag then
                     view = (view == "bag") and "inventory" or "bag"

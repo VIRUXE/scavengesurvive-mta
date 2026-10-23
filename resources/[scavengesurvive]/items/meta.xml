@@ -1,6 +1,7 @@
 <meta>
     <info author="scavengesurvive-mta" type="script" name="items" description="Item graph: world items, hands, inventory, bags, use" version="0.1.0"/>
-    <min_mta_version server="1.6.0" client="1.6.0"/>
+    <!-- client: dxDrawModel3D lighting parameter (r22862) for the gear tile previews -->
+    <min_mta_version server="1.6.0" client="1.6.0-9.22862"/>
     <include resource="lib"/>
     <include resource="data"/>
     <include resource="models"/>
@@ -13,7 +14,9 @@
     <file src="shared/logic/diff.lua"/>
     <file src="shared/logic/ammo.lua"/>
     <file src="shared/logic/apparel.lua"/>
+    <file src="shared/logic/preview.lua"/>
     <file src="client/models.lua"/>
+    <file src="client/preview.lua"/>
     <file src="client/world.lua"/>
     <file src="client/attach.lua"/>
     <file src="client/inventory.lua"/>
