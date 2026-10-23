@@ -26,32 +26,33 @@ MODELS = ROOT / "resources" / "[scavengesurvive]" / "models"
 CUT_SCRIPT = ROOT / "tools" / "blender" / "cut_headgear.py"
 
 # skin -> (dff name, texture, uv blocks or "auto", metres above the Head bone below which nothing is cut)
-# Blocks are "col,row;col,row" of the 8x8 texture grid, row 0 at the top (cut_headgear.py prints the auto choice).
+# Blocks are "col,row;col,row" of the 8x8 texture grid, row 0 at the top (cut_headgear.py prints the auto choice),
+# or "*" for every block (caps that share their texture with the hair: everything above the floor goes).
 HEADGEAR: dict[int, tuple[str, str, str, float]] = {
     283: ("csher", "csher", "auto", 0.045),
     288: ("dsher", "dsher", "auto", 0.045),
     287: ("army", "army", "auto", 0.045),
-    285: ("swat", "swat", "auto", 0.045),
+    285: ("swat", "swat", "3,5;3,6;3,7;4,5;4,6;4,7;5,5;5,6;6,5;6,6;7,5;7,6", 0.045),
     277: ("lafd1", "lafd1", "auto", 0.045),
     278: ("lvfd1", "lvfd1", "auto", 0.045),
     279: ("sffd1", "sffd1", "auto", 0.045),
-    4: ("sfpdm1", "sfpdm1", "auto", 0.045),
-    119: ("lvpdm1", "lvpdm1", "auto", 0.045),
-    284: ("lapdm1", "lapdm1", "auto", 0.045),
+    4: ("sfpdm1", "sfpdm1", "3,7;4,7;5,7;6,7;7,7", 0.045),
+    119: ("lvpdm1", "lvpdm1", "3,7;4,7;5,7;6,7;7,7", 0.045),
+    284: ("lapdm1", "lapdm1", "3,7;4,7;5,7;6,7;7,7", 0.045),
     265: ("tenpen", "tenpen", "auto", 0.045),
-    35: ("hmogar", "hmogar", "auto", 0.045),
+    35: ("hmogar", "hmogar", "6,4;7,4", 0.045),
     268: ("dwayne", "dwayne", "auto", 0.045),
-    155: ("wmypizz", "wmypizz", "auto", 0.045),
+    155: ("wmypizz", "wmypizz", "3,7;4,7;5,7;6,7;7,7", 0.045),
     205: ("wfyburg", "wfyburg", "auto", 0.045),
     161: ("cwmyfr", "cwmyfr", "auto", 0.045),
-    61: ("wmyplt", "wmyplt", "auto", 0.045),
-    2: ("maccer", "maccer", "auto", 0.045),
-    247: ("bikera", "bikera", "auto", 0.045),
-    248: ("bikerb", "bikerb", "auto", 0.045),
-    254: ("bikdrug", "bikdrug", "auto", 0.045),
+    61: ("wmyplt", "wmyplt", "*", 0.09),
+    2: ("maccer", "maccer", "0,0;1,0;2,0;3,0", 0.045),
+    247: ("bikera", "bikera", "*", 0.08),
+    248: ("bikerb", "bikerb", "0,0;0,1;1,0;1,1;2,0;2,1", 0.045),
+    254: ("bikdrug", "bikera", "*", 0.09),
     36: ("wmygol1", "wmygol1", "auto", 0.045),
     37: ("wmygol2", "wmygol2", "auto", 0.045),
-    311: ("smokev", "smokev", "auto", 0.045),
+    311: ("smokev", "smokev", "5,7;6,7;7,7", 0.045),
 }
 
 

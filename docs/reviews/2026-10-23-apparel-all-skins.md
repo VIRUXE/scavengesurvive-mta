@@ -41,6 +41,17 @@ The UV-clip attempt on the sheriff: every rectangle that removes the hat removes
 
 ![uv clip](../images/apparel-headgear-uvclip.jpg)
 
+## Hatless twins (#75)
+
+The 24 skins in `HEADGEAR` (tools/extract_ped_models.py) got a twin with the headgear cut away; `items` shows it
+under a worn hat. All 24 are clean under the army helmet (left). Bare (right, the twin forced on the client), only
+the ones whose cut rim is one loop got a closed skull (sheriffs, army, hard hat, pizza, cowboy, burger, SWAT, the
+bikers), and a closed skull is a flat cap of hair texture; close-fitting caps (pilot 61, police 4/119/284, golfers,
+Smoke, maccer) leave a cut band. So the twins stay hat-only until the skulls are remodelled by hand in Blender.
+
+![twins under the helmet](../images/hatless-twins-helmet.jpg)
+![twins bare](../images/hatless-twins-bare.jpg)
+
 ## Not covered
 
 - Held items and holsters, which have one row per item type and no per-skin data upstream.

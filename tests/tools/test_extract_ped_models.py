@@ -45,5 +45,5 @@ def test_every_headgear_skin_names_its_model() -> None:
     for skin, (dff, texture, blocks, above) in peds.HEADGEAR.items():
         assert 0 <= skin <= 312
         assert dff and texture
-        assert blocks == "auto" or all(len(b.split(",")) == 2 for b in blocks.split(";"))
+        assert blocks in ("auto", "*") or all(len(b.split(",")) == 2 for b in blocks.split(";"))
         assert 0 < above < 0.2

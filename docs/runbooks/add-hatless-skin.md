@@ -29,8 +29,9 @@ see the twin.
    cuts the faces above the Head bone whose 8x8 texture block reaches further from the head axis than a bare
    skull (0.135 m) or higher than one (0.21 m); `cut_headgear.py` prints the blocks it chose. When that takes too
    much or too little, list the blocks by hand as `"col,row;col,row"` (row 0 at the top of the texture; dump the
-   atlas with `engineGetModelTextures` + `dxGetTexturePixels` to see it). The last number is how far above the
-   Head bone the cut starts; the bone sits at the chin.
+   atlas with `engineGetModelTextures` + `dxGetTexturePixels` to see it), or `"*"` for every block when a cap
+   shares its blocks with the hair (then everything above the floor goes, which a worn hat covers). The last
+   number is how far above the Head bone the cut starts; the bone sits at the chin.
 3. `python -m tools.extract_ped_models <skin>` (needs the GTA:SA install from the registry or `--gta`, and
    Blender with the DragonFF add-on, found under Program Files or given with `--blender`). Commit the DFF,
    `peds.lua` and `meta.xml`.

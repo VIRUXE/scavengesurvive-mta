@@ -2,11 +2,13 @@
 
     blender -b --python cut_headgear.py -- <in.dff> <out.dff> <texture> <blocks|auto> <above>
 
-Imports a GTA:SA ped with DragonFF, deletes the headgear faces and exports the skinned mesh again with the texture
-name set, so MTA finds it in the ped's own TXD. A GTA ped's vertical axis is X; the Head bone sits at the chin.
+Imports a GTA:SA ped with DragonFF, deletes the headgear faces, closes the opening they leave in the skull with
+triangles textured like the surrounding hair and exports the skinned mesh again with the texture name set, so MTA
+finds it in the ped's own TXD. A GTA ped's vertical axis is X; the Head bone sits at the chin.
 
 A face is headgear when its centroid is more than <above> metres over the Head bone and its UV centroid falls in
-one of the 8x8 texture blocks listed as "u,v;u,v;..." (block column and row, row 0 at the top of the image). With
+one of the 8x8 texture blocks listed as "u,v;u,v;..." (block column and row, row 0 at the top of the image), or
+any block with "*" (for caps that share their blocks with the hair: everything above the floor goes). With
 "auto" the blocks are the ones whose faces above the bone reach further from the head axis than a bare skull
 (0.135 m) or higher than one (0.21 m), which is what the GTA hats, helmets and caps do; the choice is printed.
 """
@@ -60,6 +62,8 @@ if blocks_arg == "auto":
             peak[k] = max(peak[k], max(v.co.x for v in f.verts) - hx)
     blocks = {k for k in reach if reach[k] > SKULL_REACH or peak[k] > SKULL_TOP}
     print("cut_headgear: auto blocks " + " ".join("%d,%d(r%.2f x%.2f)" % (k[0], k[1], reach[k], peak[k]) for k in sorted(blocks)))
+elif blocks_arg == "*":
+    blocks = None  # every block: cut everything above the floor, hair included (a worn hat covers it)
 else:
     blocks = {tuple(int(v) for v in b.split(",")) for b in blocks_arg.split(";")}
 
@@ -67,10 +71,26 @@ removed, total = 0, 0
 for ob, bm in bms:
     me = ob.data
     uvl = bm.loops.layers.uv.active
-    doomed = [f for f in bm.faces if centroid_x(f) >= floor and block_of(f, uvl) in blocks]
+    doomed = [f for f in bm.faces if centroid_x(f) >= floor and (blocks is None or block_of(f, uvl) in blocks)]
     total += len(bm.faces)
     removed += len(doomed)
     bmesh.ops.delete(bm, geom=doomed, context="FACES")
+    # GTA leaves no skull under a hat: close the opening with triangles on the rim, textured and weighted like
+    # the hair and skin around it, so the twin also works bare-headed.
+    # the mesh keeps a vertex per texture seam, so weld the rim first or the opening is not one loop
+    rim_verts = [v for v in bm.verts if v.is_boundary and v.co.x >= floor - 0.03]
+    bmesh.ops.remove_doubles(bm, verts=rim_verts, dist=0.0005)
+    rim = [e for e in bm.edges if e.is_boundary and min(v.co.x for v in e.verts) >= floor - 0.03]
+    filled = bmesh.ops.holes_fill(bm, edges=rim, sides=0)["faces"] if rim else []
+    patch = bmesh.ops.triangulate(bm, faces=filled)["faces"] if filled else []
+    new = set(f.index for f in patch)
+    for f in patch:
+        f.smooth = True
+        for loop in f.loops:
+            old_loop = next((o for o in loop.vert.link_loops if o.face.index not in new), None)
+            if old_loop is not None:
+                loop[uvl].uv = old_loop[uvl].uv
+    print(f"cut_headgear: closed the opening with {len(patch)} triangles")
     bm.to_mesh(me)
     bm.free()
     me.update()
