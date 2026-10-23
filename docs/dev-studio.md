@@ -85,7 +85,10 @@ Worn items get their per-skin rows from `wearOffsets` on the item type. Those ro
 
 - `BORROW` gives a wearable upstream never placed a donor item's rows, plus its own `rot`, `shift` and `scale`.
 - `OVERRIDES` replaces one skin's row.
-- `SKIN_LIKE` lets an untuned spawn skin use a similar skin's rows.
+- `items/shared/logic/skins.lua` knows every human ped model's gender and build class, and the ordered donor
+  chain per class. A skin with no row of its own (upstream tuned 17 skins for hats, masks and armour and 54 for
+  bags) borrows the first donor in its chain that has one, so a duty skin, a clothes-item skin or a custom ped
+  model wears gear like the nearest spawn skin. `BUILD` moves a model off its gender's average chain.
 
 SA-MP bone 2 (head) is GTA node 5. On it, X points up the skull, Y forward and Z to the side. So `rx` turns an
 item about the vertical (yaw), `ry` about the forward axis (roll) and `rz` about the side axis (pitch). Restart

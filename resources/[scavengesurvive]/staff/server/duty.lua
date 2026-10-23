@@ -27,7 +27,7 @@ return function(ctx)
         local skin = getElementModel(p)
         state.duty[p] = { skin = skin }
         setElementData(p, "staff.duty", true, "broadcast", "deny")
-        setElementModel(p, logic.dutySkin(skin))
+        setElementModel(p, logic.dutySkin(exports.items:isFemaleSkin(skin)))
         setNametags(p, true)
         ctx.say(p, " >  You are now on duty: immune to player damage, name tags on.")
         ctx.msgStaff(1, " >  %s went on duty", getPlayerName(p))

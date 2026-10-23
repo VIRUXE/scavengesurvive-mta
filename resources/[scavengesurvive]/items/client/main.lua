@@ -9,6 +9,7 @@ end
 local ammo = loadModule("shared/logic/ammo.lua")
 local tent = loadModule("shared/logic/tent.lua")
 local apparel = loadModule("shared/logic/apparel.lua")
+apparel.skins = loadModule("shared/logic/skins.lua")
 local models = loadModule("client/models.lua")()
 loadModule("client/world.lua")({ models = models, ammo = ammo, tent = tent })
 local attach = loadModule("client/attach.lua")({ models = models, apparel = apparel })

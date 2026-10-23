@@ -141,25 +141,16 @@ return function(ctx)
         return attachment(uname, t and t.boneid or 6, o)
     end
 
-    local function bagAttachment(uname, player)
+    local function bagOffsetsOf(uname)
         local t = itemType(uname)
-        local bySkin = t and t.categoryData and t.categoryData.bag_offsets or {}
-        local skin = getElementModel(player)
-        local o = bySkin[skin] or bySkin[tostring(skin)]
-        if not o then
-            -- upstream leaves unknown skins invisible (zero scale); the lowest defined skin is the closest substitute
-            local best
-            for k, v in pairs(bySkin) do
-                local n = tonumber(k)
-                if n and (not best or n < best) then
-                    best, o = n, v
-                end
-            end
-        end
-        if not o then
-            o = { 0, 0, 0, 0, 0, 0, 1, 1, 1 }
-        end
-        return attachment(uname, BAG_BONE, o, { o[7] or 1, o[8] or 1, o[9] or 1 })
+        return t and t.categoryData and t.categoryData.bag_offsets
+    end
+
+    local function bagAttachment(uname, player)
+        -- the wearer's upstream row, or a similar skin's (shared/logic/apparel.lua bagConfig, skins.lua)
+        local cfg = apparel and apparel.bagConfig(uname, getElementModel(player), bagOffsetsOf)
+        local o = cfg and cfg.offsets or { 0, 0, 0, 0, 0, 0 }
+        return attachment(uname, BAG_BONE, o, cfg and cfg.scale or { 1, 1, 1 })
     end
 
     local function clearSlot(player, slot)

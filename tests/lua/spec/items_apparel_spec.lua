@@ -1,4 +1,6 @@
 local apparel = dofile("resources/[scavengesurvive]/items/shared/logic/apparel.lua")
+local skins = dofile("resources/[scavengesurvive]/items/shared/logic/skins.lua")
+apparel.skins = skins
 
 describe("apparel logic", function()
     describe("slotFor", function()
@@ -91,12 +93,29 @@ describe("apparel logic", function()
             assert.are.same({ 0.15, 0, -0.006, 0, 0, 0 }, cfg.offsets)
         end)
 
-        it("falls back to a similar skin, then to the default", function()
-            assert.are.same({ 1.1, 1, 1 }, apparel.attachConfig("hat", "HelmArmy", 90, lookup).scale)
+        it("falls back to a same-gender skin, or to the default without the skins table", function()
+            assert.are.same({ 1.1, 1, 1 }, apparel.attachConfig("hat", "HelmArmy", 90, lookup).scale) -- woman: 193
+            assert.are.same({ 0.15, 0, -0.006, 0, 0, 0 }, apparel.attachConfig("hat", "HelmArmy", 217, lookup).offsets)
+            apparel.skins = nil
             assert.are.same(
                 { 0.152, 0.0, -0.006, 0.0, 0.0, 0.0 },
                 apparel.attachConfig("hat", "HelmArmy", 217, lookup).offsets
             )
+            apparel.skins = skins
+        end)
+
+        it("gives a bag the wearer's row, else a similar skin's, or nothing without rows", function()
+            local bags = {
+                Backpack = { ["60"] = { -0.15, -0.07, -0.02, 0, 0, 0, 1, 1.2, 1.3 }, ["93"] = { -0.13, 0, 0 } },
+            }
+            local function bagLookup(uname)
+                return bags[uname]
+            end
+            assert.are.same({ 1, 1.2, 1.3 }, apparel.bagConfig("Backpack", 60, bagLookup).scale)
+            assert.are.equal(-0.13, apparel.bagConfig("Backpack", 211, bagLookup).offsets[1]) -- woman: 93
+            assert.are.equal(-0.15, apparel.bagConfig("Backpack", 217, bagLookup).offsets[1]) -- man: 60
+            assert.are.equal(1, apparel.bagConfig("Backpack", 217, bagLookup).bone)
+            assert.is_nil(apparel.bagConfig("Satchel", 60, bagLookup))
         end)
 
         it("borrows rows for wearables upstream never tuned, with their own rotation, shift and scale", function()
@@ -140,6 +159,35 @@ describe("apparel logic", function()
     end)
 end)
 
+describe("ped skin table", function()
+    it("covers every human ped model, with the right gender for spawn and duty skins", function()
+        local all = skins.all()
+        assert.are.equal(310, #all)
+        assert.is_false(skins.isValid(74))
+        assert.is_false(skins.isValid(149))
+        assert.is_false(skins.isValid(208))
+        assert.is_true(skins.isValid(0))
+        assert.is_true(skins.isValid(312))
+        for _, s in ipairs({ 60, 170, 250, 188, 206, 50, 254, 217 }) do
+            assert.is_false(skins.isFemale(s), s .. " is a man")
+        end
+        for _, s in ipairs({ 192, 93, 233, 193, 90, 191, 131, 211 }) do
+            assert.is_true(skins.isFemale(s), s .. " is a woman")
+        end
+    end)
+
+    it("lists the wearer first and never crosses gender", function()
+        for _, id in ipairs(skins.all()) do
+            local c = skins.candidates(id)
+            assert.are.equal(id, c[1])
+            assert.is_true(#c > 5, id .. " has donors")
+            for i = 2, #c do
+                assert.are.equal(skins.isFemale(id), skins.isFemale(c[i]), id .. " borrows across gender from " .. c[i])
+            end
+        end
+    end)
+end)
+
 describe("apparel on spawnable skins", function()
     local items = dofile("resources/[scavengesurvive]/data/generated/item_types.lua")
     local sp = dofile("resources/[scavengesurvive]/character/shared/logic/spawnpoints.lua")
@@ -148,24 +196,52 @@ describe("apparel on spawnable skins", function()
         return t and t.wearOffsets
     end
 
-    it("gives every hat, mask and armour a tuned row on every spawn skin", function()
+    local function bagLookup(uname)
+        local t = items.byUname[uname]
+        return t and t.categoryData and t.categoryData.bag_offsets
+    end
+
+    it("gives every hat, mask and armour a row of the spawn skin's own", function()
+        apparel.skins = nil -- no donors: the row must be the skin's own (90 excepted, which borrows 193)
         local defaults = {}
         for _, slot in ipairs({ "hat", "mask", "armour" }) do
             defaults[slot] = apparel.attachConfig(slot, "none", nil, nil)
         end
-        local skins = {}
+        local pool = {}
         for _, s in ipairs(sp.SKINS_MALE) do
-            skins[#skins + 1] = s
+            pool[#pool + 1] = s
         end
         for _, s in ipairs(sp.SKINS_FEMALE) do
-            skins[#skins + 1] = s
+            pool[#pool + 1] = s
         end
         for _, uname in ipairs(items.order) do
             local slot = apparel.slotFor(uname)
             if defaults[slot] then
-                for _, skin in ipairs(skins) do
+                for _, skin in ipairs(pool) do
+                    if skin ~= 90 then
+                        local cfg = apparel.attachConfig(slot, uname, skin, lookup)
+                        assert(cfg ~= defaults[slot], uname .. " has no row for skin " .. skin)
+                    end
+                end
+            end
+        end
+        apparel.skins = skins
+    end)
+
+    it("gives every hat, mask, armour and bag a row on every human ped model", function()
+        local defaults = {}
+        for _, slot in ipairs({ "hat", "mask", "armour" }) do
+            defaults[slot] = apparel.attachConfig(slot, "none", nil, nil)
+        end
+        for _, uname in ipairs(items.order) do
+            local slot = apparel.slotFor(uname)
+            for _, skin in ipairs(skins.all()) do
+                if defaults[slot] then
                     local cfg = apparel.attachConfig(slot, uname, skin, lookup)
                     assert(cfg ~= defaults[slot], uname .. " has no row for skin " .. skin)
+                elseif slot == "bag" then
+                    local cfg = apparel.bagConfig(uname, skin, bagLookup)
+                    assert(cfg and cfg.scale[1] > 0, uname .. " has no row for skin " .. skin)
                 end
             end
         end

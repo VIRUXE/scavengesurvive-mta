@@ -11,6 +11,13 @@ local geometry = loadFile("shared/logic/geometry.lua")
 local diff = loadFile("shared/logic/diff.lua")
 local ammo = loadFile("shared/logic/ammo.lua")
 local apparel = loadFile("shared/logic/apparel.lua")
+local skins = loadFile("shared/logic/skins.lua")
+apparel.skins = skins
+
+-- export: whether a ped model is a woman (staff picks the duty skin from it)
+function isFemaleSkin(skin)
+    return skins.isFemale(skin)
+end
 
 -- Per-player item state, shared with the server modules (they capture this table).
 local state = {

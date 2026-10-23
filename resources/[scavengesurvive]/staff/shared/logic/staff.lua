@@ -13,9 +13,9 @@ staff.LEVEL_COLOURS = {
     { 255, 0, 0 },
     { 255, 50, 0 },
 }
--- upstream admin.pwn duty skins (male 217, female 211); female skins from character/shared/logic/spawnpoints.lua
+-- upstream admin.pwn duty skins (male 217, female 211); the gender of a skin comes from items (isFemaleSkin,
+-- items/shared/logic/skins.lua covers every ped model)
 staff.DUTY_SKIN_MALE, staff.DUTY_SKIN_FEMALE = 217, 211
-staff.FEMALE_SKINS = { [192] = true, [93] = true, [233] = true, [193] = true, [90] = true, [191] = true, [131] = true }
 
 function staff.levelName(level)
     return staff.LEVEL_NAMES[level] or staff.LEVEL_NAMES[0]
@@ -25,8 +25,8 @@ function staff.levelColour(level)
     return staff.LEVEL_COLOURS[level] or staff.LEVEL_COLOURS[0]
 end
 
-function staff.dutySkin(currentSkin)
-    return staff.FEMALE_SKINS[currentSkin] and staff.DUTY_SKIN_FEMALE or staff.DUTY_SKIN_MALE
+function staff.dutySkin(female)
+    return female and staff.DUTY_SKIN_FEMALE or staff.DUTY_SKIN_MALE
 end
 
 -- Command names that are also MTA server console commands (kick, ban, restart) or that the stock Default ACL

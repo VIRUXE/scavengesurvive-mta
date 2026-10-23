@@ -160,12 +160,22 @@ local NUDGE = {
     ZorroMask = { [192] = { 0.04, 0, 0 } },
 }
 
--- Spawnable skins upstream never tuned an item for take the rows of a similar skin.
-local SKIN_LIKE = {
-    [90] = 193,
-}
+-- Skins upstream never tuned an item for take the rows of a similar skin: M.skins is the shared/logic/skins.lua
+-- module (gender and build per ped model), set by the loader. Without it only the wearer's own row is used.
+M.skins = nil
 
--- Used for a skin with no upstream offsets (one that is not spawnable, e.g. an admin duty skin).
+local function rowFor(bySkin, skin)
+    if not skin then
+        return nil
+    end
+    local function has(s)
+        return bySkin[tostring(s)] ~= nil or bySkin[s] ~= nil
+    end
+    local donor = M.skins and M.skins.fallback(skin, has) or (has(skin) and skin)
+    return donor and (bySkin[tostring(donor)] or bySkin[donor]) or nil
+end
+
+-- Used for a skin with no row of its own and no donor (M.skins unset, or an item with no rows at all).
 local DEFAULTS = {
     hat = { bone = 2, offsets = { 0.152, 0.0, -0.006, 0.0, 0.0, 0.0 }, scale = { 1.0, 1.0, 1.0 } },
     mask = { bone = 2, offsets = { 0.08, 0.03, 0.0, -85.5, 8.6, -92.8 }, scale = { 1.0, 1.0, 1.0 } },
@@ -185,7 +195,7 @@ function M.attachConfig(slot, uname, skin, wearOffsetsOf)
         local o = OVERRIDES[uname] and skin and OVERRIDES[uname][skin]
         if not o then
             local bySkin = wearOffsetsOf and skin and wearOffsetsOf(borrow and borrow.from or uname)
-            o = bySkin and (bySkin[tostring(skin)] or bySkin[tostring(SKIN_LIKE[skin])])
+            o = bySkin and rowFor(bySkin, skin)
         elseif borrow then
             borrow = nil -- an override is the final row
         end
@@ -218,6 +228,26 @@ function M.attachConfig(slot, uname, skin, wearOffsetsOf)
         end
     end
     return nil
+end
+
+--- Attachment configuration { bone, offsets, scale } for a worn bag, or nil when the bag type has no rows.
+--- Bags use upstream's per-skin spine rows (categoryData.bag_offsets = { x, y, z, rx, ry, rz, sx, sy, sz }).
+--- Upstream left an untuned skin with no bag at all; the port borrows the nearest tuned skin's row (M.skins).
+---@param uname string
+---@param skin number|nil ped model of the wearer
+---@param bagOffsetsOf function|nil uname -> the bag type's bag_offsets table (or nil)
+---@return table|nil
+function M.bagConfig(uname, skin, bagOffsetsOf)
+    local bySkin = bagOffsetsOf and bagOffsetsOf(uname)
+    local o = bySkin and rowFor(bySkin, skin)
+    if not o then
+        return nil
+    end
+    return {
+        bone = 1,
+        offsets = { o[1], o[2], o[3], o[4], o[5], o[6] },
+        scale = { o[7] or 1, o[8] or 1, o[9] or 1 },
+    }
 end
 
 return M
