@@ -1,10 +1,12 @@
 -- Green-screen photo studio, server side: moves a player into a private dimension at the studio spot, freezes
 -- them on an invisible floor slab and tells their client to draw the green box and place the camera; puts them
--- back exactly where they were on /studio, death, quit or resource stop. Loaded by server/main.lua with
+-- back exactly where they were on /studio, death, quit or resource stop. Survival is held still meanwhile: a
+-- long shoot used to starve or bleed the frozen ped to death. Loaded by server/main.lua with
 -- { logic = <shared/logic/studio.lua>, say = say }; returns { enter, leave, isIn, setCam, pose }.
 return function(ctx)
     local studio, say = ctx.logic, ctx.say
-    local occupants = {} -- player -> { x, y, z, rz, interior, dimension, frozen, studioDim, floor }
+    local occupants = {} -- player -> { x, y, z, rz, interior, dimension, frozen, studioDim, floor, stats }
+    local HELD_STATS = { "hp", "food" } -- bleed only kills through hp; raising it via modifyStat adds a wound
 
     local function usedDimensions()
         local used = {}
@@ -45,6 +47,7 @@ return function(ctx)
             setElementAlpha(o.floor, 0)
             setElementDimension(o.floor, o.studioDim)
         end
+        o.stats = exports.character:getStats(p) or nil
         occupants[p] = o
         setElementInterior(p, 0)
         setElementDimension(p, o.studioDim)
@@ -139,6 +142,21 @@ return function(ctx)
     addEventHandler("onPlayerWasted", root, function()
         M.leave(source, false)
     end)
+
+    -- the character survival tick keeps running in the studio; undo its drift every second
+    setTimer(function()
+        for p, o in pairs(occupants) do
+            local now = o.stats and exports.character:getStats(p)
+            if now then
+                for _, key in ipairs(HELD_STATS) do
+                    local delta = o.stats[key] - now[key]
+                    if math.abs(delta) > 1e-6 then
+                        exports.character:modifyStat(p, key, delta)
+                    end
+                end
+            end
+        end
+    end, 1000, 0)
 
     addEventHandler("onResourceStop", resourceRoot, function()
         for p in pairs(occupants) do

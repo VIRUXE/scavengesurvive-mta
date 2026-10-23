@@ -15,8 +15,11 @@ sp.list = {
     { -434.6048, 867.6434, 1.4236, 318.3918 },
     { -638.7510, 1286.1458, 1.4520, 110.0257 },
 }
-sp.SKINS_MALE = { 7, 20, 21, 22, 23, 50 }
-sp.SKINS_FEMALE = { 12, 13, 40, 41, 56, 69 }
+-- upstream spawn.pwn: Civ0-4M, MechM, BikeM / Civ0-4F, ArmyF, IndiF (init.pwn DefineClothesType models). Upstream's
+-- random(6) never reached the 7th; the port does (spec: "skin 6 unreachable", fixed). Every one of these has upstream
+-- per-skin hat, mask, armour and bag offsets.
+sp.SKINS_MALE = { 60, 170, 250, 188, 206, 50, 254 }
+sp.SKINS_FEMALE = { 192, 93, 233, 193, 90, 191, 131 }
 
 -- rng(n) must return an integer in [1, n]
 function sp.pick(lastIndex, rng)

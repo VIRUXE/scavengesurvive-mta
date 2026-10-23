@@ -66,6 +66,21 @@ function studio.cameraMatrix(px, py, pz, yaw, dist, height, lookZ)
     return px + dist * math.sin(r), py + dist * math.cos(r), pz + height, px, py, pz + (lookZ or 0)
 end
 
+-- Point lights for the ped (createLight lights peds but never objects, so worn items keep the stock shading).
+-- The key light sits on the camera's side, up and close, so every preset is lit from the front; the fill comes
+-- from the far side at half strength to soften the shadows. Entries: { x, y, z, radius, r, g, b }.
+studio.KEY = { dist = 1.6, height = 1.0, radius = 4, colour = { 255, 250, 240 } }
+studio.FILL = { yaw = 150, dist = 1.8, height = 0.2, radius = 3.5, colour = { 120, 125, 140 } }
+
+local function lightAt(px, py, pz, yaw, l)
+    local r = math.rad(yaw)
+    return { px + l.dist * math.sin(r), py + l.dist * math.cos(r), pz + l.height, l.radius, unpack(l.colour) }
+end
+
+function studio.lights(px, py, pz, yaw)
+    return { lightAt(px, py, pz, yaw, studio.KEY), lightAt(px, py, pz, yaw + studio.FILL.yaw, studio.FILL) }
+end
+
 local function clamp(v, lo, hi)
     return math.max(lo, math.min(hi, v))
 end

@@ -70,3 +70,32 @@ def test_symbolic_weapon_flags_and_liquid_ammo():
     assert cd["baseWeapon"] == 9 and cd["flags"] == 2 | 8 and cd["calibre"] is None and cd["liquid"] == "Petrol"
     # GasCan is defined as ammo and as a liquid container upstream; the container definition wins
     assert types["GasCan"]["category"] == "liquid"
+
+
+def _wear():
+    read = lambda name: (FX / name).read_bytes().decode("utf-8").replace("\r\n", "\n")  # noqa: E731
+    init = read("wear_excerpt.pwn")
+    types = it.parse_item_types(init)
+    it.apply_wear_offsets(types, init, read("wear_apparel_excerpt.pwn"), read("wear_armour_excerpt.pwn"))
+    return types
+
+
+def test_hat_rows_go_to_the_skin_they_were_tuned_for():
+    hat = _wear()["HelmArmy"]["wearOffsets"]
+    assert hat["60"] == [0.152291, 3e-05, -0.00579, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0]
+    # skin_Civ2F's row says "// 93": upstream renumbered the female civilians after tuning, so it fits 93 (Civ1F)
+    assert hat["93"][0] == 0.154
+    # skin_Civ1F's row was tuned for 65, which is no clothes type any more; 294 is commented out upstream
+    assert sorted(hat) == ["60", "93"]
+
+
+def test_rows_without_a_model_comment_stay_on_their_symbol():
+    bandana = _wear()["BandanaBl"]["wearOffsets"]
+    assert bandana["93"][0] == 0.064999 and bandana["60"][8] == 0.914
+
+
+def test_armour_rows_follow_their_skin_tag_not_their_index():
+    armour = _wear()["Armour"]["wearOffsets"]
+    assert armour["90"][0] == 0.117 and armour["60"][5] == 4.400002
+    assert "131" not in armour  # skin_IndiF is not defined in the excerpt
+    assert "wearOffsets" in it.render_lua(_wear()) and "wearOffsets" not in it.render_sql(_wear())

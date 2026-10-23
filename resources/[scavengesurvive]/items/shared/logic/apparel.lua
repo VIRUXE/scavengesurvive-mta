@@ -115,28 +115,97 @@ function M.isWearable(uname)
     return M.slotFor(uname) ~= nil
 end
 
+-- Hats, masks and armour carry upstream's per-skin offsets (item type wearOffsets, keyed by ped model:
+-- { x, y, z, rx, ry, rz, sx, sy, sz }). Everything below was tuned in the dev studio (docs/dev-studio.md)
+-- where upstream has no row. On the head bone rx turns the item about the up axis (yaw), ry about the
+-- forward axis (roll) and rz about the side axis (pitch).
+
+-- Wearables upstream never defined take the per-skin rows of `from` (which carry each skin's head height
+-- and size). `rot` replaces the row's rotation (each model has its own pivot: the 186xx/189xx hats lie on
+-- their side and need 0/90/90, the 19xxx ones stand upright at 0/0/0), `shift` is added to the position and
+-- `scale` (one number or { sx, sy, sz }) multiplies.
+local BORROW = {
+    Beanie = { from = "HelmArmy" },
+    StrawHat = { from = "HelmArmy", rot = { 90, 0, 0 } },
+    CaptainsCap = { from = "HelmArmy", shift = { -0.015, 0, 0 } },
+    SwatHelmet = { from = "PoliceHelm" },
+    PizzaHat = { from = "HelmArmy", rot = { 0, 0, -20 } },
+    PussyMask = { from = "HockeyMask", rot = { 0, -20, 0 }, shift = { 0.02, 0.015, 0 }, scale = 0.85 },
+    DevilMask = { from = "HockeyMask", rot = { 180, 90, 0 }, shift = { -0.06, 0.065, 0 }, scale = 0.45 },
+    Torso = { from = "Armour" },
+}
+
+-- Rows that replace upstream's for one skin: OVERRIDES[uname][skin].
+local OVERRIDES = {}
+
+-- Position nudges added on top of whatever row is chosen (upstream, borrowed or overridden):
+-- NUDGE[uname][skin] = { dx, dy, dz }. Studio-checked: the nose of skins 250 and 188 poked through the bandanas,
+-- which sat below the nose on the female civilians; Zorro sat on the nose of 192.
+local UP = 0.015
+local BANDANA_NUDGE = {
+    [250] = { 0, 0.012, 0 },
+    [188] = { 0, 0.012, 0 },
+    [93] = { UP, 0, 0 },
+    [233] = { UP, 0, 0 },
+    [193] = { UP, 0, 0 },
+    [90] = { UP, 0, 0 },
+    [191] = { UP, 0, 0 },
+    [131] = { UP, 0, 0 },
+}
+local NUDGE = {
+    BandanaBl = BANDANA_NUDGE,
+    BandanaGr = BANDANA_NUDGE,
+    BandanaWh = BANDANA_NUDGE,
+    BandanaPat = BANDANA_NUDGE,
+    ZorroMask = { [192] = { 0.04, 0, 0 } },
+}
+
+-- Spawnable skins upstream never tuned an item for take the rows of a similar skin.
+local SKIN_LIKE = {
+    [90] = 193,
+}
+
+-- Used for a skin with no upstream offsets (one that is not spawnable, e.g. an admin duty skin).
+local DEFAULTS = {
+    hat = { bone = 2, offsets = { 0.152, 0.0, -0.006, 0.0, 0.0, 0.0 }, scale = { 1.0, 1.0, 1.0 } },
+    mask = { bone = 2, offsets = { 0.08, 0.03, 0.0, -85.5, 8.6, -92.8 }, scale = { 1.0, 1.0, 1.0 } },
+    armour = { bone = 1, offsets = { 0.064, 0.048, 0.006, -1.2, -1.3, -0.9 }, scale = { 1.138, 1.294, 1.108 } },
+}
+
 --- Returns the attachment configuration { bone, offsets, scale } for an item in a gear slot.
 ---@param slot string
 ---@param uname string
+---@param skin number|nil ped model of the wearer
+---@param wearOffsetsOf function|nil uname -> the item type's wearOffsets table (or nil)
 ---@return table|nil
-function M.attachConfig(slot, uname)
-    if slot == "hat" then
+function M.attachConfig(slot, uname, skin, wearOffsetsOf)
+    local default = DEFAULTS[slot]
+    if default then
+        local borrow = BORROW[uname]
+        local o = OVERRIDES[uname] and skin and OVERRIDES[uname][skin]
+        if not o then
+            local bySkin = wearOffsetsOf and skin and wearOffsetsOf(borrow and borrow.from or uname)
+            o = bySkin and (bySkin[tostring(skin)] or bySkin[tostring(SKIN_LIKE[skin])])
+        elseif borrow then
+            borrow = nil -- an override is the final row
+        end
+        if not o then
+            return default
+        end
+        local shift = borrow and borrow.shift or { 0, 0, 0 }
+        local nudge = NUDGE[uname] and NUDGE[uname][skin]
+        if nudge then
+            shift = { shift[1] + nudge[1], shift[2] + nudge[2], shift[3] + nudge[3] }
+        end
+        local rot = borrow and borrow.rot or { o[4], o[5], o[6] }
+        local mul = borrow and borrow.scale or { 1, 1, 1 }
+        if type(mul) == "number" then
+            mul = { mul, mul, mul }
+        end
         return {
-            bone = 2, -- SA-MP head (GTA bone 8)
-            offsets = { 0.152, 0.0, -0.006, 0.0, 0.0, 0.0 },
-            scale = { 1.0, 1.0, 1.0 },
-        }
-    elseif slot == "mask" then
-        return {
-            bone = 2, -- SA-MP head (GTA bone 8)
-            offsets = { 0.08, 0.03, 0.0, -85.5, 8.6, -92.8 },
-            scale = { 1.0, 1.0, 1.0 },
-        }
-    elseif slot == "armour" then
-        return {
-            bone = 1, -- SA-MP spine (GTA bone 3)
-            offsets = { 0.117, 0.05, 0.009, -1.2, 0.5, 0.0 },
-            scale = { 1.05, 1.08, 0.95 },
+            bone = default.bone,
+            offsets = { o[1] + shift[1], o[2] + shift[2], o[3] + shift[3], rot[1], rot[2], rot[3] },
+            scale = { (o[7] or 1) * mul[1], (o[8] or 1) * mul[2], (o[9] or 1) * mul[3] },
         }
     elseif slot == "holster" then
         local cfg = HOLSTERS[uname]

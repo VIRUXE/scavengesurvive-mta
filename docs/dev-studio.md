@@ -64,12 +64,32 @@ pwsh server-config/rcon.ps1 studio VIRUXE off            # back to where they we
   captured.
 - **Heading.** The player's own client owns its ped's rotation, so a server-side `setElementRotation` does not
   stick. The server sends the heading (0 on entry, the saved one on exit, `/studiopose`) and the client applies it.
+- **Survival.** The character survival tick keeps running in the studio. Long sessions used to starve or bleed the
+  frozen ped to death, so on entry the server records hp and food from `exports.character:getStats` and restores
+  them every second with `modifyStat`. Bleed is left alone, because raising it through `modifyStat` counts a new
+  wound and bleed only kills through hp anyway.
 - **Restore.** On entry the server saves position, heading, interior, dimension and frozen state, and puts them back
   on `/studio`, `studio <p> off` or `dev` stopping.
   - **Quit.** The `onPlayerQuit` handler runs at priority `high+10`, so the player is back in place before auth
     raises `playerLoggedOut` and character saves the position. A quit from the studio never persists the studio
     spot.
   - **Death.** The studio state is only dropped and character's normal respawn takes over.
+
+## Tuning attachments
+
+Worn items get their per-skin rows from `wearOffsets` on the item type. Those rows are generated from upstream's
+`Set{Hat,Mask}OffsetsForSkin` and `ArmourSkinData`. Hand-tuned values live in
+`items/shared/logic/apparel.lua`:
+
+- `BORROW` gives a wearable upstream never placed a donor item's rows, plus its own `rot`, `shift` and `scale`.
+- `OVERRIDES` replaces one skin's row.
+- `SKIN_LIKE` lets an untuned spawn skin use a similar skin's rows.
+
+SA-MP bone 2 (head) is GTA node 5. On it, X points up the skull, Y forward and Z to the side. So `rx` turns an
+item about the vertical (yaw), `ry` about the forward axis (roll) and `rz` about the side axis (pitch). Restart
+`items` after an edit, wear the item through element data (`lua setElementData(p, "items.hat", "Beanie")`) and
+shoot it from `face` and `left`. `tests/lua/spec/items_apparel_spec.lua` fails if a spawn skin lacks a row for
+any wearable.
 
 ## Files
 

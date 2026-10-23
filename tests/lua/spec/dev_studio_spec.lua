@@ -70,6 +70,15 @@ describe("dev studio", function()
         assert.truthy(err:find("presets: back, face, front", 1, true))
     end)
 
+    it("puts the key light on the camera's side and the fill on the far side", function()
+        local key, fill = unpack(studio.lights(0, 0, 2500, 0))
+        assert.is_true(key[2] > 0 and near(key[1], 0) and key[3] > 2500) -- yaw 0: camera and key at +Y
+        assert.is_true(fill[2] < 0) -- 150 degrees round
+        assert.is_true(key[5] > fill[5]) -- the fill is dimmer
+        local side = studio.lights(0, 0, 2500, 90)[1]
+        assert.is_true(side[1] > 0 and near(side[2], 0))
+    end)
+
     it("hands out the lowest free dimension", function()
         assert.equals(60000, studio.freeDimension({}))
         assert.equals(60002, studio.freeDimension({ [60000] = true, [60001] = true, [60003] = true }))

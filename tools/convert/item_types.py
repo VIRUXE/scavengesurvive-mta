@@ -23,6 +23,19 @@ SAFEBOX_RE = re.compile(r"DefineSafeboxType\((.*?)\);", re.S)
 # bags: DefineBagType(name, item_X, size) followed by SetBagOffsetsForSkin(tmp, skin, x, y, z, rx, ry, rz, sx, sy, sz)
 # lines for that bag (worn on SA-MP bone 1, the spine); a later line for the same skin overrides an earlier one
 BAG_RE = re.compile(r"DefineBagType\((.*?)\);|SetBagOffsetsForSkin\((.*?)\);", re.S)
+# hats/masks: tmp = DefineHatItem(item_X) / DefineMaskItem(item_X) followed by Set{Hat,Mask}OffsetsForSkin(tmp, skin_Y,
+# x, y, z, rx, ry, rz, sx, sy, sz) on SA-MP bone 2 (head); skin_Y is a clothes index, resolved to its ped model through
+# skin_Y = DefineClothesType(model, ...) in init.pwn
+WEAR_RE = re.compile(r"Define(?:Hat|Mask)Item\((item_\w+)\);|Set(?:Hat|Mask)OffsetsForSkin\((.*?)\);", re.S)
+CLOTHES_RE = re.compile(r"(skin_\w+)\s*=\s*DefineClothesType\((\d+),")
+# armour: ArmourSkinData rows of 9 floats on SA-MP bone 1 (spine), each tagged "// skin_Y". Upstream indexes the
+# array by clothes index but lists the rows in a different order, so the tag is the intended skin (parity fix).
+ARMOUR_ROW_RE = re.compile(r"\{([^{}]*)\}\s*,?\s*//\s*(skin_\w+)")
+# Upstream renumbered the female civilians (Civ1F 65 -> 93, Civ2F 93 -> 233, Civ3F 233 -> 193, Civ4F 193 -> 90) after
+# the hat and mask rows were tuned, and the rows kept their symbols: each row's trailing "// <model>" still names the
+# skin it fits. Those rows go to that model instead (65 is no longer a clothes type; 90 was never tuned). Bandana rows
+# carry no model comments and stay keyed by symbol.
+WEAR_TUNED_FOR = {"skin_Civ1F": None, "skin_Civ2F": "93", "skin_Civ3F": "233", "skin_Civ4F": "193"}
 
 WEAPON_IDS = {
     "WEAPON_BRASSKNUCKLE": 1, "WEAPON_GOLFCLUB": 2, "WEAPON_NITESTICK": 3, "WEAPON_KNIFE": 4, "WEAPON_BAT": 5,
@@ -174,6 +187,32 @@ def apply_categories(types: dict[str, dict], init_src: str, apparel_src: str) ->
     types["_calibre_names"] = {v["id"]: v["name"] for v in calibres.values()}
 
 
+def apply_wear_offsets(types: dict[str, dict], init_src: str, apparel_src: str, armour_src: str) -> None:
+    """Per-skin hat/mask/armour offsets as wearOffsets = { ["<ped model>"] = {x, y, z, rx, ry, rz, sx, sy, sz} }."""
+    by_symbol = {t["_symbol"]: t for k, t in types.items() if not k.startswith("_")}
+    skins = {sym: model for sym, model in CLOTHES_RE.findall(init_src)}
+    current = None
+    for line in apparel_src.splitlines():
+        code, _, comment = line.partition("//")
+        m = WEAR_RE.search(code)
+        if not m:
+            continue
+        if m.group(1):
+            current = by_symbol.get(m.group(1))
+            if current is not None:
+                current["wearOffsets"] = {}
+        elif current is not None:
+            a = split_args(m.group(2))
+            sym = a[1].strip()
+            model = WEAR_TUNED_FOR.get(sym, skins.get(sym)) if comment.strip().isdigit() else skins.get(sym)
+            if model:
+                current["wearOffsets"][model] = [float(coerce(v)) for v in a[2:11]]
+    armour = types.get("Armour")
+    rows = ARMOUR_ROW_RE.findall(armour_src)
+    if armour is not None and rows:
+        armour["wearOffsets"] = {skins[s]: [float(coerce(v)) for v in split_args(r)] for r, s in rows if s in skins}
+
+
 def _public(t: dict) -> dict:
     return {LUA_KEY.get(k, k): v for k, v in t.items() if not k.startswith("_")}
 
@@ -214,8 +253,10 @@ def convert(src_root, out_data, out_seed) -> dict:
     from .common import read_text, write_text
     init = read_text(Path(src_root) / "gamemodes/sss/core/server/init.pwn")
     apparel = "".join(read_text(p) for p in sorted((Path(src_root) / "gamemodes/sss/core/apparel").glob("*.pwn")))
+    armour = read_text(Path(src_root) / "gamemodes/sss/core/item/armour.pwn")
     types = parse_item_types(init)
     apply_categories(types, init, apparel)
+    apply_wear_offsets(types, init, apparel, armour)
     write_text(Path(out_data) / "item_types.lua", render_lua(types))
     write_text(Path(out_seed) / "0001_item_types.sql", render_sql(types))
     return types

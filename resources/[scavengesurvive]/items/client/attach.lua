@@ -1,5 +1,6 @@
--- Held items and worn bags as client-side objects placed on the player's bones every frame, from the upstream
--- SA-MP attach data (item type: boneid + attx/y/z + attrx/y/z; bag: per-skin spine offsets with scale).
+-- Held items and worn gear as client-side objects placed on the player's bones every frame, from the upstream
+-- SA-MP attach data (item type: boneid + attx/y/z + attrx/y/z; bag: per-skin spine offsets with scale; hat, mask and
+-- armour: per-skin wearOffsets, see shared/logic/apparel.lua).
 -- The server only publishes what is carried: element data "items.held" / "items.bag" = type uname or false.
 -- ctx = { models } from client/main.lua (client/models.lua).
 return function(ctx)
@@ -16,7 +17,7 @@ return function(ctx)
     -- SA-MP SetPlayerAttachedObject bone -> GTA:SA bone id (getElementBoneMatrix)
     local SAMP_BONE = {
         [1] = 3, -- spine -> BONE_SPINE1
-        [2] = 8, -- head
+        [2] = 5, -- head: GTA node 5 is the head pivot whose X axis runs up the skull (8 is the face, X forward)
         [3] = 32, -- left upper arm
         [4] = 22, -- right upper arm
         [5] = 34, -- left hand (BONE_LEFTWRIST is the hand bone)
@@ -162,11 +163,16 @@ return function(ctx)
         return attachment("HandCuffs", 6, { 0.030, 0.048, -0.017, -8.7, -25.8, 83.8 }, { 1.027, 3.037, 1.622 })
     end
 
-    local function apparelAttachment(slot, uname)
+    local function wearOffsetsOf(uname)
+        local t = itemType(uname)
+        return t and t.wearOffsets
+    end
+
+    local function apparelAttachment(slot, uname, player)
         if not apparel then
             return nil
         end
-        local cfg = apparel.attachConfig(slot, uname)
+        local cfg = apparel.attachConfig(slot, uname, getElementModel(player), wearOffsetsOf)
         if not cfg then
             return nil
         end
@@ -184,7 +190,7 @@ return function(ctx)
         elseif slot == "cuffs" then
             tracked[player][slot] = cuffAttachment()
         elseif slot == "hat" or slot == "mask" or slot == "armour" or slot == "holster" then
-            tracked[player][slot] = apparelAttachment(slot, uname)
+            tracked[player][slot] = apparelAttachment(slot, uname, player)
         else
             tracked[player][slot] = heldAttachment(uname)
         end
@@ -269,10 +275,16 @@ return function(ctx)
         forgetPlayer(source)
     end)
 
-    -- a skin change moves the bag offsets
+    -- bag, hat, mask and armour offsets are per skin
+    local PER_SKIN =
+        { ["items.bag"] = "bag", ["items.hat"] = "hat", ["items.mask"] = "mask", ["items.armour"] = "armour" }
     addEventHandler("onClientElementModelChange", root, function()
-        if getElementType(source) == "player" and tracked[source] and tracked[source].bag then
-            setSlot(source, "bag", getElementData(source, "items.bag"))
+        if getElementType(source) == "player" and tracked[source] then
+            for key, slot in pairs(PER_SKIN) do
+                if tracked[source][slot] then
+                    setSlot(source, slot, getElementData(source, key))
+                end
+            end
         end
     end)
 
