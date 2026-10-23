@@ -1,0 +1,9 @@
+-- server-local (between resources)
+addEvent("characterSpawned", false)
+addEvent("playerLoggedOut", false)
+-- client to server (handlers registered with net.handler)
+addEvent("radioTuneRequested", true)
+addEvent("chatModeRequested", true)
+-- server to client
+addEvent("chatRadioChanged", true)
+addEvent("chatRadioOpened", true)

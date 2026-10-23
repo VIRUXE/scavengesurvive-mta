@@ -37,7 +37,7 @@ local STOCK = {
     radio = false,
 }
 -- Actions the port implements; the rest of upstream's lines wait for their features.
-local SUPPORTS = { eat = true, reload = true, unload = true, uncuff = true }
+local SUPPORTS = { eat = true, reload = true, unload = true, uncuff = true, radio = true }
 
 local state = {
     spawned = false,
@@ -108,6 +108,10 @@ addEventHandler("characterStatsSynced", root, function(s)
         state.spawned, state.dead = true, false
         applyStockHud()
     end
+end)
+
+addEventHandler("chatRadioChanged", root, function(freq)
+    state.frequency = tonumber(freq) or state.frequency
 end)
 
 addEventHandler("deathScreenShown", root, function(show)

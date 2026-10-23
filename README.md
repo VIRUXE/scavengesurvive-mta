@@ -7,7 +7,7 @@ physical item on the ground, wounds bleed, and death drops it all.
 ![MTA:SA 1.6](https://img.shields.io/badge/MTA%3ASA-1.6-2b5797?style=flat-square)
 ![Lua 5.1](https://img.shields.io/badge/Lua-5.1-000080?style=flat-square&logo=lua)
 ![MariaDB 13](https://img.shields.io/badge/MariaDB-13.0-003545?style=flat-square&logo=mariadb)
-![Milestone](https://img.shields.io/badge/milestone-M6%20Crafting%2C%20Building%2C%20Apparel-brightgreen?style=flat-square)
+![Milestone](https://img.shields.io/badge/milestone-M8%20Content%20%26%20Polish-brightgreen?style=flat-square)
 ![Code: Unlicense](https://img.shields.io/badge/code-Unlicense-lightgrey?style=flat-square)
 ![Data: MPL-2.0 · Maps: CC BY-SA 4.0](https://img.shields.io/badge/data-MPL--2.0%20%C2%B7%20CC%20BY--SA%204.0-orange?style=flat-square)
 
@@ -24,8 +24,8 @@ physical item on the ground, wounds bleed, and death drops it all.
 | M4 Weapons & Damage | ✅ | Server-authoritative wound model with calibre, ammo-type and distance falloff, magazines, reload (`R`) and hold-`N` unload, 3D bullet tracers, knockouts, handcuffs and disarm, anti-combat-log |
 | M5 Vehicles | ✅ | Fuel simulation and drain, driver controls (Y engine, N lights), locks, crowbar lock-breaking, locksmith key cutting, bonnet repair stages, petrol can refuelling, trunk container dialogs, and trailers via /tow |
 | M6 Crafting, Building, Apparel | ✅ | Apparel bone attachment (hats, masks, armour, holster), body preview & 6 gear tiles in inventory UI, safebox & tent persistent containers, in-hand combine, ground construction, workbench crafting, defences with door swing poses, 12-key dx keypad with 4-digit code and plot pole 20m claimed territory protection |
-| M7 Staff & Ops | ⬜ | Dev tooling exists (HTTP rcon, dev commands); staff tiers do not |
-| M8 Content & Polish | ⬜ | Supply drops, caches, house loot, radio, ziplines |
+| M7 Staff & Ops | ✅ | Staff levels 1-5 with 38 commands (`/acmds`), reports, mutes, freeze, spectate, duty, MariaDB bans by name/IP/serial, whitelist, action log, runbooks (live checks of the player-facing steps pending) |
+| M8 Content & Polish | 🔶 | Done: supply drops and weapons caches, chat modes (local 40 m / global / radio by frequency / admin) with the dx radio panel. Open: house loot, ziplines and ladders, languages QA |
 
 Progress is tracked in the [issues](https://github.com/VIRUXE/scavengesurvive-mta/issues) and the
 [project board](https://github.com/users/VIRUXE/projects/3); each milestone is an epic there.
@@ -39,7 +39,7 @@ Progress is tracked in the [issues](https://github.com/VIRUXE/scavengesurvive-mt
 ## How it is built
 
 - **One MTA resource per domain**, no prefix: `lib`, `data`, `models`, `maps`, `ui`, `auth`, `character`, `items`,
-  `loot`, `vehicles`, `world`, `weapons`, `hud`, `dev`. They share state only through MariaDB, so any resource can
+  `loot`, `vehicles`, `crafting`, `building`, `world`, `weapons`, `chat`, `hud`, `staff`, `dev`. They share state only through MariaDB, so any resource can
   restart alone and rebuild from the database.
 - **MariaDB does the heavy lifting.** Every item-graph move (pickup, drop, container put/take, death drop) is a
   stored procedure that returns `ok, code, payload`; positions are `POINT` columns with spatial indexes.
@@ -59,7 +59,9 @@ Decisions: `docs/adr/`. Conventions every contributor and agent follows: `CLAUDE
 2. MariaDB 13.0 as a local service (root, no password) and MTA:SA 1.6 client + server installed.
 3. `pwsh server-config/run-local.ps1` — creates the database, migrates, seeds, links the resources into the server
    and starts it. Connect to `127.0.0.1:22003`.
-4. Drive the running server without touching the console: `pwsh server-config/rcon.ps1 help` (players, resource
+4. Give yourself staff rights: `mariadb -u root scavengesurvive -e "UPDATE accounts SET admin_level = 5 WHERE name = 'You'"`,
+   relog, `/acmds` (`docs/staff-commands.md`).
+5. Drive the running server without touching the console: `pwsh server-config/rcon.ps1 help` (players, resource
    restarts, chat commands and bound keys as any player, Lua, screenshots). Details in `server-config/README.md`.
 
 Before committing, the four local checks must pass (there is no CI; commits land on `main`):
@@ -83,7 +85,9 @@ pytest -q
 | `docs/mvp-smoke-checklist.md` | The playtest checklist, extended as features land |
 | `docs/maps-census.md` | Generated: every upstream map object classified vanilla / SA-MP-only |
 | `docs/ui-reference-samp.md` | Every SA-MP UI element with upstream geometry, footage evidence and its MTA recipe; gap list vs the current resources |
-| `server-config/README.md` | Local server setup, HTTP rcon, dev commands |
+| `docs/staff-commands.md` | Staff levels, every command, upstream rules kept and deviations |
+| `docs/runbooks/` | Start/stop/restart, migrate, backup/restore, ban appeal, DB-down incident, release |
+| `server-config/README.md` | Local server setup, HTTP rcon, dev and staff commands |
 | `THIRD_PARTY_NOTICES.md` | Upstream data (MPL-2.0), maps (CC BY-SA 4.0), SA-MP models |
 
 ## Toolchain notes

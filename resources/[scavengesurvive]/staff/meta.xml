@@ -20,6 +20,8 @@
     <export function="isOnDuty" type="server"/>
     <export function="isMuted" type="server"/>
     <export function="logAction" type="server"/>
+    <export function="mutePlayer" type="server"/>
+    <export function="getLevelColour" type="server"/>
     <aclrequest>
         <right name="function.kickPlayer" access="true"/>
         <right name="function.restartResource" access="true"/>

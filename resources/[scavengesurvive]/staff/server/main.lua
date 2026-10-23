@@ -381,6 +381,20 @@ function isMuted(player)
     return logic.muteRemaining(state.muted[player], getTickCount()) ~= nil
 end
 
+-- chat's flood guard mutes through here so the mute shows in /profile and survives a relog
+function mutePlayer(player, seconds, reason)
+    if not isElement(player) then
+        return false
+    end
+    ctx.setMuted(player, true, tonumber(seconds) or 0)
+    ctx.log(player, "mute_auto", getPlayerName(player), ctx.accountId(player), tostring(reason or ""))
+    return true
+end
+
+function getLevelColour(player)
+    return logic.levelColour(ctx.level(player))
+end
+
 function logAction(actorName, action, targetName, details)
     if not state.ready then
         return false

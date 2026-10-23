@@ -159,3 +159,18 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
       Medical (<point name>) falling to …` within a minute and `supply_drop_points.used_at` is set for that point;
       with 4 players a cache appears within 25-35 min at a point with nobody within 500 m. `rr loot` while a crate
       is falling removes the crate object and blip (the drop is lost, nothing lands).
+24. **Chat modes and the radio** (#49). Two clients A and B.
+    - a. **Modes.** A types a message: B within 40 m sees `[Local] A: …` in light blue; B 50 m away sees nothing.
+      `/g` switches A to global (`You turn your radio on to the global frequency`), plain messages now reach B
+      anywhere as `[Global] A: …`; `/g hi` sends one global line without switching; `/l` back to local; `/me waves`
+      prints `[Local] A waves` nearby; `/quiet` on B hides global lines until `/quiet` again.
+    - b. **Radio.** A: `/freq 101.3`, B: `/freq 101.3`, both `/r`: messages show as `[101.30] A: …` in orange for both;
+      B `/freq 101.4` still hears (0.05 window), `/freq 101.5` no longer does. The watch bottom-left shows each
+      player's own frequency live.
+    - c. **Panel.** In a vehicle press **R** (the key list shows `R Open radio`), or `/radio` anywhere: the RADIO
+      panel at 320,200 with the dial strip, two red knobs (±0.5 MHz, clamped to 87.5-108.0), `global`/`freq`
+      toggle, `Frequency: x` (mouse wheel over it: ±0.01), red `on`/`off` power (off = local chat, on returns to the
+      last transmitting mode) and Close; hovering highlights; Escape closes. Changes show on the watch at once.
+    - d. **Persistence and guards.** A relogs: frequency and mode are back (`characters.radio_freq`, `chat_mode`).
+      A sends three messages inside a second: `Muted from global chat for 30 seconds for chat flooding`, chat is
+      refused, `/profile A` shows muted, and 30 s later `You are now un-muted`. A level-0 account cannot `/a`.
