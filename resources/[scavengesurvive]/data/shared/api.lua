@@ -83,8 +83,15 @@ function Data.languages()
     return LANGUAGES
 end
 
+-- Upstream's language files carry "(REQUIRES TRANSLATION:'…')" where a line was never translated; the player
+-- gets the English line instead of the marker (docs/languages-qa.md counts them as untranslated).
+local UNTRANSLATED = "(REQUIRES TRANSLATION"
+
 function Data.t(lang, key, ...)
-    local s = (langs[lang] or {})[key] or langs.en[key] or key
+    local s = (langs[lang] or {})[key]
+    if type(s) ~= "string" or s:sub(1, #UNTRANSLATED) == UNTRANSLATED then
+        s = langs.en[key] or key
+    end
     if select("#", ...) > 0 then
         local ok, out = pcall(string.format, s, ...)
         if ok then
@@ -129,6 +136,10 @@ end
 
 function t(lang, key, ...)
     return Data.t(lang, key, ...)
+end
+
+function languages()
+    return Data.languages()
 end
 
 return Data
