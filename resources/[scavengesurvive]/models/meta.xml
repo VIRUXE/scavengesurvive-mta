@@ -268,6 +268,7 @@
     <file src="files/matclothes.txd"/>
     <file src="files/mathockey.txd"/>
     <file src="files/matlights.txd"/>
+    <file src="files/matropes.txd"/>
     <file src="files/mattextures.txd"/>
     <file src="files/mcakeslice1.col"/>
     <file src="files/mcakeslice1.dff"/>
@@ -332,6 +333,8 @@
     <file src="files/pizzabox1.dff"/>
     <file src="files/pizzahat1.col"/>
     <file src="files/pizzahat1.dff"/>
+    <file src="files/plane003.col"/>
+    <file src="files/plane003.dff"/>
     <file src="files/police_lights01.col"/>
     <file src="files/police_lights01.dff"/>
     <file src="files/police_things.txd"/>
@@ -349,6 +352,8 @@
     <file src="files/rake1.txd"/>
     <file src="files/rockstarmat1.col"/>
     <file src="files/rockstarmat1.dff"/>
+    <file src="files/rope1.col"/>
+    <file src="files/rope1.dff"/>
     <file src="files/sampfruits.txd"/>
     <file src="files/sampkeycard1.col"/>
     <file src="files/sampkeycard1.dff"/>
@@ -387,6 +392,7 @@
     <file src="files/sfhouse4.dff"/>
     <file src="files/sfhouse4int.col"/>
     <file src="files/sfhouse4int.dff"/>
+    <file src="files/signsurf.txd"/>
     <file src="files/sledgehammer1.col"/>
     <file src="files/sledgehammer1.dff"/>
     <file src="files/sledgehammer1.txd"/>

@@ -194,6 +194,16 @@ function refreshPlayer(player)
     return true
 end
 
+-- A world item's row changed in place (door swung, tent pitched): every client that shows it gets it again.
+function resendWorldItem(itemId)
+    itemId = tonumber(itemId)
+    if not itemId then
+        return false
+    end
+    world.resendEverywhere(itemId)
+    return true
+end
+
 function createStartingItems(cid, unames)
     local player = exports.character:getPlayerByCharacterId(cid)
     local containerId = player and exports.character:getInventoryContainerId(player)

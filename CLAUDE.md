@@ -35,7 +35,9 @@ Scavenge & Survive ported to MTA:SA 1.6 (Lua 5.1) with MariaDB 13.0 (12.2 also v
 - Never commit `server-config/local.settings.xml` (holds the DB password).
 - SA-MP-only object models (ids 11682–11753, 18631+) live in the `models` resource (`manifest.lua` + `files/`, both
   committed). When an item type starts using one that is not in the pack, run `python -m tools.extract_samp_models`
-  on a box with a SA-MP client and commit the result. Clients create item objects with `ItemModels.forType(t)`.
+  on a box with a SA-MP client and commit the result. Clients create item objects with `ItemModels.forType(t)`;
+  SA-MP models that clients build structures from (the pitched tent's panels and poles) are listed in
+  `STRUCTURE_MODELS` in that tool and resolved with `ItemModels.forSamp(id)`.
 
 ## Commands
 

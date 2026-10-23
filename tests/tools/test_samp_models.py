@@ -86,5 +86,5 @@ def test_map_models_are_read_from_object_rows_only(tmp_path):
     maps.mkdir()
     (maps / "LS.lua").write_text(lua, encoding="utf-8")
     (maps / "index.lua").write_text("return { LS = { objects = 2, removals = 1 } }\n", encoding="utf-8")
-    assert m.all_models_used(items, maps) == [3168, 16203, 18633, 19312]
-    assert m.all_models_used(items, tmp_path / "missing") == [18633]
+    assert m.all_models_used(items, maps) == [3168, 16203, 18633, 19087, 19312, 19477]
+    assert m.all_models_used(items, tmp_path / "missing") == [18633, 19087, 19477]

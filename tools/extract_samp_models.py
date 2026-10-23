@@ -123,8 +123,14 @@ def map_models_used(lua_text: str) -> list[int]:
     return sorted({int(m) for m in MAP_ROW_RE.findall(lua_text)})
 
 
+# SA-MP models that clients build structures from rather than item types or maps: the pitched tent's camo
+# panels and poles (items/shared/logic/tent.lua, upstream core/item/tent.pwn)
+STRUCTURE_MODELS = [19477, 19087]
+
+
 def all_models_used(items_path: Path, maps_dir: Path | None) -> list[int]:
     used = set(models_used(items_path.read_text(encoding="utf-8")))
+    used.update(STRUCTURE_MODELS)
     if maps_dir and maps_dir.is_dir():
         for p in sorted(maps_dir.glob("*.lua")):
             if p.name != "index.lua":

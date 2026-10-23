@@ -1,6 +1,6 @@
 -- Which MTA model an item type's object uses on this client: the SA-MP model loaded by the `models` resource
 -- while it is running, otherwise the vanilla stand-in chosen by data/model_map.lua (type.mtaModel).
--- Returns { FALLBACK, forType, onChanged }; onChanged(fn) runs fn whenever the model pack (re)loads or stops.
+-- Returns { FALLBACK, forType, forSamp, onChanged }; onChanged(fn) runs fn whenever the model pack (re)loads or stops.
 return function()
     local M = { FALLBACK = 1271 }
     local cache = {}
@@ -17,6 +17,17 @@ return function()
         return ok and id or false
     end
 
+    -- A SA-MP-only model id as this client can create it (the pitched tent's parts, shared/logic/tent.lua), or
+    -- false while the pack is not running.
+    function M.forSamp(model)
+        local id = cache[model]
+        if id == nil then
+            id = sampModel(model)
+            cache[model] = id
+        end
+        return id or false
+    end
+
     function M.forType(t)
         if not t then
             return M.FALLBACK
@@ -24,12 +35,7 @@ return function()
         if not t.sampOnly then
             return t.model
         end
-        local id = cache[t.model]
-        if id == nil then
-            id = sampModel(t.model)
-            cache[t.model] = id
-        end
-        return id or t.mtaModel or M.FALLBACK
+        return M.forSamp(t.model) or t.mtaModel or M.FALLBACK
     end
 
     function M.onChanged(refresh)

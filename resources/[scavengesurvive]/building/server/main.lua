@@ -58,6 +58,7 @@ local function setDoorOpenState(itemRow, isOpen, cb)
     d.baseRz = baseRz
     local newRz = defences.calculateDoorRotation(baseRz, isOpen)
     db.exec("UPDATE items SET rz = ?, data = ? WHERE id = ?", { newRz, encodeData(d), itemRow.id }, function()
+        exports.items:resendWorldItem(itemRow.id) -- the sync only resends rows a client lacks (#73)
         if cb then
             cb(newRz)
         end

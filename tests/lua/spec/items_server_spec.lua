@@ -7,7 +7,13 @@ describe("items server sql builders", function()
         return 7
     end
     local function newWorld()
-        return dofile(ITEMS .. "server/world.lua")({ db = db, state = state, geometry = geometry, diff = diff, charId = charId })
+        return dofile(ITEMS .. "server/world.lua")({
+            db = db,
+            state = state,
+            geometry = geometry,
+            diff = diff,
+            charId = charId,
+        })
     end
     -- hands with the world module it needs, a fixed character id, a silent toast and the given type lookup
     local function newHands(typeFn)
@@ -101,5 +107,42 @@ describe("items server sql builders", function()
         assert.matches("ST_Distance%(p.pos, POINT%(1, 2%)%) <= 2", sql)
         assert.matches("ORDER BY ST_Distance", sql)
         assert.matches("LIMIT 1", sql)
+    end)
+    -- #73: hands.lua reaches the tent logic through the module, not through a client-trusting remote event
+    it("pitches a tent through containers.pitchTent without a remote client", function()
+        db.connect("items")
+        _G.getElementPosition = function()
+            return 10, 20, 3
+        end
+        _G.getDistanceBetweenPoints3D = function()
+            return 1.0
+        end
+        local containers = dofile(ITEMS .. "server/containers.lua")({
+            db = db,
+            net = load("net"),
+            state = state,
+            type = function() end,
+            charId = charId,
+            toast = function() end,
+            hands = {},
+            world = newWorld(),
+        })
+        mock.addElement("p1")
+        state.sent = { p1 = { [5] = true }, p2 = { [5] = true } }
+        state.held["p1"] = { id = 9, uname = "Hammer" }
+        assert.is_function(containers.pitchTent)
+        assert.is_function(containers.dismantleTent)
+        containers.pitchTent("p1", "5")
+        mock.answer(#mock.queries, { { id = 5, uname = "TentPack", data = false, x = 10, y = 20, z = 3 } })
+        mock.runTimers()
+        local sqls = {}
+        for _, q in ipairs(mock.queries) do
+            sqls[#sqls + 1] = q.sql
+        end
+        assert.truthy(table.concat(sqls, "\n"):find("UPDATE items SET data = '{\"pitched\":true}'", 1, true))
+        assert.truthy(table.concat(sqls, "\n"):find("INSERT INTO containers (kind, size, owner_item_id)", 1, true))
+        -- every client that shows the pack gets the row again on its next sync (the model swaps to the tent)
+        assert.is_nil(state.sent.p1[5])
+        assert.is_nil(state.sent.p2[5])
     end)
 end)

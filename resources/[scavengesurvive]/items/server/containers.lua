@@ -320,7 +320,10 @@ return function(ctx)
         end, { player = player, cont = cont, itemId = itemId, cid = cid })
     end, { rate = 3 })
 
-    net.handler("tentPitchRequested", function(player, itemId)
+    -- Pitching and packing a TentPack. Reached from hands.lua (interact on the world item while holding a
+    -- Hammer or Crowbar) and from the remote events below; both paths re-check the held tool, the distance
+    -- and the row before the 3 s hold completes.
+    local function pitchTent(player, itemId)
         local cid = charId(player)
         itemId = tonumber(itemId)
         if not cid or not itemId then
@@ -362,6 +365,9 @@ return function(ctx)
                             .. "ON DUPLICATE KEY UPDATE size = 16",
                         { itId }
                     )
+                    if world then
+                        world.resendEverywhere(itId)
+                    end
                     if refreshPlayer then
                         refreshPlayer(pl)
                     end
@@ -370,9 +376,9 @@ return function(ctx)
             end,
             { player = player }
         )
-    end, { rate = 3 })
+    end
 
-    net.handler("tentDismantleRequested", function(player, itemId)
+    local function dismantleTent(player, itemId)
         local cid = charId(player)
         itemId = tonumber(itemId)
         if not cid or not itemId then
@@ -414,6 +420,9 @@ return function(ctx)
                         if cId then
                             db.exec("DELETE FROM containers WHERE id = ?", { cId })
                         end
+                        if world then
+                            world.resendEverywhere(itId)
+                        end
                         if refreshPlayer then
                             refreshPlayer(pl)
                         end
@@ -441,7 +450,11 @@ return function(ctx)
             end,
             { player = player }
         )
-    end, { rate = 3 })
+    end
+
+    M.pitchTent, M.dismantleTent = pitchTent, dismantleTent
+    net.handler("tentPitchRequested", pitchTent, { rate = 3 })
+    net.handler("tentDismantleRequested", dismantleTent, { rate = 3 })
 
     addEventHandler("onPlayerQuit", root, function()
         activeContainer[source] = nil

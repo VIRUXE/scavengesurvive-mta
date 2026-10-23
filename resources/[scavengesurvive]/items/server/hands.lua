@@ -488,13 +488,13 @@ return function(ctx)
                 local isPitched = (rData and (rData.pitched == true or (rData[1] and rData[1].pitched == true)))
                 if isPitched then
                     if curUname == "Crowbar" then
-                        return triggerEvent("tentDismantleRequested", c.player, row.id)
+                        return containers and containers.dismantleTent(c.player, row.id)
                     else
                         return containers and containers.openWorldContainer(c.player, row)
                     end
                 else
                     if curUname == "Hammer" then
-                        return triggerEvent("tentPitchRequested", c.player, row.id)
+                        return containers and containers.pitchTent(c.player, row.id)
                     end
                 end
             end

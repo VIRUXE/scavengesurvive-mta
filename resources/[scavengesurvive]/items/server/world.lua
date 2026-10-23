@@ -75,5 +75,13 @@ return function(ctx)
         end
     end
 
+    -- An item's row changed in place (a tent pitched or packed): the diff only resends ids a client lacks, so
+    -- forgetting the id makes every client's next sync re-add the row and update the object in place.
+    function M.resendEverywhere(itemId)
+        for _, sent in pairs(state.sent) do
+            sent[itemId] = nil
+        end
+    end
+
     return M
 end
