@@ -157,6 +157,63 @@ command("rr", function(p, name)
     say(p, "restartResource(%s) -> %s", name, tostring(restartResource(res)))
 end, true)
 
+local useFly = {}
+
+command("move", function(p, dir, distArg)
+    local d = type(dir) == "string" and dir:sub(1, 1):lower() or nil
+    if d ~= "f" and d ~= "b" and d ~= "u" and d ~= "d" then
+        return say(p, "usage: /move [f/b/u/d] [optional:distance]")
+    end
+    local amount = tonumber(distArg) or 2.0
+    local elem = getPedOccupiedVehicle(p) or p
+    local x, y, z = getElementPosition(elem)
+    local _, _, rz = getElementRotation(elem)
+    local rad = math.rad(-rz)
+    if d == "f" then
+        x = x + amount * math.sin(rad)
+        y = y + amount * math.cos(rad)
+    elseif d == "b" then
+        x = x - amount * math.sin(rad)
+        y = y - amount * math.cos(rad)
+    elseif d == "u" then
+        z = z + amount
+    elseif d == "d" then
+        z = z - amount
+    end
+    setElementPosition(elem, x, y, z)
+end)
+
+command("fly", function(p, arg)
+    if arg == "now" then
+        useFly[p] = true
+        triggerClientEvent(p, "onClientDevFlyState", p, true, true)
+        return say(p, "fly activated")
+    end
+    useFly[p] = not useFly[p]
+    triggerClientEvent(p, "onClientDevFlyState", p, useFly[p], false)
+    if useFly[p] then
+        say(p, "fly mode enabled: press Jump and Enter/Exit together to fly")
+    else
+        say(p, "fly mode disabled")
+        setPedAnimation(p)
+    end
+end)
+
+addEventHandler("onPlayerQuit", root, function()
+    useFly[source] = nil
+end)
+
+addEventHandler("onDevFlyActiveChange", root, function(isFlying)
+    if not isElement(client) or client ~= source then
+        return
+    end
+    if isFlying then
+        setPedAnimation(client, "PARACHUTE", "FALL_SKYDIVE", -1, true, false, false, false)
+    else
+        setPedAnimation(client)
+    end
+end)
+
 -- HTTP "rcon" (MTA has no RCON): POST http://127.0.0.1:22005/dev/call/rcon with a JSON array holding one command
 -- line, HTTP Basic auth as the account named by *dev.http_user (created below from *dev.http_pass; run-local.ps1
 -- puts it in an ACL group that only grants general.http). Returns { ok, output = { lines } }.
