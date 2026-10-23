@@ -1,6 +1,7 @@
 # ADR 0001: Scarcity-driven respawn for loot and vehicles
 
-Status: Proposed (2026-10-22). Supersedes the fixed 30-minute loot re-roll and the one-shot vehicle roll.
+Status: Accepted (2026-10-23, implemented in #67). Supersedes the fixed 30-minute loot re-roll and the one-shot
+vehicle roll.
 
 ## Context
 
@@ -57,3 +58,33 @@ deficit, per-point cooldowns, and placement away from players.
   aggregate query per zone per interval (`items` joined to `characters` positions).
 - Risk: with a low refill rate a looted-out hub stays empty for hours by design; the jitter and the random point
   choice spread refills instead of refilling the hub first. Tune `refill_rate` and `cooldown` on the playtest.
+
+## Implementation (2026-10-23, #67)
+
+- **Arithmetic** in `lib/modules/budget.lua` (busted: `tests/lua/spec/lib_budget_spec.lua`): `cap`, `refill`
+  (nothing accrues at capacity, the fraction carries in `remainder`, never above the deficit), `cooldown`,
+  `clearOfPlayers` and `pickClear`.
+- **Schema** (`sql/schema.sql`): `world_budget(category, zone, cap, remainder, allowance)`,
+  `vehicle_spawn_state(spawn_id, next_roll_at)`, `vehicles.left_spawn`, `vehicles.last_used_at` and
+  `items.loot_zone`. `item_create` copies the zone of the loot point into `items.loot_zone`, and `item_pickup`
+  leaves it alone, so an item keeps counting against its zone wherever it goes. `loot.reroll_minutes` is deleted.
+- **Vehicles** (`vehicles/server/main.lua`): the first roll writes `world_budget('vehicles','all')` and cools every
+  used point. Every `world.refill_interval_s` the tick removes abandoned vehicles (`left_spawn = 1` and unused for
+  `vehicles.abandon_days`), computes `budget.refill` against `COUNT(*) FROM vehicles`, and spawns on random cooled
+  points with no vehicle still on them and no player within `world.min_player_distance`, with the per-point chance
+  forced to 100 (the type's own chance still applies). The minute flush marks `left_spawn` the first time a vehicle
+  is more than `vehicles.leave_radius` from its point and cools the point; an explosion cools it too;
+  `onVehicleEnter` stamps `last_used_at` at most every 5 minutes. `/vehrespawn` clears the spawn state and rolls a
+  fresh budget. A world rolled before the budget existed gets `cap = vehicles alive` on the first tick.
+- **Loot** (`loot/server/main.lua`): a `world_budget('loot', zone)` row per zone with
+  `cap = enabled points × loot.items_per_point × loot.cap_multiplier`, `allowance = cap` on creation (the world
+  starts full). The tick adds `budget.refill` to the allowance (clamped to the deficit) with
+  `alive = COUNT(items WHERE loot_zone = zone)`, carried items included unless `loot.count_carried = 0`.
+  `rollNear` rolls a due, empty point only while the zone has allowance and no player is within
+  `world.min_player_distance`; the roll spends its item count and sets `next_roll_at` to now plus
+  `loot.cooldown_minutes ± loot.cooldown_jitter`. The `lootAllowances` export reports the cached allowance per zone.
+- **Deviations from the decision above.** The loot cap is `points × items_per_point` rather than the count of the
+  first roll, so it is deterministic and a settings change applies on the next start. The loot cooldown runs from
+  the roll, not from the last pickup (a point rolls again when it is empty and the cooldown has passed). Supply
+  drops, weapon caches, crafted and staff-given items have no `loot_zone` and never count.
+- **Live check:** smoke step 28 in `docs/mvp-smoke-checklist.md`; settings in `server-config/README.md`.

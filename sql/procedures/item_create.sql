@@ -7,6 +7,7 @@ BEGIN
   DECLARE v_cont INT DEFAULT NULL;
   DECLARE v_cat VARCHAR(16) DEFAULT NULL;
   DECLARE v_size INT DEFAULT NULL;
+  DECLARE v_zone VARCHAR(8) DEFAULT NULL;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
   SELECT category, COALESCE(JSON_VALUE(category_data, '$.size'), JSON_VALUE(category_data, '$.bag_size')) INTO v_cat, v_size FROM item_types WHERE uname = p_type_uname;
   IF v_cat IS NULL THEN
@@ -14,8 +15,11 @@ BEGIN
   ELSE
     SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
     START TRANSACTION;
-    INSERT INTO items (type_uname, hitpoints, data, x, y, z, rz, interior, dimension, loot_spawn_id, despawn_at)
-      VALUES (p_type_uname, IFNULL(p_hitpoints, 5), p_data, p_x, p_y, p_z, p_rz, p_interior, p_dimension, p_loot_spawn_id, p_despawn_at);
+    IF p_loot_spawn_id IS NOT NULL THEN
+      SELECT zone INTO v_zone FROM loot_spawns WHERE id = p_loot_spawn_id;
+    END IF;
+    INSERT INTO items (type_uname, hitpoints, data, x, y, z, rz, interior, dimension, loot_spawn_id, loot_zone, despawn_at)
+      VALUES (p_type_uname, IFNULL(p_hitpoints, 5), p_data, p_x, p_y, p_z, p_rz, p_interior, p_dimension, p_loot_spawn_id, v_zone, p_despawn_at);
     SET v_item = LAST_INSERT_ID();
     INSERT INTO world_items_pos (item_id, pos) VALUES (v_item, POINT(p_x, p_y));
     IF v_cat IN ('bag', 'safebox') THEN

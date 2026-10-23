@@ -56,6 +56,18 @@ Allowed for everyone while the `dev` setting `*dev.open` is `true` (the default)
 `admin_level > 0`. Commands: `/additem <uname>`, `/rollloot`, `/stats`, `/sethp <n>`, `/setfood <n>`, `/setbleed <n>`, `/weather [id|NAME]`, `/zone [x y]`, `/vehcount`, `/vehrespawn`,
 `/dbtest`, `/rr <resource>` (also `rr <resource>` in the server console).
 
+## Economy settings (table `settings`, ADR 0001)
+
+Read on resource start (`rr loot`, `rr vehicles` after a change). Carrying capacity: `loot.items_per_point` (2.0) ×
+`loot.cap_multiplier` (1.0) items per loot point and zone; `vehicles.cap_multiplier` (1.0) × the first vehicle roll.
+Refill every `world.refill_interval_s` (300): `loot.refill_rate` / `vehicles.refill_rate` (0.10 of the deficit per
+hour) with a floor of `loot.refill_floor` / `vehicles.refill_floor` (0.02 of the cap per hour). Cooldown of a consumed
+point: `loot.cooldown_minutes` (60) ± `loot.cooldown_jitter` (0.5); `vehicles.cooldown_hours` (6) ±
+`vehicles.cooldown_jitter` (0.33). Nothing respawns within `world.min_player_distance` (150 m) of a player. A vehicle
+driven more than `vehicles.leave_radius` (100 m) from its point frees the point and is removed after
+`vehicles.abandon_days` (3) without anyone entering it. `loot.count_carried` (1) counts items players carry against
+their zone; set it to `0` to count only items in the world and in containers. Lower the multipliers for a harsher world.
+
 ## Player commands
 
 `/lang <code>` (resource `auth`) sets the language of every translated line for the session and stores it on the account; `/lang` alone lists the codes.

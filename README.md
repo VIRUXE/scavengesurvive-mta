@@ -81,7 +81,7 @@ pytest -q
 | `CLAUDE.md` | Conventions and rules (events, DB, state, style) |
 | `docs/superpowers/specs/` | The port design, upstream digest and MTA facts |
 | `docs/superpowers/plans/2026-09-27-mvp.md` | The MVP plan as executed |
-| `docs/adr/` | Architecture decisions (0001: scarcity-driven respawn, proposed) |
+| `docs/adr/` | Architecture decisions (0001: scarcity-driven respawn, accepted and implemented in #67) |
 | `docs/reviews/` | Review and live-check records with what was found and fixed |
 | `docs/mvp-smoke-checklist.md` | The playtest checklist, extended as features land |
 | `docs/maps-census.md` | Generated: every upstream map object classified vanilla / SA-MP-only |

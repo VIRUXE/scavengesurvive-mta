@@ -4,6 +4,7 @@
 local db = loadstring(exports.lib:getModule("db"), "=lib/db.lua")()
 local net = loadstring(exports.lib:getModule("net"), "=lib/net.lua")()
 local util = loadstring(exports.lib:getModule("util"), "=lib/util.lua")()
+local budget = loadstring(exports.lib:getModule("budget"), "=lib/budget.lua")()
 
 local spawn
 do
@@ -25,19 +26,72 @@ local FLUSH_MS = 60000
 local WRECK_MS = 30000
 local SIM_TICK_MS = 1000
 
+local USED_TICK_MS = 300000
+
 local SELECT_VEHICLES = "SELECT v.id, v.spawn_id, v.type_uname, v.model, v.x, v.y, v.z, v.rz, "
-    .. "v.health, v.fuel, v.locked, v.damage, v.key_code, v.trailer_id, c.id AS container_id "
-    .. "FROM vehicles v LEFT JOIN containers c ON c.owner_vehicle_id = v.id"
+    .. "v.health, v.fuel, v.locked, v.damage, v.key_code, v.trailer_id, v.left_spawn, c.id AS container_id, "
+    .. "s.x AS spawn_x, s.y AS spawn_y FROM vehicles v LEFT JOIN containers c ON c.owner_vehicle_id = v.id "
+    .. "LEFT JOIN vehicle_spawns s ON s.id = v.spawn_id"
 
 local INSERT_VEHICLE = "INSERT INTO vehicles (spawn_id, type_uname, model, x, y, z, rz, "
     .. "health, fuel, locked, damage, key_code, trailer_id) "
     .. "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 
+local SELECT_SPAWNS = "SELECT id, x, y, z, rz, group_name, type_name, categories, sizes "
+    .. "FROM vehicle_spawns WHERE enabled = 1"
+
+local UPDATE_REMAINDER = "UPDATE world_budget SET remainder = ? WHERE category = 'vehicles' AND zone = 'all'"
+
+-- Cooled points with no vehicle still standing on them, in random order
+local SELECT_COOLED_SPAWNS = SELECT_SPAWNS
+    .. " AND NOT EXISTS (SELECT 1 FROM vehicle_spawn_state st"
+    .. " WHERE st.spawn_id = vehicle_spawns.id AND st.next_roll_at > NOW())"
+    .. " AND NOT EXISTS (SELECT 1 FROM vehicles v WHERE v.spawn_id = vehicle_spawns.id AND v.left_spawn = 0)"
+    .. " ORDER BY RAND() LIMIT ?"
+
+local COOL_SPAWN = "INSERT INTO vehicle_spawn_state (spawn_id, next_roll_at) "
+    .. "VALUES (?, DATE_ADD(NOW(), INTERVAL ? SECOND)) ON DUPLICATE KEY UPDATE next_roll_at = VALUES(next_roll_at)"
+
+local SELECT_BUDGET = "SELECT cap, remainder, (SELECT COUNT(*) FROM vehicles) AS alive FROM world_budget "
+    .. "WHERE category = 'vehicles' AND zone = 'all'"
+
+local UPSERT_BUDGET = "INSERT INTO world_budget (category, zone, cap, remainder, allowance) "
+    .. "VALUES ('vehicles', 'all', ?, 0, 0) ON DUPLICATE KEY UPDATE cap = VALUES(cap), remainder = 0"
+
+local SELECT_ABANDONED = "SELECT id FROM vehicles WHERE left_spawn = 1 "
+    .. "AND COALESCE(last_used_at, updated_at) < DATE_SUB(NOW(), INTERVAL ? DAY)"
+
 local settings = {}
 local types = nil -- spawn.index(...) of the data resource's vehicle types
-local info = {} -- vehicle element -> { id, uname, fuel, locked, keyCode, trailerId, containerId }
+-- vehicle element -> { id, uname, fuel, locked, keyCode, trailerId, containerId, spawnId, spawnX, spawnY, leftSpawn }
+local info = {}
 local activeActions = {} -- player -> { actionType, vehicle, timer, extra }
 local rolling = false
+local refilling = false
+local refillTimer = nil
+
+local function setting(key, default)
+    return tonumber(settings[key]) or default
+end
+
+-- Puts a spawn point on cooldown (its vehicle was destroyed or driven away): vehicles.cooldown_hours ± jitter.
+local function coolPoint(spawnId)
+    if not spawnId then
+        return
+    end
+    local base = setting("vehicles.cooldown_hours", 6) * 3600
+    local secs = budget.cooldown(base, setting("vehicles.cooldown_jitter", 0.33), math.random)
+    db.exec(COOL_SPAWN, { spawnId, secs })
+end
+
+local function playerPositions()
+    local out = {}
+    for _, p in ipairs(getElementsByType("player")) do
+        local x, y = getElementPosition(p)
+        out[#out + 1] = { x = x, y = y }
+    end
+    return out
+end
 
 local function toast(player, code)
     if isElement(player) then
@@ -106,6 +160,11 @@ local function create(row)
         keyCode = row.key_code and tonumber(row.key_code) or nil,
         trailerId = row.trailer_id and tonumber(row.trailer_id) or nil,
         containerId = cid,
+        spawnId = row.spawn_id and tonumber(row.spawn_id) or nil,
+        spawnX = row.spawn_x and tonumber(row.spawn_x) or nil,
+        spawnY = row.spawn_y and tonumber(row.spawn_y) or nil,
+        leftSpawn = (tonumber(row.left_spawn) or 0) > 0,
+        usedTick = 0,
     }
 
     -- If the vehicle has trunk capacity but no container row yet, create one
@@ -134,86 +193,180 @@ local function count()
     return util.tableCount(info)
 end
 
--- Rolls every enabled spawn point once and stores the winners; cb(created) when all inserts are in.
+-- Rolls one spawn point (a vehicle_spawns row) with the given per-point chance. Returns true when a vehicle is
+-- being inserted; cb(vehicle or nil) when the insert is in.
+local function spawnAt(s, chance, cb)
+    local r = spawn.roll(s, types, chance, math.random)
+    if not r then
+        return false
+    end
+    local t = r.type
+    local damage = spawn.damage(t.category, math.random)
+    local isLocked = spawn.locked(t, damage, math.random)
+    local row = {
+        spawn_id = s.id,
+        spawn_x = s.x,
+        spawn_y = s.y,
+        type_uname = t.uname,
+        model = t.model,
+        x = s.x,
+        y = s.y,
+        z = s.z,
+        rz = r.rz,
+        health = spawn.health(math.random),
+        fuel = spawn.fuel(t.maxFuel or 0, math.random),
+        locked = isLocked and vlogic.LOCK_DEFAULT or vlogic.LOCK_OPEN,
+        damage = damage and toJSON(damage) or nil,
+        key_code = nil,
+        trailer_id = nil,
+    }
+    local params = {
+        row.spawn_id,
+        row.type_uname,
+        row.model,
+        row.x,
+        row.y,
+        row.z,
+        row.rz,
+        row.health,
+        row.fuel,
+        row.locked,
+        row.damage,
+        row.key_code,
+        row.trailer_id,
+        n = 13,
+    }
+    db.exec(INSERT_VEHICLE, params, function(ok, ctx, _, insertId)
+        local v = nil
+        if ok and insertId then
+            ctx.id = insertId
+            v = create(ctx)
+        end
+        if cb then
+            cb(v)
+        end
+    end, row)
+    return true
+end
+
+-- Rolls every enabled spawn point once and stores the winners; the result sets the carrying capacity
+-- (world_budget 'vehicles'/'all') and puts the used points on cooldown. cb(created) when all inserts are in.
 local function rollAll(cb)
     if rolling then
         return false
     end
     rolling = true
-    local chance = tonumber(settings["vehicles.spawn_chance"]) or spawn.DEFAULT_CHANCE
-    db.query(
-        "SELECT id, x, y, z, rz, group_name, type_name, categories, sizes FROM vehicle_spawns WHERE enabled = 1",
-        {},
-        function(rows)
-            if not rows then
+    local chance = setting("vehicles.spawn_chance", spawn.DEFAULT_CHANCE)
+    db.query(SELECT_SPAWNS, {}, function(rows)
+        if not rows then
+            rolling = false
+            return
+        end
+        local pending, created = 0, 0
+        local function done()
+            if pending == 0 then
                 rolling = false
-                return
+                local cap = budget.cap(created, settings["vehicles.cap_multiplier"])
+                db.exec(UPSERT_BUDGET, { cap })
+                util.log("vehicles", "info", "rolled %d spawn points: %d vehicles, cap %d", #rows, created, cap)
+                triggerEvent("vehiclesSpawned", resourceRoot, created)
+                if cb then
+                    cb(created)
+                end
             end
-            local pending, created = 0, 0
-            local function done()
-                if pending == 0 then
-                    rolling = false
-                    util.log("vehicles", "info", "rolled %d spawn points: %d vehicles", #rows, created)
-                    triggerEvent("vehiclesSpawned", resourceRoot, created)
-                    if cb then
-                        cb(created)
+        end
+        for _, s in ipairs(rows) do
+            local started = spawnAt(s, chance, function(v)
+                pending = pending - 1
+                if v then
+                    created = created + 1
+                    coolPoint(info[v].spawnId)
+                end
+                done()
+            end)
+            if started then
+                pending = pending + 1
+            end
+        end
+        done()
+    end)
+    return true
+end
+
+-- Spawns up to n vehicles on random cooled points clear of players; cb(spawned) when the rolls are in.
+local function refillSpawns(n, cb)
+    local minDist = setting("world.min_player_distance", 150)
+    db.query(SELECT_COOLED_SPAWNS, { n * 8 }, function(rows)
+        if not rows then
+            return cb(0)
+        end
+        local spawned = 0
+        for _, s in ipairs(budget.pickClear(rows, playerPositions(), minDist, n * 4, math.random)) do
+            if spawned >= n then
+                break
+            end
+            local started = spawnAt(s, 100, function(v)
+                if v then
+                    coolPoint(info[v].spawnId)
+                end
+            end)
+            if started then
+                spawned = spawned + 1
+            end
+        end
+        cb(spawned)
+    end)
+end
+
+-- The ADR 0001 refill tick: retire abandoned vehicles, then spend the refill the deficit earned this interval.
+local function refillTick()
+    if rolling or refilling then
+        return
+    end
+    refilling = true
+    local function finish()
+        refilling = false
+    end
+    db.query(SELECT_ABANDONED, { setting("vehicles.abandon_days", 3) }, function(rows)
+        local removed = 0
+        for _, r in ipairs(rows or {}) do
+            local id = tonumber(r.id)
+            for v, i in pairs(info) do
+                if i.id == id then
+                    forget(v)
+                    if isElement(v) then
+                        destroyElement(v)
                     end
                 end
             end
-            for _, s in ipairs(rows) do
-                local r = spawn.roll(s, types, chance, math.random)
-                if r then
-                    local t = r.type
-                    local damage = spawn.damage(t.category, math.random)
-                    local isLocked = spawn.locked(t, damage, math.random)
-                    local row = {
-                        spawn_id = s.id,
-                        type_uname = t.uname,
-                        model = t.model,
-                        x = s.x,
-                        y = s.y,
-                        z = s.z,
-                        rz = r.rz,
-                        health = spawn.health(math.random),
-                        fuel = spawn.fuel(t.maxFuel or 0, math.random),
-                        locked = isLocked and vlogic.LOCK_DEFAULT or vlogic.LOCK_OPEN,
-                        damage = damage and toJSON(damage) or nil,
-                        key_code = nil,
-                        trailer_id = nil,
-                    }
-                    pending = pending + 1
-                    local params = {
-                        row.spawn_id,
-                        row.type_uname,
-                        row.model,
-                        row.x,
-                        row.y,
-                        row.z,
-                        row.rz,
-                        row.health,
-                        row.fuel,
-                        row.locked,
-                        row.damage,
-                        row.key_code,
-                        row.trailer_id,
-                        n = 13,
-                    }
-                    db.exec(INSERT_VEHICLE, params, function(ok, ctx, _, insertId)
-                        pending = pending - 1
-                        if ok and insertId then
-                            ctx.id = insertId
-                            if create(ctx) then
-                                created = created + 1
-                            end
-                        end
-                        done()
-                    end, row)
-                end
-            end
-            done()
+            db.exec("DELETE FROM vehicles WHERE id = ?", { id })
+            removed = removed + 1
         end
-    )
-    return true
+        db.query(SELECT_BUDGET, {}, function(brows)
+            local b = brows and brows[1]
+            if not b then
+                -- a world rolled before the budget existed: its current stock becomes the capacity
+                local cap = budget.cap(count(), settings["vehicles.cap_multiplier"])
+                db.exec(UPSERT_BUDGET, { cap })
+                util.log("vehicles", "info", "refill: budget created from the %d vehicles alive, cap %d", count(), cap)
+                return finish()
+            end
+            local cap, alive = tonumber(b.cap) or 0, (tonumber(b.alive) or 0) - removed
+            local rate, floor = setting("vehicles.refill_rate", 0.10), setting("vehicles.refill_floor", 0.02)
+            local interval = setting("world.refill_interval_s", 300)
+            local spawns, remainder = budget.refill(cap, alive, tonumber(b.remainder) or 0, rate, floor, interval)
+            local function store(spawned)
+                db.exec(UPDATE_REMAINDER, { remainder })
+                local line = "refill: cap %d alive %d removed %d spawned %d"
+                util.log("vehicles", "info", line, cap, alive, removed, spawned)
+                finish()
+            end
+            if spawns <= 0 then
+                return store(0)
+            end
+            refillSpawns(spawns, store)
+        end)
+    end)
 end
 
 local function loadOrRoll()
@@ -251,10 +404,17 @@ end
 
 local function flushAll()
     local rows = {}
+    local leaveRadius = setting("vehicles.leave_radius", 100)
     for v, i in pairs(info) do
         if isElement(v) then
             local x, y, z = getElementPosition(v)
             local _, _, rz = getElementRotation(v)
+            -- the first time a vehicle is driven away from its point, the point becomes free and cools down
+            if not i.leftSpawn and i.spawnX and util.dist2(x, y, i.spawnX, i.spawnY) > leaveRadius then
+                i.leftSpawn = true
+                db.exec("UPDATE vehicles SET left_spawn = 1 WHERE id = ?", { i.id })
+                coolPoint(i.spawnId)
+            end
             rows[#rows + 1] = {
                 id = i.id,
                 x = x,
@@ -694,6 +854,19 @@ net.handler("trunkCloseRequested", function(player)
     end
 end, { rate = 3 })
 
+-- Entering a vehicle stamps last_used_at (at most once per USED_TICK_MS), which the abandon rule reads
+addEventHandler("onVehicleEnter", resourceRoot, function()
+    local i = info[source]
+    if not i then
+        return
+    end
+    local now = getTickCount()
+    if now - i.usedTick >= USED_TICK_MS then
+        i.usedTick = now
+        db.exec("UPDATE vehicles SET last_used_at = NOW() WHERE id = ?", { i.id })
+    end
+end)
+
 addEventHandler("onPlayerQuit", root, function()
     cancelHoldAction(source)
 end)
@@ -710,6 +883,10 @@ addEventHandler("onResourceStart", resourceRoot, function()
     db.settings(function(map)
         settings = map
         loadOrRoll()
+        if isTimer(refillTimer) then
+            killTimer(refillTimer)
+        end
+        refillTimer = setTimer(refillTick, setting("world.refill_interval_s", 300) * 1000, 0)
     end)
 end)
 
@@ -725,6 +902,9 @@ addEventHandler("onVehicleExplode", resourceRoot, function()
     local i = info[source]
     if not i then
         return
+    end
+    if not i.leftSpawn then
+        coolPoint(i.spawnId)
     end
     setTimer(function(v, id)
         db.exec("DELETE FROM vehicles WHERE id = ?", { id })
@@ -804,6 +984,8 @@ function respawnAll()
         end
     end
     info = {}
+    -- the dev reset: every point is free again and the roll writes a fresh budget row
+    db.exec("DELETE FROM vehicle_spawn_state", {})
     db.exec("DELETE FROM vehicles", {}, function(ok)
         if ok then
             rollAll()

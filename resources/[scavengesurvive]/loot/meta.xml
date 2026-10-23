@@ -16,4 +16,5 @@
     <export function="dropWeaponCache" type="server"/>
     <export function="supplyDropTypes" type="server"/>
     <export function="dropStatus" type="server"/>
+    <export function="lootAllowances" type="server"/>
 </meta>

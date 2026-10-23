@@ -24,7 +24,7 @@ files["resources/**/maps/server/**"] = { std = "lua51+mta_shared+mta_server", gl
 files["resources/**/maps/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "getMapStats" }, read_globals = { "restoreWorldModel" } }
 files["resources/**/maps/data/**"] = { std = "lua51", max_line_length = false }
 -- moveObject, createBlipAttachedTo (server) and createEffect (client) postdate the generated lists
-files["resources/**/loot/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "rollNear", "dropSupply", "dropWeaponCache", "supplyDropTypes", "dropStatus" }, read_globals = { "moveObject", "createBlipAttachedTo" } }
+files["resources/**/loot/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "rollNear", "dropSupply", "dropWeaponCache", "supplyDropTypes", "dropStatus", "lootAllowances" }, read_globals = { "moveObject", "createBlipAttachedTo" } }
 files["resources/**/loot/client/**"] = { std = "lua51+mta_shared+mta_client", read_globals = { "createEffect" } }
 files["resources/**/world/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "getWeather", "setGlobalWeather" } }
 files["resources/**/world/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "tryInteract", "nearbyFeature" }, read_globals = { "dxDrawLine3D", "getBoundKeys" } }

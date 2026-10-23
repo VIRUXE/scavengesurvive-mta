@@ -129,6 +129,7 @@ CREATE TABLE IF NOT EXISTS `items` (
   `holder_char_id` int(11) DEFAULT NULL,
   `holder_kind` enum('held','holster','bag','hat','mask','armour') DEFAULT NULL,
   `loot_spawn_id` int(11) DEFAULT NULL,
+  `loot_zone` varchar(8) DEFAULT NULL,
   `despawn_at` datetime DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
@@ -138,6 +139,7 @@ CREATE TABLE IF NOT EXISTS `items` (
   KEY `ix_items_loot_spawn` (`loot_spawn_id`),
   KEY `ix_items_despawn` (`despawn_at`),
   KEY `ix_items_type` (`type_uname`),
+  KEY `ix_items_loot_zone` (`loot_zone`),
   CONSTRAINT `fk_items_container` FOREIGN KEY (`container_id`) REFERENCES `containers` (`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_items_type` FOREIGN KEY (`type_uname`) REFERENCES `item_types` (`uname`),
   CONSTRAINT `chk_items_one_location` CHECK ((`x` is not null) + (`container_id` is not null) + (`holder_char_id` is not null) = 1),
@@ -225,6 +227,14 @@ CREATE TABLE IF NOT EXISTS `supply_drop_points` (
   KEY `ix_supply_drop_points_used` (`used_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
+CREATE TABLE IF NOT EXISTS `vehicle_spawn_state` (
+  `spawn_id` int(11) NOT NULL,
+  `next_roll_at` datetime NOT NULL,
+  PRIMARY KEY (`spawn_id`),
+  KEY `ix_vehicle_spawn_state_due` (`next_roll_at`),
+  CONSTRAINT `fk_vehicle_spawn_state_spawn` FOREIGN KEY (`spawn_id`) REFERENCES `vehicle_spawns` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+
 CREATE TABLE IF NOT EXISTS `vehicle_spawns` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `x` float NOT NULL,
@@ -259,6 +269,8 @@ CREATE TABLE IF NOT EXISTS `vehicles` (
   `key_code` int(11) DEFAULT NULL,
   `trailer_id` int(11) DEFAULT NULL,
   `damage` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`damage`)),
+  `left_spawn` tinyint(1) NOT NULL DEFAULT 0,
+  `last_used_at` datetime DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   PRIMARY KEY (`id`),
@@ -284,6 +296,16 @@ CREATE TABLE IF NOT EXISTS `whitelist` (
   `added_by` varchar(24) NOT NULL DEFAULT 'Server',
   `added_at` datetime NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+
+CREATE TABLE IF NOT EXISTS `world_budget` (
+  `category` varchar(16) NOT NULL,
+  `zone` varchar(8) NOT NULL,
+  `cap` int(11) NOT NULL,
+  `remainder` float NOT NULL DEFAULT 0,
+  `allowance` int(11) NOT NULL DEFAULT 0,
+  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`category`,`zone`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
 CREATE TABLE IF NOT EXISTS `world_items_pos` (

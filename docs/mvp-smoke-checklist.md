@@ -194,3 +194,20 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
       than 5 m off the line) with a forward boost.
     - c. **Guards.** Nothing happens while knocked out, cuffed, dead or in a vehicle. `rr world` while climbing or riding
       drops you back to normal controls.
+28. **Scarcity-driven respawn** (#67, ADR 0001). Server log only, no client needed for a-c.
+    - a. **Budget rows.** After `rr vehicles` and `rr loot`: `SELECT * FROM world_budget` has one `vehicles`/`all` row
+      (cap = the first roll, about 80, or the vehicles alive when the budget was first created) and one `loot` row per
+      zone (`bc fc ls lv rc sf tr`, cap = points × 2, allowance = cap on the first start).
+    - b. **Refill ticks.** Every 5 minutes (`world.refill_interval_s`) the log shows
+      `[vehicles] refill: cap N alive N removed 0 spawned 0` and `[loot] refill: 7 zones, alive A/C, allowance X (+Y)`.
+      With the world full both `spawned` and `+Y` stay 0; `/vehcount` is stable over hours. Blow up a vehicle (or set
+      `vehicles.refill_rate` to `20` and `rr vehicles`): the next ticks report `spawned 1` and `/vehcount` recovers,
+      never above the cap, with the new vehicle on a cooled point out of sight (150 m or more away).
+    - c. **Cooldowns.** `SELECT COUNT(*) FROM vehicle_spawn_state WHERE next_roll_at > NOW()` equals the vehicles rolled
+      (6 h ± 33 %). Drive one more than 100 m from its point: within a minute its row has `left_spawn = 1` and its
+      point gets a fresh `next_roll_at`.
+    - d. **Loot allowance.** Loot a point empty and stand there: it does not re-roll for its cooldown (60 min ± 50 %),
+      and the `[loot] refill` line shows `alive` unchanged (the carried items still count: `items.loot_zone` keeps the
+      zone after pickup). Nothing rolls within 150 m of any player: walk away and back after the cooldown, the point
+      refilled while you were out of range, provided the zone's allowance (`exports.loot:lootAllowances()` through
+      `rcon.ps1 lua`) was above 0.
