@@ -4,7 +4,7 @@ Full in-game verification of Milestone M6 (Apparel, Building, Crafting) and upst
 
 | System / Step | Live Test Action | Observed Outcome | Result |
 | :--- | :--- | :--- | :--- |
-| **Apparel Attachments (#38)** | Wore `CowboyHat`, `BandanaBl`, `Armour` via stored procedures & element data | Attached to head, face, and spine bones with correct upstream offsets; verified in screenshot `VIRUXE-1792745727.jpg` | **Pass** |
+| **Apparel Attachments (#38)** | Wore `CowboyHat`, `BandanaBl`, `Armour` via stored procedures & element data | Attached to head, face, and spine bones with correct upstream offsets; verified in screenshot `VIRUXE-1792745727.jpg` | **Pass**, later found wrong: hats sat in front of the face and offsets were not per skin; see 2026-10-23-apparel-fit.md (#70) |
 | **Body Preview & Gear Tiles (#39)** | Ran `/inventory` command | 3D body preview with health & wound indicators on the left, 6 gear tiles on the right; verified in screenshot `VIRUXE-1792745749.jpg` | **Pass** |
 | **Safeboxes & Tents (#37)** | Spawned `TentPack`, equipped `Hammer`, pitched tent | World object replaced with model 3243 "Pitched Tent" with 16-slot container; verified in screenshot `VIRUXE-1792745982.jpg` | **Pass** |
 | **In-Hand Combine (#35)** | Held `Knife` + `Clothes` in inventory | `Clothes` consumed, `Bandage` created in inventory slot 2, `Knife` preserved in hand | **Pass** |
