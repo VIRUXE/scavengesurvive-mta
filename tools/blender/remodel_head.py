@@ -1,0 +1,200 @@
+"""Rebuild a bare head for a GTA:SA ped whose mesh carries a hat: run inside Blender with the DragonFF add-on.
+
+    blender --python tools/blender/remodel_head.py -- <ped dir> <out dir> [skin ...]
+
+<ped dir> holds <name>.dff and <name>.txd (tools/extract_ped_models.py puts them in models/work when run with
+--keep). For each skin in HEADS the script imports the ped with its texture, deletes the headgear, flattens the cut,
+welds the rim and raises a skull over the opening: a thin band that continues the face skin, then rings of hair
+textured from the darkest patch of the ped's own atlas, all weighted to the Head bone, and exports
+<out dir>/<name>_nohat.dff. The twin keeps the base skin's TXD. Blender's viewport (or the dev studio) is the judge:
+GTA models no skull under a hat, so every parameter below was set by eye.
+
+Rules per skin (HEADS): which faces are headgear.
+- cap_floor: everything whose centre is this far above the Head bone goes (the crown). The bone sits at the brow on
+  most peds, at the chin on some (wmygol1, smokev), hence the per-skin value.
+- dark_floor / dark_lum: faces above dark_floor whose texel is darker than dark_lum go (black cap bands); None off.
+- bright_floor / bright_lum: the same for light helmets.
+- cap_blocks: 8x8 texture blocks (col,row; row 0 at the top) that are headgear below the crown.
+- profile: (angle, radial scale) rings of the skull from the rim to the apex; the first is the skin band.
+- apex: metres above the rim top for the crown.
+
+Not solved yet (hat-only twins stay): wmygol1 36 and the firefighters 277-279, whose cut line crosses the face.
+"""
+import math
+import os
+import sys
+
+import addon_utils
+import bmesh
+import bpy
+
+P = ((0.2, 1.0), (0.5, 1.12), (0.85, 1.05), (1.15, 0.8), (1.4, 0.45))
+HEADS = {
+    4: dict(name="sfpdm1", tex="SFPDM1"),
+    119: dict(name="lvpdm1", tex="LVPDM1", dark_floor=-0.005),
+    284: dict(name="lapdm1", tex="LAPDM1", dark_floor=None, bright_floor=-0.03, bright_lum=0.6),
+    61: dict(name="wmyplt", tex="wmyplt", dark_floor=-0.005, cap_blocks={(6, 6)}),
+    37: dict(name="wmygol2", tex="wmygol2"),
+    2: dict(name="maccer", tex="maccer", dark_floor=None, cap_blocks={(0, 3), (0, 5), (1, 5), (2, 5), (3, 5), (4, 5), (2, 7)}),
+    311: dict(name="smokev", tex="smokev", cap_floor=0.11, dark_floor=None),
+}
+
+
+def remodel(src_dir, out_dir, name, tex, cap_floor=0.045, dark_floor=-0.03, dark_lum=0.12, bright_floor=None, bright_lum=0.7, profile=P, apex=0.09, hair_uv=None, cap_blocks=None):
+    for o in list(bpy.data.objects):
+        bpy.data.objects.remove(o, do_unlink=True)
+    for i in list(bpy.data.images):
+        bpy.data.images.remove(i)
+    files = [{"name": name + ".dff"}, {"name": name + ".txd"}]
+    bpy.ops.import_scene.dff(filepath=os.path.join(src_dir, name + ".dff"), directory=src_dir, files=files, load_images=True, remove_doubles=False, txd_pack=True, txd_apply_to_objects=True)
+    ped_objects = list(bpy.data.objects)
+    ob = next(o for o in ped_objects if o.type == "MESH")
+    arm = next(o for o in ped_objects if o.type == "ARMATURE")
+    head = next(b for b in arm.data.bones if b.name.strip() == "Head")
+    hx = head.head_local.x
+    img = next(i for i in bpy.data.images if tex.upper() in i.name.upper())
+    W, H = img.size
+    px = img.pixels[:]
+
+    def lum(u, v):
+        u %= 1.0
+        v %= 1.0
+        x = min(W - 1, int(u * W))
+        y = min(H - 1, int(v * H))
+        i = (y * W + x) * 4
+        return 0.299 * px[i] + 0.587 * px[i + 1] + 0.114 * px[i + 2]
+
+    if hair_uv is None:
+        best = None
+        for y in range(0, H - 6, 2):
+            for x in range(0, W - 6, 2):
+                s = sum(px[((yy * W + xx) * 4) + c] for yy in range(y, y + 6) for xx in range(x, x + 6) for c in range(3))
+                if best is None or s < best[0]:
+                    best = (s, x, y)
+        hair_uv = ((best[1] + 3) / W, (best[2] + 3) / H)
+    me = ob.data
+    bm = bmesh.new()
+    bm.from_mesh(me)
+    uvl = bm.loops.layers.uv.active
+    deform = bm.verts.layers.deform.verify()
+    headg = ob.vertex_groups[" Head"].index
+
+    def cen(f):
+        return sum(v.co.x for v in f.verts) / len(f.verts)
+
+    def cuv(f):
+        return (sum(l[uvl].uv.x for l in f.loops) / len(f.loops), sum(l[uvl].uv.y for l in f.loops) / len(f.loops))
+
+    def blk(f):
+        u, v = cuv(f)
+        return (int((u % 1.0) * 8), int(((1 - v) % 1.0) * 8))
+
+    doomed = []
+    for f in bm.faces:
+        h = cen(f) - hx
+        if h >= cap_floor:
+            doomed.append(f)
+        elif dark_floor is not None and h >= dark_floor and lum(*cuv(f)) < dark_lum:
+            doomed.append(f)
+        elif bright_floor is not None and h >= bright_floor and lum(*cuv(f)) > bright_lum:
+            doomed.append(f)
+        elif cap_blocks and h >= -0.03 and blk(f) in cap_blocks:
+            doomed.append(f)
+    bmesh.ops.delete(bm, geom=doomed, context="FACES")
+    floor = hx - 0.03
+    bmesh.ops.remove_doubles(bm, verts=[v for v in bm.verts if v.is_boundary and v.co.x >= floor], dist=0.001)
+    edges = [e for e in bm.edges if e.is_boundary and min(v.co.x for v in e.verts) >= floor]
+    adj = {}
+    for e in edges:
+        a, b = e.verts
+        adj.setdefault(a, []).append(b)
+        adj.setdefault(b, []).append(a)
+    loops, seen = [], set()
+    for start in adj:
+        if start in seen:
+            continue
+        loop, cur, prev = [start], start, None
+        seen.add(start)
+        while True:
+            nxt = next((v for v in adj[cur] if v is not prev and v not in seen), None)
+            if nxt is None:
+                break
+            loop.append(nxt)
+            seen.add(nxt)
+            prev, cur = cur, nxt
+        if loop[0] in adj.get(loop[-1], []):
+            loops.append(loop)
+    loops.sort(key=len, reverse=True)
+    if not loops:
+        raise RuntimeError(f"{name}: the cut left no closed rim")
+    loop = loops[0]
+    n = len(loop)
+    rim_uv = [next(l[uvl].uv.copy() for l in v.link_loops) for v in loop]
+    cy = sum(v.co.y for v in loop) / n
+    cz = sum(v.co.z for v in loop) / n
+    apex_x = max(v.co.x for v in loop) + apex
+
+    def ring_at(phi, scale):
+        ring = []
+        for v in loop:
+            x = v.co.x + (apex_x - v.co.x) * math.sin(phi)
+            nv = bm.verts.new((x, cy + (v.co.y - cy) * math.cos(phi) * scale, cz + (v.co.z - cz) * math.cos(phi) * scale))
+            nv[deform][headg] = 1.0
+            ring.append(nv)
+        return ring
+
+    # a DFF keeps one UV per vertex: the hairline ring exists twice, a skin copy under the band and a hair copy above
+    f_phi, f_scale = profile[0]
+    skin_ring = ring_at(f_phi, f_scale)
+    hair_rings = [ring_at(f_phi, f_scale)] + [ring_at(p, s) for p, s in profile[1:]]
+    apexv = bm.verts.new((apex_x, cy, cz))
+    apexv[deform][headg] = 1.0
+    old = len(bm.faces)
+
+    def add(verts, uvs):
+        try:
+            f = bm.faces.new(verts)
+        except ValueError:
+            return
+        f.smooth = True
+        for l, u in zip(f.loops, uvs):
+            l[uvl].uv = u
+
+    for i in range(n):
+        j = (i + 1) % n
+        add((loop[i], loop[j], skin_ring[j], skin_ring[i]), (rim_uv[i], rim_uv[j], rim_uv[j], rim_uv[i]))
+    for k in range(len(hair_rings) - 1):
+        lo, hi = hair_rings[k], hair_rings[k + 1]
+        for i in range(n):
+            j = (i + 1) % n
+            add((lo[i], lo[j], hi[j], hi[i]), (hair_uv,) * 4)
+    for i in range(n):
+        j = (i + 1) % n
+        add((hair_rings[-1][i], hair_rings[-1][j], apexv), (hair_uv,) * 3)
+    bm.faces.ensure_lookup_table()
+    bmesh.ops.triangulate(bm, faces=[bm.faces[i] for i in range(old, len(bm.faces)) if len(bm.faces[i].verts) == 4])
+    bm.faces.ensure_lookup_table()
+    bmesh.ops.recalc_face_normals(bm, faces=[bm.faces[i] for i in range(old, len(bm.faces))])
+    bm.to_mesh(me)
+    bm.free()
+    me.update()
+    img.name = tex
+    for mat in me.materials:
+        mat.dff.tex_name = tex
+    out = os.path.join(out_dir, name + "_nohat.dff")
+    bpy.ops.object.select_all(action="DESELECT")
+    for o in ped_objects:
+        o.select_set(True)
+    bpy.context.view_layer.objects.active = arm
+    bpy.ops.export_dff.scene(filepath=out, export_coll=False, only_selected=True, export_version="0x36003")
+    return f"{name}: removed {len(doomed)} faces, rim of {n}, {len(me.polygons)} faces -> {out}"
+
+
+if __name__ == "__main__":
+    argv = sys.argv[sys.argv.index("--") + 1 :]
+    src_dir, out_dir = argv[0], argv[1]
+    skins = [int(s) for s in argv[2:]] or list(HEADS)
+    addon_utils.enable("DragonFF", default_set=False)
+    for skin in skins:
+        spec = dict(HEADS[skin])
+        print(remodel(src_dir, out_dir, spec.pop("name"), spec.pop("tex"), **spec))

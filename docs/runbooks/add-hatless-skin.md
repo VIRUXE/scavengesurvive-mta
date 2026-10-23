@@ -38,6 +38,22 @@ see the twin.
 4. `rcon.ps1 rr models`, then `rr items`, and screenshot the skin with a hat on and off. Bare, the twin shows the
    hole GTA leaves under the headgear; that is expected, since it is only ever shown under a hat.
 
+## Bare heads (remodelled skulls)
+
+A twin cut by `cut_headgear.py` is hat-only: GTA models no skull under a hat, so bare it shows a flat fill or a
+hole. `tools/blender/remodel_head.py` builds a bare head instead: it deletes the headgear by height, texel darkness
+or texture block (`HEADS` holds the rule per skin, set by eye), welds the cut rim and raises a skull over it, a
+thin band that continues the face skin and rings of hair textured from the darkest patch of the ped's own atlas,
+all weighted to the Head bone. Run it in Blender (`blender --python tools/blender/remodel_head.py -- <ped dir>
+<out dir> [skin ...]`, the ped dir holding `<name>.dff` and `<name>.txd` from `gta3.img`) and judge the result in
+the viewport and the studio (force the twin bare with `clua <p> setElementModel(localPlayer,
+exports.models:hatlessSkin(<skin>))`). Done so far: 2, 4, 61, 119, 284, 311 and 37; 36 and the firefighters
+277-279 still cut through the face (their Head bone sits lower) and stay hat-only.
+
+Two facts cost a long detour: a DFF stores one UV per vertex, so a hairline vertex needs a skin copy and a hair
+copy; and the exporter is fine with new vertices, so when a head looks stretched in the game compare the dome's
+size with the face, not the file.
+
 ## Caveats
 
 - Never restart `models` while a client is still downloading (docs/runbooks/start-stop-restart.md).
