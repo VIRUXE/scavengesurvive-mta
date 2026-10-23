@@ -5,7 +5,9 @@ password prompt, item pickups do nothing, or `rcon.ps1 cmd <player> dbtest` repo
 
 **What the server does on its own (design spec, Failure modes):** every resource connects with `autoreconnect=1`;
 a failed procedure returns `false` and the action is refused with a toast; `character` keeps ticking in memory and
-flushes dirty rows once the connection is back; nothing is lost that was already committed.
+flushes dirty rows once the connection is back; nothing is lost that was already committed. The held weapons' ammo
+waits too: a failed `item_data_flush` (every 5 s) logs `[items] item_data_flush failed` and its rows go back in the
+queue for the next flush, unless the weapon fired again meanwhile (the newer count wins).
 
 ## Steps
 
@@ -20,7 +22,7 @@ flushes dirty rows once the connection is back; nothing is lost that was already
 4. If MariaDB does not come back: check disk space (`innodb` stops on a full disk), `my.ini` changes, and the
    MariaDB error log. A crashed InnoDB recovers on start; do not delete `ib_logfile*`.
 5. After recovery: `SELECT @@event_scheduler` must be `ON` (set it again with
-   `SET GLOBAL event_scheduler = ON` or `run-local.ps1`), and `SHOW EVENTS` must list the two events.
+   `SET GLOBAL event_scheduler = ON` or `run-local.ps1`), and `SHOW EVENTS` must list the three events (`ev_despawn_items`, `ev_expire_bans`, `ev_item_history`).
 6. If the outage exceeded a few minutes, do a controlled restart of the game server (`start-stop-restart.md`) so
    every resource rebuilds from the database rather than from memory that drifted while writes failed.
 

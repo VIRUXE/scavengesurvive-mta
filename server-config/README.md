@@ -3,8 +3,11 @@
 `pwsh server-config/run-local.ps1` prepares the MTA:SA 1.6 server in `C:\Program Files (x86)\MTA San Andreas 1.6\server`
 and starts it. Every step is safe to run again. Stop the server first; the script refuses to run while it is up.
 
-1. `python -m tools.sqltool --db scavengesurvive apply` (`-Reset` adds `--reset` and wipes all data).
+1. `python -m tools.sqltool --db scavengesurvive apply`: missing tables, procedures, triggers, events and seeds
+   (`-Reset` adds `--reset` and wipes all data).
 2. `SET GLOBAL event_scheduler = ON` (lost when MariaDB restarts; add `event_scheduler=ON` under `[mysqld]` in `my.ini` to keep it).
+   Without it world items never despawn, `items` history is never trimmed to 7 days and expired bans keep
+   `active = 1` (`auth` ignores them by `expires_at` anyway).
 3. Copies `local.settings.xml` to `mods\deathmatch\settings.xml`, first creating it from `local.settings.example.xml`
    if missing. `local.settings.xml` is git-ignored: put the DB password there, never in the example.
 4. Rebuilds `mods\deathmatch\mtaserver.conf` from `mtaserver.conf.stock` (saved on the first run): removes every stock

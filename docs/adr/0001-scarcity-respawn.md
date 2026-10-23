@@ -66,8 +66,9 @@ deficit, per-point cooldowns, and placement away from players.
   `clearOfPlayers` and `pickClear`.
 - **Schema** (`sql/schema.sql`): `world_budget(category, zone, cap, remainder, allowance)`,
   `vehicle_spawn_state(spawn_id, next_roll_at)`, `vehicles.left_spawn`, `vehicles.last_used_at` and
-  `items.loot_zone`. `item_create` copies the zone of the loot point into `items.loot_zone`, and `item_pickup`
-  leaves it alone, so an item keeps counting against its zone wherever it goes. `loot.reroll_minutes` is deleted.
+  `items.loot_zone`. `loot_roll` (and `item_create`, given a loot point) copies the zone of the loot point into
+  `items.loot_zone`, and `item_pickup` leaves it alone, so an item keeps counting against its zone wherever it
+  goes. `loot.reroll_minutes` is deleted.
 - **Vehicles** (`vehicles/server/main.lua`): the first roll writes `world_budget('vehicles','all')` and cools every
   used point. Every `world.refill_interval_s` the tick removes abandoned vehicles (`left_spawn = 1` and unused for
   `vehicles.abandon_days`), computes `budget.refill` against `COUNT(*) FROM vehicles`, and spawns on random cooled
@@ -84,6 +85,11 @@ deficit, per-point cooldowns, and placement away from players.
   `rollNear` rolls a due, empty point only while the zone has allowance and no player is within
   `world.min_player_distance`; the roll spends its item count and sets `next_roll_at` to now plus
   `loot.cooldown_minutes ± loot.cooldown_jitter`. The `lootAllowances` export reports the cached allowance per zone.
+  Since #78 a `rollNear` batch is one `CALL loot_roll(rolls_json, loot.despawn_minutes)`: Lua picks the items and
+  trims each roll to the cached allowance, and the procedure, in one transaction, inserts every item (bags and
+  safeboxes get their container, the `items` trigger the `world_items_pos` row), spends each zone's allowance by
+  the items it created and sets each point's `next_roll_at`. Before, every spawn cost one `item_create` per item
+  plus a budget and a cooldown `UPDATE`.
 - **Deviations from the decision above.** The loot cap is `points × items_per_point` rather than the count of the
   first roll, so it is deterministic and a settings change applies on the next start. The loot cooldown runs from
   the roll, not from the last pickup (a point rolls again when it is empty and the cooldown has passed). Supply

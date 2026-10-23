@@ -1,4 +1,4 @@
-# MariaDB efficiency pass — 2026-10-23
+# MariaDB efficiency pass — 2026-10-23 (#78)
 
 MariaDB 13.0.2, local dev box (`innodb_flush_log_at_trx_commit=1`, thread pool on). Each scenario ran the SQL the game
 sent before this change (baseline) against the new SQL on one connection, like MTA's queue, in a scratch database
@@ -26,7 +26,7 @@ Both loot paths leave the same rows (600 items, 600 positions, 56 bag containers
   per live item after three days).
 - `item_types.container_size`, a stored generated column, replaces the `JSON_VALUE` pair in the item procedures.
 - `vehicles/server/main.lua`: abandoned vehicles go in one `DELETE … RETURNING id`.
-- `hands.publishAmmo` is exported; `updateHeldData` (gas can refuel) had been failing on it.
+- `hands.publishAmmo` is exported; `updateHeldData` (gas can refuel) had been failing on it (#79).
 
 ## Rejected
 
@@ -42,4 +42,4 @@ Both loot paths leave the same rows (600 items, 600 positions, 56 bag containers
 Server running, `rr items`, `rr loot`, `rr vehicles`: a `rollNear(2000, -1500, 600)` placed 162 `ls` items in one
 call, the zone allowance fell by 162, bags got containers, every world item had its position row (drift 0), no
 errors in `server.log`. The ammo flush was not driven live (another session was using the only player); the busted
-specs cover it.
+specs cover it, and the live check is open in #80.

@@ -70,7 +70,7 @@ Decisions: `docs/adr/`. Conventions every contributor and agent follows: `CLAUDE
 
 1. `pwsh tools/setup-dev.ps1` — Lua 5.1 toolchain, stylua, Python deps.
 2. MariaDB 13.0 as a local service (root, no password) and MTA:SA 1.6 client + server installed.
-3. `pwsh server-config/run-local.ps1` — creates the database, applies `sql/schema.sql`, procedures and seeds, links the resources into the server
+3. `pwsh server-config/run-local.ps1` — creates the database, applies `sql/schema.sql`, procedures, triggers, events and seeds, links the resources into the server
    and starts it. Connect to `127.0.0.1:22003`.
 4. Give yourself staff rights: `mariadb -u root scavengesurvive -e "UPDATE accounts SET admin_level = 5 WHERE name = 'You'"`,
    relog, `/acmds` (`docs/staff-commands.md`).

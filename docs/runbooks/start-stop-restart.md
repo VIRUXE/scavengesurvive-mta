@@ -8,7 +8,8 @@ Python with the repo's requirements; the MTA server installed at `$MTA`.
 ## Start (full)
 
 1. `pwsh server-config/run-local.ps1` from the repo root. It refuses to run while `MTA Server.exe` is up.
-   It applies pending SQL (`tools.sqltool apply`), turns the event scheduler on, copies the settings file,
+   It applies pending SQL (`tools.sqltool apply`: procedures, triggers, events, seeds, missing tables), turns the
+   event scheduler on (item despawn, ban expiry, `items` history retention), copies the settings file,
    regenerates `mtaserver.conf` from the stock copy with the startup list from `server-config/resources.xml`,
    junctions the resources into `$DM\resources\[scavengesurvive]`, rebuilds the `ScavengeSurvive` ACL group and
    starts the server. Add `-NoStart` to prepare without starting, `-Reset` to drop and recreate the database
@@ -21,7 +22,8 @@ Python with the repo's requirements; the MTA server installed at `$MTA`.
 
 1. Warn players: `rcon.ps1 say Server restarting in 2 minutes`.
 2. `rcon.ps1 shutdown` (or type `shutdown` in the server console). Every resource flushes in `onResourceStop`
-   (`character` writes dirty stats, `vehicles` writes positions), so a clean stop loses nothing.
+   (`character` writes dirty stats, `vehicles` writes positions, `items` writes the held weapons' ammo, which it
+   otherwise batches every 5 s), so a clean stop loses nothing. A crash can lose the last 5 s of fired rounds.
 3. Confirm the process is gone before touching files (`run-local.ps1` checks this for you).
 
 ## Restart one resource

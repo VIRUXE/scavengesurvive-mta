@@ -71,7 +71,10 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
     left on the ground). Fire 3 rounds (`7/10`) and press **R** (`reloadweapon`): the reload animation plays and the
     counter updates to `10/7`. Hold **N** (`dropitem`) for 300 ms (or `/unloadweapon`): the pistol unloads (`0/0`,
     `"There is no ammo loaded in this weapon"`) and drops a `9mm Rounds (17, 9mm, Hollow Point)` tin on the ground.
-    Tapping **N** briefly still drops the pistol itself.
+    Tapping **N** briefly still drops the pistol itself. **Ammo persistence** (#78, open live check in #80): reload,
+    fire 2 rounds and `rr items` at once: the pistol comes back in hand with the count it had (the stop writes the
+    held ammo synchronously); fire 2 more, wait 6 s and `SELECT data FROM items WHERE id = <id>` shows the new count
+    (the 5 s `item_data_flush`); fire again and put it away (**Y**): the row has the count at once.
 18. **Bullet tracers** (#27). A: `/additem M16Rifle` and `/additem Ammo556Tracer`, load and fire. Both A and B see a
     white-to-yellow 3D tracer streak (`dxDrawLine3D`) starting 2 m ahead of the muzzle and travelling at 800 m/s toward
     the hit point. Firing standard `Ammo556` or `Ammo9mm` draws no tracer.
@@ -221,6 +224,11 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
       zone after pickup). Nothing rolls within 150 m of any player: walk away and back after the cooldown, the point
       refilled while you were out of range, provided the zone's allowance (`exports.loot:lootAllowances()` through
       `rcon.ps1 lua`) was above 0.
+    - e. **One call per batch** (#78). `rcon.ps1 lua return exports.loot:rollNear(2000, -1500, 600)` with nobody
+      near: one `loot_roll` call places the batch, the `ls` row of `world_budget` loses exactly the items created,
+      every new bag or safebox has its `containers` row, and
+      `SELECT COUNT(*) FROM items i LEFT JOIN world_items_pos p ON p.item_id = i.id WHERE i.x IS NOT NULL AND p.item_id IS NULL`
+      is 0 (the `items` triggers keep the positions; no `loot_roll` warning in `scripts.log`).
 29. **Clothes and the spawn pool** (#76). One client.
     - a. **Spawn roll.** New characters spawn in one of upstream's 29 clothes skins of a random gender, civilians most
       of the time; a headgear skin (biker 254, cop 283, SWAT 285, military 287) shows its hatless twin under a hat.

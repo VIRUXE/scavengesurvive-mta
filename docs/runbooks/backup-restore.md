@@ -17,9 +17,11 @@ mariadb-dump -u root --single-transaction --routines --events --triggers --hex-b
 Copy-Item "$DM\mtaserver.conf", "$DM\acl.xml", "$DM\settings.xml" "$BACKUPS\config-$stamp\" -Force
 ```
 
-`--single-transaction` gives a consistent snapshot without stopping the server. `--routines --events` carries the
-stored procedures and scheduler events (they are also in git under `sql/`, so a restore can reapply them with
-`tools.sqltool`). System-versioned history rows (`accounts`, `items`, `bans`) are included.
+`--single-transaction` gives a consistent snapshot without stopping the server. `--routines --events --triggers`
+carries the stored procedures, scheduler events and the `items` triggers that keep `world_items_pos` (all also in
+git under `sql/`, so a restore can reapply them with `tools.sqltool`). System-versioned history rows (`accounts`,
+`items`, `bans`) are included; `items` history only reaches back 7 days (`ev_item_history` deletes older rows
+hourly), so a dump is the only record of an item older than that.
 
 Verify a backup by restoring it into a scratch database once a week:
 `mariadb -u root -e "CREATE DATABASE restore_check"` then `mariadb -u root restore_check < dump.sql` and
@@ -31,8 +33,8 @@ Verify a backup by restoring it into a scratch database once a week:
    otherwise, and their writes are lost.
 2. `mariadb -u root -e "DROP DATABASE scavengesurvive; CREATE DATABASE scavengesurvive CHARACTER SET utf8mb4
    COLLATE utf8mb4_uca1400_ai_ci"` then `mariadb -u root scavengesurvive < "$BACKUPS\scavengesurvive-<stamp>.sql"`.
-3. `python -m tools.sqltool --db scavengesurvive apply` for the latest procedures, events and tables created
-   after the dump. A column added after the dump is not: compare with `dump` + `git diff sql/schema.sql` and run
+3. `python -m tools.sqltool --db scavengesurvive apply` for the latest procedures, triggers, events and tables
+   created after the dump. A column added after the dump is not: compare with `dump` + `git diff sql/schema.sql` and run
    the missing DDL (`change-database-schema.md`).
 4. Point-in-time (binlog on): find the position just before the mistake with `mariadb-binlog --base64-output=DECODE-ROWS
    -v <binlog file>`, then `mariadb-binlog --start-datetime="<dump time>" --stop-datetime="<just before>" <files> | mariadb -u root scavengesurvive`.
@@ -42,8 +44,9 @@ Verify a backup by restoring it into a scratch database once a week:
 
 For a single item, character or account, prefer the system-versioned history to a full restore:
 `SELECT * FROM items FOR SYSTEM_TIME AS OF TIMESTAMP '2026-10-23 10:00:00' WHERE id = 123` shows the row as it
-was; copy the values back with an `UPDATE`. `SELECT * FROM bans FOR SYSTEM_TIME ALL WHERE name = 'X'` shows every
-edit of a ban. Log what you did in `staff_actions` (`exports.staff:logAction("Ops", "restore", "X", "why")`
+was (for `items`, within the last 7 days; older needs a dump restored into a scratch database); copy the
+values back with an `UPDATE` (the trigger moves the item's `world_items_pos` row with it).
+`SELECT * FROM bans FOR SYSTEM_TIME ALL WHERE name = 'X'` shows every edit of a ban. Log what you did in `staff_actions` (`exports.staff:logAction("Ops", "restore", "X", "why")`
 from `rcon.ps1 lua`, or a plain `INSERT`).
 
 ## Rollback
