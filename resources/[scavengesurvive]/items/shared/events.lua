@@ -2,7 +2,7 @@
 addEvent("itemCreated", false)
 addEvent("itemMoved", false)
 addEvent("itemDestroyed", false)
-addEvent("itemUsed", false)
+addEvent("itemUseAttempted", false)
 addEvent("characterSpawned", false)
 addEvent("characterDied", false)
 

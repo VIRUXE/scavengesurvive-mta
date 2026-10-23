@@ -16,7 +16,7 @@ return {
     itemCreated = false,
     itemMoved = false,
     itemDestroyed = false,
-    itemUsed = false,
+    itemUseAttempted = false,
     itemPickupRequested = true,
     itemDropRequested = true,
     itemPutAwayRequested = true,
