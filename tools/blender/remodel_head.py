@@ -28,18 +28,41 @@ import bpy
 
 P = ((0.2, 1.0), (0.5, 1.12), (0.85, 1.05), (1.15, 0.8), (1.4, 0.45))
 FIRE_BLOCKS = {(4, 6), (4, 7), (5, 6), (5, 7), (6, 6), (6, 7), (7, 6), (7, 7)}
+SWAT_BLOCKS = {(3, 5), (3, 6), (3, 7), (4, 5), (4, 6), (4, 7), (5, 5), (5, 6), (6, 5), (6, 6), (7, 5), (7, 6)}
+PIZZA_BLOCKS = {(3, 7), (4, 7), (5, 7), (6, 7), (7, 7)}
+MACCER_BLOCKS = {(0, 3), (1, 3), (2, 3), (3, 3), (1, 4), (2, 4), (3, 4), (2, 7), (3, 7)}
+MACCER_P = ((0.05, 1.0), (0.4, 1.1), (0.8, 1.05), (1.15, 0.8), (1.4, 0.45))
+MACCER_UV = (0.2773, 0.2812)
 HEADS = {
+    # Police & Sheriffs
     4: dict(name="sfpdm1", tex="SFPDM1"),
     119: dict(name="lvpdm1", tex="LVPDM1", dark_floor=-0.005),
     284: dict(name="lapdm1", tex="LAPDM1", dark_floor=None, bright_floor=-0.03, bright_lum=0.6),
-    61: dict(name="wmyplt", tex="wmyplt", dark_floor=-0.005, cap_blocks={(6, 6)}),
-    36: dict(name="wmygol1", tex="wmygol1", dark_floor=None, apex=0.065),
-    37: dict(name="wmygol2", tex="wmygol2", apex=0.065),
-    2: dict(name="maccer", tex="maccer", dark_floor=None, cap_blocks={(0, 3), (0, 5), (1, 5), (2, 5), (3, 5), (4, 5), (2, 7)}),
-    311: dict(name="smokev", tex="smokev", cap_floor=0.11, dark_floor=None),
+    265: dict(name="tenpen", tex="tenpen", dark_floor=None),
+    283: dict(name="csher", tex="csher", dark_floor=None),
+    288: dict(name="dsher", tex="dsher", dark_floor=None),
+    # Military & SWAT
+    287: dict(name="army", tex="army", dark_floor=None),
+    285: dict(name="swat", tex="swat", dark_floor=None, cap_blocks=SWAT_BLOCKS, apex=0.075),
+    # Firefighters
     277: dict(name="lafd1", tex="lafd1", dark_floor=None, cap_floor=0.10, cap_blocks=FIRE_BLOCKS, apex=0.075),
     278: dict(name="lvfd1", tex="lvfd1", dark_floor=None, cap_floor=0.10, cap_blocks=FIRE_BLOCKS, apex=0.075),
     279: dict(name="sffd1", tex="sffd1", dark_floor=None, cap_floor=0.10, cap_blocks=FIRE_BLOCKS, apex=0.075),
+    # Civilian & Services
+    61: dict(name="wmyplt", tex="wmyplt", dark_floor=-0.005, cap_blocks={(6, 6)}),
+    35: dict(name="hmogar", tex="hmogar", dark_floor=None, cap_blocks={(6, 4), (7, 4)}, apex=0.07),
+    268: dict(name="dwayne", tex="dwayne", dark_floor=None),
+    155: dict(name="wmypizz", tex="wmypizz", dark_floor=None, cap_blocks=PIZZA_BLOCKS),
+    205: dict(name="wfyburg", tex="wfyburg", dark_floor=None),
+    161: dict(name="cwmyfr", tex="cwmyfr", dark_floor=None),
+    36: dict(name="wmygol1", tex="wmygol1", dark_floor=None, apex=0.065),
+    37: dict(name="wmygol2", tex="wmygol2", apex=0.065),
+    2: dict(name="maccer", tex="maccer", dark_floor=None, cap_floor=0.09, cap_blocks=MACCER_BLOCKS, profile=MACCER_P, apex=0.065, hair_uv=MACCER_UV),
+    311: dict(name="smokev", tex="smokev", cap_floor=0.11, dark_floor=None),
+    # Bikers
+    247: dict(name="bikera", tex="bikera", cap_floor=0.08, dark_floor=None, apex=0.075),
+    248: dict(name="bikerb", tex="bikerb", cap_floor=0.07, dark_floor=None, apex=0.075),
+    254: dict(name="bikdrug", tex="bikera", cap_floor=0.08, dark_floor=None, apex=0.075),
 }
 
 
