@@ -26,7 +26,7 @@ physical item on the ground, wounds bleed, and death drops it all.
 | M6 Crafting, Building, Apparel | ✅ | Apparel bone attachment (hats, masks, armour, holster), body preview & 6 gear tiles in inventory UI, safebox & tent persistent containers, in-hand combine, ground construction, workbench crafting, defences with door swing poses, 12-key dx keypad with 4-digit code and plot pole 20m claimed territory protection |
 | M7 Staff & Ops | ✅ | Staff levels 1-5 with 38 commands (`/acmds`), reports, mutes, freeze, spectate, duty, MariaDB bans by name/IP/serial, whitelist, action log, runbooks (live checks of the player-facing steps pending) |
 | M8 Content & Polish | 🔶 | Done: supply drops and weapons caches, chat modes (local 40 m / global / radio by frequency / admin) with the dx radio panel, house loot in the hollow houses, ziplines and ladders. Open: balancing and the live playtest of the new content |
-| M9 Live economy & release | ⬜ | Scarcity-driven respawn for loot and vehicles (ADR 0001, #67), the two-client live checks (combat log, rotation side by side, smoke steps 22-27), balancing on the playtest, `v1.0.0` |
+| M9 Live economy & release | 🔶 | Done: scarcity-driven respawn for loot and vehicles (ADR 0001, #67: carrying capacity per category and zone, deficit-proportional refill, jittered cooldowns, no respawn near players, carried loot counts). Open: the two-client live checks (combat log #26, rotation #55, smoke steps 22-28), balancing on the playtest, `v1.0.0` |
 
 Progress is tracked in the [issues](https://github.com/VIRUXE/scavengesurvive-mta/issues) and the
 [project board](https://github.com/users/VIRUXE/projects/3); each milestone is an epic there.
