@@ -45,7 +45,7 @@ Scavenge & Survive ported to MTA:SA 1.6 (Lua 5.1) with MariaDB 13.0 (12.2 also v
 - `.lua/bin/busted.bat tests/lua` · `.lua/bin/luacheck.bat resources` · `stylua --check resources` · `pytest -q`
 - `pwsh server-config/run-local.ps1` — create DB, apply schema/procedures/events/seeds, link resources into the MTA server, start it.
 - `pwsh server-config/rcon.ps1 <command>` — drive the running server over its HTTP port (`help`, `players`, `rr items`,
-  `cmd <player> additem M9Pistol`, `key <player> interact|inventory|arrow_d|enter|escape`, `lua return …`,
+  `cmd <player> additem M9Pistol`, `key <player> interact|inventory|arrow_d|enter|escape`, `lua return …`, `clua <player> <code>` (runs on that client, read the result with `chat`),
   `screenshot <player> [w h]`, `chat <player> [n|clear]` (last chat lines that client received; screenshots omit the chat box),
   `studio <player> [front|back|left|right|threequarter|top|face|hands|yaw dist height|off]`
   puts the ped alone on a chroma-green set for screenshots, see `docs/dev-studio.md`). MTA has no RCON; this is the `dev` resource's

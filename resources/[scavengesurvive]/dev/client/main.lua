@@ -6,6 +6,34 @@ addEventHandler("devKeyPressed", root, function(command)
     end
 end)
 
+-- rcon "clua <player> <code>": runs a chunk on this client and prints its return values (or the error) to chat,
+-- where "rcon chat <player>" reads them. Dev-only, like the server-side lua verb.
+addEventHandler("devClientLuaRequested", root, function(code)
+    local chunk, err = loadstring(code, "=rcon-client")
+    if not chunk then
+        return outputChatBox("[clua] compile error: " .. tostring(err))
+    end
+    local r = { pcall(chunk) }
+    if not table.remove(r, 1) then
+        return outputChatBox("[clua] runtime error: " .. tostring(r[1]))
+    end
+    if #r == 0 then
+        return outputChatBox("[clua] ok (no return values)")
+    end
+    for i = 1, #r do
+        local v = r[i]
+        if type(v) == "table" then
+            local parts = {}
+            for k, x in pairs(v) do
+                parts[#parts + 1] = tostring(k) .. "=" .. tostring(x)
+            end
+            table.sort(parts)
+            v = "{ " .. table.concat(parts, ", ") .. " }"
+        end
+        outputChatBox(string.format("[clua] [%d] %s", i, tostring(v)))
+    end
+end)
+
 -- Fly feature ported from upstream filterscripts/fly.pwn
 local VELOCITY_MULT = 3.0
 local VELOCITY_NORM = 1.0

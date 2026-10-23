@@ -257,6 +257,7 @@ local RCON_HELP = {
     "lua <code>                    run server-side Lua and print its return values, e.g. lua return getPlayerCount()",
     "screenshot <player> [w h]     ask that client for a screenshot; saved as dev/screenshots/<player>-<time>.jpg",
     "key <player> <command|key>    run a bound command (interact, inventory) or client key (arrow_d, enter, escape)",
+    "clua <player> <code>          run a Lua chunk on that client; its return values land in its chat (rcon chat)",
     "chat <player> [n|clear]       last n (20) chat lines that client received (screenshots omit the chat box)",
     "studio <player> [cam|off]     green-screen studio; cam = preset (front back left right threequarter top face",
     "                              hands) or yaw dist height [lookZ]; then screenshot <player>",
@@ -390,6 +391,16 @@ function rcon(line)
         else
             triggerClientEvent(p, "devKeyPressed", p, bound)
             put("%s pressed %s", who, bound)
+        end
+    elseif verb == "clua" then
+        local who, code = rest:match("^(%S+)%s+(.+)$")
+        local p = who and getPlayerFromName(who)
+        if not p then
+            ok = false
+            put("usage: clua <player> <code>")
+        else
+            triggerClientEvent(p, "devClientLuaRequested", p, code)
+            put("sent to %s; read the result with: chat %s", who, who)
         end
     elseif verb == "studio" then
         local who, args = rest:match("^(%S+)%s*(.-)$")

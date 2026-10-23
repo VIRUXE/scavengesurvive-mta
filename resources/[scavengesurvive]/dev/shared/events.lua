@@ -4,6 +4,7 @@ addEvent("devChatLineReceived", true)
 
 -- server to client / client-local
 addEvent("devKeyPressed", true)
+addEvent("devClientLuaRequested", true)
 addEvent("devFlyStateChanged", true)
 addEvent("devStudioStateChanged", true)
 addEvent("devStudioCamChanged", true)
