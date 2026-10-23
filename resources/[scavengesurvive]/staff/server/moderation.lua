@@ -1,4 +1,4 @@
--- Level 1-2 moderation: mute, warn, kick, msg, clearchat, aliases, history, staff chat, freeze.
+-- Level 1-2 moderation: mute, warn, kick, msg, clearchat, aliases, serial, history, staff chat, freeze.
 -- Upstream: admin/level1.pwn, level2.pwn (freeze), mute.pwn, freeze.pwn.
 return function(ctx)
     local db, logic, state = ctx.db, ctx.logic, ctx.state
@@ -185,15 +185,21 @@ return function(ctx)
         end,
     })
 
-    -- Other accounts seen from the same IP or serial (upstream /aliases by ip; the serial replaces gpci).
+    -- Other accounts seen from the same IP and/or serial (upstream /aliases i/h/a; the serial replaces gpci).
+    local ALIAS_MATCH = {
+        both = "((serial IS NOT NULL AND serial = ?) OR (ip IS NOT NULL AND ip = ?))",
+        ip = "(ip IS NOT NULL AND ip = ?)",
+        serial = "(serial IS NOT NULL AND serial = ?)",
+    }
     ctx.command({
         name = "aliases",
         level = 1,
-        usage = "/aliases <name>",
-        help = "Accounts that share this account's IP or serial",
+        usage = "/aliases <name> [i|s]",
+        help = "Accounts that share this account's IP or serial (i = IP only, s = serial only)",
         fn = function(p, args)
-            if not args[1] then
-                return ctx.say(p, " >  Usage: /aliases <name>")
+            local mode = logic.aliasMode(args[2])
+            if not args[1] or not mode then
+                return ctx.say(p, " >  Usage: /aliases <name> [i|s]")
             end
             ctx.lookupAccount(args[1], function(row, actor)
                 if not row then
@@ -202,9 +208,16 @@ return function(ctx)
                 if (tonumber(row.admin_level) or 0) > ctx.level(actor) and row.name ~= ctx.name(actor) then
                     return ctx.say(actor, " >  No aliases found for %s", row.name)
                 end
-                local sql = "SELECT DISTINCT name FROM connection_log WHERE name <> ? AND ((serial IS NOT NULL"
-                    .. " AND serial = ?) OR (ip IS NOT NULL AND ip = ?)) ORDER BY name LIMIT 32"
-                db.query(sql, { row.name, row.last_serial, row.last_ip, n = 3 }, function(rows, a)
+                local params = { row.name, row.last_serial, row.last_ip, n = 3 }
+                if mode == "ip" then
+                    params = { row.name, row.last_ip, n = 2 }
+                elseif mode == "serial" then
+                    params = { row.name, row.last_serial, n = 2 }
+                end
+                local sql = "SELECT DISTINCT name FROM connection_log WHERE name <> ? AND "
+                    .. ALIAS_MATCH[mode]
+                    .. " ORDER BY name LIMIT 32"
+                db.query(sql, params, function(rows, a)
                     if not rows then
                         return ctx.say(a, " >  An error occurred.")
                     end
@@ -216,8 +229,42 @@ return function(ctx)
                         names[#names + 1] = r.name
                     end
                     ctx.say(a, " >  %s (%d): #33CCFF%s", row.name, #names, table.concat(names, ", "))
-                    ctx.log(a, "aliases", row.name, row.id)
+                    ctx.log(a, "aliases", row.name, row.id, mode)
                 end, actor)
+            end, p)
+        end,
+    })
+
+    -- Names seen with a raw serial (upstream's player-list "accounts by gpci hash" view). Accounts that
+    -- outrank the caller stay hidden, as /aliases hides them.
+    ctx.command({
+        name = "serial",
+        level = 1,
+        usage = "/serial <serial>",
+        help = "Names seen with a serial (32 hex digits, see /ip or /history)",
+        fn = function(p, args)
+            local serial = logic.normaliseSerial(args[1])
+            if not serial then
+                return ctx.say(p, " >  Usage: /serial <serial> (32 hex digits)")
+            end
+            local sql = "SELECT c.name, MAX(COALESCE(a.admin_level, 0)) AS lvl FROM connection_log c"
+                .. " LEFT JOIN accounts a ON a.id = c.account_id WHERE c.serial = ? GROUP BY c.name ORDER BY c.name"
+                .. " LIMIT 32"
+            db.query(sql, { serial }, function(rows, a)
+                if not rows then
+                    return ctx.say(a, " >  An error occurred.")
+                end
+                local names, level, own = {}, ctx.level(a), ctx.name(a)
+                for _, r in ipairs(rows) do
+                    if (tonumber(r.lvl) or 0) <= level or r.name == own then
+                        names[#names + 1] = r.name
+                    end
+                end
+                if #names == 0 then
+                    return ctx.say(a, " >  No names found for serial %s", serial)
+                end
+                ctx.say(a, " >  %s (%d): #33CCFF%s", serial, #names, table.concat(names, ", "))
+                ctx.log(a, "serial", nil, nil, serial)
             end, p)
         end,
     })

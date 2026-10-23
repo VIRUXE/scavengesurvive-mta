@@ -7,7 +7,7 @@ details); bans and warnings write theirs inside the `staff_ban` / `staff_warn` p
 
 | Level | Upstream name | Commands |
 | --- | --- | --- |
-| 1 | Game Master | `/a`, `/mute`, `/unmute`, `/warn`, `/kick`, `/msg`, `/clearchat`, `/aliases`, `/history`, `/reports`, `/acmds` |
+| 1 | Game Master | `/a`, `/mute`, `/unmute`, `/warn`, `/kick`, `/msg`, `/clearchat`, `/aliases`, `/serial`, `/history`, `/reports`, `/acmds` |
 | 2 | Moderator | `/duty`, `/goto`, `/get`, `/gotopos`, `/freeze`, `/unfreeze`, `/ban`, `/unban`, `/banlist`, `/banned`, `/spec`, `/free`, `/nametags`, `/profile`, `/setmotd`, `/deletereports` |
 | 3 | Administrator | `/whitelist`, `/ip`, `/setactive`, `/resetpassword`, `/adminlist` |
 | 4 | Lead | `/players`, `/setadmin`, `/restart`, `/sc [type]` (supply crate here), `/wc` (weapons cache here) |
@@ -46,8 +46,8 @@ Durations (`/mute`, `/ban`): a bare number is seconds; `10m`, `2h`, `3d`, `2w`, 
 | `/country`, `/allcountry` (GeoIP) | not ported | no GeoIP service; `/ip` shows IP and serial |
 | `/delete` (drop account) | not ported; `/setactive <name> 0` blocks the login instead | accounts are system-versioned; deletion is a DBA job |
 | `/setpinglimit`, `/dbl`, `/gmx`, `/loadfs`, `/reloadfs`, `/unloadfs`, `/hud`, `/gamename`, `/hostname`, `/mapname` | not ported | SA-MP server internals; MTA has `mtaserver.conf`, `/restart <resource>` covers the resource case |
-| `/aliases [i/p/h/a]` (same IP, password, gpci hash, all) | `/aliases <name>`: every name seen in `connection_log` with the same IP **or** serial, no mode flag | SA-MP's `gpci` becomes MTA's `getPlayerSerial` (32 hex chars, per machine, logged on every login and kept as `accounts.last_serial`); bcrypt hashes are salted, so "same password" cannot be looked up |
-| Player-list gpci views (accounts by hash, hashes by name) | `/history <name> [n]` lists a name's serials and IPs per login; no lookup that starts from a raw serial | follow-up #74 (`/serial <serial>` and an `i|s` mode on `/aliases`) |
+| `/aliases [i/p/h/a]` (same IP, password, gpci hash, all) | `/aliases <name> [i\|s]`: every name seen in `connection_log` with the same IP **or** serial by default, `i` = IP only, `s` = serial only (`h` accepted as `s`, `a` = both); the mode is logged in `staff_actions.details` | SA-MP's `gpci` becomes MTA's `getPlayerSerial` (32 hex chars, per machine, logged on every login and kept as `accounts.last_serial`); the password mode `p` is dropped because bcrypt hashes are salted, so "same password" cannot be looked up |
+| Player-list gpci views (accounts by hash, hashes by name) | `/serial <serial>` (level 1) lists the names seen with a raw serial in `connection_log`, hiding accounts that outrank the caller; `/history <name> [n]` lists a name's serials and IPs per login | the serial replaces the gpci hash; both lookups are logged in `staff_actions` |
 | Reports listed with red (banned) / yellow (unread) rows | `[banned]` / `[new]` markers | the dx list draws no colour codes |
 | Mutes end on disconnect | mutes persist on the account | upstream's own comment says they should save; the file-based save never did |
 

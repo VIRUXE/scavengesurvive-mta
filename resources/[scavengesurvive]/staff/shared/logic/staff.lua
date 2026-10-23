@@ -190,6 +190,26 @@ function staff.tail(words, from)
     return table.concat(words, " ", from)
 end
 
+-- /aliases match modes (upstream i/p/h/a): the gpci hash becomes the MTA serial (h kept as an alias of s) and
+-- "same password" is dropped because bcrypt hashes are salted. No mode matches both columns.
+staff.ALIAS_MODES = { a = "both", i = "ip", s = "serial", h = "serial" }
+
+function staff.aliasMode(arg)
+    if arg == nil then
+        return "both"
+    end
+    return staff.ALIAS_MODES[tostring(arg):lower()]
+end
+
+-- getPlayerSerial is 32 upper-case hex digits; returns that form of `text`, or nil when it is not a serial.
+function staff.normaliseSerial(text)
+    local s = tostring(text or ""):upper()
+    if #s == 32 and not s:find("[^0-9A-F]") then
+        return s
+    end
+    return nil
+end
+
 -- /report modes (upstream report-cmds.pwn): a name, the nearest player, or whoever last killed you.
 staff.REPORT_TYPES = { name = "PLY NAME", online = "PLY ID", near = "PLY CLOSE", killer = "PLY KILL" }
 
