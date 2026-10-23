@@ -7,7 +7,7 @@ physical item on the ground, wounds bleed, and death drops it all.
 ![MTA:SA 1.6](https://img.shields.io/badge/MTA%3ASA-1.6-2b5797?style=flat-square)
 ![Lua 5.1](https://img.shields.io/badge/Lua-5.1-000080?style=flat-square&logo=lua)
 ![MariaDB 13](https://img.shields.io/badge/MariaDB-13.0-003545?style=flat-square&logo=mariadb)
-![Milestone](https://img.shields.io/badge/milestone-M8%20Content%20%26%20Polish-brightgreen?style=flat-square)
+![Milestone](https://img.shields.io/badge/milestone-M9%20Live%20economy%20%26%20release-brightgreen?style=flat-square)
 ![Code: Unlicense](https://img.shields.io/badge/code-Unlicense-lightgrey?style=flat-square)
 ![Data: MPL-2.0 · Maps: CC BY-SA 4.0](https://img.shields.io/badge/data-MPL--2.0%20%C2%B7%20CC%20BY--SA%204.0-orange?style=flat-square)
 
@@ -26,6 +26,7 @@ physical item on the ground, wounds bleed, and death drops it all.
 | M6 Crafting, Building, Apparel | ✅ | Apparel bone attachment (hats, masks, armour, holster), body preview & 6 gear tiles in inventory UI, safebox & tent persistent containers, in-hand combine, ground construction, workbench crafting, defences with door swing poses, 12-key dx keypad with 4-digit code and plot pole 20m claimed territory protection |
 | M7 Staff & Ops | ✅ | Staff levels 1-5 with 38 commands (`/acmds`), reports, mutes, freeze, spectate, duty, MariaDB bans by name/IP/serial, whitelist, action log, runbooks (live checks of the player-facing steps pending) |
 | M8 Content & Polish | 🔶 | Done: supply drops and weapons caches, chat modes (local 40 m / global / radio by frequency / admin) with the dx radio panel, house loot in the hollow houses, ziplines and ladders. Open: balancing and the live playtest of the new content |
+| M9 Live economy & release | ⬜ | Scarcity-driven respawn for loot and vehicles (ADR 0001, #67), the two-client live checks (combat log, rotation side by side, smoke steps 22-27), balancing on the playtest, `v1.0.0` |
 
 Progress is tracked in the [issues](https://github.com/VIRUXE/scavengesurvive-mta/issues) and the
 [project board](https://github.com/users/VIRUXE/projects/3); each milestone is an epic there.
