@@ -53,8 +53,8 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
     fortified (LS/Fort Defiance) and the Los Santos docks have the fence line (LS/DocksBuildingNorth). Walk through
     one removed building spot (`removals` in `maps/data/LS.lua`): the vanilla model is gone and nothing flickers.
     `/rr maps`: the world is rebuilt once (no doubled objects). An object with both rx and ry non-zero (e.g. the
-    `17039` rocks in RC) sits like it does in SA-MP, which answers #55; if it does not, the rotation order needs
-    converting. Join time and FPS near Grove Street go into the #19 comment.
+    `17039` rocks in RC) sits like it does in SA-MP (#55 is answered by measurement: both engines use GTA's ZXY
+    `CMatrix::SetRotate`, so this is only a visual confirmation now). Join time and FPS near Grove Street go into the #19 comment.
 15. **Loot vehicles** (#30). First boot logs `[vehicles] rolled 2017 spawn points: N vehicles` with N around 80
     (4 %). `/vehcount` matches. Drive one: it starts battered, the engine is off until you start it, some are
     locked, tanks are near empty (no fuel use yet), and the bottom-right vehicle panel shows `DOR`, `ENG`, `DMG`,
