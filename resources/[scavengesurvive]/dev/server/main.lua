@@ -1,5 +1,23 @@
 local db = loadstring(exports.lib:getModule("db"), "=lib/db.lua")()
+local net = loadstring(exports.lib:getModule("net"), "=lib/net.lua")()
 local ready = false
+
+-- Chat lines as each client saw them (client/main.lua forwards onClientChatMessage), oldest first, 100 kept.
+local CHAT_KEEP = 100
+local chatSeen = {} -- player -> { { at = "HH:MM:SS", text = s }, ... }
+net.handler("devChatLineReceived", function(player, text)
+    local lines = chatSeen[player] or {}
+    chatSeen[player] = lines
+    local t = getRealTime()
+    local at = string.format("%02d:%02d:%02d", t.hour, t.minute, t.second)
+    lines[#lines + 1] = { at = at, text = (tostring(text):gsub("#%x%x%x%x%x%x", "")) }
+    if #lines > CHAT_KEEP then
+        table.remove(lines, 1)
+    end
+end, { rate = 60 })
+addEventHandler("onPlayerQuit", root, function()
+    chatSeen[source] = nil
+end)
 
 local function say(p, fmt, ...)
     local msg = "[dev] " .. string.format(fmt, ...)
@@ -239,6 +257,7 @@ local RCON_HELP = {
     "lua <code>                    run server-side Lua and print its return values, e.g. lua return getPlayerCount()",
     "screenshot <player> [w h]     ask that client for a screenshot; saved as dev/screenshots/<player>-<time>.jpg",
     "key <player> <command|key>    run a bound command (interact, inventory) or client key (arrow_d, enter, escape)",
+    "chat <player> [n|clear]       last n (20) chat lines that client received (screenshots omit the chat box)",
     "studio <player> [cam|off]     green-screen studio; cam = preset (front back left right threequarter top face",
     "                              hands) or yaw dist height [lookZ]; then screenshot <player>",
     "attach <player> <slot> x y z rx ry rz [sx sy sz] | off | get",
@@ -301,7 +320,14 @@ function rcon(line)
             put("no player '%s' (usage: cmd <player> <command> [args])", tostring(who))
         else
             ok = executeCommandHandler(cmd, p, args ~= "" and args or nil) == true
-            put("%s ran /%s %s -> %s (the reply went to that player's chat)", who, cmd, args, tostring(ok))
+            if not ok then
+                -- the Default ACL denies command.kick/ban/mute/unmute/restart to players; staff bridges them
+                local staff = getResourceFromName("staff")
+                if staff and getResourceState(staff) == "running" then
+                    ok = exports.staff:runCommand(p, cmd, args) == true
+                end
+            end
+            put("%s ran /%s %s -> %s (reply in that player's chat: rcon chat %s)", who, cmd, args, tostring(ok), who)
         end
     elseif verb == "say" then
         outputChatBox("[rcon] " .. rest, root, 255, 200, 80)
@@ -335,6 +361,25 @@ function rcon(line)
             -- local server: lift the default 5 kB/s upload cap so a 1080p frame arrives in a second, not a minute
             ok = takePlayerScreenShot(p, tonumber(w) or 1280, tonumber(h) or 720, tag, 90, 5000000, 50000) == true
             put("requested %s -> %s; the client uploads it within a few seconds", tag, tostring(ok))
+        end
+    elseif verb == "chat" then
+        local who, what = rest:match("^(%S+)%s*(%S*)$")
+        local p = who and getPlayerFromName(who)
+        if not p then
+            ok = false
+            put("no player '%s' (usage: chat <player> [n|clear])", tostring(who))
+        elseif what == "clear" then
+            chatSeen[p] = nil
+            put("cleared")
+        else
+            local lines = chatSeen[p] or {}
+            local n = math.min(#lines, tonumber(what) or 20)
+            for i = #lines - n + 1, #lines do
+                put("%s %s", lines[i].at, lines[i].text)
+            end
+            if n == 0 then
+                put("no chat lines seen by %s yet", who)
+            end
         end
     elseif verb == "key" then
         local who, bound = rest:match("^(%S+)%s+(%S+)$")

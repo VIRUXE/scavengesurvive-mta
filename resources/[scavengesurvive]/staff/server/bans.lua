@@ -72,6 +72,22 @@ return function(ctx)
         end,
     })
 
+    -- Shared by /unban and the ban list's Unban row; done(actor) runs after the procedure answered.
+    local function unbanNow(actor, name, done)
+        db.call("staff_unban", { name, ctx.accountId(actor), ctx.name(actor), n = 3 }, function(res, c)
+            if not res then
+                ctx.say(c.actor, " >  An error occurred.")
+            elseif not res.ok then
+                ctx.say(c.actor, " >  Player '%s' is not banned.", c.name)
+            else
+                ctx.msgStaff(1, " >  %s unbanned #33CCFF%s", ctx.name(c.actor), c.name)
+            end
+            if c.done then
+                c.done(c.actor)
+            end
+        end, { actor = actor, name = name, done = done })
+    end
+
     ctx.command({
         name = "unban",
         level = 2,
@@ -81,15 +97,7 @@ return function(ctx)
             if not args[1] then
                 return ctx.say(p, " >  Usage: /unban <name>")
             end
-            db.call("staff_unban", { args[1], ctx.accountId(p), ctx.name(p), n = 3 }, function(res, actor)
-                if not res then
-                    return ctx.say(actor, " >  An error occurred.")
-                end
-                if not res.ok then
-                    return ctx.say(actor, " >  Player '%s' is not banned.", args[1])
-                end
-                ctx.msgStaff(1, " >  %s unbanned #33CCFF%s", ctx.name(actor), args[1])
-            end, p)
+            unbanNow(p, args[1])
         end,
     })
 
@@ -103,12 +111,13 @@ return function(ctx)
                 return ctx.say(actor, " >  An error occurred while reading the ban list.")
             end
             if #rows == 0 then
+                ctx.closeList(actor) -- a refresh after the last Unban row action leaves no list to show
                 return ctx.say(actor, " >  No bans to list.")
             end
+            -- not executeCommandHandler: that needs an ACL right (function.executeCommandHandler) staff does not hold
             ctx.openList(actor, "bans", "Bans (" .. #rows .. ")", logic.banRows(rows), nil, function(rowId, actionId)
                 if actionId == "unban" and rowId ~= "none" then
-                    executeCommandHandler("unban", actor, tostring(rowId))
-                    showBanList(actor)
+                    unbanNow(actor, tostring(rowId), showBanList)
                 end
             end)
         end, p)

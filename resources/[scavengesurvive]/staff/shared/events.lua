@@ -7,6 +7,7 @@ addEvent("characterDied", false)
 addEvent("staffListActionSelected", true)
 addEvent("staffListClosed", true)
 addEvent("spectateRequested", true)
+addEvent("staffCommandIssued", true)
 
 -- server to client / client-local
 addEvent("staffListOpened", true)

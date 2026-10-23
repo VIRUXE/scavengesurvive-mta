@@ -148,3 +148,14 @@ describe("staff list rows", function()
         assert.equals("unban", rows[1].actions[1].id)
     end)
 end)
+
+describe("staff chat-bridged commands", function()
+    it("lists exactly the names MTA's console owns or the stock Default ACL denies to players", function()
+        local names = {}
+        for name in pairs(staff.CHAT_BRIDGED) do
+            names[#names + 1] = name
+        end
+        table.sort(names)
+        assert.same({ "ban", "kick", "mute", "restart", "unmute" }, names)
+    end)
+end)

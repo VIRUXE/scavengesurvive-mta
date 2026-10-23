@@ -22,6 +22,7 @@
     <export function="logAction" type="server"/>
     <export function="mutePlayer" type="server"/>
     <export function="getLevelColour" type="server"/>
+    <export function="runCommand" type="server"/>
     <aclrequest>
         <right name="function.kickPlayer" access="true"/>
         <right name="function.restartResource" access="true"/>

@@ -105,3 +105,19 @@ addEventHandler("onClientRender", root, function()
         drawSpectate()
     end
 end)
+
+-- /kick, /ban, /mute, /unmute and /restart (logic.CHAT_BRIDGED) are MTA console commands too; typed in chat
+-- they would reach the server's hardcoded handler and the Default ACL's denial instead of the staff resource,
+-- so the client forwards them with their arguments and the server cancels the hardcoded path.
+local function loadFile(path)
+    local f = fileOpen(path, true)
+    local src = fileRead(f, fileGetSize(f))
+    fileClose(f)
+    return assert(loadstring(src, "=staff/" .. path))()
+end
+local logic = loadFile("shared/logic/staff.lua")
+for name in pairs(logic.CHAT_BRIDGED) do
+    addCommandHandler(name, function(_, ...)
+        triggerServerEvent("staffCommandIssued", localPlayer, name, table.concat({ ... }, " "))
+    end)
+end

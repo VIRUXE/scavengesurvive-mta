@@ -1,5 +1,6 @@
 -- client to server (handlers registered with net.handler)
 addEvent("devFlyActiveChanged", true)
+addEvent("devChatLineReceived", true)
 
 -- server to client / client-local
 addEvent("devKeyPressed", true)

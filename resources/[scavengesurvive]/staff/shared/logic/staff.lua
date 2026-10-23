@@ -29,6 +29,12 @@ function staff.dutySkin(currentSkin)
     return staff.FEMALE_SKINS[currentSkin] and staff.DUTY_SKIN_FEMALE or staff.DUTY_SKIN_MALE
 end
 
+-- Command names that are also MTA server console commands (kick, ban, restart) or that the stock Default ACL
+-- denies to every player as command.<name> (mute, unmute): typed in chat they reach MTA's hardcoded handler
+-- first and never a script handler, so the client forwards them through staffCommandIssued and the server
+-- cancels onPlayerCommand for them (server/main.lua, client/main.lua).
+staff.CHAT_BRIDGED = { kick = true, ban = true, mute = true, unmute = true, restart = true }
+
 -- A level may use a command of its own level or below.
 function staff.canUse(level, commandLevel)
     return (level or 0) >= (commandLevel or 0)

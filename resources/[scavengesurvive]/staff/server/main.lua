@@ -151,10 +151,10 @@ function ctx.target(actor, query, allowSelf)
     return target
 end
 
-function ctx.lookupAccount(name, cb)
+function ctx.lookupAccount(name, cb, actor)
     local sql = "SELECT id, name, admin_level, active, warnings, muted, last_ip, last_serial, registered_at,"
         .. " last_login_at FROM accounts WHERE name = ?"
-    db.one(sql, { name }, cb)
+    db.one(sql, { name }, cb, actor)
 end
 
 -- Kick after a short delay so the reason line reaches the client first (upstream KickPlayerDelay, 1 s).
@@ -203,24 +203,49 @@ net.handler("staffListClosed", function(player, key)
     end
 end)
 
--- Registers a command: level-gated, silent for players below the level (they see MTA's unknown-command
--- notice, as upstream's ACMD did). args is the word list; fn(actor, args, actorLevel).
+-- Runs a registered command for a player or the console: level gate (silent below the level, as upstream's
+-- ACMD was), player-only and database checks. Returns whether the command's fn ran.
+local function dispatch(p, def, argsText)
+    local lvl = ctx.level(p)
+    if not logic.canUse(lvl, def.level) then
+        return false
+    end
+    if def.playerOnly and isConsole(p) then
+        ctx.say(p, " >  /%s needs a connected player.", def.name)
+        return false
+    end
+    if def.needsDb ~= false and not state.ready then
+        ctx.say(p, " >  The database is unavailable; try again shortly.")
+        return false
+    end
+    def.fn(p, logic.words(argsText), lvl)
+    return true
+end
+
+-- Registers a command. args is the word list; fn(actor, args, actorLevel).
+-- Names in logic.CHAT_BRIDGED (kick, ban, mute, unmute, restart) are MTA console commands too: a player typing
+-- them hits the server's hardcoded handler first, the stock Default ACL denies it ("ACL: Access denied") and the
+-- script handler below never runs. client/main.lua forwards those through staffCommandIssued instead, and the
+-- onPlayerCommand handler cancels the hardcoded path so MTA neither acts on them nor prints the denial.
 function ctx.command(def)
     logic.register(ctx.reg, def)
     addCommandHandler(def.name, function(p, _, ...)
-        local lvl = ctx.level(p)
-        if not logic.canUse(lvl, def.level) then
-            return
-        end
-        if def.playerOnly and isConsole(p) then
-            return ctx.say(p, " >  /%s needs a connected player.", def.name)
-        end
-        if def.needsDb ~= false and not state.ready then
-            return ctx.say(p, " >  The database is unavailable; try again shortly.")
-        end
-        def.fn(p, logic.words(table.concat({ ... }, " ")), lvl)
+        dispatch(p, def, table.concat({ ... }, " "))
     end)
 end
+
+addEventHandler("onPlayerCommand", root, function(command)
+    if logic.CHAT_BRIDGED[command] then
+        cancelEvent()
+    end
+end)
+
+net.handler("staffCommandIssued", function(player, name, argsText)
+    local def = logic.CHAT_BRIDGED[name] and ctx.reg.byName[name]
+    if def then
+        dispatch(player, def, tostring(argsText or ""))
+    end
+end, { rate = 5 })
 
 -- ---------------------------------------------------------------------------------------------------------
 -- Mutes (upstream admin/mute.pwn + player/chat.pwn), persisted on the account so they survive a relog.
@@ -362,6 +387,15 @@ end)
 -- Exports
 function getLevel(player)
     return ctx.level(player)
+end
+
+-- dev's rcon "cmd" verb: executeCommandHandler applies the Default ACL too, so the bridged names come through here
+function runCommand(player, name, argsText)
+    local def = ctx.reg.byName[tostring(name)]
+    if not def or not isElement(player) then
+        return false
+    end
+    return dispatch(player, def, tostring(argsText or ""))
 end
 
 function isOnDuty(player)

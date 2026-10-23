@@ -128,3 +128,9 @@ addEventHandler("onClientPlayerDamage", localPlayer, function()
         cancelEvent()
     end
 end)
+
+-- rcon "chat <player>": every chat line this client receives is echoed to the server, which keeps the last
+-- hundred per player. Screenshots never include the chat box, so a scripted live check reads replies this way.
+addEventHandler("onClientChatMessage", root, function(text)
+    triggerServerEvent("devChatLineReceived", localPlayer, text)
+end)
