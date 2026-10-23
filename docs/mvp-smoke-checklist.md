@@ -180,11 +180,13 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
       toggle, `Frequency: x` (mouse wheel over it: ±0.01), red `on`/`off` power (off = local chat, on returns to the
       last transmitting mode) and Close; hovering highlights; Escape closes. Changes show on the watch at once.
     - d. **Persistence and guards.** A relogs: frequency and mode are back (`characters.radio_freq`, `chat_mode`).
-      A sends three messages inside a second: `Muted from global chat for 30 seconds for chat flooding`, chat is
-      refused, `/profile A` shows muted, and 30 s later `You are now un-muted`. A level-0 account cannot `/a`.
+      A sends four messages inside a second: the first three go out and the fourth is refused with `Muted from global
+      chat for 30 seconds for chat flooding` (upstream mutes when the streak reaches 3), `/profile A` shows muted, and
+      30 s later `You are now un-muted`. A level-0 account cannot `/a`.
 25. **House loot** (#48). Walk into a hollow house in San Fierro (e.g. the Ocean Flats block, model 19490 at
     -2787.6, -161.0): `world_civilian` items lie at the upstream offsets inside half of the houses (seed
-    `0006_house_loot.sql`, 116 points, ids above 11062); `rollloot` nearby re-rolls them like any spawn, and the
+    `0006_house_loot.sql`, 116 points, ids above 11062); they roll like any spawn (`loot_spawn_state.next_roll_at`,
+    `items.loot_spawn_id`), but only while no player is within 150 m (#67), so stand back before `/rollloot`; the
     other half of the houses stay empty every time (deterministic selection by position).
 26. **Languages** (#51). `/lang` alone lists the ten codes and the current one; `/lang pt` then `/mute` yourself from a second
     account or trigger any translated line (e.g. get kicked with a reason): the line arrives in Portuguese; `/lang xx` is
@@ -196,8 +198,8 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
       onto the ladder facing it with the climb pose. **W** climbs at 0.1 per frame, **S** descends slower, no key holds
       your place, and the list shows `F Let go`. Past the top (after 1 s on the ladder) you step off forward; **F**
       half-way drops you with a forward nudge.
-    - b. **Ziplines.** `/gotopos 2159 -986 71` (Los Santos; 13 ziplines). A dark rope line is visible between the two
-      anchors. Within 2 m of the start (or anywhere under the rope) the list shows `F Grab zipline`; **F** hangs you 1.2 m
+    - b. **Ziplines.** `/gotopos 2159 -986 71` (Los Santos; 13 ziplines; the start anchors hang in the air beside the
+      roofs, as upstream placed them). A dark rope line is visible between the two anchors. Within 2 m of the start (or anywhere under the rope) the list shows `F Grab zipline`; **F** hangs you 1.2 m
       below the rope and you accelerate to the far end. You let go 6 m from the end (or with **F**, or when knocked more
       than 5 m off the line) with a forward boost.
     - c. **Guards.** Nothing happens while knocked out, cuffed, dead or in a vehicle. `rr world` while climbing or riding
