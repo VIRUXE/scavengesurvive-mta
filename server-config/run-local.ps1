@@ -16,7 +16,7 @@ if (-not (Test-Path -LiteralPath (Join-Path $Dm "mtaserver.conf"))) { throw "No 
 if (Get-Process -Name "MTA Server" -ErrorAction SilentlyContinue) { throw "MTA Server is running; stop it first (type 'shutdown' in its console)." }
 $Utf8 = [Text.UTF8Encoding]::new($false)
 
-# (a) database: create, migrate, procedures, events, seeds
+# (a) database: create, sql/schema.sql (missing tables only), procedures, events, seeds
 $sqlArgs = @("-m", "tools.sqltool", "--db", $DbName, "--user", $DbUser)
 if ($DbPassword) { $sqlArgs += @("--password", $DbPassword) }
 if ($Reset) { $sqlArgs += "--reset" }

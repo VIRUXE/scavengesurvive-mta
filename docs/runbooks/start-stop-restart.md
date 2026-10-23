@@ -38,8 +38,8 @@ Python with the repo's requirements; the MTA server installed at `$MTA`.
 
 ## Rollback
 
-A bad code change: `git revert <sha>` (or check out the previous tag), then `rr <resource>`. A bad migration:
-see `migrate-database.md`; there is no automatic down-migration.
+A bad code change: `git revert <sha>` (or check out the previous tag), then `rr <resource>`. A bad schema change:
+see `change-database-schema.md`; there is no automatic undo.
 
 ## Escalation
 

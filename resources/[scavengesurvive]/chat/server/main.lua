@@ -1,6 +1,7 @@
 -- Chat delivery by mode (upstream core/player/chat.pwn): every chat line is cancelled and re-sent by this
 -- resource to the right audience; /g /l /r /me /quiet /freq /radio; the radio frequency and mode persist on the
--- character (migration 0008). Mutes themselves live in staff (exports.staff:isMuted / mutePlayer).
+-- character (characters.radio_freq / chat_mode in sql/schema.sql). Mutes themselves live in staff
+-- (exports.staff:isMuted / mutePlayer).
 local db = loadstring(exports.lib:getModule("db"), "=lib/db.lua")()
 local net = loadstring(exports.lib:getModule("net"), "=lib/net.lua")()
 local logic

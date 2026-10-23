@@ -24,7 +24,8 @@ checked-out tree through the junction created by `run-local.ps1`.
 ## Rollback
 
 `git checkout <previous tag>` in the repo (the junction follows), run `run-local.ps1` to restart. A release that
-added a migration cannot be rolled back below that migration without a database restore (`migrate-database.md`).
+changed `sql/schema.sql` cannot be rolled back below that change without reverse DDL or a database restore
+(`change-database-schema.md`).
 
 ## Escalation
 

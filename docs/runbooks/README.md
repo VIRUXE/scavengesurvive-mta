@@ -8,7 +8,7 @@ cut after the local checks (`docs/runbooks/release.md`).
 | Runbook | Use it when |
 | --- | --- |
 | [start-stop-restart.md](start-stop-restart.md) | bringing the server up or down, restarting one resource |
-| [migrate-database.md](migrate-database.md) | a commit added a file under `sql/` |
+| [change-database-schema.md](change-database-schema.md) | changing a table, or pulling a commit that changed `sql/` |
 | [backup-restore.md](backup-restore.md) | nightly backup, or restoring after data loss |
 | [ban-appeal.md](ban-appeal.md) | a player asks why they cannot join, or asks to be unbanned |
 | [incident-db-down.md](incident-db-down.md) | MariaDB is unreachable while the server runs |

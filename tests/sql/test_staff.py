@@ -1,4 +1,4 @@
-"""M7 staff procedures: bans, warnings, action log (sql/migrations/0006_staff_m7.sql)."""
+"""M7 staff procedures: bans, warnings, action log (bans, whitelist, reports, staff_actions in sql/schema.sql)."""
 from tests.sql.conftest import call
 
 

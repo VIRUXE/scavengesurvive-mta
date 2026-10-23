@@ -17,7 +17,7 @@ physical item on the ground, wounds bleed, and death drops it all.
 
 | Milestone | Status | What you get |
 | --- | :---: | --- |
-| M0 Bootstrap & Data | ✅ | 302 item types, 15 loot tables, 11,062 loot points, 10 languages, 66 vehicle types and 2,017 vehicle points converted from upstream; migrations, procedures and seeds applied by one script |
+| M0 Bootstrap & Data | ✅ | 302 item types, 15 loot tables, 11,062 loot points, 10 languages, 66 vehicle types and 2,017 vehicle points converted from upstream; schema, procedures and seeds applied by one script |
 | M1 Auth & Character | ✅ | Register/login, permadeath, hunger and bleeding ticks, death drops, anti-combat-log, SA-MP HUD (watch, hunger bar, key actions, brightness overlay, death screen) |
 | M2 Items & Inventory | ✅ | Hands, 6-slot inventory, bags worn on the back, containers, food, SA-MP list dialogs; held items and bags on real bones with the SA-MP models |
 | M3 Loot & World | ✅ | Loot rolling near players, all 221 upstream maps built client-side (23,211 objects), 7 server zone colshapes (`getZoneAt`, `playerZoneEntered/Left`), weather and a real-time clock (wild trees deferred) |
@@ -58,7 +58,7 @@ Decisions: `docs/adr/`. Conventions every contributor and agent follows: `CLAUDE
 
 1. `pwsh tools/setup-dev.ps1` — Lua 5.1 toolchain, stylua, Python deps.
 2. MariaDB 13.0 as a local service (root, no password) and MTA:SA 1.6 client + server installed.
-3. `pwsh server-config/run-local.ps1` — creates the database, migrates, seeds, links the resources into the server
+3. `pwsh server-config/run-local.ps1` — creates the database, applies `sql/schema.sql`, procedures and seeds, links the resources into the server
    and starts it. Connect to `127.0.0.1:22003`.
 4. Give yourself staff rights: `mariadb -u root scavengesurvive -e "UPDATE accounts SET admin_level = 5 WHERE name = 'You'"`,
    relog, `/acmds` (`docs/staff-commands.md`).
@@ -88,7 +88,7 @@ pytest -q
 | `docs/ui-reference-samp.md` | Every SA-MP UI element with upstream geometry, footage evidence and its MTA recipe; gap list vs the current resources |
 | `docs/languages-qa.md` | Generated per-language coverage: missing keys, untranslated values, placeholder mismatches; `/lang <code>` picks a language |
 | `docs/staff-commands.md` | Staff levels, every command, upstream rules kept and deviations |
-| `docs/runbooks/` | Start/stop/restart, migrate, backup/restore, ban appeal, DB-down incident, release |
+| `docs/runbooks/` | Start/stop/restart, schema changes, backup/restore, ban appeal, DB-down incident, release |
 | `server-config/README.md` | Local server setup, HTTP rcon, dev and staff commands |
 | `THIRD_PARTY_NOTICES.md` | Upstream data (MPL-2.0), maps (CC BY-SA 4.0), SA-MP models |
 

@@ -1,13 +1,21 @@
 import pymysql
 import pytest
 
-from tests.sql.conftest import call
+from tests.sql.conftest import ARGS, call
+from tools import sqltool
 
 
-def test_migration_recorded(db):
-    with db.cursor() as cur:
-        cur.execute("SELECT version, name FROM schema_migrations ORDER BY version")
-        assert [r["name"] for r in cur.fetchall()] == ["init", "vehicle_spawns", "vehicles", "vehicle_m5", "crafting_building_m6", "staff_m7", "drop_points_m8", "chat_m8", "spawn_skins"]
+def test_schema_file_matches_the_built_database(db):
+    # sql/schema.sql is the only schema source (no migrations); a database built from it dumps back to it unchanged
+    raw = pymysql.connect(host=ARGS.host, port=ARGS.port, user=ARGS.user, password=ARGS.password, database=ARGS.db,
+                          autocommit=True, charset="utf8mb4")
+    try:
+        with raw.cursor() as cur:
+            assert sqltool.render_schema(cur) == sqltool.SCHEMA.read_text(encoding="utf-8")
+            cur.execute("SHOW TABLES LIKE 'schema_migrations'")
+            assert cur.fetchone() is None
+    finally:
+        raw.close()
 
 
 def test_vehicle_spawns_seeded_from_every_vpl(db):

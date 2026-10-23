@@ -1,6 +1,6 @@
 # Backup and restore
 
-**When:** nightly (scheduled task), before every migration, and when restoring after corruption or an operator
+**When:** nightly (scheduled task), before every schema change, and when restoring after corruption or an operator
 mistake. The game state is entirely in MariaDB; the MTA server directory holds only configuration
 (`mtaserver.conf`, `acl.xml`, `settings.xml`, `internal.db` with the rcon account) and logs.
 
@@ -31,8 +31,9 @@ Verify a backup by restoring it into a scratch database once a week:
    otherwise, and their writes are lost.
 2. `mariadb -u root -e "DROP DATABASE scavengesurvive; CREATE DATABASE scavengesurvive CHARACTER SET utf8mb4
    COLLATE utf8mb4_uca1400_ai_ci"` then `mariadb -u root scavengesurvive < "$BACKUPS\scavengesurvive-<stamp>.sql"`.
-3. `python -m tools.sqltool --db scavengesurvive apply` to bring the schema to the current commit (migrations
-   after the dump, latest procedures).
+3. `python -m tools.sqltool --db scavengesurvive apply` for the latest procedures, events and tables created
+   after the dump. A column added after the dump is not: compare with `dump` + `git diff sql/schema.sql` and run
+   the missing DDL (`change-database-schema.md`).
 4. Point-in-time (binlog on): find the position just before the mistake with `mariadb-binlog --base64-output=DECODE-ROWS
    -v <binlog file>`, then `mariadb-binlog --start-datetime="<dump time>" --stop-datetime="<just before>" <files> | mariadb -u root scavengesurvive`.
 5. Start the server; check `scripts.log` for a clean boot and `rcon.ps1 players`.
@@ -48,7 +49,7 @@ from `rcon.ps1 lua`, or a plain `INSERT`).
 ## Rollback
 
 A restore that went wrong is itself restored from the previous dump; keep the last seven nightly dumps plus the
-pre-migration dumps.
+pre-change dumps.
 
 ## Escalation
 

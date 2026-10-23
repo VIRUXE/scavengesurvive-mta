@@ -1,6 +1,6 @@
 -- Bans, whitelist and account administration. Upstream: admin/ban.pwn, ban-command.pwn, ban-list.pwn,
 -- level2.pwn (ban/unban/banlist/banned), level3.pwn (whitelist/ip/setactive/resetpassword), player/whitelist.pwn.
--- Bans live in MariaDB (sql/migrations/0006_staff_m7.sql) and are enforced by auth on join; MTA's own ban list
+-- Bans live in MariaDB (the bans table, sql/schema.sql) and are enforced by auth on join; MTA's own ban list
 -- is not used, so a ban follows the name, IP and serial recorded here.
 return function(ctx)
     local db, logic, state = ctx.db, ctx.logic, ctx.state
