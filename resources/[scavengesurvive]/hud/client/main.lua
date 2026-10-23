@@ -184,16 +184,9 @@ local function hasCuffedPlayerNearby()
     return false
 end
 
--- "ladder" / "zipline" / "ladder_on" / "zipline_on" from the world resource, nil when it is down or nothing is near
+-- "ladder" / "zipline" / "ladder_on" / "zipline_on" from the world resource, nil when nothing is near
 local function nearFeature()
-    local w = getResourceFromName("world")
-    if not w or getResourceState(w) ~= "running" then
-        return nil
-    end
-    local ok, f = pcall(function()
-        return exports.world:nearbyFeature()
-    end)
-    return ok and f or nil
+    return exports.world:nearbyFeature() or nil
 end
 
 local function drawKeyActions(driver)

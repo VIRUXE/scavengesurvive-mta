@@ -9,10 +9,6 @@ net.handler("hudStateRequested", function(player)
         triggerClientEvent(player, "characterStatsSynced", player, snapshot)
     end
     triggerClientEvent(player, "heldItemChanged", player, exports.items:getHeld(player) or false)
-    local ok, freq, mode = pcall(function()
-        return exports.chat:getRadio(player)
-    end)
-    if ok and freq then
-        triggerClientEvent(player, "chatRadioChanged", player, freq, mode)
-    end
+    local freq, mode = exports.chat:getRadio(player)
+    triggerClientEvent(player, "chatRadioChanged", player, freq, mode)
 end)

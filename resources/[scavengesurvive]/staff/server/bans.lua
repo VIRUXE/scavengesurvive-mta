@@ -145,9 +145,7 @@ return function(ctx)
         local sql = "INSERT INTO settings (skey, svalue) VALUES ('server.whitelist', ?)"
             .. " ON DUPLICATE KEY UPDATE svalue = VALUES(svalue)"
         db.exec(sql, { flag and "1" or "0" })
-        pcall(function()
-            exports.auth:setWhitelistEnabled(flag)
-        end)
+        exports.auth:setWhitelistEnabled(flag)
         local on = " >  Whitelist activated, only whitelisted players may join."
         ctx.msgStaff(1, flag and on or " >  Whitelist deactivated, anyone may join.")
         ctx.log(p, flag and "whitelist_on" or "whitelist_off")

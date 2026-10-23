@@ -272,10 +272,8 @@ return function(ctx)
             return
         end
         setElementFrozen(target, false)
-        local ok, ko = pcall(function()
-            return exports.character:isKnockedOut(target) or exports.character:isPlayerCuffed(target)
-        end)
-        if not (ok and ko) then
+        local ko = exports.character:isKnockedOut(target) or exports.character:isPlayerCuffed(target)
+        if not ko then
             toggleAllControls(target, true, true, false)
         end
         if not silent then

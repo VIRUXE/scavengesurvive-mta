@@ -34,20 +34,14 @@ function ctx.level(p)
     if isConsole(p) then
         return logic.MAX_LEVEL
     end
-    local ok, level = pcall(function()
-        return exports.auth:getAdminLevel(p)
-    end)
-    return ok and tonumber(level) or 0
+    return tonumber(exports.auth:getAdminLevel(p)) or 0
 end
 
 function ctx.accountId(p)
     if isConsole(p) then
         return nil
     end
-    local ok, id = pcall(function()
-        return exports.auth:getAccountId(p)
-    end)
-    return ok and id or nil
+    return exports.auth:getAccountId(p) or nil
 end
 
 function ctx.name(p)
@@ -61,10 +55,7 @@ function ctx.lang(p)
     if isConsole(p) then
         return "en"
     end
-    local ok, lang = pcall(function()
-        return exports.auth:getLanguage(p)
-    end)
-    return ok and lang or "en"
+    return exports.auth:getLanguage(p) or "en"
 end
 
 -- Chat lines use the upstream " >  " prefix and yellow; #RRGGBB codes inside are honoured.

@@ -4,21 +4,13 @@ local listKey = nil
 local spectating = nil -- player element being watched
 local nametags = false
 
-local function uiRunning()
-    local ui = getResourceFromName("ui")
-    return ui and getResourceState(ui) == "running"
-end
-
 addEventHandler("staffListOpened", root, function(key, title, rows, buttons)
-    if not uiRunning() then
-        return outputChatBox("[staff] ui resource is not running", 255, 100, 100)
-    end
     listKey = key
     exports.ui:listOpen("staff:" .. key, title, rows, buttons)
 end)
 
 addEventHandler("staffListDismissed", root, function()
-    if listKey and uiRunning() then
+    if listKey then
         exports.ui:listClose()
     end
     listKey = nil

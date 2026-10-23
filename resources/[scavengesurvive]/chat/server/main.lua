@@ -32,10 +32,7 @@ local function get(p)
 end
 
 local function lang(p)
-    local ok, l = pcall(function()
-        return exports.auth:getLanguage(p)
-    end)
-    return ok and l or "en"
+    return exports.auth:getLanguage(p) or "en"
 end
 
 local function sayLang(p, key, ...)
@@ -43,17 +40,11 @@ local function sayLang(p, key, ...)
 end
 
 local function staffLevel(p)
-    local ok, level = pcall(function()
-        return exports.staff:getLevel(p)
-    end)
-    return ok and tonumber(level) or 0
+    return tonumber(exports.staff:getLevel(p)) or 0
 end
 
 local function isMuted(p)
-    local ok, muted = pcall(function()
-        return exports.staff:isMuted(p)
-    end)
-    return ok and muted == true
+    return exports.staff:isMuted(p) == true
 end
 
 local function sync(p)
@@ -152,10 +143,8 @@ local function deliver(p, text, mode)
     end
     local colourHex = nil
     if mode == MODE.ADMIN then
-        local ok, c = pcall(function()
-            return exports.staff:getLevelColour(p)
-        end)
-        if ok and type(c) == "table" then
+        local c = exports.staff:getLevelColour(p)
+        if type(c) == "table" then
             colourHex = string.format("#%02X%02X%02X", c[1], c[2], c[3])
         end
     end
@@ -165,19 +154,14 @@ end
 
 -- Gate every message: logged in, not muted, not flooding; blank text is dropped.
 local function accept(p, text)
-    local ok, authed = pcall(function()
-        return exports.auth:isAuthenticated(p)
-    end)
-    if not ok or not authed then
+    if not exports.auth:isAuthenticated(p) then
         return false
     end
     if isMuted(p) then
         return false -- staff's own onPlayerChat handler tells them
     end
     if logic.flood(get(p), getTickCount()) then
-        pcall(function()
-            exports.staff:mutePlayer(p, logic.FLOOD_MUTE_S, "chat flooding")
-        end)
+        exports.staff:mutePlayer(p, logic.FLOOD_MUTE_S, "chat flooding")
         sayLang(p, "MUTEDFLOODM")
         return false
     end
@@ -307,10 +291,8 @@ end)
 addEventHandler("onResourceStart", resourceRoot, function()
     ready = db.connect("chat")
     for _, p in ipairs(getElementsByType("player")) do
-        local ok, charId = pcall(function()
-            return exports.character:getCharacterId(p)
-        end)
-        if ok and charId then
+        local charId = exports.character:getCharacterId(p)
+        if charId then
             triggerEvent("characterSpawned", p, charId, false) -- reload this resource's own state only
         end
     end

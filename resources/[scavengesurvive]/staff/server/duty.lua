@@ -347,15 +347,11 @@ return function(ctx)
             local rows = {}
             for _, o in ipairs(getElementsByType("player")) do
                 local lvl = ctx.level(o)
-                local ok, charId = pcall(function()
-                    return exports.character:getCharacterId(o)
-                end)
-                local okz, zone = pcall(function()
-                    return exports.maps:getPlayerZone(o)
-                end)
+                local charId = exports.character:getCharacterId(o)
+                local zone = exports.maps:getPlayerZone(o)
                 local prefix = (lvl > 0 and ("[" .. lvl .. "] ") or "") .. getPlayerName(o)
                 local flags = (state.duty[o] and "  duty" or "") .. (state.spectating[o] and "  spec" or "")
-                local where = tostring(ok and charId or "-") .. "  " .. tostring(okz and zone or "-")
+                local where = tostring(charId or "-") .. "  " .. tostring(zone or "-")
                 local label = string.format("%s  char %s  %d ms%s", prefix, where, getPlayerPing(o), flags)
                 rows[#rows + 1] = { id = getPlayerName(o), label = label }
             end
@@ -420,9 +416,7 @@ return function(ctx)
                     end
                     local levelName = logic.levelName(newLevel)
                     if isElement(online) then
-                        pcall(function()
-                            exports.auth:setSessionAdminLevel(online, newLevel)
-                        end)
+                        exports.auth:setSessionAdminLevel(online, newLevel)
                         ctx.say(online, " >  %s made you a level %d %s", ctx.name(actor), newLevel, levelName)
                         if newLevel < 2 and state.duty[online] then
                             dutyOff(online)
@@ -501,12 +495,7 @@ return function(ctx)
         help = "Drop a supply crate of that type where you stand (no type lists them)",
         needsDb = false,
         fn = function(p, args)
-            local ok, types = pcall(function()
-                return exports.loot:supplyDropTypes()
-            end)
-            if not ok or type(types) ~= "table" then
-                return ctx.say(p, " >  The loot resource is not running.")
-            end
+            local types = exports.loot:supplyDropTypes()
             local idx = tonumber(args[1])
             if not idx or not types[idx] then
                 ctx.say(p, " >  Usage: /sc [type] - types:")
@@ -534,12 +523,7 @@ return function(ctx)
         needsDb = false,
         fn = function(p)
             local x, y, z = getElementPosition(p)
-            local ok, done, why = pcall(function()
-                return exports.loot:dropWeaponCache(x, y, z - 0.8)
-            end)
-            if not ok then
-                return ctx.say(p, " >  The loot resource is not running.")
-            end
+            local done, why = exports.loot:dropWeaponCache(x, y, z - 0.8)
             ctx.say(p, done and " >  Weapons cache placed." or " >  Refused: %s", tostring(why))
             if done then
                 ctx.log(p, "weaponcache", nil, nil, string.format("%.1f, %.1f, %.1f", x, y, z))

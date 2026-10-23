@@ -25,10 +25,6 @@ local BOX = tocolor(0, 0, 0, 100)
 local state = { open = false, freq = logic.FREQ_DEFAULT, mode = logic.MODE.LOCAL, oldMode = logic.MODE.RADIO }
 
 local function uiListIsOpen()
-    local ui = getResourceFromName("ui")
-    if not ui or getResourceState(ui) ~= "running" then
-        return false
-    end
     return exports.ui:listIsOpen() == true
 end
 
