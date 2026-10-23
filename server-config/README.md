@@ -42,7 +42,8 @@ Basic auth and prints the reply. Commands: `help`, `players`, `start|stop|restar
 `key <player> <command|key>` (runs a bound client command like `interact`, `putaway`, `dropitem`, `inventory` or
 dispatches a client key press like `arrow_u`, `arrow_d`, `enter`, `escape`), `say <text>`,
 `lua <code>`, `screenshot <player> [w h]` (the client renders a frame and uploads it to `dev/screenshots/`, git-ignored;
-the client must not be minimised), `shutdown`.
+the client must not be minimised), `chat <player> [n|clear]` (the last n chat lines that client received; a
+screenshot never shows the chat box, so this is how a scripted check reads a reply), `shutdown`.
 
 The account is `*dev.http_user` / `*dev.http_pass` from `local.settings.xml` (`run-local.ps1` fills in a random
 password when it creates the file; `dev` creates or re-passwords the MTA account on start). Its ACL group
@@ -77,4 +78,6 @@ their zone; set it to `0` to count only items in the world and in containers. Lo
 Gated by `accounts.admin_level` (1 Game Master … 5 Developer); the server console counts as level 5. Give yourself a
 level with `mariadb -u root scavengesurvive -e "UPDATE accounts SET admin_level = 5 WHERE name = 'You'"` and relog,
 then `/acmds` lists what you may use. Full table, upstream rules and deviations: `docs/staff-commands.md`.
-`rcon.ps1 cmd <player> ban Someone 1d reason` runs a staff command as that player (their level applies).
+`rcon.ps1 cmd <player> ban Someone 1d reason` runs a staff command as that player (their level applies); for the
+names MTA's console owns (`kick`, `ban`, `mute`, `unmute`, `restart`) it goes through `exports.staff:runCommand`,
+since MTA's `executeCommandHandler` applies the Default ACL's `command.<name>` denial.
