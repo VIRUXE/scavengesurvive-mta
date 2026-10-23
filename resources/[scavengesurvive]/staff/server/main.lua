@@ -103,20 +103,11 @@ function ctx.log(actor, action, targetName, targetAccountId, details)
     if not state.ready then
         return
     end
-    db.exec(
-        "INSERT INTO staff_actions (actor_account_id, actor_name, action, target_name, target_account_id, details)"
-            .. " VALUES (?, ?, ?, ?, ?, ?)",
-        { ctx.accountId(actor), ctx.name(actor), action, targetName, targetAccountId, details, n = 6 }
-    )
-    util.log(
-        "staff",
-        "info",
-        "%s %s %s%s",
-        ctx.name(actor),
-        action,
-        tostring(targetName or ""),
-        details and (" (" .. tostring(details) .. ")") or ""
-    )
+    local sql = "INSERT INTO staff_actions (actor_account_id, actor_name, action, target_name, target_account_id,"
+        .. " details) VALUES (?, ?, ?, ?, ?, ?)"
+    db.exec(sql, { ctx.accountId(actor), ctx.name(actor), action, targetName, targetAccountId, details, n = 6 })
+    local suffix = details and (" (" .. tostring(details) .. ")") or ""
+    util.log("staff", "info", "%s %s %s%s", ctx.name(actor), action, tostring(targetName or ""), suffix)
 end
 
 function ctx.onlinePlayers()
@@ -170,12 +161,9 @@ function ctx.target(actor, query, allowSelf)
 end
 
 function ctx.lookupAccount(name, cb)
-    db.one(
-        "SELECT id, name, admin_level, active, warnings, muted, last_ip, last_serial, registered_at, last_login_at"
-            .. " FROM accounts WHERE name = ?",
-        { name },
-        cb
-    )
+    local sql = "SELECT id, name, admin_level, active, warnings, muted, last_ip, last_serial, registered_at,"
+        .. " last_login_at FROM accounts WHERE name = ?"
+    db.one(sql, { name }, cb)
 end
 
 -- Kick after a short delay so the reason line reaches the client first (upstream KickPlayerDelay, 1 s).
@@ -252,10 +240,9 @@ local function persistMute(p, muted, untilTick)
         return
     end
     local secs = untilTick and math.max(1, math.ceil((untilTick - getTickCount()) / 1000)) or nil
-    db.exec(
-        "UPDATE accounts SET muted = ?, mute_until = IF(? IS NULL, NULL, NOW() + INTERVAL ? SECOND) WHERE id = ?",
-        { muted and 1 or 0, secs, secs, id, n = 4 }
-    )
+    local sql =
+        "UPDATE accounts SET muted = ?, mute_until = IF(? IS NULL, NULL, NOW() + INTERVAL ? SECOND) WHERE id = ?"
+    db.exec(sql, { muted and 1 or 0, secs, secs, id, n = 4 })
 end
 
 function ctx.setMuted(p, muted, seconds, persist)
@@ -303,25 +290,21 @@ end)
 
 -- Persisted mute of a freshly authenticated (or already connected, after a restart) player.
 local function loadMute(p)
-    db.one(
-        "SELECT muted, IF(mute_until IS NULL, NULL, GREATEST(0, TIMESTAMPDIFF(SECOND, NOW(), mute_until))) AS remaining"
-            .. " FROM accounts WHERE id = ?",
-        { ctx.accountId(p) },
-        function(row, pl)
-            if not row or not isElement(pl) or tonumber(row.muted) ~= 1 then
-                return
-            end
-            local remaining = tonumber(row.remaining)
-            if remaining == nil or remaining == false then
-                ctx.setMuted(pl, true, nil, false)
-            elseif remaining > 0 then
-                ctx.setMuted(pl, true, remaining, false)
-            else
-                persistMute(pl, false)
-            end
-        end,
-        p
-    )
+    local sql = "SELECT muted, IF(mute_until IS NULL, NULL, GREATEST(0, TIMESTAMPDIFF(SECOND, NOW(), mute_until)))"
+        .. " AS remaining FROM accounts WHERE id = ?"
+    db.one(sql, { ctx.accountId(p) }, function(row, pl)
+        if not row or not isElement(pl) or tonumber(row.muted) ~= 1 then
+            return
+        end
+        local remaining = tonumber(row.remaining)
+        if remaining == nil or remaining == false then
+            ctx.setMuted(pl, true, nil, false)
+        elseif remaining > 0 then
+            ctx.setMuted(pl, true, remaining, false)
+        else
+            persistMute(pl, false)
+        end
+    end, p)
 end
 
 addEventHandler("playerAuthenticated", root, function()
@@ -402,9 +385,7 @@ function logAction(actorName, action, targetName, details)
     if not state.ready then
         return false
     end
-    db.exec(
-        "INSERT INTO staff_actions (actor_name, action, target_name, details) VALUES (?, ?, ?, ?)",
-        { tostring(actorName or "Server"), tostring(action), targetName, details, n = 4 }
-    )
+    local sql = "INSERT INTO staff_actions (actor_name, action, target_name, details) VALUES (?, ?, ?, ?)"
+    db.exec(sql, { tostring(actorName or "Server"), tostring(action), targetName, details, n = 4 })
     return true
 end

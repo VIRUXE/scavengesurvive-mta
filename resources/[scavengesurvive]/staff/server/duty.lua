@@ -88,14 +88,8 @@ return function(ctx)
         local x, y, z = getElementPosition(target)
         local _, _, rz = getElementRotation(target)
         local rad = math.rad(rz)
-        teleport(
-            who,
-            x - math.sin(rad) * 1.5,
-            y + math.cos(rad) * 1.5,
-            z + 0.5,
-            getElementInterior(target),
-            getElementDimension(target)
-        )
+        local tx, ty = x - math.sin(rad) * 1.5, y + math.cos(rad) * 1.5
+        teleport(who, tx, ty, z + 0.5, getElementInterior(target), getElementDimension(target))
     end
 
     ctx.command({
@@ -319,43 +313,27 @@ return function(ctx)
             if not args[1] then
                 return ctx.say(p, " >  Usage: /profile <name>")
             end
-            db.one(
-                "SELECT a.id, a.name, a.admin_level, a.active, a.warnings, a.muted,"
-                    .. " DATE_FORMAT(a.registered_at, '%Y-%m-%d') AS reg,"
-                    .. " DATE_FORMAT(a.last_login_at, '%Y-%m-%d %H:%i') AS last,"
-                    .. " (SELECT COUNT(*) FROM characters c WHERE c.account_id = a.id) AS lives,"
-                    .. " (SELECT COUNT(*) FROM characters c WHERE c.account_id = a.id AND c.alive = 1) AS alive,"
-                    .. " (SELECT COUNT(*) FROM reports r WHERE r.name = a.name AND r.active = 1) AS reports"
-                    .. " FROM accounts a WHERE a.name = ?",
-                { args[1] },
-                function(r, actor)
-                    if not r then
-                        return ctx.say(actor, " >  The account '%s' does not exist.", args[1])
-                    end
-                    local lvl = tonumber(r.admin_level) or 0
-                    ctx.say(
-                        actor,
-                        " >  #33CCFF%s#FFFF00 #%d, %s (level %d), registered %s, last login %s",
-                        r.name,
-                        r.id,
-                        logic.levelName(lvl),
-                        lvl,
-                        tostring(r.reg),
-                        tostring(r.last or "never")
-                    )
-                    ctx.say(
-                        actor,
-                        " >  %s, warnings %d, %s, characters %d (%d alive), open reports %d",
-                        tonumber(r.active) == 1 and "active" or "#FF8080inactive#FFFF00",
-                        tonumber(r.warnings) or 0,
-                        tonumber(r.muted) == 1 and "#FF8080muted#FFFF00" or "not muted",
-                        tonumber(r.lives) or 0,
-                        tonumber(r.alive) or 0,
-                        tonumber(r.reports) or 0
-                    )
-                end,
-                p
-            )
+            local sql = "SELECT a.id, a.name, a.admin_level, a.active, a.warnings, a.muted,"
+                .. " DATE_FORMAT(a.registered_at, '%Y-%m-%d') AS reg,"
+                .. " DATE_FORMAT(a.last_login_at, '%Y-%m-%d %H:%i') AS last,"
+                .. " (SELECT COUNT(*) FROM characters c WHERE c.account_id = a.id) AS lives,"
+                .. " (SELECT COUNT(*) FROM characters c WHERE c.account_id = a.id AND c.alive = 1) AS alive,"
+                .. " (SELECT COUNT(*) FROM reports r WHERE r.name = a.name AND r.active = 1) AS reports"
+                .. " FROM accounts a WHERE a.name = ?"
+            db.one(sql, { args[1] }, function(r, actor)
+                if not r then
+                    return ctx.say(actor, " >  The account '%s' does not exist.", args[1])
+                end
+                local lvl = tonumber(r.admin_level) or 0
+                local head =
+                    string.format(" >  #33CCFF%s#FFFF00 #%d, %s (level %d)", r.name, r.id, logic.levelName(lvl), lvl)
+                ctx.say(actor, "%s, registered %s, last login %s", head, tostring(r.reg), tostring(r.last or "never"))
+                local active = tonumber(r.active) == 1 and "active" or "#FF8080inactive#FFFF00"
+                local muted = tonumber(r.muted) == 1 and "#FF8080muted#FFFF00" or "not muted"
+                local lives, alive, reports = tonumber(r.lives) or 0, tonumber(r.alive) or 0, tonumber(r.reports) or 0
+                local fmt = " >  %s, warnings %d, %s, characters %d (%d alive), open reports %d"
+                ctx.say(actor, fmt, active, tonumber(r.warnings) or 0, muted, lives, alive, reports)
+            end, p)
         end,
     })
 
@@ -375,18 +353,11 @@ return function(ctx)
                 local okz, zone = pcall(function()
                     return exports.maps:getPlayerZone(o)
                 end)
-                rows[#rows + 1] = {
-                    id = getPlayerName(o),
-                    label = string.format(
-                        "%s%s  char %s  %s  %d ms%s",
-                        lvl > 0 and ("[" .. lvl .. "] ") or "",
-                        getPlayerName(o),
-                        tostring(ok and charId or "-"),
-                        tostring(okz and zone or "-"),
-                        getPlayerPing(o),
-                        (state.duty[o] and "  duty" or "") .. (state.spectating[o] and "  spec" or "")
-                    ),
-                }
+                local prefix = (lvl > 0 and ("[" .. lvl .. "] ") or "") .. getPlayerName(o)
+                local flags = (state.duty[o] and "  duty" or "") .. (state.spectating[o] and "  spec" or "")
+                local where = tostring(ok and charId or "-") .. "  " .. tostring(okz and zone or "-")
+                local label = string.format("%s  char %s  %d ms%s", prefix, where, getPlayerPing(o), flags)
+                rows[#rows + 1] = { id = getPlayerName(o), label = label }
             end
             ctx.openList(p, "players", "Players (" .. #rows .. ")", rows, { "Close", "Close" }, function()
                 ctx.closeList(p)
@@ -400,35 +371,23 @@ return function(ctx)
         usage = "/adminlist",
         help = "Staff accounts by level (online ones marked)",
         fn = function(p)
-            db.query(
-                "SELECT name, admin_level FROM accounts WHERE admin_level > 0 ORDER BY admin_level DESC, name",
-                {},
-                function(rows, actor)
-                    local out = {}
-                    for _, r in ipairs(rows or {}) do
-                        local lvl = tonumber(r.admin_level) or 0
-                        local online = getPlayerFromName(r.name) and " >  " or "    "
-                        out[#out + 1] = {
-                            id = r.name,
-                            label = string.format("%s%s (%d-%s)", online, r.name, lvl, logic.levelName(lvl)),
-                        }
-                    end
-                    if #out == 0 then
-                        out[1] = { id = "none", label = "No staff accounts", empty = true }
-                    end
-                    ctx.openList(
-                        actor,
-                        "adminlist",
-                        "Staff (" .. #(rows or {}) .. ")",
-                        out,
-                        { "Close", "Close" },
-                        function()
-                            ctx.closeList(actor)
-                        end
-                    )
-                end,
-                p
-            )
+            local sql = "SELECT name, admin_level FROM accounts WHERE admin_level > 0 ORDER BY admin_level DESC, name"
+            db.query(sql, {}, function(rows, actor)
+                local out = {}
+                for _, r in ipairs(rows or {}) do
+                    local lvl = tonumber(r.admin_level) or 0
+                    local online = getPlayerFromName(r.name) and " >  " or "    "
+                    local label = string.format("%s%s (%d-%s)", online, r.name, lvl, logic.levelName(lvl))
+                    out[#out + 1] = { id = r.name, label = label }
+                end
+                if #out == 0 then
+                    out[1] = { id = "none", label = "No staff accounts", empty = true }
+                end
+                local title = "Staff (" .. #(rows or {}) .. ")"
+                ctx.openList(actor, "adminlist", title, out, { "Close", "Close" }, function()
+                    ctx.closeList(actor)
+                end)
+            end, p)
         end,
     })
 
@@ -454,33 +413,24 @@ return function(ctx)
                     })[code]
                     return ctx.say(p, " >  %s.", msg)
                 end
-                db.exec(
-                    "UPDATE accounts SET admin_level = ? WHERE id = ?",
-                    { newLevel, accountId },
-                    function(ok2, actor)
-                        if not ok2 then
-                            return ctx.say(actor, " >  An error occurred.")
+                local sql = "UPDATE accounts SET admin_level = ? WHERE id = ?"
+                db.exec(sql, { newLevel, accountId }, function(ok2, actor)
+                    if not ok2 then
+                        return ctx.say(actor, " >  An error occurred.")
+                    end
+                    local levelName = logic.levelName(newLevel)
+                    if isElement(online) then
+                        pcall(function()
+                            exports.auth:setSessionAdminLevel(online, newLevel)
+                        end)
+                        ctx.say(online, " >  %s made you a level %d %s", ctx.name(actor), newLevel, levelName)
+                        if newLevel < 2 and state.duty[online] then
+                            dutyOff(online)
                         end
-                        if isElement(online) then
-                            pcall(function()
-                                exports.auth:setSessionAdminLevel(online, newLevel)
-                            end)
-                            ctx.say(
-                                online,
-                                " >  %s made you a level %d %s",
-                                ctx.name(actor),
-                                newLevel,
-                                logic.levelName(newLevel)
-                            )
-                            if newLevel < 2 and state.duty[online] then
-                                dutyOff(online)
-                            end
-                        end
-                        ctx.say(actor, " >  You set %s to level %d (%s).", name, newLevel, logic.levelName(newLevel))
-                        ctx.log(actor, "setadmin", name, accountId, tostring(newLevel))
-                    end,
-                    p
-                )
+                    end
+                    ctx.say(actor, " >  You set %s to level %d (%s).", name, newLevel, levelName)
+                    ctx.log(actor, "setadmin", name, accountId, tostring(newLevel))
+                end, p)
             end
             if entry and ctx.accountId(entry.player) then
                 return apply(entry.name, ctx.accountId(entry.player), ctx.level(entry.player), entry.player)
@@ -502,21 +452,16 @@ return function(ctx)
         fn = function(p, args)
             local text = logic.tail(args, 1)
             if not text then
-                return ctx.say(
-                    p,
-                    " >  Usage: /setmotd <message|off> (currently: %s)",
-                    state.settings["server.motd"] ~= "" and state.settings["server.motd"] or "none"
-                )
+                local current = state.settings["server.motd"] ~= "" and state.settings["server.motd"] or "none"
+                return ctx.say(p, " >  Usage: /setmotd <message|off> (currently: %s)", current)
             end
             if text:lower() == "off" then
                 text = ""
             end
             state.settings["server.motd"] = text
-            db.exec(
-                "INSERT INTO settings (skey, svalue) VALUES ('server.motd', ?)"
-                    .. " ON DUPLICATE KEY UPDATE svalue = VALUES(svalue)",
-                { text:sub(1, 255) }
-            )
+            local sql = "INSERT INTO settings (skey, svalue) VALUES ('server.motd', ?)"
+                .. " ON DUPLICATE KEY UPDATE svalue = VALUES(svalue)"
+            db.exec(sql, { text:sub(1, 255) })
             ctx.msgAll(text == "" and " >  MOTD cleared" or " >  MOTD updated: #33CCFF%s", text)
             ctx.log(p, "setmotd", nil, nil, text:sub(1, 255))
         end,
@@ -572,11 +517,8 @@ return function(ctx)
             end
             local x, y, z = getElementPosition(p)
             local done, why = exports.loot:dropSupply(idx, x, y, z - 0.8, "staff request")
-            ctx.say(
-                p,
-                done and " >  Supply crate %s on its way." or " >  Refused: %s",
-                done and types[idx].name or tostring(why)
-            )
+            local fmt = done and " >  Supply crate %s on its way." or " >  Refused: %s"
+            ctx.say(p, fmt, done and types[idx].name or tostring(why))
             if done then
                 ctx.log(p, "supplydrop", nil, nil, types[idx].name)
             end

@@ -128,10 +128,8 @@ end)
 
 local function admit(player, account)
     session[player] = account
-    db.exec(
-        "INSERT INTO connection_log (account_id, name, serial, ip) VALUES (?, ?, ?, ?)",
-        { account.id, account.name, getPlayerSerial(player), getPlayerIP(player) }
-    )
+    local sql = "INSERT INTO connection_log (account_id, name, serial, ip) VALUES (?, ?, ?, ?)"
+    db.exec(sql, { account.id, account.name, getPlayerSerial(player), getPlayerIP(player) })
     triggerClientEvent(player, "authResolved", player, true, "OK")
     triggerEvent("playerAuthenticated", player, account.id)
     util.log("auth", "info", "%s authenticated as account %d", account.name, account.id)

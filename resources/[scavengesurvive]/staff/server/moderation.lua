@@ -17,16 +17,8 @@ return function(ctx)
             end
             local lvl = ctx.level(p)
             local c = logic.levelColour(lvl)
-            ctx.msgStaff(
-                1,
-                "#%02X%02X%02X[%s] %s: #FFFFFF%s",
-                c[1],
-                c[2],
-                c[3],
-                logic.levelName(lvl),
-                ctx.name(p),
-                text
-            )
+            local tag = string.format("#%02X%02X%02X[%s] %s:", c[1], c[2], c[3], logic.levelName(lvl), ctx.name(p))
+            ctx.msgStaff(1, "%s #FFFFFF%s", tag, text)
         end,
     })
 
@@ -58,13 +50,8 @@ return function(ctx)
                 ctx.say(p, " >  Muted %s permanently.", getPlayerName(target))
                 ctx.sayLang(target, "MUTEDREASON", reason)
             end
-            ctx.log(
-                p,
-                "mute",
-                getPlayerName(target),
-                ctx.accountId(target),
-                logic.formatDuration(seconds) .. ": " .. reason
-            )
+            local details = logic.formatDuration(seconds) .. ": " .. reason
+            ctx.log(p, "mute", getPlayerName(target), ctx.accountId(target), details)
         end,
     })
 
@@ -124,14 +111,8 @@ return function(ctx)
                     return ctx.say(c.actor, " >  Warning failed: %s", res and res.code or "db error")
                 end
                 local warnings = res.payload.warnings
-                ctx.say(
-                    c.actor,
-                    " >  #FFAA00%s#FFFF00 has been warned (%d/%d) for: %s",
-                    c.name,
-                    warnings,
-                    maxWarnings,
-                    c.reason
-                )
+                local fmt = " >  #FFAA00%s#FFFF00 has been warned (%d/%d) for: %s"
+                ctx.say(c.actor, fmt, c.name, warnings, maxWarnings, c.reason)
                 if isElement(c.target) then
                     ctx.sayLang(c.target, "WARNEDMESSG", warnings, c.reason)
                     if tonumber(res.payload.banned) == 1 then
@@ -140,13 +121,8 @@ return function(ctx)
                     end
                 end
                 if tonumber(res.payload.banned) == 1 then
-                    ctx.msgStaff(
-                        1,
-                        " >  %s reached %d warnings and was banned for %dh",
-                        c.name,
-                        maxWarnings,
-                        banSeconds / 3600
-                    )
+                    local line = " >  %s reached %d warnings and was banned for %dh"
+                    ctx.msgStaff(1, line, c.name, maxWarnings, banSeconds / 3600)
                 end
             end, { actor = p, target = target, name = getPlayerName(target), reason = reason })
         end,
@@ -166,15 +142,9 @@ return function(ctx)
             end
             local highest = ctx.highestLevelOnline()
             if logic.kickNeedsApproval(lvl, highest) then
-                ctx.msgStaff(
-                    highest,
-                    " >  %s kick request: %s reason: %s (run /kick %s %s to approve)",
-                    ctx.name(p),
-                    getPlayerName(target),
-                    reason,
-                    getPlayerName(target),
-                    reason
-                )
+                local who = getPlayerName(target)
+                local fmt = " >  %s kick request: %s reason: %s (run /kick %s %s to approve)"
+                ctx.msgStaff(highest, fmt, ctx.name(p), who, reason, who, reason)
                 return ctx.say(p, " >  Higher staff are online; your kick was sent to them as a request.")
             end
             if target == p then
@@ -232,26 +202,22 @@ return function(ctx)
                 if (tonumber(row.admin_level) or 0) > ctx.level(actor) and row.name ~= ctx.name(actor) then
                     return ctx.say(actor, " >  No aliases found for %s", row.name)
                 end
-                db.query(
-                    "SELECT DISTINCT name FROM connection_log WHERE name <> ? AND ((serial IS NOT NULL AND serial = ?)"
-                        .. " OR (ip IS NOT NULL AND ip = ?)) ORDER BY name LIMIT 32",
-                    { row.name, row.last_serial, row.last_ip, n = 3 },
-                    function(rows, a)
-                        if not rows then
-                            return ctx.say(a, " >  An error occurred.")
-                        end
-                        if #rows == 0 then
-                            return ctx.say(a, " >  No aliases found for %s", row.name)
-                        end
-                        local names = {}
-                        for _, r in ipairs(rows) do
-                            names[#names + 1] = r.name
-                        end
-                        ctx.say(a, " >  %s (%d): #33CCFF%s", row.name, #names, table.concat(names, ", "))
-                        ctx.log(a, "aliases", row.name, row.id)
-                    end,
-                    actor
-                )
+                local sql = "SELECT DISTINCT name FROM connection_log WHERE name <> ? AND ((serial IS NOT NULL"
+                    .. " AND serial = ?) OR (ip IS NOT NULL AND ip = ?)) ORDER BY name LIMIT 32"
+                db.query(sql, { row.name, row.last_serial, row.last_ip, n = 3 }, function(rows, a)
+                    if not rows then
+                        return ctx.say(a, " >  An error occurred.")
+                    end
+                    if #rows == 0 then
+                        return ctx.say(a, " >  No aliases found for %s", row.name)
+                    end
+                    local names = {}
+                    for _, r in ipairs(rows) do
+                        names[#names + 1] = r.name
+                    end
+                    ctx.say(a, " >  %s (%d): #33CCFF%s", row.name, #names, table.concat(names, ", "))
+                    ctx.log(a, "aliases", row.name, row.id)
+                end, actor)
             end, p)
         end,
     })
@@ -273,34 +239,24 @@ return function(ctx)
                 if (tonumber(row.admin_level) or 0) > ctx.level(actor) and row.name ~= ctx.name(actor) then
                     return ctx.say(actor, " >  No history found for %s", row.name)
                 end
-                db.query(
-                    "SELECT DATE_FORMAT(joined_at, '%Y-%m-%d %H:%i') AS at_, ip, serial FROM connection_log"
-                        .. " WHERE account_id = ? ORDER BY joined_at DESC LIMIT "
-                        .. n,
-                    { row.id },
-                    function(rows, a)
-                        if not rows or #rows == 0 then
-                            return ctx.say(a, " >  No history found for %s", row.name)
-                        end
-                        local lines = {}
-                        for _, r in ipairs(rows) do
-                            lines[#lines + 1] = {
-                                id = r.at_,
-                                label = string.format(
-                                    "%s  %s  %s",
-                                    r.at_,
-                                    tostring(r.ip or "-"),
-                                    tostring(r.serial or "-")
-                                ),
-                            }
-                        end
-                        ctx.openList(a, "history", "History of " .. row.name, lines, { "Close", "Close" }, function()
-                            ctx.closeList(a)
-                        end)
-                        ctx.log(a, "history", row.name, row.id)
-                    end,
-                    actor
-                )
+                local sql = "SELECT DATE_FORMAT(joined_at, '%Y-%m-%d %H:%i') AS at_, ip, serial FROM connection_log"
+                    .. " WHERE account_id = ? ORDER BY joined_at DESC LIMIT "
+                    .. n
+                db.query(sql, { row.id }, function(rows, a)
+                    if not rows or #rows == 0 then
+                        return ctx.say(a, " >  No history found for %s", row.name)
+                    end
+                    local lines = {}
+                    for _, r in ipairs(rows) do
+                        local label =
+                            string.format("%s  %s  %s", r.at_, tostring(r.ip or "-"), tostring(r.serial or "-"))
+                        lines[#lines + 1] = { id = r.at_, label = label }
+                    end
+                    ctx.openList(a, "history", "History of " .. row.name, lines, { "Close", "Close" }, function()
+                        ctx.closeList(a)
+                    end)
+                    ctx.log(a, "history", row.name, row.id)
+                end, actor)
             end, p)
         end,
     })

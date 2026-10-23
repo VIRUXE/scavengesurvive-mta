@@ -142,3 +142,20 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
       without errors; `/setadmin B 1` promotes B live (B's `/acmds` works without relog); `/setactive B 0` kicks B and
       blocks B's login (`INACTIVE`); `/setactive B 1`; `/resetpassword B newpass` lets B log in with the new password;
       `/setmotd Welcome` is shown to B on login and `/setmotd off` clears it; `/restart world` restarts the resource.
+23. **Supply drops and weapons caches** (#47). A at level 4.
+    - a. `/sc` lists the five types with their player requirements; `/sc 1` prints the yellow `[EBS]: SUPPLY DROP:
+      "Food and Medical"` (or `"Unknown"`) `INCOMING AT: "staff request"` line for everyone, a blip appears on the
+      map, and a crate with a smoke trail descends over A's position for about 4-5 minutes (from z 1000 at 3.5 u/s).
+    - b. Stand on the landing spot: on landing A is pushed 3 m away, the crate object disappears, a `Large Box`
+      item lies there with smoke rising, **F** opens it with 4-12 items from `airdrop_food_medical`, and any
+      overflow (up to 19 items in total) lies in rings around it. `scripts.log` has `supply crate (Food and
+      Medical) at …: N items (i offered to the crate, a around)`; items the box refuses (slots count size units) land
+      on the ground too. A second `/sc` while one is falling is refused (`IN_FLIGHT`).
+    - c. `/wc`: a `Gun Case` appears at A's feet holding 5 military weapons/ammo with 17-27 more around it
+      (`weapons cache at …` in the log), and everyone reads `[EBS]: WEAPONS CACHE SIGNAL: BEARING: xDEG DISTANCE:
+      yM` three times, 200 s apart; the bearing/distance from a cache point near Esplanade (`weapon_cache_points`,
+      all in `sf`) leads to the case. `/wc` while signals run is refused (`ACTIVE`).
+    - d. Automatic: with 3 players online and no drop for 10 min, `scripts.log` logs `supply drop Food and
+      Medical (<point name>) falling to …` within a minute and `supply_drop_points.used_at` is set for that point;
+      with 4 players a cache appears within 25-35 min at a point with nobody within 500 m. `rr loot` while a crate
+      is falling removes the crate object and blip (the drop is lost, nothing lands).

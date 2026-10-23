@@ -7,6 +7,9 @@ return function(ctx)
     local db, util, roll, drops = ctx.db, ctx.util, ctx.roll, ctx.drops
     local M = {}
     local rng = math.random
+    local function rand()
+        return rng()
+    end
     local typeState = drops.newTypeState(drops.TYPES, getTickCount(), rng)
     local lastSupplyDrop = nil -- tick of the last landing
     local inFlight = nil -- { typeIdx, x, y, z, obj, blip, timer }
@@ -62,46 +65,44 @@ return function(ctx)
                 return
             end
             local containerId = payload.container_id
-            for _, uname in ipairs(inside) do
-                if containerId and containerId ~= false then
-                    db.call("item_create_in_container", { uname, containerId }, function(res)
-                        if res and res.ok and res.payload and res.payload.item_id then
-                            local data = initialData(uname, tableName)
-                            if data then
+            -- ground positions: the overflow first, then one spare per crate item in case the crate refuses it
+            -- (container slots count item size units, so a 5-slot gun case holds fewer than five rifles)
+            local positions = drops.ringPositions(x, y, #around + #inside, function()
+                return rng()
+            end)
+            local nextGround = #around
+            local despawnAt = nil
+            local function ground(uname)
+                nextGround = nextGround + 1
+                local pos = positions[nextGround] or positions[#positions]
+                createWorldItem(uname, pos.x, pos.y, z, initialData(uname, tableName), despawnAt)
+            end
+            local sql = "SELECT DATE_FORMAT(DATE_ADD(NOW(), INTERVAL ? MINUTE), '%Y-%m-%d %H:%i:%s') AS d"
+            db.one(sql, { num("loot.despawn_minutes", 120) }, function(row)
+                despawnAt = row and row.d or nil
+                for i, uname in ipairs(around) do
+                    local pos = positions[i]
+                    createWorldItem(uname, pos.x, pos.y, z, initialData(uname, tableName), despawnAt)
+                end
+                for _, uname in ipairs(inside) do
+                    if not containerId or containerId == false then
+                        ground(uname)
+                    else
+                        db.call("item_create_in_container", { uname, containerId }, function(res, u)
+                            if not res or not res.ok then
+                                return ground(u) -- CONTAINER_FULL: size units, not slots
+                            end
+                            local data = initialData(u, tableName)
+                            if data and res.payload and res.payload.item_id then
                                 db.exec("UPDATE items SET data = ? WHERE id = ?", { data, res.payload.item_id })
                             end
-                        end
-                    end)
-                end
-            end
-            if #around > 0 then
-                local despawn = num("loot.despawn_minutes", 120)
-                db.one(
-                    "SELECT DATE_FORMAT(DATE_ADD(NOW(), INTERVAL ? MINUTE), '%Y-%m-%d %H:%i:%s') AS d",
-                    { despawn },
-                    function(row)
-                        local at = row and row.d or nil
-                        local positions = drops.ringPositions(x, y, #around, function()
-                            return rng()
-                        end)
-                        for i, uname in ipairs(around) do
-                            createWorldItem(uname, positions[i].x, positions[i].y, z, initialData(uname, tableName), at)
-                        end
+                        end, uname)
                     end
-                )
-            end
-            util.log(
-                "loot",
-                "info",
-                "%s at %.1f, %.1f, %.1f: %d items (%d inside, %d around)",
-                label,
-                x,
-                y,
-                z,
-                #unames,
-                #inside,
-                #around
-            )
+                end
+            end)
+            local where = string.format("%.1f, %.1f, %.1f", x, y, z)
+            local counts = string.format("%d items (%d offered to the crate, %d around)", #unames, #inside, #around)
+            util.log("loot", "info", "%s at %s: %s", label, where, counts)
         end)
     end
 
@@ -129,17 +130,8 @@ return function(ctx)
             end
         end
         local t = drops.TYPES[d.typeIdx]
-        fillCrate(
-            drops.SUPPLY_CRATE,
-            t.table,
-            drops.supplyCount(function()
-                return rng()
-            end),
-            d.x,
-            d.y,
-            d.z,
-            "supply crate (" .. t.name .. ")"
-        )
+        local count = drops.supplyCount(rand)
+        fillCrate(drops.SUPPLY_CRATE, t.table, count, d.x, d.y, d.z, "supply crate (" .. t.name .. ")")
         triggerClientEvent(root, "supplyCrateLanded", resourceRoot, d.x, d.y, d.z)
         triggerEvent("supplyCrateLanded", resourceRoot, d.typeIdx, d.x, d.y, d.z)
         lastSupplyDrop = getTickCount()
@@ -164,23 +156,9 @@ return function(ctx)
         inFlight = { typeIdx = typeIdx, x = x, y = y, z = z, obj = obj, blip = blip }
         inFlight.timer = setTimer(land, ms, 1)
         triggerClientEvent(root, "supplyDropStarted", resourceRoot, obj, x, y, z)
-        say(drops.supplyText(
-            drops.announceName(t.name, function()
-                return rng()
-            end),
-            locationName or "an unknown location"
-        ))
-        util.log(
-            "loot",
-            "info",
-            "supply drop %s (%s) falling to %.1f, %.1f, %.1f in %d s",
-            t.name,
-            locationName or "?",
-            x,
-            y,
-            z,
-            ms / 1000
-        )
+        say(drops.supplyText(drops.announceName(t.name, rand), locationName or "an unknown location"))
+        local target = string.format("%s (%s) falling to %.1f, %.1f, %.1f", t.name, locationName or "?", x, y, z)
+        util.log("loot", "info", "supply drop %s in %d s", target, ms / 1000)
         return true
     end
 
@@ -196,28 +174,23 @@ return function(ctx)
         if not idx then
             return
         end
-        db.one(
-            "SELECT id, name, x, y, z FROM supply_drop_points"
-                .. " WHERE used_at IS NULL OR used_at < NOW() - INTERVAL ? HOUR ORDER BY RAND() LIMIT 1",
-            { num("loot.drop_point_reuse_hours", 24) },
-            function(row)
-                if not row then
-                    if not warnedEmpty.supply then
-                        warnedEmpty.supply = true
-                        util.log("loot", "warn", "supply drops: every drop point was used recently")
-                    end
-                    return
+        local sql = "SELECT id, name, x, y, z FROM supply_drop_points"
+            .. " WHERE used_at IS NULL OR used_at < NOW() - INTERVAL ? HOUR ORDER BY RAND() LIMIT 1"
+        db.one(sql, { num("loot.drop_point_reuse_hours", 24) }, function(row)
+            if not row then
+                if not warnedEmpty.supply then
+                    warnedEmpty.supply = true
+                    util.log("loot", "warn", "supply drops: every drop point was used recently")
                 end
-                if inFlight then
-                    return
-                end
-                db.exec("UPDATE supply_drop_points SET used_at = NOW() WHERE id = ?", { row.id })
-                drops.markDropped(drops.TYPES, typeState, idx, getTickCount(), function()
-                    return rng()
-                end)
-                M.dropSupply(idx, row.x, row.y, row.z, row.name)
+                return
             end
-        )
+            if inFlight then
+                return
+            end
+            db.exec("UPDATE supply_drop_points SET used_at = NOW() WHERE id = ?", { row.id })
+            drops.markDropped(drops.TYPES, typeState, idx, getTickCount(), rand)
+            M.dropSupply(idx, row.x, row.y, row.z, row.name)
+        end)
     end
 
     -- Weapons caches -----------------------------------------------------------------------------------------
@@ -243,17 +216,7 @@ return function(ctx)
             return false, "ACTIVE"
         end
         activeCache = { x = x, y = y, z = z }
-        fillCrate(
-            drops.CACHE_CRATE,
-            drops.CACHE_TABLE,
-            drops.cacheCount(function()
-                return rng()
-            end),
-            x,
-            y,
-            z,
-            "weapons cache"
-        )
+        fillCrate(drops.CACHE_CRATE, drops.CACHE_TABLE, drops.cacheCount(rand), x, y, z, "weapons cache")
         triggerEvent("weaponCacheDropped", resourceRoot, x, y, z)
         signal(x, y, z, 1)
         return true
@@ -273,26 +236,23 @@ return function(ctx)
         local ms = (num("loot.cache_interval_s", 1500) + rng() * num("loot.cache_jitter_s", 600)) * 1000
         setTimer(function()
             if not activeCache and getPlayerCount() >= num("loot.cache_min_players", 4) then
-                db.query(
-                    "SELECT id, x, y, z FROM weapon_cache_points"
-                        .. " WHERE used_at IS NULL OR used_at < NOW() - INTERVAL ? HOUR ORDER BY RAND() LIMIT 25",
-                    { num("loot.drop_point_reuse_hours", 24) },
-                    function(rows)
-                        for _, r in ipairs(rows or {}) do
-                            if not playersNear(r.x, r.y, r.z, drops.CACHE_CLEAR_RADIUS) then
-                                db.exec("UPDATE weapon_cache_points SET used_at = NOW() WHERE id = ?", { r.id })
-                                M.dropWeaponCache(r.x, r.y, r.z)
-                                return
-                            end
-                        end
-                        if not rows or #rows == 0 then
-                            if not warnedEmpty.cache then
-                                warnedEmpty.cache = true
-                                util.log("loot", "warn", "weapons caches: every cache point was used recently")
-                            end
+                local sql = "SELECT id, x, y, z FROM weapon_cache_points"
+                    .. " WHERE used_at IS NULL OR used_at < NOW() - INTERVAL ? HOUR ORDER BY RAND() LIMIT 25"
+                db.query(sql, { num("loot.drop_point_reuse_hours", 24) }, function(rows)
+                    for _, r in ipairs(rows or {}) do
+                        if not playersNear(r.x, r.y, r.z, drops.CACHE_CLEAR_RADIUS) then
+                            db.exec("UPDATE weapon_cache_points SET used_at = NOW() WHERE id = ?", { r.id })
+                            M.dropWeaponCache(r.x, r.y, r.z)
+                            return
                         end
                     end
-                )
+                    if not rows or #rows == 0 then
+                        if not warnedEmpty.cache then
+                            warnedEmpty.cache = true
+                            util.log("loot", "warn", "weapons caches: every cache point was used recently")
+                        end
+                    end
+                end)
             end
             scheduleCache()
         end, math.floor(ms), 1)

@@ -53,17 +53,9 @@ return function(ctx)
                 if ctx.level(target) > 0 and not logic.outranks(lvl, ctx.level(target), false) then
                     return ctx.say(p, " >  %s is staff of your level or higher.", entry.name)
                 end
-                local accountId = ctx.accountId(target)
-                return banNow(
-                    p,
-                    entry.name,
-                    accountId and { id = accountId } or nil,
-                    getPlayerIP(target),
-                    getPlayerSerial(target),
-                    reason,
-                    seconds,
-                    target
-                )
+                local account = ctx.accountId(target) and { id = ctx.accountId(target) } or nil
+                local ip, serial = getPlayerIP(target), getPlayerSerial(target)
+                return banNow(p, entry.name, account, ip, serial, reason, seconds, target)
             end
             -- offline: the account supplies the last IP and serial
             ctx.lookupAccount(args[1], function(row, actor)
@@ -140,15 +132,9 @@ return function(ctx)
                 if not row then
                     return ctx.say(actor, " >  Player '%s' #33CCFFisn't #FFFF00banned.", args[1])
                 end
-                ctx.say(
-                    actor,
-                    " >  %s: banned %s by %s, %s. Reason: #33CCFF%s",
-                    row.name,
-                    row.created,
-                    row.by_name,
-                    row.expires_at and row.expires_at ~= false and ("until " .. row.expires_at) or "forever",
-                    row.reason
-                )
+                local until_ = row.expires_at and row.expires_at ~= false and ("until " .. row.expires_at) or "forever"
+                local fmt = " >  %s: banned %s by %s, %s. Reason: #33CCFF%s"
+                ctx.say(actor, fmt, row.name, row.created, row.by_name, until_, row.reason)
             end, p)
         end,
     })
@@ -156,21 +142,14 @@ return function(ctx)
     -- Whitelist: rows in `whitelist`, the switch in settings server.whitelist; auth enforces it at login.
     local function setWhitelistEnabled(p, flag)
         state.settings["server.whitelist"] = flag and "1" or "0"
-        db.exec(
-            "INSERT INTO settings (skey, svalue) VALUES ('server.whitelist', ?)"
-                .. " ON DUPLICATE KEY UPDATE svalue = VALUES(svalue)",
-            {
-                flag and "1" or "0",
-            }
-        )
+        local sql = "INSERT INTO settings (skey, svalue) VALUES ('server.whitelist', ?)"
+            .. " ON DUPLICATE KEY UPDATE svalue = VALUES(svalue)"
+        db.exec(sql, { flag and "1" or "0" })
         pcall(function()
             exports.auth:setWhitelistEnabled(flag)
         end)
-        ctx.msgStaff(
-            1,
-            flag and " >  Whitelist activated, only whitelisted players may join."
-                or " >  Whitelist deactivated, anyone may join."
-        )
+        local on = " >  Whitelist activated, only whitelisted players may join."
+        ctx.msgStaff(1, flag and on or " >  Whitelist deactivated, anyone may join.")
         ctx.log(p, flag and "whitelist_on" or "whitelist_off")
     end
 
@@ -185,21 +164,17 @@ return function(ctx)
             if verb == "on" or verb == "off" then
                 return setWhitelistEnabled(p, verb == "on")
             elseif verb == "add" and name then
-                db.exec(
-                    "INSERT IGNORE INTO whitelist (name, added_by) VALUES (?, ?)",
-                    { name, ctx.name(p) },
-                    function(ok, actor, affected)
-                        if not ok then
-                            return ctx.say(actor, " >  An error occurred.")
-                        end
-                        if affected == 0 then
-                            return ctx.say(actor, " >  That name #FFAA00is already #FFFF00in the whitelist.")
-                        end
-                        ctx.say(actor, " >  Added #33CCFF%s #FFFF00to the whitelist.", name)
-                        ctx.log(actor, "whitelist_add", name)
-                    end,
-                    p
-                )
+                local sql = "INSERT IGNORE INTO whitelist (name, added_by) VALUES (?, ?)"
+                db.exec(sql, { name, ctx.name(p) }, function(ok, actor, affected)
+                    if not ok then
+                        return ctx.say(actor, " >  An error occurred.")
+                    end
+                    if affected == 0 then
+                        return ctx.say(actor, " >  That name #FFAA00is already #FFFF00in the whitelist.")
+                    end
+                    ctx.say(actor, " >  Added #33CCFF%s #FFFF00to the whitelist.", name)
+                    ctx.log(actor, "whitelist_add", name)
+                end, p)
             elseif verb == "remove" and name then
                 db.exec("DELETE FROM whitelist WHERE name = ?", { name }, function(ok, actor, affected)
                     if not ok then
@@ -213,12 +188,9 @@ return function(ctx)
                 end, p)
             elseif verb == "?" and name then
                 db.one("SELECT name FROM whitelist WHERE name = ?", { name }, function(row, actor)
-                    ctx.say(
-                        actor,
-                        row and " >  %s #33CCFFis #FFFF00in the whitelist."
-                            or " >  %s #FFAA00is not #FFFF00in the whitelist.",
-                        name
-                    )
+                    local yes, no =
+                        " >  %s #33CCFFis #FFFF00in the whitelist.", " >  %s #FFAA00is not #FFFF00in the whitelist."
+                    ctx.say(actor, row and yes or no, name)
                 end, p)
             elseif verb == "list" then
                 db.query("SELECT name, added_by FROM whitelist ORDER BY name LIMIT 200", {}, function(rows, actor)
@@ -229,23 +201,14 @@ return function(ctx)
                     if #out == 0 then
                         out[1] = { id = "none", label = "Nobody is whitelisted", empty = true }
                     end
-                    ctx.openList(
-                        actor,
-                        "whitelist",
-                        "Whitelist (" .. #(rows or {}) .. ")",
-                        out,
-                        { "Close", "Close" },
-                        function()
-                            ctx.closeList(actor)
-                        end
-                    )
+                    local title = "Whitelist (" .. #(rows or {}) .. ")"
+                    ctx.openList(actor, "whitelist", title, out, { "Close", "Close" }, function()
+                        ctx.closeList(actor)
+                    end)
                 end, p)
             else
-                ctx.say(
-                    p,
-                    " >  Usage: /whitelist add|remove|?|list|on|off [name] - the whitelist is currently %s",
-                    enabled and "on" or "off"
-                )
+                local fmt = " >  Usage: /whitelist add|remove|?|list|on|off [name] - the whitelist is currently %s"
+                ctx.say(p, fmt, enabled and "on" or "off")
             end
         end,
     })
@@ -262,26 +225,16 @@ return function(ctx)
             local entry = logic.findPlayer(args[1], ctx.onlinePlayers())
             if entry then
                 ctx.log(p, "ip", entry.name, ctx.accountId(entry.player))
-                return ctx.say(
-                    p,
-                    " >  %s: #33CCFF%s#FFFF00 serial #33CCFF%s",
-                    entry.name,
-                    getPlayerIP(entry.player),
-                    getPlayerSerial(entry.player)
-                )
+                local ip, serial = getPlayerIP(entry.player), getPlayerSerial(entry.player)
+                return ctx.say(p, " >  %s: #33CCFF%s#FFFF00 serial #33CCFF%s", entry.name, ip, serial)
             end
             ctx.lookupAccount(args[1], function(row, actor)
                 if not row then
                     return ctx.say(actor, " >  The account '%s' does not exist.", args[1])
                 end
                 ctx.log(actor, "ip", row.name, row.id)
-                ctx.say(
-                    actor,
-                    " >  %s (offline): #33CCFF%s#FFFF00 serial #33CCFF%s",
-                    row.name,
-                    tostring(row.last_ip or "-"),
-                    tostring(row.last_serial or "-")
-                )
+                local ip, serial = tostring(row.last_ip or "-"), tostring(row.last_serial or "-")
+                ctx.say(actor, " >  %s (offline): #33CCFF%s#FFFF00 serial #33CCFF%s", row.name, ip, serial)
             end, p)
         end,
     })
@@ -296,27 +249,23 @@ return function(ctx)
             if not args[1] or (flag ~= 0 and flag ~= 1) then
                 return ctx.say(p, " >  Usage: /setactive <name> <0|1>")
             end
-            db.exec(
-                "UPDATE accounts SET active = ? WHERE name = ? AND admin_level < ?",
-                { flag, args[1], ctx.level(p) },
-                function(ok, actor, affected)
-                    if not ok then
-                        return ctx.say(actor, " >  An error occurred.")
+            local sql = "UPDATE accounts SET active = ? WHERE name = ? AND admin_level < ?"
+            db.exec(sql, { flag, args[1], ctx.level(p) }, function(ok, actor, affected)
+                if not ok then
+                    return ctx.say(actor, " >  An error occurred.")
+                end
+                if affected == 0 then
+                    return ctx.say(actor, " >  No such account, or it is staff of your level or higher.")
+                end
+                ctx.say(actor, " >  %s is now %s.", args[1], flag == 1 and "active" or "inactive")
+                ctx.log(actor, flag == 1 and "activate" or "deactivate", args[1])
+                if flag == 0 then
+                    local entry = logic.findPlayer(args[1], ctx.onlinePlayers())
+                    if entry and entry.name:lower() == args[1]:lower() then
+                        ctx.kick(entry.player, actor, "Account deactivated")
                     end
-                    if affected == 0 then
-                        return ctx.say(actor, " >  No such account, or it is staff of your level or higher.")
-                    end
-                    ctx.say(actor, " >  %s is now %s.", args[1], flag == 1 and "active" or "inactive")
-                    ctx.log(actor, flag == 1 and "activate" or "deactivate", args[1])
-                    if flag == 0 then
-                        local entry = logic.findPlayer(args[1], ctx.onlinePlayers())
-                        if entry and entry.name:lower() == args[1]:lower() then
-                            ctx.kick(entry.player, actor, "Account deactivated")
-                        end
-                    end
-                end,
-                p
-            )
+                end
+            end, p)
         end,
     })
 
@@ -334,21 +283,17 @@ return function(ctx)
                 if not hash then
                     return ctx.say(p, " >  Hashing failed.")
                 end
-                db.exec(
-                    "UPDATE accounts SET password_hash = ? WHERE name = ? AND admin_level < ?",
-                    { hash, name, ctx.level(p) },
-                    function(ok, actor, affected)
-                        if not ok then
-                            return ctx.say(actor, " >  An error occurred.")
-                        end
-                        if affected == 0 then
-                            return ctx.say(actor, " >  No such account, or it is staff of your level or higher.")
-                        end
-                        ctx.say(actor, " >  Password of %s reset.", name)
-                        ctx.log(actor, "resetpassword", name)
-                    end,
-                    p
-                )
+                local sql = "UPDATE accounts SET password_hash = ? WHERE name = ? AND admin_level < ?"
+                db.exec(sql, { hash, name, ctx.level(p) }, function(ok, actor, affected)
+                    if not ok then
+                        return ctx.say(actor, " >  An error occurred.")
+                    end
+                    if affected == 0 then
+                        return ctx.say(actor, " >  No such account, or it is staff of your level or higher.")
+                    end
+                    ctx.say(actor, " >  Password of %s reset.", name)
+                    ctx.log(actor, "resetpassword", name)
+                end, p)
             end)
         end,
     })
