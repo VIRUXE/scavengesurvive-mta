@@ -112,6 +112,21 @@ describe("items hands data batching", function()
         assert.is_true(logged)
     end)
 
+    it("queues a failed batch again unless newer data arrived meanwhile", function()
+        hands.queueData({ id = 3, data = { mag = 1 } })
+        hands.queueData({ id = 4, data = { mag = 5 } })
+        hands.flushData()
+        hands.queueData({ id = 4, data = { mag = 4 } }) -- fired while the batch was in flight
+        mock.fail(#mock.queries, 1213, "deadlock")
+        hands.flushData()
+        local qs = flushQueries()
+        assert.equals(2, #qs)
+        local rows, n = flushRows(qs[2])
+        assert.equals(2, n)
+        assert.same({ mag = 1 }, mock.json.decode(rows[3]))
+        assert.same({ mag = 4 }, mock.json.decode(rows[4]))
+    end)
+
     it("clearHeld flushes the held item's data and leaves other items pending", function()
         mock.addElement("p1")
         state.held["p1"] = { id = 11, uname = "M9Pistol", data = { mag = 3 } }

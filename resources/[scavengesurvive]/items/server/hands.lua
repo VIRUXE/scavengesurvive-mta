@@ -121,11 +121,18 @@ return function(ctx)
         if wait then
             return dbPoll(dbQuery(db.conn, "CALL item_data_flush(?)", toJSON(rows)), -1)
         end
-        db.call("item_data_flush", { toJSON(rows) }, function(res)
-            if not res or not res.ok then
-                outputDebugString("[items] item_data_flush failed: " .. tostring(res and res.code or "db"), 1)
+        db.call("item_data_flush", { toJSON(rows) }, function(res, sent)
+            if res and res.ok then
+                return
             end
-        end)
+            outputDebugString("[items] item_data_flush failed: " .. tostring(res and res.code or "db"), 1)
+            -- the batch waits for the next flush unless newer data for the item arrived meanwhile
+            for _, r in ipairs(sent) do
+                if pendingData[r.id] == nil then
+                    pendingData[r.id] = r.data
+                end
+            end
+        end, rows)
     end
 
     -- a procedure about to write the item's data itself supersedes what is waiting
