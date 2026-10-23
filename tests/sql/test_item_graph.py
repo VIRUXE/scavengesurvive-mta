@@ -1,3 +1,4 @@
+import json
 import threading
 
 import pymysql
@@ -108,6 +109,11 @@ def test_death_drops_everything_and_marks_dead(db, character):
         assert cur.fetchone()["alive"] == 0
         cur.execute("SELECT COUNT(*) AS n FROM items WHERE id IN (%s,%s) AND x IS NOT NULL", (a, b))
         assert cur.fetchone()["n"] == 2
+        # upstream death.pwn: a Clothes item with the dead character's skin, 1 m east of the body
+        cur.execute("SELECT type_uname, data, x, y FROM items WHERE id=%s", (payload["clothes_item_id"],))
+        row = cur.fetchone()
+        assert row["type_uname"] == "Clothes" and json.loads(row["data"]) == {"skin": 0}
+        assert (row["x"], row["y"]) == (101.0, 200.0)
 
 
 def test_concurrent_pickup_exactly_one_winner(db):
