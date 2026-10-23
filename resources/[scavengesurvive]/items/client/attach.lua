@@ -3,8 +3,16 @@
 -- The server only publishes what is carried: element data "items.held" / "items.bag" = type uname or false.
 -- ctx = { models } from client/main.lua (client/models.lua).
 return function(ctx)
-    local models = ctx.models
-    local SLOTS = { ["items.held"] = "held", ["items.bag"] = "bag", ["character.cuffed"] = "cuffs" }
+    local models, apparel = ctx.models, ctx.apparel
+    local SLOTS = {
+        ["items.held"] = "held",
+        ["items.bag"] = "bag",
+        ["character.cuffed"] = "cuffs",
+        ["items.hat"] = "hat",
+        ["items.mask"] = "mask",
+        ["items.armour"] = "armour",
+        ["items.holster"] = "holster",
+    }
     -- SA-MP SetPlayerAttachedObject bone -> GTA:SA bone id (getElementBoneMatrix)
     local SAMP_BONE = {
         [1] = 3, -- spine -> BONE_SPINE1
@@ -154,6 +162,17 @@ return function(ctx)
         return attachment("HandCuffs", 6, { 0.030, 0.048, -0.017, -8.7, -25.8, 83.8 }, { 1.027, 3.037, 1.622 })
     end
 
+    local function apparelAttachment(slot, uname)
+        if not apparel then
+            return nil
+        end
+        local cfg = apparel.attachConfig(slot, uname)
+        if not cfg then
+            return nil
+        end
+        return attachment(uname, cfg.bone, cfg.offsets, cfg.scale)
+    end
+
     local function setSlot(player, slot, uname)
         clearSlot(player, slot)
         if not uname or uname == false then
@@ -164,6 +183,8 @@ return function(ctx)
             tracked[player][slot] = bagAttachment(uname, player)
         elseif slot == "cuffs" then
             tracked[player][slot] = cuffAttachment()
+        elseif slot == "hat" or slot == "mask" or slot == "armour" or slot == "holster" then
+            tracked[player][slot] = apparelAttachment(slot, uname)
         else
             tracked[player][slot] = heldAttachment(uname)
         end
@@ -171,9 +192,9 @@ return function(ctx)
 
     local function forgetPlayer(player)
         if tracked[player] then
-            clearSlot(player, "held")
-            clearSlot(player, "bag")
-            clearSlot(player, "cuffs")
+            for _, slot in pairs(SLOTS) do
+                clearSlot(player, slot)
+            end
             tracked[player] = nil
         end
     end

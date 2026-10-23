@@ -12,6 +12,7 @@
     <file src="shared/logic/geometry.lua"/>
     <file src="shared/logic/diff.lua"/>
     <file src="shared/logic/ammo.lua"/>
+    <file src="shared/logic/apparel.lua"/>
     <file src="client/models.lua"/>
     <file src="client/world.lua"/>
     <file src="client/attach.lua"/>
@@ -21,6 +22,8 @@
     <export function="clearHeld" type="server"/>
     <export function="openTrunkContainer" type="server"/>
     <export function="closeTrunk" type="server"/>
+    <export function="openWorldContainer" type="server"/>
+    <export function="closeContainer" type="server"/>
     <export function="updateHeldData" type="server"/>
     <export function="createStartingItems" type="server"/>
     <export function="refreshPlayer" type="server"/>

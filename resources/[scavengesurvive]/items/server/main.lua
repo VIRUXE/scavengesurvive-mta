@@ -10,6 +10,7 @@ end
 local geometry = loadFile("shared/logic/geometry.lua")
 local diff = loadFile("shared/logic/diff.lua")
 local ammo = loadFile("shared/logic/ammo.lua")
+local apparel = loadFile("shared/logic/apparel.lua")
 
 -- Per-player item state, shared with the server modules (they capture this table).
 local state = {
@@ -17,6 +18,10 @@ local state = {
     sent = {}, -- player -> set of world item ids the client shows; nil until the character spawned
     held = {}, -- player -> { id, uname, hp, data } in hand
     worn = {}, -- player -> { id, uname, hp, data } bag on the back
+    hat = {}, -- player -> { id, uname, hp, data } worn hat
+    mask = {}, -- player -> { id, uname, hp, data } worn mask
+    armour = {}, -- player -> { id, uname, hp, data } worn armour
+    holster = {}, -- player -> { id, uname, hp, data } holstered weapon
     typeCache = {}, -- uname -> item type or false
 }
 
@@ -93,6 +98,7 @@ hands = loadFile("server/hands.lua")({
     state = state,
     geometry = geometry,
     ammo = ammo,
+    apparel = apparel,
     type = itemType,
     defaultAmmo = defaultAmmo,
     charId = charId,
@@ -113,7 +119,11 @@ local containers = loadFile("server/containers.lua")({
     charId = charId,
     toast = toast,
     hands = hands,
+    apparel = apparel,
+    world = world,
+    refreshPlayer = refreshPlayer,
 })
+hands.setContainers(containers)
 loadFile("server/use.lua")({
     db = db,
     net = net,
@@ -151,11 +161,13 @@ addEventHandler("onCharacterDied", root, function()
     -- character_death_drop already moved everything to the world; the next sync projects it
     hands.setHeld(source, nil)
     hands.setWorn(source, nil)
+    hands.clearGear(source)
 end)
 
 addEventHandler("onPlayerQuit", root, function()
     hands.clearHeld(source)
     hands.setWorn(source, nil)
+    hands.clearGear(source)
     state.sent[source] = nil
 end)
 
@@ -244,6 +256,22 @@ function closeTrunk(player)
         return false
     end
     containers.closeTrunk(player)
+    return true
+end
+
+function openWorldContainer(player, itemRow)
+    if not isElement(player) or not itemRow then
+        return false
+    end
+    containers.openWorldContainer(player, itemRow)
+    return true
+end
+
+function closeContainer(player)
+    if not isElement(player) then
+        return false
+    end
+    containers.closeContainer(player)
     return true
 end
 

@@ -10,6 +10,8 @@
     <resource src="items" startup="1" protected="0"/>
     <resource src="loot" startup="1" protected="0"/>
     <resource src="vehicles" startup="1" protected="0"/>
+    <resource src="crafting" startup="1" protected="0"/>
+    <resource src="building" startup="1" protected="0"/>
     <resource src="world" startup="1" protected="0"/>
     <resource src="weapons" startup="1" protected="0"/>
     <resource src="hud" startup="1" protected="0"/>

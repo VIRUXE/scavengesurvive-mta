@@ -17,9 +17,10 @@ return function(ctx)
         if not changed then
             return
         end
-        st.lastSent = { hp = st.hp, food = st.food, bleed = st.bleed }
-        triggerClientEvent(player, "onClientCharacterStats", player, { hp = st.hp, food = st.food, bleed = st.bleed })
-        triggerEvent("onCharacterStatsChanged", player, { hp = st.hp, food = st.food, bleed = st.bleed })
+        local payload = { hp = st.hp, food = st.food, bleed = st.bleed, wounds = st.wounds }
+        st.lastSent = payload
+        triggerClientEvent(player, "onClientCharacterStats", player, payload)
+        triggerEvent("onCharacterStatsChanged", player, payload)
     end
 
     setTimer(function()

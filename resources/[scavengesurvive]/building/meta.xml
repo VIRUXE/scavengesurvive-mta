@@ -1,0 +1,16 @@
+<meta>
+    <info author="scavengesurvive-mta" type="script" name="building" description="Base building: defences, keypads, and plot poles" version="0.1.0"/>
+    <min_mta_version server="1.6.0" client="1.6.0"/>
+    <include resource="lib"/>
+    <include resource="data"/>
+    <include resource="ui"/>
+    <include resource="items"/>
+    <include resource="character"/>
+    <script src="shared/events.lua" type="shared"/>
+    <script src="server/main.lua" type="server"/>
+    <script src="client/main.lua" type="client"/>
+    <file src="shared/logic/defences.lua"/>
+    <file src="client/keypad.lua"/>
+    <export function="isInsideAnyPlotPole" type="server"/>
+    <export function="interactDefence" type="server"/>
+</meta>

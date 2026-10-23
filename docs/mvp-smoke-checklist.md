@@ -93,3 +93,23 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
     - **Refuelling**: Hold `GasCan` (Petrol Can) and press **F** near the vehicle: fuel transfers from the can to the vehicle tank over a timed progress bar until full or the can is empty.
     - **Trunk container**: Walk to the rear (trunk) of an unlocked vehicle with empty hands and press **F**: the trunk lid opens (`setVehicleDoorOpenRatio`), and the inventory dialog opens showing the `Trunk (used/size)` screen alongside player inventory. Items can be transferred between hands, inventory, satchel, and trunk. Closing the dialog shuts the trunk lid.
     - **Trailers and towing**: Drive a vehicle with a trailer hitch (e.g. `Sadler`, `Bobcat`, `Yosemite`, `Linerunner`) backing up near a compatible trailer (e.g. `Baggage Trailer`, `Farm Trailer`). Type `/tow`: the trailer attaches (`attachTrailerToVehicle`). Type `/tow` again: the trailer detaches. Attaching persists across resource restarts (`rr vehicles`).
+21. **Crafting, Building and Apparel parity** (#35, #36, #37, #38, #39).
+    - **Apparel bone attach & protection**:
+      - Equip `CowboyHat` / `ArmyHelmet` / `Mask` / `Bandana` / `Armour`: visible attached on head/face/spine bones with upstream offsets.
+      - Body damage protection: Torso damage bleed reduced by 50% when wearing `Armour`; Head shot knockout chance reduced by 60% when wearing a helmet/hat.
+    - **Body preview & Gear tiles**:
+      - Press **Tab** / open inventory: left Body Panel shows Health status, individual bodypart wound counts (Head, Torso, Arms, Groin, Legs) in red when injured, Bleeding status, Hunger %, and unconsciousness chance formula.
+      - Right side displays 6 Gear Tiles (`HEAD`, `FACE`, `HAND`, `HOLSTER`, `TORSO`, `BACK`). Clicking an equipped tile takes off the item into hands/inventory; clicking an empty tile with matching held item wears it; clicking `BACK` navigates directly to worn bag. Wearable items in inventory also have a `Wear` option.
+    - **Safeboxes & Tents as persistent containers**:
+      - World safeboxes (`SmallBox`, `MediumBox`, `LargeBox`, `Locker`, `ToolBox`, `Capsule`, `Suitcase`, etc.): Press **F** near a world safebox to open its persistent container dialog; transfer items between hands and box. When empty, `[Pick up container]` option in dialog allows picking up the box into hands.
+      - `TentPack`: Place on ground. Standing near it holding `Hammer`, press **F**: 3-second progress bar pitches the tent into a full 3D tent (model 3243) with a 16-slot container. Interacting with pitched tent opens tent container. Holding `Crowbar` near an empty tent and pressing **F** plays a 3-second packing progress bar, packing it back into portable `TentPack`.
+    - **Crafting & Workbench**:
+      - In-hand combine: Hold `Knife` and click `Clothes` in inventory -> click `Combine`: instant craft produces `Bandage` in inventory while preserving the `Knife`. Combine `Bottle` + `Bandage` -> `MolotovEmpty`.
+      - Ground construction: Drop ingredients on ground (e.g. 2x `WoodLog`), hold `FireLighter`, press **F** (or `/craft`): 3-second construction progress bar consumes logs and spawns `Campfire`. Hold `Hammer` near 3x `WoodLog` -> builds `Barricade`. Hold `Hammer` near 2x `WoodLog` + 2x `CorPanel` -> builds `Workbench`.
+      - Deconstruction: Hold `Crowbar` and press **F** near constructed object (`Campfire`, `Workbench`, `Barricade`, `LargeFrame`): timed deconstruction progress bar dismantles the object and returns raw materials.
+      - Workbench crafting: Place materials in Workbench 16-slot container (e.g. `CorPanel` + `Battery` + tool `Screwdriver`), press **F** at Workbench: crafts `Keypad` inside container.
+    - **Defences, Keypads and Plot Poles**:
+      - Defences (`LargeFrame`, `Door`, `MetalGate`): Press **F** on an unlocked door/gate to swing it open (+90 deg rotation) with 5-second auto-latch closing.
+      - Keypad security: Hold `Keypad` item and press **F** on defence: installs keypad and opens 12-key Keypad UI to set 4-digit code. Interacting with locked defence opens Keypad UI: enter 4-digit code with mouse/numpad, press `>` (Enter); correct code grants access and swings door open for 5 seconds; wrong code plays error sound.
+      - `LockBreaker` & `HackDevice`: Hold `LockBreaker` on locked door -> 10s break action removes lock. Hold `HackDevice` on keypad -> 8s bypass timer swings door open.
+      - `PlotPole`: Placing `PlotPole` creates 20m claimed territory colshape: entering displays `PLOTPOLEENT` action text; leaving displays `PLOTPOLEEXT`.

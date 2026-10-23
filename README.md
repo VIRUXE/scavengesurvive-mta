@@ -7,7 +7,7 @@ physical item on the ground, wounds bleed, and death drops it all.
 ![MTA:SA 1.6](https://img.shields.io/badge/MTA%3ASA-1.6-2b5797?style=flat-square)
 ![Lua 5.1](https://img.shields.io/badge/Lua-5.1-000080?style=flat-square&logo=lua)
 ![MariaDB 13](https://img.shields.io/badge/MariaDB-13.0-003545?style=flat-square&logo=mariadb)
-![Milestone](https://img.shields.io/badge/milestone-M5%20Vehicles-brightgreen?style=flat-square)
+![Milestone](https://img.shields.io/badge/milestone-M6%20Crafting%2C%20Building%2C%20Apparel-brightgreen?style=flat-square)
 ![Code: Unlicense](https://img.shields.io/badge/code-Unlicense-lightgrey?style=flat-square)
 ![Data: MPL-2.0 · Maps: CC BY-SA 4.0](https://img.shields.io/badge/data-MPL--2.0%20%C2%B7%20CC%20BY--SA%204.0-orange?style=flat-square)
 
@@ -23,7 +23,7 @@ physical item on the ground, wounds bleed, and death drops it all.
 | M3 Loot & World | ✅ | Loot rolling near players, all 221 upstream maps built client-side (23,211 objects), 7 server zone colshapes (`getZoneAt`, `onPlayerZoneEnter/Leave`), weather and a real-time clock (wild trees deferred) |
 | M4 Weapons & Damage | ✅ | Server-authoritative wound model with calibre, ammo-type and distance falloff, magazines, reload (`R`) and hold-`N` unload, 3D bullet tracers, knockouts, handcuffs and disarm, anti-combat-log |
 | M5 Vehicles | ✅ | Fuel simulation and drain, driver controls (Y engine, N lights), locks, crowbar lock-breaking, locksmith key cutting, bonnet repair stages, petrol can refuelling, trunk container dialogs, and trailers via /tow |
-| M6 Crafting, Building, Apparel | ⬜ | |
+| M6 Crafting, Building, Apparel | ✅ | Apparel bone attachment (hats, masks, armour, holster), body preview & 6 gear tiles in inventory UI, safebox & tent persistent containers, in-hand combine, ground construction, workbench crafting, defences with door swing poses, 12-key dx keypad with 4-digit code and plot pole 20m claimed territory protection |
 | M7 Staff & Ops | ⬜ | Dev tooling exists (HTTP rcon, dev commands); staff tiers do not |
 | M8 Content & Polish | ⬜ | Supply drops, caches, house loot, radio, ziplines |
 

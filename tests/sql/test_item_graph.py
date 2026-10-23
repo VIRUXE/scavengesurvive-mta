@@ -218,3 +218,84 @@ def test_disarm_and_create_held(db, character):
         cur.execute("SELECT holder_char_id, holder_kind FROM items WHERE id=%s", (knife_id,))
         row = cur.fetchone()
         assert row["holder_char_id"] == ch and row["holder_kind"] == "held"
+
+
+def test_gear_wear_and_unwear(db, character):
+    ch = character["character_id"]
+    inv = character["inventory_container_id"]
+    hat1 = make_world_item(db, "T_Wrench")
+    hat2 = make_world_item(db, "T_Wrench")
+
+    # Pickup hat1 into hands
+    assert call(db, "item_pickup", hat1, ch)[1] == "OK"
+
+    # Wear hat1
+    ok, code, payload = call(db, "item_wear", hat1, ch, "hat")
+    assert (ok, code) == (1, "OK")
+    assert payload["slot"] == "hat"
+    with db.cursor() as cur:
+        cur.execute("SELECT holder_char_id, holder_kind FROM items WHERE id=%s", (hat1,))
+        r = cur.fetchone()
+        assert r["holder_char_id"] == ch and r["holder_kind"] == "hat"
+
+    # Hands are now free. Pickup hat2 into hands.
+    assert call(db, "item_pickup", hat2, ch)[1] == "OK"
+
+    # Wear hat2 -> should swap with hat1 (hat1 goes back to held)
+    ok_sw, code_sw, payload_sw = call(db, "item_wear", hat2, ch, "hat")
+    assert (ok_sw, code_sw) == (1, "OK")
+    assert payload_sw["swapped_id"] == hat1
+    with db.cursor() as cur:
+        cur.execute("SELECT holder_kind FROM items WHERE id=%s", (hat1,))
+        assert cur.fetchone()["holder_kind"] == "held"
+        cur.execute("SELECT holder_kind FROM items WHERE id=%s", (hat2,))
+        assert cur.fetchone()["holder_kind"] == "hat"
+
+    # Drop held hat1
+    assert call(db, "item_drop", hat1, ch, 0, 0, 3, 0, 0, 0)[1] == "OK"
+
+    # Hands are empty: unwear hat2 -> goes to held
+    ok_un, code_un, payload_un = call(db, "item_unwear", ch, "hat")
+    assert (ok_un, code_un) == (1, "OK")
+    assert payload_un["destination"] == "held"
+    with db.cursor() as cur:
+        cur.execute("SELECT holder_kind FROM items WHERE id=%s", (hat2,))
+        assert cur.fetchone()["holder_kind"] == "held"
+
+    # Put hat2 in inventory container slot 0
+    assert call(db, "container_put", hat2, ch, inv)[1] == "OK"
+
+    # Wear directly from inventory
+    ok_w_inv, code_w_inv, _ = call(db, "item_wear", hat2, ch, "hat")
+    assert (ok_w_inv, code_w_inv) == (1, "OK")
+    with db.cursor() as cur:
+        cur.execute("SELECT holder_kind, container_id FROM items WHERE id=%s", (hat2,))
+        r2 = cur.fetchone()
+        assert r2["holder_kind"] == "hat" and r2["container_id"] is None
+
+
+def test_safebox_and_tent_containers(db, character):
+    ch = character["character_id"]
+    box = make_world_item(db, "T_Wrench")
+    with db.cursor() as cur:
+        cur.execute("INSERT INTO containers (kind, size, owner_item_id) VALUES ('safebox', 10, %s)", (box,))
+        box_cont = cur.lastrowid
+
+    it = make_world_item(db, "T_Wrench")
+    assert call(db, "item_pickup", it, ch)[1] == "OK"
+
+    # Put into world container
+    ok, code, _ = call(db, "container_put", it, ch, box_cont)
+    assert (ok, code) == (1, "OK")
+    with db.cursor() as cur:
+        cur.execute("SELECT container_id, slot FROM items WHERE id=%s", (it,))
+        r = cur.fetchone()
+        assert r["container_id"] == box_cont and r["slot"] == 0
+
+    # Take back from world container
+    ok_take, code_take, _ = call(db, "container_take", it, ch)
+    assert (ok_take, code_take) == (1, "OK")
+    with db.cursor() as cur:
+        cur.execute("SELECT holder_char_id, holder_kind, container_id FROM items WHERE id=%s", (it,))
+        r2 = cur.fetchone()
+        assert r2["holder_char_id"] == ch and r2["holder_kind"] == "held" and r2["container_id"] is None

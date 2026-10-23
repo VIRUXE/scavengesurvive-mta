@@ -134,11 +134,18 @@ net.handler("onWeaponsRequestHit", function(victim, attacker, weapon, bodypart, 
     end
     pairs_[victim] = now
     bleed = wound.bodypartBleed(bleed, bodypart)
+    if bodypart == 3 and getElementData(victim, "items.armour") then
+        bleed = bleed * 0.5
+    end
     local hp = wound.hpLoss(bleed)
     exports.character:applyWound(victim, bleed, hp, attacker, "killed")
     local st = exports.character:getStats(victim)
     if st and st.hp > 0 then
-        local chance = wound.knockoutChance(knockMult, bodypart, st.wounds, st.bleed)
+        local km = knockMult
+        if bodypart == 9 and getElementData(victim, "items.hat") then
+            km = km * 0.4
+        end
+        local chance = wound.knockoutChance(km, bodypart, st.wounds, st.bleed)
         if math.random() * 100 < chance then
             local koMs = wound.knockoutDuration(knockMult, bodypart, st.wounds, st.bleed, st.hp)
             if koMs > 0 then

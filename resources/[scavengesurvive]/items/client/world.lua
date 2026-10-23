@@ -23,6 +23,9 @@ return function(ctx)
     end
 
     local function formatName(t, r)
+        if r.uname == "TentPack" and r.data and r.data.pitched then
+            return "Pitched Tent"
+        end
         if ammo and t then
             local defA = t.categoryData and defaultAmmo(t.categoryData.calibre) or nil
             return ammo.displayName(t, r.data, itemType, calibreName, defA)
@@ -45,14 +48,16 @@ return function(ctx)
             forget(id)
         end
         for _, r in ipairs(delta.add or {}) do
+            local t = itemType(r.uname)
+            local isPitched = (r.uname == "TentPack" and r.data and r.data.pitched)
             if not objects[r.id] then
-                local t = itemType(r.uname)
                 local z = r.z + (t and t.modelz or 0)
                 local rx, ry = t and t.rotx or 0, t and t.roty or 0
-                local obj = createObject(models.forType(t), r.x, r.y, z, rx, ry, r.rz or 0)
+                local modelId = isPitched and 3243 or models.forType(t)
+                local obj = createObject(modelId, r.x, r.y, z, rx, ry, r.rz or 0)
                     or createObject(models.FALLBACK, r.x, r.y, z, rx, ry, r.rz or 0)
                 if obj then
-                    setElementCollisionsEnabled(obj, false)
+                    setElementCollisionsEnabled(obj, isPitched or false)
                     setElementInterior(obj, r.interior or 0)
                     setElementDimension(obj, r.dimension or 0)
                 end
@@ -65,6 +70,14 @@ return function(ctx)
                     z = r.z,
                     name = formatName(t, r),
                 }
+            else
+                local e = objects[r.id]
+                local targetModel = isPitched and 3243 or models.forType(t)
+                if isElement(e.obj) and getElementModel(e.obj) ~= targetModel then
+                    setElementModel(e.obj, targetModel)
+                    setElementCollisionsEnabled(e.obj, isPitched or false)
+                end
+                e.name = formatName(t, r)
             end
         end
     end)

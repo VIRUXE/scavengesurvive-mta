@@ -12,7 +12,12 @@ return function(ctx)
     local VANILLA_MELEE_MAX = 15
     local RELOAD_COOLDOWN_MS = 1000
     local lastReload = {}
+    local containers = nil
     local M = {}
+
+    function M.setContainers(c)
+        containers = c
+    end
 
     local function baseWeapon(t)
         local w = t and t.category == "weapon" and t.categoryData and t.categoryData.baseWeapon
@@ -67,6 +72,26 @@ return function(ctx)
     function M.setWorn(player, item)
         state.worn[player] = item
         publish(player, "items.bag", item)
+    end
+
+    function M.setGear(player, slot, item)
+        if slot == "bag" then
+            return M.setWorn(player, item)
+        end
+        if state[slot] then
+            state[slot][player] = item
+            publish(player, "items." .. slot, item)
+        end
+    end
+
+    function M.clearGear(player)
+        local gearSlots = { "hat", "mask", "armour", "holster" }
+        for _, slot in ipairs(gearSlots) do
+            if state[slot] then
+                state[slot][player] = nil
+                publish(player, "items." .. slot, nil)
+            end
+        end
     end
 
     function M.clearHeld(player)
@@ -162,23 +187,30 @@ return function(ctx)
         end
         db.query(
             "SELECT id, type_uname AS uname, hitpoints AS hp, data, holder_kind AS kind FROM items "
-                .. "WHERE holder_char_id = ? AND holder_kind IN ('held', 'bag')",
+                .. "WHERE holder_char_id = ? AND holder_kind IN ('held', 'bag', 'hat', 'mask', 'armour', 'holster')",
             { cid },
             function(rows, c)
                 if not isElement(c.player) or rows == false then
                     return
                 end
                 local held, bag
+                local gear = { hat = nil, mask = nil, armour = nil, holster = nil }
+                local isGear = { hat = true, mask = true, armour = true, holster = true }
                 for _, row in ipairs(rows) do
                     row.data = decodeData(row.data)
                     if row.kind == "bag" then
                         bag = row
-                    else
+                    elseif row.kind == "held" then
                         held = row
+                    elseif isGear[row.kind] then
+                        gear[row.kind] = row
                     end
                 end
                 M.setHeld(c.player, held)
                 M.setWorn(c.player, bag)
+                for slot, item in pairs(gear) do
+                    M.setGear(c.player, slot, item)
+                end
             end,
             { player = player }
         )
@@ -440,10 +472,6 @@ return function(ctx)
         if tryPlayerInteraction(player, cid, held) then
             return
         end
-        local heldType = held and itemType(held.uname) or nil
-        if held and (not ammo or (not ammo.isCalibreWeapon(heldType) and not ammo.isAmmoItem(heldType))) then
-            return toast(player, "HANDS_FULL")
-        end
         local x, y = getElementPosition(player)
         local r = tonumber(state.settings["items.pickup_radius"]) or 2.0
         local sql = world.findNearestSql(x, y, r, getElementInterior(player), getElementDimension(player))
@@ -452,8 +480,50 @@ return function(ctx)
                 return
             end
             local curHeld = state.held[c.player]
+            local curUname = curHeld and curHeld.uname
+            local rData = decodeData(row.data)
+
+            -- TentPack interactions
+            if row.uname == "TentPack" then
+                if rData and rData.pitched then
+                    if curUname == "Crowbar" then
+                        return triggerEvent("onItemsRequestDismantleTent", c.player, row.id)
+                    else
+                        return containers and containers.openWorldContainer(c.player, row)
+                    end
+                else
+                    if curUname == "Hammer" then
+                        return triggerEvent("onItemsRequestPitchTent", c.player, row.id)
+                    end
+                end
+            end
+
+            -- Safebox world containers
+            local t = itemType(row.uname)
+            if t and t.category == "safebox" then
+                return containers and containers.openWorldContainer(c.player, row)
+            end
+
+            -- Defences
+            local isDefence = (
+                row.uname == "Door"
+                or row.uname == "MetalGate"
+                or row.uname == "CrateDoor"
+                or row.uname == "LargeFrame"
+            )
+            if isDefence and curUname ~= "Crowbar" then
+                local bRes = getResourceFromName("building")
+                if bRes and getResourceState(bRes) == "running" then
+                    return exports.building:interactDefence(c.player, row)
+                end
+            end
+
+            local curType = curHeld and itemType(curHeld.uname) or nil
+            if curHeld and (not ammo or (not ammo.isCalibreWeapon(curType) and not ammo.isAmmoItem(curType))) then
+                return toast(c.player, "HANDS_FULL")
+            end
+
             if curHeld then
-                local curType = itemType(curHeld.uname)
                 return tryTransferFromWorld(c.player, c.charId, curHeld, curType, row)
             end
             db.call("item_pickup", { row.id, c.charId }, function(res, c2)

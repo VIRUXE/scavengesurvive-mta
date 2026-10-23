@@ -1,0 +1,6 @@
+addEvent("onCraftingRequestCombine", true)
+addEvent("onCraftingRequestGroundCraft", true)
+addEvent("onCraftingRequestDeconstruct", true)
+addEvent("onCraftingRequestWorkbenchCraft", true)
+addEvent("onClientCraftingHoldAction", true)
+addEvent("onClientCraftingStopHoldAction", true)

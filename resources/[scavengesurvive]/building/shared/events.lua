@@ -1,0 +1,8 @@
+addEvent("onBuildingRequestInteract", true)
+addEvent("onBuildingRequestKeypadSubmit", true)
+addEvent("onBuildingRequestInstallKeypad", true)
+addEvent("onBuildingRequestLockBreak", true)
+addEvent("onBuildingRequestHackDevice", true)
+addEvent("onClientBuildingOpenKeypad", true)
+addEvent("onClientBuildingCloseKeypad", true)
+addEvent("onClientBuildingDoorState", true)
