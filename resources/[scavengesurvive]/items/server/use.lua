@@ -1,4 +1,5 @@
--- Food is the MVP use-case; other categories are handled by other resources through itemUseAttempted (cancel = consumed).
+-- Food is the MVP use-case; other categories are handled by other resources through itemUseAttempted
+-- (cancel = consumed).
 -- ctx = { db, net, state, type, charId, toast, destroy, sendInventory } built by server/main.lua.
 return function(ctx)
     local db, net, state = ctx.db, ctx.net, ctx.state

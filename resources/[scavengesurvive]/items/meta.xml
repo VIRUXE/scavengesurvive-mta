@@ -28,6 +28,7 @@
     <export function="openTrunkContainer" type="server"/>
     <export function="closeTrunk" type="server"/>
     <export function="openWorldContainer" type="server"/>
+    <export function="openSupplyContainer" type="server"/>
     <export function="closeContainer" type="server"/>
     <export function="updateHeldData" type="server"/>
     <export function="createStartingItems" type="server"/>

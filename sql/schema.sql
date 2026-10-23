@@ -308,6 +308,20 @@ CREATE TABLE IF NOT EXISTS `world_budget` (
   PRIMARY KEY (`category`,`zone`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
+CREATE TABLE IF NOT EXISTS `world_crates` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `kind` enum('supply','cache') NOT NULL,
+  `container_id` int(11) NOT NULL,
+  `x` float NOT NULL,
+  `y` float NOT NULL,
+  `z` float NOT NULL,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_world_crates_container` (`container_id`),
+  KEY `ix_world_crates_kind` (`kind`),
+  CONSTRAINT `fk_world_crates_container` FOREIGN KEY (`container_id`) REFERENCES `containers` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+
 CREATE TABLE IF NOT EXISTS `world_items_pos` (
   `item_id` int(11) NOT NULL,
   `pos` point NOT NULL,

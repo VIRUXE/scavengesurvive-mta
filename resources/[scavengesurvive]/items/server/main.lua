@@ -318,6 +318,10 @@ function openWorldContainer(player, itemRow)
     return true
 end
 
+function openSupplyContainer(player, containerId, title, size, x, y, z)
+    return containers.openSupplyContainer(player, containerId, title, size, x, y, z) == true
+end
+
 function closeContainer(player)
     if not isElement(player) then
         return false

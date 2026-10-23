@@ -68,6 +68,9 @@ return function(ctx)
         if worldInteract() then
             return
         end
+        if exports.loot:tryOpenCrate() == true then
+            return
+        end
         local nearVeh, nearDist = getNearbyVehicle()
         local held = ctx.getHeld()
         local uname = held and held.uname

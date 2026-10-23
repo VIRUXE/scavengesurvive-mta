@@ -238,11 +238,11 @@ return function(ctx)
                     db.exec(
                         "INSERT INTO containers (kind, size, owner_item_id) VALUES (?, ?, ?)",
                         { c.ckind, c.csize, c.itemRow.id },
-                        function(insRes)
+                        function(ok, _, _, insertId)
                             if not isElement(c.player) then
                                 return
                             end
-                            local newId = insRes and insRes.insert_id
+                            local newId = ok and tonumber(insertId)
                             if newId then
                                 activeContainer[c.player] = {
                                     containerId = newId,
@@ -259,6 +259,22 @@ return function(ctx)
             end,
             { player = player, title = title, ckind = ckind, csize = csize, itemRow = itemRow }
         )
+    end
+
+    -- A supply crate or weapons cache (loot resource): a container with no item behind it, shown like a trunk
+    -- and closed when the player walks more than 4 m from (x, y, z).
+    function M.openSupplyContainer(player, containerId, title, size, x, y, z)
+        if not isElement(player) or not charId(player) or not tonumber(containerId) then
+            return false
+        end
+        activeContainer[player] = {
+            containerId = tonumber(containerId),
+            title = title or "Container",
+            size = tonumber(size) or 32,
+            pos = { x = x, y = y, z = z },
+        }
+        sendInventory(player)
+        return true
     end
 
     function M.closeContainer(player)

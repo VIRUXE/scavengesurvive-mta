@@ -15,8 +15,12 @@ M.SPECIAL = {
     HerpDerp = "Herp-a-derp",
 }
 
+-- The interact verb next to a landed crate, by the loot resource's crate kind.
+M.CRATES = { supply = "Open supply crate", cache = "Open weapon cache" }
+
 -- ctx = {
 --   spawned, uiOpen, knockedOut, hudOff, driver, nearTrunk, nearBonnet, nearPlayer, cuffedNearby, hasBag,
+--   nearFeature ("ladder" / "zipline" / "ladder_on" / "zipline_on"), nearCrate ("supply" / "cache"),
 --   held = false | { uname, category, isWeapon },
 --   supports = { [capability] = true },   -- eat, drink, openbag, wearbag, special, holster, reload, unload, give,
 --                                         -- removebag, uncuff, trunk, repair, engine, lights, doors, radio
@@ -50,6 +54,10 @@ function M.lines(ctx, keys)
         add("interact", "Climb ladder")
     elseif feature == "zipline" then
         add("interact", "Grab zipline")
+    end
+    -- a landed supply crate or weapons cache (loot resource): upstream's button label next to the crate
+    if M.CRATES[ctx.nearCrate] then
+        add("interact", M.CRATES[ctx.nearCrate])
     end
     if ctx.nearTrunk then
         add("interact", "Open Trunk", "trunk")

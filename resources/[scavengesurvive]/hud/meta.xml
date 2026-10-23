@@ -9,6 +9,7 @@
     <include resource="items"/>
     <include resource="chat"/>
     <include resource="world"/>
+    <include resource="loot"/>
     <script src="shared/events.lua" type="shared"/>
     <script src="server/main.lua" type="server"/>
     <script src="client/main.lua" type="client"/>

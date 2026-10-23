@@ -91,6 +91,7 @@ return {
     supplyDropStarted = true,
     supplyCrateLanded = true,
     weaponCacheDropped = false,
+    supplyCrateOpenRequested = true,
     radioTuneRequested = true,
     chatModeRequested = true,
     chatRadioChanged = true,

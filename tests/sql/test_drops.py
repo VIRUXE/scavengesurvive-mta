@@ -13,6 +13,23 @@ def test_drop_points_seeded_from_upstream_zones(db):
         assert r["n"] == 186 and r["lo"] == "sf" and r["hi"] == "sf"  # upstream: 186 DefineWeaponsCachePos, all in sf.pwn
 
 
+def test_world_crates_follow_their_container(db):
+    """A landed crate is a 32-slot 'supply' container with no item behind it; deleting the container removes the crate row."""
+    with db.cursor() as cur:
+        cur.execute("INSERT INTO containers (kind, size) VALUES ('supply', 32)")
+        cid = cur.lastrowid
+        cur.execute("INSERT INTO world_crates (kind, container_id, x, y, z) VALUES ('cache', %s, 1, 2, 3)", (cid,))
+        cur.execute("CALL item_create_in_container('M9Pistol', %s)", (cid,))
+        assert cur.fetchone()["ok"] == 1
+        while cur.nextset():
+            pass
+        cur.execute("DELETE FROM containers WHERE id = %s", (cid,))
+        cur.execute("SELECT COUNT(*) AS n FROM world_crates WHERE container_id = %s", (cid,))
+        assert cur.fetchone()["n"] == 0
+        cur.execute("SELECT COUNT(*) AS n FROM items WHERE container_id = %s", (cid,))
+        assert cur.fetchone()["n"] == 0
+
+
 def test_drop_settings_seeded(db):
     with db.cursor() as cur:
         cur.execute("SELECT skey, svalue FROM settings WHERE skey LIKE 'loot.supply%' OR skey LIKE 'loot.cache%' OR skey = 'loot.drop_point_reuse_hours'")

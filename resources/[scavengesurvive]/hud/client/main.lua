@@ -205,6 +205,7 @@ local function drawKeyActions(driver)
         held = held and { uname = held.uname, category = held.category, isWeapon = isCalibreWep },
         nearPlayer = false,
         nearFeature = nearFeature(),
+        nearCrate = exports.loot:nearbyCrate() or nil,
         cuffedNearby = not held and hasCuffedPlayerNearby() or false,
         supports = SUPPORTS,
     }, state.keys)

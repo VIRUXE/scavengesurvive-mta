@@ -1,4 +1,5 @@
 local db = loadstring(exports.lib:getModule("db"), "=lib/db.lua")()
+local net = loadstring(exports.lib:getModule("net"), "=lib/net.lua")()
 local util = loadstring(exports.lib:getModule("util"), "=lib/util.lua")()
 local budget = loadstring(exports.lib:getModule("budget"), "=lib/budget.lua")()
 local function loadFile(path)
@@ -92,6 +93,7 @@ end
 
 local drops = loadFile("server/drops.lua")({
     db = db,
+    net = net,
     util = util,
     roll = roll,
     drops = dropsLogic,

@@ -11,13 +11,13 @@ stds.mta_shared = dofile(".luacheck/mta_shared.lua")
 stds.mta_server = dofile(".luacheck/mta_server.lua")
 stds.mta_client = dofile(".luacheck/mta_client.lua")
 files["resources/**/lib/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "getModule" } }
-files["resources/**/data/**"] = { std = "lua51+mta_shared", globals = { "itemType", "itemTypes", "lootTable", "calibreBleed", "calibreName", "ammoTypesForCalibre", "vehicleType", "vehicleTypes", "t" } }
+files["resources/**/data/**"] = { std = "lua51+mta_shared", globals = { "itemType", "itemTypes", "lootTable", "calibreBleed", "calibreName", "ammoTypesForCalibre", "vehicleType", "vehicleTypes", "t", "languages" } }
 files["resources/**/ui/**"] = { std = "lua51+mta_shared+mta_client", globals = { "actionTextShow", "actionTextHide", "toast", "progressStart", "progressCancel", "listOpen", "listUpdate", "listClose", "listIsOpen" } }
 -- getTime/getVehicleEngineState/getVehicleName/getVehicleOccupant postdate the generated .luacheck/mta_client.lua list
 files["resources/**/hud/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "setHidden" }, read_globals = { "getTime", "getVehicleEngineState", "getVehicleName", "getVehicleOccupant" } }
 files["resources/**/auth/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "prompt", "getAccountId", "getAdminLevel", "getLanguage", "isAuthenticated", "setSessionAdminLevel", "setWhitelistEnabled", "isWhitelistEnabled" } }
 files["resources/**/character/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "getCharacterId", "getPlayerByCharacterId", "getInventoryContainerId", "getStats", "modifyStat", "killCharacter", "applyWound", "knockOutPlayer", "wakeUpPlayer", "isKnockedOut", "setPlayerCuffed", "isPlayerCuffed" } }
-files["resources/**/items/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "getHeld", "setHeld", "clearHeld", "openTrunkContainer", "closeTrunk", "openWorldContainer", "closeContainer", "updateHeldData", "createStartingItems", "refreshPlayer", "destroyItem", "destroyWorldItem", "destroyContainerItem", "resendWorldItem" } }
+files["resources/**/items/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "getHeld", "setHeld", "clearHeld", "openTrunkContainer", "closeTrunk", "openWorldContainer", "openSupplyContainer", "closeContainer", "updateHeldData", "createStartingItems", "refreshPlayer", "destroyItem", "destroyWorldItem", "destroyContainerItem", "resendWorldItem" } }
 files["resources/**/models/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "resolve" } }
 -- restoreWorldModel postdates the generated .luacheck/mta_client.lua list
 files["resources/**/maps/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "getZoneAt", "getPlayerZone" } }
@@ -25,7 +25,7 @@ files["resources/**/maps/client/**"] = { std = "lua51+mta_shared+mta_client", gl
 files["resources/**/maps/data/**"] = { std = "lua51", max_line_length = false }
 -- moveObject, createBlipAttachedTo (server) and createEffect (client) postdate the generated lists
 files["resources/**/loot/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "rollNear", "dropSupply", "dropWeaponCache", "supplyDropTypes", "dropStatus", "lootAllowances" }, read_globals = { "moveObject", "createBlipAttachedTo" } }
-files["resources/**/loot/client/**"] = { std = "lua51+mta_shared+mta_client", read_globals = { "createEffect" } }
+files["resources/**/loot/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "nearbyCrate", "tryOpenCrate" }, read_globals = { "createEffect" } }
 files["resources/**/world/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "getWeather", "setGlobalWeather" } }
 files["resources/**/world/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "tryInteract", "nearbyFeature" }, read_globals = { "dxDrawLine3D", "getBoundKeys" } }
 files["resources/**/world/data/**"] = { std = "lua51", max_line_length = false }

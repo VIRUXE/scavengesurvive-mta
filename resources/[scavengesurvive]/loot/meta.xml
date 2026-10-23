@@ -17,4 +17,6 @@
     <export function="supplyDropTypes" type="server"/>
     <export function="dropStatus" type="server"/>
     <export function="lootAllowances" type="server"/>
+    <export function="nearbyCrate" type="client"/>
+    <export function="tryOpenCrate" type="client"/>
 </meta>

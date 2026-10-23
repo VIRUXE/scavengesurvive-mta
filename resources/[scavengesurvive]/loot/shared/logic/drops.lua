@@ -13,8 +13,17 @@ drops.TYPES = {
 }
 drops.DROP_HEIGHT = 1000.0 -- crates start here (upstream creates the objects at z 1000)
 drops.DROP_SPEED = 3.5 -- units per second
-drops.SUPPLY_CRATE = "LargeBox" -- the landed crate is a world safebox item; loot beyond its slots lies around it
-drops.CACHE_CRATE = "GunCase"
+-- The crate is a 32-slot container with no item behind it (upstream CreateContainer("Supply Crate", 32) and
+-- CreateContainer("Weapon Cache", 32)), opened with the interact key next to its objects: two 3799 crates, the
+-- top one upside down, for a supply drop (supply-crate.pwn:261-262) and object 964 for a weapons cache
+-- (weapons-cache.pwn:128). Loot that does not fit is simply not created, nothing lies around the crate.
+drops.CRATE_SIZE = 32
+drops.SUPPLY_OBJECT = 3799
+drops.SUPPLY_STACK_Z = 2.465
+drops.CACHE_OBJECT = 964
+drops.CACHE_Z_OFFSET = -0.044
+drops.OPEN_RADIUS = 3.0 -- the button's range in the SIF button library
+drops.TITLES = { supply = "Supply Crate", cache = "Weapon Cache" }
 drops.CACHE_TABLE = "airdrop_military_weapons"
 drops.CACHE_SIGNALS = 3
 drops.CACHE_SIGNAL_INTERVAL_S = 200
@@ -71,29 +80,37 @@ function drops.cacheCount(rng)
     return 22 + math.floor(rng() * 11)
 end
 
--- Splits rolled unames between the crate (first `slots` items, one slot each) and the ground around it.
-function drops.splitForCrate(unames, slots)
-    local inside, around = {}, {}
-    for i, u in ipairs(unames) do
-        if i <= slots then
-            inside[#inside + 1] = u
-        else
-            around[#around + 1] = u
-        end
+-- The objects that stand for a crate of `kind` ("supply" / "cache") landed at (x, y, z), in creation order; the
+-- first one carries the crate's element data.
+function drops.crateObjects(kind, x, y, z)
+    if kind == "cache" then
+        return { { model = drops.CACHE_OBJECT, x = x, y = y, z = z + drops.CACHE_Z_OFFSET, rx = 0, ry = 0, rz = 0 } }
     end
-    return inside, around
+    return {
+        { model = drops.SUPPLY_OBJECT, x = x, y = y, z = z, rx = 0, ry = 0, rz = 0 },
+        {
+            model = drops.SUPPLY_OBJECT,
+            x = x + 0.01,
+            y = y + 0.01,
+            z = z + drops.SUPPLY_STACK_Z,
+            rx = 0,
+            ry = 180,
+            rz = 0,
+        },
+    }
 end
 
--- Positions for n ground items in rings around (x, y): 8 per ring, 1.2 m apart in radius.
-function drops.ringPositions(x, y, n, rng)
-    local out = {}
-    for i = 1, n do
-        local ring = math.floor((i - 1) / 8)
-        local ang = math.rad(((i - 1) % 8) * 45 + rng() * 20)
-        local r = 1.5 + ring * 1.2
-        out[i] = { x = x + math.cos(ang) * r, y = y + math.sin(ang) * r }
+-- The crate object nearest to (px, py, pz) within OPEN_RADIUS, from { { id, x, y, z }, ... }; nil when none.
+function drops.crateAt(crates, px, py, pz)
+    local best, bestD = nil, drops.OPEN_RADIUS
+    for _, c in ipairs(crates) do
+        local dx, dy, dz = c.x - px, c.y - py, c.z - pz
+        local d = math.sqrt(dx * dx + dy * dy + dz * dz)
+        if d <= bestD then
+            best, bestD = c, d
+        end
     end
-    return out
+    return best
 end
 
 -- Upstream GetAngleToPoint / absoluteangle: compass bearing (0 = north, clockwise) from the reference to the
