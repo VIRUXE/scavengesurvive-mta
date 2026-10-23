@@ -103,11 +103,25 @@ return function(ctx)
         return {
             obj = obj,
             uname = uname,
+            sampBone = SAMP_BONE[bone] and bone or 6,
             bone = SAMP_BONE[bone] or SAMP_BONE[6],
+            offsets = { unpack(offsets, 1, 6) },
+            scale = scale and { scale[1], scale[2], scale[3] } or { 1, 1, 1 },
             localMatrix = l,
             interior = -1,
             dimension = -1,
         }
+    end
+
+    -- attachedit preview: slot -> { offsets, scale } replacing the configured values on the local player only
+    local preview = {}
+
+    local function applyPreview(a, p)
+        a.offsets = { unpack(p.offsets, 1, 6) }
+        a.scale = { p.scale[1], p.scale[2], p.scale[3] }
+        setObjectScale(a.obj, a.scale[1], a.scale[2], a.scale[3])
+        local r = rotationMatrix(a.offsets[4], a.offsets[5], a.offsets[6])
+        a.localMatrix = { r[1], r[2], r[3], { a.offsets[1], a.offsets[2], a.offsets[3] } }
     end
 
     local function heldAttachment(uname)
@@ -193,6 +207,10 @@ return function(ctx)
             tracked[player][slot] = apparelAttachment(slot, uname, player)
         else
             tracked[player][slot] = heldAttachment(uname)
+        end
+        local a = tracked[player][slot]
+        if a and player == localPlayer and preview[slot] then
+            applyPreview(a, preview[slot])
         end
     end
 
@@ -300,4 +318,51 @@ return function(ctx)
             forgetPlayer(player)
         end
     end)
+
+    local SLOT_KEY = {}
+    for key, slot in pairs(SLOTS) do
+        SLOT_KEY[slot] = key
+    end
+
+    local M = {}
+
+    -- the local player's attachment in slot: { slot, uname, skin, bone (SA-MP id), gtaBone, offsets, scale,
+    -- preview }, or nil when the slot is empty or GTA draws the item itself (a real weapon)
+    function M.getConfig(slot)
+        local a = tracked[localPlayer] and tracked[localPlayer][slot]
+        if not a or not isElement(a.obj) then
+            return nil
+        end
+        return {
+            slot = slot,
+            uname = a.uname,
+            skin = getElementModel(localPlayer),
+            bone = a.sampBone,
+            gtaBone = a.bone,
+            offsets = { unpack(a.offsets, 1, 6) },
+            scale = { a.scale[1], a.scale[2], a.scale[3] },
+            preview = preview[slot] ~= nil,
+        }
+    end
+
+    -- offsets = { x, y, z, rx, ry, rz }, scale = { sx, sy, sz } (default 1); offsets nil clears the preview and
+    -- rebuilds the slot from its configured values. Returns getConfig(slot) afterwards.
+    function M.setPreview(slot, offsets, scale)
+        if not SLOT_KEY[slot] then
+            return nil
+        end
+        if offsets then
+            preview[slot] = { offsets = offsets, scale = scale or { 1, 1, 1 } }
+            local a = tracked[localPlayer] and tracked[localPlayer][slot]
+            if a and isElement(a.obj) then
+                applyPreview(a, preview[slot])
+            end
+        elseif preview[slot] then
+            preview[slot] = nil
+            setSlot(localPlayer, slot, getElementData(localPlayer, SLOT_KEY[slot]))
+        end
+        return M.getConfig(slot)
+    end
+
+    return M
 end

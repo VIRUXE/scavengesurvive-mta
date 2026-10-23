@@ -30,4 +30,6 @@
     <export function="destroyItem" type="server"/>
     <export function="destroyWorldItem" type="server"/>
     <export function="destroyContainerItem" type="server"/>
+    <export function="setAttachPreview" type="client"/>
+    <export function="getAttachConfig" type="client"/>
 </meta>

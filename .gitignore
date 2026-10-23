@@ -8,6 +8,7 @@ server-config/local.settings.xml
 server-config/run/
 # brackets are a character class in gitignore patterns; escape them
 resources/\[scavengesurvive\]/dev/screenshots/
+resources/\[scavengesurvive\]/attachedit/attachedit-out.lua
 *.zip
 luacov.*
 .luacheckcache

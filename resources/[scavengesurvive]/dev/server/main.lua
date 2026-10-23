@@ -241,6 +241,8 @@ local RCON_HELP = {
     "key <player> <command|key>    run a bound command (interact, inventory) or client key (arrow_d, enter, escape)",
     "studio <player> [cam|off]     green-screen studio; cam = preset (front back left right threequarter top face",
     "                              hands) or yaw dist height [lookZ]; then screenshot <player>",
+    "attach <player> <slot> x y z rx ry rz [sx sy sz] | off | get",
+    "                              preview attachment offsets (attachedit resource); get = last client report",
     "shutdown                      stop the server",
 }
 local RESOURCE_VERBS = { start = startResource, stop = stopResource, restart = restartResource, rr = restartResource }
@@ -362,6 +364,28 @@ function rcon(line)
             local cam, err = studio.setCam(p, words)
             ok = cam ~= nil
             put("%s", cam and (who .. " in the studio: " .. studio.describeCam(cam)) or err)
+        end
+    elseif verb == "attach" then
+        local who, args = rest:match("^(%S+)%s*(.-)$")
+        local p = who and getPlayerFromName(who)
+        local res = getResourceFromName("attachedit")
+        local words = {}
+        for w in (args or ""):gmatch("%S+") do
+            words[#words + 1] = w
+        end
+        if not p then
+            ok = false
+            put("no player '%s' (usage: attach <player> <slot> x y z rx ry rz [sx sy sz] | off | get)", tostring(who))
+        elseif not res or getResourceState(res) ~= "running" then
+            ok = false
+            put("the attachedit resource is not running")
+        else
+            local lines
+            ok, lines = exports.attachedit:rcon(p, words)
+            ok = ok == true
+            for _, l in ipairs(type(lines) == "table" and lines or {}) do
+                put("%s", tostring(l))
+            end
         end
     elseif verb == "shutdown" then
         put("shutting down")

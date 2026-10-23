@@ -91,6 +91,48 @@ item about the vertical (yaw), `ry` about the forward axis (roll) and `rz` about
 shoot it from `face` and `left`. `tests/lua/spec/items_apparel_spec.lua` fails if a spawn skin lacks a row for
 any wearable.
 
+### Attachment editor (`attachedit` resource)
+
+Instead of editing, restarting and reshooting, preview values live on the player's own client. `items` exports two
+client functions for this. `setAttachPreview(slot, offsets, scale)` makes the local player's attachment in `slot`
+(`hat`, `mask`, `armour`, `bag`, `holster`, `held` or `cuffs`) use `offsets = { x, y, z, rx, ry, rz }` and
+`scale = { sx, sy, sz }` instead of its configured row. The preview survives a skin or item change in that slot.
+`setAttachPreview(slot, nil)` rebuilds the slot from its configured values. `getAttachConfig(slot)` returns the live
+`uname`, `skin`, `bone` (SA-MP id), `offsets`, `scale` and `preview` flag, or nil when nothing is drawn (an empty
+slot, or a real weapon GTA draws itself). Other players never see a preview.
+
+In game, `/attachedit <slot>` opens an editor on the item in that slot. Like the dev commands, it needs `*dev.open`
+or an admin level. The editor starts from the live values and shows the slot, item, skin and bone, all nine values
+and the step:
+
+| Key | Effect |
+| :--- | :--- |
+| `1`–`9`, up / down | select x, y, z, rx, ry, rz, sx, sy, sz |
+| right, `+` (`=`), page up / left, `-`, page down | add / subtract the step |
+| `0` / backspace | next / previous step: 0.001, 0.005, 0.02 m; 1, 5, 15°; 0.01, 0.05 scale |
+| Enter | print `[skin] = { x, y, z, rx, ry, rz, sx, sy, sz }, -- uname slot` to chat and the server log, and append it to `resources/[scavengesurvive]/attachedit/attachedit-out.lua` (git-ignored) with a timestamp |
+| Escape | clear the preview and close (MTA lets a script cancel Escape only once, so a second quick press opens the main menu) |
+
+The row pastes straight into `OVERRIDES[uname]`. `/attachedit <same slot>` closes the editor but keeps the preview.
+The keys come through `onClientKey`, and only while the editor is open. Each one it uses is cancelled, so GTA
+controls and other binds on that key do not fire, and keys are ignored while chat input, the console or the main
+menu is open. The panel is drawn post-GUI, so `takePlayerScreenShot` leaves it out of rcon screenshots. rcon
+`key <player> enter|escape|arrow_d|…` drives the editor as well.
+
+With no keyboard, use the rcon verb (dev forwards it to `exports.attachedit:rcon`):
+
+```powershell
+pwsh server-config/rcon.ps1 attach VIRUXE hat 0.152 0 -0.006 0 0 0 1.1 1.1 1.1   # preview (scale optional, default 1)
+pwsh server-config/rcon.ps1 screenshot VIRUXE
+pwsh server-config/rcon.ps1 attach VIRUXE hat get                              # last values the client reported
+pwsh server-config/rcon.ps1 attach VIRUXE hat off                              # back to the configured row
+```
+
+An HTTP rcon call cannot wait for the client, so `get` prints the server's cached copy of the client's last report
+for that slot, with its age, and asks the client for a new one. The client reports after every `set`, every `off`
+and every editor nudge, so a `get` a moment after a `set` is current. Otherwise run `get` twice; the first call of
+a session says "no report yet". Stopping `attachedit` clears every preview it set.
+
 ## Files
 
 - `resources/[scavengesurvive]/dev/shared/logic/studio.lua` holds the pure logic: constants, presets, box
@@ -99,6 +141,10 @@ any wearable.
   quit, death or stop. `server/main.lua` loads it and adds the `studio` rcon verb.
 - `resources/[scavengesurvive]/dev/client/studio.lua` draws the box and pins the camera, time and weather.
 - `resources/[scavengesurvive]/hud/client/main.lua` adds the `setHidden(bool)` export.
+- `resources/[scavengesurvive]/attachedit/` is the attachment editor: `shared/logic/attachedit.lua` (fields, steps,
+  clamping, key map, row format, rcon arguments; tested in `tests/lua/spec/attachedit_logic_spec.lua`),
+  `client/main.lua` (editor and preview relay) and `server/main.lua` (`/attachedit`, the `rcon` export, the output
+  file). The preview hook is in `items/client/attach.lua`, exported from `items/client/main.lua`.
 
 ## Limits
 
