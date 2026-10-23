@@ -7,9 +7,12 @@
     <include resource="character"/>
     <include resource="items"/>
     <include resource="loot"/>
+    <include resource="hud"/>
     <script src="shared/events.lua" type="shared"/>
     <script src="server/main.lua" type="server"/>
     <script src="client/main.lua" type="client"/>
+    <script src="client/studio.lua" type="client"/>
+    <file src="shared/logic/studio.lua"/>
     <export function="rcon" type="server" http="true"/>
     <aclrequest>
         <right name="function.restartResource" access="true"/>

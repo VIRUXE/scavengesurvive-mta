@@ -1,3 +1,6 @@
 addEvent("onClientDevKey", true)
 addEvent("onClientDevFlyState", true)
 addEvent("onDevFlyActiveChange", true)
+addEvent("onClientDevStudioState", true)
+addEvent("onClientDevStudioCam", true)
+addEvent("onClientDevStudioPose", true)

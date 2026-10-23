@@ -15,4 +15,5 @@
     <file src="shared/logic/keyactions.lua"/>
     <file src="shared/logic/watch.lua"/>
     <file src="shared/logic/vehiclepanel.lua"/>
+    <export function="setHidden" type="client"/>
 </meta>

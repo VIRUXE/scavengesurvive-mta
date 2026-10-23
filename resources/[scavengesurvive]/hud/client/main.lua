@@ -48,6 +48,7 @@ local state = {
     combatLogging = false,
     frequency = watch.DEFAULT_FREQUENCY,
     keys = {},
+    hidden = false, -- setHidden(true): the dev studio wants clean screenshots
 }
 local typeCache, vehicleTypeCache = {}, {}
 
@@ -294,7 +295,7 @@ local function drawVehiclePanel(vehicle)
 end
 
 addEventHandler("onClientRender", root, function()
-    if not state.spawned or state.dead then
+    if not state.spawned or state.dead or state.hidden then
         return
     end
     if state.brightness > 0 then
@@ -310,6 +311,16 @@ addEventHandler("onClientRender", root, function()
         drawVehiclePanel(vehicle)
     end
 end)
+
+-- export: hide everything this resource draws, stock components included; false brings the usual set back
+function setHidden(hidden)
+    state.hidden = hidden == true
+    if state.hidden then
+        setPlayerHudComponentVisible("all", false)
+    elseif state.spawned and not state.dead then
+        applyStockHud()
+    end
+end
 
 addEventHandler("onClientResourceStart", resourceRoot, function()
     setPlayerHudComponentVisible("all", false)

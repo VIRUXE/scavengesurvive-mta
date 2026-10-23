@@ -214,6 +214,18 @@ addEventHandler("onDevFlyActiveChange", root, function(isFlying)
     end
 end)
 
+local function loadFile(path, chunkName)
+    local f = fileOpen(path, true)
+    local src = fileRead(f, fileGetSize(f))
+    fileClose(f)
+    return assert(loadstring(src, chunkName))()
+end
+local studio = loadFile("server/studio.lua", "=dev/studio.lua")({
+    logic = loadFile("shared/logic/studio.lua", "=dev/studio_logic.lua"),
+    say = say,
+    command = command,
+})
+
 -- HTTP "rcon" (MTA has no RCON): POST http://127.0.0.1:22005/dev/call/rcon with a JSON array holding one command
 -- line, HTTP Basic auth as the account named by *dev.http_user (created below from *dev.http_pass; run-local.ps1
 -- puts it in an ACL group that only grants general.http). Returns { ok, output = { lines } }.
@@ -227,6 +239,8 @@ local RCON_HELP = {
     "lua <code>                    run server-side Lua and print its return values, e.g. lua return getPlayerCount()",
     "screenshot <player> [w h]     ask that client for a screenshot; saved as dev/screenshots/<player>-<time>.jpg",
     "key <player> <command|key>    run a bound command (interact, inventory) or client key (arrow_d, enter, escape)",
+    "studio <player> [cam|off]     green-screen studio; cam = preset (front back left right threequarter top face",
+    "                              hands) or yaw dist height [lookZ]; then screenshot <player>",
     "shutdown                      stop the server",
 }
 local RESOURCE_VERBS = { start = startResource, stop = stopResource, restart = restartResource, rr = restartResource }
@@ -329,6 +343,25 @@ function rcon(line)
         else
             triggerClientEvent(p, "onClientDevKey", p, bound)
             put("%s pressed %s", who, bound)
+        end
+    elseif verb == "studio" then
+        local who, args = rest:match("^(%S+)%s*(.-)$")
+        local p = who and getPlayerFromName(who)
+        local words = {}
+        for w in (args or ""):gmatch("%S+") do
+            words[#words + 1] = w
+        end
+        if not p then
+            ok = false
+            put("no player '%s' (usage: studio <player> [preset|yaw dist height [lookZ]|off])", tostring(who))
+        elseif words[1] == "off" then
+            ok = studio.leave(p)
+            put(ok and "%s left the studio" or "%s was not in the studio", who)
+        else
+            studio.enter(p)
+            local cam, err = studio.setCam(p, words)
+            ok = cam ~= nil
+            put("%s", cam and (who .. " in the studio: " .. studio.describeCam(cam)) or err)
         end
     elseif verb == "shutdown" then
         put("shutting down")
