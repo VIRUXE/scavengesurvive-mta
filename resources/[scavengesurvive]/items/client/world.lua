@@ -22,8 +22,21 @@ return function(ctx)
         return list and list[1] or nil
     end
 
+    local function isPitchedTent(r)
+        if r.uname ~= "TentPack" or not r.data then
+            return false
+        end
+        if r.data.pitched == true then
+            return true
+        end
+        if type(r.data) == "table" and r.data[1] and r.data[1].pitched == true then
+            return true
+        end
+        return false
+    end
+
     local function formatName(t, r)
-        if r.uname == "TentPack" and r.data and r.data.pitched then
+        if isPitchedTent(r) then
             return "Pitched Tent"
         end
         if ammo and t then
@@ -49,7 +62,7 @@ return function(ctx)
         end
         for _, r in ipairs(delta.add or {}) do
             local t = itemType(r.uname)
-            local isPitched = (r.uname == "TentPack" and r.data and r.data.pitched)
+            local isPitched = isPitchedTent(r)
             if not objects[r.id] then
                 local z = r.z + (t and t.modelz or 0)
                 local rx, ry = t and t.rotx or 0, t and t.roty or 0

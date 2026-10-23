@@ -485,7 +485,8 @@ return function(ctx)
 
             -- TentPack interactions
             if row.uname == "TentPack" then
-                if rData and rData.pitched then
+                local isPitched = (rData and (rData.pitched == true or (rData[1] and rData[1].pitched == true)))
+                if isPitched then
                     if curUname == "Crowbar" then
                         return triggerEvent("onItemsRequestDismantleTent", c.player, row.id)
                     else

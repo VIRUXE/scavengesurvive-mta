@@ -8,7 +8,7 @@ BEGIN
   DECLARE v_slot INT DEFAULT 0;
   DECLARE v_item INT;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
-  SELECT category, size, JSON_VALUE(category_data, '$.bag_size') INTO v_cat, v_item_size, v_bag_size
+  SELECT category, size, COALESCE(JSON_VALUE(category_data, '$.size'), JSON_VALUE(category_data, '$.bag_size')) INTO v_cat, v_item_size, v_bag_size
     FROM item_types WHERE uname = p_type_uname;
   IF v_cat IS NULL THEN
     SELECT 0 AS ok, 'UNKNOWN_TYPE' AS code, NULL AS payload;

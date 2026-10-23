@@ -220,6 +220,47 @@ function destroyItem(itemId, player)
     return destroy(itemId, player)
 end
 
+function destroyWorldItem(itemId)
+    itemId = tonumber(itemId)
+    if not itemId then
+        return false
+    end
+    db.exec(
+        "DELETE FROM items WHERE id = ? AND container_id IS NULL AND holder_char_id IS NULL",
+        { itemId },
+        function(ok)
+            if ok then
+                world.forgetEverywhere(itemId)
+                triggerEvent("onItemDestroyed", resourceRoot, itemId)
+            end
+        end
+    )
+    return true
+end
+
+function destroyContainerItem(itemId)
+    itemId = tonumber(itemId)
+    if not itemId then
+        return false
+    end
+    db.one("SELECT container_id, slot FROM items WHERE id = ?", { itemId }, function(row)
+        if not row then
+            return
+        end
+        local contId, slot = row.container_id, row.slot
+        db.exec("DELETE FROM items WHERE id = ?", { itemId }, function(ok)
+            if ok and contId and slot then
+                db.exec(
+                    "UPDATE items SET slot = slot - 1 WHERE container_id = ? AND slot > ? ORDER BY slot ASC",
+                    { contId, slot },
+                    function() end
+                )
+            end
+        end)
+    end)
+    return true
+end
+
 function getHeld(player)
     if not isElement(player) then
         return false

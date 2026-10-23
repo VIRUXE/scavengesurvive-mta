@@ -1,8 +1,9 @@
 -- Server-side building interactions, defences, keypads, and plot poles.
 -- Ported from upstream Scavenge & Survive (core/itemtype/defences.pwn, core/item/plot-pole.pwn).
-local db = exports.lib:getModule("db")
-local net = exports.lib:getModule("net")
-local util = exports.lib:getModule("util")
+local db = assert(loadstring(exports.lib:getModule("db"), "=lib/db.lua"))()
+local net = assert(loadstring(exports.lib:getModule("net"), "=lib/net.lua"))()
+local util = assert(loadstring(exports.lib:getModule("util"), "=lib/util.lua"))()
+db.connect("building")
 
 local function loadModule(path)
     local f = fileOpen(path, true)
@@ -342,6 +343,77 @@ end
 
 function interactDefence(player, row)
     return handleDefenceInteract(player, row)
+end
+
+function submitPasscode(player, defenceId, enteredCode)
+    defenceId = tonumber(defenceId)
+    if not defenceId or not enteredCode then
+        return false
+    end
+    db.one(
+        "SELECT id, type_uname, data, x, y, z, rz FROM items "
+            .. "WHERE id = ? AND container_id IS NULL AND holder_char_id IS NULL",
+        { defenceId },
+        function(row, c)
+            if not isElement(c.player) or not row then
+                return
+            end
+            local d = decodeData(row.data)
+            local expected = d.passcode
+            if expected and string.format("%04d", tonumber(c.enteredCode) or 0) == expected then
+                setDoorOpenState(row, true, function()
+                    exports.items:refreshPlayer(c.player)
+                    toast(c.player, "ACCESS_GRANTED")
+                    if isTimer(autoCloseTimers[row.id]) then
+                        killTimer(autoCloseTimers[row.id])
+                    end
+                    autoCloseTimers[row.id] = setTimer(function(itId)
+                        autoCloseTimers[itId] = nil
+                        db.one("SELECT id, type_uname, data, rz FROM items WHERE id = ?", { itId }, function(clRow)
+                            if clRow then
+                                setDoorOpenState(clRow, false, function()
+                                    for _, p in ipairs(getElementsByType("player")) do
+                                        exports.items:refreshPlayer(p)
+                                    end
+                                end)
+                            end
+                        end)
+                    end, 5000, 1, row.id)
+                end)
+            else
+                toast(c.player, "WRONG_PASSCODE")
+            end
+        end,
+        { player = player, enteredCode = enteredCode }
+    )
+    return true
+end
+
+function installKeypad(player, defenceId, newPasscode)
+    defenceId = tonumber(defenceId)
+    if not defenceId or not newPasscode then
+        return false
+    end
+    db.one(
+        "SELECT id, type_uname, data, x, y, z, rz FROM items "
+            .. "WHERE id = ? AND container_id IS NULL AND holder_char_id IS NULL",
+        { defenceId },
+        function(row, c)
+            if not isElement(c.player) or not row then
+                return
+            end
+            local d = decodeData(row.data)
+            d.keypad = true
+            d.passcode = string.format("%04d", tonumber(c.newPasscode) or 0)
+            db.exec("UPDATE items SET data = ? WHERE id = ?", { encodeData(d), row.id }, function()
+                if isElement(c.player) then
+                    toast(c.player, "KEYPAD_INSTALLED")
+                end
+            end)
+        end,
+        { player = player, newPasscode = newPasscode }
+    )
+    return true
 end
 
 util.log("building", "info", "building system initialized")

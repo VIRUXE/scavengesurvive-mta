@@ -13,4 +13,6 @@
     <file src="client/keypad.lua"/>
     <export function="isInsideAnyPlotPole" type="server"/>
     <export function="interactDefence" type="server"/>
+    <export function="submitPasscode" type="server"/>
+    <export function="installKeypad" type="server"/>
 </meta>

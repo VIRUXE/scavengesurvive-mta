@@ -1,8 +1,9 @@
 -- Crafting system: in-hand combine, ground construction, deconstruction, and workbench crafting.
 -- Ported from upstream Scavenge & Survive (core/world/craft-construct.pwn, core/item/workbench.pwn).
-local db = exports.lib:getModule("db")
-local net = exports.lib:getModule("net")
-local util = exports.lib:getModule("util")
+local db = assert(loadstring(exports.lib:getModule("db"), "=lib/db.lua"))()
+local net = assert(loadstring(exports.lib:getModule("net"), "=lib/net.lua"))()
+local util = assert(loadstring(exports.lib:getModule("util"), "=lib/util.lua"))()
+db.connect("crafting")
 
 local function loadModule(path)
     local f = fileOpen(path, true)
@@ -160,7 +161,7 @@ local function tryGroundCraft(player, _cid, held, px, py, pz, rz, int, dim)
                     for i = 1, ing.count do
                         local it = list[i]
                         if it then
-                            exports.items:destroyItem(it.id, pl)
+                            exports.items:destroyWorldItem(it.id)
                         end
                     end
                 end
@@ -171,7 +172,7 @@ local function tryGroundCraft(player, _cid, held, px, py, pz, rz, int, dim)
             local dropY = cpy + 1.2 * math.cos(rad)
             db.call(
                 "item_create",
-                { rec.result.uname, 5, nil, dropX, dropY, cpz - 0.8, crz, cint, cdim, nil, nil },
+                { rec.result.uname, 5, nil, dropX, dropY, cpz - 0.8, crz, cint, cdim, nil, nil, n = 11 },
                 function(res, c2)
                     if not isElement(c2.player) then
                         return
@@ -225,13 +226,13 @@ local function tryDeconstruct(player, _cid, held, px, py, _pz, rz, int, dim)
             if not curHeld or curHeld.uname ~= "Crowbar" then
                 return toast(pl, "NEED_TOOL")
             end
-            exports.items:destroyItem(tgt.id, pl)
+            exports.items:destroyWorldItem(tgt.id)
             for i, ing in ipairs(dInfo.ingredients or {}) do
                 local ox = (i % 2 == 0) and 0.3 or -0.3
                 local oy = (i > 2) and 0.3 or -0.3
                 db.call(
                     "item_create",
-                    { ing.uname, 5, nil, tgt.x + ox, tgt.y + oy, tgt.z, crz, cint, cdim, nil, nil },
+                    { ing.uname, 5, nil, tgt.x + ox, tgt.y + oy, tgt.z, crz, cint, cdim, nil, nil, n = 11 },
                     function() end
                 )
             end
@@ -290,7 +291,7 @@ local function tryWorkbenchCraft(player, _cid, held, px, py)
                         for i = 1, ing.count do
                             local it = list[i]
                             if it then
-                                exports.items:destroyItem(it.id, pl)
+                                exports.items:destroyContainerItem(it.id)
                             end
                         end
                     end
@@ -361,5 +362,42 @@ addCommandHandler("craft", function(player)
     tryWorkbenchCraft(player, cid, held, px, py)
     tryGroundCraft(player, cid, held, px, py, pz, rz, int, dim)
 end)
+
+function groundCraft(player)
+    local cid = charId(player)
+    if not cid then
+        return false
+    end
+    local held = exports.items:getHeld(player)
+    local px, py, pz = getElementPosition(player)
+    local _, _, rz = getElementRotation(player)
+    local int, dim = getElementInterior(player), getElementDimension(player)
+    tryGroundCraft(player, cid, held, px, py, pz, rz, int, dim)
+    return true
+end
+
+function deconstruct(player)
+    local cid = charId(player)
+    if not cid then
+        return false
+    end
+    local held = exports.items:getHeld(player)
+    local px, py, pz = getElementPosition(player)
+    local _, _, rz = getElementRotation(player)
+    local int, dim = getElementInterior(player), getElementDimension(player)
+    tryDeconstruct(player, cid, held, px, py, pz, rz, int, dim)
+    return true
+end
+
+function workbenchCraft(player)
+    local cid = charId(player)
+    if not cid then
+        return false
+    end
+    local held = exports.items:getHeld(player)
+    local px, py = getElementPosition(player)
+    tryWorkbenchCraft(player, cid, held, px, py)
+    return true
+end
 
 util.log("crafting", "info", "crafting engine initialized with %d recipes", #craft.RECIPES)

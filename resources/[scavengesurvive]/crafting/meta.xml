@@ -10,4 +10,7 @@
     <script src="server/main.lua" type="server"/>
     <script src="client/main.lua" type="client"/>
     <file src="shared/logic/craft.lua"/>
+    <export function="groundCraft" type="server"/>
+    <export function="deconstruct" type="server"/>
+    <export function="workbenchCraft" type="server"/>
 </meta>

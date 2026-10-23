@@ -28,4 +28,6 @@
     <export function="createStartingItems" type="server"/>
     <export function="refreshPlayer" type="server"/>
     <export function="destroyItem" type="server"/>
+    <export function="destroyWorldItem" type="server"/>
+    <export function="destroyContainerItem" type="server"/>
 </meta>
