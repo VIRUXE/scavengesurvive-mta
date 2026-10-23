@@ -15,5 +15,6 @@
     <resource src="world" startup="1" protected="0"/>
     <resource src="weapons" startup="1" protected="0"/>
     <resource src="hud" startup="1" protected="0"/>
+    <resource src="staff" startup="1" protected="0"/>
     <resource src="dev" startup="1" protected="0"/>
 </resources>

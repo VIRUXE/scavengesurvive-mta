@@ -55,4 +55,11 @@ return {
     onClientUiListClosed = false,
     onWeaponsRequestHit = true,
     onClientWeaponsWound = true,
+    onStaffRequestListAction = true,
+    onStaffRequestListClosed = true,
+    onStaffRequestSpectate = true,
+    onClientStaffList = true,
+    onClientStaffListClose = true,
+    onClientStaffSpectate = true,
+    onClientStaffNametags = true,
 }

@@ -98,6 +98,10 @@ net.handler("onWeaponsRequestHit", function(victim, attacker, weapon, bodypart, 
     if getElementDimension(attacker) ~= getElementDimension(victim) then
         return
     end
+    -- staff on duty (staff resource, upstream TogglePlayerAdminDuty) are out of the game: no wounds from players
+    if getElementData(victim, "staff.duty") == true then
+        return
+    end
 
     local now = getTickCount()
     local pairs_ = lastHit[attacker]

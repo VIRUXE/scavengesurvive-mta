@@ -15,7 +15,7 @@ files["resources/**/data/**"] = { std = "lua51+mta_shared", globals = { "itemTyp
 files["resources/**/ui/**"] = { std = "lua51+mta_shared+mta_client", globals = { "actionTextShow", "actionTextHide", "toast", "progressStart", "progressCancel", "listOpen", "listUpdate", "listClose", "listIsOpen" } }
 -- getTime/getVehicleEngineState/getVehicleName/getVehicleOccupant postdate the generated .luacheck/mta_client.lua list
 files["resources/**/hud/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "setHidden" }, read_globals = { "getTime", "getVehicleEngineState", "getVehicleName", "getVehicleOccupant" } }
-files["resources/**/auth/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "prompt", "getAccountId", "getAdminLevel", "getLanguage", "isAuthenticated" } }
+files["resources/**/auth/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "prompt", "getAccountId", "getAdminLevel", "getLanguage", "isAuthenticated", "setSessionAdminLevel", "setWhitelistEnabled", "isWhitelistEnabled" } }
 files["resources/**/character/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "getCharacterId", "getPlayerByCharacterId", "getInventoryContainerId", "getStats", "modifyStat", "killCharacter", "applyWound", "knockOutPlayer", "wakeUpPlayer", "isKnockedOut", "setPlayerCuffed", "isPlayerCuffed" } }
 files["resources/**/items/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "getHeld", "setHeld", "clearHeld", "openTrunkContainer", "closeTrunk", "openWorldContainer", "closeContainer", "updateHeldData", "createStartingItems", "refreshPlayer", "destroyItem", "destroyWorldItem", "destroyContainerItem" } }
 files["resources/**/models/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "resolve" } }
@@ -32,3 +32,5 @@ files["resources/**/vehicles/server/**"] = { std = "lua51+mta_shared+mta_server"
 files["resources/**/building/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "isInsideAnyPlotPole", "interactDefence", "submitPasscode", "installKeypad" } }
 files["resources/**/building/client/**"] = { std = "lua51+mta_shared+mta_client", read_globals = { "playSoundFrontEnd" } }
 files["resources/**/crafting/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "groundCraft", "deconstruct", "workbenchCraft" } }
+-- clearChatBox postdates the generated .luacheck/mta_server.lua list
+files["resources/**/staff/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "getLevel", "isOnDuty", "isMuted", "logAction" }, read_globals = { "clearChatBox" } }

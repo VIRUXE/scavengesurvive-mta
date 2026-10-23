@@ -98,6 +98,9 @@ $ssAcl = New-AclElement "acl" ([ordered]@{ name = "ScavengeSurvive" })
 [void]$ssAcl.AppendChild((New-AclElement "right" ([ordered]@{ name = "function.loadstring"; access = "true" })))
 # dev's rcon "screenshot" verb; granted here so the server never files it as a pending (denying) aclrequest
 [void]$ssAcl.AppendChild((New-AclElement "right" ([ordered]@{ name = "function.takePlayerScreenShot"; access = "true" })))
+# auth kicks banned / non-whitelisted players, staff kicks on /kick, /ban and /warn, and /restart restarts a resource
+[void]$ssAcl.AppendChild((New-AclElement "right" ([ordered]@{ name = "function.kickPlayer"; access = "true" })))
+[void]$ssAcl.AppendChild((New-AclElement "right" ([ordered]@{ name = "function.restartResource"; access = "true" })))
 $default = $root.SelectSingleNode('acl[@name="Default"]')
 if (-not $default) { throw "acl.xml has no Default ACL" }
 [void]$root.InsertBefore($group, $default)

@@ -1,0 +1,26 @@
+<meta>
+    <info author="scavengesurvive-mta" type="script" name="staff" description="Staff commands by level, reports, bans, whitelist, mute, freeze, spectate, duty" version="0.1.0"/>
+    <min_mta_version server="1.6.0" client="1.6.0"/>
+    <include resource="lib"/>
+    <include resource="data"/>
+    <include resource="ui"/>
+    <include resource="auth"/>
+    <include resource="character"/>
+    <include resource="maps"/>
+    <script src="shared/events.lua" type="shared"/>
+    <script src="server/main.lua" type="server"/>
+    <script src="client/main.lua" type="client"/>
+    <file src="shared/logic/staff.lua"/>
+    <file src="server/moderation.lua"/>
+    <file src="server/bans.lua"/>
+    <file src="server/reports.lua"/>
+    <file src="server/duty.lua"/>
+    <export function="getLevel" type="server"/>
+    <export function="isOnDuty" type="server"/>
+    <export function="isMuted" type="server"/>
+    <export function="logAction" type="server"/>
+    <aclrequest>
+        <right name="function.kickPlayer" access="true"/>
+        <right name="function.restartResource" access="true"/>
+    </aclrequest>
+</meta>

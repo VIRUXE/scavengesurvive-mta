@@ -1,0 +1,388 @@
+-- Level 1-2 moderation: mute, warn, kick, msg, clearchat, aliases, history, staff chat, freeze.
+-- Upstream: admin/level1.pwn, level2.pwn (freeze), mute.pwn, freeze.pwn.
+return function(ctx)
+    local db, logic, state = ctx.db, ctx.logic, ctx.state
+    local M = {}
+
+    ctx.command({
+        name = "a",
+        level = 1,
+        usage = "/a <message>",
+        help = "Staff chat channel",
+        needsDb = false,
+        fn = function(p, args)
+            local text = logic.tail(args, 1)
+            if not text then
+                return ctx.say(p, " >  Usage: /a <message>")
+            end
+            local lvl = ctx.level(p)
+            local c = logic.levelColour(lvl)
+            ctx.msgStaff(
+                1,
+                "#%02X%02X%02X[%s] %s: #FFFFFF%s",
+                c[1],
+                c[2],
+                c[3],
+                logic.levelName(lvl),
+                ctx.name(p),
+                text
+            )
+        end,
+    })
+
+    ctx.command({
+        name = "mute",
+        level = 1,
+        usage = "/mute <player> <seconds|forever> [reason]",
+        help = "Mute a player from global chat",
+        fn = function(p, args)
+            local target = args[1] and ctx.target(p, args[1], false)
+            local seconds = logic.parseDuration(args[2] or "")
+            if not target or not seconds then
+                if not args[1] or not args[2] then
+                    ctx.say(p, " >  Usage: /mute <player> <seconds|forever> [reason]")
+                elseif target then
+                    ctx.say(p, " >  '%s' is not a duration (10m, 2h, 1d or forever).", tostring(args[2]))
+                end
+                return
+            end
+            if state.muted[target] then
+                return ctx.say(p, " >  Player already muted.")
+            end
+            local reason = logic.tail(args, 3) or "no reason given"
+            ctx.setMuted(target, true, seconds)
+            if seconds > 0 then
+                ctx.say(p, " >  Muted %s #FFFFFFfor %s.", getPlayerName(target), logic.formatDuration(seconds))
+                ctx.sayLang(target, "MUTEDANTIME", seconds, reason)
+            else
+                ctx.say(p, " >  Muted %s permanently.", getPlayerName(target))
+                ctx.sayLang(target, "MUTEDREASON", reason)
+            end
+            ctx.log(
+                p,
+                "mute",
+                getPlayerName(target),
+                ctx.accountId(target),
+                logic.formatDuration(seconds) .. ": " .. reason
+            )
+        end,
+    })
+
+    ctx.command({
+        name = "unmute",
+        level = 1,
+        usage = "/unmute <player>",
+        help = "Lift a mute",
+        fn = function(p, args)
+            local target = args[1] and ctx.target(p, args[1], true)
+            if not target then
+                return args[1] == nil and ctx.say(p, " >  Usage: /unmute <player>")
+            end
+            if not state.muted[target] then
+                return ctx.say(p, " >  %s is not muted.", getPlayerName(target))
+            end
+            ctx.setMuted(target, false)
+            ctx.say(p, " >  Un-muted %s", getPlayerName(target))
+            ctx.sayLang(target, "MUTEDUNMUTE")
+            ctx.log(p, "unmute", getPlayerName(target), ctx.accountId(target))
+        end,
+    })
+
+    ctx.command({
+        name = "warn",
+        level = 1,
+        usage = "/warn <player> <reason>",
+        help = "Warn a player; staff.max_warnings warnings = a staff.warn_ban_hours ban",
+        fn = function(p, args)
+            local target = args[1] and ctx.target(p, args[1], true)
+            local reason = logic.tail(args, 2)
+            if not target or not reason then
+                return (not args[1] or not reason) and ctx.say(p, " >  Usage: /warn <player> <reason>")
+            end
+            local accountId = ctx.accountId(target)
+            if not accountId then
+                return ctx.say(p, " >  %s is not logged in yet.", getPlayerName(target))
+            end
+            local maxWarnings = tonumber(state.settings["staff.max_warnings"]) or 5
+            local banSeconds = (tonumber(state.settings["staff.warn_ban_hours"]) or 24) * 3600
+            db.call("staff_warn", {
+                accountId,
+                getPlayerName(target),
+                getPlayerIP(target),
+                getPlayerSerial(target),
+                ctx.accountId(p),
+                ctx.name(p),
+                reason:sub(1, 128),
+                maxWarnings,
+                banSeconds,
+                n = 9,
+            }, function(res, c)
+                if not isElement(c.actor) then
+                    return
+                end
+                if not res or not res.ok then
+                    return ctx.say(c.actor, " >  Warning failed: %s", res and res.code or "db error")
+                end
+                local warnings = res.payload.warnings
+                ctx.say(
+                    c.actor,
+                    " >  #FFAA00%s#FFFF00 has been warned (%d/%d) for: %s",
+                    c.name,
+                    warnings,
+                    maxWarnings,
+                    c.reason
+                )
+                if isElement(c.target) then
+                    ctx.sayLang(c.target, "WARNEDMESSG", warnings, c.reason)
+                    if tonumber(res.payload.banned) == 1 then
+                        ctx.sayLang(c.target, "BANNEDMESSG", "Getting " .. maxWarnings .. " warnings")
+                        ctx.kick(c.target, c.actor, "Banned: " .. maxWarnings .. " warnings")
+                    end
+                end
+                if tonumber(res.payload.banned) == 1 then
+                    ctx.msgStaff(
+                        1,
+                        " >  %s reached %d warnings and was banned for %dh",
+                        c.name,
+                        maxWarnings,
+                        banSeconds / 3600
+                    )
+                end
+            end, { actor = p, target = target, name = getPlayerName(target), reason = reason })
+        end,
+    })
+
+    ctx.command({
+        name = "kick",
+        level = 1,
+        usage = "/kick <player> <reason>",
+        help = "Kick a player (becomes a request when higher staff are online)",
+        needsDb = false,
+        fn = function(p, args, lvl)
+            local target = args[1] and ctx.target(p, args[1], true)
+            local reason = logic.tail(args, 2)
+            if not target or not reason then
+                return (not args[1] or not reason) and ctx.say(p, " >  Usage: /kick <player> <reason>")
+            end
+            local highest = ctx.highestLevelOnline()
+            if logic.kickNeedsApproval(lvl, highest) then
+                ctx.msgStaff(
+                    highest,
+                    " >  %s kick request: %s reason: %s (run /kick %s %s to approve)",
+                    ctx.name(p),
+                    getPlayerName(target),
+                    reason,
+                    getPlayerName(target),
+                    reason
+                )
+                return ctx.say(p, " >  Higher staff are online; your kick was sent to them as a request.")
+            end
+            if target == p then
+                ctx.msgAll(" >  #FF80FF%s failed and kicked themselves", getPlayerName(target))
+            end
+            ctx.sayLang(target, "KICKMESSAGE", reason)
+            ctx.msgStaff(1, " >  %s kicked, reason: #33CCFF%s", getPlayerName(target), reason)
+            ctx.log(p, "kick", getPlayerName(target), ctx.accountId(target), reason)
+            ctx.kick(target, p, reason)
+        end,
+    })
+
+    ctx.command({
+        name = "msg",
+        level = 1,
+        usage = "/msg <message>",
+        help = "Server message to everyone",
+        needsDb = false,
+        fn = function(p, args)
+            local text = logic.tail(args, 1)
+            if not text then
+                return ctx.say(p, " >  Usage: /msg <message>")
+            end
+            ctx.msgAll(" >  #33CCFF%s", text)
+            ctx.log(p, "msg", nil, nil, text:sub(1, 255))
+        end,
+    })
+
+    ctx.command({
+        name = "clearchat",
+        level = 1,
+        usage = "/clearchat",
+        help = "Clear everyone's chat box",
+        needsDb = false,
+        fn = function(p)
+            clearChatBox(root)
+            ctx.log(p, "clearchat")
+        end,
+    })
+
+    -- Other accounts seen from the same IP or serial (upstream /aliases by ip; the serial replaces gpci).
+    ctx.command({
+        name = "aliases",
+        level = 1,
+        usage = "/aliases <name>",
+        help = "Accounts that share this account's IP or serial",
+        fn = function(p, args)
+            if not args[1] then
+                return ctx.say(p, " >  Usage: /aliases <name>")
+            end
+            ctx.lookupAccount(args[1], function(row, actor)
+                if not row then
+                    return ctx.say(actor, " >  The account '%s' does not exist.", args[1])
+                end
+                if (tonumber(row.admin_level) or 0) > ctx.level(actor) and row.name ~= ctx.name(actor) then
+                    return ctx.say(actor, " >  No aliases found for %s", row.name)
+                end
+                db.query(
+                    "SELECT DISTINCT name FROM connection_log WHERE name <> ? AND ((serial IS NOT NULL AND serial = ?)"
+                        .. " OR (ip IS NOT NULL AND ip = ?)) ORDER BY name LIMIT 32",
+                    { row.name, row.last_serial, row.last_ip, n = 3 },
+                    function(rows, a)
+                        if not rows then
+                            return ctx.say(a, " >  An error occurred.")
+                        end
+                        if #rows == 0 then
+                            return ctx.say(a, " >  No aliases found for %s", row.name)
+                        end
+                        local names = {}
+                        for _, r in ipairs(rows) do
+                            names[#names + 1] = r.name
+                        end
+                        ctx.say(a, " >  %s (%d): #33CCFF%s", row.name, #names, table.concat(names, ", "))
+                        ctx.log(a, "aliases", row.name, row.id)
+                    end,
+                    actor
+                )
+            end, p)
+        end,
+    })
+
+    ctx.command({
+        name = "history",
+        level = 1,
+        usage = "/history <name> [n]",
+        help = "Last n (default 10) connections of an account: date, IP, serial",
+        fn = function(p, args)
+            if not args[1] then
+                return ctx.say(p, " >  Usage: /history <name> [n]")
+            end
+            local n = math.min(50, math.max(1, tonumber(args[2]) or 10))
+            ctx.lookupAccount(args[1], function(row, actor)
+                if not row then
+                    return ctx.say(actor, " >  The account '%s' does not exist.", args[1])
+                end
+                if (tonumber(row.admin_level) or 0) > ctx.level(actor) and row.name ~= ctx.name(actor) then
+                    return ctx.say(actor, " >  No history found for %s", row.name)
+                end
+                db.query(
+                    "SELECT DATE_FORMAT(joined_at, '%Y-%m-%d %H:%i') AS at_, ip, serial FROM connection_log"
+                        .. " WHERE account_id = ? ORDER BY joined_at DESC LIMIT "
+                        .. n,
+                    { row.id },
+                    function(rows, a)
+                        if not rows or #rows == 0 then
+                            return ctx.say(a, " >  No history found for %s", row.name)
+                        end
+                        local lines = {}
+                        for _, r in ipairs(rows) do
+                            lines[#lines + 1] = {
+                                id = r.at_,
+                                label = string.format(
+                                    "%s  %s  %s",
+                                    r.at_,
+                                    tostring(r.ip or "-"),
+                                    tostring(r.serial or "-")
+                                ),
+                            }
+                        end
+                        ctx.openList(a, "history", "History of " .. row.name, lines, { "Close", "Close" }, function()
+                            ctx.closeList(a)
+                        end)
+                        ctx.log(a, "history", row.name, row.id)
+                    end,
+                    actor
+                )
+            end, p)
+        end,
+    })
+
+    -- Freeze (upstream FreezePlayer): no movement and no controls, optionally for n seconds.
+    local function unfreeze(target, silent)
+        local t = state.frozen[target]
+        if isTimer(t) then
+            killTimer(t)
+        end
+        state.frozen[target] = nil
+        if not isElement(target) then
+            return
+        end
+        setElementFrozen(target, false)
+        local ok, ko = pcall(function()
+            return exports.character:isKnockedOut(target) or exports.character:isPlayerCuffed(target)
+        end)
+        if not (ok and ko) then
+            toggleAllControls(target, true, true, false)
+        end
+        if not silent then
+            ctx.sayLang(target, "FREEZEUNFRE")
+        end
+    end
+    M.unfreeze = unfreeze
+
+    ctx.command({
+        name = "freeze",
+        level = 2,
+        usage = "/freeze <player> [seconds]",
+        help = "Freeze a player in place",
+        needsDb = false,
+        fn = function(p, args)
+            local target = args[1] and ctx.target(p, args[1], true)
+            if not target then
+                return args[1] == nil and ctx.say(p, " >  Usage: /freeze <player> [seconds]")
+            end
+            local seconds = tonumber(args[2]) or 0
+            if isTimer(state.frozen[target]) then
+                killTimer(state.frozen[target])
+            end
+            setElementFrozen(target, true)
+            toggleAllControls(target, false, true, false)
+            state.frozen[target] = true
+            if seconds > 0 then
+                state.frozen[target] = setTimer(unfreeze, seconds * 1000, 1, target)
+                ctx.say(p, " >  Frozen %s for %d seconds", getPlayerName(target), seconds)
+                ctx.sayLang(target, "FREEZETIMER", seconds)
+            else
+                ctx.say(p, " >  Frozen %s", getPlayerName(target))
+                ctx.sayLang(target, "FREEZEFROZE")
+            end
+            ctx.log(p, "freeze", getPlayerName(target), ctx.accountId(target), seconds > 0 and (seconds .. "s") or nil)
+        end,
+    })
+
+    ctx.command({
+        name = "unfreeze",
+        level = 2,
+        usage = "/unfreeze <player>",
+        help = "Unfreeze a player",
+        needsDb = false,
+        fn = function(p, args)
+            local target = args[1] and ctx.findPlayer(p, args[1])
+            if not target then
+                return args[1] == nil and ctx.say(p, " >  Usage: /unfreeze <player>")
+            end
+            if not state.frozen[target] then
+                return ctx.say(p, " >  %s is not frozen.", getPlayerName(target))
+            end
+            unfreeze(target)
+            ctx.say(p, " >  Unfrozen %s", getPlayerName(target))
+            ctx.log(p, "unfreeze", getPlayerName(target), ctx.accountId(target))
+        end,
+    })
+
+    function M.forget(p)
+        if state.frozen[p] then
+            unfreeze(p, true)
+        end
+    end
+
+    return M
+end
