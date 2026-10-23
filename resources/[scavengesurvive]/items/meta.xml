@@ -17,6 +17,11 @@
     <file src="client/attach.lua"/>
     <file src="client/inventory.lua"/>
     <export function="getHeld" type="server"/>
+    <export function="setHeld" type="server"/>
+    <export function="clearHeld" type="server"/>
+    <export function="openTrunkContainer" type="server"/>
+    <export function="closeTrunk" type="server"/>
+    <export function="updateHeldData" type="server"/>
     <export function="createStartingItems" type="server"/>
     <export function="refreshPlayer" type="server"/>
     <export function="destroyItem" type="server"/>

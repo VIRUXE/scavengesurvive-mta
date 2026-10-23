@@ -3,6 +3,7 @@
 return function(ctx)
     local db, net, state, hands = ctx.db, ctx.net, ctx.state, ctx.hands
     local itemType, charId, toast = ctx.type, ctx.charId, ctx.toast
+    local activeTrunk = {} -- player -> { vehicle, containerId, title, size }
     local M = {}
 
     local CONTAINERS_SQL = "SELECT c.id, c.kind, c.size, owner.type_uname AS uname FROM containers c "
@@ -19,6 +20,8 @@ return function(ctx)
         )
     end
 
+    local sendInventory
+
     local function put(player, cid, itemId, containerId, onFull)
         db.call("container_put", { itemId, cid, containerId }, function(res, c)
             if not isElement(c.player) then
@@ -27,6 +30,9 @@ return function(ctx)
             if res and res.ok then
                 hands.setHeld(c.player, nil)
                 triggerEvent("onItemMoved", c.player, c.itemId, "held", "container")
+                if activeTrunk[c.player] then
+                    sendInventory(c.player)
+                end
                 return toast(c.player, "PUT_AWAY")
             end
             if res and res.code == "CONTAINER_FULL" and onFull then
@@ -64,6 +70,12 @@ return function(ctx)
         if t and t.category == "bag" then
             return wearBag(player, cid, item)
         end
+        local tr = activeTrunk[player]
+        if tr and isElement(tr.vehicle) then
+            return put(player, cid, item.id, tr.containerId, function()
+                toast(player, "CONTAINER_FULL")
+            end)
+        end
         local inv = exports.character:getInventoryContainerId(player)
         if not inv then
             return
@@ -82,7 +94,7 @@ return function(ctx)
         end)
     end, { rate = 5 })
 
-    local function sendInventory(player)
+    sendInventory = function(player)
         local cid = charId(player)
         if not cid then
             return
@@ -91,7 +103,12 @@ return function(ctx)
             if not conts or not isElement(c.player) then
                 return
             end
-            local payload = { inventory = {}, bag = false, capacity = { inv = { used = 0, size = 0 }, bag = false } }
+            local payload = {
+                inventory = {},
+                bag = false,
+                trunk = false,
+                capacity = { inv = { used = 0, size = 0 }, bag = false, trunk = false },
+            }
             local byId, ids = {}, {}
             for _, cont in ipairs(conts) do
                 if cont.kind == "inventory" then
@@ -103,6 +120,13 @@ return function(ctx)
                     byId[cont.id] = { rows = payload.bag, cap = payload.capacity.bag }
                 end
                 ids[#ids + 1] = string.format("%d", cont.id)
+            end
+            local tr = activeTrunk[c.player]
+            if tr and isElement(tr.vehicle) and tr.containerId then
+                payload.trunk = {}
+                payload.capacity.trunk = { used = 0, size = tr.size or 40, uname = tr.title or "Trunk" }
+                byId[tr.containerId] = { rows = payload.trunk, cap = payload.capacity.trunk }
+                ids[#ids + 1] = string.format("%d", tr.containerId)
             end
             if #ids == 0 then
                 return triggerClientEvent(c.player, "onClientItemsInventory", c.player, payload)
@@ -134,6 +158,24 @@ return function(ctx)
         end, { player = player })
     end
     M.sendInventory = sendInventory
+
+    function M.openTrunk(player, vehicle, containerId, trunkTitle, trunkSize)
+        activeTrunk[player] = {
+            vehicle = vehicle,
+            containerId = containerId,
+            title = trunkTitle,
+            size = trunkSize,
+        }
+        sendInventory(player)
+    end
+
+    function M.closeTrunk(player)
+        activeTrunk[player] = nil
+    end
+
+    addEventHandler("onPlayerQuit", root, function()
+        activeTrunk[source] = nil
+    end)
 
     net.handler("onItemsRequestOpenInventory", function(player)
         sendInventory(player)

@@ -81,3 +81,15 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
     hands within 2 m to disarm B (`"Disarmed player"`, item moves to A's hands). A equips `HandCuffs` (visible on the
     right-hand bone) and presses **F** near B (unarmed): B's hands lock behind the back and controls are disabled; A
     sees `F Remove handcuffs` with empty hands and pressing **F** uncuffs B and returns `HandCuffs` to A's hands.
+20. **Vehicles parity** (#30, #31, #32, #33).
+    - **Engine, lights and fuel simulation**: Enter a vehicle as driver: press **Y** (`putaway`) to toggle the engine on/off, **N** (`dropitem`) to toggle headlights. While driving with the engine running, fuel drains continuously (check HUD bottom-right panel `DOR ENG DMG` and fuel L). When fuel reaches 0, the engine cuts out and cannot restart. Sputter/stall chance occurs when health is below 450.
+    - **Locks and entry**: Try entering a locked vehicle (`v.locked = 1`): `onVehicleStartEnter` cancels entry, doors rattle, and action text informs the vehicle is locked. Standing outside, `/lock` (or pressing **F** holding a matching `Key`) toggles lock state.
+    - **Crowbar lock-breaking**: Outside near a locked vehicle, equip `Crowbar` and press **F**: a 3-second progress bar plays (kick animation). On completion, the lock breaks open and the crowbar takes durability damage.
+    - **Locksmith key cutting**: Equip `LocksmithKit` and press **F** near a vehicle: a 10-second progress bar cuts a new `Key` (with matching key code in item data) and adds it to the player's inventory/hands.
+    - **Roadside repairs**: Walk to the front (bonnet) of a damaged vehicle:
+      - Health < 450 HP: holding `Hammer` (or `SledgeHammer`), press **F** to hammer out the frame back up to 450 HP (3 s progress).
+      - Health 450..700 HP: holding `Screwdriver`, press **F** to adjust components up to 700 HP (3 s progress).
+      - Health 700..999 HP: holding `Wrench`, press **F** to service the engine up to 1000 HP (3 s progress).
+    - **Refuelling**: Hold `GasCan` (Petrol Can) and press **F** near the vehicle: fuel transfers from the can to the vehicle tank over a timed progress bar until full or the can is empty.
+    - **Trunk container**: Walk to the rear (trunk) of an unlocked vehicle with empty hands and press **F**: the trunk lid opens (`setVehicleDoorOpenRatio`), and the inventory dialog opens showing the `Trunk (used/size)` screen alongside player inventory. Items can be transferred between hands, inventory, satchel, and trunk. Closing the dialog shuts the trunk lid.
+    - **Trailers and towing**: Drive a vehicle with a trailer hitch (e.g. `Sadler`, `Bobcat`, `Yosemite`, `Linerunner`) backing up near a compatible trailer (e.g. `Baggage Trailer`, `Farm Trailer`). Type `/tow`: the trailer attaches (`attachTrailerToVehicle`). Type `/tow` again: the trailer detaches. Attaching persists across resource restarts (`rr vehicles`).

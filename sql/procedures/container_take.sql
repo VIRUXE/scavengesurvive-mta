@@ -4,6 +4,7 @@ BEGIN
   DECLARE v_slot INT DEFAULT NULL;
   DECLARE v_owner_char INT DEFAULT NULL;
   DECLARE v_owner_item INT DEFAULT NULL;
+  DECLARE v_owner_vehicle INT DEFAULT NULL;
   DECLARE v_owner_holder INT DEFAULT NULL;
   DECLARE v_held INT DEFAULT 0;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
@@ -14,12 +15,12 @@ BEGIN
     ROLLBACK;
     SELECT 0 AS ok, 'NOT_IN_CONTAINER' AS code, NULL AS payload;
   ELSE
-    SELECT owner_char_id, owner_item_id INTO v_owner_char, v_owner_item FROM containers WHERE id = v_cont FOR UPDATE;
+    SELECT owner_char_id, owner_item_id, owner_vehicle_id INTO v_owner_char, v_owner_item, v_owner_vehicle FROM containers WHERE id = v_cont FOR UPDATE;
     IF v_owner_item IS NOT NULL THEN
       SELECT holder_char_id INTO v_owner_holder FROM items WHERE id = v_owner_item;
     END IF;
     SELECT COUNT(*) INTO v_held FROM items WHERE holder_char_id = p_char_id AND holder_kind = 'held' FOR UPDATE;
-    IF NOT (v_owner_char <=> p_char_id OR v_owner_holder <=> p_char_id) THEN
+    IF NOT (v_owner_char <=> p_char_id OR v_owner_holder <=> p_char_id OR v_owner_vehicle IS NOT NULL) THEN
       ROLLBACK;
       SELECT 0 AS ok, 'NOT_OWNER' AS code, NULL AS payload;
     ELSEIF v_held > 0 THEN

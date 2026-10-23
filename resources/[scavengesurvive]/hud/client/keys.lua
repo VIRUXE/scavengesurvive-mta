@@ -28,11 +28,55 @@ return function(ctx)
             triggerServerEvent(eventName, localPlayer)
         end
     end
+    local VEHICLE_TOOLS = {
+        Wrench = true,
+        Screwdriver = true,
+        Hammer = true,
+        GasCan = true,
+        Key = true,
+        LocksmithKit = true,
+        WheelLock = true,
+        Crowbar = true,
+        LockBreaker = true,
+    }
+
+    local function getNearbyVehicle()
+        local px, py, pz = getElementPosition(localPlayer)
+        local nearVeh, nearDist = nil, 6.0
+        for _, veh in ipairs(getElementsByType("vehicle", root, true)) do
+            local vx, vy, vz = getElementPosition(veh)
+            local dist = getDistanceBetweenPoints3D(px, py, pz, vx, vy, vz)
+            if dist < nearDist then
+                nearVeh, nearDist = veh, dist
+            end
+        end
+        return nearVeh, nearDist
+    end
+
     addCommandHandler("interact", function()
         if not guard() or listIsOpen() then
             return
         end
+        if getPedOccupiedVehicle(localPlayer) then
+            return
+        end
+        local nearVeh, nearDist = getNearbyVehicle()
         local held = ctx.getHeld()
+        local uname = held and held.uname
+        if nearVeh and nearDist <= 5.5 then
+            local px, py = getElementPosition(localPlayer)
+            local vx, vy = getElementPosition(nearVeh)
+            local _, _, vrz = getElementRotation(nearVeh)
+            local rad = math.rad(vrz or 0)
+            local dx, dy = px - vx, py - vy
+            local localX = dx * math.cos(rad) + dy * math.sin(rad)
+            local localY = -dx * math.sin(rad) + dy * math.cos(rad)
+            local angle = (math.deg(math.atan2(localX, localY)) + 360) % 360
+            local isRear = angle > 155 and angle < 205
+            if (uname and VEHICLE_TOOLS[uname]) or isRear then
+                return triggerServerEvent("onVehiclesRequestInteract", localPlayer, nearVeh)
+            end
+        end
         if held and held.category == "food" then
             return triggerServerEvent("onItemsRequestUse", localPlayer, held.id)
         end
@@ -42,6 +86,9 @@ return function(ctx)
     addCommandHandler("dropitem", function()
         if not guard() or listIsOpen() then
             return
+        end
+        if getPedOccupiedVehicle(localPlayer) then
+            return triggerServerEvent("onVehiclesRequestLightsToggle", localPlayer)
         end
         if isTimer(holdTimer) then
             return
@@ -66,7 +113,15 @@ return function(ctx)
         end, 50, 0)
     end)
 
-    addCommandHandler("putaway", request("onItemsRequestPutAway"))
+    addCommandHandler("putaway", function()
+        if not guard() or listIsOpen() then
+            return
+        end
+        if getPedOccupiedVehicle(localPlayer) then
+            return triggerServerEvent("onVehiclesRequestEngineToggle", localPlayer)
+        end
+        triggerServerEvent("onItemsRequestPutAway", localPlayer)
+    end)
     addCommandHandler("reloadweapon", request("onItemsRequestReload"))
     addCommandHandler("unloadweapon", request("onItemsRequestUnload"))
     addCommandHandler("inventory", function()

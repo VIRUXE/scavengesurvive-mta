@@ -2,6 +2,7 @@ CREATE OR REPLACE PROCEDURE container_put(IN p_item_id INT, IN p_char_id INT, IN
 BEGIN
   DECLARE v_owner_char INT DEFAULT NULL;
   DECLARE v_owner_item INT DEFAULT NULL;
+  DECLARE v_owner_vehicle INT DEFAULT NULL;
   DECLARE v_owner_holder INT DEFAULT NULL;
   DECLARE v_size INT DEFAULT NULL;
   DECLARE v_used INT DEFAULT 0;
@@ -11,7 +12,7 @@ BEGIN
   DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
   SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
   START TRANSACTION;
-  SELECT owner_char_id, owner_item_id, size INTO v_owner_char, v_owner_item, v_size
+  SELECT owner_char_id, owner_item_id, owner_vehicle_id, size INTO v_owner_char, v_owner_item, v_owner_vehicle, v_size
     FROM containers WHERE id = p_container_id FOR UPDATE;
   SELECT COUNT(*) INTO v_held FROM items WHERE id = p_item_id AND holder_char_id = p_char_id AND holder_kind = 'held' FOR UPDATE;
   SELECT t.size INTO v_item_size FROM items i JOIN item_types t ON t.uname = i.type_uname WHERE i.id = p_item_id;
@@ -24,7 +25,7 @@ BEGIN
   ELSEIF v_owner_item = p_item_id THEN
     ROLLBACK;
     SELECT 0 AS ok, 'SELF_CONTAINMENT' AS code, NULL AS payload;
-  ELSEIF NOT (v_owner_char <=> p_char_id OR v_owner_holder <=> p_char_id) THEN
+  ELSEIF NOT (v_owner_char <=> p_char_id OR v_owner_holder <=> p_char_id OR v_owner_vehicle IS NOT NULL) THEN
     ROLLBACK;
     SELECT 0 AS ok, 'NOT_OWNER' AS code, NULL AS payload;
   ELSE

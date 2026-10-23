@@ -3,10 +3,21 @@
     <min_mta_version server="1.6.0" client="1.6.0"/>
     <include resource="lib"/>
     <include resource="data"/>
+    <include resource="items"/>
+    <include resource="ui"/>
     <script src="shared/events.lua" type="shared"/>
     <script src="server/main.lua" type="server"/>
+    <script src="client/main.lua" type="client"/>
     <file src="shared/logic/spawn.lua"/>
+    <file src="shared/logic/vehicle.lua"/>
     <export function="getVehicleDbId" type="server"/>
     <export function="countVehicles" type="server"/>
     <export function="respawnAll" type="server"/>
+    <export function="getVehicleFuel" type="server"/>
+    <export function="setVehicleFuel" type="server"/>
+    <export function="getVehicleLockState" type="server"/>
+    <export function="setVehicleLockState" type="server"/>
+    <export function="getVehicleKeyCode" type="server"/>
+    <export function="setVehicleKeyCode" type="server"/>
+    <export function="getVehicleContainerId" type="server"/>
 </meta>

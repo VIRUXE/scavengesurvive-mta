@@ -207,3 +207,59 @@ function destroyItem(itemId, player)
     end
     return destroy(itemId, player)
 end
+
+function getHeld(player)
+    if not isElement(player) then
+        return false
+    end
+    return state.held[player] or false
+end
+
+function setHeld(player, item)
+    if not isElement(player) then
+        return false
+    end
+    hands.setHeld(player, item)
+    return true
+end
+
+function clearHeld(player)
+    if not isElement(player) then
+        return false
+    end
+    hands.clearHeld(player)
+    return true
+end
+
+function openTrunkContainer(player, vehicle, containerId, trunkTitle, trunkSize)
+    if not isElement(player) or not isElement(vehicle) then
+        return false
+    end
+    containers.openTrunk(player, vehicle, containerId, trunkTitle, trunkSize)
+    return true
+end
+
+function closeTrunk(player)
+    if not isElement(player) then
+        return false
+    end
+    containers.closeTrunk(player)
+    return true
+end
+
+function updateHeldData(player, nextData)
+    if not isElement(player) then
+        return false
+    end
+    local item = state.held[player]
+    if not item then
+        return false
+    end
+    item.data = nextData
+    hands.publishAmmo(player, item)
+    if ammo then
+        db.exec("UPDATE items SET data = ? WHERE id = ?", { ammo.encodeData(nextData), item.id })
+    end
+    triggerClientEvent(player, "onClientItemsHeld", player, item)
+    return true
+end

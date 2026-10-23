@@ -1,6 +1,5 @@
--- The inventory and bag dialogs (inventory-dialog.inc / container-dialog.inc through the ui resource) and the
--- action-text messages the server sends. The hand is not listed: upstream shows it in the gear tiles, and the
--- held item is used, put away or dropped with the keys.
+-- The inventory, bag and trunk dialogs (inventory-dialog.inc / container-dialog.inc through the ui resource) and
+-- the action-text messages the server sends.
 return function(ctx)
     local ammo = ctx and ctx.ammo
     local MESSAGES = {
@@ -25,8 +24,37 @@ return function(ctx)
         CUFFED = "Handcuffed player",
         UNCUFFED = "Removed handcuffs",
         DISARMED = "Disarmed player",
+        -- Vehicles
+        TRUNKLOCKED = "Trunk is locked",
+        NO_TRUNK = "This vehicle has no trunk",
+        DOORLOCKED = "Door is locked",
+        LOCKUSECROW = "This vehicle is locked, maybe you could break it with a crowbar",
+        LOCKCUSTOML = "This vehicle has a custom lock, you need a key to open it",
+        LOCKBREAKNO = "This lock is reinforced, a crowbar will not work",
+        LOCKNODOORS = "This vehicle does not have doors to lock",
+        LOCKALREADY = "This vehicle already has a lock",
+        LOCKVNOLOCK = "This vehicle does not have a lock",
+        LOCKKEYNCUT = "This key is not cut for any lock",
+        LOCKKEYNFIT = "This key does not fit this lock",
+        NEEDANOTOOL = "You need another tool to continue repairing this vehicle",
+        LOCKED = "Vehicle locked",
+        UNLOCKED = "Vehicle unlocked",
+        LOCKBROKEN = "Lock broken",
+        KEY_CRAFTED = "Key crafted",
+        REFUELLED = "Refuelled",
+        REPAIRED = "Vehicle repaired",
+        TANKFULL = "Tank is full",
+        EMPTY = "Empty",
+        NO_FUEL = "Out of fuel",
+        ENGINE_BROKEN = "Engine is broken",
+        ENGINE_STALL = "Engine stalled",
+        NO_HITCH = "This vehicle has no trailer hitch",
+        NO_TRAILER_NEAR = "No trailer in range",
+        TRAILER_ATTACHED = "Trailer attached",
+        TRAILER_DETACHED = "Trailer detached",
+        VEH_FULL_REPAIR = "Vehicle is already fully repaired",
     }
-    local view = "inventory" -- which dialog is up: "inventory" or "bag"
+    local view = "inventory" -- which dialog is up: "inventory", "bag" or "trunk"
     local last = nil -- the last payload, re-rendered when the view switches
 
     addEventHandler("onClientItemsHeld", root, function()
@@ -90,7 +118,12 @@ return function(ctx)
     local function open(p)
         local title, rows
         local bname = bagName(p)
-        if view == "bag" and p.bag then
+        local tname = p.capacity and p.capacity.trunk and p.capacity.trunk.uname or "Trunk"
+        if view == "trunk" and p.trunk then
+            title = string.format("%s (%d/%d)", tname, p.capacity.trunk.used, p.capacity.trunk.size)
+            rows = rowsFor(p.trunk, p.capacity.trunk)
+            rows[#rows + 1] = { id = "nav:inventory", label = "My Inventory >" }
+        elseif view == "bag" and p.bag then
             title = string.format("%s (%d/%d)", bname, p.capacity.bag.used, p.capacity.bag.size)
             rows = rowsFor(p.bag, p.capacity.bag)
             rows[#rows + 1] = { id = "nav:inventory", label = "My Inventory >" }
@@ -101,12 +134,20 @@ return function(ctx)
             if p.bag then
                 rows[#rows + 1] = { id = "nav:bag", label = bname .. " >" }
             end
+            if p.trunk then
+                rows[#rows + 1] = { id = "nav:trunk", label = tname .. " >" }
+            end
         end
         exports.ui:listOpen("inventory", title, rows)
     end
 
     addEventHandler("onClientItemsInventory", root, function(p)
         last = p
+        if p.trunk and view ~= "inventory" and view ~= "bag" then
+            view = "trunk"
+        elseif not p.trunk and view == "trunk" then
+            view = "inventory"
+        end
         open(p)
     end)
 
@@ -117,6 +158,8 @@ return function(ctx)
         if actionId == "select" then
             if rowId == "nav:bag" then
                 view = "bag"
+            elseif rowId == "nav:trunk" then
+                view = "trunk"
             elseif rowId == "nav:inventory" then
                 view = "inventory"
             end
@@ -132,7 +175,11 @@ return function(ctx)
 
     addEventHandler("onClientUiListClosed", root, function(listId)
         if listId == "inventory" then
+            if last and last.trunk then
+                triggerServerEvent("onVehiclesRequestCloseTrunk", localPlayer)
+            end
             view = "inventory"
+            last = nil
         end
     end)
 end
