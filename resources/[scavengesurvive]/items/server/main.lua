@@ -137,6 +137,8 @@ local containers = loadFile("server/containers.lua")({
     refreshPlayer = refreshPlayer,
 })
 hands.setContainers(containers)
+-- the held items' ammo, batched (hands.queueData)
+setTimer(hands.flushData, 5000, 0)
 loadFile("server/use.lua")({
     db = db,
     net = net,
@@ -195,6 +197,7 @@ addEventHandler("onPlayerQuit", root, function()
 end)
 
 addEventHandler("onResourceStop", resourceRoot, function()
+    hands.flushData(nil, true)
     for p in pairs(state.held) do
         hands.clearHeld(p)
     end
@@ -363,9 +366,7 @@ function updateHeldData(player, nextData)
     end
     item.data = nextData
     hands.publishAmmo(player, item)
-    if ammo then
-        db.exec("UPDATE items SET data = ? WHERE id = ?", { ammo.encodeData(nextData), item.id })
-    end
+    hands.queueData(item)
     triggerClientEvent(player, "heldItemChanged", player, item)
     return true
 end

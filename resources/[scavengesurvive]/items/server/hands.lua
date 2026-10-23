@@ -67,6 +67,7 @@ return function(ctx)
             setElementData(player, "items.ammo", loaded, "broadcast", "deny")
         end
     end
+    M.publishAmmo = publishAmmo
 
     -- item = { id, uname, hp, data } or nil: the bag worn on the back
     function M.setWorn(player, item)
@@ -94,10 +95,59 @@ return function(ctx)
         end
     end
 
+    -- Ammo changes on every shot: the latest data of each held item waits here and reaches the DB in one
+    -- item_data_flush call (main.lua's timer), or at once when the item leaves the hand, so whoever next loads
+    -- it reads the rounds that are left.
+    local pendingData = {} -- item id -> encoded data
+
+    function M.queueData(item)
+        if ammo then
+            pendingData[item.id] = ammo.encodeData(item.data)
+        end
+    end
+
+    -- itemId nil = every pending item; wait = block until written (resource stop)
+    function M.flushData(itemId, wait)
+        local rows = {}
+        for id, data in pairs(pendingData) do
+            if not itemId or id == itemId then
+                rows[#rows + 1] = { id = id, data = data }
+                pendingData[id] = nil
+            end
+        end
+        if #rows == 0 then
+            return
+        end
+        if wait then
+            return dbPoll(dbQuery(db.conn, "CALL item_data_flush(?)", toJSON(rows)), -1)
+        end
+        db.call("item_data_flush", { toJSON(rows) }, function(res)
+            if not res or not res.ok then
+                outputDebugString("[items] item_data_flush failed: " .. tostring(res and res.code or "db"), 1)
+            end
+        end)
+    end
+
+    -- a procedure about to write the item's data itself supersedes what is waiting
+    local function dropPendingData(itemId)
+        pendingData[itemId] = nil
+    end
+
+    -- ...and when it fails the item's data in hand is still the latest, so it waits again
+    local function requeueHeld(player, itemId)
+        local cur = state.held[player]
+        if cur and cur.id == itemId then
+            M.queueData(cur)
+        end
+    end
+
     function M.clearHeld(player)
         publish(player, "items.held", nil)
         publishAmmo(player, nil)
         local item = state.held[player]
+        if item then
+            M.flushData(item.id)
+        end
         if item and isElement(player) then
             local w = baseWeapon(itemType(item.uname))
             if w then
@@ -152,9 +202,7 @@ return function(ctx)
     local function syncHeldData(player, item, nextData)
         item.data = nextData
         publishAmmo(player, item)
-        if ammo then
-            db.exec("UPDATE items SET data = ? WHERE id = ?", { ammo.encodeData(nextData), item.id })
-        end
+        M.queueData(item)
         local t = itemType(item.uname)
         local w = baseWeapon(t)
         if w and isElement(player) then
@@ -297,11 +345,13 @@ return function(ctx)
             getElementInterior(player),
             getElementDimension(player),
         }
+        dropPendingData(item.id)
         db.call("weapon_unload", params, function(res, c)
             if not isElement(c.player) then
                 return
             end
             if not res or not res.ok then
+                requeueHeld(c.player, c.itemId)
                 return toast(c.player, res and res.code or "DB_ERROR")
             end
             local cur = state.held[c.player]
@@ -342,6 +392,7 @@ return function(ctx)
             delWorld and 1 or 0,
             delHeld and 1 or 0,
         }
+        dropPendingData(held.id)
         db.call("item_transfer_world", params, function(res, c)
             if res and res.ok then
                 world.forgetEverywhere(c.worldId)
@@ -353,6 +404,7 @@ return function(ctx)
                 return
             end
             if not res or not res.ok then
+                requeueHeld(c.player, c.held.id)
                 return toast(c.player, res and res.code or "DB_ERROR")
             end
             if c.delHeld then

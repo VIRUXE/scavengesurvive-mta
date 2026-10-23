@@ -58,8 +58,9 @@ local SELECT_BUDGET = "SELECT cap, remainder, (SELECT COUNT(*) FROM vehicles) AS
 local UPSERT_BUDGET = "INSERT INTO world_budget (category, zone, cap, remainder, allowance) "
     .. "VALUES ('vehicles', 'all', ?, 0, 0) ON DUPLICATE KEY UPDATE cap = VALUES(cap), remainder = 0"
 
-local SELECT_ABANDONED = "SELECT id FROM vehicles WHERE left_spawn = 1 "
-    .. "AND COALESCE(last_used_at, updated_at) < DATE_SUB(NOW(), INTERVAL ? DAY)"
+-- retires every abandoned vehicle in one statement; RETURNING hands back the ids whose elements go too
+local DELETE_ABANDONED = "DELETE FROM vehicles WHERE left_spawn = 1 "
+    .. "AND COALESCE(last_used_at, updated_at) < DATE_SUB(NOW(), INTERVAL ? DAY) RETURNING id"
 
 local settings = {}
 local types = nil -- spawn.index(...) of the data resource's vehicle types
@@ -341,7 +342,7 @@ local function refillTick()
     local function finish()
         refilling = false
     end
-    db.query(SELECT_ABANDONED, { setting("vehicles.abandon_days", 3) }, function(rows)
+    db.query(DELETE_ABANDONED, { setting("vehicles.abandon_days", 3) }, function(rows)
         local removed = 0
         for _, r in ipairs(rows or {}) do
             local id = tonumber(r.id)
@@ -353,7 +354,6 @@ local function refillTick()
                     end
                 end
             end
-            db.exec("DELETE FROM vehicles WHERE id = ?", { id })
             removed = removed + 1
         end
         db.query(SELECT_BUDGET, {}, function(brows)

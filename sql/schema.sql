@@ -109,6 +109,7 @@ CREATE TABLE IF NOT EXISTS `item_types` (
   `max_hitpoints` smallint(6) NOT NULL DEFAULT 5,
   `category` enum('generic','weapon','ammo','food','liquid','bag','safebox') NOT NULL DEFAULT 'generic',
   `category_data` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`category_data`)),
+  `container_size` tinyint(4) GENERATED ALWAYS AS (cast(coalesce(json_value(`category_data`,'$.size'),json_value(`category_data`,'$.bag_size')) as signed)) STORED,
   PRIMARY KEY (`uname`),
   CONSTRAINT `chk_item_types_data` CHECK (`category_data` is null or json_valid(`category_data`))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;

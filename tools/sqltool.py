@@ -2,11 +2,11 @@
 
 Usage: python -m tools.sqltool --db NAME [--host H --port P --user U --password PW] [--reset] apply|dump
 apply: sql/schema.sql (CREATE TABLE IF NOT EXISTS, so existing tables and their data are kept), then
-procedures and events (CREATE OR REPLACE) and seeds (idempotent); it can run again without --reset.
+procedures, triggers and events (CREATE OR REPLACE) and seeds (idempotent); it can run again without --reset.
 dump: rewrites sql/schema.sql from the database's tables (SHOW CREATE TABLE).
 There are no migration files: change the live database directly, then `dump` to keep sql/schema.sql in step.
 schema.sql and seeds are split on a semicolon that ends a line; procedure and event files are sent whole
-(one CREATE OR REPLACE statement per file, no DELIMITER).
+(one CREATE OR REPLACE statement per file, no DELIMITER). Triggers live in files because SHOW CREATE TABLE omits them.
 """
 from __future__ import annotations
 
@@ -52,7 +52,7 @@ def apply(args) -> None:
     with connect(args, args.db) as c, c.cursor() as cur:
         for st in statements(SCHEMA.read_text(encoding="utf-8")):
             cur.execute(st)
-        for sub in ("procedures", "events"):
+        for sub in ("procedures", "triggers", "events"):
             for f in sorted((SQL / sub).glob("*.sql")):
                 cur.execute(f.read_text(encoding="utf-8").strip().rstrip(";"))
         for f in sorted((SQL / "seed").glob("*.sql")):

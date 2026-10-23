@@ -24,7 +24,6 @@ BEGIN
       INSERT INTO items (type_uname, hitpoints, data, x, y, z, rz, interior, dimension)
         VALUES (p_ammo_uname, 5, p_ammo_data, p_x, p_y, p_z, p_rz, p_interior, p_dimension);
       SET v_ammo_id = LAST_INSERT_ID();
-      INSERT INTO world_items_pos (item_id, pos) VALUES (v_ammo_id, POINT(p_x, p_y));
       COMMIT;
       SELECT 1 AS ok, 'OK' AS code, JSON_OBJECT(
         'weapon_id', CAST(p_weapon_id AS SIGNED),

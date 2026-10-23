@@ -13,7 +13,6 @@ BEGIN
     ROLLBACK;
     SELECT 0 AS ok, 'NOT_HELD' AS code, NULL AS payload;
   ELSE
-    INSERT INTO world_items_pos (item_id, pos) VALUES (p_item_id, POINT(p_x, p_y));
     COMMIT;
     SELECT 1 AS ok, 'OK' AS code, JSON_OBJECT('item_id', CAST(p_item_id AS SIGNED)) AS payload;
   END IF;

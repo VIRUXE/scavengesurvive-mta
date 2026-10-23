@@ -9,7 +9,7 @@ BEGIN
   DECLARE v_size INT DEFAULT NULL;
   DECLARE v_zone VARCHAR(8) DEFAULT NULL;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
-  SELECT category, COALESCE(JSON_VALUE(category_data, '$.size'), JSON_VALUE(category_data, '$.bag_size')) INTO v_cat, v_size FROM item_types WHERE uname = p_type_uname;
+  SELECT category, container_size INTO v_cat, v_size FROM item_types WHERE uname = p_type_uname;
   IF v_cat IS NULL THEN
     SELECT 0 AS ok, 'UNKNOWN_TYPE' AS code, NULL AS payload;
   ELSE
@@ -21,7 +21,6 @@ BEGIN
     INSERT INTO items (type_uname, hitpoints, data, x, y, z, rz, interior, dimension, loot_spawn_id, loot_zone, despawn_at)
       VALUES (p_type_uname, IFNULL(p_hitpoints, 5), p_data, p_x, p_y, p_z, p_rz, p_interior, p_dimension, p_loot_spawn_id, v_zone, p_despawn_at);
     SET v_item = LAST_INSERT_ID();
-    INSERT INTO world_items_pos (item_id, pos) VALUES (v_item, POINT(p_x, p_y));
     IF v_cat IN ('bag', 'safebox') THEN
       INSERT INTO containers (kind, size, owner_item_id) VALUES (v_cat, IFNULL(v_size, 8), v_item);
       SET v_cont = LAST_INSERT_ID();

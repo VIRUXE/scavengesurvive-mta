@@ -25,7 +25,6 @@ BEGIN
       UPDATE items SET data = p_held_data WHERE id = p_held_id;
     END IF;
     IF p_delete_world = 1 THEN
-      DELETE FROM world_items_pos WHERE item_id = p_world_id;
       DELETE FROM items WHERE id = p_world_id;
     ELSE
       UPDATE items SET data = p_world_data WHERE id = p_world_id;

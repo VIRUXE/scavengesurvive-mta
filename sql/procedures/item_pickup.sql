@@ -23,7 +23,6 @@ BEGIN
       ROLLBACK;
       SELECT 0 AS ok, 'NOT_IN_WORLD' AS code, NULL AS payload;
     ELSE
-      DELETE FROM world_items_pos WHERE item_id = p_item_id;
       COMMIT;
       SELECT 1 AS ok, 'OK' AS code, JSON_OBJECT('item_id', CAST(p_item_id AS SIGNED)) AS payload;
     END IF;

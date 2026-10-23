@@ -28,7 +28,6 @@ BEGIN
     SET v_y = p_y + 1.5 * SIN(v_ang);
     UPDATE items SET holder_char_id = NULL, holder_kind = NULL, container_id = NULL, slot = NULL,
       x = v_x, y = v_y, z = p_z, rz = 0, interior = p_interior, dimension = p_dimension WHERE id = v_id;
-    INSERT INTO world_items_pos (item_id, pos) VALUES (v_id, POINT(v_x, v_y));
     SET v_n = v_n + 1;
   END LOOP;
   CLOSE cur;
@@ -37,7 +36,6 @@ BEGIN
     INSERT INTO items (type_uname, data, x, y, z, rz, interior, dimension)
       VALUES ('Clothes', JSON_OBJECT('skin', CAST(v_skin AS SIGNED)), p_x + 1.0, p_y, p_z, 0, p_interior, p_dimension);
     SET v_clothes = LAST_INSERT_ID();
-    INSERT INTO world_items_pos (item_id, pos) VALUES (v_clothes, POINT(p_x + 1.0, p_y));
   END IF;
   UPDATE characters SET alive = 0, died_at = NOW(), x = p_x, y = p_y, z = p_z WHERE id = p_char_id;
   COMMIT;

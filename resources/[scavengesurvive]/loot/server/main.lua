@@ -33,9 +33,6 @@ local SELECT_BUDGETS = "SELECT b.zone, b.cap, b.remainder, b.allowance, (SELECT 
 local UPDATE_BUDGET = "UPDATE world_budget SET remainder = ?, "
     .. "allowance = LEAST(allowance + ?, GREATEST(cap - ?, 0)) WHERE category = 'loot' AND zone = ?"
 
-local SPEND_BUDGET = "UPDATE world_budget SET allowance = GREATEST(allowance - ?, 0) "
-    .. "WHERE category = 'loot' AND zone = ?"
-
 local function setting(key, default)
     return tonumber(settings[key]) or default
 end
@@ -103,6 +100,8 @@ local drops = loadFile("server/drops.lua")({
     end,
 })
 
+-- One spawn's roll for loot_roll: { s = id, cd = cooldown seconds, items = { { u, data, x, y, z, rz } } }, or nil
+-- for a spawn whose loot table is unknown (disabled instead).
 local function rollSpawn(s)
     local tbl = lootTable(s.table_name)
     if not tbl then
@@ -112,68 +111,45 @@ local function rollSpawn(s)
             util.log("loot", "warn", "unknown loot table %s (spawn %d and others disabled)", s.table_name, s.id)
         end
         db.exec("UPDATE loot_spawns SET enabled = 0 WHERE id = ?", { s.id })
-        return
+        return nil
     end
     local mult = setting("loot.spawn_multiplier", 1.0)
     local unames = roll.pick(tbl, s.size, s.weight, mult, math.random)
-    -- the zone pays for this roll; a roll bigger than what is left is trimmed, an empty roll costs nothing
+    -- the zone pays for this roll (loot_roll spends it); a roll bigger than what is left is trimmed
     local left = allowance[s.zone] or 0
     while #unames > left do
         unames[#unames] = nil
     end
     allowance[s.zone] = left - #unames
-    if #unames > 0 then
-        db.exec(SPEND_BUDGET, { #unames, s.zone })
-    end
+    local items = {}
     for i, uname in ipairs(unames) do
         local def = exports.data:itemType(uname)
         if def then
             local ang = math.rad(i * (360 / #unames))
-            local x, y = s.x + math.cos(ang) * 0.6, s.y + math.sin(ang) * 0.6
             local cal = def.categoryData and def.categoryData.calibre
             local ammoTypes = cal and exports.data:ammoTypesForCalibre(cal) or nil
-            local dataJson = roll.initialItemData(def, s.table_name, ammoTypes, math.random)
-            -- hitpoints is NULL; n is required because of the embedded nils
-            local params = {
-                uname,
-                nil,
-                dataJson,
-                x,
-                y,
-                s.z + 0.1032,
-                math.random(0, 359),
-                s.interior,
-                s.dimension,
-                s.id,
-                s.despawn_at, -- computed by the DB (the only clock) in rollNear's SELECT
-                n = 11,
+            items[#items + 1] = {
+                u = uname,
+                data = roll.initialItemData(def, s.table_name, ammoTypes, math.random), -- JSON text or nil
+                x = s.x + math.cos(ang) * 0.6,
+                y = s.y + math.sin(ang) * 0.6,
+                z = s.z + 0.1032,
+                rz = math.random(0, 359),
             }
-            db.call("item_create", params, function(res)
-                if not res or not res.ok then
-                    util.log("loot", "warn", "item_create %s failed: %s", uname, res and res.code or "db")
-                end
-            end)
         end
     end
     -- the point cools down from the roll: loot.cooldown_minutes ± jitter before it may roll again
     local base = setting("loot.cooldown_minutes", 60) * 60
     local secs = budget.cooldown(base, setting("loot.cooldown_jitter", 0.5), math.random)
-    db.exec("UPDATE loot_spawn_state SET next_roll_at = DATE_ADD(NOW(), INTERVAL ? SECOND) WHERE spawn_id = ?", {
-        secs,
-        s.id,
-    })
-    triggerEvent("lootSpawned", resourceRoot, s.id, #unames)
+    return { s = s.id, cd = secs, items = items }
 end
 
 -- Rolls due spawns inside a box around (x, y): spawns are due when next_roll_at has passed and no item from the
 -- previous roll remains in the world; the zone must still have allowance and no player may be within
--- world.min_player_distance of the point.
+-- world.min_player_distance of the point. Every roll of the batch goes to the DB in one loot_roll call.
 function rollNear(x, y, radius)
     local batch = setting("loot.roll_batch", 300)
-    local despawn = setting("loot.despawn_minutes", 120)
-    local sql = "SELECT s.id, s.x, s.y, s.z, s.zone, s.table_name, s.weight, s.size, s.interior, s.dimension, "
-        .. "DATE_FORMAT(DATE_ADD(NOW(), INTERVAL ? MINUTE), '%Y-%m-%d %H:%i:%s') AS despawn_at "
-        .. "FROM loot_spawns s "
+    local sql = "SELECT s.id, s.x, s.y, s.z, s.zone, s.table_name, s.weight, s.size FROM loot_spawns s "
         .. "JOIN loot_spawn_state st ON st.spawn_id = s.id WHERE s.enabled = 1 AND st.next_roll_at <= NOW() "
         .. "AND NOT EXISTS (SELECT 1 FROM items i WHERE i.loot_spawn_id = s.id) "
         .. string.format(
@@ -190,21 +166,36 @@ function rollNear(x, y, radius)
             y - radius,
             batch
         )
-    db.query(sql, { despawn }, function(rows)
+    db.query(sql, {}, function(rows)
         if not rows then
             return
         end
         local players, minDist = playerPositions(), setting("world.min_player_distance", 150)
+        local rolls = {}
         for _, s in ipairs(rows) do
             local clear = (allowance[s.zone] or 0) > 0 and budget.clearOfPlayers(s.x, s.y, players, minDist)
             if clear and not busy[s.id] then
-                busy[s.id] = true
-                rollSpawn(s)
-                setTimer(function(id)
-                    busy[id] = nil
-                end, 5000, 1, s.id)
+                local r = rollSpawn(s)
+                if r then
+                    busy[s.id] = true
+                    rolls[#rolls + 1] = r
+                end
             end
         end
+        if #rolls == 0 then
+            return
+        end
+        db.call("loot_roll", { toJSON(rolls), setting("loot.despawn_minutes", 120) }, function(res, done)
+            for _, r in ipairs(done) do
+                busy[r.s] = nil
+            end
+            if not res or not res.ok then
+                return util.log("loot", "warn", "loot_roll of %d spawns failed: %s", #done, res and res.code or "db")
+            end
+            for _, r in ipairs(done) do
+                triggerEvent("lootSpawned", resourceRoot, r.s, #r.items)
+            end
+        end, rolls)
     end)
     return true
 end
