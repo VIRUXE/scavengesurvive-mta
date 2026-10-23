@@ -46,7 +46,8 @@ Durations (`/mute`, `/ban`): a bare number is seconds; `10m`, `2h`, `3d`, `2w`, 
 | `/country`, `/allcountry` (GeoIP) | not ported | no GeoIP service; `/ip` shows IP and serial |
 | `/delete` (drop account) | not ported; `/setactive <name> 0` blocks the login instead | accounts are system-versioned; deletion is a DBA job |
 | `/setpinglimit`, `/dbl`, `/gmx`, `/loadfs`, `/reloadfs`, `/unloadfs`, `/hud`, `/gamename`, `/hostname`, `/mapname` | not ported | SA-MP server internals; MTA has `mtaserver.conf`, `/restart <resource>` covers the resource case |
-| `/aliases` by password or hash | by IP and serial from `connection_log` | bcrypt hashes are salted, so "same password" cannot be looked up |
+| `/aliases [i/p/h/a]` (same IP, password, gpci hash, all) | `/aliases <name>`: every name seen in `connection_log` with the same IP **or** serial, no mode flag | SA-MP's `gpci` becomes MTA's `getPlayerSerial` (32 hex chars, per machine, logged on every login and kept as `accounts.last_serial`); bcrypt hashes are salted, so "same password" cannot be looked up |
+| Player-list gpci views (accounts by hash, hashes by name) | `/history <name> [n]` lists a name's serials and IPs per login; no lookup that starts from a raw serial | follow-up #74 (`/serial <serial>` and an `i|s` mode on `/aliases`) |
 | Reports listed with red (banned) / yellow (unread) rows | `[banned]` / `[new]` markers | the dx list draws no colour codes |
 | Mutes end on disconnect | mutes persist on the account | upstream's own comment says they should save; the file-based save never did |
 
