@@ -56,5 +56,6 @@ Smoke, maccer) leave a cut band. So the twins stay hat-only until the skulls are
 
 - Held items and holsters, which have one row per item type and no per-skin data upstream.
 - The spawn pool and the clothes item still use upstream's 14 spawn skins; widening them is a separate decision.
+  (Since widened by #76 to upstream's 29 clothes types, see 2026-10-23-clothes.md.)
 - Custom `engineRequestModel("ped")` skins get a fresh id above 312 at run time, so `skins.lua` has no gender
   for them: they fall into the average man's chain until a `FEMALE` or `BUILD` entry exists.

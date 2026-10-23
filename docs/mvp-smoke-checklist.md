@@ -230,3 +230,5 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
       then the skin changes and the item now shows the clothes you took off; relog and the new skin stays
       (`characters.skin`). Walking during the bar cancels it; the wrong gender says "Wrong gender for clothes"; on
       staff duty it says to go off duty first.
+    - d. **Death.** Die: a Clothes item holding the skin you died in lies 1 m east of the body, next to the rest of
+      the death drop, and its label names that skin's type.

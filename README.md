@@ -18,12 +18,12 @@ physical item on the ground, wounds bleed, and death drops it all.
 | Milestone | Status | What you get |
 | --- | :---: | --- |
 | M0 Bootstrap & Data | ✅ | 302 item types, 15 loot tables, 11,062 loot points, 10 languages, 66 vehicle types and 2,017 vehicle points converted from upstream; schema, procedures and seeds applied by one script |
-| M1 Auth & Character | ✅ | Register/login, permadeath, upstream's 14 spawn skins, hunger and bleeding ticks, death drops, anti-combat-log, SA-MP HUD (watch, hunger bar, key actions, brightness overlay, death screen) |
+| M1 Auth & Character | ✅ | Register/login, permadeath, spawn skins rolled from upstream's 29 clothes types, hunger and bleeding ticks, death drops, anti-combat-log, SA-MP HUD (watch, hunger bar, key actions, brightness overlay, death screen) |
 | M2 Items & Inventory | ✅ | Hands, 6-slot inventory, bags worn on the back, containers, food, SA-MP list dialogs; held items and bags on real bones with the SA-MP models |
 | M3 Loot & World | ✅ | Loot rolling near players, all 221 upstream maps built client-side (23,211 objects), 7 server zone colshapes (`getZoneAt`, `playerZoneEntered/Left`), weather and a real-time clock (wild trees deferred) |
 | M4 Weapons & Damage | ✅ | Server-authoritative wound model with calibre, ammo-type and distance falloff, magazines, reload (`R`) and hold-`N` unload, 3D bullet tracers, knockouts, handcuffs and disarm, anti-combat-log |
 | M5 Vehicles | ✅ | Fuel simulation and drain, driver controls (Y engine, N lights), locks, crowbar lock-breaking, locksmith key cutting, bonnet repair stages, petrol can refuelling, trunk container dialogs, and trailers via /tow |
-| M6 Crafting, Building, Apparel | ✅ | Apparel bone attachment (hats, masks, armour, holster), body preview & 6 gear tiles with live 3D item previews in the inventory UI, safebox & tent persistent containers, in-hand combine, ground construction, workbench crafting, defences with door swing poses, 12-key dx keypad with 4-digit code and plot pole 20m claimed territory protection |
+| M6 Crafting, Building, Apparel | ✅ | Apparel bone attachment (hats, masks, armour, holster), clothes items that change the skin, body preview & 6 gear tiles with live 3D item previews in the inventory UI, safebox & tent persistent containers, in-hand combine, ground construction, workbench crafting, defences with door swing poses, 12-key dx keypad with 4-digit code and plot pole 20m claimed territory protection |
 | M7 Staff & Ops | ✅ | Staff levels 1-5 with 38 commands (`/acmds`), reports, mutes, freeze, spectate, duty, MariaDB bans by name/IP/serial, whitelist, action log, runbooks. Live-checked with one client (`docs/reviews/2026-10-23-m7-live.md`); the two-client steps (mute seen by the other player, online ban and kick, spectate, kick request) are pending |
 | M8 Content & Polish | 🔶 | Done: supply drops and weapons caches (upstream's crate objects and 32-slot containers, persisted across restarts), chat modes (local 40 m / global / radio by frequency / admin) with the dx radio panel, house loot in the hollow houses, ziplines and ladders, ten languages with English fallback. Live-checked with one client (`docs/reviews/2026-10-23-m8-live.md`); open: the two-client parts (automatic drops, who hears what, relog persistence), the hand-held ladder climb and balancing |
 | M9 Live economy & release | 🔶 | Done: scarcity-driven respawn for loot and vehicles (ADR 0001, #67: carrying capacity per category and zone, deficit-proportional refill, jittered cooldowns, no respawn near players, carried loot counts). Open: the two-client live checks (combat log #26, smoke steps 12 and 22-28; #55 is answered by measurement), balancing on the playtest, `v1.0.0` |
@@ -37,7 +37,7 @@ Progress is tracked in the [issues](https://github.com/VIRUXE/scavengesurvive-mt
 | ![A hollow house replacing the vanilla one](docs/images/hollow-house-replacement.jpg) | ![The 14 spawn skins in body armour, pistol holstered](docs/images/apparel-body-threequarter.jpg) |
 | Upstream's hollow houses replace the sealed vanilla models | The 14 spawn skins in body armour, each with its own upstream fit |
 
-![Captain's cap across every spawn skin](docs/images/apparel-captainscap.jpg)
+![Captain's cap across upstream's 14 spawn skins](docs/images/apparel-captainscap.jpg)
 
 Apparel is checked in the green-screen studio (`docs/dev-studio.md`): one ped, a fixed camera, every skin in a row.
 

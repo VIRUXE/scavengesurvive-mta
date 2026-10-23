@@ -93,8 +93,8 @@ Worn items get their per-skin rows from `wearOffsets` on the item type. Those ro
 SA-MP bone 2 (head) is GTA node 5. On it, X points up the skull, Y forward and Z to the side. So `rx` turns an
 item about the vertical (yaw), `ry` about the forward axis (roll) and `rz` about the side axis (pitch). Restart
 `items` after an edit, wear the item through element data (`lua setElementData(p, "items.hat", "Beanie")`) and
-shoot it from `face` and `left`. `tests/lua/spec/items_apparel_spec.lua` fails if a spawn skin lacks a row for
-any wearable.
+shoot it from `face` and `left`. `tests/lua/spec/items_apparel_spec.lua` fails if one of upstream's 14 spawn skins
+lacks a row for any wearable.
 
 ### Attachment editor (`attachedit` resource)
 
