@@ -178,3 +178,7 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
     -2787.6, -161.0): `world_civilian` items lie at the upstream offsets inside half of the houses (seed
     `0006_house_loot.sql`, 116 points, ids above 11062); `rollloot` nearby re-rolls them like any spawn, and the
     other half of the houses stay empty every time (deterministic selection by position).
+26. **Languages** (#51). `/lang` alone lists the ten codes and the current one; `/lang pt` then `/mute` yourself from a second
+    account or trigger any translated line (e.g. get kicked with a reason): the line arrives in Portuguese; `/lang xx` is
+    refused with the usage line; a key missing from the language (one of the 149 English-only keys) arrives in English;
+    `/lang en` restores. `docs/languages-qa.md` matches `python -m tools.lang_qa --check`.

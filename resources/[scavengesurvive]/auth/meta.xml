@@ -2,6 +2,7 @@
     <info author="scavengesurvive-mta" type="script" name="auth" description="Accounts, login/register, connection log" version="0.1.0"/>
     <min_mta_version server="1.6.0" client="1.6.0"/>
     <include resource="lib"/>
+    <include resource="data"/>
     <script src="shared/events.lua" type="shared"/>
     <script src="server/main.lua" type="server"/>
     <script src="client/login.lua" type="client"/>

@@ -199,6 +199,31 @@ addEventHandler("onPlayerQuit", root, function(reason)
     end
 end)
 
+-- /lang <code>: the language every resource reads through getLanguage (data's t()); stored on the account.
+addCommandHandler("lang", function(player, _, code)
+    if getElementType(player) ~= "player" then
+        return
+    end
+    local account = session[player]
+    if not account then
+        return outputChatBox(" >  Log in first.", player, 255, 255, 0)
+    end
+    local codes = exports.data:languages()
+    local valid = {}
+    for _, c in ipairs(codes) do
+        valid[c] = true
+    end
+    code = type(code) == "string" and code:lower() or nil
+    if not code or not valid[code] then
+        local list = table.concat(codes, ", ")
+        return outputChatBox(string.format(" >  Usage: /lang <%s> (now %s)", list, account.lang), player, 255, 255, 0)
+    end
+    account.lang = code
+    db.exec("UPDATE accounts SET lang = ? WHERE id = ?", { code, account.id })
+    outputChatBox(string.format(" >  Language set to %s.", code), player, 255, 255, 0)
+    util.log("auth", "info", "%s set language %s", account.name, code)
+end)
+
 function getAccountId(player)
     return session[player] and session[player].id or false
 end

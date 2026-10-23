@@ -56,6 +56,10 @@ Allowed for everyone while the `dev` setting `*dev.open` is `true` (the default)
 `admin_level > 0`. Commands: `/additem <uname>`, `/rollloot`, `/stats`, `/sethp <n>`, `/setfood <n>`, `/setbleed <n>`, `/weather [id|NAME]`, `/zone [x y]`, `/vehcount`, `/vehrespawn`,
 `/dbtest`, `/rr <resource>` (also `rr <resource>` in the server console).
 
+## Player commands
+
+`/lang <code>` (resource `auth`) sets the language of every translated line for the session and stores it on the account; `/lang` alone lists the codes.
+
 ## Staff commands (resource `staff`)
 
 Gated by `accounts.admin_level` (1 Game Master … 5 Developer); the server console counts as level 5. Give yourself a
