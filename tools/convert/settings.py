@@ -11,6 +11,8 @@ SETTINGS = {
     "spawn.res_items": "AntiSepBandage", "loot.spawn_multiplier": "1.0", "loot.despawn_minutes": "120",
     "loot.reroll_minutes": "30", "loot.roll_batch": "300", "items.sync_radius": "150", "items.pickup_radius": "2.0",
     "vehicles.spawn_chance": "4.0",
+    # M7 staff & ops: upstream settings.ini server/whitelist and server/motd; level1.pwn warn (5 warnings = 1 day ban)
+    "server.whitelist": "0", "server.motd": "", "staff.max_warnings": "5", "staff.warn_ban_hours": "24",
 }
 
 

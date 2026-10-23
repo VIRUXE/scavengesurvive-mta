@@ -10,6 +10,8 @@ INSERT INTO settings (skey, svalue) VALUES
 ('player.combat_log_window','30'),
 ('player.login_freeze_time','8'),
 ('player.ping_limit','400'),
+('server.motd',''),
+('server.whitelist','0'),
 ('spawn.bagtype','Satchel'),
 ('spawn.new_bleed','0.0001'),
 ('spawn.new_blood','90'),
@@ -19,5 +21,7 @@ INSERT INTO settings (skey, svalue) VALUES
 ('spawn.res_blood','100'),
 ('spawn.res_food','40'),
 ('spawn.res_items','AntiSepBandage'),
+('staff.max_warnings','5'),
+('staff.warn_ban_hours','24'),
 ('vehicles.spawn_chance','4.0')
 ON DUPLICATE KEY UPDATE svalue = svalue;
