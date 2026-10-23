@@ -182,3 +182,15 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
     account or trigger any translated line (e.g. get kicked with a reason): the line arrives in Portuguese; `/lang xx` is
     refused with the usage line; a key missing from the language (one of the 149 English-only keys) arrives in English;
     `/lang en` restores. `docs/languages-qa.md` matches `python -m tools.lang_qa --check`.
+27. **Ladders and ziplines** (#50). Needs a client; the rope and the climb are client-side.
+    - a. **Ladders.** `/gotopos -1056 -628 33` (level 2+ on duty), or walk to the Flint County radio mast ladders listed in
+      `world/data/features.lua` (14 ladders). Within 1 m of the base the key list shows `F Climb ladder`; **F** snaps you
+      onto the ladder facing it with the climb pose. **W** climbs at 0.1 per frame, **S** descends slower, no key holds
+      your place, and the list shows `F Let go`. Past the top (after 1 s on the ladder) you step off forward; **F**
+      half-way drops you with a forward nudge.
+    - b. **Ziplines.** `/gotopos 2159 -986 71` (Los Santos; 13 ziplines). A dark rope line is visible between the two
+      anchors. Within 2 m of the start (or anywhere under the rope) the list shows `F Grab zipline`; **F** hangs you 1.2 m
+      below the rope and you accelerate to the far end. You let go 6 m from the end (or with **F**, or when knocked more
+      than 5 m off the line) with a forward boost.
+    - c. **Guards.** Nothing happens while knocked out, cuffed, dead or in a vehicle. `rr world` while climbing or riding
+      drops you back to normal controls.

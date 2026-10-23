@@ -67,7 +67,7 @@ Legend: **Port** = reimplement behaviour in Lua · **Replace** = MTA-native mech
 | `world/puzzles/*`, `xmas.pwn` | Defer | content after core parity |
 | `world/houseloot.pwn` | Port (2026-10-23, `tools/convert/houseloot.py`) | hollow-house offsets reproduced at convert time into `loot_spawns` (seed 0006); upstream's per-start 50 % coin is a deterministic half by position |
 | `world-bs/`, `world-wasteland/` | Drop | alternate maps not used by entry file |
-| ziplines, ladders, linegen libs | Port (medium) | objects + `moveObject` + animations; no native support |
+| ziplines, ladders, linegen libs | Port (2026-10-23, `world/client/features.lua`) | objects + `moveObject` + animations; no native support |
 | `filterscripts/*` (TextDrawEditor, object-loader…) | Drop | MTA `editor` resource covers dev tooling |
 | `runner/` (Go supervisor, Discord) | Drop / out of scope | MTA server handles restarts; Discord later via `fetchRemote` |
 | `docs/` Docusaurus site | Replace | repo `docs/` (Wiki unavailable on private Free) |
