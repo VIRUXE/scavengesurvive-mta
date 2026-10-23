@@ -186,11 +186,11 @@ end)
 command("fly", function(p, arg)
     if arg == "now" then
         useFly[p] = true
-        triggerClientEvent(p, "onClientDevFlyState", p, true, true)
+        triggerClientEvent(p, "devFlyStateChanged", p, true, true)
         return say(p, "fly activated")
     end
     useFly[p] = not useFly[p]
-    triggerClientEvent(p, "onClientDevFlyState", p, useFly[p], false)
+    triggerClientEvent(p, "devFlyStateChanged", p, useFly[p], false)
     if useFly[p] then
         say(p, "fly mode enabled: press Jump and Enter/Exit together to fly")
     else
@@ -203,7 +203,7 @@ addEventHandler("onPlayerQuit", root, function()
     useFly[source] = nil
 end)
 
-addEventHandler("onDevFlyActiveChange", root, function(isFlying)
+addEventHandler("devFlyActiveChanged", root, function(isFlying)
     if not isElement(client) or client ~= source then
         return
     end
@@ -341,7 +341,7 @@ function rcon(line)
             ok = false
             put("usage: key <player> <command>")
         else
-            triggerClientEvent(p, "onClientDevKey", p, bound)
+            triggerClientEvent(p, "devKeyPressed", p, bound)
             put("%s pressed %s", who, bound)
         end
     elseif verb == "studio" then

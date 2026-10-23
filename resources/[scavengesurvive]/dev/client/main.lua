@@ -1,6 +1,6 @@
 -- rcon "key <player> <command>": runs a bound command (interact, dropitem, putaway, inventory) or dispatches a
 -- client key press (arrow_u, arrow_d, enter, escape) so a live check can be driven from a script.
-addEventHandler("onClientDevKey", root, function(command)
+addEventHandler("devKeyPressed", root, function(command)
     if not executeCommandHandler(command) then
         triggerEvent("onClientKey", root, command, true)
     end
@@ -15,16 +15,16 @@ local canFly = false
 local isFlying = false
 local flyAngle = 0
 
-addEventHandler("onClientDevFlyState", root, function(enabled, activateNow)
+addEventHandler("devFlyStateChanged", root, function(enabled, activateNow)
     canFly = enabled == true
     if activateNow then
         isFlying = true
         local _, _, rz = getElementRotation(localPlayer)
         flyAngle = rz
-        triggerServerEvent("onDevFlyActiveChange", localPlayer, true)
+        triggerServerEvent("devFlyActiveChanged", localPlayer, true)
     elseif not canFly and isFlying then
         isFlying = false
-        triggerServerEvent("onDevFlyActiveChange", localPlayer, false)
+        triggerServerEvent("devFlyActiveChanged", localPlayer, false)
     end
 end)
 
@@ -37,7 +37,7 @@ local function toggleFly()
         local _, _, rz = getElementRotation(localPlayer)
         flyAngle = rz
     end
-    triggerServerEvent("onDevFlyActiveChange", localPlayer, isFlying)
+    triggerServerEvent("devFlyActiveChanged", localPlayer, isFlying)
 end
 
 bindKey("jump", "down", function()
@@ -64,7 +64,7 @@ addEventHandler("onClientPreRender", root, function(slice)
     end
     if getPedOccupiedVehicle(localPlayer) or isPedDead(localPlayer) then
         isFlying = false
-        triggerServerEvent("onDevFlyActiveChange", localPlayer, false)
+        triggerServerEvent("devFlyActiveChanged", localPlayer, false)
         return
     end
 

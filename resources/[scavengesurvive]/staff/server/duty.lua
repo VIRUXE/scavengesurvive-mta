@@ -19,7 +19,7 @@ return function(ctx)
     local function setNametags(p, flag)
         state.nametags[p] = flag or nil
         if isElement(p) then
-            triggerClientEvent(p, "onClientStaffNametags", p, flag == true)
+            triggerClientEvent(p, "nametagsChanged", p, flag == true)
         end
     end
 
@@ -184,7 +184,7 @@ return function(ctx)
         setElementDimension(p, getElementDimension(target))
         setElementInterior(p, getElementInterior(target))
         setCameraTarget(p, target)
-        triggerClientEvent(p, "onClientStaffSpectate", p, target)
+        triggerClientEvent(p, "spectateChanged", p, target)
         ctx.util.log("staff", "info", "%s watches %s", getPlayerName(p), getPlayerName(target))
     end
 
@@ -201,7 +201,7 @@ return function(ctx)
         setElementFrozen(p, false)
         setElementAlpha(p, 255)
         setElementCollisionsEnabled(p, true)
-        triggerClientEvent(p, "onClientStaffSpectate", p, false)
+        triggerClientEvent(p, "spectateChanged", p, false)
         if not state.duty[p] then
             setNametags(p, false)
         end
@@ -282,7 +282,7 @@ return function(ctx)
         end,
     })
 
-    ctx.net.handler("onStaffRequestSpectate", function(player, dir)
+    ctx.net.handler("spectateRequested", function(player, dir)
         if state.spectating[player] then
             cycle(player, dir == "prev" and -1 or 1)
         end

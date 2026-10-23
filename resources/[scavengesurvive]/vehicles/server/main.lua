@@ -41,7 +41,7 @@ local rolling = false
 
 local function toast(player, code)
     if isElement(player) then
-        triggerClientEvent(player, "onClientItemsToast", player, code)
+        triggerClientEvent(player, "toastShown", player, code)
     end
 end
 
@@ -154,7 +154,7 @@ local function rollAll(cb)
                 if pending == 0 then
                     rolling = false
                     util.log("vehicles", "info", "rolled %d spawn points: %d vehicles", #rows, created)
-                    triggerEvent("onVehiclesSpawned", resourceRoot, created)
+                    triggerEvent("vehiclesSpawned", resourceRoot, created)
                     if cb then
                         cb(created)
                     end
@@ -245,7 +245,7 @@ local function loadOrRoll()
             end
         end
         util.log("vehicles", "info", "%d vehicles rebuilt from the database", n)
-        triggerEvent("onVehiclesSpawned", resourceRoot, n)
+        triggerEvent("vehiclesSpawned", resourceRoot, n)
     end)
 end
 
@@ -326,7 +326,7 @@ local function cancelHoldAction(player)
     end
     if isElement(player) then
         setPedAnimation(player, nil)
-        triggerClientEvent(player, "onClientVehiclesStopHoldAction", player)
+        triggerClientEvent(player, "vehicleHoldStopped", player)
     end
     if act.actionType == "repair" and isElement(act.vehicle) then
         setVehicleDoorOpenRatio(act.vehicle, 0, 0, 500) -- close bonnet
@@ -348,7 +348,7 @@ addEventHandler("onVehicleStartEnter", root, function(player)
 end)
 
 -- Engine toggle (driver Y key)
-net.handler("onVehiclesRequestEngineToggle", function(player)
+net.handler("engineToggleRequested", function(player)
     local v = getPedOccupiedVehicle(player)
     if not v or getVehicleController(v) ~= player then
         return
@@ -377,7 +377,7 @@ net.handler("onVehiclesRequestEngineToggle", function(player)
 end, { rate = 3 })
 
 -- Lights toggle (occupant N key)
-net.handler("onVehiclesRequestLightsToggle", function(player)
+net.handler("lightsToggleRequested", function(player)
     local v = getPedOccupiedVehicle(player)
     if not v then
         return
@@ -387,7 +387,7 @@ net.handler("onVehiclesRequestLightsToggle", function(player)
 end, { rate = 3 })
 
 -- Lock toggle from inside the vehicle (/lock or bind)
-net.handler("onVehiclesRequestLockToggle", function(player)
+net.handler("lockToggleRequested", function(player)
     local v = getPedOccupiedVehicle(player)
     if not v or getVehicleController(v) ~= player then
         return
@@ -410,7 +410,7 @@ net.handler("onVehiclesRequestLockToggle", function(player)
 end, { rate = 3 })
 
 -- Trailers attach/detach (/tow)
-net.handler("onVehiclesRequestTow", function(player)
+net.handler("towRequested", function(player)
     local v = getPedOccupiedVehicle(player)
     if not v or getVehicleController(v) ~= player then
         return
@@ -454,7 +454,7 @@ net.handler("onVehiclesRequestTow", function(player)
 end, { rate = 3 })
 
 -- Roadside interaction: repair, locksmith, lock-breaking, trunk container, refuelling
-net.handler("onVehiclesRequestInteract", function(player, vehicle)
+net.handler("vehicleInteractRequested", function(player, vehicle)
     if not isElement(vehicle) or not info[vehicle] or isPedDead(player) then
         return
     end
@@ -485,7 +485,7 @@ net.handler("onVehiclesRequestInteract", function(player, vehicle)
         cancelHoldAction(player)
         setVehicleDoorOpenRatio(vehicle, 0, 1, 500)
         setPedAnimation(player, "INT_SHOP", "SHOP_CASHIER", -1, true, false, false, false)
-        triggerClientEvent(player, "onClientVehiclesHoldAction", player, "Repairing", 3000)
+        triggerClientEvent(player, "vehicleHoldStarted", player, "Repairing", 3000)
         local timer = setTimer(function(p, veh)
             activeActions[p] = nil
             if not isElement(p) or not isElement(veh) then
@@ -530,7 +530,7 @@ net.handler("onVehiclesRequestInteract", function(player, vehicle)
             end
             cancelHoldAction(player)
             setPedAnimation(player, "COP_AMBIENT", "COPBROWSE_LOOP", -1, true, false, false, false)
-            triggerClientEvent(player, "onClientVehiclesHoldAction", player, "Crafting key", 3000)
+            triggerClientEvent(player, "vehicleHoldStarted", player, "Crafting key", 3000)
             local timer = setTimer(function(p, veh, kitId)
                 activeActions[p] = nil
                 if not isElement(p) or not isElement(veh) then
@@ -572,7 +572,7 @@ net.handler("onVehiclesRequestInteract", function(player, vehicle)
             end
             cancelHoldAction(player)
             setPedAnimation(player, "POLICE", "DOOR_KICK", -1, true, false, false, false)
-            triggerClientEvent(player, "onClientVehiclesHoldAction", player, "Breaking lock", 3000)
+            triggerClientEvent(player, "vehicleHoldStarted", player, "Breaking lock", 3000)
             local timer = setTimer(function(p, veh)
                 activeActions[p] = nil
                 if not isElement(p) or not isElement(veh) then
@@ -603,7 +603,7 @@ net.handler("onVehiclesRequestInteract", function(player, vehicle)
             end
             cancelHoldAction(player)
             setPedAnimation(player, "POLICE", "DOOR_KICK", -1, true, false, false, false)
-            triggerClientEvent(player, "onClientVehiclesHoldAction", player, "Breaking trunk", 3000)
+            triggerClientEvent(player, "vehicleHoldStarted", player, "Breaking trunk", 3000)
             local timer = setTimer(function(p, veh)
                 activeActions[p] = nil
                 if not isElement(p) or not isElement(veh) then
@@ -648,7 +648,7 @@ net.handler("onVehiclesRequestInteract", function(player, vehicle)
         end
         cancelHoldAction(player)
         setPedAnimation(player, "PED", "DRIVE_BOAT", -1, true, false, false, false)
-        triggerClientEvent(player, "onClientVehiclesHoldAction", player, "Refuelling", 3000)
+        triggerClientEvent(player, "vehicleHoldStarted", player, "Refuelling", 3000)
         local timer = setTimer(function(p, veh, gcan)
             activeActions[p] = nil
             if not isElement(p) or not isElement(veh) then
@@ -676,11 +676,11 @@ net.handler("onVehiclesRequestInteract", function(player, vehicle)
     end
 end, { rate = 3 })
 
-net.handler("onVehiclesRequestCancelHoldAction", function(player)
+net.handler("holdActionCancelRequested", function(player)
     cancelHoldAction(player)
 end, { rate = 5 })
 
-net.handler("onVehiclesRequestCloseTrunk", function(player)
+net.handler("trunkCloseRequested", function(player)
     exports.items:closeTrunk(player)
     -- find any vehicle near player whose trunk is open and close it
     local px, py, pz = getElementPosition(player)

@@ -19,8 +19,8 @@ return function(ctx)
         end
         local payload = { hp = st.hp, food = st.food, bleed = st.bleed, wounds = st.wounds }
         st.lastSent = payload
-        triggerClientEvent(player, "onClientCharacterStats", player, payload)
-        triggerEvent("onCharacterStatsChanged", player, payload)
+        triggerClientEvent(player, "characterStatsSynced", player, payload)
+        triggerEvent("characterStatsChanged", player, payload)
     end
 
     setTimer(function()

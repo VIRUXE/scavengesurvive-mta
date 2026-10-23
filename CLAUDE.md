@@ -15,7 +15,7 @@ Scavenge & Survive ported to MTA:SA 1.6 (Lua 5.1) with MariaDB 13.0 (12.2 also v
 
 ## Rules
 
-- Events: `on<Domain><Thing><Verb>`; client→server `on<Domain>Request<Verb>` and server→client `onClient<Domain><Verb>` are registered with `addEvent(name, true)` (MTA only delivers `triggerServerEvent`/`triggerClientEvent` to events whose receiving side allows remote triggering); purely local events (e.g. `onClientUiListAction`, `onPlayerAuthenticated`) use `false`. Every resource declares every event it triggers or handles in `shared/events.lua`.
+- Events: names are `<subject><PastTenseVerb>` camelCase with no `on`, `onClient` or `Request` prefix (e.g. `itemCreated`, `inventoryOpened`, `itemPickupRequested`); direction comes from registration, not the name. Client to server events are registered through `net.handler(...)` (`addEvent(name, true)`), server to client events with `addEvent(name, true)` on the client side, purely local events with `false` (e.g. `uiListActionSelected`, `playerAuthenticated`). Each resource declares every event it triggers or handles in `shared/events.lua`, grouped by direction. MTA event names are global, so every name carries its own subject.
 - Remote handlers are registered through `net.handler(...)` from `lib`; trust only the `client` global.
 - DB: identical connection string in every resource (`lib/modules/db.lua`), `batch=0`; anything touching more than one row is a stored procedure returning `SELECT ok, code, payload`.
 - Migrations that `ALTER` a system-versioned table (`accounts`, `items`, `bans`) start with

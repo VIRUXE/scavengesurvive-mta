@@ -143,7 +143,7 @@ return function(ctx)
         end
         triggerClientEvent(
             player,
-            "onClientItemsHeld",
+            "heldItemChanged",
             player,
             item and { id = item.id, uname = item.uname, hp = item.hp, data = item.data } or false
         )
@@ -172,7 +172,7 @@ return function(ctx)
         if isElement(player) then
             triggerClientEvent(
                 player,
-                "onClientItemsHeld",
+                "heldItemChanged",
                 player,
                 { id = item.id, uname = item.uname, hp = item.hp, data = item.data }
             )
@@ -238,7 +238,7 @@ return function(ctx)
         syncHeldData(source, item, nextData)
     end)
 
-    net.handler("onItemsRequestReload", function(player)
+    net.handler("itemReloadRequested", function(player)
         if not ammo or (isIncapacitated and isIncapacitated(player)) then
             return
         end
@@ -265,7 +265,7 @@ return function(ctx)
         syncHeldData(player, item, nextData)
     end, { rate = 3 })
 
-    net.handler("onItemsRequestUnload", function(player)
+    net.handler("itemUnloadRequested", function(player)
         if not ammo or (isIncapacitated and isIncapacitated(player)) then
             return
         end
@@ -313,7 +313,7 @@ return function(ctx)
             end
             world.syncPlayer(c.player)
             if res.payload and res.payload.ammo_item_id then
-                triggerEvent("onItemCreated", resourceRoot, res.payload.ammo_item_id)
+                triggerEvent("itemCreated", resourceRoot, res.payload.ammo_item_id)
             end
         end, { player = player, itemId = item.id, unloadedState = unloadedState })
     end, { rate = 3 })
@@ -346,7 +346,7 @@ return function(ctx)
             if res and res.ok then
                 world.forgetEverywhere(c.worldId)
                 if c.delWorld then
-                    triggerEvent("onItemDestroyed", resourceRoot, c.worldId)
+                    triggerEvent("itemDestroyed", resourceRoot, c.worldId)
                 end
             end
             if not isElement(c.player) then
@@ -357,7 +357,7 @@ return function(ctx)
             end
             if c.delHeld then
                 M.setHeld(c.player, nil)
-                triggerEvent("onItemDestroyed", resourceRoot, c.held.id)
+                triggerEvent("itemDestroyed", resourceRoot, c.held.id)
             else
                 M.setHeld(c.player, { id = c.held.id, uname = c.held.uname, hp = c.held.hp, data = c.nextHeld })
             end
@@ -437,7 +437,7 @@ return function(ctx)
                     setPlayerCuffed(c.target, false)
                 end
                 M.setHeld(c.player, { id = res.payload.item_id, uname = "HandCuffs", hp = 5, data = {} })
-                triggerEvent("onItemCreated", resourceRoot, res.payload.item_id)
+                triggerEvent("itemCreated", resourceRoot, res.payload.item_id)
                 toast(c.player, "UNCUFFED")
             end, { player = player, target = target })
             return true
@@ -454,7 +454,7 @@ return function(ctx)
                         M.setHeld(c.target, nil)
                     end
                     M.setHeld(c.player, c.item)
-                    triggerEvent("onItemMoved", c.player, c.item.id, "held", "held")
+                    triggerEvent("itemMoved", c.player, c.item.id, "held", "held")
                     toast(c.player, "DISARMED")
                 end, { player = player, target = target, item = tItem })
                 return true
@@ -463,7 +463,7 @@ return function(ctx)
         return false
     end
 
-    net.handler("onItemsRequestPickup", function(player)
+    net.handler("itemPickupRequested", function(player)
         local cid = charId(player)
         if not cid or (isIncapacitated and isIncapacitated(player)) then
             return
@@ -488,13 +488,13 @@ return function(ctx)
                 local isPitched = (rData and (rData.pitched == true or (rData[1] and rData[1].pitched == true)))
                 if isPitched then
                     if curUname == "Crowbar" then
-                        return triggerEvent("onItemsRequestDismantleTent", c.player, row.id)
+                        return triggerEvent("tentDismantleRequested", c.player, row.id)
                     else
                         return containers and containers.openWorldContainer(c.player, row)
                     end
                 else
                     if curUname == "Hammer" then
-                        return triggerEvent("onItemsRequestPitchTent", c.player, row.id)
+                        return triggerEvent("tentPitchRequested", c.player, row.id)
                     end
                 end
             end
@@ -541,12 +541,12 @@ return function(ctx)
                     c2.player,
                     { id = c2.row.id, uname = c2.row.uname, hp = c2.row.hp, data = decodeData(c2.row.data) }
                 )
-                triggerEvent("onItemMoved", c2.player, c2.row.id, "world", "held")
+                triggerEvent("itemMoved", c2.player, c2.row.id, "world", "held")
             end, { player = c.player, row = row })
         end, { player = player, charId = cid })
     end, { rate = 5 })
 
-    net.handler("onItemsRequestDrop", function(player)
+    net.handler("itemDropRequested", function(player)
         local cid, item = charId(player), state.held[player]
         if not cid or (isIncapacitated and isIncapacitated(player)) then
             return
@@ -567,7 +567,7 @@ return function(ctx)
             end
             M.setHeld(c.player, nil)
             world.syncPlayer(c.player) -- the dropped item appears without waiting for the next tick
-            triggerEvent("onItemMoved", c.player, c.itemId, "held", "world")
+            triggerEvent("itemMoved", c.player, c.itemId, "held", "world")
         end, { player = player, itemId = item.id })
     end, { rate = 5 })
 

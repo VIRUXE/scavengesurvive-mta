@@ -1,12 +1,12 @@
 -- Loads the SA-MP custom object models listed in manifest.lua (written by tools/extract_samp_models.py together
 -- with files/) into client-allocated model ids. Allocated ids differ per client, so nothing is
 -- shared through the server: other resources ask exports.models:resolve(sampModel) on their own client and listen
--- for onClientSampModelsChanged (fired after loading and again before unloading) to swap their objects' models.
+-- for sampModelsChanged (fired after loading and again before unloading) to swap their objects' models.
 local ids = {} -- SA-MP model -> allocated MTA model
 local allocated = {}
 local keep = {} -- col/dff/txd elements stay alive while the models are in use
 
-addEvent("onClientSampModelsChanged", false)
+addEvent("sampModelsChanged", false)
 
 local function readManifest()
     local f = fileOpen("manifest.lua", true)
@@ -77,12 +77,12 @@ addEventHandler("onClientResourceStart", resourceRoot, function()
     end
     local suffix = #failed > 0 and (", failed: " .. table.concat(failed, ", ")) or ""
     outputDebugString(("models: %d SA-MP models loaded%s"):format(count, suffix), #failed > 0 and 2 or 3)
-    triggerEvent("onClientSampModelsChanged", root)
+    triggerEvent("sampModelsChanged", root)
 end)
 
 addEventHandler("onClientResourceStop", resourceRoot, function()
     ids = {}
-    triggerEvent("onClientSampModelsChanged", root) -- users fall back to stand-ins before the ids go away
+    triggerEvent("sampModelsChanged", root) -- users fall back to stand-ins before the ids go away
     for _, id in ipairs(allocated) do
         engineFreeModel(id)
     end

@@ -62,7 +62,7 @@ local function draw()
     end
 end
 
-addEventHandler("onClientCharacterDeathScreen", root, function(show)
+addEventHandler("deathScreenShown", root, function(show)
     if show == showing then
         return
     end
@@ -87,11 +87,11 @@ addEventHandler("onClientClick", root, function(btn, state, ax, ay)
     end
     local bx = sw / 2 + (button.x - 320) * s
     if ax >= bx and ax <= bx + button.w * s and ay >= button.y * s and ay <= (button.y + button.h) * s then
-        triggerServerEvent("onCharacterRequestRespawn", localPlayer)
+        triggerServerEvent("respawnRequested", localPlayer)
     end
 end)
 
-addEventHandler("onClientCharacterKnockout", root, function(durationMs)
+addEventHandler("knockedOut", root, function(durationMs)
     local ui = getResourceFromName("ui")
     if not ui or getResourceState(ui) ~= "running" then
         return

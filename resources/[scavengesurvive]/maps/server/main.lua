@@ -1,5 +1,5 @@
 -- Server-side zone colshapes built from data/zones.lua (tools/convert/maps.py, upstream pyss/data/regions.json).
--- Exposes getZoneAt(x, y) and getPlayerZone(player) and emits onPlayerZoneEnter / onPlayerZoneLeave.
+-- Exposes getZoneAt(x, y) and getPlayerZone(player) and emits playerZoneEntered / playerZoneLeft.
 local util = loadstring(exports.lib:getModule("util"), "=lib/util.lua")()
 
 local function readLua(path)
@@ -57,10 +57,10 @@ local function setPlayerZone(p, nextZone)
     end
     playerZone[p] = nextZone
     if prev then
-        triggerEvent("onPlayerZoneLeave", p, prev)
+        triggerEvent("playerZoneLeft", p, prev)
     end
     if nextZone then
-        triggerEvent("onPlayerZoneEnter", p, nextZone)
+        triggerEvent("playerZoneEntered", p, nextZone)
     end
 end
 

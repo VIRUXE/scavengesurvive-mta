@@ -10,14 +10,14 @@ local function cancelAction()
     end
 end
 
-addEventHandler("onClientCraftingHoldAction", root, function(actionType, durationMs)
+addEventHandler("craftHoldStarted", root, function(actionType, durationMs)
     activeAction = actionType
     local x, y, z = getElementPosition(localPlayer)
     lastPos = { x = x, y = y, z = z }
     exports.ui:progressStart(actionType, durationMs)
 end)
 
-addEventHandler("onClientCraftingStopHoldAction", root, function()
+addEventHandler("craftHoldStopped", root, function()
     cancelAction()
 end)
 

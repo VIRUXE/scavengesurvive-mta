@@ -67,7 +67,7 @@ pwsh server-config/rcon.ps1 studio VIRUXE off            # back to where they we
 - **Restore.** On entry the server saves position, heading, interior, dimension and frozen state, and puts them back
   on `/studio`, `studio <p> off` or `dev` stopping.
   - **Quit.** The `onPlayerQuit` handler runs at priority `high+10`, so the player is back in place before auth
-    raises `onPlayerLoggedOut` and character saves the position. A quit from the studio never persists the studio
+    raises `playerLoggedOut` and character saves the position. A quit from the studio never persists the studio
     spot.
   - **Death.** The studio state is only dropped and character's normal respawn takes over.
 

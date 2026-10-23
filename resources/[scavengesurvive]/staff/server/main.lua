@@ -193,23 +193,23 @@ function ctx.kick(target, actor, reason, delayMs)
 end
 
 -- List dialogs: the server owns the rows and the meaning of each action; the client only draws (ui:listOpen)
--- and echoes onClientUiListAction back as onStaffRequestListAction.
+-- and echoes uiListActionSelected back as staffListActionSelected.
 function ctx.openList(p, key, title, rows, buttons, handler)
     if not isElement(p) or isConsole(p) then
         return ctx.say(p, " >  (dialogs need a connected player)")
     end
     state.lists[p] = { key = key, handler = handler }
-    triggerClientEvent(p, "onClientStaffList", p, key, title, rows, buttons)
+    triggerClientEvent(p, "staffListOpened", p, key, title, rows, buttons)
 end
 
 function ctx.closeList(p)
     state.lists[p] = nil
     if isElement(p) and not isConsole(p) then
-        triggerClientEvent(p, "onClientStaffListClose", p)
+        triggerClientEvent(p, "staffListDismissed", p)
     end
 end
 
-net.handler("onStaffRequestListAction", function(player, key, rowId, actionId)
+net.handler("staffListActionSelected", function(player, key, rowId, actionId)
     local open = state.lists[player]
     if not open or open.key ~= key then
         return
@@ -217,7 +217,7 @@ net.handler("onStaffRequestListAction", function(player, key, rowId, actionId)
     open.handler(rowId, actionId)
 end, { rate = 5 })
 
-net.handler("onStaffRequestListClosed", function(player, key)
+net.handler("staffListClosed", function(player, key)
     local open = state.lists[player]
     if open and open.key == key then
         state.lists[player] = nil
@@ -324,7 +324,7 @@ local function loadMute(p)
     )
 end
 
-addEventHandler("onPlayerAuthenticated", root, function()
+addEventHandler("playerAuthenticated", root, function()
     if not state.ready then
         return
     end
@@ -335,7 +335,7 @@ addEventHandler("onPlayerAuthenticated", root, function()
     loadMute(source)
 end)
 
-addEventHandler("onCharacterDied", root, function(_, _, killer)
+addEventHandler("characterDied", root, function(_, _, killer)
     if isElement(killer) and getElementType(killer) == "player" and killer ~= source then
         state.lastKiller[source] = getPlayerName(killer)
     end
@@ -373,7 +373,7 @@ addEventHandler("onResourceStart", resourceRoot, function()
     end)
     for _, p in ipairs(getElementsByType("player")) do
         if ctx.accountId(p) then
-            loadMute(p) -- mutes survive a staff restart; never re-raise onPlayerAuthenticated (character would respawn)
+            loadMute(p) -- mutes survive a staff restart; never re-raise playerAuthenticated (character would respawn)
         end
     end
 end)

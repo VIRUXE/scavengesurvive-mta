@@ -24,7 +24,7 @@ local function build(m)
     showCursor(true)
     addEventHandler("onClientGUIClick", btn, function()
         local pw = guiGetText(edit)
-        triggerServerEvent(mode == "login" and "onAuthRequestLogin" or "onAuthRequestRegister", localPlayer, pw)
+        triggerServerEvent(mode == "login" and "loginRequested" or "registrationRequested", localPlayer, pw)
         guiSetEnabled(btn, false)
         setTimer(function()
             if isElement(btn) then
@@ -34,10 +34,10 @@ local function build(m)
     end, false)
 end
 
-addEventHandler("onClientAuthPrompt", root, function(m)
+addEventHandler("authPromptShown", root, function(m)
     build(m)
 end)
-addEventHandler("onClientAuthResult", root, function(ok, message)
+addEventHandler("authResolved", root, function(ok, message)
     if ok then
         if win then
             destroyElement(win)

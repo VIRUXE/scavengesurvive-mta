@@ -9,7 +9,7 @@ local function uiRunning()
     return ui and getResourceState(ui) == "running"
 end
 
-addEventHandler("onClientStaffList", root, function(key, title, rows, buttons)
+addEventHandler("staffListOpened", root, function(key, title, rows, buttons)
     if not uiRunning() then
         return outputChatBox("[staff] ui resource is not running", 255, 100, 100)
     end
@@ -17,26 +17,26 @@ addEventHandler("onClientStaffList", root, function(key, title, rows, buttons)
     exports.ui:listOpen("staff:" .. key, title, rows, buttons)
 end)
 
-addEventHandler("onClientStaffListClose", root, function()
+addEventHandler("staffListDismissed", root, function()
     if listKey and uiRunning() then
         exports.ui:listClose()
     end
     listKey = nil
 end)
 
-addEventHandler("onClientUiListAction", root, function(listId, rowId, actionId)
+addEventHandler("uiListActionSelected", root, function(listId, rowId, actionId)
     local key = tostring(listId):match("^staff:(.+)$")
     if not key or key ~= listKey then
         return
     end
-    triggerServerEvent("onStaffRequestListAction", localPlayer, key, rowId, actionId)
+    triggerServerEvent("staffListActionSelected", localPlayer, key, rowId, actionId)
 end)
 
-addEventHandler("onClientUiListClosed", root, function(listId)
+addEventHandler("uiListClosed", root, function(listId)
     local key = tostring(listId):match("^staff:(.+)$")
     if key and key == listKey then
         listKey = nil
-        triggerServerEvent("onStaffRequestListClosed", localPlayer, key)
+        triggerServerEvent("staffListClosed", localPlayer, key)
     end
 end)
 
@@ -44,13 +44,13 @@ end)
 local function cycleSpectate(dir)
     return function()
         if spectating and not isChatBoxInputActive() then
-            triggerServerEvent("onStaffRequestSpectate", localPlayer, dir)
+            triggerServerEvent("spectateRequested", localPlayer, dir)
         end
     end
 end
 local cyclePrev, cycleNext = cycleSpectate("prev"), cycleSpectate("next")
 
-addEventHandler("onClientStaffSpectate", root, function(target)
+addEventHandler("spectateChanged", root, function(target)
     local was = spectating ~= nil
     spectating = isElement(target) and target or nil
     if spectating and not was then
@@ -62,7 +62,7 @@ addEventHandler("onClientStaffSpectate", root, function(target)
     end
 end)
 
-addEventHandler("onClientStaffNametags", root, function(flag)
+addEventHandler("nametagsChanged", root, function(flag)
     nametags = flag == true
 end)
 

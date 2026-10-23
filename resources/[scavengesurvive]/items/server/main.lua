@@ -43,7 +43,7 @@ end
 
 local function toast(player, code)
     if isElement(player) then
-        triggerClientEvent(player, "onClientItemsToast", player, code)
+        triggerClientEvent(player, "toastShown", player, code)
     end
 end
 
@@ -61,7 +61,7 @@ local function destroy(itemId, player, cb)
         local ok = res and res.ok or false
         if ok then
             world.forgetEverywhere(ctx.itemId)
-            triggerEvent("onItemDestroyed", resourceRoot, ctx.itemId)
+            triggerEvent("itemDestroyed", resourceRoot, ctx.itemId)
         end
         if not isElement(ctx.player) then
             return
@@ -151,13 +151,13 @@ addEventHandler("onResourceStart", resourceRoot, function()
     end
 end)
 
-addEventHandler("onCharacterSpawned", root, function()
+addEventHandler("characterSpawned", root, function()
     -- keep an existing sent-set: the client still shows those objects, the diff stays exact
     state.sent[source] = state.sent[source] or {}
     hands.rebuildCarried(source)
 end)
 
-addEventHandler("onCharacterDied", root, function()
+addEventHandler("characterDied", root, function()
     -- character_death_drop already moved everything to the world; the next sync projects it
     hands.setHeld(source, nil)
     hands.setWorn(source, nil)
@@ -203,7 +203,7 @@ function createStartingItems(cid, unames)
     for _, uname in ipairs(unames) do
         db.call("item_create_in_container", { uname, containerId }, function(res, ctx)
             if res and res.ok then
-                triggerEvent("onItemCreated", resourceRoot, res.payload.item_id)
+                triggerEvent("itemCreated", resourceRoot, res.payload.item_id)
             else
                 util.log("items", "warn", "starting item %s: %s", ctx.uname, res and res.code or "DB_ERROR")
             end
@@ -231,7 +231,7 @@ function destroyWorldItem(itemId)
         function(ok)
             if ok then
                 world.forgetEverywhere(itemId)
-                triggerEvent("onItemDestroyed", resourceRoot, itemId)
+                triggerEvent("itemDestroyed", resourceRoot, itemId)
             end
         end
     )
@@ -329,6 +329,6 @@ function updateHeldData(player, nextData)
     if ammo then
         db.exec("UPDATE items SET data = ? WHERE id = ?", { ammo.encodeData(nextData), item.id })
     end
-    triggerClientEvent(player, "onClientItemsHeld", player, item)
+    triggerClientEvent(player, "heldItemChanged", player, item)
     return true
 end

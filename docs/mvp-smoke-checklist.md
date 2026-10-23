@@ -62,7 +62,7 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
     up: the wreck disappears after 30 s and `/vehcount` drops by one.
 16. **Zone colshapes** (#65). Boot logs `[maps] 7 zone colshapes created`. `/zone` prints the player's current zone
     (`ls`, `sf`, `lv`, `rc`, `fc`, `bc`, `tr`); `/zone 2495 -1687` prints `ls`; `rcon.ps1 players` includes `zone=<z>`.
-    Crossing a zone border emits `onPlayerZoneLeave` and `onPlayerZoneEnter` and rolls due loot near the player.
+    Crossing a zone border emits `playerZoneLeft` and `playerZoneEntered` and rolls due loot near the player.
 17. **Ammo calibres, magazines and reloading** (#24). A: `/additem M9Pistol` and `/additem Ammo9mm`. Pick up `M9Pistol`:
     it equips with one full magazine (`10/0` inside the weapon icon; `[01]M9 (10/0, 9mm, Hollow Point)` when put away in
     **H**). Stand over the `Ammo9mm` tin (`9mm Rounds (20, 9mm, Hollow Point)`) and press **F**: 10 rounds transfer into

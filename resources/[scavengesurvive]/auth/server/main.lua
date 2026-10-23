@@ -113,7 +113,7 @@ function prompt(player)
         if not isElement(player) then
             return
         end
-        triggerClientEvent(player, "onClientAuthPrompt", player, row and "login" or "register")
+        triggerClientEvent(player, "authPromptShown", player, row and "login" or "register")
     end)
 end
 
@@ -132,8 +132,8 @@ local function admit(player, account)
         "INSERT INTO connection_log (account_id, name, serial, ip) VALUES (?, ?, ?, ?)",
         { account.id, account.name, getPlayerSerial(player), getPlayerIP(player) }
     )
-    triggerClientEvent(player, "onClientAuthResult", player, true, "OK")
-    triggerEvent("onPlayerAuthenticated", player, account.id)
+    triggerClientEvent(player, "authResolved", player, true, "OK")
+    triggerEvent("playerAuthenticated", player, account.id)
     util.log("auth", "info", "%s authenticated as account %d", account.name, account.id)
 end
 
@@ -143,7 +143,7 @@ local function finish(player, ok, code, account)
         return
     end
     if not ok then
-        triggerClientEvent(player, "onClientAuthResult", player, false, code)
+        triggerClientEvent(player, "authResolved", player, false, code)
         return
     end
     if not whitelistEnabled or account.adminLevel > 0 then
@@ -157,14 +157,14 @@ local function finish(player, ok, code, account)
         if access.whitelistAllows(true, row ~= nil and row ~= false, account.adminLevel) then
             return admit(p, account)
         end
-        triggerClientEvent(p, "onClientAuthResult", p, false, "NOT_WHITELISTED")
+        triggerClientEvent(p, "authResolved", p, false, "NOT_WHITELISTED")
         outputChatBox("This server is whitelisted and your name is not on the list.", p, 255, 80, 80)
         util.log("auth", "info", "%s refused: not whitelisted", account.name)
         kickLater(p, "Not whitelisted")
     end, player)
 end
 
-net.handler("onAuthRequestLogin", function(player, password)
+net.handler("loginRequested", function(player, password)
     if session[player] or pending[player] or not accounts then
         return
     end
@@ -174,7 +174,7 @@ net.handler("onAuthRequestLogin", function(player, password)
     end)
 end, { rate = 2 })
 
-net.handler("onAuthRequestRegister", function(player, password)
+net.handler("registrationRequested", function(player, password)
     if session[player] or pending[player] or not accounts then
         return
     end
@@ -188,7 +188,7 @@ addEventHandler("onPlayerQuit", root, function(reason)
     local account = session[source]
     if account then
         -- the quit reason travels with the event: character decides whether a leaving player combat-logged
-        triggerEvent("onPlayerLoggedOut", source, account.id, reason)
+        triggerEvent("playerLoggedOut", source, account.id, reason)
         db.exec("UPDATE connection_log SET left_at = NOW() WHERE account_id = ? AND left_at IS NULL", { account.id })
     end
     session[source] = nil

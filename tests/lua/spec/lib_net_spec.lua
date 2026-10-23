@@ -5,20 +5,20 @@ describe("lib.net", function()
     before_each(function() mock.install(); net = load("net"); mock.addElement("p1"); mock.addElement("p2") end)
     it("registers a remote event and only runs when client == source", function()
         local seen = 0
-        net.handler("onItemsRequestPickup", function(player) seen = seen + 1 end, { rate = 100 })
-        assert.same({ "addEvent", "onItemsRequestPickup", true }, mock.calls[1])
-        _G.client, _G.source = "p1", "p1"; mock.fire("onItemsRequestPickup")
-        _G.client, _G.source = "p1", "p2"; mock.fire("onItemsRequestPickup")
+        net.handler("itemPickupRequested", function(player) seen = seen + 1 end, { rate = 100 })
+        assert.same({ "addEvent", "itemPickupRequested", true }, mock.calls[1])
+        _G.client, _G.source = "p1", "p1"; mock.fire("itemPickupRequested")
+        _G.client, _G.source = "p1", "p2"; mock.fire("itemPickupRequested")
         assert.equals(1, seen)
     end)
     it("rate limits per player per event", function()
         local seen = 0
-        net.handler("onItemsRequestDrop", function() seen = seen + 1 end, { rate = 2 })
+        net.handler("itemDropRequested", function() seen = seen + 1 end, { rate = 2 })
         _G.client, _G.source = "p1", "p1"
-        for _ = 1, 5 do mock.fire("onItemsRequestDrop") end
+        for _ = 1, 5 do mock.fire("itemDropRequested") end
         assert.equals(2, seen)
         mock.tick = 1001
-        mock.fire("onItemsRequestDrop")
+        mock.fire("itemDropRequested")
         assert.equals(3, seen)
     end)
     it("issues one-shot tokens that expire", function()

@@ -24,7 +24,7 @@ local function isPlayer(e)
 end
 
 local function report(victim, bleed, hp, bodypart)
-    triggerClientEvent(victim, "onClientWeaponsWound", victim, bleed, hp, bodypart)
+    triggerClientEvent(victim, "woundInflicted", victim, bleed, hp, bodypart)
 end
 
 local function environmental(victim, weapon, bodypart, loss)
@@ -74,7 +74,7 @@ local function hitBleed(attacker, weapon, dist)
         wound.firearmKnock(cd.muzzleVelocity, dist, ammoKoMult)
 end
 
-net.handler("onWeaponsRequestHit", function(victim, attacker, weapon, bodypart, loss)
+net.handler("weaponHitReported", function(victim, attacker, weapon, bodypart, loss)
     weapon, bodypart, loss = tonumber(weapon), tonumber(bodypart) or 3, tonumber(loss) or 0
     if not weapon or loss < 0 or loss > MAX_LOSS then
         return

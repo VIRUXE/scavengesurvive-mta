@@ -22,7 +22,7 @@ addEventHandler("onClientPlayerDamage", root, function(attacker, weapon, bodypar
     end
     lastReport = now
     triggerServerEvent(
-        "onWeaponsRequestHit",
+        "weaponHitReported",
         localPlayer,
         isElement(attacker) and attacker or false,
         weapon or 0,
@@ -31,7 +31,7 @@ addEventHandler("onClientPlayerDamage", root, function(attacker, weapon, bodypar
     )
 end)
 
-addEventHandler("onClientWeaponsWound", root, function(bleedAdd, hpLoss, bodypart)
+addEventHandler("woundInflicted", root, function(bleedAdd, hpLoss, bodypart)
     local text = string.format("Wounded: %s  -%d hp", PARTS[bodypart] or "body", math.floor(hpLoss + 0.5))
     if bleedAdd > 0 then
         text = text .. "  (bleeding)"

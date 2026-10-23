@@ -50,7 +50,7 @@ return function(ctx)
         setElementDimension(p, o.studioDim)
         setElementPosition(p, c.x, c.y, c.z)
         setElementFrozen(p, true)
-        triggerClientEvent(p, "onClientDevStudioState", p, true, studio.parseCam({}), 0)
+        triggerClientEvent(p, "devStudioStateChanged", p, true, studio.parseCam({}), 0)
         return true
     end
 
@@ -70,7 +70,7 @@ return function(ctx)
             setElementDimension(p, o.dimension)
             setElementPosition(p, o.x, o.y, o.z)
         end
-        triggerClientEvent(p, "onClientDevStudioState", p, false, nil, restore ~= false and o.rz or nil)
+        triggerClientEvent(p, "devStudioStateChanged", p, false, nil, restore ~= false and o.rz or nil)
         return true
     end
 
@@ -80,13 +80,13 @@ return function(ctx)
         if not cam then
             return nil, err
         end
-        triggerClientEvent(p, "onClientDevStudioCam", p, cam)
+        triggerClientEvent(p, "devStudioCamChanged", p, cam)
         return cam
     end
 
     -- the player's own client owns its ped's heading: a server-side setElementRotation does not stick
     function M.pose(p, rz)
-        triggerClientEvent(p, "onClientDevStudioPose", p, rz)
+        triggerClientEvent(p, "devStudioPoseChanged", p, rz)
     end
 
     local function describeCam(cam)
@@ -130,7 +130,7 @@ return function(ctx)
         M.pose(p, tonumber(rz))
     end)
 
-    -- "high" so the player is back in place before auth's onPlayerQuit raises onPlayerLoggedOut and character
+    -- "high" so the player is back in place before auth's onPlayerQuit raises playerLoggedOut and character
     -- saves the position: a quit from the studio must not persist z=2500 in a studio dimension
     addEventHandler("onPlayerQuit", root, function()
         M.leave(source)

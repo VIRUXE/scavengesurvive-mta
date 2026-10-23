@@ -1,9 +1,14 @@
-addEvent("onPlayerAuthenticated", false)
-addEvent("onPlayerLoggedOut", false)
-addEvent("onCharacterSpawned", false)
-addEvent("onCharacterDied", false)
-addEvent("onCharacterStatsChanged", false)
-addEvent("onCharacterRequestRespawn", true)
-addEvent("onClientCharacterStats", true)
-addEvent("onClientCharacterDeathScreen", true)
-addEvent("onClientCharacterKnockout", true)
+-- server-local (triggered and handled on one side, or between resources)
+addEvent("playerAuthenticated", false)
+addEvent("playerLoggedOut", false)
+addEvent("characterSpawned", false)
+addEvent("characterDied", false)
+addEvent("characterStatsChanged", false)
+
+-- client to server (handlers registered with net.handler)
+addEvent("respawnRequested", true)
+
+-- server to client / client-local
+addEvent("characterStatsSynced", true)
+addEvent("deathScreenShown", true)
+addEvent("knockedOut", true)

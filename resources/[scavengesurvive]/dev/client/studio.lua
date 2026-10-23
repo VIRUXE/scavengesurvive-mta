@@ -66,7 +66,7 @@ local function stop()
 end
 
 -- rz: the heading to face; the server sends it because only this client can set its own ped's rotation
-addEventHandler("onClientDevStudioState", root, function(enabled, spec, rz)
+addEventHandler("devStudioStateChanged", root, function(enabled, spec, rz)
     if spec then
         cam = spec
     end
@@ -80,11 +80,11 @@ addEventHandler("onClientDevStudioState", root, function(enabled, spec, rz)
     end
 end)
 
-addEventHandler("onClientDevStudioPose", root, function(rz)
+addEventHandler("devStudioPoseChanged", root, function(rz)
     setElementRotation(localPlayer, 0, 0, rz)
 end)
 
-addEventHandler("onClientDevStudioCam", root, function(spec)
+addEventHandler("devStudioCamChanged", root, function(spec)
     cam = spec
 end)
 

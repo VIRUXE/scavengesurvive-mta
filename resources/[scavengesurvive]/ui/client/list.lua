@@ -2,7 +2,7 @@
 -- Level 1 lists the rows the caller gave; the left button on a row with actions opens level 2, a second dialog
 -- titled with the row label listing its actions with Accept/Back (inventory-dialog.inc / container-dialog.inc).
 -- A row without actions is a navigation row: the left button emits actionId "select" for it.
--- Emits onClientUiListAction(listId, rowId, actionId) and onClientUiListClosed(listId). One dialog at a time.
+-- Emits uiListActionSelected(listId, rowId, actionId) and uiListClosed(listId). One dialog at a time.
 return function(ctx)
     local dialog, canvas, c = ctx.dialog, ctx.canvas, ctx.c
     local COL = {
@@ -47,7 +47,7 @@ return function(ctx)
         local id = state.base.id
         state = nil
         showCursor(false)
-        triggerEvent("onClientUiListClosed", root, id)
+        triggerEvent("uiListClosed", root, id)
         return true
     end
 
@@ -62,7 +62,7 @@ return function(ctx)
             return
         end
         if state.options then
-            triggerEvent("onClientUiListAction", root, state.base.id, state.options.rowId, row.id)
+            triggerEvent("uiListActionSelected", root, state.base.id, state.options.rowId, row.id)
             state.options = nil
             return
         end
@@ -74,7 +74,7 @@ return function(ctx)
             state.options = dialog.new(state.base.id, row.label, rows, OPTION_BUTTONS)
             state.options.rowId = row.id
         else
-            triggerEvent("onClientUiListAction", root, state.base.id, row.id, "select")
+            triggerEvent("uiListActionSelected", root, state.base.id, row.id, "select")
         end
     end
 

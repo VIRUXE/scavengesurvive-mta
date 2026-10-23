@@ -67,7 +67,7 @@ local function rollSpawn(s)
         reroll,
         s.id,
     })
-    triggerEvent("onLootSpawned", resourceRoot, s.id, #unames)
+    triggerEvent("lootSpawned", resourceRoot, s.id, #unames)
 end
 
 -- Rolls due spawns inside a box around (x, y): spawns are due when next_roll_at has passed and no item from the
@@ -130,7 +130,7 @@ setTimer(function()
     end
 end, 15000, 0)
 
-addEventHandler("onPlayerZoneEnter", root, function()
+addEventHandler("playerZoneEntered", root, function()
     if exports.character:getCharacterId(source) then
         local x, y = getElementPosition(source)
         rollNear(x, y, 400)

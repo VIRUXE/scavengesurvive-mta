@@ -40,11 +40,11 @@ local function submit()
         return
     end
     if isSetupMode then
-        triggerServerEvent("onBuildingRequestInstallKeypad", localPlayer, currentDefenceId, enteredCode)
+        triggerServerEvent("keypadInstallRequested", localPlayer, currentDefenceId, enteredCode)
         playSuccessSound()
         close()
     else
-        triggerServerEvent("onBuildingRequestKeypadSubmit", localPlayer, currentDefenceId, enteredCode)
+        triggerServerEvent("keypadSubmitted", localPlayer, currentDefenceId, enteredCode)
     end
 end
 
@@ -250,7 +250,7 @@ addEventHandler("onClientKey", root, function(button, press)
     end
 end)
 
-addEventHandler("onClientBuildingOpenKeypad", root, function(defenceId, isSetup)
+addEventHandler("keypadOpened", root, function(defenceId, isSetup)
     currentDefenceId = defenceId
     isSetupMode = (isSetup == true)
     enteredCode = ""
@@ -258,7 +258,7 @@ addEventHandler("onClientBuildingOpenKeypad", root, function(defenceId, isSetup)
     showCursor(true)
 end)
 
-addEventHandler("onClientBuildingCloseKeypad", root, function()
+addEventHandler("keypadClosed", root, function()
     close()
 end)
 

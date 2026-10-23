@@ -32,7 +32,7 @@ return function(ctx)
             end
             if res and res.ok then
                 hands.setHeld(c.player, nil)
-                triggerEvent("onItemMoved", c.player, c.itemId, "held", "container")
+                triggerEvent("itemMoved", c.player, c.itemId, "held", "container")
                 if activeContainer[c.player] then
                     sendInventory(c.player)
                 end
@@ -56,12 +56,12 @@ return function(ctx)
             end
             hands.setHeld(c.player, nil)
             hands.setWorn(c.player, c.item)
-            triggerEvent("onItemMoved", c.player, c.item.id, "held", "bag")
+            triggerEvent("itemMoved", c.player, c.item.id, "held", "bag")
             toast(c.player, "BAG_WORN")
         end, { player = player, item = item })
     end
 
-    net.handler("onItemsRequestPutAway", function(player)
+    net.handler("itemPutAwayRequested", function(player)
         local cid, item = charId(player), state.held[player]
         if not cid then
             return
@@ -157,7 +157,7 @@ return function(ctx)
             end
             if #ids == 0 then
                 attachGearAndHeld(payload, c.player)
-                return triggerClientEvent(c.player, "onClientItemsInventory", c.player, payload)
+                return triggerClientEvent(c.player, "inventoryOpened", c.player, payload)
             end
             local sql = "SELECT i.id, i.type_uname AS uname, i.hitpoints AS hp, i.data, i.container_id AS cid, "
                 .. "t.size AS isize, t.category FROM items i JOIN item_types t ON t.uname = i.type_uname "
@@ -182,7 +182,7 @@ return function(ctx)
                     end
                 end
                 attachGearAndHeld(payload, c2.player)
-                triggerClientEvent(c2.player, "onClientItemsInventory", c2.player, payload)
+                triggerClientEvent(c2.player, "inventoryOpened", c2.player, payload)
             end, { player = c.player })
         end, { player = player })
     end
@@ -265,7 +265,7 @@ return function(ctx)
         activeContainer[player] = nil
     end
 
-    net.handler("onItemsRequestPickupContainer", function(player, itemId)
+    net.handler("containerPickupRequested", function(player, itemId)
         local cid = charId(player)
         itemId = tonumber(itemId)
         if not cid or not itemId then
@@ -306,7 +306,7 @@ return function(ctx)
                                     hp = iRow.hp,
                                     data = hands.decodeData(iRow.data),
                                 })
-                                triggerEvent("onItemMoved", c3.player, iRow.id, "world", "held")
+                                triggerEvent("itemMoved", c3.player, iRow.id, "world", "held")
                                 sendInventory(c3.player)
                             end
                         end,
@@ -320,7 +320,7 @@ return function(ctx)
         end, { player = player, cont = cont, itemId = itemId, cid = cid })
     end, { rate = 3 })
 
-    net.handler("onItemsRequestPitchTent", function(player, itemId)
+    net.handler("tentPitchRequested", function(player, itemId)
         local cid = charId(player)
         itemId = tonumber(itemId)
         if not cid or not itemId then
@@ -343,7 +343,7 @@ return function(ctx)
                 if d > 3.0 then
                     return
                 end
-                triggerClientEvent(c.player, "onClientVehiclesHoldAction", c.player, "Pitching tent", 3000)
+                triggerClientEvent(c.player, "vehicleHoldStarted", c.player, "Pitching tent", 3000)
                 setTimer(function(pl, itId, rx, ry, rz)
                     if not isElement(pl) then
                         return
@@ -372,7 +372,7 @@ return function(ctx)
         )
     end, { rate = 3 })
 
-    net.handler("onItemsRequestDismantleTent", function(player, itemId)
+    net.handler("tentDismantleRequested", function(player, itemId)
         local cid = charId(player)
         itemId = tonumber(itemId)
         if not cid or not itemId then
@@ -397,7 +397,7 @@ return function(ctx)
                     return
                 end
                 local function startDismantle()
-                    triggerClientEvent(c.player, "onClientVehiclesHoldAction", c.player, "Packing tent", 3000)
+                    triggerClientEvent(c.player, "vehicleHoldStarted", c.player, "Packing tent", 3000)
                     setTimer(function(pl, itId, cId, rx, ry, rz)
                         if not isElement(pl) then
                             return
@@ -447,11 +447,11 @@ return function(ctx)
         activeContainer[source] = nil
     end)
 
-    net.handler("onItemsRequestOpenInventory", function(player)
+    net.handler("inventoryOpenRequested", function(player)
         sendInventory(player)
     end, { rate = 3 })
 
-    net.handler("onItemsRequestTake", function(player, itemId)
+    net.handler("itemTakeRequested", function(player, itemId)
         local cid = charId(player)
         itemId = tonumber(itemId)
         if not cid or not itemId then
@@ -476,7 +476,7 @@ return function(ctx)
                     end
                     row.data = hands.decodeData(row.data)
                     hands.setHeld(c2.player, row)
-                    triggerEvent("onItemMoved", c2.player, c2.itemId, "container", "held")
+                    triggerEvent("itemMoved", c2.player, c2.itemId, "container", "held")
                     sendInventory(c2.player)
                 end,
                 { player = c.player, itemId = c.itemId }
@@ -484,7 +484,7 @@ return function(ctx)
         end, { player = player, itemId = itemId })
     end, { rate = 5 })
 
-    net.handler("onItemsRequestWear", function(player, itemId)
+    net.handler("itemWearRequested", function(player, itemId)
         local cid = charId(player)
         itemId = tonumber(itemId)
         if not cid or not itemId then
@@ -537,7 +537,7 @@ return function(ctx)
         )
     end, { rate = 5 })
 
-    net.handler("onItemsRequestUnwear", function(player, slot)
+    net.handler("itemUnwearRequested", function(player, slot)
         local cid = charId(player)
         if not cid or not slot or type(slot) ~= "string" then
             return

@@ -103,7 +103,7 @@ describe("maps server colshapes and events", function()
         assert.is_false(_G.getZoneAt(3500, -3500))
     end)
 
-    it("tracks player zones and fires onPlayerZoneEnter and onPlayerZoneLeave", function()
+    it("tracks player zones and fires playerZoneEntered and playerZoneLeft", function()
         local p = "player:1"
         mock.addElement(p)
         local lsCol = createdCols[1].id --zones.ORDER[1] == "ls"
@@ -133,10 +133,10 @@ describe("maps server colshapes and events", function()
             end
         end
         assert.same({
-            { "onPlayerZoneEnter", p, "ls" },
-            { "onPlayerZoneLeave", p, "ls" },
-            { "onPlayerZoneEnter", p, "rc" },
-            { "onPlayerZoneLeave", p, "rc" },
+            { "playerZoneEntered", p, "ls" },
+            { "playerZoneLeft", p, "ls" },
+            { "playerZoneEntered", p, "rc" },
+            { "playerZoneLeft", p, "rc" },
         }, events)
     end)
 end)

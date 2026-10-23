@@ -9,17 +9,17 @@ local function cancelAction()
     activeAction = nil
     lastPos = nil
     exports.ui:progressCancel()
-    triggerServerEvent("onVehiclesRequestCancelHoldAction", localPlayer)
+    triggerServerEvent("holdActionCancelRequested", localPlayer)
 end
 
-addEventHandler("onClientVehiclesHoldAction", root, function(actionType, durationMs)
+addEventHandler("vehicleHoldStarted", root, function(actionType, durationMs)
     activeAction = actionType
     local x, y, z = getElementPosition(localPlayer)
     lastPos = { x = x, y = y, z = z }
     exports.ui:progressStart(actionType, durationMs)
 end)
 
-addEventHandler("onClientVehiclesStopHoldAction", root, function()
+addEventHandler("vehicleHoldStopped", root, function()
     activeAction = nil
     lastPos = nil
     exports.ui:progressCancel()
@@ -41,9 +41,9 @@ addEventHandler("onClientRender", root, function()
 end)
 
 addCommandHandler("tow", function()
-    triggerServerEvent("onVehiclesRequestTow", localPlayer)
+    triggerServerEvent("towRequested", localPlayer)
 end)
 
 addCommandHandler("lock", function()
-    triggerServerEvent("onVehiclesRequestLockToggle", localPlayer)
+    triggerServerEvent("lockToggleRequested", localPlayer)
 end)

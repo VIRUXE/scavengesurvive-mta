@@ -50,7 +50,7 @@ return function(ctx)
             local add, remove, sent = diff.compute(state.sent[c.player], visible)
             state.sent[c.player] = sent
             if #add > 0 or #remove > 0 then
-                triggerClientEvent(c.player, "onClientItemsSync", resourceRoot, { add = add, remove = remove })
+                triggerClientEvent(c.player, "inventorySynced", resourceRoot, { add = add, remove = remove })
             end
         end, { player = player })
     end
@@ -69,7 +69,7 @@ return function(ctx)
             if sent[itemId] then
                 sent[itemId] = nil
                 if isElement(player) then
-                    triggerClientEvent(player, "onClientItemsSync", resourceRoot, { add = {}, remove = { itemId } })
+                    triggerClientEvent(player, "inventorySynced", resourceRoot, { add = {}, remove = { itemId } })
                 end
             end
         end

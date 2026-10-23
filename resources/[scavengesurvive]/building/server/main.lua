@@ -32,12 +32,12 @@ addEventHandler("onPlayerQuit", root, function()
     cancelBreak(source)
 end)
 
-addEventHandler("onCharacterDied", root, function()
+addEventHandler("characterDied", root, function()
     cancelBreak(source)
 end)
 
 local function toast(player, code)
-    triggerClientEvent(player, "onClientItemsToast", player, code)
+    triggerClientEvent(player, "toastShown", player, code)
 end
 
 local function decodeData(data)
@@ -79,12 +79,12 @@ local function handleDefenceInteract(player, row)
             return toast(player, "KEYPAD_ALREADY")
         end
         exports.items:destroyItem(held.id, player)
-        return triggerClientEvent(player, "onClientBuildingOpenKeypad", player, row.id, true)
+        return triggerClientEvent(player, "keypadOpened", player, row.id, true)
     end
 
     -- 2. Lock breaking with LockBreaker
     if heldUname == "LockBreaker" and (d.keypad or d.passcode) then
-        triggerClientEvent(player, "onClientVehiclesHoldAction", player, "Breaking lock", 10000)
+        triggerClientEvent(player, "vehicleHoldStarted", player, "Breaking lock", 10000)
         local timer = setTimer(function(pl, itId)
             activeBreaks[pl] = nil
             if not isElement(pl) then
@@ -109,7 +109,7 @@ local function handleDefenceInteract(player, row)
 
     -- 3. Hacking with HackDevice
     if heldUname == "HackDevice" and d.keypad then
-        triggerClientEvent(player, "onClientVehiclesHoldAction", player, "Hacking keypad", 8000)
+        triggerClientEvent(player, "vehicleHoldStarted", player, "Hacking keypad", 8000)
         local timer = setTimer(function(pl, itId)
             activeBreaks[pl] = nil
             if not isElement(pl) then
@@ -146,7 +146,7 @@ local function handleDefenceInteract(player, row)
 
     -- 4. Locked with Keypad
     if d.keypad and d.passcode and d.passcode ~= "" then
-        return triggerClientEvent(player, "onClientBuildingOpenKeypad", player, row.id, false)
+        return triggerClientEvent(player, "keypadOpened", player, row.id, false)
     end
 
     -- 5. Normal door/gate open/close toggle
@@ -176,7 +176,7 @@ local function handleDefenceInteract(player, row)
     end
 end
 
-net.handler("onBuildingRequestInteract", function(player, itemId)
+net.handler("buildingInteractRequested", function(player, itemId)
     local cid = charId(player)
     itemId = tonumber(itemId)
     if not cid or not itemId then
@@ -201,7 +201,7 @@ net.handler("onBuildingRequestInteract", function(player, itemId)
     )
 end, { rate = 3 })
 
-net.handler("onBuildingRequestKeypadSubmit", function(player, defenceId, enteredCode)
+net.handler("keypadSubmitted", function(player, defenceId, enteredCode)
     local cid = charId(player)
     defenceId = tonumber(defenceId)
     if not cid or not defenceId then
@@ -217,7 +217,7 @@ net.handler("onBuildingRequestKeypadSubmit", function(player, defenceId, entered
             end
             local d = decodeData(row.data)
             if defences.verifyPasscode(d.passcode, c.enteredCode) then
-                triggerClientEvent(c.player, "onClientBuildingCloseKeypad", c.player)
+                triggerClientEvent(c.player, "keypadClosed", c.player)
                 setDoorOpenState(row, true, function()
                     exports.items:refreshPlayer(c.player)
                     toast(c.player, "ACCESS_GRANTED")
@@ -245,7 +245,7 @@ net.handler("onBuildingRequestKeypadSubmit", function(player, defenceId, entered
     )
 end, { rate = 3 })
 
-net.handler("onBuildingRequestInstallKeypad", function(player, defenceId, newPasscode)
+net.handler("keypadInstallRequested", function(player, defenceId, newPasscode)
     local cid = charId(player)
     defenceId = tonumber(defenceId)
     if not cid or not defenceId or not newPasscode then

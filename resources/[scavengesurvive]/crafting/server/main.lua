@@ -20,7 +20,7 @@ local function charId(player)
 end
 
 local function toast(player, code)
-    triggerClientEvent(player, "onClientItemsToast", player, code)
+    triggerClientEvent(player, "toastShown", player, code)
 end
 
 local function cancelHold(player)
@@ -30,7 +30,7 @@ local function cancelHold(player)
             killTimer(h.timer)
         end
         activeHold[player] = nil
-        triggerClientEvent(player, "onClientCraftingStopHoldAction", player)
+        triggerClientEvent(player, "craftHoldStopped", player)
     end
 end
 
@@ -38,12 +38,12 @@ addEventHandler("onPlayerQuit", root, function()
     cancelHold(source)
 end)
 
-addEventHandler("onCharacterDied", root, function()
+addEventHandler("characterDied", root, function()
     cancelHold(source)
 end)
 
 -- 1. In-Hand Combine: Combine held item with an inventory item
-net.handler("onCraftingRequestCombine", function(player, invItemId)
+net.handler("combineRequested", function(player, invItemId)
     local cid = charId(player)
     invItemId = tonumber(invItemId)
     if not cid or not invItemId then
@@ -138,13 +138,7 @@ local function tryGroundCraft(player, _cid, held, px, py, pz, rz, int, dim)
         end
         local recipe = matches[1]
         cancelHold(c.player)
-        triggerClientEvent(
-            c.player,
-            "onClientCraftingHoldAction",
-            c.player,
-            "Constructing " .. recipe.name,
-            recipe.buildTime
-        )
+        triggerClientEvent(c.player, "craftHoldStarted", c.player, "Constructing " .. recipe.name, recipe.buildTime)
         local timer = setTimer(function(pl, rec, byUname, cpx, cpy, cpz, crz, cint, cdim)
             activeHold[pl] = nil
             if not isElement(pl) then
@@ -212,7 +206,7 @@ local function tryDeconstruct(player, _cid, held, px, py, _pz, rz, int, dim)
         cancelHold(c.player)
         triggerClientEvent(
             c.player,
-            "onClientCraftingHoldAction",
+            "craftHoldStarted",
             c.player,
             "Deconstructing " .. target.type_uname,
             info.duration
@@ -272,13 +266,7 @@ local function tryWorkbenchCraft(player, _cid, held, px, py)
             end
             local recipe = matches[1]
             cancelHold(c2.player)
-            triggerClientEvent(
-                c2.player,
-                "onClientCraftingHoldAction",
-                c2.player,
-                "Crafting " .. recipe.name,
-                recipe.buildTime
-            )
+            triggerClientEvent(c2.player, "craftHoldStarted", c2.player, "Crafting " .. recipe.name, recipe.buildTime)
             local timer = setTimer(function(pl, rec, byUname, wbContId)
                 activeHold[pl] = nil
                 if not isElement(pl) then
@@ -313,7 +301,7 @@ local function tryWorkbenchCraft(player, _cid, held, px, py)
     end, { player = player, held = held })
 end
 
-net.handler("onCraftingRequestGroundCraft", function(player)
+net.handler("groundCraftRequested", function(player)
     local cid = charId(player)
     if not cid then
         return
@@ -325,7 +313,7 @@ net.handler("onCraftingRequestGroundCraft", function(player)
     tryGroundCraft(player, cid, held, px, py, pz, rz, int, dim)
 end, { rate = 3 })
 
-net.handler("onCraftingRequestDeconstruct", function(player)
+net.handler("deconstructRequested", function(player)
     local cid = charId(player)
     if not cid then
         return
@@ -337,7 +325,7 @@ net.handler("onCraftingRequestDeconstruct", function(player)
     tryDeconstruct(player, cid, held, px, py, pz, rz, int, dim)
 end, { rate = 3 })
 
-net.handler("onCraftingRequestWorkbenchCraft", function(player)
+net.handler("workbenchCraftRequested", function(player)
     local cid = charId(player)
     if not cid then
         return

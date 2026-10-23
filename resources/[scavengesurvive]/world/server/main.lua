@@ -14,7 +14,7 @@ local function apply(id, why)
     current, lastChange = id, getTickCount()
     setWeather(id)
     util.log("world", "info", "weather %d (%s) %s", id, weather.name(id), why)
-    triggerEvent("onWorldWeatherChanged", resourceRoot, id)
+    triggerEvent("weatherChanged", resourceRoot, id)
 end
 
 -- MTA keeps every client's weather and clock in sync on its own (setWeather/setTime are global and sent to

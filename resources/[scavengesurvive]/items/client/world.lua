@@ -56,7 +56,7 @@ return function(ctx)
         end
     end
 
-    addEventHandler("onClientItemsSync", resourceRoot, function(delta)
+    addEventHandler("inventorySynced", resourceRoot, function(delta)
         for _, id in ipairs(delta.remove or {}) do
             forget(id)
         end

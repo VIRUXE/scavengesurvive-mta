@@ -23,7 +23,7 @@ return function(ctx)
             if not res or not res.ok then
                 util.log("character", "error", "death_drop failed for %d", c.charId)
             end
-            triggerEvent("onCharacterDied", c.player, c.charId, c.cause, c.killer)
+            triggerEvent("characterDied", c.player, c.charId, c.cause, c.killer)
             if state.byId[c.charId] == c.player then
                 state.byId[c.charId] = nil
             end
@@ -40,7 +40,7 @@ return function(ctx)
         end
         setTimer(function(p)
             if isElement(p) then
-                triggerClientEvent(p, "onClientCharacterDeathScreen", p, true, cause)
+                triggerClientEvent(p, "deathScreenShown", p, true, cause)
             end
         end, 1500, 1, player)
         return true

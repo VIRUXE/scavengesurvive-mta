@@ -112,7 +112,7 @@ function step()
             ),
             (s.failed > 0) and 2 or 3
         )
-        triggerEvent("onClientMapsBuilt", resourceRoot, s)
+        triggerEvent("mapsBuilt", resourceRoot, s)
     end
 end
 
@@ -152,7 +152,7 @@ end)
 
 -- the SA-MP model pack (re)loaded or is stopping: swap the models of the objects that use it, and place the rows
 -- that were skipped because the pack was not loaded yet (the pack downloads before maps, but not always first)
-addEventHandler("onClientSampModelsChanged", root, function()
+addEventHandler("sampModelsChanged", root, function()
     for _, entry in ipairs(state.sampObjects) do
         if isElement(entry.element) then
             local id = sampModel(entry.model)

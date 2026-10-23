@@ -83,24 +83,24 @@ return function(ctx)
     local charStats = { hp = 100, food = 100, bleed = 0, wounds = 0 }
     local lastHitPart = nil
 
-    addEventHandler("onClientCharacterStats", root, function(s)
+    addEventHandler("characterStatsSynced", root, function(s)
         if s then
             charStats = s
         end
     end)
 
-    addEventHandler("onClientWeaponsWound", root, function(_, _, bodypart)
+    addEventHandler("woundInflicted", root, function(_, _, bodypart)
         lastHitPart = bodypart
     end)
 
-    addEventHandler("onClientItemsHeld", root, function()
+    addEventHandler("heldItemChanged", root, function()
         -- the dialog's contents depend on the hand (Equip empties a slot): ask for a fresh one
         if exports.ui:listIsOpen() then
-            triggerServerEvent("onItemsRequestOpenInventory", localPlayer)
+            triggerServerEvent("inventoryOpenRequested", localPlayer)
         end
     end)
 
-    addEventHandler("onClientItemsToast", root, function(code)
+    addEventHandler("toastShown", root, function(code)
         local n = type(code) == "string" and code:match("^AMTRANS:(%d+)$")
         local msg = n and string.format("Transferred %d rounds", tonumber(n) or 0) or MESSAGES[code] or tostring(code)
         exports.ui:actionTextShow(msg, 3000)
@@ -190,7 +190,7 @@ return function(ctx)
         exports.ui:listOpen("inventory", title, rows)
     end
 
-    addEventHandler("onClientItemsInventory", root, function(p)
+    addEventHandler("inventoryOpened", root, function(p)
         last = p
         if p.trunk and view ~= "inventory" and view ~= "bag" then
             view = "trunk"
@@ -200,7 +200,7 @@ return function(ctx)
         open(p)
     end)
 
-    addEventHandler("onClientUiListAction", root, function(listId, rowId, actionId)
+    addEventHandler("uiListActionSelected", root, function(listId, rowId, actionId)
         if listId ~= "inventory" then
             return
         end
@@ -213,20 +213,20 @@ return function(ctx)
                 view = "inventory"
             elseif string.match(rowId, "^action:pickup_container:(%d+)$") then
                 local itId = tonumber(string.match(rowId, "^action:pickup_container:(%d+)$"))
-                triggerServerEvent("onItemsRequestPickupContainer", localPlayer, itId)
+                triggerServerEvent("containerPickupRequested", localPlayer, itId)
                 return exports.ui:listClose()
             end
             if last then
                 open(last)
             end
         elseif actionId == "take" then
-            triggerServerEvent("onItemsRequestTake", localPlayer, rowId)
+            triggerServerEvent("itemTakeRequested", localPlayer, rowId)
         elseif actionId == "use" then
-            triggerServerEvent("onItemsRequestUse", localPlayer, rowId)
+            triggerServerEvent("itemUseRequested", localPlayer, rowId)
         elseif actionId == "wear" then
-            triggerServerEvent("onItemsRequestWear", localPlayer, rowId)
+            triggerServerEvent("itemWearRequested", localPlayer, rowId)
         elseif actionId == "combine" then
-            triggerServerEvent("onCraftingRequestCombine", localPlayer, rowId)
+            triggerServerEvent("combineRequested", localPlayer, rowId)
         end
     end)
 
@@ -423,13 +423,13 @@ return function(ctx)
                     view = (view == "bag") and "inventory" or "bag"
                     open(last)
                 elseif sl.id == "held" and last.held then
-                    triggerServerEvent("onItemsRequestPutAway", localPlayer)
+                    triggerServerEvent("itemPutAwayRequested", localPlayer)
                 elseif sl.id ~= "bag" and sl.id ~= "held" then
                     local isEquipped = last.gear and last.gear[sl.id]
                     if isEquipped then
-                        triggerServerEvent("onItemsRequestUnwear", localPlayer, sl.id)
+                        triggerServerEvent("itemUnwearRequested", localPlayer, sl.id)
                     elseif last.held and apparel and apparel.slotFor(last.held.uname) == sl.id then
-                        triggerServerEvent("onItemsRequestWear", localPlayer, last.held.id)
+                        triggerServerEvent("itemWearRequested", localPlayer, last.held.id)
                     end
                 end
                 break
@@ -437,10 +437,10 @@ return function(ctx)
         end
     end)
 
-    addEventHandler("onClientUiListClosed", root, function(listId)
+    addEventHandler("uiListClosed", root, function(listId)
         if listId == "inventory" then
             if last and last.trunk then
-                triggerServerEvent("onVehiclesRequestCloseTrunk", localPlayer)
+                triggerServerEvent("trunkCloseRequested", localPlayer)
             end
             view = "inventory"
             last = nil

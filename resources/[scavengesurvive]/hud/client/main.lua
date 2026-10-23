@@ -102,7 +102,7 @@ local function refreshKeys()
     }
 end
 
-addEventHandler("onClientCharacterStats", root, function(s)
+addEventHandler("characterStatsSynced", root, function(s)
     state.stats = s
     if not state.spawned then
         state.spawned, state.dead = true, false
@@ -110,7 +110,7 @@ addEventHandler("onClientCharacterStats", root, function(s)
     end
 end)
 
-addEventHandler("onClientCharacterDeathScreen", root, function(show)
+addEventHandler("deathScreenShown", root, function(show)
     state.dead = show
     if show then
         state.spawned = false
@@ -118,7 +118,7 @@ addEventHandler("onClientCharacterDeathScreen", root, function(show)
     end
 end)
 
-addEventHandler("onClientItemsHeld", root, function(item)
+addEventHandler("heldItemChanged", root, function(item)
     if item then
         local t = itemType(item.uname)
         local cd = t and t.categoryData or nil
@@ -324,7 +324,7 @@ end
 
 addEventHandler("onClientResourceStart", resourceRoot, function()
     setPlayerHudComponentVisible("all", false)
-    triggerServerEvent("onHudRequestState", localPlayer) -- a restarted hud asks for the stats and the hand
+    triggerServerEvent("hudStateRequested", localPlayer) -- a restarted hud asks for the stats and the hand
     refreshKeys()
     setTimer(refreshKeys, 1000, 0)
     setTimer(function()

@@ -48,7 +48,7 @@ local function clearStatuses(player, restoreControls)
         if restoreControls then
             toggleAllControls(player, true, true, false)
             if ko then
-                triggerClientEvent(player, "onClientCharacterKnockout", player, 0)
+                triggerClientEvent(player, "knockedOut", player, 0)
             end
         end
     end
@@ -88,7 +88,7 @@ local function spawnFromRow(player, row, isNew)
     setElementHealth(player, math.max(1, st.hp))
     setCameraTarget(player, player)
     fadeCamera(player, true)
-    triggerEvent("onCharacterSpawned", player, row.id, isNew)
+    triggerEvent("characterSpawned", player, row.id, isNew)
     if isNew then
         startingItems(row.id, row.hp == survival.NEW.hp)
     end
@@ -166,11 +166,11 @@ addEventHandler("onResourceStart", resourceRoot, function()
     end
 end)
 
-addEventHandler("onPlayerAuthenticated", root, function(accountId)
+addEventHandler("playerAuthenticated", root, function(accountId)
     loadOrCreate(source, accountId)
 end)
 
-net.handler("onCharacterRequestRespawn", function(player)
+net.handler("respawnRequested", function(player)
     local st = state.byPlayer[player]
     if st and st.hp > 0 then
         return
@@ -179,7 +179,7 @@ net.handler("onCharacterRequestRespawn", function(player)
     if not accountId then
         return
     end
-    triggerClientEvent(player, "onClientCharacterDeathScreen", player, false)
+    triggerClientEvent(player, "deathScreenShown", player, false)
     createAndSpawn(player, accountId, survival.RESPAWN)
 end, { rate = 1 })
 
@@ -214,12 +214,12 @@ local function forget(player, quitReason)
     state.lastSpawn[player] = nil
     state.creating[player] = nil
 end
--- auth's own onPlayerQuit handler runs first (it started first) and raises onPlayerLoggedOut with the quit reason,
+-- auth's own onPlayerQuit handler runs first (it started first) and raises playerLoggedOut with the quit reason,
 -- so that is where a quitting player is seen; the direct onPlayerQuit handler covers a player who never logged in.
 addEventHandler("onPlayerQuit", root, function(reason)
     forget(source, reason)
 end)
-addEventHandler("onPlayerLoggedOut", root, function(_, quitReason)
+addEventHandler("playerLoggedOut", root, function(_, quitReason)
     forget(source, quitReason)
 end)
 addEventHandler("onResourceStop", resourceRoot, function()
@@ -304,7 +304,7 @@ function wakeUpPlayer(player)
         return false
     end
     setElementData(player, "character.knockedOut", false, "broadcast", "deny")
-    triggerClientEvent(player, "onClientCharacterKnockout", player, 0)
+    triggerClientEvent(player, "knockedOut", player, 0)
     local st = state.byPlayer[player]
     if st and not st.dead and not isPedDead(player) then
         toggleAllControls(player, true, true, false)
@@ -349,7 +349,7 @@ function knockOutPlayer(player, durationMs)
     else
         setPedAnimation(player, "PED", "KO_SHOT_STOM", -1, false, false, false, true)
     end
-    triggerClientEvent(player, "onClientCharacterKnockout", player, total)
+    triggerClientEvent(player, "knockedOut", player, total)
     return true
 end
 

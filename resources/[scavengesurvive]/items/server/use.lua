@@ -1,4 +1,4 @@
--- Food is the MVP use-case; other categories are handled by other resources through onItemUse (cancel = consumed).
+-- Food is the MVP use-case; other categories are handled by other resources through itemUsed (cancel = consumed).
 -- ctx = { db, net, state, type, charId, toast, destroy, sendInventory } built by server/main.lua.
 return function(ctx)
     local db, net, state = ctx.db, ctx.net, ctx.state
@@ -25,7 +25,7 @@ return function(ctx)
     end
 
     local function use(player, itemId, uname, fromHand)
-        if not triggerEvent("onItemUse", player, itemId, uname) then
+        if not triggerEvent("itemUsed", player, itemId, uname) then
             return -- cancelled by a handler that consumed it
         end
         local t = itemType(uname)
@@ -34,7 +34,7 @@ return function(ctx)
         end
     end
 
-    net.handler("onItemsRequestUse", function(player, itemId)
+    net.handler("itemUseRequested", function(player, itemId)
         local cid = charId(player)
         itemId = tonumber(itemId)
         if not cid or not itemId then

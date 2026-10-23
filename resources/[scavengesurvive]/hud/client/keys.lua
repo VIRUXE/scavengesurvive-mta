@@ -74,13 +74,13 @@ return function(ctx)
             local angle = (math.deg(math.atan2(localX, localY)) + 360) % 360
             local isRear = angle > 155 and angle < 205
             if (uname and VEHICLE_TOOLS[uname]) or isRear then
-                return triggerServerEvent("onVehiclesRequestInteract", localPlayer, nearVeh)
+                return triggerServerEvent("vehicleInteractRequested", localPlayer, nearVeh)
             end
         end
         if held and held.category == "food" then
-            return triggerServerEvent("onItemsRequestUse", localPlayer, held.id)
+            return triggerServerEvent("itemUseRequested", localPlayer, held.id)
         end
-        triggerServerEvent("onItemsRequestPickup", localPlayer)
+        triggerServerEvent("itemPickupRequested", localPlayer)
     end)
 
     addCommandHandler("dropitem", function()
@@ -88,7 +88,7 @@ return function(ctx)
             return
         end
         if getPedOccupiedVehicle(localPlayer) then
-            return triggerServerEvent("onVehiclesRequestLightsToggle", localPlayer)
+            return triggerServerEvent("lightsToggleRequested", localPlayer)
         end
         if isTimer(holdTimer) then
             return
@@ -97,18 +97,18 @@ return function(ctx)
         local isCalibreWep = held and held.category == "weapon" and held.calibre ~= nil and not held.liquid
         local key = string.lower(getKeyBoundToCommand("dropitem") or "n")
         if not isCalibreWep or not getKeyState(key) then
-            return triggerServerEvent("onItemsRequestDrop", localPlayer)
+            return triggerServerEvent("itemDropRequested", localPlayer)
         end
         local startTick = getTickCount()
         holdTimer = setTimer(function()
             if not getKeyState(key) then
                 killTimer(holdTimer)
                 holdTimer = nil
-                triggerServerEvent("onItemsRequestDrop", localPlayer)
+                triggerServerEvent("itemDropRequested", localPlayer)
             elseif getTickCount() - startTick >= 300 then
                 killTimer(holdTimer)
                 holdTimer = nil
-                triggerServerEvent("onItemsRequestUnload", localPlayer)
+                triggerServerEvent("itemUnloadRequested", localPlayer)
             end
         end, 50, 0)
     end)
@@ -118,12 +118,12 @@ return function(ctx)
             return
         end
         if getPedOccupiedVehicle(localPlayer) then
-            return triggerServerEvent("onVehiclesRequestEngineToggle", localPlayer)
+            return triggerServerEvent("engineToggleRequested", localPlayer)
         end
-        triggerServerEvent("onItemsRequestPutAway", localPlayer)
+        triggerServerEvent("itemPutAwayRequested", localPlayer)
     end)
-    addCommandHandler("reloadweapon", request("onItemsRequestReload"))
-    addCommandHandler("unloadweapon", request("onItemsRequestUnload"))
+    addCommandHandler("reloadweapon", request("itemReloadRequested"))
+    addCommandHandler("unloadweapon", request("itemUnloadRequested"))
     addCommandHandler("inventory", function()
         if not guard() then
             return
@@ -131,7 +131,7 @@ return function(ctx)
         if listIsOpen() then
             return exports.ui:listClose()
         end
-        triggerServerEvent("onItemsRequestOpenInventory", localPlayer)
+        triggerServerEvent("inventoryOpenRequested", localPlayer)
     end)
 
     local DEFAULTS = { interact = "f", dropitem = "n", putaway = "y", inventory = "h", reloadweapon = "r" }
