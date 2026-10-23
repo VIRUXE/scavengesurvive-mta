@@ -1,10 +1,15 @@
 <meta>
-    <info author="scavengesurvive-mta" type="script" name="world" description="World state: weather and clock" version="0.1.0"/>
+    <info author="scavengesurvive-mta" type="script" name="world" description="World state: weather, clock, ladders and ziplines" version="0.1.0"/>
     <min_mta_version server="1.6.0" client="1.6.0"/>
     <include resource="lib"/>
     <script src="shared/events.lua" type="shared"/>
     <script src="server/main.lua" type="server"/>
+    <script src="client/features.lua" type="client"/>
     <file src="shared/logic/weather.lua"/>
+    <file src="shared/logic/features.lua"/>
+    <file src="data/features.lua"/>
     <export function="getWeather" type="server"/>
     <export function="setGlobalWeather" type="server"/>
+    <export function="tryInteract" type="client"/>
+    <export function="nearbyFeature" type="client"/>
 </meta>

@@ -1,7 +1,7 @@
 std = "lua51"
 max_line_length = 120
 codes = true
-exclude_files = { ".lua/**", "resources/**/data/generated/**" }
+exclude_files = { ".lua/**", "resources/**/data/generated/**", "resources/**/attachedit/attachedit-out.lua" }
 files["resources/**/server/**"] = { std = "lua51+mta_shared+mta_server" }
 files["resources/**/client/**"] = { std = "lua51+mta_shared+mta_client" }
 files["resources/**/shared/**"] = { std = "lua51+mta_shared" }
@@ -27,9 +27,14 @@ files["resources/**/maps/data/**"] = { std = "lua51", max_line_length = false }
 files["resources/**/loot/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "rollNear", "dropSupply", "dropWeaponCache", "supplyDropTypes", "dropStatus" }, read_globals = { "moveObject", "createBlipAttachedTo" } }
 files["resources/**/loot/client/**"] = { std = "lua51+mta_shared+mta_client", read_globals = { "createEffect" } }
 files["resources/**/world/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "getWeather", "setGlobalWeather" } }
+files["resources/**/world/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "tryInteract", "nearbyFeature" }, read_globals = { "dxDrawLine3D", "getBoundKeys" } }
+files["resources/**/world/data/**"] = { std = "lua51", max_line_length = false }
 -- removePedFromVehicle, dxDrawPrimitive3D and the clock/weather getters and setters postdate the generated lists
 files["resources/**/dev/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "rcon" }, read_globals = { "removePedFromVehicle" } }
 files["resources/**/dev/client/**"] = { std = "lua51+mta_shared+mta_client", read_globals = { "executeCommandHandler", "dxDrawPrimitive3D", "getTime", "setTime", "getWeather", "setWeather", "getMinuteDuration", "setMinuteDuration", "createLight", "showChat", "isChatVisible" } }
+files["resources/**/items/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "setAttachPreview", "getAttachConfig" } }
+-- fileSetPos postdates the generated .luacheck/mta_shared.lua list
+files["resources/**/attachedit/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "rcon" }, read_globals = { "fileSetPos" } }
 files["resources/**/vehicles/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "getVehicleDbId", "countVehicles", "respawnAll", "getVehicleFuel", "setVehicleFuel", "getVehicleLockState", "setVehicleLockState", "getVehicleKeyCode", "setVehicleKeyCode", "getVehicleContainerId" }, read_globals = { "attachTrailerToVehicle", "detachTrailerFromVehicle", "getVehicleEngineState", "getVehicleController", "setVehicleDoorOpenRatio", "getVehicleOverrideLights", "setVehicleOverrideLights", "getVehicleTowedByVehicle", "getVehicleTowingVehicle" } }
 files["resources/**/building/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "isInsideAnyPlotPole", "interactDefence", "submitPasscode", "installKeypad" } }
 files["resources/**/building/client/**"] = { std = "lua51+mta_shared+mta_client", read_globals = { "playSoundFrontEnd" } }

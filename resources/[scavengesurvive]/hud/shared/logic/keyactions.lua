@@ -41,6 +41,16 @@ function M.lines(ctx, keys)
         add("radio", "Open radio", "radio")
         return out
     end
+    -- ladders and ziplines (world resource): the F line replaces everything else while climbing or riding
+    local feature = ctx.nearFeature
+    if feature == "ladder_on" or feature == "zipline_on" then
+        add("interact", "Let go")
+        return out
+    elseif feature == "ladder" then
+        add("interact", "Climb ladder")
+    elseif feature == "zipline" then
+        add("interact", "Grab zipline")
+    end
     if ctx.nearTrunk then
         add("interact", "Open Trunk", "trunk")
     end

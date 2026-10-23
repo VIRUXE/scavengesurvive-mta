@@ -50,3 +50,15 @@ def test_parses_supply_drop_and_weapon_cache_points():
 def test_unparsed_drop_point_is_an_error():
     with pytest.raises(zones.UnparsedLine):
         zones.parse_drop_points('\tDefineSupplyDropPos("X", a, b, c);\n', zone="ls")
+
+
+def test_parses_ladders_and_multi_line_ziplines():
+    from tools.convert import features
+    ladders, ziplines = features.parse_features(read_raw(FX / "zone_excerpt.pwn"), zone="fc")
+    assert ladders == [{"x": -1056.0153, "y": -628.1323, "base": 32.0012, "top": 130.1213, "angle": 180.0, "zone": "fc"}]
+    assert ziplines == [{"x1": 2159.08, "y1": -986.47, "z1": 70.59, "x2": 2063.3, "y2": -993.57, "z2": 59.38, "zone": "fc"}]
+    lua = features.render_lua(ladders, ziplines)
+    assert '{ -1056.0153, -628.1323, 32.0012, 130.1213, 180.0, "fc" },' in lua
+    assert '{ 2159.08, -986.47, 70.59, 2063.3, -993.57, 59.38, "fc" },' in lua
+    with pytest.raises(features.UnparsedLine):
+        features.parse_features("CreateLadder(1.0, 2.0);", zone="fc")

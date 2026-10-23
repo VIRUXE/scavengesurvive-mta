@@ -184,6 +184,18 @@ local function hasCuffedPlayerNearby()
     return false
 end
 
+-- "ladder" / "zipline" / "ladder_on" / "zipline_on" from the world resource, nil when it is down or nothing is near
+local function nearFeature()
+    local w = getResourceFromName("world")
+    if not w or getResourceState(w) ~= "running" then
+        return nil
+    end
+    local ok, f = pcall(function()
+        return exports.world:nearbyFeature()
+    end)
+    return ok and f or nil
+end
+
 local function drawKeyActions(driver)
     local held = state.held
     local isCalibreWep = held and held.category == "weapon" and held.calibre ~= nil and not held.liquid or false
@@ -194,6 +206,7 @@ local function drawKeyActions(driver)
         driver = driver,
         held = held and { uname = held.uname, category = held.category, isWeapon = isCalibreWep },
         nearPlayer = false,
+        nearFeature = nearFeature(),
         cuffedNearby = not held and hasCuffedPlayerNearby() or false,
         supports = SUPPORTS,
     }, state.keys)

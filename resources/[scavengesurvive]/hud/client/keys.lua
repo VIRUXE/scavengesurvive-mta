@@ -53,11 +53,26 @@ return function(ctx)
         return nearVeh, nearDist
     end
 
+    -- ladders and ziplines (world) take the key before anything else; a failed export must not eat the press
+    local function worldInteract()
+        local w = getResourceFromName("world")
+        if not w or getResourceState(w) ~= "running" then
+            return false
+        end
+        local ok, used = pcall(function()
+            return exports.world:tryInteract()
+        end)
+        return ok and used == true
+    end
+
     addCommandHandler("interact", function()
         if not guard() or listIsOpen() then
             return
         end
         if getPedOccupiedVehicle(localPlayer) then
+            return
+        end
+        if worldInteract() then
             return
         end
         local nearVeh, nearDist = getNearbyVehicle()

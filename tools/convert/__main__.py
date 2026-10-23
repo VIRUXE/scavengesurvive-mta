@@ -4,13 +4,14 @@ import argparse
 import sys
 from pathlib import Path
 
-from . import houseloot, item_types, lang, loot_tables, maps, settings, vspawn, zones
+from . import features, houseloot, item_types, lang, loot_tables, maps, settings, vspawn, zones
 from .common import read_text
 
 ROOT = Path(__file__).resolve().parents[2]
 DATA = ROOT / "resources" / "[scavengesurvive]" / "data" / "generated"
 SEED = ROOT / "sql" / "seed"
 MAPS = ROOT / "resources" / "[scavengesurvive]" / "maps"
+WORLD = ROOT / "resources" / "[scavengesurvive]" / "world"
 MAPS_REPORT = ROOT / "docs" / "maps-census.md"
 SAMP_ONLY = lambda model: model >= 18631 or 11682 <= model <= 11753  # noqa: E731
 
@@ -35,6 +36,8 @@ def main(argv=None) -> int:
     if args.kind in ("all", "zones"):
         print(f"zones: {len(zones.convert(args.src, SEED))} loot spawns")
         print(f"house loot: {len(houseloot.convert(args.src, SEED))} loot points in half of the hollow houses")
+        nl, nz = features.convert(args.src, WORLD)
+        print(f"features: {nl} ladders, {nz} ziplines -> world/data/features.lua")
     if args.kind in ("all", "lang"):
         print("lang:", lang.convert(args.src, DATA))
     if args.kind in ("all", "vspawn"):
