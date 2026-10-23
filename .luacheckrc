@@ -30,7 +30,7 @@ files["resources/**/world/server/**"] = { std = "lua51+mta_shared+mta_server", g
 files["resources/**/world/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "tryInteract", "nearbyFeature" }, read_globals = { "dxDrawLine3D", "getBoundKeys" } }
 files["resources/**/world/data/**"] = { std = "lua51", max_line_length = false }
 -- removePedFromVehicle, dxDrawPrimitive3D and the clock/weather getters and setters postdate the generated lists
-files["resources/**/dev/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "rcon" }, read_globals = { "removePedFromVehicle" } }
+files["resources/**/dev/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "rcon" }, read_globals = { "removePedFromVehicle", "removeElementData" } }
 files["resources/**/dev/client/**"] = { std = "lua51+mta_shared+mta_client", read_globals = { "executeCommandHandler", "dxDrawPrimitive3D", "getTime", "setTime", "getWeather", "setWeather", "getMinuteDuration", "setMinuteDuration", "createLight", "showChat", "isChatVisible" } }
 files["resources/**/items/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "setAttachPreview", "getAttachConfig" } }
 -- fileSetPos postdates the generated .luacheck/mta_shared.lua list

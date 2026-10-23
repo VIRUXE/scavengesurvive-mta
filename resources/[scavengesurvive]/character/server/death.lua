@@ -15,7 +15,13 @@ return function(ctx)
             state.clearStatuses(player, not silent)
         end
         local x, y, z = getElementPosition(player)
-        local params = { st.id, x, y, z, getElementInterior(player), getElementDimension(player) }
+        local int, dim = getElementInterior(player), getElementDimension(player)
+        -- a dev tool holding the ped somewhere else (the studio) records where the character really is: drop there
+        local real = getElementData(player, "character.realPosition")
+        if type(real) == "table" then
+            x, y, z, int, dim = real[1], real[2], real[3], real[4], real[5]
+        end
+        local params = { st.id, x, y, z, int, dim }
         db.call("character_death_drop", params, function(res, c)
             if not isElement(c.player) then
                 return

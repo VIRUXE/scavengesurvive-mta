@@ -73,7 +73,9 @@ pwsh server-config/rcon.ps1 studio VIRUXE off            # back to where they we
   - **Quit.** The `onPlayerQuit` handler runs at priority `high+10`, so the player is back in place before auth
     raises `playerLoggedOut` and character saves the position. A quit from the studio never persists the studio
     spot.
-  - **Death.** The studio state is only dropped and character's normal respawn takes over.
+  - **Death.** The studio state is only dropped and character's normal respawn takes over. While a player is in
+    the studio the server keeps its real spot in element data `character.realPosition` (`local` sync, never sent to
+    clients). `character`'s death drop uses that spot, so the inventory is not left in the private dimension.
 
 ## Tuning attachments
 

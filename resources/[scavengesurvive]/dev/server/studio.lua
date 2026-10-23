@@ -49,6 +49,8 @@ return function(ctx)
         end
         o.stats = exports.character:getStats(p) or nil
         occupants[p] = o
+        -- server-only: a death in here drops the inventory at the real spot, not in the private dimension
+        setElementData(p, "character.realPosition", { o.x, o.y, o.z, o.interior, o.dimension }, "local")
         setElementInterior(p, 0)
         setElementDimension(p, o.studioDim)
         setElementPosition(p, c.x, c.y, c.z)
@@ -64,6 +66,7 @@ return function(ctx)
             return false
         end
         occupants[p] = nil
+        removeElementData(p, "character.realPosition")
         if isElement(o.floor) then
             destroyElement(o.floor)
         end
