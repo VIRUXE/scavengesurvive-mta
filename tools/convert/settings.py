@@ -13,6 +13,10 @@ SETTINGS = {
     "vehicles.spawn_chance": "4.0",
     # M7 staff & ops: upstream settings.ini server/whitelist and server/motd; level1.pwn warn (5 warnings = 1 day ban)
     "server.whitelist": "0", "server.motd": "", "staff.max_warnings": "5", "staff.warn_ban_hours": "24",
+    # M8 supply drops and weapon caches (core/world/supply-crate.pwn, weapons-cache.pwn: tick 60 s, cooldown 600 s,
+    # cache 1500 s + random 600 s with 4+ players); drop points come back after loot.drop_point_reuse_hours
+    "loot.supply_tick_s": "60", "loot.supply_cooldown_s": "600", "loot.cache_interval_s": "1500",
+    "loot.cache_jitter_s": "600", "loot.cache_min_players": "4", "loot.drop_point_reuse_hours": "24",
 }
 
 

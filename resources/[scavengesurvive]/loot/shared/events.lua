@@ -1,3 +1,7 @@
 -- server-local (triggered and handled on one side, or between resources)
 addEvent("lootSpawned", false)
 addEvent("playerZoneEntered", false)
+addEvent("weaponCacheDropped", false)
+-- server to client (and server-local for other resources: supplyCrateLanded)
+addEvent("supplyDropStarted", true)
+addEvent("supplyCrateLanded", true)

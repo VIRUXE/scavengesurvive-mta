@@ -1,12 +1,13 @@
 local db = loadstring(exports.lib:getModule("db"), "=lib/db.lua")()
 local util = loadstring(exports.lib:getModule("util"), "=lib/util.lua")()
-local roll
-do
-    local f = fileOpen("shared/logic/roll.lua", true)
+local function loadFile(path)
+    local f = fileOpen(path, true)
     local src = fileRead(f, fileGetSize(f))
     fileClose(f)
-    roll = assert(loadstring(src, "=loot/roll.lua"))()
+    return assert(loadstring(src, "=loot/" .. path))()
 end
+local roll = loadFile("shared/logic/roll.lua")
+local dropsLogic = loadFile("shared/logic/drops.lua")
 local settings = {}
 local tableCache = {}
 local busy = {}
@@ -18,6 +19,17 @@ local function lootTable(name)
     end
     return tableCache[name] or nil
 end
+
+local drops = loadFile("server/drops.lua")({
+    db = db,
+    util = util,
+    roll = roll,
+    drops = dropsLogic,
+    lootTable = lootTable,
+    settings = function()
+        return settings
+    end,
+})
 
 local function rollSpawn(s)
     local tbl = lootTable(s.table_name)
@@ -117,9 +129,31 @@ addEventHandler("onResourceStart", resourceRoot, function()
     end
     db.settings(function(map)
         settings = map
+        drops.start()
     end)
     db.exec("INSERT IGNORE INTO loot_spawn_state (spawn_id, next_roll_at) SELECT id, NOW() FROM loot_spawns", {})
 end)
+
+addEventHandler("onResourceStop", resourceRoot, function()
+    drops.stop()
+end)
+
+-- Exports for staff (/sc, /wc) and other resources
+function dropSupply(typeIdx, x, y, z, locationName)
+    return drops.dropSupply(typeIdx, x, y, z, locationName)
+end
+
+function dropWeaponCache(x, y, z)
+    return drops.dropWeaponCache(x, y, z)
+end
+
+function supplyDropTypes()
+    return drops.types()
+end
+
+function dropStatus()
+    return drops.status()
+end
 
 setTimer(function()
     for _, p in ipairs(getElementsByType("player")) do

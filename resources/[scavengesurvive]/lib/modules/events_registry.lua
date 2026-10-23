@@ -82,4 +82,7 @@ return {
     holdActionCancelRequested = true,
     towRequested = true,
     vehicleHoldStopped = true,
+    supplyDropStarted = true,
+    supplyCrateLanded = true,
+    weaponCacheDropped = false,
 }

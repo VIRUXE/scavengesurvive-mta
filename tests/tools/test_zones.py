@@ -36,3 +36,17 @@ def test_unparsed_line_is_an_error():
 def test_block_comments_are_ignored():
     src = '/*\n\tCreateStaticLootSpawn(1.0, 2.0, 3.0,\tGetLootIndexFromName("world_medical"), 30.0);\n*/\n'
     assert zones.parse_zone(src, zone="ls") == []
+
+
+def test_parses_supply_drop_and_weapon_cache_points():
+    supply, caches = zones.parse_drop_points(read_raw(FX / "zone_excerpt.pwn"), zone="bc")
+    assert supply == [{"name": "Fort Carson", "x": 7.24142, "y": 959.9455, "z": 18.55249, "zone": "bc"}]
+    assert caches == [{"x": -2016.65759, "y": -1053.53784, "z": 32.10938, "zone": "bc"}]
+    sql = zones.render_drop_points_sql(supply, caches)
+    assert "DELETE FROM supply_drop_points;" in sql and "('Fort Carson',7.24142,959.9455,18.55249,'bc')" in sql
+    assert "INSERT INTO weapon_cache_points (x,y,z,zone) VALUES\n(-2016.65759,-1053.53784,32.10938,'bc');" in sql
+
+
+def test_unparsed_drop_point_is_an_error():
+    with pytest.raises(zones.UnparsedLine):
+        zones.parse_drop_points('\tDefineSupplyDropPos("X", a, b, c);\n', zone="ls")

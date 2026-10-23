@@ -547,6 +547,64 @@ return function(ctx)
         end,
     })
 
+    -- Supply crate / weapons cache on demand (upstream supply-crate.pwn ACMD:sc[4]); loot owns the mechanics.
+    ctx.command({
+        name = "sc",
+        level = 4,
+        playerOnly = true,
+        usage = "/sc [type 1-5]",
+        help = "Drop a supply crate of that type where you stand (no type lists them)",
+        needsDb = false,
+        fn = function(p, args)
+            local ok, types = pcall(function()
+                return exports.loot:supplyDropTypes()
+            end)
+            if not ok or type(types) ~= "table" then
+                return ctx.say(p, " >  The loot resource is not running.")
+            end
+            local idx = tonumber(args[1])
+            if not idx or not types[idx] then
+                ctx.say(p, " >  Usage: /sc [type] - types:")
+                for i, t in ipairs(types) do
+                    ctx.say(p, " >  %d: %s (%s, %d+ players)", i, t.name, t.table, t.required)
+                end
+                return
+            end
+            local x, y, z = getElementPosition(p)
+            local done, why = exports.loot:dropSupply(idx, x, y, z - 0.8, "staff request")
+            ctx.say(
+                p,
+                done and " >  Supply crate %s on its way." or " >  Refused: %s",
+                done and types[idx].name or tostring(why)
+            )
+            if done then
+                ctx.log(p, "supplydrop", nil, nil, types[idx].name)
+            end
+        end,
+    })
+
+    ctx.command({
+        name = "wc",
+        level = 4,
+        playerOnly = true,
+        usage = "/wc",
+        help = "Place a weapons cache where you stand and start its signals",
+        needsDb = false,
+        fn = function(p)
+            local x, y, z = getElementPosition(p)
+            local ok, done, why = pcall(function()
+                return exports.loot:dropWeaponCache(x, y, z - 0.8)
+            end)
+            if not ok then
+                return ctx.say(p, " >  The loot resource is not running.")
+            end
+            ctx.say(p, done and " >  Weapons cache placed." or " >  Refused: %s", tostring(why))
+            if done then
+                ctx.log(p, "weaponcache", nil, nil, string.format("%.1f, %.1f, %.1f", x, y, z))
+            end
+        end,
+    })
+
     ctx.command({
         name = "restart",
         level = 4,

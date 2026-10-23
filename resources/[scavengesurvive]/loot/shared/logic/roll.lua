@@ -40,6 +40,19 @@ function roll.pick(tbl, size, spawnWeight, mult, rng)
     return out
 end
 
+-- Upstream FillContainerWithLoot: `count` picks, each a uniform choice among the entries that pass their weight
+-- roll (with replacement across picks, so a crate can hold two of a kind).
+function roll.fill(tbl, count, rng)
+    local out = {}
+    for _ = 1, count do
+        local sample = roll.sampleList(tbl.entries, rng)
+        if #sample > 0 then
+            out[#out + 1] = sample[math.floor(rng() * #sample) + 1].uname
+        end
+    end
+    return out
+end
+
 -- Computes the initial JSON string for loot-spawned ammo tins and calibre weapons (core/weapon/{loot,ammunition}.pwn).
 function roll.initialItemData(def, tableName, ammoTypes, rand)
     if type(def) ~= "table" or type(def.categoryData) ~= "table" then

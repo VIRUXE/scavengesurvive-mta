@@ -23,11 +23,13 @@ files["resources/**/models/client/**"] = { std = "lua51+mta_shared+mta_client", 
 files["resources/**/maps/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "getZoneAt", "getPlayerZone" } }
 files["resources/**/maps/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "getMapStats" }, read_globals = { "restoreWorldModel" } }
 files["resources/**/maps/data/**"] = { std = "lua51", max_line_length = false }
-files["resources/**/loot/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "rollNear" } }
+-- moveObject, createBlipAttachedTo (server) and createEffect (client) postdate the generated lists
+files["resources/**/loot/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "rollNear", "dropSupply", "dropWeaponCache", "supplyDropTypes", "dropStatus" }, read_globals = { "moveObject", "createBlipAttachedTo" } }
+files["resources/**/loot/client/**"] = { std = "lua51+mta_shared+mta_client", read_globals = { "createEffect" } }
 files["resources/**/world/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "getWeather", "setGlobalWeather" } }
 -- removePedFromVehicle, dxDrawPrimitive3D and the clock/weather getters and setters postdate the generated lists
 files["resources/**/dev/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "rcon" }, read_globals = { "removePedFromVehicle" } }
-files["resources/**/dev/client/**"] = { std = "lua51+mta_shared+mta_client", read_globals = { "executeCommandHandler", "dxDrawPrimitive3D", "getTime", "setTime", "getWeather", "setWeather", "getMinuteDuration", "setMinuteDuration" } }
+files["resources/**/dev/client/**"] = { std = "lua51+mta_shared+mta_client", read_globals = { "executeCommandHandler", "dxDrawPrimitive3D", "getTime", "setTime", "getWeather", "setWeather", "getMinuteDuration", "setMinuteDuration", "createLight" } }
 files["resources/**/vehicles/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "getVehicleDbId", "countVehicles", "respawnAll", "getVehicleFuel", "setVehicleFuel", "getVehicleLockState", "setVehicleLockState", "getVehicleKeyCode", "setVehicleKeyCode", "getVehicleContainerId" }, read_globals = { "attachTrailerToVehicle", "detachTrailerFromVehicle", "getVehicleEngineState", "getVehicleController", "setVehicleDoorOpenRatio", "getVehicleOverrideLights", "setVehicleOverrideLights", "getVehicleTowedByVehicle", "getVehicleTowingVehicle" } }
 files["resources/**/building/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "isInsideAnyPlotPole", "interactDefence", "submitPasscode", "installKeypad" } }
 files["resources/**/building/client/**"] = { std = "lua51+mta_shared+mta_client", read_globals = { "playSoundFrontEnd" } }
