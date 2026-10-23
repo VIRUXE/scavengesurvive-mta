@@ -49,10 +49,10 @@ the ones whose cut rim is one loop got a closed skull (sheriffs, army, hard hat,
 bikers), and a closed skull is a flat cap of hair texture; close-fitting caps (pilot 61, police 4/119/284, golfers,
 Smoke, maccer) leave a cut band. So the twins stay hat-only until the skulls are remodelled by hand in Blender.
 
-Later the same evening `tools/blender/remodel_head.py` (Blender, live viewport plus studio checks) gave seven of
-them a bare head: a skin band over the brow and a dome of hair in the ped's own darkest texel, weighted to the
-Head bone: the policemen 4, 119 and 284, the pilot 61, the golfer 37, maccer 2 and Big Smoke 311. The golfer 36
-and the firefighters 277-279 still cut through the face and stay hat-only.
+Later the same evening `tools/blender/remodel_head.py` (Blender, live viewport plus studio checks) gave all 11
+close-fitting skins a bare head: a skin band over the brow and a dome of hair in the ped's own darkest texel,
+weighted to the Head bone: the policemen 4, 119 and 284, the pilot 61, the golfers 36 and 37, maccer 2, Big
+Smoke 311, and the firefighters 277-279.
 
 ![twins under the helmet](../images/hatless-twins-helmet.jpg)
 ![twins bare](../images/hatless-twins-bare.jpg)

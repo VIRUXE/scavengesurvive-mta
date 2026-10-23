@@ -17,8 +17,6 @@ Rules per skin (HEADS): which faces are headgear.
 - cap_blocks: 8x8 texture blocks (col,row; row 0 at the top) that are headgear below the crown.
 - profile: (angle, radial scale) rings of the skull from the rim to the apex; the first is the skin band.
 - apex: metres above the rim top for the crown.
-
-Not solved yet (hat-only twins stay): wmygol1 36 and the firefighters 277-279, whose cut line crosses the face.
 """
 import math
 import os
@@ -29,14 +27,19 @@ import bmesh
 import bpy
 
 P = ((0.2, 1.0), (0.5, 1.12), (0.85, 1.05), (1.15, 0.8), (1.4, 0.45))
+FIRE_BLOCKS = {(4, 6), (4, 7), (5, 6), (5, 7), (6, 6), (6, 7), (7, 6), (7, 7)}
 HEADS = {
     4: dict(name="sfpdm1", tex="SFPDM1"),
     119: dict(name="lvpdm1", tex="LVPDM1", dark_floor=-0.005),
     284: dict(name="lapdm1", tex="LAPDM1", dark_floor=None, bright_floor=-0.03, bright_lum=0.6),
     61: dict(name="wmyplt", tex="wmyplt", dark_floor=-0.005, cap_blocks={(6, 6)}),
-    37: dict(name="wmygol2", tex="wmygol2"),
+    36: dict(name="wmygol1", tex="wmygol1", dark_floor=None, apex=0.065),
+    37: dict(name="wmygol2", tex="wmygol2", apex=0.065),
     2: dict(name="maccer", tex="maccer", dark_floor=None, cap_blocks={(0, 3), (0, 5), (1, 5), (2, 5), (3, 5), (4, 5), (2, 7)}),
     311: dict(name="smokev", tex="smokev", cap_floor=0.11, dark_floor=None),
+    277: dict(name="lafd1", tex="lafd1", dark_floor=None, cap_floor=0.10, cap_blocks=FIRE_BLOCKS, apex=0.075),
+    278: dict(name="lvfd1", tex="lvfd1", dark_floor=None, cap_floor=0.10, cap_blocks=FIRE_BLOCKS, apex=0.075),
+    279: dict(name="sffd1", tex="sffd1", dark_floor=None, cap_floor=0.10, cap_blocks=FIRE_BLOCKS, apex=0.075),
 }
 
 
@@ -98,10 +101,10 @@ def remodel(src_dir, out_dir, name, tex, cap_floor=0.045, dark_floor=-0.03, dark
             doomed.append(f)
         elif bright_floor is not None and h >= bright_floor and lum(*cuv(f)) > bright_lum:
             doomed.append(f)
-        elif cap_blocks and h >= -0.03 and blk(f) in cap_blocks:
+        elif cap_blocks and h >= -0.05 and blk(f) in cap_blocks:
             doomed.append(f)
     bmesh.ops.delete(bm, geom=doomed, context="FACES")
-    floor = hx - 0.03
+    floor = hx - 0.05 if cap_blocks else hx - 0.03
     bmesh.ops.remove_doubles(bm, verts=[v for v in bm.verts if v.is_boundary and v.co.x >= floor], dist=0.001)
     edges = [e for e in bm.edges if e.is_boundary and min(v.co.x for v in e.verts) >= floor]
     adj = {}
@@ -122,12 +125,18 @@ def remodel(src_dir, out_dir, name, tex, cap_floor=0.045, dark_floor=-0.03, dark
             loop.append(nxt)
             seen.add(nxt)
             prev, cur = cur, nxt
-        if loop[0] in adj.get(loop[-1], []):
+        if len(loop) > 2 and loop[0] in adj.get(loop[-1], []):
             loops.append(loop)
     loops.sort(key=len, reverse=True)
     if not loops:
         raise RuntimeError(f"{name}: the cut left no closed rim")
     loop = loops[0]
+    for extra_loop in loops[1:]:
+        extra_edges = [bm.edges.get((extra_loop[i], extra_loop[(i + 1) % len(extra_loop)])) for i in range(len(extra_loop))]
+        extra_edges = [e for e in extra_edges if e]
+        if extra_edges:
+            filled = bmesh.ops.holes_fill(bm, edges=extra_edges, sides=0)["faces"]
+            bmesh.ops.triangulate(bm, faces=filled)
     n = len(loop)
     rim_uv = [next(l[uvl].uv.copy() for l in v.link_loops) for v in loop]
     cy = sum(v.co.y for v in loop) / n
