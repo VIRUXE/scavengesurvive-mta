@@ -3,6 +3,7 @@
 return function(ctx)
     local ammo = ctx and ctx.ammo
     local apparel = ctx and ctx.apparel
+    local clothes = ctx and ctx.clothes -- shared/logic/clothes.lua: which skin a Clothes item holds
     local models = ctx and ctx.models -- client/models.lua: which model id draws an item type on this client
     local preview = ctx and ctx.preview -- client/preview.lua: live dxDrawModel3D previews inside the gear tiles
     local MESSAGES = {
@@ -32,6 +33,8 @@ return function(ctx)
         NOT_WEARABLE = "This item cannot be worn",
         NOT_WORN = "Nothing equipped in that slot",
         INVENTORY_FULL = "Inventory is full",
+        CLOTHESWRGE = "Wrong gender for clothes",
+        CLOTHES_ON_DUTY = "Go off duty before changing clothes",
         -- Vehicles
         TRUNKLOCKED = "Trunk is locked",
         NO_TRUNK = "This vehicle has no trunk",
@@ -123,7 +126,9 @@ return function(ctx)
 
     local function formatLabel(t, it)
         local name = t and t.name or it.uname
-        if ammo and t then
+        if clothes and it.uname == "Clothes" then
+            name = clothes.label(clothes.skinFor(it.id, it.data))
+        elseif ammo and t then
             local defA = t.categoryData and defaultAmmo(t.categoryData.calibre) or nil
             name = ammo.displayName(t, it.data, itemType, calibreName, defA)
         end

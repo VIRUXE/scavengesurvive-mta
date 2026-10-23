@@ -1,11 +1,11 @@
 -- Food is the MVP use-case; other categories are handled by other resources through itemUseAttempted
 -- (cancel = consumed).
--- ctx = { db, net, state, type, charId, toast, destroy, sendInventory } built by server/main.lua.
+-- ctx = { db, net, state, type, charId, toast, destroy, sendInventory, decodeData, clothes } built by server/main.lua.
 return function(ctx)
     local db, net, state = ctx.db, ctx.net, ctx.state
     local itemType, charId, toast = ctx.type, ctx.charId, ctx.toast
 
-    local OWNED_SQL = "SELECT i.type_uname AS uname FROM items i "
+    local OWNED_SQL = "SELECT i.type_uname AS uname, i.data FROM items i "
         .. "LEFT JOIN containers c ON c.id = i.container_id LEFT JOIN items owner ON owner.id = c.owner_item_id "
         .. "WHERE i.id = ? AND (i.holder_char_id = ? OR c.owner_char_id = ? OR owner.holder_char_id = ?)"
 
@@ -25,9 +25,12 @@ return function(ctx)
         end)
     end
 
-    local function use(player, itemId, uname, fromHand)
+    local function use(player, itemId, uname, fromHand, data)
         if not triggerEvent("itemUseAttempted", player, itemId, uname) then
             return -- cancelled by a handler that consumed it
+        end
+        if uname == "Clothes" then
+            return ctx.clothes.use(player, itemId, data, fromHand)
         end
         local t = itemType(uname)
         if t and t.category == "food" then
@@ -43,7 +46,7 @@ return function(ctx)
         end
         local held = state.held[player]
         if held and held.id == itemId then
-            return use(player, itemId, held.uname, true)
+            return use(player, itemId, held.uname, true, held.data)
         end
         -- only items the character owns (inventory or worn bag) can be used
         db.one(OWNED_SQL, { itemId, cid, cid, cid }, function(row, c)
@@ -53,7 +56,7 @@ return function(ctx)
             if not row then
                 return toast(c.player, "NOT_OWNER")
             end
-            use(c.player, c.itemId, row.uname, false)
+            use(c.player, c.itemId, row.uname, false, ctx.decodeData(row.data))
         end, { player = player, itemId = itemId })
     end, { rate = 3 })
 end

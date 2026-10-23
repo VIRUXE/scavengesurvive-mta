@@ -29,6 +29,8 @@ addEvent("heldItemChanged", true)
 addEvent("inventoryOpened", true)
 addEvent("toastShown", true)
 addEvent("vehicleHoldStarted", true)
+addEvent("clothesChangeStarted", true)
+addEvent("clothesChangeStopped", true)
 addEvent("sampModelsChanged", false) -- fired by the models resource on every client
 addEvent("uiListActionSelected", false)
 addEvent("uiListClosed", false)

@@ -15,6 +15,7 @@
     <file src="shared/logic/ammo.lua"/>
     <file src="shared/logic/apparel.lua"/>
     <file src="shared/logic/skins.lua"/>
+    <file src="shared/logic/clothes.lua"/>
     <file src="shared/logic/preview.lua"/>
     <file src="shared/logic/tent.lua"/>
     <file src="client/models.lua"/>
@@ -39,6 +40,7 @@
     <export function="destroyWorldItem" type="server"/>
     <export function="destroyContainerItem" type="server"/>
     <export function="isFemaleSkin" type="server"/>
+    <export function="rollSpawnSkin" type="server"/>
     <export function="setAttachPreview" type="client"/>
     <export function="getAttachConfig" type="client"/>
 </meta>

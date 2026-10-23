@@ -221,3 +221,12 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
       zone after pickup). Nothing rolls within 150 m of any player: walk away and back after the cooldown, the point
       refilled while you were out of range, provided the zone's allowance (`exports.loot:lootAllowances()` through
       `rcon.ps1 lua`) was above 0.
+29. **Clothes and the spawn pool** (#76). One client.
+    - a. **Spawn roll.** New characters spawn in one of upstream's 29 clothes skins of a random gender, civilians most
+      of the time; a headgear skin (biker 254, cop 283, SWAT 285, military 287) shows its hatless twin under a hat.
+    - b. **Label.** `/additem Clothes` a few times: each shows as "Male …" or "Female …" with its type name, the same
+      in the inventory and on the ground, and the name survives a pickup, a drop and a resource restart.
+    - c. **Change.** Use a Clothes item of your gender (held or from the inventory): a 3 s "Changing clothes" bar,
+      then the skin changes and the item now shows the clothes you took off; relog and the new skin stays
+      (`characters.skin`). Walking during the bar cancels it; the wrong gender says "Wrong gender for clothes"; on
+      staff duty it says to go off duty first.

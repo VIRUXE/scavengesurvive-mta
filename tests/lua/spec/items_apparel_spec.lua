@@ -190,7 +190,8 @@ end)
 
 describe("apparel on spawnable skins", function()
     local items = dofile("resources/[scavengesurvive]/data/generated/item_types.lua")
-    local sp = dofile("resources/[scavengesurvive]/character/shared/logic/spawnpoints.lua")
+    -- upstream spawn.pwn's skins (the port's spawn pool before #76 widened it to every clothes type)
+    local UPSTREAM_SPAWN = { 60, 170, 250, 188, 206, 50, 254, 192, 93, 233, 193, 90, 191, 131 }
     local function lookup(uname)
         local t = items.byUname[uname]
         return t and t.wearOffsets
@@ -201,19 +202,13 @@ describe("apparel on spawnable skins", function()
         return t and t.categoryData and t.categoryData.bag_offsets
     end
 
-    it("gives every hat, mask and armour a row of the spawn skin's own", function()
+    it("gives every hat, mask and armour a row of upstream's spawn skins' own", function()
         apparel.skins = nil -- no donors: the row must be the skin's own (90 excepted, which borrows 193)
         local defaults = {}
         for _, slot in ipairs({ "hat", "mask", "armour" }) do
             defaults[slot] = apparel.attachConfig(slot, "none", nil, nil)
         end
-        local pool = {}
-        for _, s in ipairs(sp.SKINS_MALE) do
-            pool[#pool + 1] = s
-        end
-        for _, s in ipairs(sp.SKINS_FEMALE) do
-            pool[#pool + 1] = s
-        end
+        local pool = UPSTREAM_SPAWN
         for _, uname in ipairs(items.order) do
             local slot = apparel.slotFor(uname)
             if defaults[slot] then

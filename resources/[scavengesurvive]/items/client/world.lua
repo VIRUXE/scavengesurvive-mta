@@ -1,11 +1,12 @@
 -- World items as client-side objects with a name label, from the server's per-player sync deltas.
--- ctx = { models, ammo, tent } from client/main.lua. A pitched TentPack is six objects (shared/logic/tent.lua)
+-- ctx = { models, ammo, tent, clothes } from client/main.lua. A pitched TentPack is six objects (shared/logic/tent.lua)
 -- placed with upstream's SA-MP rotations as they are: SA-MP's CreateObject and MTA's createObject both go
 -- through GTA's own ZXY CMatrix::SetRotate (#55).
 return function(ctx)
     local models = ctx.models
     local ammo = ctx.ammo
     local tent = ctx.tent
+    local clothes = ctx.clothes
     local objects = {} -- id -> { obj | parts, pitched, row, uname, hp, x, y, z, name }
     local shaders = {} -- tent material key -> shader, or false when its texture could not be read
     local typeCache = {}
@@ -42,6 +43,9 @@ return function(ctx)
     local function formatName(t, r)
         if isPitchedTent(r) then
             return "Pitched Tent"
+        end
+        if clothes and r.uname == "Clothes" then
+            return clothes.label(clothes.skinFor(r.id, r.data))
         end
         if ammo and t then
             local defA = t.categoryData and defaultAmmo(t.categoryData.calibre) or nil

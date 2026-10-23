@@ -88,6 +88,8 @@ return {
     holdActionCancelRequested = true,
     towRequested = true,
     vehicleHoldStopped = true,
+    clothesChangeStarted = true,
+    clothesChangeStopped = true,
     supplyDropStarted = true,
     supplyCrateLanded = true,
     weaponCacheDropped = false,

@@ -116,7 +116,9 @@ local function createAndSpawn(player, accountId, stats)
     state.creating[player] = true
     local idx, x, y, z, rz = spawnpoints.pick(state.lastSpawn[player], rngInt)
     state.lastSpawn[player] = idx
-    local skin = spawnpoints.randomSkin(rngInt)
+    -- upstream spawn.pwn picked from seven skins per gender; the port rolls every clothes type of the gender with
+    -- its spawn chance (items/shared/logic/clothes.lua, #76), so a rare SWAT or Morgan Freeman spawn is possible
+    local skin = exports.items:rollSpawnSkin(rngInt(2) == 2)
     local params = { accountId, skin, x, y, z, rz, stats.hp, stats.food, stats.bleed }
     db.call("character_create", params, function(res, ctx)
         state.creating[ctx.player] = nil

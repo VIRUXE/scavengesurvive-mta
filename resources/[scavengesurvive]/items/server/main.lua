@@ -13,10 +13,16 @@ local ammo = loadFile("shared/logic/ammo.lua")
 local apparel = loadFile("shared/logic/apparel.lua")
 local skins = loadFile("shared/logic/skins.lua")
 apparel.skins = skins
+local clothes = loadFile("shared/logic/clothes.lua")
 
 -- export: whether a ped model is a woman (staff picks the duty skin from it)
 function isFemaleSkin(skin)
     return skins.isFemale(skin)
+end
+
+-- export: a new character's skin, upstream's clothes roll limited to one gender (character picks the gender)
+function rollSpawnSkin(female)
+    return clothes.roll(math.random, math.random, female and clothes.FEMALE or clothes.MALE)
 end
 
 -- Per-player item state, shared with the server modules (they capture this table).
@@ -140,6 +146,16 @@ loadFile("server/use.lua")({
     toast = toast,
     destroy = destroy,
     sendInventory = containers.sendInventory,
+    decodeData = hands.decodeData,
+    clothes = loadFile("server/clothes.lua")({
+        db = db,
+        state = state,
+        clothes = clothes,
+        skins = skins,
+        charId = charId,
+        toast = toast,
+        sendInventory = containers.sendInventory,
+    }),
 })
 
 addEventHandler("onResourceStart", resourceRoot, function()
