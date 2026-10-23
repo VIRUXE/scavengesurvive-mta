@@ -18,7 +18,7 @@ physical item on the ground, wounds bleed, and death drops it all.
 | Milestone | Status | What you get |
 | --- | :---: | --- |
 | M0 Bootstrap & Data | ✅ | 302 item types, 15 loot tables, 11,062 loot points, 10 languages, 66 vehicle types and 2,017 vehicle points converted from upstream; schema, procedures and seeds applied by one script |
-| M1 Auth & Character | ✅ | Register/login, permadeath, hunger and bleeding ticks, death drops, anti-combat-log, SA-MP HUD (watch, hunger bar, key actions, brightness overlay, death screen) |
+| M1 Auth & Character | ✅ | Register/login, permadeath, upstream's 14 spawn skins, hunger and bleeding ticks, death drops, anti-combat-log, SA-MP HUD (watch, hunger bar, key actions, brightness overlay, death screen) |
 | M2 Items & Inventory | ✅ | Hands, 6-slot inventory, bags worn on the back, containers, food, SA-MP list dialogs; held items and bags on real bones with the SA-MP models |
 | M3 Loot & World | ✅ | Loot rolling near players, all 221 upstream maps built client-side (23,211 objects), 7 server zone colshapes (`getZoneAt`, `playerZoneEntered/Left`), weather and a real-time clock (wild trees deferred) |
 | M4 Weapons & Damage | ✅ | Server-authoritative wound model with calibre, ammo-type and distance falloff, magazines, reload (`R`) and hold-`N` unload, 3D bullet tracers, knockouts, handcuffs and disarm, anti-combat-log |
@@ -34,16 +34,27 @@ Progress is tracked in the [issues](https://github.com/VIRUXE/scavengesurvive-mt
 | ![A battered loot vehicle](docs/images/loot-vehicle-blista.jpg) | ![A world item with its label](docs/images/world-item-hotdog.jpg) |
 | :---: | :---: |
 | Loot vehicles spawn smoking, half-wrecked and almost out of fuel | Every item is an object on the ground, SA-MP models included |
-| ![A hollow house replacing the vanilla one](docs/images/hollow-house-replacement.jpg) | |
-| Upstream's hollow houses replace the sealed vanilla models | |
+| ![A hollow house replacing the vanilla one](docs/images/hollow-house-replacement.jpg) | ![The 14 spawn skins in body armour, pistol holstered](docs/images/apparel-body-threequarter.jpg) |
+| Upstream's hollow houses replace the sealed vanilla models | The 14 spawn skins in body armour, each with its own upstream fit |
+
+![Captain's cap across every spawn skin](docs/images/apparel-captainscap.jpg)
+
+Apparel is checked in the green-screen studio (`docs/dev-studio.md`): one ped, a fixed camera, every skin in a row.
 
 ## How it is built
 
 - **One MTA resource per domain**, no prefix: `lib`, `data`, `models`, `maps`, `ui`, `auth`, `character`, `items`,
-  `loot`, `vehicles`, `crafting`, `building`, `world`, `weapons`, `chat`, `hud`, `staff`, `dev`. They share state only through MariaDB, so any resource can
-  restart alone and rebuild from the database.
+  `loot`, `vehicles`, `crafting`, `building`, `world`, `weapons`, `chat`, `hud`, `staff`, `dev`, `attachedit`. They
+  share state only through MariaDB, so any resource can restart alone and rebuild from the database.
 - **MariaDB does the heavy lifting.** Every item-graph move (pickup, drop, container put/take, death drop) is a
-  stored procedure that returns `ok, code, payload`; positions are `POINT` columns with spatial indexes.
+  stored procedure that returns `ok, code, payload`; positions are `POINT` columns with spatial indexes. The schema
+  is one `sql/schema.sql` dumped from the database; there are no migration files.
+- **Scarcity is a budget, not a timer.** Loot and vehicles have a carrying capacity (per zone for loot) that refills
+  in proportion to what is missing, with per-point cooldowns and nothing respawning within 150 m of a player. What
+  players carry still counts, so hoarding slows the whole server down (ADR 0001).
+- **The dev server is driven from the shell.** `rcon.ps1` runs commands and key presses as any player, Lua, and
+  screenshots over the `dev` resource's HTTP export; `/studio` puts a ped alone on a chroma-green set and
+  `attachedit` tunes attachment offsets in game.
 - **Static world on the client.** The 221 upstream map files become `createBuilding` calls spread over frames
   (about 1.3 s on join), with the 209 SA-MP-only object models shipped in the `models` resource.
 - **Damage is server-authoritative.** The victim's client reports a hit; the server checks the shooter's held weapon,
@@ -88,6 +99,8 @@ pytest -q
 | `docs/ui-reference-samp.md` | Every SA-MP UI element with upstream geometry, footage evidence and its MTA recipe; gap list vs the current resources |
 | `docs/languages-qa.md` | Generated per-language coverage: missing keys, untranslated values, placeholder mismatches; `/lang <code>` picks a language |
 | `docs/staff-commands.md` | Staff levels, every command, upstream rules kept and deviations |
+| `docs/dev-studio.md` | The green-screen studio: presets, rcon usage, how the apparel sheets are taken |
+| `docs/PROJECT_README.md` | The GitHub project board: fields, views and how issues flow through milestones |
 | `docs/runbooks/` | Start/stop/restart, schema changes, backup/restore, ban appeal, DB-down incident, release |
 | `server-config/README.md` | Local server setup, HTTP rcon, dev and staff commands |
 | `THIRD_PARTY_NOTICES.md` | Upstream data (MPL-2.0), maps (CC BY-SA 4.0), SA-MP models |
