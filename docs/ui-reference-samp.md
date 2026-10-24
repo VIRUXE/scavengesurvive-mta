@@ -167,6 +167,16 @@ Issue #39. Needs the skin-portrait atlas (see fonts table, font 5).
   carry their state text "[05] MODEL 70 (1/2, .308, FMJ)".
 - Footage: columns at x 980 and 1120 px, rows at y 172/349/526 px on 720p (`AEp1SnYke4U @ 0:28`).
 
+**Message, input and password dialogs** (`DIALOG_STYLE_MSGBOX` / `_INPUT` / `_PASSWORD`, 32 / 19 / 2 uses
+upstream against 27 lists): same chrome as the list dialog, a colour-coded body of upstream's own line
+breaks (dx cannot wrap colour-coded text), a one-line field under it for the input styles (masked for
+passwords; append, backspace and Ctrl+V paste through `onClientPaste`), the Accept / Leave pair centred under it, or one centred button when
+the right label is empty (`""`, as y_dialog's lone Close). The box widens with the longest line between
+280 and 600 canvas units. `ui/client/dialogbox.lua` + `dialog.boxLayout`; `exports.ui:dialogOpen(id, style,
+title, body, left, right)` answers with `uiDialogResponded(id, accepted, text)` after closing itself, so a
+handler may open the next one (upstream re-showed the dialog on a wrong password). Enter and Escape are the
+two buttons; `guiSetInputMode("no_binds")` while open.
+
 ### 2.3 Other screens
 
 | Screen | Upstream | Footage | MTA |
@@ -211,7 +221,7 @@ Updated 2026-10-22 after the dx rework (`feat(ui,hud): the SA-MP look`); rows ma
 | `ui/client/progress.lua` | **done**: progress2 bar at `291,345`, driven by `character/client/deathscreen.lua` during knockouts (`knockedOut`) | hold actions (eat, repair, cuff) | wire hold timers to `progressShow`/`progressHide` |
 | `character/client/deathscreen.lua` | **done**: 30 s rising camera, boxed lines at 325/349 under the alpha-185 brightness overlay with hover highlight (`649aeb7`) | | |
 | body panel, gear tiles | **done**: health panel (text only), six see-through tiles with live `dxDrawModel3D` previews and the upstream caption (`NAME`, `<EMPTY>`, hand `(size) NAME (state)`) | skin portrait in the body panel | a one-off skin capture by `dev` (peds cannot be drawn with `dxDrawModel3D`) |
-| `auth/client/login.lua` | CEGUI window | SA-MP input dialogs | fine as is (spec: CEGUI only for passwords) |
+| `auth/client/login.lua` | **done** (2026-10-25): the upstream password dialogs through `ui`'s `dialogOpen` (`ACCLOGITITL`/`ACCLOGIBODY`, `ACCREGITITL`/`ACCREGIBODY`, `ACCLOGWROPW` after a wrong try, Accept / Leave, the grey "left the server without logging in" broadcast on Leave or the fifth try) and the "Welcome to the Server" message box with its 10 s countdown after registering | | `/changepass`, auto-login by IP |
 | world labels | yellow within 15 m | yellow within 2 m, prompt via action text | tighten the range, add the prompt |
 
 ## 4. Verified MTA facts used above
