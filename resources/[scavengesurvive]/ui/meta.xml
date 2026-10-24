@@ -1,5 +1,5 @@
 <meta>
-    <info author="scavengesurvive-mta" type="script" name="ui" description="dx UI kit: action text, hold bar, SA-MP style list dialog" version="0.2.0"/>
+    <info author="scavengesurvive-mta" type="script" name="ui" description="dx UI kit: action text, hold bar, SA-MP style list, message and input dialogs" version="0.3.0"/>
     <min_mta_version server="1.6.0" client="1.6.0"/>
     <download_priority_group>90</download_priority_group>
     <include resource="lib"/>
@@ -11,6 +11,7 @@
     <file src="client/actiontext.lua"/>
     <file src="client/progress.lua"/>
     <file src="client/list.lua"/>
+    <file src="client/dialogbox.lua"/>
     <export function="actionTextShow" type="client"/>
     <export function="actionTextHide" type="client"/>
     <export function="toast" type="client"/>
@@ -20,4 +21,9 @@
     <export function="listUpdate" type="client"/>
     <export function="listClose" type="client"/>
     <export function="listIsOpen" type="client"/>
+    <export function="dialogOpen" type="client"/>
+    <export function="dialogSetBody" type="client"/>
+    <export function="dialogSetButtons" type="client"/>
+    <export function="dialogClose" type="client"/>
+    <export function="dialogIsOpen" type="client"/>
 </meta>

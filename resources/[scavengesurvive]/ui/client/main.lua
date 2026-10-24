@@ -14,10 +14,14 @@ ctx.draw = loadModule("client/draw.lua")(ctx)
 local actionText = loadModule("client/actiontext.lua")(ctx)
 local progress = loadModule("client/progress.lua")(ctx)
 local list = loadModule("client/list.lua")(ctx)
+local dialogbox = loadModule("client/dialogbox.lua")(ctx)
 
 addEventHandler("onClientRender", root, function()
     if list.isOpen() then
         list.draw()
+    end
+    if dialogbox.isOpen() then
+        dialogbox.draw()
     end
     progress.draw()
     actionText.draw()
@@ -59,4 +63,25 @@ end
 
 function listIsOpen()
     return list.isOpen()
+end
+
+-- msgbox / input / password dialogs (dialogbox.lua); the answer arrives as uiDialogResponded(id, accepted, text)
+function dialogOpen(id, style, title, body, left, right)
+    return dialogbox.open(id, style, title, body, left, right)
+end
+
+function dialogSetBody(id, body)
+    return dialogbox.setBody(id, body)
+end
+
+function dialogSetButtons(id, left, right)
+    return dialogbox.setButtons(id, left, right)
+end
+
+function dialogClose()
+    return dialogbox.close()
+end
+
+function dialogIsOpen()
+    return dialogbox.isOpen()
 end

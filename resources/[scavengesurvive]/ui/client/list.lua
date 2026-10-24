@@ -11,8 +11,6 @@ return function(ctx)
         selected = tocolor(139, 26, 30, 255),
         text = tocolor(255, 255, 255, 255),
         empty = tocolor(200, 200, 200, 255),
-        button = tocolor(45, 45, 45, 255),
-        border = tocolor(190, 190, 190, 255),
         scroll = tocolor(60, 60, 60, 255),
         thumb = tocolor(150, 150, 150, 255),
     }
@@ -86,19 +84,7 @@ return function(ctx)
         end
     end
 
-    local function rect(r, colour)
-        dxDrawRectangle(r.x, r.y, r.w, r.h, colour)
-    end
-
-    local function button(r, label)
-        rect(r, COL.button)
-        dxDrawLine(r.x, r.y, r.x + r.w, r.y, COL.border)
-        dxDrawLine(r.x, r.y + r.h, r.x + r.w, r.y + r.h, COL.border)
-        dxDrawLine(r.x, r.y, r.x, r.y + r.h, COL.border)
-        dxDrawLine(r.x + r.w, r.y, r.x + r.w, r.y + r.h, COL.border)
-        local scale = canvas.textScale(c, 1.3, 1)
-        dxDrawText(label, r.x, r.y, r.x + r.w, r.y + r.h, COL.text, scale, canvas.font(1), "center", "center")
-    end
+    local rect, button = ctx.draw.pxRect, ctx.draw.pxButton
 
     function M.draw()
         local st = current()

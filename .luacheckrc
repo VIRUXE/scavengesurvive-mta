@@ -12,7 +12,7 @@ stds.mta_server = dofile(".luacheck/mta_server.lua")
 stds.mta_client = dofile(".luacheck/mta_client.lua")
 files["resources/**/lib/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "getModule" } }
 files["resources/**/data/**"] = { std = "lua51+mta_shared", globals = { "itemType", "itemTypes", "lootTable", "calibreBleed", "calibreName", "ammoTypesForCalibre", "vehicleType", "vehicleTypes", "t", "languages" } }
-files["resources/**/ui/**"] = { std = "lua51+mta_shared+mta_client", globals = { "actionTextShow", "actionTextHide", "toast", "progressStart", "progressCancel", "listOpen", "listUpdate", "listClose", "listIsOpen" } }
+files["resources/**/ui/**"] = { std = "lua51+mta_shared+mta_client", globals = { "actionTextShow", "actionTextHide", "toast", "progressStart", "progressCancel", "listOpen", "listUpdate", "listClose", "listIsOpen", "dialogOpen", "dialogSetBody", "dialogSetButtons", "dialogClose", "dialogIsOpen" }, read_globals = { "guiGetInputMode" } }
 -- getTime/getVehicleEngineState/getVehicleName/getVehicleOccupant postdate the generated .luacheck/mta_client.lua list
 files["resources/**/hud/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "setHidden" }, read_globals = { "getTime", "getVehicleEngineState", "getVehicleName", "getVehicleOccupant" } }
 files["resources/**/auth/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "prompt", "getAccountId", "getAdminLevel", "getLanguage", "isAuthenticated", "setSessionAdminLevel", "setWhitelistEnabled", "isWhitelistEnabled" } }

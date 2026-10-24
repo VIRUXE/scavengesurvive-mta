@@ -156,4 +156,124 @@ function dialog.selectedRow(st)
     return st.rows[st.selected]
 end
 
+-- ---------------------------------------------------------------------------------------------------------------
+-- The other SA-MP dialog styles (DIALOG_STYLE_MSGBOX, _INPUT, _PASSWORD) on the same chrome: title, a body of
+-- colour-coded lines (no wrapping: dxDrawText cannot wrap colour-coded text, and upstream bodies break their own
+-- lines), an optional one-line field and the Accept/Leave button pair (one centred button when the right label
+-- is empty, as y_dialog shows a lone "Close").
+G.fieldH = 16
+G.minW = 280
+G.maxW = 600
+G.bodyGap = 4
+G.buttonGap = 7
+G.bottomPad = 5
+G.leftOnlyX = (G.w - G.btnW) / 2
+
+-- Lines and the longest visible line (colour codes #RRGGBB stripped) of a dialog body.
+function dialog.bodyMetrics(body)
+    local plain = tostring(body or ""):gsub("#%x%x%x%x%x%x", "")
+    local lines, longest = 0, 0
+    for line in (plain .. "\n"):gmatch("(.-)\n") do
+        lines = lines + 1
+        if #line > longest then
+            longest = #line
+        end
+    end
+    return lines, longest
+end
+
+-- Box width in canvas units for the longest line, given the width of one character in units.
+function dialog.boxWidth(longest, charUnits)
+    local w = longest * (charUnits or 4.6) + 2 * (G.titleX + G.textPad)
+    return math.max(G.minW, math.min(G.maxW, w))
+end
+
+-- Pixel rectangles for a msgbox/input/password dialog of `lines` body lines and `widthUnits` wide.
+function dialog.boxLayout(sw, sh, s, style, lines, widthUnits, twoButtons)
+    local hasField = style == "input" or style == "password"
+    local wU = widthUnits or G.w
+    local bodyH = math.max(1, lines or 1) * G.rowH + 2 * G.textPad
+    local fieldY = G.listY + bodyH + G.bodyGap
+    local btnY = (hasField and (fieldY + G.fieldH) or (G.listY + bodyH)) + G.buttonGap
+    local hU = btnY + G.btnH + G.bottomPad
+    local w, h = wU * s, hU * s
+    local x, y = (sw - w) / 2, (sh - h) / 2
+    local cx = x + w / 2
+    local L = {
+        s = s,
+        style = style,
+        box = { x = x, y = y, w = w, h = h },
+        title = { x = x + G.titleX * s, y = y + G.titleY * s },
+        body = { x = x + G.listX * s, y = y + G.listY * s, w = (wU - 2 * G.listX) * s, h = bodyH * s },
+        textPad = G.textPad * s,
+        rowH = G.rowH * s,
+    }
+    if hasField then
+        L.field = { x = L.body.x, y = y + fieldY * s, w = L.body.w, h = G.fieldH * s }
+    end
+    if twoButtons then
+        L.left = { x = cx - (G.btnW + G.btnGap / 2) * s, y = y + btnY * s, w = G.btnW * s, h = G.btnH * s }
+        L.right = { x = cx + (G.btnGap / 2) * s, y = y + btnY * s, w = G.btnW * s, h = G.btnH * s }
+    else
+        L.left = { x = cx - (G.btnW / 2) * s, y = y + btnY * s, w = G.btnW * s, h = G.btnH * s }
+    end
+    return L
+end
+
+-- What a click hits on a box dialog: "left" | "right" | "field" | "box" | nil
+function dialog.boxHit(L, px, py)
+    if inside(L.left, px, py) then
+        return "left"
+    elseif L.right and inside(L.right, px, py) then
+        return "right"
+    elseif L.field and inside(L.field, px, py) then
+        return "field"
+    elseif inside(L.box, px, py) then
+        return "box"
+    end
+    return nil
+end
+
+-- Field editing (append-only, like the chat box): typed characters, backspace of one UTF-8 character, masking.
+dialog.MAX_INPUT = 128
+
+function dialog.typed(text, ch, max)
+    if dialog.length(text) >= (max or dialog.MAX_INPUT) then
+        return text
+    end
+    return text .. ch
+end
+
+function dialog.backspace(text)
+    local i = #text
+    while i > 1 and text:byte(i) >= 0x80 and text:byte(i) < 0xC0 do
+        i = i - 1
+    end
+    return text:sub(1, i - 1)
+end
+
+-- Characters (not bytes) in a UTF-8 string.
+function dialog.length(text)
+    local _, n = text:gsub("[^\128-\191]", "")
+    return n
+end
+
+-- Clipboard text appended to the field: control characters (line breaks, tabs) dropped, whole UTF-8
+-- characters only, never past max.
+function dialog.pasted(text, clip, max)
+    max = max or dialog.MAX_INPUT
+    local clean = tostring(clip or ""):gsub("%c", "")
+    for ch in clean:gmatch("[%z\1-\127\194-\244][\128-\191]*") do
+        if dialog.length(text) >= max then
+            break
+        end
+        text = text .. ch
+    end
+    return text
+end
+
+function dialog.masked(text)
+    return string.rep("*", dialog.length(text))
+end
+
 return dialog

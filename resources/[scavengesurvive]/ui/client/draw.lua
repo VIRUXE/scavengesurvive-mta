@@ -74,5 +74,28 @@ return function(ctx)
         M.box(bar.value.x, bar.value.y, bar.value.w, bar.value.h, tocolor(r, g, b, a), anchor)
     end
 
+    -- Pixel-space helpers for the dialog widgets (the rectangles come from dialog.layout / dialog.boxLayout).
+    function M.pxRect(r, colour)
+        dxDrawRectangle(r.x, r.y, r.w, r.h, colour)
+    end
+
+    function M.pxFrame(r, colour)
+        dxDrawLine(r.x, r.y, r.x + r.w, r.y, colour)
+        dxDrawLine(r.x, r.y + r.h, r.x + r.w, r.y + r.h, colour)
+        dxDrawLine(r.x, r.y, r.x, r.y + r.h, colour)
+        dxDrawLine(r.x + r.w, r.y, r.x + r.w, r.y + r.h, colour)
+    end
+
+    local BUTTON = tocolor(45, 45, 45, 255)
+    local BORDER = tocolor(190, 190, 190, 255)
+    local WHITE = tocolor(255, 255, 255, 255)
+    -- An SA-MP dialog button: dark fill, 1 px light border, centred font 1 label.
+    function M.pxButton(r, label)
+        M.pxRect(r, BUTTON)
+        M.pxFrame(r, BORDER)
+        local scale = canvas.textScale(c, 1.3, 1)
+        dxDrawText(label, r.x, r.y, r.x + r.w, r.y + r.h, WHITE, scale, canvas.font(1), "center", "center")
+    end
+
     return M
 end
