@@ -1,27 +1,23 @@
 local db = loadstring(exports.lib:getModule("db"), "=lib/db.lua")()
 local net = loadstring(exports.lib:getModule("net"), "=lib/net.lua")()
 local util = loadstring(exports.lib:getModule("util"), "=lib/util.lua")()
-local accountsModule
-do
-    local f = fileOpen("server/accounts.lua", true)
+local function loadFile(path)
+    local f = fileOpen(path, true)
     local src = fileRead(f, fileGetSize(f))
     fileClose(f)
-    accountsModule = assert(loadstring(src, "=auth/accounts.lua"))()
+    return assert(loadstring(src, "=auth/" .. path))()
 end
-
-local access
-do
-    local f = fileOpen("shared/logic/access.lua", true)
-    local src = fileRead(f, fileGetSize(f))
-    fileClose(f)
-    access = assert(loadstring(src, "=auth/access.lua"))()
-end
+local accountsModule = loadFile("server/accounts.lua")
+local access = loadFile("shared/logic/access.lua")
+local prompts = loadFile("shared/logic/prompt.lua")
 
 local session = {} -- player -> account table
 local pending = {} -- player -> true while a login/register request is in flight
 local checking = {} -- player -> true while the join-time ban lookup is in flight
 local wantsPrompt = {} -- player -> true when the client was ready before the ban lookup finished
 local blocked = {} -- player -> true once a ban (or the whitelist) kicked them
+local promptMode = {} -- player -> "login" | "register" while a dialog is up
+local promptLang = {} -- player -> language of the dialog texts (the account's, "en" for a new name)
 local whitelistEnabled = false
 local accounts
 local warnedNoDb = false
@@ -33,6 +29,10 @@ local function kickLater(player, reason)
             kickPlayer(p, r)
         end
     end, 1000, 1, player, reason)
+end
+
+local function t(player, key, ...)
+    return exports.data:t(promptLang[player] or "en", key, ...)
 end
 
 -- Ban check on join (upstream BanCheck in OnPlayerConnect): name, IP or serial; the prompt waits for the answer.
@@ -94,6 +94,24 @@ addEventHandler("onPlayerJoin", root, function()
     checkBan(source)
 end)
 
+-- The upstream dialog for the mode: title and body in the player's language, the client adds Accept / Leave.
+local function showDialog(player, mode, attempts)
+    promptMode[player] = mode
+    local d = prompts.dialog(mode, getPlayerName(player), attempts)
+    local title = t(player, d.titleKey)
+    local body = t(player, d.bodyKey, unpack(d.args))
+    triggerClientEvent(player, "authPromptShown", player, mode, title, body)
+end
+
+-- Leave button, or the fifth wrong password: everyone reads the grey line, the player is kicked (upstream Kick).
+local function leave(player)
+    local mode = promptMode[player]
+    promptMode[player] = nil
+    outputChatBox(prompts.leftMessage(getPlayerName(player), mode), root, 175, 175, 175)
+    util.log("auth", "info", "%s left the %s dialog", getPlayerName(player), tostring(mode))
+    kickLater(player, mode == "register" and "Left without registering" or "Left without logging in")
+end
+
 function prompt(player)
     if not accounts then
         if not warnedNoDb then
@@ -110,10 +128,18 @@ function prompt(player)
         return
     end
     accounts.lookup(getPlayerName(player), function(row)
-        if not isElement(player) then
+        if not isElement(player) or blocked[player] then
             return
         end
-        triggerClientEvent(player, "authPromptShown", player, row and "login" or "register")
+        if row == false then
+            return kickLater(player, "Account load failed")
+        end
+        if row and row.active == 0 then
+            util.log("auth", "info", "%s refused: account inactive", getPlayerName(player))
+            return kickLater(player, "Account inactive")
+        end
+        promptLang[player] = row and row.lang or "en"
+        showDialog(player, row and "login" or "register")
     end)
 end
 
@@ -126,26 +152,45 @@ addEventHandler("onPlayerResourceStart", root, function(res)
     end
 end)
 
-local function admit(player, account)
+local function admit(player, account, isNew)
     session[player] = account
+    promptMode[player] = nil
     local sql = "INSERT INTO connection_log (account_id, name, serial, ip) VALUES (?, ?, ?, ?)"
     db.exec(sql, { account.id, account.name, getPlayerSerial(player), getPlayerIP(player) })
-    triggerClientEvent(player, "authResolved", player, true, "OK")
+    if isNew then
+        triggerClientEvent(player, "authWelcomeShown", player)
+    end
     triggerEvent("playerAuthenticated", player, account.id)
     util.log("auth", "info", "%s authenticated as account %d", account.name, account.id)
 end
 
-local function finish(player, ok, code, account)
+local function refused(player, code, attempts)
+    local r = prompts.onRefused(code, attempts)
+    if r.chatKey then
+        outputChatBox(t(player, r.chatKey), player, 255, 255, 0, true)
+    end
+    if r.action == "reprompt" then
+        showDialog(player, r.mode, r.attempts)
+    elseif r.action == "lookup" then
+        prompt(player)
+    elseif r.action == "leave" then
+        leave(player)
+    elseif r.action == "kick" then
+        util.log("auth", "info", "%s refused: %s", getPlayerName(player), code)
+        kickLater(player, r.reason)
+    end
+end
+
+local function finish(player, ok, code, account, attempts, isNew)
     pending[player] = nil
     if not isElement(player) or blocked[player] then
         return
     end
     if not ok then
-        triggerClientEvent(player, "authResolved", player, false, code)
-        return
+        return refused(player, code, attempts)
     end
     if not whitelistEnabled or account.adminLevel > 0 then
-        return admit(player, account)
+        return admit(player, account, isNew)
     end
     -- whitelist on (upstream player/whitelist.pwn): only listed names and staff may stay
     db.one("SELECT name FROM whitelist WHERE name = ?", { account.name }, function(row, p)
@@ -153,10 +198,10 @@ local function finish(player, ok, code, account)
             return
         end
         if access.whitelistAllows(true, row ~= nil and row ~= false, account.adminLevel) then
-            return admit(p, account)
+            return admit(p, account, isNew)
         end
-        triggerClientEvent(p, "authResolved", p, false, "NOT_WHITELISTED")
-        outputChatBox("This server is whitelisted and your name is not on the list.", p, 255, 80, 80)
+        outputChatBox(t(p, "WHITELISTAC"), p, 255, 255, 0, true)
+        outputChatBox(t(p, "WHITELISTNO"), p, 255, 255, 0, true)
         util.log("auth", "info", "%s refused: not whitelisted", account.name)
         kickLater(p, "Not whitelisted")
     end, player)
@@ -167,8 +212,8 @@ net.handler("loginRequested", function(player, password)
         return
     end
     pending[player] = true
-    accounts.login(player, getPlayerName(player), tostring(password), function(ok, code, account)
-        finish(player, ok, code, account)
+    accounts.login(player, getPlayerName(player), tostring(password), function(ok, code, account, attempts)
+        finish(player, ok, code, account, attempts, false)
     end)
 end, { rate = 2 })
 
@@ -178,8 +223,15 @@ net.handler("registrationRequested", function(player, password)
     end
     pending[player] = true
     accounts.register(player, getPlayerName(player), tostring(password), function(ok, code, account)
-        finish(player, ok, code, account)
+        finish(player, ok, code, account, nil, true)
     end)
+end, { rate = 2 })
+
+net.handler("authPromptDismissed", function(player)
+    if session[player] or pending[player] or blocked[player] or not promptMode[player] then
+        return
+    end
+    leave(player)
 end, { rate = 2 })
 
 addEventHandler("onPlayerQuit", root, function(reason)
@@ -194,6 +246,8 @@ addEventHandler("onPlayerQuit", root, function(reason)
     checking[source] = nil
     wantsPrompt[source] = nil
     blocked[source] = nil
+    promptMode[source] = nil
+    promptLang[source] = nil
     if accounts then
         accounts.forget(source)
     end

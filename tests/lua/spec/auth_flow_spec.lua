@@ -77,6 +77,21 @@ describe("auth flow", function()
         end)
         assert.equals("TOO_MANY_ATTEMPTS", codes[#codes])
     end)
+    it("counts a short password as a try and reports the attempt number", function()
+        local got
+        acc.login("p1", "Bob", "abc", function(ok, code, account, attempts)
+            got = { ok, code, account, attempts }
+        end)
+        assert.same({ false, "BAD_PASSWORD", nil, 1 }, got)
+        assert.equals(0, #mock.queries) -- no lookup, no bcrypt for a password that cannot be right
+        local row =
+            { id = 7, name = "Bob", password_hash = "$2y$hash-of-secret", admin_level = 0, lang = "en", active = 1 }
+        acc.login("p1", "Bob", "wrong", function(_, _, _, attempts)
+            got = attempts
+        end)
+        mock.answer(1, { row })
+        assert.equals(2, got)
+    end)
     it("logs in successfully and updates last login", function()
         local got
         local row =

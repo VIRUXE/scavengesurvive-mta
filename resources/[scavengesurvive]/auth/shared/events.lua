@@ -5,7 +5,11 @@ addEvent("playerLoggedOut", false)
 -- client to server (handlers registered with net.handler)
 addEvent("loginRequested", true)
 addEvent("registrationRequested", true)
+addEvent("authPromptDismissed", true)
 
--- server to client / client-local
+-- server to client
 addEvent("authPromptShown", true)
-addEvent("authResolved", true)
+addEvent("authWelcomeShown", true)
+
+-- client-local (raised by ui)
+addEvent("uiDialogResponded", false)

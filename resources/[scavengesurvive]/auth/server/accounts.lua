@@ -67,10 +67,19 @@ function accounts.new(deps)
         end)
     end
 
+    -- cb(ok, code, account, attempts): a wrong password, or one shorter than four characters (upstream counts
+    -- those as a try too), comes back as BAD_PASSWORD with the running attempt count.
     function self.login(player, name, pw, cb)
         local key = tostring(player)
         if (self.attempts[key] or 0) >= MAX_ATTEMPTS then
             return cb(false, "TOO_MANY_ATTEMPTS")
+        end
+        local function failed()
+            self.attempts[key] = (self.attempts[key] or 0) + 1
+            return cb(false, "BAD_PASSWORD", nil, self.attempts[key])
+        end
+        if #pw < 4 then
+            return failed()
         end
         self.lookup(name, function(row)
             if row == false then
@@ -84,8 +93,7 @@ function accounts.new(deps)
             end
             deps.verify(pw, row.password_hash, function(match)
                 if not match then
-                    self.attempts[key] = (self.attempts[key] or 0) + 1
-                    return cb(false, "BAD_PASSWORD")
+                    return failed()
                 end
                 self.attempts[key] = nil
                 deps.db.exec(
