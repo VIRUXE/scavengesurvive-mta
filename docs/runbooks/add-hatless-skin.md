@@ -51,6 +51,7 @@ exports.models:hatlessSkin(<skin>))`). All 24 headgear skins now have remodelled
 anatomical cranial hair domes: police and sheriffs (4, 119, 284, 265, 283, 288), military and SWAT (287, 285),
 firefighters (277-279), services and civilian (61, 35, 268, 155, 205, 161, 36, 37, 2, 311), and bikers (247, 248, 254).
 Maccer 2 carries custom hair texture UV sampling and a contoured hairline matching his dirty-blond mop.
+![all 24 bare](../images/hatless-twins-remodelled.jpg)
 
 Two facts cost a long detour: a DFF stores one UV per vertex, so a hairline vertex needs a skin copy and a hair
 copy; and the exporter is fine with new vertices, so when a head looks stretched in the game compare the dome's
