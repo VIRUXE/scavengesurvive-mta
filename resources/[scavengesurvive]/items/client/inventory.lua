@@ -452,7 +452,7 @@ return function(ctx)
             local t = sl.item and itemType(sl.item.uname)
             if t and preview and models then
                 local area = preview.logic.area(tx, ty, tw, th, L.titleH)
-                entries[#entries + 1] = { model = models.forType(t), area = area }
+                entries[#entries + 1] = { model = models.forType(t), area = area, itemType = t }
             end
             local cx0, cx1, cy0, cy1 = tx - 5 * s, tx + tw + 5 * s, ty + th + 2 * s, ty + th + L.captionH
             local col = sl.item and white or grey

@@ -95,6 +95,7 @@ return function(ctx)
             return nil
         end
         setElementCollisionsEnabled(obj, false)
+        models.applyTint(obj, t)
         if scale then
             setObjectScale(obj, scale[1], scale[2], scale[3])
         end
@@ -284,7 +285,9 @@ return function(ctx)
         for player, slots in pairs(tracked) do
             for _, a in pairs(slots) do
                 if isElement(a.obj) then
-                    setElementModel(a.obj, models.forType(itemType(a.uname)))
+                    local t = itemType(a.uname)
+                    setElementModel(a.obj, models.forType(t))
+                    models.applyTint(a.obj, t)
                 end
             end
             -- hatless twins came or went with the pack

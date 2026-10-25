@@ -161,6 +161,7 @@ return function(ctx)
         if obj then
             place(obj, r)
             orient(obj, r, t)
+            models.applyTint(obj, t)
         end
         return obj
     end
@@ -217,7 +218,9 @@ return function(ctx)
                 end
                 e.parts = createTentParts(e.row)
             elseif isElement(e.obj) then
-                setElementModel(e.obj, models.forType(itemType(e.uname)))
+                local t = itemType(e.uname)
+                setElementModel(e.obj, models.forType(t))
+                models.applyTint(e.obj, t)
             end
         end
     end)

@@ -24,6 +24,7 @@
     <file src="client/preview.lua"/>
     <file src="client/world.lua"/>
     <file src="client/replace.fx"/>
+    <file src="client/tint.fx"/>
     <file src="client/attach.lua"/>
     <file src="client/inventory.lua"/>
     <export function="getHeld" type="server"/>

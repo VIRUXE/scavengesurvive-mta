@@ -18,7 +18,7 @@ local worldCtx = { models = models, ammo = ammo, tent = tent, clothes = clothes,
 worldCtx.cooking = cooking
 local world = loadModule("client/world.lua")(worldCtx)
 local attach = loadModule("client/attach.lua")({ models = models, apparel = apparel })
-local preview = loadModule("client/preview.lua")({ logic = loadModule("shared/logic/preview.lua") })
+local preview = loadModule("client/preview.lua")({ logic = loadModule("shared/logic/preview.lua"), models = models })
 local inventoryCtx = { ammo = ammo, apparel = apparel, clothes = clothes, models = models, preview = preview }
 inventoryCtx.cooking = cooking
 loadModule("client/inventory.lua")(inventoryCtx)
