@@ -54,6 +54,9 @@ function roll.fill(tbl, count, rng)
 end
 
 -- Computes the initial JSON string for loot-spawned ammo tins and calibre weapons (core/weapon/{loot,ammunition}.pwn).
+-- Looted items whose data character's medical rules roll (exports.character:medicalLootData, #94).
+roll.MEDICAL_DATA = { DoctorBag = true, Pills = true, AutoInjec = true }
+
 function roll.initialItemData(def, tableName, ammoTypes, rand)
     if type(def) ~= "table" or type(def.categoryData) ~= "table" then
         return nil

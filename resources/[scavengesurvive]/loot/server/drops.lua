@@ -36,7 +36,8 @@ return function(ctx)
         end
         local cal = def.categoryData and def.categoryData.calibre
         local ammoTypes = cal and exports.data:ammoTypesForCalibre(cal) or nil
-        return roll.initialItemData(def, tableName, ammoTypes, rng)
+        local medical = roll.MEDICAL_DATA[uname] and exports.character:medicalLootData(uname)
+        return medical or roll.initialItemData(def, tableName, ammoTypes, rng)
     end
 
     -- Crates -------------------------------------------------------------------------------------------------

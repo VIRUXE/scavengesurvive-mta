@@ -128,9 +128,10 @@ local function rollSpawn(s)
             local ang = math.rad(i * (360 / #unames))
             local cal = def.categoryData and def.categoryData.calibre
             local ammoTypes = cal and exports.data:ammoTypesForCalibre(cal) or nil
+            local medical = roll.MEDICAL_DATA[uname] and exports.character:medicalLootData(uname)
             items[#items + 1] = {
                 u = uname,
-                data = roll.initialItemData(def, s.table_name, ammoTypes, math.random), -- JSON text or nil
+                data = medical or roll.initialItemData(def, s.table_name, ammoTypes, math.random), -- JSON text or nil
                 x = s.x + math.cos(ang) * 0.6,
                 y = s.y + math.sin(ang) * 0.6,
                 z = s.z + 0.1032,

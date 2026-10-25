@@ -1,6 +1,6 @@
 -- Command binds for the HUD keys (players rebind them in MTA's settings). ctx.getHeld() is the held item
--- summary from client/main.lua; the interact key eats held food, R reloads, and holding N for 300 ms on a
--- calibre weapon unloads it (tapping N drops the item).
+-- summary from client/main.lua; the interact key eats held food or starts a held treatment, R reloads, and holding
+-- N for 300 ms on a calibre weapon unloads it (tapping N drops the item).
 return function(ctx)
     local holdTimer = nil
 
@@ -39,6 +39,9 @@ return function(ctx)
         Crowbar = true,
         LockBreaker = true,
     }
+
+    local TREATMENTS = { Bandage = true, AntiSepBandage = true, Medkit = true, DoctorBag = true, Pills = true }
+    TREATMENTS.AutoInjec = true
 
     local function getNearbyVehicle()
         local px, py, pz = getElementPosition(localPlayer)
@@ -88,7 +91,8 @@ return function(ctx)
                 return triggerServerEvent("vehicleInteractRequested", localPlayer, nearVeh)
             end
         end
-        if held and held.category == "food" then
+        -- food is eaten; a held treatment starts its hold, and letting go of the key cancels it (items, #94)
+        if held and (held.category == "food" or TREATMENTS[held.uname]) then
             return triggerServerEvent("itemUseRequested", localPlayer, held.id)
         end
         triggerServerEvent("itemPickupRequested", localPlayer)

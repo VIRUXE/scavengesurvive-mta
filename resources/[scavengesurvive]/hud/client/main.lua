@@ -376,7 +376,10 @@ addEventHandler("onClientResourceStart", resourceRoot, function()
     refreshKeys()
     setTimer(refreshKeys, 1000, 0)
     setTimer(function()
-        state.brightness = bars.brightnessStep(state.brightness, bars.brightness(state.stats.hp))
+        -- brightness.pwn: Painkill and Adrenaline hide the darkness (character sends the drugs with the stats, #94)
+        local drugs = type(state.stats.drugs) == "table" and state.stats.drugs or {}
+        local target = (drugs.Painkill or drugs.Adrenaline) and 0 or bars.brightness(state.stats.hp)
+        state.brightness = bars.brightnessStep(state.brightness, target)
     end, 100, 0)
 end)
 

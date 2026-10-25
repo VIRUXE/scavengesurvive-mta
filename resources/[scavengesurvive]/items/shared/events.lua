@@ -23,6 +23,7 @@ addEvent("tentPitchRequested", true)
 addEvent("tentDismantleRequested", true)
 addEvent("combineRequested", true)
 addEvent("trunkCloseRequested", true)
+addEvent("treatmentCancelRequested", true)
 
 -- server to client / client-local
 addEvent("inventorySynced", true)
@@ -32,6 +33,8 @@ addEvent("toastShown", true)
 addEvent("vehicleHoldStarted", true)
 addEvent("clothesChangeStarted", true)
 addEvent("clothesChangeStopped", true)
+addEvent("treatmentStarted", true)
+addEvent("treatmentStopped", true)
 addEvent("sampModelsChanged", false) -- fired by the models resource on every client
 addEvent("uiListActionSelected", false)
 addEvent("uiListClosed", false)

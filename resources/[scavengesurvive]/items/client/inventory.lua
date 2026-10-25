@@ -128,6 +128,8 @@ return function(ctx)
         local name = t and t.name or it.uname
         if clothes and it.uname == "Clothes" then
             name = clothes.label(clothes.skinFor(it.id, it.data))
+        elseif it.uname == "Pills" or it.uname == "AutoInjec" or it.uname == "DoctorBag" then
+            name = exports.character:medicalLabel(it.uname, name, it.data)
         elseif ammo and t then
             local defA = t.categoryData and defaultAmmo(t.categoryData.calibre) or nil
             name = ammo.displayName(t, it.data, itemType, calibreName, defA)
@@ -375,6 +377,28 @@ return function(ctx)
         )
 
         local footerY = py + ph - 18 * s
+        -- upstream ShowPlayerHealthInfo: "Food Infect" and "Wound Infect" in red, each active drug in yellow (#94)
+        local extra = {}
+        local infection = type(charStats.infection) == "table" and charStats.infection or {}
+        if infection.food then
+            extra[#extra + 1] = { "Food Infect", tocolor(255, 0, 0, 255) }
+        end
+        if infection.wound then
+            extra[#extra + 1] = { "Wound Infect", tocolor(255, 0, 0, 255) }
+        end
+        local drugs = type(charStats.drugs) == "table" and charStats.drugs or {}
+        for _, name in ipairs({ "Antibiotic", "Painkill", "Lsd", "Air", "Morphine", "Adrenaline", "Heroin" }) do
+            if drugs[name] then
+                extra[#extra + 1] = { name, tocolor(255, 255, 0, 255) }
+            end
+        end
+        for i, row in ipairs(extra) do
+            local y = statusY + lineH * (i + 1)
+            if y + lineH > footerY then
+                break
+            end
+            dxDrawText(row[1], px + 8 * s, y, px + pw, y + lineH, row[2], 0.85 * s, "default-bold")
+        end
         dxDrawRectangle(px, footerY, pw, 18 * s, tocolor(50, 50, 50, 255))
         local koChance = math.min(100, (wounds + 1) * 0.2 * ((bleed * 50) + 1) * 10)
         dxDrawText(

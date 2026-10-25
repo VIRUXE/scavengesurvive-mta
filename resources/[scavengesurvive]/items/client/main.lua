@@ -36,3 +36,29 @@ end)
 addEventHandler("clothesChangeStopped", localPlayer, function()
     exports.ui:progressCancel()
 end)
+
+-- treatments (server/medical.lua): the healer holds the interact key, letting go cancels; the patient sees the bar
+local treatmentTimer = nil
+addEventHandler("treatmentStarted", localPlayer, function(durationMs, healer)
+    exports.ui:progressStart(healer and "Treating" or "Being treated", durationMs)
+    if isTimer(treatmentTimer) then
+        killTimer(treatmentTimer)
+    end
+    if not healer then
+        return
+    end
+    local key = string.lower(getKeyBoundToCommand("interact") or "f")
+    treatmentTimer = setTimer(function()
+        if not getKeyState(key) then
+            killTimer(treatmentTimer)
+            triggerServerEvent("treatmentCancelRequested", localPlayer)
+        end
+    end, 100, 0)
+end)
+
+addEventHandler("treatmentStopped", localPlayer, function()
+    exports.ui:progressCancel()
+    if isTimer(treatmentTimer) then
+        killTimer(treatmentTimer)
+    end
+end)

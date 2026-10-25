@@ -139,7 +139,9 @@ local containers = loadFile("server/containers.lua")({
 hands.setContainers(containers)
 -- the held items' ammo, batched (hands.queueData)
 setTimer(hands.flushData, 5000, 0)
+local medical = loadFile("server/medical.lua")({ db = db, net = net, state = state, destroy = destroy })
 loadFile("server/use.lua")({
+    medical = medical,
     db = db,
     net = net,
     state = state,
