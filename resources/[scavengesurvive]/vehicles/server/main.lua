@@ -508,8 +508,12 @@ local function cancelHoldAction(player)
     activeActions[player] = nil
 end
 
--- Door lock enforcement: cancel entry on locked vehicles
+-- Entry enforcement: no entering during a roadside hold (repair, refuel, locksmith, lock-break), nor into locked vehicles
 addEventHandler("onVehicleStartEnter", root, function(player)
+    if activeActions[player] then
+        cancelEvent()
+        return
+    end
     local inf = info[source]
     if inf and inf.locked and inf.locked > 0 then
         cancelEvent()
