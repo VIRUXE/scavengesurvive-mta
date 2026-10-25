@@ -115,3 +115,18 @@ def test_planes_are_sane() -> None:
     for skin, plane in rebuild.PLANES.items():
         assert skin in peds.HEADGEAR
         assert 0 < plane["front"] < 0.2 and 0 < plane["back"] < 0.2
+
+
+def test_every_headgear_skin_players_can_get_has_a_rebuilt_bare_head():
+    # spawn rolls and Clothes items draw from items/shared/logic/clothes.lua TYPES; a headgear skin there must have a
+    # rebuilt twin (a PLANES row), which players always see instead of the hatted skin (items attach.lua, #89)
+    import re
+    from pathlib import Path
+
+    from tools.extract_ped_models import HEADGEAR
+    from tools.hatless_rebuild import PLANES
+
+    src = (Path(__file__).resolve().parents[2] / "resources" / "[scavengesurvive]" / "items" / "shared" / "logic" / "clothes.lua").read_text(encoding="utf8")
+    pool = {int(m) for m in re.findall(r"^\s*\{ (\d+), \"", src, re.M)}
+    assert pool, "no clothes types parsed"
+    assert sorted(s for s in pool & set(HEADGEAR) if s not in PLANES) == []
