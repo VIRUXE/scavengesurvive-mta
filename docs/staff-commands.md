@@ -12,7 +12,7 @@ details); bans and warnings write theirs inside the `staff_ban` / `staff_warn` p
 | 3 | Administrator | `/whitelist`, `/ip`, `/setactive`, `/resetpassword`, `/adminlist` |
 | 4 | Lead | `/players`, `/setadmin`, `/restart`, `/sc [type]` (supply crate here), `/wc` (weapons cache here) |
 | 5 | Developer | everything above; the debug toggles live in the `dev` resource (`/sethp`, `/setfood`, `/setbleed`, `/weather`, `/additem`, `/rr`, `/move`, `/fly`) |
-| 0 | Player | `/report <name|near|killer> <reason>` |
+| 0 | Player | `/report [name|near|killer] [reason]` |
 
 Durations (`/mute`, `/ban`): a bare number is seconds; `10m`, `2h`, `3d`, `2w`, `1mo` and the full words work;
 `forever`, `perm`, `0` or `-1` mean no expiry. Player arguments accept a unique prefix or substring of the name
@@ -47,7 +47,7 @@ Durations (`/mute`, `/ban`): a bare number is seconds; `10m`, `2h`, `3d`, `2w`, 
 | Upstream | Port | Why |
 | --- | --- | --- |
 | `/ban [name]` then two input dialogs (reason, duration) | `/ban <name> <duration> <reason>` | the dx UI kit has list dialogs only; no text input |
-| `/report` menu with 4 modes and an input dialog | `/report <name\|near\|killer> <reason>` | same; `near` = closest player within 100 m not on duty, `killer` = the last player who killed you |
+| `/report` menu with 4 modes and an input dialog | the same dialog chain, plus `/report <name\|near\|killer> [reason]` to skip the menu | port addition; `near` = closest player within 100 m not on duty, `killer` = the last player who killed you (upstream fell back to the last player who hit you) |
 | Duty logs the character out of the world (`Logout`) | character stays loaded, duty = damage immunity + skin + tags | `character` has no suspend/resume export yet; follow-up when that resource is reworked |
 | `/country`, `/allcountry` (GeoIP) | not ported | no GeoIP service; `/ip` shows IP and serial |
 | `/delete` (drop account) | not ported; `/setactive <name> 0` blocks the login instead | accounts are system-versioned; deletion is a DBA job |

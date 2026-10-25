@@ -20,7 +20,8 @@ local state = {
     duty = {}, -- player -> { skin = previous skin }
     spectating = {}, -- player -> { target, x, y, z, interior, dimension }
     nametags = {}, -- player -> true
-    lists = {}, -- player -> { key, handler }
+    lists = {}, -- player -> { key, handler, onClose }
+    dialogs = {}, -- player -> { key, handler } for the open msgbox/input dialog
     lastKiller = {}, -- player -> name of the last player who killed them (for /report killer)
     kicked = {}, -- player -> true while a delayed kick is pending
 }
@@ -172,12 +173,13 @@ function ctx.kick(target, actor, reason, delayMs)
 end
 
 -- List dialogs: the server owns the rows and the meaning of each action; the client only draws (ui:listOpen)
--- and echoes uiListActionSelected back as staffListActionSelected.
-function ctx.openList(p, key, title, rows, buttons, handler)
+-- and echoes uiListActionSelected back as staffListActionSelected. onClose runs when the player closes the list
+-- (the right button on level 1, as upstream's "Back"), not when the server replaces or dismisses it.
+function ctx.openList(p, key, title, rows, buttons, handler, onClose)
     if not isElement(p) or isConsole(p) then
         return ctx.say(p, " >  (dialogs need a connected player)")
     end
-    state.lists[p] = { key = key, handler = handler }
+    state.lists[p] = { key = key, handler = handler, onClose = onClose }
     triggerClientEvent(p, "staffListOpened", p, key, title, rows, buttons)
 end
 
@@ -200,8 +202,34 @@ net.handler("staffListClosed", function(player, key)
     local open = state.lists[player]
     if open and open.key == key then
         state.lists[player] = nil
+        if open.onClose then
+            open.onClose()
+        end
     end
 end)
+
+-- Message and input dialogs (ui:dialogOpen, style "msgbox" or "input"): handler(accepted, text) runs once with the
+-- player's answer. Opening one closes the player's list first; the handler may open the next dialog or list.
+function ctx.openDialog(p, key, style, title, body, buttons, handler)
+    if not isElement(p) or isConsole(p) then
+        return ctx.say(p, " >  (dialogs need a connected player)")
+    end
+    if state.lists[p] then
+        ctx.closeList(p)
+    end
+    state.dialogs[p] = { key = key, handler = handler }
+    local left, right = buttons[1], buttons[2] or ""
+    triggerClientEvent(p, "staffDialogOpened", p, key, style, title, body, left, right)
+end
+
+net.handler("staffDialogResponded", function(player, key, accepted, text)
+    local open = state.dialogs[player]
+    if not open or open.key ~= key then
+        return
+    end
+    state.dialogs[player] = nil
+    open.handler(accepted == true, tostring(text or ""))
+end, { rate = 5 })
 
 -- Runs a registered command for a player or the console: level gate (silent below the level, as upstream's
 -- ACMD was), player-only and database checks. Returns whether the command's fn ran.
@@ -349,6 +377,7 @@ local function forget(p)
     end
     state.muted[p] = nil
     state.lists[p] = nil
+    state.dialogs[p] = nil
     state.lastKiller[p] = nil
     state.kicked[p] = nil
     modules.moderation.forget(p)

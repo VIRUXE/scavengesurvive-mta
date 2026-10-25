@@ -1,5 +1,5 @@
--- Client half of staff: draws the server's list dialogs through ui, relays their actions back, shows the
--- spectate banner with arrow-key cycling, and draws name tags over players when the server turns them on.
+-- Client half of staff: draws the server's list, message and input dialogs through ui, relays the answers back,
+-- shows the spectate banner with arrow-key cycling, and draws name tags over players when the server turns them on.
 local listKey = nil
 local spectating = nil -- player element being watched
 local nametags = false
@@ -9,11 +9,12 @@ addEventHandler("staffListOpened", root, function(key, title, rows, buttons)
     exports.ui:listOpen("staff:" .. key, title, rows, buttons)
 end)
 
+-- cleared before listClose so the uiListClosed it emits is not echoed: the server closed this list itself
 addEventHandler("staffListDismissed", root, function()
     if listKey then
+        listKey = nil
         exports.ui:listClose()
     end
-    listKey = nil
 end)
 
 addEventHandler("uiListActionSelected", root, function(listId, rowId, actionId)
@@ -30,6 +31,22 @@ addEventHandler("uiListClosed", root, function(listId)
         listKey = nil
         triggerServerEvent("staffListClosed", localPlayer, key)
     end
+end)
+
+local dialogKey = nil
+
+addEventHandler("staffDialogOpened", root, function(key, style, title, body, left, right)
+    dialogKey = key
+    exports.ui:dialogOpen("staff:" .. key, style, title, body, left, right)
+end)
+
+addEventHandler("uiDialogResponded", root, function(id, accepted, text)
+    local key = tostring(id):match("^staff:(.+)$")
+    if not key or key ~= dialogKey then
+        return
+    end
+    dialogKey = nil
+    triggerServerEvent("staffDialogResponded", localPlayer, key, accepted, text)
 end)
 
 -- Spectate banner and arrow keys (upstream spectate.pwn: left/right switch target).

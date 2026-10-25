@@ -190,6 +190,11 @@ function staff.tail(words, from)
     return table.concat(words, " ", from)
 end
 
+-- Text typed into an input dialog without its surrounding spaces ("" when blank).
+function staff.trim(text)
+    return (tostring(text or ""):gsub("^%s+", ""):gsub("%s+$", ""))
+end
+
 -- /aliases match modes (upstream i/p/h/a): the gpci hash becomes the MTA serial (h kept as an alias of s) and
 -- "same password" is dropped because bcrypt hashes are salted. No mode matches both columns.
 staff.ALIAS_MODES = { a = "both", i = "ip", s = "serial", h = "serial" }

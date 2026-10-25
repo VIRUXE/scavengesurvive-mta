@@ -147,6 +147,12 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
     - e. **Reports.** B: `/report A testing report`, `/report near hello`, and after A kills B `/report killer x`.
       A sees `B reported …` lines and `/reports` lists `[new] B (PLY ID)` rows; `View` prints the details and clears
       the marker, `Go to position` needs duty, `Delete` removes the row, `/deletereports` clears the read ones.
+    - e2. **Report dialogs** (#85). B: `/report` alone opens "Report a player" with the four upstream modes (Send /
+      Cancel). Online → a list of the other players (Report / Back; Back returns to the modes), pick A → "Enter
+      report reason" input; Back there returns to the modes, Report with an empty field asks again, a reason files
+      it (`Report filed`, A sees the line). Offline name → "Report Offline Player" input, then the reason. Killer
+      with nobody having killed B and Near with nobody within 100 m print the upstream red lines and close the
+      menu. `/report A` without a reason skips the menu and opens the reason input.
     - f. **Duty, teleports, spectate.** A: `/goto B` is refused off duty; `/duty` swaps A's skin to 217/211, name
       tags appear over B, and B's shots no longer wound A (`/stats` on A unchanged); `/goto B`, `/get B`, `/gotopos
       0 0 5` move the right player; `/spec B` makes A invisible to B, A's screen shows the `Spectating B` banner and

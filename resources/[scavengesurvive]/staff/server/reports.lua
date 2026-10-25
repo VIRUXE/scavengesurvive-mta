@@ -1,21 +1,23 @@
 -- Player reports: /report for everyone, /reports and /deletereports for staff.
 -- Upstream: admin/report.pwn (storage) and report-cmds.pwn (the four filing modes and the staff list).
--- Deviation: the dx UI kit has no text-input dialog, so the reason is typed on the command line.
+-- /report alone opens upstream's dialog chain; /report <name|near|killer> [reason] skips the menu (port addition).
 return function(ctx)
     local db, logic, state = ctx.db, ctx.logic, ctx.state
     local M = {}
 
-    local function file(reporter, name, reason, kind, x, y, z, interior, dimension)
+    -- target = { name, kind, x, y, z, interior, dimension }, captured when the player picks who to report
+    local function file(reporter, target, reason)
         local sql = "INSERT INTO reports (name, reason, type, x, y, z, interior, dimension, by_name, by_account_id)"
             .. " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
         local by, byId = ctx.name(reporter), ctx.accountId(reporter)
-        local params = { name, reason:sub(1, 128), kind, x, y, z, interior, dimension, by, byId, n = 10 }
+        local t = target
+        local params = { t.name, reason:sub(1, 128), t.kind, t.x, t.y, t.z, t.interior, t.dimension, by, byId, n = 10 }
         db.exec(sql, params, function(ok, r)
             if not ok then
                 return ctx.say(r, " >  Your report could not be saved; try again later.")
             end
             ctx.say(r, " >  Report filed. Thank you.")
-            ctx.msgStaff(1, " >  %s reported %s, reason: %s", ctx.name(r), name, reason)
+            ctx.msgStaff(1, " >  %s reported %s, reason: %s", ctx.name(r), t.name, reason)
         end, reporter)
     end
 
@@ -34,44 +36,152 @@ return function(ctx)
         return best
     end
 
+    -- An online or killer report carries the reporter's position, a near report the target's, a name report none.
+    local function targetAt(name, kind, el)
+        local x, y, z = getElementPosition(el)
+        return {
+            name = name,
+            kind = kind,
+            x = x,
+            y = y,
+            z = z,
+            interior = getElementInterior(el),
+            dimension = getElementDimension(el),
+        }
+    end
+
+    local function nearTarget(p)
+        local o = nearestPlayer(p, 100)
+        if not o then
+            return ctx.sayLang(p, "REPNOPF100M")
+        end
+        return targetAt(getPlayerName(o), logic.REPORT_TYPES.near, o)
+    end
+
+    local function killerTarget(p)
+        local name = state.lastKiller[p]
+        if not name then
+            return ctx.sayLang(p, "REPNOPFOUND")
+        end
+        return targetAt(name, logic.REPORT_TYPES.killer, p)
+    end
+
+    local function nameTarget(name)
+        return { name = name:sub(1, 24), kind = logic.REPORT_TYPES.name }
+    end
+
+    -- Upstream report-cmds.pwn: a mode list, then the online list or the offline name input, then the reason input;
+    -- each "Back" returns to the mode list.
+    local showMenu
+
+    local BACK = { "Report", "Back" }
+
+    local function askReason(p, target)
+        local function answered(ok, text)
+            if not ok then
+                return showMenu(p)
+            end
+            local reason = logic.trim(text)
+            if reason == "" then
+                return askReason(p, target)
+            end
+            file(p, target, reason)
+        end
+        local body = "Enter the reason for your report below."
+        ctx.openDialog(p, "report_reason", "input", "Enter report reason", body, BACK, answered)
+    end
+
+    local function askOfflineName(p)
+        local function answered(ok, text)
+            if not ok then
+                return showMenu(p)
+            end
+            local name = logic.trim(text)
+            if name == "" then
+                return askOfflineName(p)
+            end
+            askReason(p, nameTarget(name))
+        end
+        ctx.openDialog(p, "report_name", "input", "Report Offline Player", "Enter name to report below", BACK, answered)
+    end
+
+    local function showOnline(p)
+        local rows = {}
+        for _, e in ipairs(ctx.onlinePlayers()) do
+            if e.player ~= p then
+                rows[#rows + 1] = { id = e.name, label = e.name }
+            end
+        end
+        if #rows == 0 then
+            ctx.say(p, " >  Nobody else is online.")
+            return showMenu(p)
+        end
+        local function picked(name)
+            local entry = logic.findPlayer(name, ctx.onlinePlayers())
+            if not entry then
+                return askReason(p, nameTarget(name))
+            end
+            askReason(p, targetAt(entry.name, logic.REPORT_TYPES.online, p))
+        end
+        ctx.openList(p, "report_online", "Report Online Player", rows, BACK, picked, function()
+            showMenu(p)
+        end)
+    end
+
+    local MENU = {
+        { id = "online", label = "Specific player ID (who is online now)" },
+        { id = "name", label = "Specific Player Name (Who isn't online now)" },
+        { id = "killer", label = "Player that last killed me" },
+        { id = "near", label = "Player closest to me" },
+    }
+
+    showMenu = function(p)
+        ctx.openList(p, "report", "Report a player", MENU, { "Send", "Cancel" }, function(rowId)
+            if rowId == "online" then
+                return showOnline(p)
+            elseif rowId == "name" then
+                return askOfflineName(p)
+            end
+            local target = (rowId == "near" and nearTarget or killerTarget)(p)
+            if target then
+                askReason(p, target)
+            else
+                ctx.closeList(p)
+            end
+        end)
+    end
+
     ctx.command({
         name = "report",
         level = 0,
         playerOnly = true,
-        usage = "/report <name|near|killer> <reason>",
-        help = "Report a player by name, the nearest player, or whoever last killed you",
+        usage = "/report [name|near|killer] [reason]",
+        help = "Report a player: the menu, or by name, the nearest player, or whoever last killed you",
         fn = function(p, args)
             local who, reason = args[1], logic.tail(args, 2)
-            if not who or not reason then
-                return ctx.say(p, " >  Usage: /report <name|near|killer> <reason>")
+            if not who then
+                return showMenu(p)
             end
-            local x, y, z = getElementPosition(p)
-            local interior, dimension = getElementInterior(p), getElementDimension(p)
+            local target
             if who:lower() == "near" then
-                local target = nearestPlayer(p, 100)
-                if not target then
-                    return ctx.sayLang(p, "REPNOPF100M")
-                end
-                x, y, z = getElementPosition(target)
-                local int, dim = getElementInterior(target), getElementDimension(target)
-                return file(p, getPlayerName(target), reason, logic.REPORT_TYPES.near, x, y, z, int, dim)
-            end
-            if who:lower() == "killer" then
-                local name = state.lastKiller[p]
-                if not name then
-                    return ctx.sayLang(p, "REPNOPFOUND")
-                end
-                return file(p, name, reason, logic.REPORT_TYPES.killer, x, y, z, interior, dimension)
-            end
-            local entry = logic.findPlayer(who, ctx.onlinePlayers())
-            if entry then
-                if entry.player == p then
+                target = nearTarget(p)
+            elseif who:lower() == "killer" then
+                target = killerTarget(p)
+            else
+                local entry = logic.findPlayer(who, ctx.onlinePlayers())
+                if entry and entry.player == p then
                     return ctx.say(p, " >  You cannot report yourself.")
                 end
-                return file(p, entry.name, reason, logic.REPORT_TYPES.online, x, y, z, interior, dimension)
+                -- an offline name is stored as typed (upstream "Specific Player Name (Who isn't online now)")
+                target = entry and targetAt(entry.name, logic.REPORT_TYPES.online, p) or nameTarget(who)
             end
-            -- offline name: stored as typed (upstream "Specific Player Name (Who isn't online now)")
-            file(p, who:sub(1, 24), reason, logic.REPORT_TYPES.name, nil, nil, nil, nil, nil)
+            if not target then
+                return
+            end
+            if reason then
+                return file(p, target, reason)
+            end
+            askReason(p, target)
         end,
     })
 
