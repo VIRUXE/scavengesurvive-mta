@@ -142,9 +142,10 @@ return function(ctx)
     end
 
     -- Skins whose mesh carries its own hat, cap or helmet have a hatless twin in the models pack (peds.lua, #75).
-    -- While such a player wears a hat this client shows the twin instead, locally: setElementModel on this side
-    -- is never synced, so the server and every other client keep seeing the real skin. swapped[player] holds the
-    -- real skin meanwhile, and every per-skin row is looked up by it.
+    -- A twin whose head was rebuilt bare (#89, exports.models:bareSkin) is how that skin always looks: the hat is
+    -- an item of its own (#77). The other twins are only shown while a hat covers them. This client swaps
+    -- locally: setElementModel on this side is never synced, so the server and every other client keep the real
+    -- skin. swapped[player] holds the real skin meanwhile, and every per-skin row is looked up by it.
     local swapped = {} -- player -> base skin while shown on its hatless twin
     local swapping = false
 
@@ -160,7 +161,7 @@ return function(ctx)
 
     local function applyHatSwap(player, uname)
         local base = baseSkin(player)
-        local twin = uname and exports.models:hatlessSkin(base)
+        local twin = exports.models:bareSkin(base) or (uname and exports.models:hatlessSkin(base))
         if twin then
             swapped[player] = base
             if getElementModel(player) ~= twin then
@@ -291,6 +292,11 @@ return function(ctx)
                 applyHatSwap(player, slots.hat and slots.hat.uname or nil)
             end
         end
+        for _, p in ipairs(getElementsByType("player", root, true)) do
+            if not tracked[p] then -- no worn gear, but its skin may have a bare twin
+                applyHatSwap(p, nil)
+            end
+        end
     end)
 
     addEventHandler("onClientPedsProcessed", root, function()
@@ -339,6 +345,7 @@ return function(ctx)
             return -- our own switch to or from a hatless twin changes no row
         end
         swapped[source] = nil -- the server gave the player a new real skin
+        applyHatSwap(source, tracked[source] and tracked[source].hat and tracked[source].hat.uname or nil)
         if tracked[source] then
             for key, slot in pairs(PER_SKIN) do
                 if tracked[source][slot] then

@@ -237,7 +237,7 @@ def render_meta(entries, peds: list[str] = (), hats: list[str] = ()) -> str:
     if hats:
         lines.append('    <file src="hats.lua"/>')
         lines += [f'    <file src="files/{name}"/>' for name in hats]
-    lines += ['    <export function="resolve" type="client"/>', '    <export function="hatlessSkin" type="client"/>']
+    lines += ['    <export function="resolve" type="client"/>', '    <export function="hatlessSkin" type="client"/>', '    <export function="bareSkin" type="client"/>']
     lines.append("</meta>")
     return "\n".join(lines) + "\n"
 

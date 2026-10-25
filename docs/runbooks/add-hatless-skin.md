@@ -13,8 +13,10 @@ see the twin.
   `resources/[scavengesurvive]/models/files/<name>_nohat.dff`, `models/peds.lua` (base skin -> twin) and
   `models/meta.xml` (both manifests). The twin shares the base skin's TXD, so nothing else is extracted.
 - `models/client/main.lua`: loads every twin with `engineRequestModel("ped", base)` on the client, so the ids
-  differ per client like the object ids, and exports `hatlessSkin(base)`.
-- `items/client/attach.lua`: when a player's hat slot fills, the client calls `setElementModel` on that player
+  differ per client like the object ids, and exports `hatlessSkin(base)`. It also exports `bareSkin(base)`, which
+  is the twin only when its head was rebuilt bare (it has a hair TXD, #89).
+- `items/client/attach.lua`: a skin with a bare twin always shows that twin, since its hat is an item of its own
+  (#77). For the other twins, when a player's hat slot fills, the client calls `setElementModel` on that player
   with the twin; when it empties, with the real skin again. Client-side `setElementModel` is never synced.
   `swapped[player]` keeps the real skin, and every per-skin row (`skins.lua`) is looked up by it. A server-side
   skin change (duty, clothes) arrives through `onClientElementModelChange`, which drops the swap and re-applies

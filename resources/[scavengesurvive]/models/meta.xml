@@ -555,4 +555,5 @@
     <file src="files/wmyplt_hat.dff"/>
     <export function="resolve" type="client"/>
     <export function="hatlessSkin" type="client"/>
+    <export function="bareSkin" type="client"/>
 </meta>
