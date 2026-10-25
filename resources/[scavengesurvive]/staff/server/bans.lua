@@ -61,8 +61,27 @@ return function(ctx)
     end
 
     -- Upstream ban-command.pwn: the reason input, then the duration input (Back returns to the reason). Upstream
-    -- banned the name as "Pending" before the first dialog; the port bans only once both answers are in.
+    -- banned the name as "Pending" before the first dialog; the port freezes an online target instead and bans once
+    -- both answers are in, so Cancel leaves no ban behind. state.banHolds: actor -> the target it froze.
     local askReason
+
+    local function hold(actor, t)
+        M.release(actor)
+        if isElement(t.online) and not state.frozen[t.online] then
+            ctx.freeze(t.online)
+            ctx.sayLang(t.online, "FREEZEFROZE")
+            state.banHolds[actor] = t.online
+        end
+    end
+
+    -- Cancel, or the actor left mid-dialog: unfreeze the target the ban dialogs froze.
+    function M.release(actor)
+        local target = state.banHolds[actor]
+        state.banHolds[actor] = nil
+        if isElement(target) and state.frozen[target] then
+            ctx.unfreeze(target)
+        end
+    end
 
     local function askDuration(actor, t, reason)
         local function answered(ok, text)
@@ -73,6 +92,7 @@ return function(ctx)
             if not seconds then
                 return askDuration(actor, t, reason)
             end
+            state.banHolds[actor] = nil -- the ban kicks the target; nothing to unfreeze
             banNow(actor, t.name, t.account, t.ip, t.serial, reason, seconds, t.online)
         end
         local body = "Enter the ban duration below: a number and m, h, d, w or mo (30m, 12h, 3 days, 2 weeks, 1 month)."
@@ -84,7 +104,7 @@ return function(ctx)
     askReason = function(actor, t)
         local function answered(ok, text)
             if not ok then
-                return
+                return M.release(actor)
             end
             local reason = logic.trim(text)
             if reason == "" then
@@ -107,7 +127,10 @@ return function(ctx)
         help = "Ban an account by name, IP and serial (duration: 30m, 12h, 3d, 2w, 1mo, forever); the name alone asks",
         fn = function(p, args, lvl)
             if args[1] and not args[2] then
-                return resolveTarget(p, lvl, args[1], askReason)
+                return resolveTarget(p, lvl, args[1], function(actor, t)
+                    hold(actor, t)
+                    askReason(actor, t)
+                end)
             end
             local seconds = logic.parseDuration(args[2] or "")
             local reason = logic.tail(args, 3)

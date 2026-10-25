@@ -142,9 +142,11 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
       `/ban B 10m test` with B online kicks B; `/banned B` and `/banlist` show the ban; the `Unban` row action lifts it.
       Offline: `/ban Nobody 1h x` fails with `does not exist`; `/ban <offline account> forever x` records the account's
       last IP and serial (`SELECT ip, serial FROM bans`).
-    - c2. **Ban dialogs** (#85). A: `/ban B` alone: "Please enter ban reason" (Continue / Cancel; Cancel bans
-      nobody), then "Please enter ban duration"; Back returns to the reason, `soon` asks again, `10m` bans B for
-      ten minutes (same kick and staff line as c.), `forever` permanently. `/unban B` after.
+    - c2. **Ban dialogs** (#85). A: `/ban B` alone: B is frozen at once (the frozen line, no movement or controls)
+      and A sees "Please enter ban reason" (Continue / Cancel; Cancel bans nobody and unfreezes B), then "Please
+      enter ban duration"; Back returns to the reason, `soon` asks again, `10m` bans B for ten minutes (same kick
+      and staff line as c.), `forever` permanently. `/unban B` after. A disconnecting mid-dialog unfreezes B; B
+      quitting mid-dialog is still banned when A finishes. A `/freeze`-d B stays frozen after a Cancel.
     - d. **Whitelist.** A: `/whitelist on`; B relogs and is kicked after a successful login with `not whitelisted`;
       `/whitelist add B`, B logs in; `/whitelist ?` and `/whitelist list` show B; `/whitelist off`.
     - e. **Reports.** B: `/report A testing report`, `/report near hello`, and after A kills B `/report killer x`.

@@ -329,6 +329,17 @@ return function(ctx)
     end
     M.unfreeze = unfreeze
 
+    local function freeze(target)
+        if isTimer(state.frozen[target]) then
+            killTimer(state.frozen[target])
+        end
+        setElementFrozen(target, true)
+        toggleAllControls(target, false, true, false)
+        state.frozen[target] = true
+    end
+    -- for the /ban dialogs, which hold the target still while the reason and duration are typed
+    ctx.freeze, ctx.unfreeze = freeze, unfreeze
+
     ctx.command({
         name = "freeze",
         level = 2,
@@ -341,12 +352,7 @@ return function(ctx)
                 return args[1] == nil and ctx.say(p, " >  Usage: /freeze <player> [seconds]")
             end
             local seconds = tonumber(args[2]) or 0
-            if isTimer(state.frozen[target]) then
-                killTimer(state.frozen[target])
-            end
-            setElementFrozen(target, true)
-            toggleAllControls(target, false, true, false)
-            state.frozen[target] = true
+            freeze(target)
             if seconds > 0 then
                 state.frozen[target] = setTimer(unfreeze, seconds * 1000, 1, target)
                 ctx.say(p, " >  Frozen %s for %d seconds", getPlayerName(target), seconds)

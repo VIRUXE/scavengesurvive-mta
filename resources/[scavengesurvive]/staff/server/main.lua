@@ -22,6 +22,7 @@ local state = {
     nametags = {}, -- player -> true
     lists = {}, -- player -> { key, handler, onClose }
     dialogs = {}, -- player -> { key, handler } for the open msgbox/input dialog
+    banHolds = {}, -- staff member -> the player their open /ban dialogs froze
     lastKiller = {}, -- player -> name of the last player who killed them (for /report killer)
     kicked = {}, -- player -> true while a delayed kick is pending
 }
@@ -380,6 +381,7 @@ local function forget(p)
     state.dialogs[p] = nil
     state.lastKiller[p] = nil
     state.kicked[p] = nil
+    modules.bans.release(p)
     modules.moderation.forget(p)
     modules.duty.forget(p)
 end
@@ -405,6 +407,7 @@ end)
 
 addEventHandler("onResourceStop", resourceRoot, function()
     for _, p in ipairs(getElementsByType("player")) do
+        modules.bans.release(p)
         modules.moderation.forget(p)
         modules.duty.forget(p)
     end
