@@ -44,13 +44,28 @@ PRIV = Path(r"C:\Program Files (x86)\MTA San Andreas 1.6\mods\deathmatch\priv")
 
 # skin -> the cut plane in Head bone space (metres above the bone, which sits at the jaw on these skins): `front` at
 # the brow, `back` under the headgear's rim; `blocks` adds atlas blocks (col, row) that are headgear but escape the
-# automatic rule. Set by eye from the studio's side shot with height lines drawn on it.
+# automatic rule. Set by eye from the studio's side shot with height lines drawn on it. Left out: the helmeted cops
+# with sunglasses (4, 119, 284), whose cut still takes the glasses.
 PLANES: dict[int, dict] = {
     2: dict(front=0.115, back=0.07),
     35: dict(front=0.10, back=0.07),
     36: dict(front=0.11, back=0.07),
     37: dict(front=0.11, back=0.08, blocks=[(6, 4), (7, 4)]),
     61: dict(front=0.095, back=0.045),
+    155: dict(front=0.105, back=0.065, blocks=[(3, 3), (4, 3), (5, 0), (5, 1), (6, 0), (6, 1), (7, 0), (3, 6), (4, 6), (5, 6), (6, 6)]),
+    161: dict(front=0.10, back=0.07),
+    205: dict(front=0.12, back=0.11),
+    247: dict(front=0.115, back=0.07),
+    248: dict(front=0.085, back=0.07),
+    254: dict(front=0.115, back=0.07),
+    277: dict(front=0.09, back=0.04),
+    278: dict(front=0.09, back=0.04, blocks=[(4, 6), (4, 7), (5, 6), (5, 7), (6, 6), (6, 7), (7, 6), (7, 7)]),
+    279: dict(front=0.09, back=0.04, blocks=[(4, 6), (4, 7), (5, 6), (5, 7), (6, 6), (6, 7), (7, 6), (7, 7)]),
+    283: dict(front=0.08, back=0.04),
+    285: dict(front=0.10, back=0.06),
+    287: dict(front=0.105, back=0.075, blocks=[(3, 6), (4, 5), (4, 6), (5, 5), (5, 6), (6, 5), (6, 6), (7, 5)]),
+    288: dict(front=0.08, back=0.04),
+    311: dict(front=0.10, back=0.06),
 }
 
 

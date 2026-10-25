@@ -66,7 +66,7 @@ def dump(ped_dir, name, tex, out_json, out_png):
     _, ob, _, tb = import_ped(ped_dir, name, [name + ".txd"])
     me = ob.data
     g = next(v for v in ob.vertex_groups if v.name.strip() == "Head").index
-    verts = [list(np.array(v.co) @ tb[:3, :3].T + tb[:3, 3]) for v in me.vertices]
+    verts = [[float(x) for x in np.array(v.co) @ tb[:3, :3].T + tb[:3, 3]] for v in me.vertices]
     headw = [max([x.weight for x in v.groups if x.group == g] or [0]) for v in me.vertices]
     uv = me.uv_layers.active.data
     faces = [[list(p.vertices), [list(uv[li].uv) for li in p.loop_indices]] for p in me.polygons]
@@ -117,6 +117,7 @@ def build(job):
 
     ref = image_rows(job["reference"])
     solid = ~((ref[..., 1] > ref[..., 0] + 0.2) & (ref[..., 1] > ref[..., 2] + 0.2))
+    tinted = (ref[..., 1] > ref[..., 0] + 0.06) & (ref[..., 1] > ref[..., 2] + 0.06)  # green-screen fringe: never hair
 
     def sample(view, w):
         xy = np.round(ref_xy(view, w)).astype(int)
@@ -274,7 +275,7 @@ def build(job):
         to_cam = hp.camera(view)[0] - Pw
         to_cam /= np.linalg.norm(to_cam, axis=1)[:, None]
         yx = sample(view, Pw)
-        wgt = np.clip((Nw * to_cam).sum(1), 0, 1) ** 4 * solid[yx]
+        wgt = np.clip((Nw * to_cam).sum(1), 0, 1) ** 4 * (solid[yx] & ~tinted[yx])
         acc += ref[yx] * wgt[:, None]
         wsum += wgt
     col = np.where(wsum[:, None] > 1e-4, acc / np.maximum(wsum, 1e-4)[:, None], np.nan).reshape(TEX, TEX, 3)
@@ -294,8 +295,27 @@ def build(job):
         rimcol.append(None if uv is None else apx[min(atlas.size[1] - 1, int((uv.y % 1.0) * atlas.size[1])), min(atlas.size[0] - 1, int((uv.x % 1.0) * atlas.size[0]))])
     mean_rim = np.mean([c for c in rimcol if c is not None], 0)
     rimcol = np.array([c if c is not None else mean_rim for c in rimcol])
+    # at the front the rim can run through the eyebrows: a rim texel much darker than the face's skin takes the skin
+    skin = []
+    for f in bm.faces:
+        if f.material_index == mi:
+            continue
+        pb = bone(sum((v.co for v in f.verts), Vector()) / len(f.verts))
+        if pb[1] > 0.03 and 0.02 < pb[0] < plane["front"] - 0.02:
+            u = sum(lp[uvl].uv.x for lp in f.loops) / len(f.loops)
+            v = sum(lp[uvl].uv.y for lp in f.loops) / len(f.loops)
+            skin.append(apx[min(atlas.size[1] - 1, int((v % 1.0) * atlas.size[1])), min(atlas.size[0] - 1, int((u % 1.0) * atlas.size[0]))])
+    if skin:
+        skin = np.median(np.array(skin), 0)
+        lum = np.array([0.299, 0.587, 0.114])
+        front = np.array([bone(np.array(v.co))[1] > 0.0 for v in loop])
+        dark = front & (rimcol @ lum < 0.8 * (skin @ lum))
+        rimcol[dark] = skin
     rc = (rimcol[i0] * (1 - ti)[..., None] + rimcol[i1] * ti[..., None]).reshape(TEX, TEX, 3)
-    fade = np.clip(((1 - r) * (K + 1)) / 2.5, 0, 1)[..., None]
+    # over the face the rim sits just above the brows, so the skin carries further up (4 rings) before the reference's
+    # forehead takes over; elsewhere 2.5 rings
+    facing = np.clip((np.cos(ang - np.arctan2(0.0, 1.0)) - 0.3) / 0.5, 0, 1)  # 1 towards the face (+fwd = UV +u)
+    fade = np.clip(((1 - r) * (K + 1)) / (2.5 + 1.5 * facing), 0, 1)[..., None]
     col = rc * (1 - fade) + col * fade
     hair_img.pixels = np.concatenate([col, np.ones((TEX, TEX, 1))], 2)[::-1].astype(np.float32).ravel().tolist()
 
@@ -303,9 +323,11 @@ def build(job):
     bm.to_mesh(me)
     bm.free()
     me.update()
-    atlas.name = tex
+    # the texture's own spelling in the TXD ("<txd>/<TEXTURE>/0"): GTA matches names without case, Blender does not
+    tex_name = atlas.name.split("/")[1] if atlas.name.count("/") >= 2 else tex
+    atlas.name = tex_name
     for m in me.materials[:mi]:
-        m.dff.tex_name = tex
+        m.dff.tex_name = tex_name
     out_dir = job["out_dir"]
     bpy.ops.object.select_all(action="DESELECT")
     for o in peds:
