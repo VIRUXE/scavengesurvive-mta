@@ -343,6 +343,11 @@ playerCommand("credits", function(p)
     end
 end)
 
+playerCommand("pos", function(p)
+    local x, y, z = getElementPosition(p)
+    outputChatBox(string.format(" >  Position: #33CCFF%.2f, %.2f, %.2f", x, y, z), p, 255, 255, 0, true)
+end)
+
 playerCommand("motd", function(p)
     outputChatBox(" >  MoTD: #33CCFF" .. exports.staff:getMotd(), p, 255, 255, 0, true)
 end)
