@@ -113,22 +113,25 @@ def calibrate(player: str) -> None:
     print(f"{len(matrices)} Head bone matrices -> {CALIB}")
 
 
-def register(skin: int, mesh: dict, atlas_png: Path) -> dict:
-    """Per-view offsets (mesh -> studio grid), reference re-framing (studio grid -> reference) and lighting."""
-    from PIL import Image, ImageDraw
+def register(skin: int, mesh: dict, atlas_png: Path, grid: str = "level", views=None) -> dict:
+    """Per-view offsets (mesh -> studio grid), reference re-framing (studio grid -> reference) and, for the level
+    grid, lighting. The top grid (seen from above) has no brow line to fit below: there the reference is fitted on
+    everything but the head."""
+    from PIL import Image, ImageDraw, ImageFilter
 
     plane = PLANES[skin]
     bone_m = json.loads(CALIB.read_text())[str(skin)]
     v, w = np.array(mesh["verts"]), np.array(mesh["headw"])
     faces = [f for f in mesh["faces"] if all(w[i] > 0.5 for i in f[0])]
-    studio = np.asarray(Image.open(REFS / f"{skin}-studio.jpg").convert("RGB")).astype(np.float32) / 255
-    ref = Image.open(REFS / f"{skin}.jpg").convert("RGB").resize((1024, 1024))
+    suffix = "" if grid == "level" else "-top"
+    studio = np.asarray(Image.open(REFS / f"{skin}-studio{suffix}.jpg").convert("RGB")).astype(np.float32) / 255
+    ref = Image.open(REFS / f"{skin}{suffix}.jpg").convert("RGB").resize((1024, 1024))
     atlas = np.asarray(Image.open(atlas_png).convert("RGB")).astype(np.float32) / 255
     green = (studio[..., 1] > studio[..., 0] + 0.2) & (studio[..., 1] > studio[..., 2] + 0.2)
     out = {"offset": {}, "ref_xform": {}}
     ratios = []
-    for view in hp.GRIDS["level"]:
-        base = hp.to_grid("level", view, hp.to_shot(view, hp.to_world(bone_m, v)))
+    for view in views or hp.GRIDS[grid]:
+        base = hp.to_grid(grid, view, hp.to_shot(view, hp.to_world(bone_m, v)))
         # the mesh against the studio silhouette, top of the head to the chin
         best = None
         for dy in range(-14, 15):
@@ -148,17 +151,29 @@ def register(skin: int, mesh: dict, atlas_png: Path) -> dict:
                     best = (iou, dx, dy)
         out["offset"][view] = [best[1], best[2]]
         # the reference against the studio grid below the brow: scale about the cell centre, then shift
-        ox, oy = hp.cell_origin("level", view)
-        fx = hp.to_grid("level", view, hp.to_shot(view, hp.to_world(bone_m, v[(v[:, 0] < plane["front"] - 0.01) & (v[:, 0] > 0) & (w > 0.5)])), out["offset"][view])
+        ox, oy = hp.cell_origin(grid, view)
+        fx = hp.to_grid(grid, view, hp.to_shot(view, hp.to_world(bone_m, v[(v[:, 0] < plane["front"] - 0.01) & (v[:, 0] > 0) & (w > 0.5)])), out["offset"][view])
         brow = int(fx[:, 1].min()) - oy
         cell = Image.fromarray((studio[oy : oy + 512, ox : ox + 512] * 255).astype(np.uint8))
         rcell = ref.crop((ox, oy, ox + 512, oy + 512))
         small = {k: np.asarray(cell.resize((512 // k, 512 // k))).astype(np.float32) / 255 for k in (1, 4)}
+        keep = np.zeros((512, 512), bool)
+        keep[brow:500, 6:506] = True
+        if grid != "level":  # everything but the head (hat included), with a margin
+            img = Image.new("1", (512, 512))
+            draw = ImageDraw.Draw(img)
+            xy = base + out["offset"][view] - [ox, oy]
+            for f in faces:
+                draw.polygon([tuple(xy[i]) for i in f[0]], fill=1)
+            head = np.asarray(img.filter(ImageFilter.MaxFilter(21)))
+            keep = ~head
+            keep[:6], keep[500:], keep[:, :6], keep[:, 506:] = False, False, False, False
+        masks = {1: keep, 4: np.asarray(Image.fromarray(keep).resize((128, 128)))}
 
         def score(s, tx, ty, k):
             warped = rcell.transform((512, 512), Image.AFFINE, (s, 0, 256 - 256 * s + tx, 0, s, 256 - 256 * s + ty), resample=Image.BILINEAR)
             a = np.asarray(warped.resize((512 // k, 512 // k))).astype(np.float32) / 255
-            return np.abs(a[brow // k : 500 // k, 6 // k : 506 // k] - small[k][brow // k : 500 // k, 6 // k : 506 // k]).mean()
+            return np.abs(a - small[k])[masks[k]].mean()
 
         fit = min(((score(s, tx, ty, 4), s, tx, ty) for s in np.arange(0.70, 1.101, 0.04) for ty in range(-64, 65, 8) for tx in range(-48, 49, 8)), key=lambda r: r[0])
         for ds, dt in ((0.02, 4), (0.01, 2), (0.005, 1)):
@@ -166,7 +181,7 @@ def register(skin: int, mesh: dict, atlas_png: Path) -> dict:
             fit = min(((score(s, tx, ty, 1), s, tx, ty) for s in (s0 - ds, s0, s0 + ds) for ty in (y0 - dt, y0, y0 + dt) for tx in (x0 - dt, x0, x0 + dt)), key=lambda r: r[0])
         out["ref_xform"][view] = [round(float(fit[1]), 3), int(fit[2]), int(fit[3])]
         # lighting: studio pixel over atlas texel on the front of the face
-        if view in ("front", "three"):
+        if grid == "level" and view in ("front", "three"):
             for idx, uvs in faces:
                 if not all(0.0 < v[i, 0] < plane["front"] - 0.02 for i in idx):
                     continue
@@ -176,7 +191,8 @@ def register(skin: int, mesh: dict, atlas_png: Path) -> dict:
                 if not green[int(c[1]), int(c[0])]:
                     ratios.append(studio[int(c[1]), int(c[0])] / np.maximum(texel, 0.03))
         print(f"{skin} {view}: offset {out['offset'][view]} (iou {best[0]:.3f}), reference {out['ref_xform'][view]} (diff {fit[0]:.3f})")
-    out["light"] = [round(float(x), 3) for x in np.median(np.array(ratios), 0)]
+    if ratios:
+        out["light"] = [round(float(x), 3) for x in np.median(np.array(ratios), 0)]
     return out
 
 
@@ -187,7 +203,10 @@ def prep(skins: list[int]) -> None:
         for skin in skins:
             name, tex = extract(skin, work)
             blender("dump", str(work), name, tex, str(work / f"{name}.json"), str(work / f"{name}-atlas.png"))
-            data[str(skin)] = register(skin, json.loads((work / f"{name}.json").read_text()), work / f"{name}-atlas.png")
+            mesh = json.loads((work / f"{name}.json").read_text())
+            data[str(skin)] = register(skin, mesh, work / f"{name}-atlas.png")
+            if (REFS / f"{skin}-top.jpg").is_file():
+                data[str(skin)]["top"] = register(skin, mesh, work / f"{name}-atlas.png", "top", ("top", "topback"))
     PREP.write_text(json.dumps({k: data[k] for k in sorted(data, key=int)}, indent=1) + "\n", encoding="ascii")
 
 
@@ -204,7 +223,8 @@ def ellipsoid_points(params, n: int = 40):
 
 
 def fit_skull(skin: int, mesh: dict, prep: dict) -> list[float]:
-    """The ellipsoid cranium whose outline best matches the top of the reference's head in all four level views.
+    """The ellipsoid cranium whose outline best matches the reference's head in the four level views and the crown
+    seen from behind and above.
 
     The image model draws each view a little differently, so a visual hull carved point by point is lumpy and too
     small or too big where one view disagrees; one smooth ellipsoid fitted to every view's head contour (the topmost
@@ -238,13 +258,32 @@ def fit_skull(skin: int, mesh: dict, prep: dict) -> list[float]:
             xs = np.nonzero(solid[y, max(ox, x0) : min(ox + 512, x1)])[0]
             if len(xs):
                 rows[y // BIN] = (max(ox, x0) + xs[0], max(ox, x0) + xs[-1])
-        targets[view] = (cols, rows, brow)
+        targets[view] = (cols, rows, brow, lambda pts, view=view: to_ref(view, pts))
+    # from behind and above, the crown's outline against the green screen: the shape the level views leave loose
+    if "top" in prep:
+        top = prep["top"]
+        tref = np.asarray(Image.open(REFS / f"{skin}-top.jpg").convert("RGB").resize((1024, 1024))).astype(np.float32) / 255
+        tsolid = ~((tref[..., 1] > tref[..., 0] + 0.2) & (tref[..., 1] > tref[..., 2] + 0.2))
+
+        def to_top(pts):
+            g = hp.to_grid("top", "topback", hp.to_shot("topback", hp.to_world(bone_m, pts)), top["offset"]["topback"])
+            return hp.to_reference("top", "topback", g, top["ref_xform"]["topback"])
+
+        ox, oy = hp.cell_origin("top", "topback")
+        mid = int(to_top(np.array([[0.06, 0.0, 0.0]]))[0, 1])
+        hx = to_top(v[w > 0.5])
+        cols = {}
+        for x in range(max(ox, int(hx[:, 0].min()) - 60), min(ox + 512, int(hx[:, 0].max()) + 60), BIN):
+            ys = np.nonzero(tsolid[oy:mid, x])[0]
+            if len(ys):
+                cols[x // BIN] = oy + ys[0]
+        targets["topback"] = (cols, {}, mid, to_top)
 
     def cost(params):
         pts = ellipsoid_points(params)
         total, count = 0.0, 0
-        for view, (cols, rows, brow) in targets.items():
-            xy = to_ref(view, pts)
+        for view, (cols, rows, brow, mapper) in targets.items():
+            xy = mapper(pts)
             above = xy[xy[:, 1] < brow]
             top, span = {}, {}
             for x, y in above:
@@ -304,6 +343,8 @@ def build(skins: list[int]) -> None:
             name, tex = extract(skin, work)
             p = preps[str(skin)]
             job = dict(ped_dir=str(work), name=name, tex=tex, out_dir=str(work), plane=PLANES[skin], listed_blocks=listed_blocks(skin), bone_matrix=calib[str(skin)], offset=p["offset"], ref_xform=p["ref_xform"], light=p["light"], skull=p.get("skull"), reference=str(REFS / f"{skin}.jpg"))
+            if "top" in p:
+                job["top"] = dict(reference=str(REFS / f"{skin}-top.jpg"), offset=p["top"]["offset"], ref_xform=p["top"]["ref_xform"])
             (work / "job.json").write_text(json.dumps(job), encoding="utf8")
             print(next(line for line in blender("build", str(work / "job.json")).splitlines() if line.startswith("REBUILT")))
             for ext in ("dff", "txd"):

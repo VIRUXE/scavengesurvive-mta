@@ -194,18 +194,30 @@ def build(job):
         return max(0.02, (-b + math.sqrt(max(disc, 0.0))) / (2 * a))
     rs = np.linspace(0.26, 0.02, 241)
     grid = np.zeros((K + 2, n, 3))  # level 0 = rim, level K+1 = apex
+    ell = np.zeros((K + 2, n))  # radius to the fitted skull along each ring direction
     grid[0] = rim
     for k in range(1, K + 2):
         t = k / (K + 1)
         for i in range(n):
             om = math.acos(max(-1.0, min(1.0, float(d0[i] @ up))))
             d = up if om < 1e-6 or k == K + 1 else (math.sin((1 - t) * om) * d0[i] + math.sin(t * om) * up) / math.sin(om)
-            if skull is not None:
-                grid[k, i] = cc + skull_hit(cc, d) * d
-                continue
             cand = cc + rs[:, None] * d
             ok = inside(cand)
             grid[k, i] = cand[np.argmax(ok)] if ok.any() else cc + 0.08 * d
+            if skull is not None:
+                ell[k, i] = skull_hit(cc, d)
+    if skull is not None and not job.get("detail"):
+        grid[1:] = cc + ((grid[1:] - cc) / np.linalg.norm(grid[1:] - cc, axis=2)[..., None]) * ell[1:, :, None]
+    elif skull is not None and job.get("detail"):  # off: the carved outline swells the rim into a mushroom
+        # this ped's own skull: the fitted ellipsoid plus the carved outline's difference from it, smoothed around and
+        # up the rings and kept within 1.5 cm, so a flat top, a wide crown or a full occiput shows without the lumps
+        res = np.linalg.norm(grid[1:] - cc, axis=2) - ell[1:]
+        for _ in range(10):
+            res[:-1] = (res[:-1] * 4 + np.roll(res[:-1], 1, 1) + np.roll(res[:-1], -1, 1) + np.vstack([res[:1], res[:-2]]) + res[1:]) / 8
+            res[-1] = res[-1].mean()
+        res = np.clip(res, -0.015, 0.015)
+        dirs1 = (grid[1:] - cc) / np.linalg.norm(grid[1:] - cc, axis=2)[..., None]
+        grid[1:] = cc + dirs1 * (ell[1:] + res)[..., None]
     rad = np.linalg.norm(grid - cc, axis=2)
     dirs = (grid - cc) / rad[..., None]
     # a carved hull is lumpy: smooth around each ring (the rim, whose radius is the neck's at the back, must not pull
@@ -302,6 +314,18 @@ def build(job):
         wgt = np.clip((Nw * to_cam).sum(1), 0, 1) ** 4 * (solid[yx] & ~tinted[yx])
         acc += ref[yx] * wgt[:, None]
         wsum += wgt
+    top = job.get("top") if job.get("detail") else None  # off: the top views' pose smears the forehead
+    if top:  # the views from above see the crown head on
+        tref = image_rows(top["reference"])
+        tok = ~((tref[..., 1] > tref[..., 0] + 0.2) & (tref[..., 1] > tref[..., 2] + 0.2)) & ~(tref[..., 1] > np.maximum(tref[..., 0], tref[..., 2]) * 1.12 + 0.02)
+        for view in ("top", "topback"):
+            to_cam = hp.camera(view)[0] - Pw
+            to_cam /= np.linalg.norm(to_cam, axis=1)[:, None]
+            xy = np.round(hp.to_reference("top", view, hp.to_grid("top", view, hp.to_shot(view, Pw), top["offset"][view]), top["ref_xform"][view])).astype(int)
+            yx = np.clip(xy[:, 1], 0, tref.shape[0] - 1), np.clip(xy[:, 0], 0, tref.shape[1] - 1)
+            wgt = np.clip((Nw * to_cam).sum(1), 0, 1) ** 4 * tok[yx]
+            acc += tref[yx] * wgt[:, None]
+            wsum += wgt
     col = np.where(wsum[:, None] > 1e-4, acc / np.maximum(wsum, 1e-4)[:, None], np.nan).reshape(TEX, TEX, 3)
     for _ in range(64):  # texels no view saw take their neighbours' colour
         holes = np.isnan(col[..., 0])
