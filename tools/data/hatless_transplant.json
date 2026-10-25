@@ -1,0 +1,265 @@
+{
+ "2": {
+  "donor": "swmocd",
+  "seam": {
+   "nape_side": 0.03,
+   "nape_back": -0.012,
+   "snap_eps": 0.005,
+   "band_t": 0.009,
+   "band_d": 0.014,
+   "mu": 0.3
+  },
+  "texture": {}
+ },
+ "35": {
+  "donor": "hmori",
+  "seam": {
+   "nape_side": 0.03,
+   "nape_back": -0.012,
+   "snap_eps": 0.005,
+   "band_t": 0.009,
+   "band_d": 0.014,
+   "mu": 0.3
+  },
+  "texture": {
+   "deshadow": true
+  }
+ },
+ "36": {
+  "donor": "wmosci",
+  "seam": {
+   "nape_side": 0.03,
+   "nape_back": -0.012,
+   "snap_eps": 0.005,
+   "band_t": 0.009,
+   "band_d": 0.014,
+   "mu": 0.3
+  },
+  "texture": {}
+ },
+ "37": {
+  "donor": "lvemt1",
+  "seam": {
+   "nape_side": 0.03,
+   "nape_back": -0.012,
+   "snap_eps": 0.005,
+   "band_t": 0.009,
+   "band_d": 0.014,
+   "mu": 0.3
+  },
+  "texture": {}
+ },
+ "61": {
+  "donor": "omoboat",
+  "seam": {
+   "nape_side": 0.03,
+   "nape_back": -0.012,
+   "snap_eps": 0.005,
+   "band_t": 0.009,
+   "band_d": 0.014,
+   "mu": 0.3
+  },
+  "texture": {}
+ },
+ "155": {
+  "donor": "somori",
+  "seam": {
+   "nape_side": 0.03,
+   "nape_back": -0.012,
+   "snap_eps": 0.005,
+   "band_t": 0.009,
+   "band_d": 0.014,
+   "mu": 0.3
+  },
+  "texture": {}
+ },
+ "161": {
+  "donor": "sbmost",
+  "seam": {
+   "nape_side": 0.03,
+   "nape_back": -0.012,
+   "snap_eps": 0.005,
+   "band_t": 0.009,
+   "band_d": 0.014,
+   "mu": 0.3
+  },
+  "texture": {
+   "hair_rgb": [
+    0.52,
+    0.5,
+    0.48
+   ]
+  }
+ },
+ "205": {
+  "donor": "gungrl3",
+  "seam": {
+   "nape_side": 0.03,
+   "nape_back": -0.012,
+   "snap_eps": 0.005,
+   "band_t": 0.009,
+   "band_d": 0.014,
+   "mu": 0.3,
+   "face_az": 48.0
+  },
+  "texture": {}
+ },
+ "247": {
+  "donor": "wmycr",
+  "seam": {
+   "nape_side": 0.075,
+   "nape_back": 0.06,
+   "snap_eps": 0.005,
+   "band_t": 0.009,
+   "band_d": 0.014,
+   "mu": 0.3,
+   "near": 0.004
+  },
+  "texture": {
+   "hair_back": true,
+   "hair_rgb": [
+    0.3569,
+    0.251,
+    0.1882
+   ]
+  }
+ },
+ "248": {
+  "donor": "vmaff3",
+  "seam": {
+   "nape_side": 0.075,
+   "nape_back": 0.06,
+   "snap_eps": 0.005,
+   "band_t": 0.009,
+   "band_d": 0.014,
+   "mu": 0.3,
+   "near": 0.004
+  },
+  "texture": {
+   "hair_back": true,
+   "hair_rgb": [
+    0.6667,
+    0.5176,
+    0.3608
+   ]
+  }
+ },
+ "254": {
+  "donor": "swmyhp1",
+  "seam": {
+   "nape_side": 0.075,
+   "nape_back": 0.06,
+   "snap_eps": 0.005,
+   "band_t": 0.009,
+   "band_d": 0.014,
+   "mu": 0.3,
+   "near": 0.004
+  },
+  "texture": {
+   "hair_back": true,
+   "hair_rgb": [
+    0.3569,
+    0.251,
+    0.1882
+   ]
+  }
+ },
+ "277": {
+  "donor": "heck1",
+  "seam": {
+   "nape_side": 0.03,
+   "nape_back": -0.012,
+   "snap_eps": 0.005,
+   "band_t": 0.009,
+   "band_d": 0.014,
+   "mu": 0.3
+  },
+  "texture": {}
+ },
+ "278": {
+  "donor": "bmydrug",
+  "seam": {
+   "nape_side": 0.03,
+   "nape_back": -0.012,
+   "snap_eps": 0.005,
+   "band_t": 0.009,
+   "band_d": 0.014,
+   "mu": 0.3
+  },
+  "texture": {}
+ },
+ "279": {
+  "donor": "bmybu",
+  "seam": {
+   "nape_side": 0.03,
+   "nape_back": -0.012,
+   "snap_eps": 0.005,
+   "band_t": 0.009,
+   "band_d": 0.014,
+   "mu": 0.3
+  },
+  "texture": {}
+ },
+ "283": {
+  "donor": "wmybu",
+  "seam": {
+   "nape_side": 0.03,
+   "nape_back": -0.012,
+   "snap_eps": 0.005,
+   "band_t": 0.009,
+   "band_d": 0.014,
+   "mu": 0.3
+  },
+  "texture": {}
+ },
+ "285": {
+  "donor": "sbmori",
+  "seam": {
+   "nape_side": 0.03,
+   "nape_back": -0.012,
+   "snap_eps": 0.005,
+   "band_t": 0.009,
+   "band_d": 0.014,
+   "mu": 0.3
+  },
+  "texture": {
+   "fabric": true
+  }
+ },
+ "287": {
+  "donor": "laemt1",
+  "seam": {
+   "nape_side": 0.03,
+   "nape_back": -0.012,
+   "snap_eps": 0.005,
+   "band_t": 0.009,
+   "band_d": 0.014,
+   "mu": 0.3
+  },
+  "texture": {}
+ },
+ "288": {
+  "donor": "somyri",
+  "seam": {
+   "nape_side": 0.03,
+   "nape_back": -0.012,
+   "snap_eps": 0.005,
+   "band_t": 0.009,
+   "band_d": 0.014,
+   "mu": 0.3
+  },
+  "texture": {}
+ },
+ "311": {
+  "donor": "bmyri",
+  "seam": {
+   "nape_side": 0.03,
+   "nape_back": -0.012,
+   "snap_eps": 0.005,
+   "band_t": 0.009,
+   "band_d": 0.014,
+   "mu": 0.3
+  },
+  "texture": {}
+ }
+}
