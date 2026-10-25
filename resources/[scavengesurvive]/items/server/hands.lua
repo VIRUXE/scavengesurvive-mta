@@ -159,19 +159,6 @@ return function(ctx)
         end
     end
 
-    -- Two-handed items (upstream usecarryanim: Wheel, crates, ...) hold the CARRY upper-body loop while in hand,
-    -- MTA's stand-in for SA-MP's SPECIAL_ACTION_CARRY; the arms then lift the item off the waist.
-    local function setCarrying(player, carrying)
-        if not setPedAnimation then
-            return
-        end
-        if carrying then
-            setPedAnimation(player, "CARRY", "crry_prtial", -1, true, true, false, false)
-        else
-            setPedAnimation(player)
-        end
-    end
-
     function M.clearHeld(player)
         publish(player, "items.held", nil)
         publishAmmo(player, nil)
@@ -180,13 +167,9 @@ return function(ctx)
             M.flushData(item.id)
         end
         if item and isElement(player) then
-            local t = itemType(item.uname)
-            local w = baseWeapon(t)
+            local w = baseWeapon(itemType(item.uname))
             if w then
                 takeWeapon(player, w)
-            end
-            if t and t.useCarryAnim then
-                setCarrying(player, false)
             end
         end
         state.held[player] = nil
@@ -212,9 +195,6 @@ return function(ctx)
             state.held[player] = item
             publish(player, "items.held", item)
             publishAmmo(player, item)
-            if t and t.useCarryAnim then
-                setCarrying(player, true)
-            end
             local w = baseWeapon(t)
             if w then
                 local rounds = ammoFor(t, item.data)
