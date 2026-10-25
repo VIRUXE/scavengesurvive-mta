@@ -119,6 +119,9 @@ return function(ctx)
             return
         end
         local held = ctx.getHeld()
+        if not held and getElementData(localPlayer, "items.bag") then
+            return triggerServerEvent("itemUnwearRequested", localPlayer, "bag")
+        end
         local isCalibreWep = held and held.category == "weapon" and held.calibre ~= nil and not held.liquid
         local key = string.lower(getKeyBoundToCommand("dropitem") or "n")
         if not isCalibreWep or not isKeyHeld(key, "dropitem") then
