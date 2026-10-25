@@ -2,6 +2,7 @@
 -- n * 40 degrees, item n in slot n mod RING_SLOTS) plus the death Clothes 1 m east (upstream death.pwn). The
 -- server cannot see collision, so the player's client measures the ground under each spot; a height that is
 -- missing or implausible next to the player falls back to the player's Z minus upstream's ITEM_FLOOR_OFFSET.
+-- Every item faces the way the player faced (upstream DropItems .rz = r).
 -- Pure logic: no MTA calls.
 local drop = {}
 drop.RING_SLOTS = 9
@@ -21,8 +22,9 @@ function drop.spots(x, y)
     return out
 end
 
--- Gives each spot its z from the client's heights (a list in spot order, false for none), or the fallback.
-function drop.settle(spots, heights, playerZ)
+-- Makes each spot { x, y, z, rz }: z from the client's heights (a list in spot order, false for none) or the
+-- fallback, rz the player's heading.
+function drop.settle(spots, heights, playerZ, rz)
     local fallback = playerZ - drop.FLOOR_OFFSET
     for i, s in ipairs(spots) do
         local g = type(heights) == "table" and tonumber(heights[i]) or nil
@@ -31,11 +33,12 @@ function drop.settle(spots, heights, playerZ)
         else
             s[3] = fallback
         end
+        s[4] = rz or 0
     end
     return spots
 end
 
--- The ring as the procedures take it ([[x, y, z], ...]) and the Clothes spot on its own.
+-- The ring as the procedures take it ([[x, y, z, rz], ...]) and the Clothes spot on its own.
 function drop.split(spots)
     local ring = {}
     for i = 1, drop.RING_SLOTS do

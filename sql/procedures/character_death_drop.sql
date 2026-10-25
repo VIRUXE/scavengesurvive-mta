@@ -1,5 +1,5 @@
 CREATE OR REPLACE PROCEDURE character_death_drop(IN p_char_id INT, IN p_x FLOAT, IN p_y FLOAT, IN p_z FLOAT,
-  IN p_interior TINYINT, IN p_dimension INT, IN p_ring LONGTEXT, IN p_clothes_z FLOAT)
+  IN p_interior TINYINT, IN p_dimension INT, IN p_ring LONGTEXT, IN p_clothes_z FLOAT, IN p_clothes_rz FLOAT)
 BEGIN
   DECLARE v_n INT DEFAULT 0;
   DECLARE v_inv INT DEFAULT NULL;
@@ -13,7 +13,7 @@ BEGIN
   -- upstream death.pwn: the body leaves a Clothes item holding its skin, 1 m along sin/cos(90)
   IF v_skin IS NOT NULL THEN
     INSERT INTO items (type_uname, data, x, y, z, rz, interior, dimension)
-      VALUES ('Clothes', JSON_OBJECT('skin', CAST(v_skin AS SIGNED)), p_x + 1.0, p_y, p_clothes_z, 0, p_interior,
+      VALUES ('Clothes', JSON_OBJECT('skin', CAST(v_skin AS SIGNED)), p_x + 1.0, p_y, p_clothes_z, p_clothes_rz, p_interior,
         p_dimension);
     SET v_clothes = LAST_INSERT_ID();
   END IF;

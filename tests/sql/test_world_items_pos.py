@@ -70,7 +70,7 @@ def test_death_drop_mirrors_dropped_items_and_clothes(db, character):
     call(db, "container_put", a, ch, cid)
     call(db, "item_pickup", b, ch)
     assert pos(db, a) is None and pos(db, b) is None
-    ok, code, payload = call(db, "character_death_drop", ch, 100.0, 200.0, 5.0, 0, 0, RING, 4.2)
+    ok, code, payload = call(db, "character_death_drop", ch, 100.0, 200.0, 5.0, 0, 0, RING, 4.2, 135.0)
     assert code == "OK" and payload["dropped"] == 2
     with db.cursor() as cur:
         for item in (a, b, payload["clothes_item_id"]):

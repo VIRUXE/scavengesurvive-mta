@@ -17,8 +17,10 @@ describe("item drop spots", function()
     it("takes the client's ground heights near the player and falls back otherwise", function()
         local spots = drop.spots(0, 0)
         local heights = { 9.2, 11.4, 4.9, false, 0 }
-        drop.settle(spots, heights, 10)
+        drop.settle(spots, heights, 10, 135)
         near(9.2, spots[1][3]) -- under the feet
+        near(135, spots[1][4]) -- facing like the player
+        near(135, spots[10][4])
         near(11.4, spots[2][3]) -- uphill
         near(10 - 0.9, spots[3][3]) -- more than 5 m down
         near(10 - 0.9, spots[4][3]) -- no ground found
@@ -30,6 +32,6 @@ describe("item drop spots", function()
     it("splits the ring from the clothes spot", function()
         local ring, clothes = drop.split(drop.settle(drop.spots(0, 0), {}, 1))
         assert.equals(9, #ring)
-        assert.same({ 1, 0, 0.1 }, { clothes[1], clothes[2], math.floor(clothes[3] * 10 + 0.5) / 10 })
+        assert.same({ 1, 0, 0.1, 0 }, { clothes[1], clothes[2], math.floor(clothes[3] * 10 + 0.5) / 10, clothes[4] })
     end)
 end)

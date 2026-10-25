@@ -8,7 +8,7 @@ return function(ctx)
 
     -- Ground under the drop spots: the client answers groundHeightsReported, or after GROUND_WAIT_MS (or at once
     -- when measure is false) every spot takes the fallback height. One question per player at a time.
-    local pending = {} -- player -> { id, spots, z, cb, timer }
+    local pending = {} -- player -> { id, spots, z, rz, cb, timer }
     local nextId = 0
 
     local function answer(player, heights)
@@ -20,17 +20,17 @@ return function(ctx)
         if isTimer(q.timer) then
             killTimer(q.timer)
         end
-        q.cb(drop.settle(q.spots, heights, q.z))
+        q.cb(drop.settle(q.spots, heights, q.z, q.rz))
     end
 
-    local function groundSpots(player, x, y, z, measure, cb)
+    local function groundSpots(player, x, y, z, rz, measure, cb)
         answer(player, nil)
         local spots = drop.spots(x, y)
         if not measure or not isElement(player) then
-            return cb(drop.settle(spots, nil, z))
+            return cb(drop.settle(spots, nil, z, rz))
         end
         nextId = nextId + 1
-        local q = { id = nextId, spots = spots, z = z, cb = cb }
+        local q = { id = nextId, spots = spots, z = z, rz = rz, cb = cb }
         q.timer = setTimer(answer, GROUND_WAIT_MS, 1, player, nil)
         pending[player] = q
         triggerClientEvent(player, "groundHeightsRequested", player, q.id, spots, z)
@@ -67,10 +67,11 @@ return function(ctx)
             x, y, z, int, dim = real[1], real[2], real[3], real[4], real[5]
             measure = false
         end
+        local _, _, rz = getElementRotation(player)
         local c = { player = player, st = st, charId = st.id, cause = cause, killer = killer }
-        groundSpots(player, x, y, z, measure, function(spots)
+        groundSpots(player, x, y, z, rz, measure, function(spots)
             local ring, clothes = drop.split(spots)
-            local params = { c.charId, x, y, z, int, dim, toJSON(ring, true), clothes[3] }
+            local params = { c.charId, x, y, z, int, dim, toJSON(ring, true), clothes[3], clothes[4] }
             db.call("character_death_drop", params, function(res)
                 if not isElement(c.player) then
                     return
@@ -119,8 +120,9 @@ return function(ctx)
             return
         end
         local x, y, z = getElementPosition(player)
+        local _, _, rz = getElementRotation(player)
         local int, dim = getElementInterior(player), getElementDimension(player)
-        groundSpots(player, x, y, z, true, function(spots)
+        groundSpots(player, x, y, z, rz, true, function(spots)
             local params = { st.id, toJSON((drop.split(spots)), true), int, dim }
             db.call("character_drop_all", params, function(res)
                 if not isElement(player) or not res or not res.ok then
