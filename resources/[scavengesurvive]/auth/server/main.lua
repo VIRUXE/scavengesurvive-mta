@@ -187,6 +187,7 @@ addEventHandler("onResourceStart", resourceRoot, function()
         ip = function(p)
             return getPlayerIP(p)
         end,
+        present = isElement,
     })
     db.settings(function(map)
         whitelistEnabled = access.whitelistEnabledFromSetting(map["server.whitelist"])
@@ -275,6 +276,14 @@ addEventHandler("onPlayerResourceStart", root, function(res)
 end)
 
 local function admit(player, account, isNew)
+    -- one session per account: a client that renamed itself (/nick) keeps its session, so a second client joining
+    -- under the account's name must not load and control the same character
+    for other, held in pairs(session) do
+        if other ~= player and held.id == account.id then
+            util.log("auth", "info", "%s refused: account already online as %s", account.name, getPlayerName(other))
+            return kickLater(player, "Account already online")
+        end
+    end
     session[player] = account
     promptMode[player] = nil
     applyAutoWhitelist(nil, player)
@@ -376,9 +385,6 @@ addEventHandler("onPlayerQuit", root, function(reason)
     blocked[source] = nil
     promptMode[source] = nil
     promptLang[source] = nil
-    if accounts then
-        accounts.forget(source)
-    end
 end)
 
 -- /lang <code>: the language every resource reads through getLanguage (data's t()); stored on the account.
