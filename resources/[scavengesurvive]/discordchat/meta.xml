@@ -1,0 +1,7 @@
+<meta>
+    <info author="scavengesurvive-mta" type="script" name="discordchat" description="Relays global chat to and from Discord through the discord bridge resource" version="0.1.0"/>
+    <min_mta_version server="1.6.0"/>
+    <include resource="chat"/>
+    <script src="shared/events.lua" type="server"/>
+    <script src="server/main.lua" type="server"/>
+</meta>

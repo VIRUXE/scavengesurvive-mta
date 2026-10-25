@@ -14,5 +14,6 @@
     <export function="getRadio" type="server"/>
     <export function="setChatMode" type="server"/>
     <export function="sendAs" type="server"/>
+    <export function="sendGlobalExternal" type="server"/>
     <export function="radioOpen" type="client"/>
 </meta>

@@ -157,6 +157,9 @@ local function deliver(p, text, mode)
     end
     send(logic.format(mode, name, text, st.freq, colourHex), audience(p, mode), rgb)
     outputServerLog(string.format("[CHAT] [%s] %s: %s", tag, name, text))
+    if mode == MODE.GLOBAL then
+        triggerEvent("globalChatSent", p, text) -- discordchat relays global lines only
+    end
 end
 
 -- Gate every message: logged in, not muted, not flooding; blank text is dropped.
@@ -455,5 +458,16 @@ function sendAs(player, text, mode)
         return false
     end
     deliver(player, tostring(text), tonumber(mode) or get(player).mode)
+    return true
+end
+
+-- A global line from outside the game (discordchat: Discord messages), shown to everyone not /quiet.
+function sendGlobalExternal(tag, name, text)
+    send(
+        string.format("[%s] %s#FFFFFF: %s", tostring(tag), tostring(name), tostring(text)),
+        audience(nil, MODE.GLOBAL),
+        logic.COLOURS[MODE.GLOBAL]
+    )
+    outputServerLog(string.format("[CHAT] [%s] %s: %s", tostring(tag), tostring(name), tostring(text)))
     return true
 end

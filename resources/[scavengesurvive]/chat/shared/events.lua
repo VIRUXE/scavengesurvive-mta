@@ -1,6 +1,7 @@
 -- server-local (between resources)
 addEvent("characterSpawned", false)
 addEvent("playerLoggedOut", false)
+addEvent("globalChatSent", false)
 -- client to server (handlers registered with net.handler)
 addEvent("radioTuneRequested", true)
 addEvent("radioFrequencyEntered", true)

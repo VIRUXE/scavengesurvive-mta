@@ -44,5 +44,5 @@ files["resources/**/building/client/**"] = { std = "lua51+mta_shared+mta_client"
 files["resources/**/crafting/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "groundCraft", "deconstruct", "workbenchCraft" } }
 -- clearChatBox postdates the generated .luacheck/mta_server.lua list
 files["resources/**/staff/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "getLevel", "getMotd", "isOnDuty", "isMuted", "logAction", "mutePlayer", "getLevelColour", "runCommand" }, read_globals = { "clearChatBox" } }
-files["resources/**/chat/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "getRadio", "setChatMode", "sendAs" } }
+files["resources/**/chat/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "getRadio", "setChatMode", "sendAs", "sendGlobalExternal" } }
 files["resources/**/chat/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "radioOpen" } }
