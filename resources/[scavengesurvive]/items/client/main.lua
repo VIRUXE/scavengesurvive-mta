@@ -16,7 +16,7 @@ local geometry = loadModule("shared/logic/geometry.lua")
 local cooking = loadModule("shared/logic/cooking.lua")
 local worldCtx = { models = models, ammo = ammo, tent = tent, clothes = clothes, geometry = geometry }
 worldCtx.cooking = cooking
-loadModule("client/world.lua")(worldCtx)
+local world = loadModule("client/world.lua")(worldCtx)
 local attach = loadModule("client/attach.lua")({ models = models, apparel = apparel })
 local preview = loadModule("client/preview.lua")({ logic = loadModule("shared/logic/preview.lua") })
 local inventoryCtx = { ammo = ammo, apparel = apparel, clothes = clothes, models = models, preview = preview }
@@ -26,6 +26,11 @@ loadModule("client/inventory.lua")(inventoryCtx)
 -- client exports for the attachedit resource: preview offsets on the local player's own attachments
 function setAttachPreview(slot, offsets, scale)
     return attach.setPreview(slot, offsets, scale)
+end
+
+-- client export for the hud: "Campfire" / "Barbecue" when one is within the pickup reach (2 m), else false
+function nearbyCooker()
+    return world.nearbyCooker(2.0) or false
 end
 
 function getAttachConfig(slot)

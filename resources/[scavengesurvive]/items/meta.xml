@@ -45,4 +45,5 @@
     <export function="rollSpawnSkin" type="server"/>
     <export function="setAttachPreview" type="client"/>
     <export function="getAttachConfig" type="client"/>
+    <export function="nearbyCooker" type="client"/>
 </meta>

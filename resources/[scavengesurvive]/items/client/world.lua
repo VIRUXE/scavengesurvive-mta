@@ -266,4 +266,23 @@ return function(ctx)
             forget(id)
         end
     end)
+
+    -- A campfire or barbecue within reach of the local player (the hud's "Cook" hint), nil when none.
+    local M = {}
+    function M.nearbyCooker(reach)
+        local px, py, pz = getElementPosition(localPlayer)
+        local dim, int = getElementDimension(localPlayer), getElementInterior(localPlayer)
+        for _, e in pairs(objects) do
+            if e.uname == "Campfire" or e.uname == "Barbecue" then
+                local r = e.row
+                local dx, dy, dz = e.x - px, e.y - py, e.z - pz
+                local same = (r.dimension or 0) == dim and (r.interior or 0) == int
+                if same and dx * dx + dy * dy <= reach * reach and math.abs(dz) < 3 then
+                    return e.uname
+                end
+            end
+        end
+        return nil
+    end
+    return M
 end

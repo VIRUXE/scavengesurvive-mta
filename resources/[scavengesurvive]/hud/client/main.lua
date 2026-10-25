@@ -225,6 +225,20 @@ local function nearFeature()
     return exports.world:nearbyFeature() or nil
 end
 
+-- uncooked food that can be cooked, with a campfire or barbecue in reach: F puts it on (items/server/use.lua)
+local function nearCooker(held)
+    if not held or held.category ~= "food" then
+        return false
+    end
+    local t = itemType(held.uname)
+    local data = type(held.data) == "table" and held.data or {}
+    local cooked = data.cooked or (type(data[1]) == "table" and data[1].cooked)
+    if not (t and t.categoryData and t.categoryData.canCook) or (cooked and cooked ~= 0) then
+        return false
+    end
+    return exports.items:nearbyCooker() ~= false
+end
+
 local function drawKeyActions(driver)
     local held = state.held
     local isCalibreWep = held and held.category == "weapon" and held.calibre ~= nil and not held.liquid or false
@@ -237,6 +251,7 @@ local function drawKeyActions(driver)
         nearPlayer = false,
         nearFeature = nearFeature(),
         nearCrate = exports.loot:nearbyCrate() or nil,
+        nearCooker = nearCooker(held),
         cuffedNearby = not held and hasCuffedPlayerNearby() or false,
         supports = SUPPORTS,
     }, state.keys)

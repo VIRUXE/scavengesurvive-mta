@@ -22,6 +22,7 @@ M.CRATES = { supply = "Open supply crate", cache = "Open weapon cache" }
 --   spawned, uiOpen, knockedOut, hudOff, driver, nearTrunk, nearBonnet, nearPlayer, cuffedNearby, hasBag,
 --   nearFeature ("ladder" / "zipline" / "ladder_on" / "zipline_on"), nearCrate ("supply" / "cache"),
 --   held = false | { uname, category, isWeapon },
+--   nearCooker,                           -- uncooked food in hand next to a campfire or barbecue (#95): "Cook"
 --   supports = { [capability] = true },   -- eat, drink, openbag, wearbag, special, holster, reload, unload, give,
 --                                         -- removebag, uncuff, trunk, repair, engine, lights, doors, radio
 -- }
@@ -79,7 +80,7 @@ function M.lines(ctx, keys)
     if M.SPECIAL[h.uname] then
         add("interact", M.SPECIAL[h.uname], "special")
     elseif h.category == "food" then
-        add("interact", "Eat", "eat")
+        add("interact", ctx.nearCooker and "Cook" or "Eat", "eat")
     elseif h.category == "bag" then
         add("interact", "Open satchel", "openbag")
         add("putaway", "Wear", "wearbag")

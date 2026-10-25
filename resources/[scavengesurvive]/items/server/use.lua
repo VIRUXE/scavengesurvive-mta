@@ -1,7 +1,8 @@
 -- Food is the MVP use-case; treatments held in hand start a hold (server/medical.lua, #94); other categories are
 -- handled by other resources through itemUseAttempted (cancel = consumed).
--- Food in hand next to a campfire or barbecue goes onto it instead (upstream OnPlayerUseItemWithItem: the interact
--- key at a world item uses the held item with it).
+-- Uncooked food in hand next to a campfire or barbecue goes onto it instead (upstream OnPlayerUseItemWithItem: the
+-- interact key at a world item uses the held item with it); cooked food, or food that cannot be cooked, is eaten even
+-- there (upstream's campfire took any food back onto the fire).
 -- ctx = { medical, db, net, state, type, charId, toast, destroy, sendInventory, decodeData, cooking, cookers, world,
 -- clothes } built by server/main.lua.
 return function(ctx)
@@ -52,7 +53,7 @@ return function(ctx)
         if not t or t.category ~= "food" then
             return
         end
-        if not fromHand then
+        if not fromHand or not ctx.cooking.isRaw(t, data) then
             return eat(player, itemId, t, fromHand, data)
         end
         local x, y = getElementPosition(player)
