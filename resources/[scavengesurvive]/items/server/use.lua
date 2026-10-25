@@ -10,11 +10,14 @@ return function(ctx)
         .. "LEFT JOIN containers c ON c.id = i.container_id LEFT JOIN items owner ON owner.id = c.owner_item_id "
         .. "WHERE i.id = ? AND (i.holder_char_id = ? OR c.owner_char_id = ? OR owner.holder_char_id = ?)"
 
+    local COOKING = false
+
     local function eat(player, itemId, t, fromHand, data)
         local food = t.categoryData or {}
         local amount = (tonumber(food.biteValue) or 0) * (tonumber(food.maxBites) or 1)
-        -- item/food.pwn: uncooked food that can be cooked gives 70 %, and raw meat or fish infects (#94)
-        local raw = food.canCook and not (type(data) == "table" and data.cooked)
+        -- item/food.pwn: uncooked food that can be cooked gives 70 %, and raw meat or fish infects (#94). Off until
+        -- cooking is ported (#95): with no campfire or barbecue every Meat and Fish would count as raw.
+        local raw = COOKING and food.canCook and not (type(data) == "table" and data.cooked)
         if raw then
             amount = amount * 0.7
         end

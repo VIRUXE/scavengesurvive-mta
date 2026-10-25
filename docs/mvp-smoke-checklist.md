@@ -323,8 +323,10 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
       hp +10, the darkness gone while Health Status lists `Painkill` in yellow.
     - e. **LSD.** Use `Pills (LSD)`: the sky turns to 22:03 with weather 33 and stays there; after 300 s
       `Lsd has worn off` and the server's weather and clock come back.
-    - f. **Food infection.** `/additem Meat` and eat it raw: 70 % of its food, Health Status lists `Food Infect` and
-      the camera wobbles now and then. `Pills (Antibiotics)` cures it (and the wound infection half the time).
+    - f. **Food infection.** Raw food does not infect until cooking lands (#95): eating `Meat` gives its full food.
+      Infect from rcon (`lua return exports.character:setInfection(getPlayerFromName("<you>"), "food", true)`): Health
+      Status lists `Food Infect` and the camera wobbles now and then. `Pills (Antibiotics)` cures it (and the wound
+      infection half the time).
     - g. **Persistence.** With an infection and a drug active, reconnect or `rr character`: both are still listed,
       the drug with its time left (`SELECT infection, drugs FROM characters WHERE alive = 1`). Die and respawn:
       neither is listed.
