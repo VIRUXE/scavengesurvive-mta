@@ -170,7 +170,17 @@ describe("items hands data batching", function()
         assert.is_nil(seen.sql)
     end)
 
-    it("does not queue without the ammo module", function()
+    it("queues data the ammo module does not encode (a Petrol Can's amount) as MTA JSON", function()
+        local bare = dofile(ITEMS .. "server/hands.lua")({ db = db, net = load("net"), state = state, world = {} })
+        bare.queueData({ id = 31, data = { amount = 19.4 } })
+        bare.queueData({ id = 32, data = {} })
+        bare.flushData()
+        local rows = flushRows(flushQueries()[1])
+        assert.same({ amount = 19.4 }, mock.json.decode(rows[31]))
+        assert.is_nil(rows[32])
+    end)
+
+    it("queues without the ammo module too", function()
         local bare = dofile(ITEMS .. "server/hands.lua")({
             db = db,
             net = load("net"),
@@ -185,6 +195,6 @@ describe("items hands data batching", function()
         })
         bare.queueData({ id = 1, data = { mag = 1 } })
         bare.flushData()
-        assert.equals(0, #mock.queries)
+        assert.equals(1, #mock.queries)
     end)
 end)

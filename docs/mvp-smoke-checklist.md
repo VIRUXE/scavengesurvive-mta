@@ -323,13 +323,26 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
       hp +10, the darkness gone while Health Status lists `Painkill` in yellow.
     - e. **LSD.** Use `Pills (LSD)`: the sky turns to 22:03 with weather 33 and stays there; after 300 s
       `Lsd has worn off` and the server's weather and clock come back.
-    - f. **Food infection.** Raw food does not infect until cooking lands (#95): eating `Meat` gives its full food.
-      Infect from rcon (`lua return exports.character:setInfection(getPlayerFromName("<you>"), "food", true)`): Health
-      Status lists `Food Infect` and the camera wobbles now and then. `Pills (Antibiotics)` cures it (and the wound
-      infection half the time).
+    - f. **Food infection.** Eat a `Meat (Uncooked)`: 70 % of its food, and Health Status lists `Food Infect`; the
+      camera wobbles now and then (cooking: step 33). `Pills (Antibiotics)` cures it (and the wound infection half
+      the time).
     - g. **Persistence.** With an infection and a drug active, reconnect or `rr character`: both are still listed,
       the drug with its time left (`SELECT infection, drugs FROM characters WHERE alive = 1`). Die and respawn:
       neither is listed.
     - h. **Others.** A stands within 1.5 m of B and holds **F** with a Bandage or Medkit: B sees a `Being treated`
       bar and gets the outcome (2-3 wounds from a Medkit). A walking away (0.8 m) or B leaving 2.5 m cancels it.
       Knock B out and inject `Injector (Adrenaline)`: B wakes up; A's injector is now `Injector (Empty)`.
+33. **Cooking** (#95). One client; `/additem` a Meat, a Fire Lighter, two Wood Logs, a Barbecue and a Petrol Can.
+    - a. **Campfire.** Drop the two Wood Logs, hold the Fire Lighter and hold **F** next to them: a Campfire with
+      flames. **F** with empty hands does nothing (a campfire is never picked up). Hold the Meat (labelled
+      `Meat (Uncooked)` in the inventory and on the ground) and press **F** at the fire: `Food added / 1 minute cook
+      time`, the Meat sits on the fire and **F** on it says `Still cooking`. After about a minute the label reads
+      `Meat (Cooked)`; pick it up and eat it: full food, no `Food Infect`.
+    - b. **Barbecue.** Drop the Barbecue. **F** with the Fire Lighter: `Needs fuel from a Petrol Can`. **F** with the
+      Petrol Can: `1L of petrol added / 10 BBQ uses`. Put a Meat on it (`Food added`), then **F** with the Fire
+      Lighter: `BBQ Lit / Cook time: 30 seconds`, two small fires under the grill, the barbecue cannot be picked
+      up. 30 s later the fires go out and the Meat reads `Meat (Cooked)`; **F** with empty hands takes the Meat off,
+      a second **F** picks the barbecue up. A cooked Meat is refused (`Food already cooked`).
+    - c. **Persistence.** `rr items` while the Meat cooks: the cook still finishes on time
+      (`SELECT data FROM items WHERE type_uname IN ('Campfire', 'Barbecue') AND x IS NOT NULL`). Ten minutes after
+      it was lit (two in the rain, weather 8 or 16) the campfire turns into three Burnt Logs.

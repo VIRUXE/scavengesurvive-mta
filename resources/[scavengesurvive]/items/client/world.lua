@@ -1,14 +1,16 @@
 -- World items as client-side objects with a name label, from the server's per-player sync deltas.
--- ctx = { models, ammo, tent, clothes, geometry } from client/main.lua. A pitched TentPack is six objects
+-- ctx = { models, ammo, tent, clothes, geometry, cooking } from client/main.lua. A pitched TentPack is six objects
 -- (shared/logic/tent.lua) placed with upstream's SA-MP rotations as they are: SA-MP's CreateObject and MTA's
--- createObject both go through GTA's own ZXY CMatrix::SetRotate (#55).
+-- createObject both go through GTA's own ZXY CMatrix::SetRotate (#55). A campfire burns and a barbecue's burners
+-- burn while it cooks (#95): GTA "fire" effects, since upstream's fire objects (18701) are SA-MP particles.
 return function(ctx)
     local models = ctx.models
     local ammo = ctx.ammo
     local tent = ctx.tent
     local clothes = ctx.clothes
     local geometry = ctx.geometry
-    local objects = {} -- id -> { obj | parts, pitched, row, uname, hp, x, y, z, name }
+    local cooking = ctx.cooking
+    local objects = {} -- id -> { obj | parts, pitched, row, uname, hp, x, y, z, name, fires }
     local shaders = {} -- tent material key -> shader, or false when its texture could not be read
     local typeCache = {}
 
@@ -48,6 +50,9 @@ return function(ctx)
         if clothes and r.uname == "Clothes" then
             return clothes.label(clothes.skinFor(r.id, r.data))
         end
+        if cooking.isFood(t) then
+            return cooking.label(t, t.name, r.data)
+        end
         if ammo and t then
             local defA = t.categoryData and defaultAmmo(t.categoryData.calibre) or nil
             return ammo.displayName(t, r.data, itemType, calibreName, defA)
@@ -64,6 +69,11 @@ return function(ctx)
             for _, part in ipairs(e.parts or {}) do
                 if isElement(part) then
                     destroyElement(part)
+                end
+            end
+            for _, fx in ipairs(e.fires or {}) do
+                if isElement(fx) then
+                    destroyElement(fx)
                 end
             end
             objects[id] = nil
@@ -122,6 +132,30 @@ return function(ctx)
         end
     end
 
+    -- the fire a row shows: a campfire always, a barbecue while its cook runs (data.doneAt)
+    local function updateFires(e, r)
+        for _, fx in ipairs(e.fires or {}) do
+            if isElement(fx) then
+                destroyElement(fx)
+            end
+        end
+        e.fires = {}
+        local spots = {}
+        if r.uname == "Campfire" then
+            spots[1] = { x = r.x, y = r.y, z = r.z }
+        elseif r.uname == "Barbecue" and cooking.decode(r.data).doneAt then
+            spots = cooking.burnerSpots(r.x, r.y, r.z, r.rz)
+        end
+        for _, s in ipairs(spots) do
+            local fx = createEffect("fire", s.x, s.y, s.z)
+            if fx then
+                setElementInterior(fx, r.interior or 0)
+                setElementDimension(fx, r.dimension or 0)
+                e.fires[#e.fires + 1] = fx
+            end
+        end
+    end
+
     local function createItemObject(r, t)
         local obj = createObject(models.forType(t), r.x, r.y, r.z) or createObject(models.FALLBACK, r.x, r.y, r.z)
         if obj then
@@ -148,6 +182,8 @@ return function(ctx)
                 if isElement(e.obj) then -- the row came again because it moved or turned (a door swung)
                     orient(e.obj, r, t)
                 end
+                e.row = r
+                updateFires(e, r)
             else
                 e = {
                     pitched = isPitched,
@@ -164,6 +200,7 @@ return function(ctx)
                 else
                     e.obj = createItemObject(r, t)
                 end
+                updateFires(e, r)
                 objects[r.id] = e
             end
         end

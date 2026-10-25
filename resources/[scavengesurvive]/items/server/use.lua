@@ -1,7 +1,7 @@
 -- Food is the MVP use-case; treatments held in hand start a hold (server/medical.lua, #94); other categories are
 -- handled by other resources through itemUseAttempted (cancel = consumed).
--- ctx = { medical, db, net, state, type, charId, toast, destroy, sendInventory, decodeData, clothes } built by
--- server/main.lua.
+-- ctx = { medical, db, net, state, type, charId, toast, destroy, sendInventory, decodeData, cooking, clothes } built
+-- by server/main.lua.
 return function(ctx)
     local db, net, state = ctx.db, ctx.net, ctx.state
     local itemType, charId, toast = ctx.type, ctx.charId, ctx.toast
@@ -10,14 +10,12 @@ return function(ctx)
         .. "LEFT JOIN containers c ON c.id = i.container_id LEFT JOIN items owner ON owner.id = c.owner_item_id "
         .. "WHERE i.id = ? AND (i.holder_char_id = ? OR c.owner_char_id = ? OR owner.holder_char_id = ?)"
 
-    local COOKING = false
-
     local function eat(player, itemId, t, fromHand, data)
         local food = t.categoryData or {}
         local amount = (tonumber(food.biteValue) or 0) * (tonumber(food.maxBites) or 1)
-        -- item/food.pwn: uncooked food that can be cooked gives 70 %, and raw meat or fish infects (#94). Off until
-        -- cooking is ported (#95): with no campfire or barbecue every Meat and Fish would count as raw.
-        local raw = COOKING and food.canCook and not (type(data) == "table" and data.cooked)
+        -- item/food.pwn: uncooked food that can be cooked gives 70 %, and raw meat or fish infects (#94); a campfire
+        -- or barbecue cooks it (#95, server/cooking.lua)
+        local raw = ctx.cooking.isRaw(t, data)
         if raw then
             amount = amount * 0.7
         end

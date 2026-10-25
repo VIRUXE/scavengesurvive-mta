@@ -6,6 +6,7 @@ return function(ctx)
     local clothes = ctx and ctx.clothes -- shared/logic/clothes.lua: which skin a Clothes item holds
     local models = ctx and ctx.models -- client/models.lua: which model id draws an item type on this client
     local preview = ctx and ctx.preview -- client/preview.lua: live dxDrawModel3D previews inside the gear tiles
+    local cooking = ctx and ctx.cooking -- shared/logic/cooking.lua: "(Cooked)" / "(Uncooked)" on food
     local MESSAGES = {
         HANDS_FULL = "You are already holding an item",
         NOT_IN_WORLD = "It is gone",
@@ -35,6 +36,18 @@ return function(ctx)
         INVENTORY_FULL = "Inventory is full",
         CLOTHESWRGE = "Wrong gender for clothes",
         CLOTHES_ON_DUTY = "Go off duty before changing clothes",
+        -- Cooking (#95): upstream's texts where it had one
+        FIRELITSTAR = "Food added\n1 minute cook time",
+        BBQFOODADDE = "Food added",
+        BBQALREADYC = "Food already cooked",
+        BBQADDPETRO = "1L of petrol added\n10 BBQ uses",
+        BBQFUELEMPT = "Needs fuel from a Petrol Can",
+        BBQLITSTART = "BBQ Lit\nCook time: 30 seconds",
+        PETROLEMPTY = "Petrol can empty",
+        BBQ_FULL = "The grill is full",
+        BBQ_LIT = "It is already lit",
+        BUSY = "Something is already cooking",
+        COOKING = "Still cooking",
         -- Vehicles
         TRUNKLOCKED = "Trunk is locked",
         NO_TRUNK = "This vehicle has no trunk",
@@ -130,6 +143,8 @@ return function(ctx)
             name = clothes.label(clothes.skinFor(it.id, it.data))
         elseif it.uname == "Pills" or it.uname == "AutoInjec" or it.uname == "DoctorBag" then
             name = exports.character:medicalLabel(it.uname, name, it.data)
+        elseif cooking and cooking.isFood(t) then
+            name = cooking.label(t, name, it.data)
         elseif ammo and t then
             local defA = t.categoryData and defaultAmmo(t.categoryData.calibre) or nil
             name = ammo.displayName(t, it.data, itemType, calibreName, defA)

@@ -14,6 +14,7 @@ local apparel = loadFile("shared/logic/apparel.lua")
 local skins = loadFile("shared/logic/skins.lua")
 apparel.skins = skins
 local clothes = loadFile("shared/logic/clothes.lua")
+local cooking = loadFile("shared/logic/cooking.lua")
 
 -- export: whether a ped model is a woman (staff picks the duty skin from it)
 function isFemaleSkin(skin)
@@ -137,6 +138,9 @@ local containers = loadFile("server/containers.lua")({
     refreshPlayer = refreshPlayer,
 })
 hands.setContainers(containers)
+local cookingCtx = { db = db, state = state, type = itemType, toast = toast, world = world, hands = hands }
+cookingCtx.cooking = cooking
+hands.setCooking(loadFile("server/cooking.lua")(cookingCtx))
 -- the held items' ammo, batched (hands.queueData)
 setTimer(hands.flushData, 5000, 0)
 local medical = loadFile("server/medical.lua")({ db = db, net = net, state = state, destroy = destroy })
@@ -151,6 +155,7 @@ loadFile("server/use.lua")({
     destroy = destroy,
     sendInventory = containers.sendInventory,
     decodeData = hands.decodeData,
+    cooking = cooking,
     clothes = loadFile("server/clothes.lua")({
         db = db,
         state = state,

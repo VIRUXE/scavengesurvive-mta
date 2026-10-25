@@ -12,11 +12,15 @@ return function(ctx)
     local VANILLA_MELEE_MAX = 15
     local RELOAD_COOLDOWN_MS = 1000
     local lastReload = {}
-    local containers = nil
+    local containers, cooking = nil, nil
     local M = {}
 
     function M.setContainers(c)
         containers = c
+    end
+
+    function M.setCooking(c)
+        cooking = c
     end
 
     local function baseWeapon(t)
@@ -100,10 +104,17 @@ return function(ctx)
     -- it reads the rounds that are left.
     local pendingData = {} -- item id -> encoded data
 
-    function M.queueData(item)
-        if ammo then
-            pendingData[item.id] = ammo.encodeData(item.data)
+    -- a weapon's or ammo's data in its fixed form, anything else (a Petrol Can's amount) as MTA JSON
+    local function encodeData(data)
+        local encoded = ammo and ammo.encodeData(data)
+        if encoded or type(data) ~= "table" or next(data) == nil then
+            return encoded
         end
+        return toJSON(data, true)
+    end
+
+    function M.queueData(item)
+        pendingData[item.id] = encodeData(item.data)
     end
 
     -- itemId nil = every pending item; wait = block until written (resource stop)
@@ -233,6 +244,8 @@ return function(ctx)
             )
         end
     end
+
+    M.syncHeldData = syncHeldData
 
     -- Restores the held item and the worn bag from the DB (spawn and resource restart).
     function M.rebuildCarried(player)
@@ -522,6 +535,23 @@ return function(ctx)
         return false
     end
 
+    -- row = { id, uname, hp, data (JSON text) } of a world item: into the empty hand
+    function M.pickup(player, cid, row)
+        db.call("item_pickup", { row.id, cid }, function(res, c)
+            if res and res.ok then
+                world.forgetEverywhere(c.row.id)
+            end
+            if not isElement(c.player) then
+                return
+            end
+            if not res or not res.ok then
+                return toast(c.player, res and res.code or "DB_ERROR")
+            end
+            M.setHeld(c.player, { id = c.row.id, uname = c.row.uname, hp = c.row.hp, data = decodeData(c.row.data) })
+            triggerEvent("itemMoved", c.player, c.row.id, "world", "held")
+        end, { player = player, row = row })
+    end
+
     net.handler("itemPickupRequested", function(player)
         local cid = charId(player)
         if not cid or (isIncapacitated and isIncapacitated(player)) then
@@ -558,6 +588,11 @@ return function(ctx)
                 end
             end
 
+            -- campfires and barbecues (server/cooking.lua), and the food they are cooking
+            if cooking and cooking.interact(c.player, c.charId, curHeld, row) then
+                return
+            end
+
             -- Safebox world containers
             local t = itemType(row.uname)
             if t and t.category == "safebox" then
@@ -586,22 +621,7 @@ return function(ctx)
             if curHeld then
                 return tryTransferFromWorld(c.player, c.charId, curHeld, curType, row)
             end
-            db.call("item_pickup", { row.id, c.charId }, function(res, c2)
-                if res and res.ok then
-                    world.forgetEverywhere(c2.row.id)
-                end
-                if not isElement(c2.player) then
-                    return
-                end
-                if not res or not res.ok then
-                    return toast(c2.player, res and res.code or "DB_ERROR")
-                end
-                M.setHeld(
-                    c2.player,
-                    { id = c2.row.id, uname = c2.row.uname, hp = c2.row.hp, data = decodeData(c2.row.data) }
-                )
-                triggerEvent("itemMoved", c2.player, c2.row.id, "world", "held")
-            end, { player = c.player, row = row })
+            M.pickup(c.player, c.charId, row)
         end, { player = player, charId = cid })
     end, { rate = 5 })
 
