@@ -12,6 +12,7 @@ addEvent("itemUnloadRequested", true)
 addEvent("engineToggleRequested", true)
 addEvent("lightsToggleRequested", true)
 addEvent("vehicleInteractRequested", true)
+addEvent("fuelPumpInteractRequested", true)
 
 -- server to client / client-local
 addEvent("characterStatsSynced", true)

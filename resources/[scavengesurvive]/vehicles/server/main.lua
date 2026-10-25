@@ -22,6 +22,14 @@ do
     vlogic = assert(loadstring(src, "=vehicles/vehicle.lua"))()
 end
 
+local fuelPumps
+do
+    local f = fileOpen("shared/logic/fuel-pumps.lua", true)
+    local src = fileRead(f, fileGetSize(f))
+    fileClose(f)
+    fuelPumps = assert(loadstring(src, "=vehicles/fuel-pumps.lua"))()
+end
+
 local FLUSH_MS = 60000
 local WRECK_MS = 30000
 local SIM_TICK_MS = 1000
@@ -70,6 +78,9 @@ local activeActions = {} -- player -> { actionType, vehicle, timer, extra }
 local rolling = false
 local refilling = false
 local refillTimer = nil
+for _, pump in ipairs(fuelPumps) do
+    pump.stock = math.random() * pump.stockMax -- upstream frandom(startamount); not persisted
+end
 
 local function setting(key, default)
     return tonumber(settings[key]) or default
@@ -508,6 +519,58 @@ local function cancelHoldAction(player)
     end
     activeActions[player] = nil
 end
+
+-- Fuel pumps (upstream world/fuel.pwn): holding interact at a pump with a Petrol Can fills it from the pump's stock.
+-- Upstream moved 1.2 L per 100 ms hold tick; one hold here moves the whole amount over the same time.
+local CAN_CAPACITY, PUMP_REACH, PUMP_LITRES_PER_TICK, PUMP_TICK_MS = 20.0, 2.0, 1.2, 100
+
+net.handler("fuelPumpInteractRequested", function(player)
+    local held = exports.items:getHeld(player)
+    if not held or held.uname ~= "GasCan" or isPedDead(player) or activeActions[player] then
+        return
+    end
+    local px, py, pz = getElementPosition(player)
+    local pump, best = nil, PUMP_REACH
+    for _, candidate in ipairs(fuelPumps) do
+        local d = getDistanceBetweenPoints3D(px, py, pz, candidate.x, candidate.y, candidate.z)
+        if d < best then
+            pump, best = candidate, d
+        end
+    end
+    if not pump then
+        return
+    end
+    local amount = math.max(0, tonumber(held.data and held.data.amount) or CAN_CAPACITY)
+    if amount >= CAN_CAPACITY then
+        return toast(player, "CANFULL")
+    end
+    if pump.stock <= 0 then
+        return toast(player, "EMPTY")
+    end
+    local transfer = math.min(CAN_CAPACITY - amount, pump.stock)
+    local ms = math.max(500, math.ceil(transfer / PUMP_LITRES_PER_TICK) * PUMP_TICK_MS)
+    setPedAnimation(player, "PED", "DRIVE_BOAT", -1, true, false, false, false)
+    triggerClientEvent(player, "vehicleHoldStarted", player, "Filling petrol can", ms)
+    local timer = setTimer(function(p, canId, outlet)
+        activeActions[p] = nil
+        if not isElement(p) then
+            return
+        end
+        setPedAnimation(p, nil)
+        local current = exports.items:getHeld(p)
+        if not current or current.id ~= canId then
+            return
+        end
+        local fuel = math.max(0, tonumber(current.data and current.data.amount) or CAN_CAPACITY)
+        local moved = math.min(CAN_CAPACITY - fuel, outlet.stock)
+        if moved > 0 then
+            outlet.stock = outlet.stock - moved
+            exports.items:updateHeldData(p, { amount = fuel + moved })
+            toast(p, "REFUELLED")
+        end
+    end, ms, 1, player, held.id, pump)
+    activeActions[player] = { actionType = "pump", timer = timer }
+end, { rate = 3 })
 
 -- Entry enforcement: no entering during a roadside hold (repair, refuel, locksmith, lock-break), nor into locked vehicles
 addEventHandler("onVehicleStartEnter", root, function(player)

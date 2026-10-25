@@ -84,6 +84,7 @@ return {
     engineToggleRequested = true,
     lightsToggleRequested = true,
     vehicleInteractRequested = true,
+    fuelPumpInteractRequested = true,
     trunkCloseRequested = true,
     sampModelsChanged = false,
     playerZoneEntered = false,

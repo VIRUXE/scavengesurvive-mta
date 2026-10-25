@@ -93,6 +93,9 @@ return function(ctx)
                 return triggerServerEvent("vehicleInteractRequested", localPlayer, nearVeh)
             end
         end
+        if uname == "GasCan" then
+            return triggerServerEvent("fuelPumpInteractRequested", localPlayer)
+        end
         -- food is eaten; a held treatment starts its hold, and letting go of the key cancels it (items, #94)
         if held and (held.category == "food" or TREATMENTS[held.uname]) then
             return triggerServerEvent("itemUseRequested", localPlayer, held.id)

@@ -10,6 +10,7 @@
     <script src="client/main.lua" type="client"/>
     <file src="shared/logic/spawn.lua"/>
     <file src="shared/logic/vehicle.lua"/>
+    <file src="shared/logic/fuel-pumps.lua"/>
     <export function="getVehicleDbId" type="server"/>
     <export function="countVehicles" type="server"/>
     <export function="respawnAll" type="server"/>

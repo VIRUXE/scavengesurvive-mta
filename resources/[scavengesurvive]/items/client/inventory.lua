@@ -68,6 +68,7 @@ return function(ctx)
         REFUELLED = "Refuelled",
         REPAIRED = "Vehicle repaired",
         TANKFULL = "Tank is full",
+        CANFULL = "Petrol can is full",
         EMPTY = "Empty",
         NO_FUEL = "Out of fuel",
         ENGINE_BROKEN = "Engine is broken",
