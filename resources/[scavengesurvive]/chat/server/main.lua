@@ -255,6 +255,13 @@ net.handler("radioTuneRequested", function(p, delta)
     setFrequency(p, get(p).freq + delta)
 end, { rate = 20 })
 
+net.handler("radioFrequencyEntered", function(p, value)
+    local f = logic.parseFreq(value)
+    if f then
+        setFrequency(p, f)
+    end
+end, { rate = 5 })
+
 net.handler("chatModeRequested", function(p, mode)
     mode = tonumber(mode)
     if logic.isMode(mode) and mode ~= MODE.ADMIN then

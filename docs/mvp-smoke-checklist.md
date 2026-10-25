@@ -210,6 +210,10 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
       panel at 320,200 with the dial strip, two red knobs (±0.5 MHz, clamped to 87.5-108.0), `global`/`freq`
       toggle, `Frequency: x` (mouse wheel over it: ±0.01), red `on`/`off` power (off = local chat, on returns to the
       last transmitting mode) and Close; hovering highlights; Escape closes. Changes show on the watch at once.
+    - c2. **Frequency input** (#85). Click `Frequency: x`: the "Frequency" input dialog (`Enter a frequency between
+      87.5 and 108.0`, Accept / Cancel) over the panel. `101.3` + Enter retunes to 101.30 and the panel stays
+      open; `120`, `abc` or an empty field asks again; Escape or Cancel closes only the dialog, the panel stays.
+      Clicks on the dialog do not reach the knobs under it.
     - d. **Persistence and guards.** A relogs: frequency and mode are back (`characters.radio_freq`, `chat_mode`).
       A sends four messages inside a second: the first three go out and the fourth is refused with `Muted from global
       chat for 30 seconds for chat flooding` (upstream mutes when the streak reaches 3), `/profile A` shows muted, and

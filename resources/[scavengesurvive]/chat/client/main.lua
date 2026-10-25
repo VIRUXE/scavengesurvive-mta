@@ -1,6 +1,7 @@
 -- The radio panel (core/ui/radio.pwn) in dx: RADIO title, dial strip, two 0.5 MHz knobs, global/freq toggle,
--- "Frequency: x", power, Close; hover 0xFFFFFF88. Opens with R in a vehicle or /radio; mouse wheel over the
--- frequency fine-tunes by 0.01 MHz (upstream opened an input dialog instead). Hit tests run in canvas units.
+-- "Frequency: x", power, Close; hover 0xFFFFFF88. Opens with R in a vehicle or /radio; clicking the frequency opens
+-- upstream's input dialog, the mouse wheel over it fine-tunes by 0.01 MHz (port addition). Hit tests run in canvas
+-- units.
 local function loadFile(path, chunkName)
     local f = fileOpen(path, true)
     local src = fileRead(f, fileGetSize(f))
@@ -23,6 +24,7 @@ local HOVER = tocolor(255, 255, 255, 0x88)
 local BOX = tocolor(0, 0, 0, 100)
 
 local state = { open = false, freq = logic.FREQ_DEFAULT, mode = logic.MODE.LOCAL, oldMode = logic.MODE.RADIO }
+local typing = false -- the frequency dialog is open (and for one short moment after it answers)
 
 local function uiListIsOpen()
     return exports.ui:listIsOpen() == true
@@ -63,6 +65,10 @@ local function close()
     if not state.open then
         return
     end
+    if typing then
+        exports.ui:dialogClose()
+        typing = false
+    end
     state.open = false
     showCursor(false)
 end
@@ -83,6 +89,32 @@ end)
 
 addEventHandler("chatRadioOpened", root, function()
     open()
+end)
+
+-- upstream ShowFrequencyDialog: a number in range retunes, anything else asks again, Cancel leaves it be
+local FREQ_BODY = string.format("Enter a frequency between %.1f and %.1f", logic.FREQ_MIN, logic.FREQ_MAX)
+
+local function askFrequency()
+    typing = true
+    exports.ui:dialogOpen("chat:freq", "input", "Frequency", FREQ_BODY, "Accept", "Cancel")
+end
+
+addEventHandler("uiDialogResponded", root, function(id, accepted, text)
+    if id ~= "chat:freq" then
+        return
+    end
+    -- the Enter, Escape or click that answered the dialog must not reach the panel underneath this frame
+    setTimer(function()
+        typing = false
+    end, 50, 1)
+    if not accepted then
+        return
+    end
+    local f = logic.parseFreq(text)
+    if not f then
+        return askFrequency()
+    end
+    triggerServerEvent("radioFrequencyEntered", localPlayer, f)
 end)
 
 local function label(td)
@@ -129,7 +161,7 @@ addEventHandler("onClientRender", root, function()
 end)
 
 addEventHandler("onClientClick", root, function(button, pressState)
-    if not state.open or button ~= "left" or pressState ~= "down" then
+    if not state.open or typing or button ~= "left" or pressState ~= "down" then
         return
     end
     local hit = hovered()
@@ -142,13 +174,15 @@ addEventHandler("onClientClick", root, function(button, pressState)
     elseif hit == "power" then
         local newMode = logic.togglePower(state.mode, state.oldMode)
         triggerServerEvent("chatModeRequested", localPlayer, newMode)
+    elseif hit == "freq" then
+        askFrequency()
     elseif hit == "close" then
         close()
     end
 end)
 
 addEventHandler("onClientKey", root, function(key, press)
-    if not state.open or not press then
+    if not state.open or typing or not press then
         return
     end
     if key == "escape" then
