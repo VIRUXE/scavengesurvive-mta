@@ -20,6 +20,7 @@ return {
     itemDestroyed = false,
     itemUseAttempted = false,
     itemPickupRequested = true,
+    itemBagOpenRequested = true,
     itemDropRequested = true,
     itemPutAwayRequested = true,
     itemTakeRequested = true,

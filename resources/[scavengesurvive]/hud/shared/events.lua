@@ -1,6 +1,7 @@
 -- client to server (handlers registered with net.handler)
 addEvent("hudStateRequested", true)
 addEvent("itemPickupRequested", true)
+addEvent("itemBagOpenRequested", true)
 addEvent("itemDropRequested", true)
 addEvent("itemUnwearRequested", true)
 addEvent("itemPutAwayRequested", true)

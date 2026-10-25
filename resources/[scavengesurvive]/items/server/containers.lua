@@ -129,6 +129,9 @@ return function(ctx)
                 local valid = true
                 if tr.vehicle and not isElement(tr.vehicle) then
                     valid = false
+                elseif tr.heldItemId then
+                    local h = state.held[c.player]
+                    valid = h ~= nil and h.id == tr.heldItemId
                 elseif tr.pos then
                     local px, py, pz = getElementPosition(c.player)
                     local d = getDistanceBetweenPoints3D(px, py, pz, tr.pos.x, tr.pos.y, tr.pos.z)
@@ -214,13 +217,15 @@ return function(ctx)
         local uname = itemRow.uname
         local isTent = (uname == "TentPack")
         local t = itemType(uname)
-        local csize = isTent and 16 or (t and t.categoryData and t.categoryData.size or 8)
-        local ckind = isTent and "tent" or "safebox"
+        local isBag = t and t.category == "bag"
+        local csize = isTent and 16 or (t and t.categoryData and (t.categoryData.bag_size or t.categoryData.size) or 8)
+        local ckind = isTent and "tent" or (isBag and "bag" or "safebox")
         local title = (isTent and "Tent" or (t and t.name or uname))
+        local pos = itemRow.x and itemRow.y and itemRow.z and { x = itemRow.x, y = itemRow.y, z = itemRow.z }
 
         db.one(
             "SELECT id, size, kind FROM containers WHERE owner_item_id = ? "
-                .. "AND kind IN ('safebox', 'tent', 'supply') LIMIT 1",
+                .. "AND kind IN ('bag', 'safebox', 'tent', 'supply') LIMIT 1",
             { itemRow.id },
             function(cRow, c)
                 if not isElement(c.player) then
@@ -231,8 +236,9 @@ return function(ctx)
                         containerId = cRow.id,
                         title = c.title,
                         size = cRow.size,
-                        worldItemId = c.itemRow.id,
-                        pos = { x = c.itemRow.x, y = c.itemRow.y, z = c.itemRow.z },
+                        worldItemId = c.pos and c.itemRow.id or nil,
+                        heldItemId = not c.pos and c.itemRow.id or nil,
+                        pos = c.pos,
                     }
                     sendInventory(c.player)
                 else
@@ -249,8 +255,9 @@ return function(ctx)
                                     containerId = newId,
                                     title = c.title,
                                     size = c.csize,
-                                    worldItemId = c.itemRow.id,
-                                    pos = { x = c.itemRow.x, y = c.itemRow.y, z = c.itemRow.z },
+                                    worldItemId = c.pos and c.itemRow.id or nil,
+                                    heldItemId = not c.pos and c.itemRow.id or nil,
+                                    pos = c.pos,
                                 }
                                 sendInventory(c.player)
                             end
@@ -258,9 +265,19 @@ return function(ctx)
                     )
                 end
             end,
-            { player = player, title = title, ckind = ckind, csize = csize, itemRow = itemRow }
+            { player = player, title = title, ckind = ckind, csize = csize, itemRow = itemRow, pos = pos }
         )
     end
+
+    -- "Open satchel": the bag in hand shows its contents as the side container (upstream itemtype/backpack.pwn
+    -- _DisplayBagDialog). Bags on the ground still need hold-to-pick-up and container_put/take access (#108).
+    net.handler("itemBagOpenRequested", function(player)
+        local bag = state.held[player]
+        local t = bag and itemType(bag.uname)
+        if t and t.category == "bag" then
+            M.openWorldContainer(player, bag)
+        end
+    end, { rate = 5 })
 
     -- A supply crate or weapons cache (loot resource): a container with no item behind it, shown like a trunk
     -- and closed when the player walks more than 4 m from (x, y, z).

@@ -97,6 +97,9 @@ return function(ctx)
         if held and (held.category == "food" or TREATMENTS[held.uname]) then
             return triggerServerEvent("itemUseRequested", localPlayer, held.id)
         end
+        if held and held.category == "bag" then
+            return triggerServerEvent("itemBagOpenRequested", localPlayer)
+        end
         triggerServerEvent("itemPickupRequested", localPlayer)
     end)
 

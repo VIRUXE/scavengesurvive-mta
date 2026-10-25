@@ -9,6 +9,7 @@ addEvent("characterItemsDropped", false)
 
 -- client to server (handlers registered with net.handler)
 addEvent("itemPickupRequested", true)
+addEvent("itemBagOpenRequested", true)
 addEvent("itemDropRequested", true)
 addEvent("itemPutAwayRequested", true)
 addEvent("itemTakeRequested", true)
