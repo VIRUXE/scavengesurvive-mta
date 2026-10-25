@@ -103,6 +103,18 @@ def test_loot_roll_places_items_spends_budget_and_cools(db, types):
     assert 3590 <= cooldown_left(db, sid) <= 3600
 
 
+def test_loot_roll_leaves_earlier_bags_without_a_container_alone(db, types):
+    sid, _ = spawn(db)
+    with db.cursor() as cur:
+        cur.execute("INSERT INTO items (type_uname, loot_spawn_id, x, y, z) VALUES ('T_Satchel', %s, 500, 600, 3)", (sid,))
+        old = cur.lastrowid
+    ok, code, payload = call(db, "loot_roll", rolls({"s": sid, "cd": 60, "items": [item("T_Satchel", 499.5)]}), 30)
+    assert (ok, code, payload) == (1, "OK", {"created": 1})
+    rows = {r["id"]: r for r in spawn_items(db, sid)}
+    assert rows[old]["kind"] is None
+    assert [r["kind"] for i, r in rows.items() if i != old] == ["bag"]
+
+
 def test_loot_roll_stores_data_text_as_json(db, types):
     sid, _ = spawn(db)
     items = [item("T_Knife", data='{"mag":3,"ammoItem":"Ammo9mm"}'), item("T_Wrench")]
@@ -161,6 +173,15 @@ def test_container_size_generated_from_category_data(db, types):
         cur.execute(SIZES_SQL)
         got = {r["uname"]: r["container_size"] for r in cur.fetchall()}
     assert got == {"T_Satchel": 7, "T_Safe": 12, "T_Sack": None, "T_Wrench": None}
+
+
+def test_container_size_holds_sizes_past_a_byte(db):
+    insert = "INSERT INTO item_types (uname,name,model,size,category,category_data) VALUES ('T_Huge','Huge',1550,3,'bag','{\"bag_size\":200}')"
+    with db.cursor() as cur:
+        cur.execute(insert)
+        cur.execute("SELECT container_size FROM item_types WHERE uname='T_Huge'")
+        assert cur.fetchone()["container_size"] == 200
+        cur.execute("DELETE FROM item_types WHERE uname='T_Huge'")
 
 
 def test_item_create_sizes_containers_from_container_size(db, types, character):

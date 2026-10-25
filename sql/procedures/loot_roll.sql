@@ -4,6 +4,7 @@ BEGIN
   -- wrapped in an outer array; one transaction places every item (bags get their container, the trigger the
   -- world position), spends each zone's allowance and cools every point.
   DECLARE v_n INT DEFAULT 0;
+  DECLARE v_first INT DEFAULT 0;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
   SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
   START TRANSACTION;
@@ -15,12 +16,15 @@ BEGIN
     JOIN loot_spawns s ON s.id = j.sid
     JOIN item_types t ON t.uname = j.u;
   SET v_n = ROW_COUNT();
+  SET v_first = LAST_INSERT_ID();
+  -- only the rows this call inserted get a container: ids never go below the first one the insert was handed
   INSERT INTO containers (kind, size, owner_item_id)
     SELECT t.category, IFNULL(t.container_size, 8), i.id
     FROM JSON_TABLE(p_rolls, '$[0][*]' COLUMNS (sid INT PATH '$.s')) j
-    JOIN items i ON i.loot_spawn_id = j.sid
+    JOIN items i ON i.loot_spawn_id = j.sid AND i.id >= v_first
     JOIN item_types t ON t.uname = i.type_uname
-    WHERE t.category IN ('bag', 'safebox') AND NOT EXISTS (SELECT 1 FROM containers c WHERE c.owner_item_id = i.id);
+    WHERE v_n > 0 AND t.category IN ('bag', 'safebox')
+      AND NOT EXISTS (SELECT 1 FROM containers c WHERE c.owner_item_id = i.id);
   UPDATE world_budget b
     JOIN (SELECT s.zone, COUNT(*) AS n
           FROM JSON_TABLE(p_rolls, '$[0][*]' COLUMNS (sid INT PATH '$.s', NESTED PATH '$.items[*]' COLUMNS (
