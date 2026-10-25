@@ -23,6 +23,8 @@ INSERT INTO settings (skey, svalue) VALUES
 ('player.login_freeze_time','8'),
 ('player.ping_limit','400'),
 ('server.motd',''),
+('server.rules',''),
+('server.staff',''),
 ('server.whitelist','0'),
 ('server.whitelist_auto','0'),
 ('spawn.bagtype','Satchel'),

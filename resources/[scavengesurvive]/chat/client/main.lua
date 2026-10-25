@@ -76,6 +76,11 @@ addEventHandler("chatRadioChanged", root, function(freq, mode)
     state.freq, state.mode = tonumber(freq) or state.freq, tonumber(mode) or state.mode
 end)
 
+-- /help and /chatinfo: upstream's DIALOG_STYLE_MSGBOX with a lone Close button
+addEventHandler("chatInfoShown", root, function(title, body)
+    exports.ui:dialogOpen("chat:info", "msgbox", title, body, "Close", "")
+end)
+
 addEventHandler("chatRadioOpened", root, function()
     open()
 end)

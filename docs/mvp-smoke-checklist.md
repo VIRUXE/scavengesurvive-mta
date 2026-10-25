@@ -18,6 +18,9 @@ ui 6, auth 7, character 8, items 9, loot 10, hud 11, weapons 12, dev/config 13),
    On join A reads the orange `Scavenge and Survive (Copyright (C) 2016 Barnaby "Southclaws" Keene)` line and, when
    a MoTD is set, `MoTD: …`; B reads `A has joined`. A quitting shows B `A left the server.`, a timeout `A lost
    connection.`, a kick nothing (#84).
+   `/help` and `/chatinfo` open message boxes with a lone Close (tabs as indents, colours kept); `/welcome` re-shows
+   the welcome box closable at once; `/rules` and `/admins` list `server.rules` / `server.staff` (entries split on
+   `|`, "total: 0" when empty); `/credits` and `/motd` print in chat (#85).
 3. **DB round trip.** A: `/dbtest` prints `dbtest: <n> ms ok=false code=UNKNOWN_TYPE` with n < 50.
 4. **Pick up / drop.** A: `/additem Wrench`. Within 2 s a "Wrench" label appears at the item. **F** picks it up
    (the key list changes to Put away / Drop item), **N** drops it at your feet, **F** picks it up again. B sees each change.

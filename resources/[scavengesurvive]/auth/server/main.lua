@@ -317,6 +317,13 @@ addCommandHandler("lang", function(player, _, code)
     util.log("auth", "info", "%s set language %s", account.name, code)
 end)
 
+-- /welcome (upstream commands.pwn): the welcome box again, closable at once
+addCommandHandler("welcome", function(player)
+    if getElementType(player) == "player" then
+        triggerClientEvent(player, "authWelcomeShown", player, 0)
+    end
+end)
+
 -- /changepass <old> <new> (upstream commands.pwn): verify the old password, store a new bcrypt hash.
 addCommandHandler("changepass", function(player, _, oldPw, newPw)
     if getElementType(player) ~= "player" then

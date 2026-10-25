@@ -7,3 +7,4 @@ addEvent("chatModeRequested", true)
 -- server to client
 addEvent("chatRadioChanged", true)
 addEvent("chatRadioOpened", true)
+addEvent("chatInfoShown", true)

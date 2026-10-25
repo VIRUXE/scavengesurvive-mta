@@ -175,4 +175,49 @@ function chat.quitLine(name, quitType)
     return fmt and string.format(fmt, name) or nil
 end
 
+-- Info commands (upstream player/commands.pwn). SA-MP message boxes expand tabs; dx does not, so the body gets
+-- four spaces per tab before it is sent.
+function chat.dialogBody(text)
+    return (tostring(text or ""):gsub("\t", "    "))
+end
+
+-- server.rules / server.staff (upstream settings.ini arrays): entries separated by "|", blanks dropped.
+function chat.listSetting(value)
+    local out = {}
+    if type(value) ~= "string" then
+        return out
+    end
+    for part in (value .. "|"):gmatch("(.-)|") do
+        local item = part:gsub("^%s+", ""):gsub("%s+$", "")
+        if item ~= "" then
+            out[#out + 1] = item
+        end
+    end
+    return out
+end
+
+-- /rules and /admins: a yellow header with the count, then one orange line per entry.
+function chat.listLines(header, items)
+    local lines = { string.format(" >  %s (total: %d)", header, #items) }
+    for _, item in ipairs(items) do
+        lines[#lines + 1] = " >  #FFAA00" .. item
+    end
+    return lines
+end
+
+chat.CREDITS = {
+    "Scavenge and Survive is developed by Southclaws (www.southcla.ws) and the following contributors:",
+    "Y_Less - Tons of useful code, libraries and conversations",
+    "Viruxe - Lots of anti-cheat work",
+    "Kadaradam - Fishing, Trees and lots of bug fixes",
+    "Eidorian - French translation",
+    "Hiddos - Better water detection code",
+    "YOLO - Bosnian/Croatian/Serbian Translation",
+    "JJ - Czech Translation",
+    "KingSergio - Russian Translation",
+    "Blacky - Romanian Translation",
+    "Reza - Indonesian Translation",
+    "PrettyDiamond - Spanish Translation",
+}
+
 return chat

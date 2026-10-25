@@ -285,6 +285,68 @@ addEventHandler("characterSpawned", root, function(charId)
     end, source)
 end)
 
+-- ---------------------------------------------------------------------------------------------------------
+-- Info commands (upstream player/commands.pwn): message boxes for /help and /chatinfo, chat lines for the rest.
+
+-- addCommandHandler also hands console commands over; these only make sense for a player
+local function playerCommand(name, fn)
+    addCommandHandler(name, function(p, ...)
+        if getElementType(p) == "player" then
+            fn(p, ...)
+        end
+    end)
+end
+
+local function showInfo(p, title, key)
+    triggerClientEvent(p, "chatInfoShown", p, title, logic.dialogBody(exports.data:t(lang(p), key)))
+end
+
+playerCommand("help", function(p)
+    showInfo(p, "General Information", "GENCOMDHELP")
+end)
+
+playerCommand("chatinfo", function(p)
+    showInfo(p, "Information about #33CCFFChat", "GENCOMDCHAT")
+end)
+
+local function sayList(p, header, settingKey)
+    db.one("SELECT svalue FROM settings WHERE skey = ?", { settingKey }, function(row, pl)
+        if not isElement(pl) then
+            return
+        end
+        local items = logic.listSetting(row and row.svalue)
+        for i, line in ipairs(logic.listLines(header, items)) do
+            local r, g, b = 255, 255, 0
+            if i > 1 then
+                r, g, b = 51, 204, 255
+            end
+            outputChatBox(line, pl, r, g, b, true)
+        end
+    end, p)
+end
+
+playerCommand("rules", function(p)
+    sayList(p, "Rules List", "server.rules")
+end)
+
+playerCommand("admins", function(p)
+    sayList(p, "Staff List", "server.staff")
+end)
+
+playerCommand("credits", function(p)
+    for i, line in ipairs(logic.CREDITS) do
+        local r, g, b = 51, 204, 255
+        if i == 1 then
+            r, g, b = 255, 255, 0
+        end
+        outputChatBox(" >  " .. line, p, r, g, b)
+    end
+end)
+
+playerCommand("motd", function(p)
+    outputChatBox(" >  MoTD: #33CCFF" .. exports.staff:getMotd(), p, 255, 255, 0, true)
+end)
+
 addEventHandler("onPlayerJoin", root, function()
     local name = getPlayerName(source)
     for _, line in ipairs(logic.joinLines(name, exports.staff:getMotd())) do

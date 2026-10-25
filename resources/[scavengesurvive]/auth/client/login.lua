@@ -21,9 +21,12 @@ local function showWelcome()
     exports.ui:dialogOpen("auth:welcome", "msgbox", prompt.WELCOME_TITLE, prompt.WELCOME_BODY, label, "")
 end
 
-addEventHandler("authWelcomeShown", root, function()
-    welcomeLeft = prompt.WELCOME_COUNTDOWN
+addEventHandler("authWelcomeShown", root, function(countdown)
+    welcomeLeft = tonumber(countdown) or prompt.WELCOME_COUNTDOWN
     showWelcome()
+    if welcomeLeft <= 0 then
+        return
+    end
     setTimer(function()
         welcomeLeft = welcomeLeft - 1
         exports.ui:dialogSetButtons("auth:welcome", prompt.welcomeButton(welcomeLeft), "")
