@@ -11,7 +11,7 @@ details); bans and warnings write theirs inside the `staff_ban` / `staff_warn` p
 | 2 | Moderator | `/duty`, `/goto`, `/get`, `/gotopos`, `/freeze`, `/unfreeze`, `/ban`, `/unban`, `/banlist`, `/banned`, `/spec`, `/free`, `/nametags`, `/profile`, `/setmotd`, `/deletereports` |
 | 3 | Administrator | `/whitelist`, `/ip`, `/setactive`, `/resetpassword`, `/adminlist` |
 | 4 | Lead | `/players`, `/setadmin`, `/restart`, `/sc [type]` (supply crate here), `/wc` (weapons cache here) |
-| 5 | Developer | everything above; the debug toggles live in the `dev` resource (`/sethp`, `/setfood`, `/setbleed`, `/weather`, `/additem`, `/rr`, `/move`, `/fly`) |
+| 5 | Developer | everything above, `/setskill <skill> <0-1> [player]`; the debug toggles live in the `dev` resource (`/sethp`, `/setfood`, `/setbleed`, `/weather`, `/additem`, `/rr`, `/move`, `/fly`) |
 | 0 | Player | `/report [name|near|killer] [reason]` |
 
 Durations (`/mute`, `/ban`): a bare number is seconds; `10m`, `2h`, `3d`, `2w`, `1mo` and the full words work;

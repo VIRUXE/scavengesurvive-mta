@@ -138,7 +138,9 @@ local function tryGroundCraft(player, _cid, held, px, py, pz, rz, int, dim)
         end
         local recipe = matches[1]
         cancelHold(c.player)
-        triggerClientEvent(c.player, "craftHoldStarted", c.player, "Constructing " .. recipe.name, recipe.buildTime)
+        -- upstream craft-construct.pwn: the skill is the result's uniqueid, its value shortens the build time
+        local ms = exports.character:skillTimeModifier(c.player, recipe.buildTime, recipe.result.uname)
+        triggerClientEvent(c.player, "craftHoldStarted", c.player, "Constructing " .. recipe.name, ms)
         local timer = setTimer(function(pl, rec, byUname, cpx, cpy, cpz, crz, cint, cdim)
             activeHold[pl] = nil
             if not isElement(pl) then
@@ -173,14 +175,15 @@ local function tryGroundCraft(player, _cid, held, px, py, pz, rz, int, dim)
                     end
                     if res and res.ok then
                         exports.items:refreshPlayer(c2.player)
+                        exports.character:gainSkill(c2.player, c2.skill)
                         toast(c2.player, "CRAFTED")
                     else
                         toast(c2.player, res and res.code or "DB_ERROR")
                     end
                 end,
-                { player = pl }
+                { player = pl, skill = rec.result.uname }
             )
-        end, recipe.buildTime, 1, c.player, recipe, itemsByUname, px, py, pz, rz, int, dim)
+        end, ms, 1, c.player, recipe, itemsByUname, px, py, pz, rz, int, dim)
         activeHold[c.player] = { timer = timer, action = "construct" }
     end, { player = player, toolUname = toolUname })
 end
@@ -204,13 +207,10 @@ local function tryDeconstruct(player, _cid, held, px, py, _pz, rz, int, dim)
             return
         end
         cancelHold(c.player)
-        triggerClientEvent(
-            c.player,
-            "craftHoldStarted",
-            c.player,
-            "Deconstructing " .. target.type_uname,
-            info.duration
-        )
+        -- upstream craft-construct.pwn: removal time shortened by the skill of the item being taken apart, no gain
+        local ms = exports.character:skillTimeModifier(c.player, info.duration, target.type_uname)
+        local label = "Deconstructing " .. target.type_uname
+        triggerClientEvent(c.player, "craftHoldStarted", c.player, label, ms)
         local timer = setTimer(function(pl, tgt, dInfo, crz, cint, cdim)
             activeHold[pl] = nil
             if not isElement(pl) then
@@ -232,7 +232,7 @@ local function tryDeconstruct(player, _cid, held, px, py, _pz, rz, int, dim)
             end
             exports.items:refreshPlayer(pl)
             toast(pl, "DECONSTRUCTED")
-        end, info.duration, 1, c.player, target, info, rz, int, dim)
+        end, ms, 1, c.player, target, info, rz, int, dim)
         activeHold[c.player] = { timer = timer, action = "deconstruct" }
     end, { player = player })
 end
@@ -266,7 +266,9 @@ local function tryWorkbenchCraft(player, _cid, held, px, py)
             end
             local recipe = matches[1]
             cancelHold(c2.player)
-            triggerClientEvent(c2.player, "craftHoldStarted", c2.player, "Crafting " .. recipe.name, recipe.buildTime)
+            -- upstream workbench.pwn: the skill is the result's uniqueid
+            local ms = exports.character:skillTimeModifier(c2.player, recipe.buildTime, recipe.result.uname)
+            triggerClientEvent(c2.player, "craftHoldStarted", c2.player, "Crafting " .. recipe.name, ms)
             local timer = setTimer(function(pl, rec, byUname, wbContId)
                 activeHold[pl] = nil
                 if not isElement(pl) then
@@ -290,12 +292,13 @@ local function tryWorkbenchCraft(player, _cid, held, px, py)
                         return
                     end
                     if res and res.ok then
+                        exports.character:gainSkill(c3.player, c3.skill)
                         toast(c3.player, "CRAFTED")
                     else
                         toast(c3.player, res and res.code or "DB_ERROR")
                     end
-                end, { player = pl })
-            end, recipe.buildTime, 1, c2.player, recipe, itemsByUname, contId)
+                end, { player = pl, skill = rec.result.uname })
+            end, ms, 1, c2.player, recipe, itemsByUname, contId)
             activeHold[c2.player] = { timer = timer, action = "workbench" }
         end, { player = c.player, held = c.held })
     end, { player = player, held = held })

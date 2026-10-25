@@ -659,7 +659,10 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
         cancelHoldAction(player)
         setVehicleDoorOpenRatio(vehicle, 0, 1, 500)
         setPedAnimation(player, "INT_SHOP", "SHOP_CASHIER", -1, true, false, false, false)
-        triggerClientEvent(player, "vehicleHoldStarted", player, "Repairing", 3000)
+        -- upstream repair.pwn ran the Repair skill through the per-tick health step, so skill made repairs slower;
+        -- the port shortens the hold instead
+        local ms = exports.character:skillTimeModifier(player, 3000, "Repair")
+        triggerClientEvent(player, "vehicleHoldStarted", player, "Repairing", ms)
         local timer = setTimer(function(p, veh)
             activeActions[p] = nil
             if not isElement(p) or not isElement(veh) then
@@ -670,8 +673,9 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
             local curHp = getElementHealth(veh)
             local nextHp = math.min(vlogic.HEALTH_MAX, curHp + 150)
             setElementHealth(veh, nextHp)
+            exports.character:gainSkill(p, "Repair")
             toast(p, "REPAIRED")
-        end, 3000, 1, player, vehicle)
+        end, ms, 1, player, vehicle)
         activeActions[player] = { actionType = "repair", vehicle = vehicle, timer = timer }
         return
     end

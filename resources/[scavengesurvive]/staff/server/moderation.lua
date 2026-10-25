@@ -385,6 +385,33 @@ return function(ctx)
         end,
     })
 
+    -- upstream level5.pwn /setskill ran PlayerGainSkillExperience with the amount as mult on the caller; the port
+    -- sets the value outright (0..1) on the caller or a named player (character skills, #93)
+    ctx.command({
+        name = "setskill",
+        level = 5,
+        usage = "/setskill <skill> <0-1> [player]",
+        help = "Set a character skill",
+        needsDb = false,
+        fn = function(p, args)
+            local amount = tonumber(args[2])
+            if not args[1] or not amount then
+                return ctx.say(p, " >  Usage: /setskill <skill> <0-1> [player]")
+            end
+            local target = args[3] and ctx.target(p, args[3], true) or (not args[3] and p)
+            if not target or not isElement(target) then
+                return
+            end
+            local v = exports.character:setSkill(target, args[1], amount)
+            if not v then
+                return ctx.say(p, " >  %s has no character, or the skill name is not valid.", getPlayerName(target))
+            end
+            ctx.say(p, " >  %s: %s = %.2f", getPlayerName(target), args[1], v)
+            local details = string.format("%s=%.3f", args[1], v)
+            ctx.log(p, "setskill", getPlayerName(target), ctx.accountId(target), details)
+        end,
+    })
+
     -- After every login (upstream CheckForExtraAccounts): other names from this IP or serial, their highest staff
     -- level and whether any is banned. Catches a name banned while offline, whose bans row has no IP or serial yet.
     local ALIAS_LOGIN_SQL = "SELECT c.name, MAX(COALESCE(a.admin_level, 0)) AS lvl, MAX(EXISTS(SELECT 1 FROM bans b"
