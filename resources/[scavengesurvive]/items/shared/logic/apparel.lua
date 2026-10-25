@@ -168,6 +168,7 @@ local OVERRIDES = {}
 local CUT_HAT_ROW = { 0, 0, 0, 0, 0, 0, 1, 1, 1 }
 local CUT_HAT_FIT = {
     [283] = CUT_HAT_ROW, -- the sheriff, a source skin
+    [5] = { 0.015, 0, 0, 0, 0, 0, 1.2, 1.2, 1.2 }, -- Big Bear: broader, taller head than the source skin
     [93] = { 0, 0, 0, 0, 0, 0, 1.1, 1.1, 1.1 },
 }
 
