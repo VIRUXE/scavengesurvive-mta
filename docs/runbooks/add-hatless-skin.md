@@ -113,7 +113,7 @@ that shows it:
 4. Restart `models` and look at the twin bare in the studio. `tools/blender/render_head.py` shows it without the
    game.
 
-Rebuilt so far: 2, 35, 36, 37 and 61. The other 17 keep their domes until they get a plane.
+Rebuilt: every headgear skin except the helmeted cops with sunglasses (4, 119, 284), whose cut still takes the glasses.
 
 ## Hat items from the cut (#77)
 
