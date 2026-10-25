@@ -447,18 +447,22 @@ BEGIN
   DECLARE v_inv INT DEFAULT NULL;
   DECLARE v_skin SMALLINT DEFAULT NULL;
   DECLARE v_clothes INT DEFAULT NULL;
+  DECLARE v_despawn DATETIME;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
   SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
   START TRANSACTION;
+  -- the corpse's items despawn like loot (loot.despawn_minutes, ADR 0001) unless someone picks them up
+  SET v_despawn = NOW() + INTERVAL IFNULL(
+    (SELECT CAST(svalue AS SIGNED) FROM settings WHERE skey = 'loot.despawn_minutes'), 120) MINUTE;
   SELECT inventory_container_id, skin INTO v_inv, v_skin FROM characters WHERE id = p_char_id FOR UPDATE;
-  CALL character_drop_items(p_char_id, v_inv, p_ring, p_interior, p_dimension, v_n);
+  CALL character_drop_items(p_char_id, v_inv, p_ring, p_interior, p_dimension, v_despawn, v_n);
   -- upstream death.pwn: the body leaves a Clothes item holding its skin, 1 m along sin/cos(90); p_clothes is that
   -- spot as one ring entry (MTA toJSON of [x, y, z, nx, ny]), at a random heading like the rest
   IF v_skin IS NOT NULL THEN
-    INSERT INTO items (type_uname, data, x, y, z, rz, ground_nx, ground_ny, interior, dimension)
+    INSERT INTO items (type_uname, data, x, y, z, rz, ground_nx, ground_ny, interior, dimension, despawn_at)
       VALUES ('Clothes', JSON_OBJECT('skin', CAST(v_skin AS SIGNED)), JSON_VALUE(p_clothes, '$[0][0]'),
         JSON_VALUE(p_clothes, '$[0][1]'), JSON_VALUE(p_clothes, '$[0][2]'), RAND() * 360,
-        JSON_VALUE(p_clothes, '$[0][3]'), JSON_VALUE(p_clothes, '$[0][4]'), p_interior, p_dimension);
+        JSON_VALUE(p_clothes, '$[0][3]'), JSON_VALUE(p_clothes, '$[0][4]'), p_interior, p_dimension, v_despawn);
     SET v_clothes = LAST_INSERT_ID();
   END IF;
   UPDATE characters SET alive = 0, died_at = NOW(), x = p_x, y = p_y, z = p_z WHERE id = p_char_id;
@@ -481,19 +485,20 @@ BEGIN
     ROLLBACK;
     SELECT 0 AS ok, 'NOT_ALIVE' AS code, NULL AS payload;
   ELSE
-    CALL character_drop_items(p_char_id, v_inv, p_ring, p_interior, p_dimension, v_n);
+    CALL character_drop_items(p_char_id, v_inv, p_ring, p_interior, p_dimension, NULL, v_n);
     COMMIT;
     SELECT 1 AS ok, 'OK' AS code, JSON_OBJECT('dropped', CAST(v_n AS SIGNED)) AS payload;
   END IF;
 END//
 
 CREATE OR REPLACE PROCEDURE `character_drop_items`(IN p_char_id INT, IN p_inv INT, IN p_ring LONGTEXT,
-  IN p_interior TINYINT, IN p_dimension INT, OUT p_n INT)
+  IN p_interior TINYINT, IN p_dimension INT, IN p_despawn_at DATETIME, OUT p_n INT)
 BEGIN
   -- Puts everything the character holds or wears, and its inventory, on the ground (a bag keeps its contents):
   -- item n goes to spot n mod the ring's length, turned to a random heading. p_ring is MTA's toJSON of
   -- [[x, y, z, nx, ny], ...] from character drop.lua: z and the ground normal (nx, ny; 0, 0 = flat) measured by the
-  -- client. toJSON's outer [ ] is why the paths start at '$[0]'.
+  -- client. toJSON's outer [ ] is why the paths start at '$[0]'. p_despawn_at (NULL = never) is when
+  -- ev_despawn_items removes what nobody picked up (item_pickup clears it).
   -- Runs inside the caller's transaction: character_death_drop, character_drop_all.
   DECLARE v_done INT DEFAULT 0;
   DECLARE v_id INT;
@@ -514,7 +519,7 @@ BEGIN
       x = JSON_VALUE(p_ring, CONCAT(v_slot, '[0]')), y = JSON_VALUE(p_ring, CONCAT(v_slot, '[1]')),
       z = JSON_VALUE(p_ring, CONCAT(v_slot, '[2]')), rz = RAND() * 360,
       ground_nx = JSON_VALUE(p_ring, CONCAT(v_slot, '[3]')), ground_ny = JSON_VALUE(p_ring, CONCAT(v_slot, '[4]')),
-      interior = p_interior, dimension = p_dimension
+      interior = p_interior, dimension = p_dimension, despawn_at = p_despawn_at
       WHERE id = v_id;
     SET p_n = p_n + 1;
   END LOOP;
@@ -531,8 +536,10 @@ BEGIN
     JOIN JSON_TABLE(p_rows, '$[0][*]' COLUMNS (
       id INT PATH '$.id', hp FLOAT PATH '$.hp', food FLOAT PATH '$.food', bleed FLOAT PATH '$.bleed',
       x FLOAT PATH '$.x', y FLOAT PATH '$.y', z FLOAT PATH '$.z', rz FLOAT PATH '$.rz',
+      interior INT PATH '$.interior', dimension INT PATH '$.dimension',
       skills LONGTEXT PATH '$.skills', infection INT PATH '$.infection', drugs LONGTEXT PATH '$.drugs')) j ON j.id = c.id
     SET c.hp = j.hp, c.food = j.food, c.bleed = j.bleed, c.x = j.x, c.y = j.y, c.z = j.z, c.rz = j.rz,
+      c.interior = COALESCE(j.interior, c.interior), c.dimension = COALESCE(j.dimension, c.dimension),
       c.skills = COALESCE(j.skills, c.skills), c.infection = COALESCE(j.infection, c.infection),
       c.drugs = COALESCE(j.drugs, c.drugs)
     WHERE c.alive = 1;

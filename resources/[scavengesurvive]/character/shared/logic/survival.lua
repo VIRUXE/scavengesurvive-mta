@@ -36,6 +36,18 @@ function survival.loadWounds(bleed, isNew)
     return (tonumber(bleed) or 0) > 0 and 1 or 0
 end
 
+-- The cause of a death in the survival tick: a tick drains HP through bleeding (bleed > 0 at its start), hunger
+-- (food < 20) or the Air drug. Bleeding wins when several applied.
+function survival.deathCause(bleedBefore, food)
+    if bleedBefore > 0 then
+        return "bleeding"
+    end
+    if food < 20 then
+        return "starvation"
+    end
+    return "drugs"
+end
+
 -- rng() must return a float in [0,1). state.infection = { food, wound } and state.drugs = { [name] = ms } are
 -- optional (#94): food infection adds one idle food rate, wound infection halves the regeneration, and the drug
 -- effects of bleed.pwn and drugfx.pwn apply once per tick (upstream ran Air and Adrenaline twice, ADR 0007).
