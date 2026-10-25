@@ -3,6 +3,8 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+from tools.port_hats import HATS
+
 from .common import HEADER, NUM, lua_index, lua_value, write_text
 
 HEADER_RE = re.compile(r"^\s*([A-Za-z0-9_]+)\s*,\s*(" + NUM + r")?\s*$")
@@ -41,6 +43,21 @@ def canonicalise(tables: dict[str, dict], unames) -> list[tuple[str, str]]:
     return unknown
 
 
+def add_port_hats(tables: dict[str, dict]) -> list[str]:
+    """Appends the port's hat items (tools/port_hats.py) to the upstream tables they name, with upstream's default
+    per-point limit and no server limit; returns the tables that got rows."""
+    touched = []
+    for h in HATS:
+        for table, weight in h["loot"].items():
+            if table not in tables:
+                raise KeyError(f"port hat {h['uname']}: no loot table {table}")
+            entries = tables[table]["entries"]
+            entries.append({"weight": float(weight), "uname": h["uname"], "perLimit": 3, "serverLimit": 0})
+            if table not in touched:
+                touched.append(table)
+    return touched
+
+
 def render_lua(tables: dict[str, dict]) -> str:
     body = ["local M = {}"] + [f"M{lua_index(name)} = {lua_value(tables[name])}" for name in sorted(tables)]
     return HEADER + "\n".join(body) + "\nreturn M\n"
@@ -53,5 +70,6 @@ def convert(src_root, out_data, unames) -> dict:
         tables[name] = table
     for table, uname in canonicalise(tables, unames):
         print(f"loot: dropped unknown uname {uname!r} in {table} (upstream skips it too)")
+    add_port_hats(tables)
     write_text(Path(out_data) / "loot_tables.lua", render_lua(tables))
     return tables

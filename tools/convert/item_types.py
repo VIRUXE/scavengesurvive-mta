@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 import re
 
+from tools.port_hats import HATS
+
 from .common import HEADER, NUM, SEED_HEADER, lua_index, lua_value, sql_str
 
 POSITIONAL = ["name", "uname", "model", "size", "rotx", "roty", "rotz", "modelz", "attx", "atty", "attz",
@@ -213,6 +215,17 @@ def apply_wear_offsets(types: dict[str, dict], init_src: str, apparel_src: str, 
         armour["wearOffsets"] = {skins[s]: [float(coerce(v)) for v in split_args(r)] for r, s in rows if s in skins}
 
 
+def add_port_hats(types: dict[str, dict]) -> None:
+    """The port's own hat items (tools/port_hats.py, #77): generic wearables like upstream's PoliceCap, cut from the
+    skins so they carry no per-skin wearOffsets (apparel.lua attaches them at zero offset). On the ground the hat's
+    up axis is X, as in the ped it came from, so the world object stands on roty."""
+    index = max(t["_index"] for k, t in types.items() if not k.startswith("_")) + 1
+    for i, h in enumerate(HATS):
+        fields = dict(DEFAULTS, name=h["name"], uname=h["uname"], model=h["model"], size=1, roty=270.0, modelz=0.05)
+        fields.update(_symbol="port_" + h["uname"], _index=index + i, category="generic", categoryData=None)
+        types[h["uname"]] = fields
+
+
 def _public(t: dict) -> dict:
     return {LUA_KEY.get(k, k): v for k, v in t.items() if not k.startswith("_")}
 
@@ -257,6 +270,7 @@ def convert(src_root, out_data, out_seed) -> dict:
     types = parse_item_types(init)
     apply_categories(types, init, apparel)
     apply_wear_offsets(types, init, apparel, armour)
+    add_port_hats(types)
     write_text(Path(out_data) / "item_types.lua", render_lua(types))
     write_text(Path(out_seed) / "0001_item_types.sql", render_sql(types))
     return types

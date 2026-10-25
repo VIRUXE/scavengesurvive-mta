@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from tools.convert import item_types as it
+from tools.port_hats import HATS
 
 FX = Path(__file__).parent / "fixtures"
 
@@ -99,3 +100,16 @@ def test_armour_rows_follow_their_skin_tag_not_their_index():
     assert armour["90"][0] == 0.117 and armour["60"][5] == 4.400002
     assert "131" not in armour  # skin_IndiF is not defined in the excerpt
     assert "wearOffsets" in it.render_lua(_wear()) and "wearOffsets" not in it.render_sql(_wear())
+
+
+def test_port_hats_are_generic_items_after_upstream_s():
+    types = _load()
+    last = max(t["_index"] for k, t in types.items() if not k.startswith("_"))
+    it.add_port_hats(types)
+    for i, h in enumerate(HATS):
+        t = types[h["uname"]]
+        assert (t["category"], t["model"], t["roty"], t["size"], t["modelz"]) == ("generic", h["model"], 270.0, 1, 0.05)
+        assert t["_index"] == last + 1 + i
+    lua, sql = it.render_lua(types), it.render_sql(types)
+    for h in HATS:
+        assert f'M.byUname.{h["uname"]} = ' in lua and f"'{h['uname']}'" in sql

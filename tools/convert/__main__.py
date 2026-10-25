@@ -13,7 +13,7 @@ SEED = ROOT / "sql" / "seed"
 MAPS = ROOT / "resources" / "[scavengesurvive]" / "maps"
 WORLD = ROOT / "resources" / "[scavengesurvive]" / "world"
 MAPS_REPORT = ROOT / "docs" / "maps-census.md"
-SAMP_ONLY = lambda model: model >= 18631 or 11682 <= model <= 11753  # noqa: E731
+SAMP_ONLY = lambda model: 18631 <= model < 20001 or 11682 <= model <= 11753  # noqa: E731 (port hats sit at 20001+)
 
 
 def main(argv=None) -> int:

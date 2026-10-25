@@ -20,6 +20,21 @@ local HATS = {
     PizzaHat = true,
 }
 
+-- Hats cut off the skins that model their own headgear (tools/port_hats.py, #77). The mesh keeps the ped's head
+-- space with the Head bone at the origin, so every skin wears it at zero offset on the head bone; a skin that
+-- still needs a nudge gets an OVERRIDES row from the studio.
+local CUT_HATS = {
+    SheriffHat = true,
+    FireHelmet = true,
+    GardenerHat = true,
+    PilotCap = true,
+    MotoHelmet = true,
+    RanchHat = true,
+    GolfCap = true,
+    BurgerHat = true,
+    BucketHat = true,
+}
+
 local MASKS = {
     GasMask = true,
     HockeyMask = true,
@@ -90,7 +105,7 @@ function M.slotFor(uname)
     if not uname then
         return nil
     end
-    if HATS[uname] then
+    if HATS[uname] or CUT_HATS[uname] then
         return "hat"
     end
     if MASKS[uname] then
@@ -106,6 +121,13 @@ function M.slotFor(uname)
         return "holster"
     end
     return nil
+end
+
+--- Whether a hat item was cut off a skin (worn at zero offset, tools/port_hats.py).
+---@param uname string
+---@return boolean
+function M.isCutHat(uname)
+    return CUT_HATS[uname] == true
 end
 
 --- Returns whether an item can be worn as apparel or holstered.
@@ -137,6 +159,17 @@ local BORROW = {
 
 -- Rows that replace upstream's for one skin: OVERRIDES[uname][skin].
 local OVERRIDES = {}
+
+-- A cut hat sits where it was cut from: the head bone's origin, unrotated, unscaled. Heads differ in size and
+-- height per skin, so CUT_HAT_FIT holds one row per tuned skin, { x, y, z, rx, ry, rz, sx, sy, sz }, shared by every
+-- cut hat and borrowed along the skins.lua chain by the untuned ones (like upstream's per-skin rows). Studio-tuned
+-- on 2026-10-25 from six angles: skin 93's hair fills a hat cut from a flat male head, so she takes it a tenth
+-- larger at the same height (lowering or shrinking it pushed the hair through the crown).
+local CUT_HAT_ROW = { 0, 0, 0, 0, 0, 0, 1, 1, 1 }
+local CUT_HAT_FIT = {
+    [283] = CUT_HAT_ROW, -- the sheriff, a source skin
+    [93] = { 0, 0, 0, 0, 0, 0, 1.1, 1.1, 1.1 },
+}
 
 -- Position nudges added on top of whatever row is chosen (upstream, borrowed or overridden):
 -- NUDGE[uname][skin] = { dx, dy, dz }. Studio-checked: the nose of skins 250 and 188 poked through the bandanas,
@@ -193,7 +226,9 @@ function M.attachConfig(slot, uname, skin, wearOffsetsOf)
     if default then
         local borrow = BORROW[uname]
         local o = OVERRIDES[uname] and skin and OVERRIDES[uname][skin]
-        if not o then
+        if not o and CUT_HATS[uname] then
+            o = (skin and rowFor(CUT_HAT_FIT, skin)) or CUT_HAT_ROW
+        elseif not o then
             local bySkin = wearOffsetsOf and skin and wearOffsetsOf(borrow and borrow.from or uname)
             o = bySkin and rowFor(bySkin, skin)
         elseif borrow then

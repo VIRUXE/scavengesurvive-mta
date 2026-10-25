@@ -57,6 +57,32 @@ Two facts cost a long detour: a DFF stores one UV per vertex, so a hairline vert
 copy; and the exporter is fine with new vertices, so when a head looks stretched in the game compare the dome's
 size with the face, not the file.
 
+## Hat items from the cut (#77)
+
+The faces the remodel deletes are the skin's own hat, so `tools/port_hats.py` turns the distinct ones into items.
+One row per headgear: uname, display name, skin, ped DFF name, loot tables with weights and the atlas `blocks`.
+Each hat gets a port model id from 20001 up. `python -m tools.extract_ped_models --hats` pulls each skin's DFF and
+TXD out of `gta3.img` and runs `remodel_head.py --only hats --blocks c,r;c,r` headless. The HEADS rule of that
+skin decides what is hat. The exporter copies those faces into the Head bone's frame and writes
+`files/<ped>_hat.dff`, then `hats.lua` (the skin's TXD through `txdModel`, the beanie's collision through `col`)
+and `meta.xml`.
+
+GTA models a skull patch under each hat, textured with a smear of the face, and the cut carries it along. The
+`blocks` column drops it: it lists the (column, row) cells of an 8x8 grid over the skin's texture, row 0 at the
+top, and only faces whose UV centre falls in those cells are kept. Read the cells off a sheet of the textures with
+the grid drawn. Ped meshes are wound every which way, and MTA culls a worn object on the opposite side from a
+free-standing one. So the exporter recalculates normals and writes every face twice with reversed winding, a
+double-sided shell, which is solid worn and alone. Then run `python -m tools.convert items loot` for the item types
+(generic, size 1, `roty` 270 so the X-up mesh stands on the ground) and the loot rows. Apply the seed and restart
+`models`, `data` and `items`. `items/shared/logic/apparel.lua` lists the unames in `CUT_HATS`, worn on SA-MP bone 2.
+Per-skin fit lives in `CUT_HAT_FIT`, borrowed along the `skins.lua` chain: skin 283 is the zero row, skin 93 is
+scale 1.1 at zero offset. Add a `CUT_HAT_FIT` row for a skin that needs one, not an `OVERRIDES` row. Judge each
+hat from six angles, worn and alone, and from the side camera (`studio <p> 270 1.4 0.75 0.65`), not the face
+preset, which looks up at the brim and makes the hat seem pitched back.
+
+Left out on purpose: headgear a SA-MP object already covers (police caps, SWAT and army helmets, the pizza cap, the
+beanie) and cuts that are mostly hair (dwayne's mullet, bikerb's bandana).
+
 ## Caveats
 
 - Never restart `models` while a client is still downloading (docs/runbooks/start-stop-restart.md).

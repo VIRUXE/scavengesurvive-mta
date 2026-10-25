@@ -1,6 +1,9 @@
 from pathlib import Path
 
+import pytest
+
 from tools.convert import loot_tables as lt
+from tools.port_hats import HATS
 
 FX = Path(__file__).parent / "fixtures"
 
@@ -30,3 +33,14 @@ def test_unames_resolve_case_insensitively_like_upstream():
     unknown = lt.canonicalise(tables, ["Whisky", "Wrench"])
     assert tables["t"]["entries"] == [{"weight": 1.0, "uname": "Whisky", "perLimit": 3, "serverLimit": 0}]
     assert unknown == [("t", "Nope")]
+
+
+def test_port_hats_join_the_tables_they_name():
+    tables = {t: {"mult": 1.0, "entries": []} for h in HATS for t in h["loot"]}
+    touched = lt.add_port_hats(tables)
+    assert sorted(touched) == sorted(tables)
+    assert {"weight": 12.0, "uname": "SheriffHat", "perLimit": 3, "serverLimit": 0} in tables["world_police"]["entries"]
+    assert {"weight": 6.0, "uname": "BucketHat", "perLimit": 3, "serverLimit": 0} in tables["world_survivor"]["entries"]
+    assert sum(len(t["entries"]) for t in tables.values()) == sum(len(h["loot"]) for h in HATS)
+    with pytest.raises(KeyError):
+        lt.add_port_hats({"world_police": {"mult": 1.0, "entries": []}})

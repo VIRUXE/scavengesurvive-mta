@@ -242,3 +242,52 @@ describe("apparel on spawnable skins", function()
         end
     end)
 end)
+
+describe("cut hats", function()
+    local items = dofile("resources/[scavengesurvive]/data/generated/item_types.lua")
+    local CUT = {
+        "SheriffHat",
+        "FireHelmet",
+        "GardenerHat",
+        "PilotCap",
+        "MotoHelmet",
+        "RanchHat",
+        "GolfCap",
+        "BurgerHat",
+        "BucketHat",
+    }
+
+    it("are hats, and only they are cut hats", function()
+        for _, uname in ipairs(CUT) do
+            assert.are.equal("hat", apparel.slotFor(uname))
+            assert.is_true(apparel.isCutHat(uname))
+            assert.is_true(apparel.isWearable(uname))
+        end
+        assert.is_false(apparel.isCutHat("HelmArmy"))
+        assert.is_false(apparel.isCutHat(nil))
+    end)
+
+    it("sit at zero offset on the head bone of every skin, with or without rows", function()
+        local none = function()
+            return nil
+        end
+        for _, uname in ipairs(CUT) do
+            for _, skin in ipairs({ 0, 60, 283, 250 }) do
+                local cfg = apparel.attachConfig("hat", uname, skin, none)
+                assert.are.equal(2, cfg.bone)
+                assert.are.same({ 0, 0, 0, 0, 0, 0 }, cfg.offsets)
+                assert.are.same({ 1, 1, 1 }, cfg.scale)
+            end
+        end
+    end)
+
+    it("are in the generated item types with the port's model ids", function()
+        for i, uname in ipairs(CUT) do
+            local t = items.byUname[uname]
+            assert.is_not_nil(t, uname)
+            assert.are.equal(20000 + i, t.model)
+            assert.are.equal("generic", t.category)
+        end
+        assert.are.equal(20001, items.byUname.SheriffHat.model)
+    end)
+end)

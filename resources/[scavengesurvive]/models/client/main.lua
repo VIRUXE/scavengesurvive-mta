@@ -29,17 +29,19 @@ local function loadTxd(name, cache)
     return cache[name]
 end
 
--- e = { dff, txd | txdModel, dist }: own texture dictionary file, or the TXD of a vanilla model that already uses it.
--- MTA requires COL -> TXD -> DFF order when replacing a model's assets.
+-- e = { dff, txd | txdModel, dist, col }: own texture dictionary file, or the TXD of a vanilla model (or skin) that
+-- already uses it; the collision file is the dff's own unless `col` names another one (the cut hats share the
+-- beanie's). MTA requires COL -> TXD -> DFF order when replacing a model's assets.
 local function loadModel(e, txds)
     local id = engineRequestModel("object")
     if not id then
         return nil, "no free model id"
     end
     allocated[#allocated + 1] = id
-    local col = engineLoadCOL("files/" .. e.dff .. ".col")
+    local colName = e.col or e.dff
+    local col = engineLoadCOL("files/" .. colName .. ".col")
     if not col or not engineReplaceCOL(col, id) then
-        return nil, "col " .. e.dff
+        return nil, "col " .. colName
     end
     keep[#keep + 1] = col
     if e.txd then
@@ -98,15 +100,20 @@ local function loadPed(base, e)
     return id
 end
 
+-- Hats cut off the skins above (hats.lua, written by tools/extract_ped_models.py --hats): static objects under the
+-- port's own model ids (tools/port_hats.py), resolved like the SA-MP ones, textured from the base skin's TXD (#77).
+
 addEventHandler("onClientResourceStart", resourceRoot, function()
     local txds, count, failed = {}, 0, {}
-    for sampModel, e in pairs(readManifest()) do
-        local id, err = loadModel(e, txds)
-        if id then
-            ids[sampModel] = id
-            count = count + 1
-        else
-            failed[#failed + 1] = sampModel .. " (" .. err .. ")"
+    for _, manifest in ipairs({ readManifest(), readLuaFile("hats.lua") }) do
+        for sampModel, e in pairs(manifest) do
+            local id, err = loadModel(e, txds)
+            if id then
+                ids[sampModel] = id
+                count = count + 1
+            else
+                failed[#failed + 1] = sampModel .. " (" .. err .. ")"
+            end
         end
     end
     local peds = 0
@@ -120,7 +127,7 @@ addEventHandler("onClientResourceStart", resourceRoot, function()
         end
     end
     local suffix = #failed > 0 and (", failed: " .. table.concat(failed, ", ")) or ""
-    local msg = ("models: %d SA-MP models and %d hatless skins loaded%s"):format(count, peds, suffix)
+    local msg = ("models: %d SA-MP and hat models and %d hatless skins loaded%s"):format(count, peds, suffix)
     outputDebugString(msg, #failed > 0 and 2 or 3)
     triggerEvent("sampModelsChanged", root)
 end)

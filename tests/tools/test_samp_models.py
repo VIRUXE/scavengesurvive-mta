@@ -88,3 +88,8 @@ def test_map_models_are_read_from_object_rows_only(tmp_path):
     (maps / "index.lua").write_text("return { LS = { objects = 2, removals = 1 } }\n", encoding="utf-8")
     assert m.all_models_used(items, maps) == [3168, 16203, 18633, 19087, 19312, 19477]
     assert m.all_models_used(items, tmp_path / "missing") == [18633, 19087, 19477]
+
+
+def test_port_hat_models_are_not_samp_models():
+    assert all(m.is_samp_model(i) for i in (18631, 19999, 11682, 11753))
+    assert not any(m.is_samp_model(i) for i in (20001, 18630, 11754))

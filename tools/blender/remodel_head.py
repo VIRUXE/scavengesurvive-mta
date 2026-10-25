@@ -1,6 +1,6 @@
 """Rebuild a bare head for a GTA:SA ped whose mesh carries a hat: run inside Blender with the DragonFF add-on.
 
-    blender --python tools/blender/remodel_head.py -- <ped dir> <out dir> [skin ...]
+    blender --python tools/blender/remodel_head.py -- <ped dir> <out dir> [--only heads|hats|both] [--blocks c,r;c,r] [skin ...]
 
 <ped dir> holds <name>.dff and <name>.txd (tools/extract_ped_models.py puts them in models/work when run with
 --keep). For each skin in HEADS the script imports the ped with its texture, deletes the headgear, flattens the cut,
@@ -66,7 +66,7 @@ HEADS = {
 }
 
 
-def remodel(src_dir, out_dir, name, tex, cap_floor=0.045, dark_floor=-0.03, dark_lum=0.12, bright_floor=None, bright_lum=0.7, profile=P, apex=0.09, hair_uv=None, cap_blocks=None):
+def remodel(src_dir, out_dir, name, tex, cap_floor=0.045, dark_floor=-0.03, dark_lum=0.12, bright_floor=None, bright_lum=0.7, profile=P, apex=0.09, hair_uv=None, cap_blocks=None, only="both", hat_blocks=None):
     for o in list(bpy.data.objects):
         bpy.data.objects.remove(o, do_unlink=True)
     for i in list(bpy.data.images):
@@ -126,6 +126,13 @@ def remodel(src_dir, out_dir, name, tex, cap_floor=0.045, dark_floor=-0.03, dark
             doomed.append(f)
         elif cap_blocks and h >= -0.05 and blk(f) in cap_blocks:
             doomed.append(f)
+    notes = []
+    if only in ("both", "hats"):
+        to_bone = (arm.matrix_world @ head.matrix_local).inverted() @ ob.matrix_world
+        notes.append(export_hat(doomed, uvl, to_bone, name, tex, img, out_dir, hat_blocks))
+    if only == "hats":
+        bm.free()
+        return f"{name}: " + "; ".join(notes)
     bmesh.ops.delete(bm, geom=doomed, context="FACES")
     floor = hx - 0.05 if cap_blocks else hx - 0.03
     bmesh.ops.remove_doubles(bm, verts=[v for v in bm.verts if v.is_boundary and v.co.x >= floor], dist=0.001)
@@ -219,14 +226,90 @@ def remodel(src_dir, out_dir, name, tex, cap_floor=0.045, dark_floor=-0.03, dark
         o.select_set(True)
     bpy.context.view_layer.objects.active = arm
     bpy.ops.export_dff.scene(filepath=out, export_coll=False, only_selected=True, export_version="0x36003")
-    return f"{name}: removed {len(doomed)} faces, rim of {n}, {len(me.polygons)} faces -> {out}"
+    notes.append(f"removed {len(doomed)} faces, rim of {n}, {len(me.polygons)} faces -> {out}")
+    return f"{name}: " + "; ".join(notes)
+
+
+# The faces the rules above delete are the skin's hat, cap or helmet: exported on their own, de-skinned and expressed
+# in the Head bone's bind frame (DragonFF rebuilds the bone from the skin's inverse bind matrix, so the bone's rest
+# matrix is that frame), they make a static object that `items` attaches on SA-MP bone 2 at zero offset: the game
+# places an attachment in the bone's own axes, which are rotated against the ped's model space (#77).
+def export_hat(faces, uvl, to_bone, name, tex, img, out_dir, blocks=None):
+    hb = bmesh.new()
+    huv = hb.loops.layers.uv.new()
+    verts = {}
+    lining = 0
+    for f in faces:
+        # GTA models a skull patch under its hats, textured with a smear of the face, and the rules cut it with
+        # the hat: only faces in the hat's own atlas blocks (tools/port_hats.py) go into the object
+        if blocks is not None:
+            cu = sum(l[uvl].uv.x for l in f.loops) / len(f.loops)
+            cv = sum(l[uvl].uv.y for l in f.loops) / len(f.loops)
+            if (int((cu % 1.0) * 8), int(((1 - cv) % 1.0) * 8)) not in blocks:
+                lining += 1
+                continue
+        vs = []
+        for v in f.verts:
+            if v not in verts:
+                verts[v] = hb.verts.new(to_bone @ v.co)
+            vs.append(verts[v])
+        try:
+            nf = hb.faces.new(vs)
+        except ValueError:
+            continue
+        nf.smooth = f.smooth
+        for l, ol in zip(nf.loops, f.loops):
+            l[huv].uv = ol[uvl].uv
+    # A ped is drawn without back-face culling, an object is not, and a GTA hat's faces are wound every which way;
+    # worse, MTA culls an attached object on the opposite side from a free-standing one (studio, 2026-10-25). So the
+    # shell is made double-sided: consistent normals, then every face again with its winding reversed, as the
+    # SA-MP hats are. A few hundred extra triangles per hat.
+    hb.faces.ensure_lookup_table()
+    bmesh.ops.recalc_face_normals(hb, faces=hb.faces[:])
+    dup = bmesh.ops.duplicate(hb, geom=hb.faces[:])
+    bmesh.ops.reverse_faces(hb, faces=[g for g in dup["geom"] if isinstance(g, bmesh.types.BMFace)])
+    me = bpy.data.meshes.new(name + "_hat")
+    hb.to_mesh(me)
+    hb.free()
+    me.update()
+    mat = bpy.data.materials.new(name + "_hat")
+    mat.dff.tex_name = tex
+    mat.use_nodes = True
+    node = mat.node_tree.nodes.new("ShaderNodeTexImage")
+    node.image = img
+    bsdf = next((n for n in mat.node_tree.nodes if n.type == "BSDF_PRINCIPLED"), None)
+    if bsdf:
+        mat.node_tree.links.new(node.outputs["Color"], bsdf.inputs["Base Color"])
+    me.materials.append(mat)
+    ob = bpy.data.objects.new(name + "_hat", me)
+    bpy.context.collection.objects.link(ob)
+    bpy.ops.object.select_all(action="DESELECT")
+    ob.select_set(True)
+    bpy.context.view_layer.objects.active = ob
+    out = os.path.join(out_dir, name + "_hat.dff")
+    bpy.ops.export_dff.scene(filepath=out, export_coll=False, only_selected=True, export_version="0x36003")
+    bpy.data.objects.remove(ob, do_unlink=True)
+    lo = [min(v.co[i] for v in me.vertices) for i in range(3)]
+    hi = [max(v.co[i] for v in me.vertices) for i in range(3)]
+    extent = " ".join("%s %.2f..%.2f" % (a, lo[i], hi[i]) for i, a in enumerate("xyz"))
+    return f"hat of {len(me.polygons)} faces, {lining} lining faces dropped ({extent}) -> {out}"
 
 
 if __name__ == "__main__":
     argv = sys.argv[sys.argv.index("--") + 1 :]
+    only = "both"
+    if "--only" in argv:
+        i = argv.index("--only")
+        only = argv[i + 1]
+        del argv[i : i + 2]
+    hat_blocks = None  # "c,r;c,r": the hat's atlas blocks, for a run over one skin (tools/extract_ped_models.py --hats)
+    if "--blocks" in argv:
+        i = argv.index("--blocks")
+        hat_blocks = {tuple(int(v) for v in b.split(",")) for b in argv[i + 1].split(";")}
+        del argv[i : i + 2]
     src_dir, out_dir = argv[0], argv[1]
     skins = [int(s) for s in argv[2:]] or list(HEADS)
     addon_utils.enable("DragonFF", default_set=False)
     for skin in skins:
         spec = dict(HEADS[skin])
-        print(remodel(src_dir, out_dir, spec.pop("name"), spec.pop("tex"), **spec))
+        print(remodel(src_dir, out_dir, spec.pop("name"), spec.pop("tex"), only=only, hat_blocks=hat_blocks, **spec))

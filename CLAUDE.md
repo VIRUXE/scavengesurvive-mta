@@ -44,6 +44,10 @@ Scavenge & Survive ported to MTA:SA 1.6 (Lua 5.1) with MariaDB 13.0 (12.2 also v
   built by `python -m tools.extract_ped_models` from `gta3.img` with Blender + DragonFF, see
   `docs/runbooks/add-hatless-skin.md`); `items` shows the twin on each client while a hat is worn, the server never
   changes the skin.
+- Hat items cut off those skins (`SheriffHat`, `FireHelmet`, ...) are rows of `tools/port_hats.py`: port-only model ids
+  20001+ in `models/hats.lua` + `files/<ped>_hat.dff`, built by `python -m tools.extract_ped_models --hats` (Blender,
+  the remodel script's `--only hats`); the converters add the item type and its loot rows from the same table, and
+  `apparel.lua` `CUT_HATS` wears them at zero offset on the head bone. Never list them in `extract_samp_models`.
 
 ## Commands
 

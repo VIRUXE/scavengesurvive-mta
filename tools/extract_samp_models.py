@@ -22,6 +22,8 @@ import struct
 import sys
 from pathlib import Path
 
+from tools.port_hats import PORT_MODEL_MIN
+
 ROOT = Path(__file__).resolve().parents[1]
 RESOURCES = ROOT / "resources" / "[scavengesurvive]"
 IDE = ROOT / "tools" / "data" / "samp.ide"
@@ -34,7 +36,8 @@ COL_FOURCCS = (b"COLL", b"COL2", b"COL3", b"COL4")
 
 
 def is_samp_model(model: int) -> bool:
-    return model >= 18631 or 11682 <= model <= 11753
+    """SA-MP's own object ids; the port's hat models (tools/port_hats.py, 20001+) are above them."""
+    return 18631 <= model < PORT_MODEL_MIN or 11682 <= model <= 11753
 
 
 def parse_col_library(data: bytes) -> dict[str, bytes]:
@@ -201,13 +204,21 @@ def files_needed(entries) -> list[str]:
 
 def ped_files(out_dir: Path) -> list[str]:
     """DFF files of the hatless ped variants listed in <out_dir>/peds.lua (tools/extract_ped_models.py)."""
-    peds = out_dir / "peds.lua"
-    if not peds.is_file():
+    return listed_dffs(out_dir / "peds.lua")
+
+
+def hat_files(out_dir: Path) -> list[str]:
+    """DFF files of the cut hats listed in <out_dir>/hats.lua (tools/extract_ped_models.py --hats)."""
+    return listed_dffs(out_dir / "hats.lua")
+
+
+def listed_dffs(manifest: Path) -> list[str]:
+    if not manifest.is_file():
         return []
-    return sorted(f"{name}.dff" for name in re.findall(r'dff = "([^"]+)"', peds.read_text(encoding="ascii")))
+    return sorted(f"{name}.dff" for name in re.findall(r'dff = "([^"]+)"', manifest.read_text(encoding="ascii")))
 
 
-def render_meta(entries, peds: list[str] = ()) -> str:
+def render_meta(entries, peds: list[str] = (), hats: list[str] = ()) -> str:
     lines = [
         "<meta>",
         '    <info author="scavengesurvive-mta" type="script" name="models" '
@@ -221,13 +232,17 @@ def render_meta(entries, peds: list[str] = ()) -> str:
     if peds:
         lines.append('    <file src="peds.lua"/>')
         lines += [f'    <file src="files/{name}"/>' for name in peds]
+    if hats:
+        lines.append('    <file src="hats.lua"/>')
+        lines += [f'    <file src="files/{name}"/>' for name in hats]
     lines += ['    <export function="resolve" type="client"/>', '    <export function="hatlessSkin" type="client"/>']
     lines.append("</meta>")
     return "\n".join(lines) + "\n"
 
 
 def write_meta(out_dir: Path) -> None:
-    """Regenerates meta.xml from the manifests on disk (manifest.lua for objects, peds.lua for hatless peds)."""
+    """Regenerates meta.xml from the manifests on disk (manifest.lua for objects, peds.lua for hatless peds, hats.lua
+    for the hats cut off them)."""
     entries = {}
     manifest = out_dir / "manifest.lua"
     if manifest.is_file():
@@ -240,7 +255,8 @@ def write_meta(out_dir: Path) -> None:
             if txd_model:
                 e["txdModel"] = int(txd_model)
             entries[dff] = e
-    (out_dir / "meta.xml").write_text(render_meta(entries, ped_files(out_dir)), encoding="ascii", newline="\n")
+    meta = render_meta(entries, ped_files(out_dir), hat_files(out_dir))
+    (out_dir / "meta.xml").write_text(meta, encoding="ascii", newline="\n")
 
 
 def detect_gta() -> Path | None:
