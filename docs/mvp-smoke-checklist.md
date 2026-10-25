@@ -159,6 +159,10 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
       `Aliases: (n) …` in yellow. Ban B's other name while it is offline (`/ban <name> 1h test`), then log in as B
       again: A also reads the red `Warning: One or more of those aliases is banned!`; with A offline, B is kicked
       with `One of your previously used accounts is banned.` `/unban <name>` afterwards.
+    - j. **Whitelist auto and auto-login** (#86). `/whitelist on`, `/whitelist auto`: A (level 4) logging in reads
+      `Auto-whitelist: Deactivated the whitelist.`; after A quits, B (not listed) is refused. `UPDATE settings SET
+      svalue = '1' WHERE skey = 'player.auto_ip_login'`, `rr auth`: A is logged in without the dialog, B from another
+      PC under A's name still gets it. Set both back to 0.
 23. **Supply drops and weapons caches** (#47). A at level 4.
     - a. `/sc` lists the five types with their player requirements; `/sc 1` prints the yellow `[EBS]: SUPPLY DROP:
       "Food and Medical"` (or `"Unknown"`) `INCOMING AT: "staff request"` line for everyone, a blip appears on the

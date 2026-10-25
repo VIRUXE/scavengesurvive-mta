@@ -29,6 +29,12 @@ Durations (`/mute`, `/ban`): a bare number is seconds; `10m`, `2h`, `3d`, `2w`, 
   Timed bans expire through the `ev_expire_bans` scheduler event and are also filtered by expiry in every query.
 - Whitelist (`/whitelist on|off`, setting `server.whitelist`): when on, a logged-in account that is not in the
   `whitelist` table and has level 0 is kicked after the login succeeds. Staff accounts always pass.
+- Whitelist auto mode (`/whitelist auto` toggles it, setting `server.whitelist_auto`, upstream `wl_Auto`): `auth`
+  turns the whitelist off while a level 2+ account is logged in and on again when the last one leaves; those flips
+  are not written back to `server.whitelist`, so a restart recomputes them. Upstream's countdown kick for players
+  already on when the whitelist turns on is not ported.
+- Auto-login (setting `player.auto_ip_login`, off by default, upstream `player/auto-ip-login`): an account whose last
+  login came from the same IP **and** serial skips the password dialog. Upstream matched the IP alone.
 - Mutes cancel `onPlayerChat` and persist on the account (`accounts.muted`, `mute_until`), so a relog does not
   lift them.
 - `/duty` swaps to the upstream duty skin (217 male / 211 female), turns name tags on and sets element data

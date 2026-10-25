@@ -160,16 +160,29 @@ return function(ctx)
         ctx.log(p, flag and "whitelist_on" or "whitelist_off")
     end
 
+    -- /whitelist auto (upstream level3.pwn): auth turns the whitelist off while level 2+ staff are on.
+    local function toggleWhitelistAuto(p)
+        local flag = not exports.auth:isWhitelistAuto()
+        state.settings["server.whitelist_auto"] = flag and "1" or "0"
+        local sql = "INSERT INTO settings (skey, svalue) VALUES ('server.whitelist_auto', ?)"
+            .. " ON DUPLICATE KEY UPDATE svalue = VALUES(svalue)"
+        db.exec(sql, { flag and "1" or "0" })
+        exports.auth:setWhitelistAuto(flag)
+        ctx.msgStaff(1, " >  Whitelist automatic toggle %s.", flag and "activated" or "deactivated")
+        ctx.log(p, flag and "whitelist_auto_on" or "whitelist_auto_off")
+    end
+
     ctx.command({
         name = "whitelist",
         level = 3,
-        usage = "/whitelist add|remove|?|list|on|off [name]",
+        usage = "/whitelist add|remove|?|list|on|off|auto [name]",
         help = "Manage the join whitelist",
         fn = function(p, args)
             local verb, name = (args[1] or ""):lower(), args[2]
-            local enabled = state.settings["server.whitelist"] == "1"
             if verb == "on" or verb == "off" then
                 return setWhitelistEnabled(p, verb == "on")
+            elseif verb == "auto" then
+                return toggleWhitelistAuto(p)
             elseif verb == "add" and name then
                 local sql = "INSERT IGNORE INTO whitelist (name, added_by) VALUES (?, ?)"
                 db.exec(sql, { name, ctx.name(p) }, function(ok, actor, affected)
@@ -214,8 +227,9 @@ return function(ctx)
                     end)
                 end, p)
             else
-                local fmt = " >  Usage: /whitelist add|remove|?|list|on|off [name] - the whitelist is currently %s"
-                ctx.say(p, fmt, enabled and "on" or "off")
+                local fmt = " >  Usage: /whitelist add|remove|?|list|on|off|auto [name] - whitelist %s, auto %s"
+                local enabled, auto = exports.auth:isWhitelistEnabled(), exports.auth:isWhitelistAuto()
+                ctx.say(p, fmt, enabled and "on" or "off", auto and "on" or "off")
             end
         end,
     })

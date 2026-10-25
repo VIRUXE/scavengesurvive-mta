@@ -130,4 +130,14 @@ describe("auth flow", function()
         assert.equals("NO_MATCH", code)
         assert.equals(1, #mock.queries)
     end)
+    it("logs in a trusted row without a password and records the login", function()
+        local got
+        local row = { id = 7, name = "Bob", admin_level = 0, lang = "en", active = 1 }
+        acc.loginTrusted("p1", row, function(ok, code, account)
+            got = { ok, code, account }
+        end)
+        assert.same({ true, "OK" }, { got[1], got[2] })
+        assert.equals(7, got[3].id)
+        assert.matches("UPDATE accounts SET last_login_at", mock.queries[1].sql)
+    end)
 end)

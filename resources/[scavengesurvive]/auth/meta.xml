@@ -18,6 +18,8 @@
     <export function="setSessionAdminLevel" type="server"/>
     <export function="setWhitelistEnabled" type="server"/>
     <export function="isWhitelistEnabled" type="server"/>
+    <export function="setWhitelistAuto" type="server"/>
+    <export function="isWhitelistAuto" type="server"/>
     <aclrequest>
         <right name="function.kickPlayer" access="true"/>
     </aclrequest>

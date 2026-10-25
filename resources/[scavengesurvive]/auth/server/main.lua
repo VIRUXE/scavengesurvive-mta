@@ -21,8 +21,30 @@ local blocked = {} -- player -> true once a ban (or the whitelist) kicked them
 local promptMode = {} -- player -> "login" | "register" while a dialog is up
 local promptLang = {} -- player -> language of the dialog texts (the account's, "en" for a new name)
 local whitelistEnabled = false
+local whitelistAuto = false
+local autoIpLogin = false
 local accounts
+local finish -- defined after prompt, which calls it for an auto-login
 local warnedNoDb = false
+
+-- Whitelist auto mode: recount level 2+ staff in session (minus a leaving player) and flip the switch.
+local function applyAutoWhitelist(leaving, announceTo)
+    local staffOnline = 0
+    for p, account in pairs(session) do
+        if p ~= leaving and account.adminLevel >= access.AUTO_WHITELIST_LEVEL then
+            staffOnline = staffOnline + 1
+        end
+    end
+    local nextState = access.autoWhitelist(whitelistAuto, whitelistEnabled, staffOnline)
+    if nextState == nil then
+        return
+    end
+    whitelistEnabled = nextState
+    util.log("auth", "info", "auto-whitelist: whitelist %s (%d staff online)", nextState and "on" or "off", staffOnline)
+    if not nextState and isElement(announceTo) then
+        outputChatBox(" >  Auto-whitelist: Deactivated the whitelist.", announceTo, 255, 255, 0)
+    end
+end
 
 local function kickLater(player, reason)
     blocked[player] = true
@@ -89,6 +111,9 @@ addEventHandler("onResourceStart", resourceRoot, function()
     })
     db.settings(function(map)
         whitelistEnabled = access.whitelistEnabledFromSetting(map["server.whitelist"])
+        whitelistAuto = access.whitelistEnabledFromSetting(map["server.whitelist_auto"])
+        autoIpLogin = access.whitelistEnabledFromSetting(map["player.auto_ip_login"])
+        applyAutoWhitelist()
     end)
 end)
 
@@ -141,6 +166,13 @@ function prompt(player)
             return kickLater(player, "Account inactive")
         end
         promptLang[player] = row and row.lang or "en"
+        if access.autoLoginAllowed(autoIpLogin, row, getPlayerIP(player), getPlayerSerial(player)) then
+            pending[player] = true
+            return accounts.loginTrusted(player, row, function(ok, code, account)
+                util.log("auth", "info", "%s auto-logged in by IP and serial", row.name)
+                finish(player, ok, code, account, nil, false)
+            end)
+        end
         showDialog(player, row and "login" or "register")
     end)
 end
@@ -157,6 +189,7 @@ end)
 local function admit(player, account, isNew)
     session[player] = account
     promptMode[player] = nil
+    applyAutoWhitelist(nil, player)
     local sql = "INSERT INTO connection_log (account_id, name, serial, ip) VALUES (?, ?, ?, ?)"
     db.exec(sql, { account.id, account.name, getPlayerSerial(player), getPlayerIP(player) })
     if isNew then
@@ -183,7 +216,7 @@ local function refused(player, code, attempts)
     end
 end
 
-local function finish(player, ok, code, account, attempts, isNew)
+function finish(player, ok, code, account, attempts, isNew)
     pending[player] = nil
     if not isElement(player) or blocked[player] then
         return
@@ -242,6 +275,9 @@ addEventHandler("onPlayerQuit", root, function(reason)
         -- the quit reason travels with the event: character decides whether a leaving player combat-logged
         triggerEvent("playerLoggedOut", source, account.id, reason)
         db.exec("UPDATE connection_log SET left_at = NOW() WHERE account_id = ? AND left_at IS NULL", { account.id })
+    end
+    if account then
+        applyAutoWhitelist(source)
     end
     session[source] = nil
     pending[source] = nil
@@ -328,11 +364,20 @@ function setSessionAdminLevel(player, level)
         return false
     end
     session[player].adminLevel = tonumber(level) or 0
+    applyAutoWhitelist()
     return true
 end
 function setWhitelistEnabled(flag)
     whitelistEnabled = flag == true
     return whitelistEnabled
+end
+function setWhitelistAuto(flag)
+    whitelistAuto = flag == true
+    applyAutoWhitelist()
+    return whitelistAuto
+end
+function isWhitelistAuto()
+    return whitelistAuto
 end
 function isWhitelistEnabled()
     return whitelistEnabled

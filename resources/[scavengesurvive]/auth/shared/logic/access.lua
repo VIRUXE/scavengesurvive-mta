@@ -32,4 +32,34 @@ function access.whitelistEnabledFromSetting(value)
     return value == "1" or value == "true" or value == "on"
 end
 
+-- Whitelist auto mode (upstream whitelist.pwn wl_Auto, setting server.whitelist_auto): off while any level 2+
+-- staff member is logged in, on again when the last one leaves. Returns the new state, or nil for no change.
+access.AUTO_WHITELIST_LEVEL = 2
+function access.autoWhitelist(auto, enabled, staffOnline)
+    if not auto then
+        return nil
+    end
+    if enabled and staffOnline > 0 then
+        return false
+    end
+    if not enabled and staffOnline == 0 then
+        return true
+    end
+    return nil
+end
+
+-- Auto-login (upstream player/auto-ip-login, setting player.auto_ip_login, off by default): skip the password
+-- dialog when the account's last login came from this address. Upstream matched the IP alone; the port also
+-- needs the serial, so a shared or NATed IP is not enough.
+function access.autoLoginAllowed(enabled, row, ip, serial)
+    if not enabled or not row then
+        return false
+    end
+    local lastIp, lastSerial = row.last_ip, row.last_serial
+    if type(lastIp) ~= "string" or type(lastSerial) ~= "string" or lastIp == "" or lastSerial == "" then
+        return false
+    end
+    return lastIp == ip and lastSerial == serial
+end
+
 return access

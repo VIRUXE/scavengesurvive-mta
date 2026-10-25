@@ -27,13 +27,11 @@ function accounts.new(deps)
     local self = { attempts = {} }
 
     function self.lookup(name, cb)
-        deps.db.one(
-            "SELECT id, name, password_hash, admin_level, lang, active FROM accounts WHERE name = ?",
-            { name },
-            function(row)
-                cb(row)
-            end
-        )
+        local sql = "SELECT id, name, password_hash, admin_level, lang, active, last_ip, last_serial FROM accounts"
+            .. " WHERE name = ?"
+        deps.db.one(sql, { name }, function(row)
+            cb(row)
+        end)
     end
 
     function self.register(player, name, pw, cb)
@@ -127,6 +125,14 @@ function accounts.new(deps)
                 end)
             end)
         end)
+    end
+
+    -- Auto-login (access.autoLoginAllowed already matched the row's IP and serial): no password, same bookkeeping.
+    function self.loginTrusted(player, row, cb)
+        self.attempts[tostring(player)] = nil
+        local sql = "UPDATE accounts SET last_login_at = NOW(), last_ip = ?, last_serial = ? WHERE id = ?"
+        deps.db.exec(sql, { deps.ip(player), deps.serial(player), row.id })
+        cb(true, "OK", toAccount(row))
     end
 
     function self.forget(player)
