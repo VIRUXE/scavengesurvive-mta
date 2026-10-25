@@ -39,11 +39,13 @@ so step 32's outcomes went through `exports.character:treatPlayer(p, p, uname, d
 ## Also seen
 
 - The `NN% Unconscious` footer read 100 % with 2 wounds and bleed 0.37: upstream's formula, capped, not a bug.
-- Decided after the run (not live-checked yet): only uncooked food that can be cooked goes onto a campfire or
-  barbecue within reach, with the HUD hint `F Cook` instead of `F Eat`; cooked food and food that cannot be cooked
-  is eaten even next to a fire (upstream's campfire took any food).
+- Decided after the run (ed242cd): only uncooked food that can be cooked goes onto a campfire or barbecue within
+  reach, with the HUD hint `F Cook` instead of `F Eat`; cooked food and food that cannot be cooked is eaten even next
+  to a fire (upstream's campfire took any food). Live-checked afterwards: uncooked Meat at a campfire shows `F Cook`,
+  a cooked one `F Eat`.
 
 ## Still open
 
-The **F**-hold UX by hand (bars, release cancels), 32 c, 32 e wear-off, 32 h (two clients), 33 c on screen, and the
-`F Cook` change above. Filed as follow-up issues: #96 (item type colours, the Burnt Log renders brown), #97 (Petrol Can / Fire Lighter at a barbecue take the nearest item), #98 (rcon key hold for the treatment holds).
+The **F**-hold UX by hand (bars, release cancels), 32 c, 32 e wear-off, 32 h (two clients), 33 c on screen.
+Follow-up issues: #96 (item type colours, the Burnt Log renders brown), #97 (Petrol Can / Fire Lighter at a barbecue
+take the nearest item), #98 (rcon key hold for the treatment holds).
