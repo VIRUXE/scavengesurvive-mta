@@ -324,6 +324,7 @@ local function drawVehiclePanel(vehicle)
     local R = vehiclepanel.ROWS
     local vt = vehicleType(getElementData(vehicle, "vehicles.type"))
     local fuel = tonumber(getElementData(vehicle, "vehicles.fuel")) or 0
+    local locked = tonumber(getElementData(vehicle, "vehicles.locked")) or 0
     local vx, vy, vz = getElementVelocity(vehicle)
     local function row(text, y, rgb, ly)
         draw.text({
@@ -338,7 +339,7 @@ local function drawVehiclePanel(vehicle)
             outline = 1,
         })
     end
-    row("DOR", R.doors, vehiclepanel.stateColour(not isVehicleLocked(vehicle)))
+    row("DOR", R.doors, vehiclepanel.stateColour(locked == 0))
     row("ENG", R.engine, vehiclepanel.stateColour(getVehicleEngineState(vehicle)))
     row("DMG", R.damage, vehiclepanel.damageColour(getElementHealth(vehicle) or 0))
     row(vehiclepanel.fuelText(fuel, vt and vt.maxFuel or 0), R.fuel, { 255, 255, 255 })
