@@ -31,6 +31,7 @@ return {
     itemWearRequested = true,
     itemUnwearRequested = true,
     containerPickupRequested = true,
+    itemContainerMoveRequested = true,
     tentPitchRequested = true,
     tentDismantleRequested = true,
     combineRequested = true,

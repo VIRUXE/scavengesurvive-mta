@@ -154,13 +154,16 @@ return function(ctx)
     end
 
     -- "[%02d]%s": the type size then the name, one "<Empty>" per free slot
-    local function rowsFor(list, cap)
+    local function rowsFor(list, cap, moveAction)
         local rows = {}
         for _, it in ipairs(list or {}) do
             local t = itemType(it.uname)
             local actions = { { id = "take", label = "Equip" }, { id = "use", label = "Use" } }
             if apparel and apparel.isWearable(it.uname) then
                 actions[#actions + 1] = { id = "wear", label = "Wear" }
+            end
+            if moveAction then
+                actions[#actions + 1] = moveAction
             end
             if last and last.held then
                 actions[#actions + 1] = { id = "combine", label = "Combine" }
@@ -189,7 +192,8 @@ return function(ctx)
         local tname = p.capacity and p.capacity.trunk and p.capacity.trunk.uname or "Trunk"
         if view == "trunk" and p.trunk then
             title = string.format("%s (%d/%d)", tname, p.capacity.trunk.used, p.capacity.trunk.size)
-            rows = rowsFor(p.trunk, p.capacity.trunk)
+            local moveAction = p.bag and { id = "move:bag", label = "Move to bag" } or nil
+            rows = rowsFor(p.trunk, p.capacity.trunk, moveAction)
             rows[#rows + 1] = { id = "nav:inventory", label = "My Inventory >" }
             if p.containerWorldItemId and #p.trunk == 0 then
                 rows[#rows + 1] = {
@@ -199,7 +203,8 @@ return function(ctx)
             end
         elseif view == "bag" and p.bag then
             title = string.format("%s (%d/%d)", bname, p.capacity.bag.used, p.capacity.bag.size)
-            rows = rowsFor(p.bag, p.capacity.bag)
+            local moveAction = p.trunk and { id = "move:trunk", label = "Move to " .. tname } or nil
+            rows = rowsFor(p.bag, p.capacity.bag, moveAction)
             rows[#rows + 1] = { id = "nav:inventory", label = "My Inventory >" }
         else
             view = "inventory"
@@ -260,6 +265,10 @@ return function(ctx)
             triggerServerEvent("itemUseRequested", localPlayer, rowId)
         elseif actionId == "wear" then
             triggerServerEvent("itemWearRequested", localPlayer, rowId)
+        elseif actionId == "move:bag" then
+            triggerServerEvent("itemContainerMoveRequested", localPlayer, rowId, "bag")
+        elseif actionId == "move:trunk" then
+            triggerServerEvent("itemContainerMoveRequested", localPlayer, rowId, "trunk")
         elseif actionId == "combine" then
             triggerServerEvent("combineRequested", localPlayer, rowId)
         end

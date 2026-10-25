@@ -610,6 +610,118 @@ BEGIN
   END IF;
 END//
 
+CREATE OR REPLACE PROCEDURE `container_move`(
+  IN p_item_id INT,
+  IN p_char_id INT,
+  IN p_dst_container_id INT,
+  IN p_open_container_id INT
+)
+BEGIN
+  DECLARE v_src_cont INT DEFAULT NULL;
+  DECLARE v_src_slot INT DEFAULT NULL;
+  DECLARE v_src_owner_char INT DEFAULT NULL;
+  DECLARE v_src_owner_item INT DEFAULT NULL;
+  DECLARE v_src_owner_vehicle INT DEFAULT NULL;
+  DECLARE v_src_owner_holder INT DEFAULT NULL;
+  DECLARE v_src_kind VARCHAR(16) DEFAULT NULL;
+  DECLARE v_src_size INT DEFAULT NULL;
+
+  DECLARE v_dst_owner_char INT DEFAULT NULL;
+  DECLARE v_dst_owner_item INT DEFAULT NULL;
+  DECLARE v_dst_owner_vehicle INT DEFAULT NULL;
+  DECLARE v_dst_owner_holder INT DEFAULT NULL;
+  DECLARE v_dst_kind VARCHAR(16) DEFAULT NULL;
+  DECLARE v_dst_size INT DEFAULT NULL;
+  DECLARE v_dst_used INT DEFAULT 0;
+  DECLARE v_dst_slot INT DEFAULT 0;
+
+  DECLARE v_item_size INT DEFAULT 1;
+
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
+  SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+  START TRANSACTION;
+
+  SELECT container_id, slot INTO v_src_cont, v_src_slot FROM items WHERE id = p_item_id FOR UPDATE;
+
+  IF v_src_cont IS NULL THEN
+    ROLLBACK;
+    SELECT 0 AS ok, 'NOT_IN_CONTAINER' AS code, NULL AS payload;
+  ELSEIF v_src_cont = p_dst_container_id THEN
+    ROLLBACK;
+    SELECT 0 AS ok, 'ALREADY_IN_CONTAINER' AS code, NULL AS payload;
+  ELSE
+    IF v_src_cont < p_dst_container_id THEN
+      SELECT owner_char_id, owner_item_id, owner_vehicle_id, kind, size
+        INTO v_src_owner_char, v_src_owner_item, v_src_owner_vehicle, v_src_kind, v_src_size
+        FROM containers WHERE id = v_src_cont FOR UPDATE;
+      SELECT owner_char_id, owner_item_id, owner_vehicle_id, kind, size
+        INTO v_dst_owner_char, v_dst_owner_item, v_dst_owner_vehicle, v_dst_kind, v_dst_size
+        FROM containers WHERE id = p_dst_container_id FOR UPDATE;
+    ELSE
+      SELECT owner_char_id, owner_item_id, owner_vehicle_id, kind, size
+        INTO v_dst_owner_char, v_dst_owner_item, v_dst_owner_vehicle, v_dst_kind, v_dst_size
+        FROM containers WHERE id = p_dst_container_id FOR UPDATE;
+      SELECT owner_char_id, owner_item_id, owner_vehicle_id, kind, size
+        INTO v_src_owner_char, v_src_owner_item, v_src_owner_vehicle, v_src_kind, v_src_size
+        FROM containers WHERE id = v_src_cont FOR UPDATE;
+    END IF;
+
+    IF v_src_owner_item IS NOT NULL THEN
+      SELECT holder_char_id INTO v_src_owner_holder FROM items WHERE id = v_src_owner_item FOR UPDATE;
+    END IF;
+    IF v_dst_owner_item IS NOT NULL THEN
+      SELECT holder_char_id INTO v_dst_owner_holder FROM items WHERE id = v_dst_owner_item FOR UPDATE;
+    END IF;
+
+    SELECT t.size INTO v_item_size FROM items i JOIN item_types t ON t.uname = i.type_uname WHERE i.id = p_item_id;
+
+    IF v_dst_size IS NULL THEN
+      ROLLBACK;
+      SELECT 0 AS ok, 'CONTAINER_NOT_FOUND' AS code, NULL AS payload;
+    ELSEIF v_dst_owner_item = p_item_id THEN
+      ROLLBACK;
+      SELECT 0 AS ok, 'SELF_CONTAINMENT' AS code, NULL AS payload;
+    ELSEIF NOT (
+      p_char_id IS NOT NULL AND (
+        v_src_owner_char <=> p_char_id
+        OR v_src_owner_holder <=> p_char_id
+        OR (p_open_container_id IS NOT NULL AND v_src_cont <=> p_open_container_id)
+      )
+    ) THEN
+      ROLLBACK;
+      SELECT 0 AS ok, 'NOT_OWNER' AS code, NULL AS payload;
+    ELSEIF NOT (
+      p_char_id IS NOT NULL AND (
+        v_dst_owner_char <=> p_char_id
+        OR v_dst_owner_holder <=> p_char_id
+        OR (p_open_container_id IS NOT NULL AND p_dst_container_id <=> p_open_container_id)
+      )
+    ) THEN
+      ROLLBACK;
+      SELECT 0 AS ok, 'NOT_OWNER' AS code, NULL AS payload;
+    ELSE
+      SELECT IFNULL(SUM(t.size), 0), IFNULL(MAX(i.slot) + 1, 0) INTO v_dst_used, v_dst_slot
+        FROM items i JOIN item_types t ON t.uname = i.type_uname WHERE i.container_id = p_dst_container_id FOR UPDATE;
+
+      IF v_dst_used + v_item_size > v_dst_size THEN
+        ROLLBACK;
+        SELECT 0 AS ok, 'CONTAINER_FULL' AS code, JSON_OBJECT('used', CAST(v_dst_used AS SIGNED), 'size', CAST(v_dst_size AS SIGNED)) AS payload;
+      ELSE
+        UPDATE items SET container_id = p_dst_container_id, slot = v_dst_slot WHERE id = p_item_id;
+        UPDATE items SET slot = slot - 1 WHERE container_id = v_src_cont AND slot > v_src_slot ORDER BY slot ASC;
+        COMMIT;
+        SELECT 1 AS ok, 'OK' AS code,
+          JSON_OBJECT(
+            'item_id', CAST(p_item_id AS SIGNED),
+            'slot', CAST(v_dst_slot AS SIGNED),
+            'from_container_id', CAST(v_src_cont AS SIGNED),
+            'to_container_id', CAST(p_dst_container_id AS SIGNED)
+          ) AS payload;
+      END IF;
+    END IF;
+  END IF;
+END//
+
 CREATE OR REPLACE PROCEDURE `container_put`(IN p_item_id INT, IN p_char_id INT, IN p_container_id INT)
 BEGIN
   DECLARE v_owner_char INT DEFAULT NULL;

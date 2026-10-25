@@ -556,6 +556,44 @@ return function(ctx)
         end, { player = player, itemId = itemId })
     end, { rate = 5 })
 
+    net.handler("itemContainerMoveRequested", function(player, itemId, target)
+        local cid = charId(player)
+        itemId = tonumber(itemId)
+        if not cid or not itemId or (target ~= "bag" and target ~= "trunk") then
+            return
+        end
+        local sideContId = M.openContainerId(player)
+        local function executeMove(dstContainerId)
+            local allowedOpenId = sideContId
+            if allowedOpenId and M.openContainerId(player) ~= allowedOpenId then
+                allowedOpenId = nil
+            end
+            db.call("container_move", { itemId, cid, dstContainerId, allowedOpenId, n = 4 }, function(res, c)
+                if not isElement(c.player) then
+                    return
+                end
+                if not res or not res.ok then
+                    return toast(c.player, res and res.code or "DB_ERROR")
+                end
+                sendInventory(c.player)
+            end, { player = player })
+        end
+
+        if target == "bag" then
+            wornBag(cid, function(bag, c)
+                if not isElement(c.player) or not bag then
+                    return
+                end
+                executeMove(bag.id)
+            end, { player = player })
+        elseif target == "trunk" then
+            if not sideContId then
+                return
+            end
+            executeMove(sideContId)
+        end
+    end, { rate = 5 })
+
     net.handler("itemWearRequested", function(player, itemId)
         local cid = charId(player)
         itemId = tonumber(itemId)
