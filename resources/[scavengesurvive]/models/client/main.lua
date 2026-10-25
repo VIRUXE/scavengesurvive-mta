@@ -68,7 +68,8 @@ end
 
 -- Hatless ped variants (peds.lua, written by tools/extract_ped_models.py): a copy of a skin whose mesh carries
 -- its own hat, cap or helmet, with that headgear cut away so a worn hat sits clean. The variant shares the base
--- skin's TXD and animations; items swaps a player onto it locally while a hat is worn (#75).
+-- skin's TXD and animations, plus its own `txd` when the head was rebuilt (the hair texture, #89);
+-- items swaps a player onto it locally while a hat is worn (#75).
 local hatless = {} -- base skin -> allocated ped model
 
 local function readLuaFile(name)
@@ -91,6 +92,14 @@ local function loadPed(base, e)
     local txdId = engineGetModelTXDID(base)
     if not txdId or not engineSetModelTXDID(id, txdId) then
         return nil, "txd of skin " .. base
+    end
+    -- a rebuilt head's hair texture goes into that shared dictionary; the base skin never references it
+    if e.txd then
+        local txd = engineLoadTXD("files/" .. e.txd .. ".txd")
+        if not txd or not engineImportTXD(txd, id) then
+            return nil, "txd " .. e.txd
+        end
+        keep[#keep + 1] = txd
     end
     local dff = engineLoadDFF("files/" .. e.dff .. ".dff")
     if not dff or not engineReplaceModel(dff, id) then

@@ -2,6 +2,8 @@
 bare-headed by an image model.
 
     python -m tools.hatless_refs shoot [--player VIRUXE] [skin ...]   # studio shots through server-config/rcon.ps1
+    python -m tools.hatless_refs shoot-top [skin ...]                 # the two high cameras, for the crown
+    python -m tools.hatless_refs grid-top [skin ...]                  # <skin>-studio-top.jpg: top, top-back, front, side
     POLLINATIONS_KEY=sk_... python -m tools.hatless_refs edit [skin ...]  # 2x2 grids -> gpt-image-2 edits
 
 `shoot` puts the player's client on each original skin (client-side `setElementModel`, never synced) and has the
@@ -24,13 +26,20 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
+from tools import hatless_proj as hp
+
 ROOT = Path(__file__).resolve().parents[1]
 SHOTS = ROOT / "resources" / "[scavengesurvive]" / "dev" / "screenshots"
 OUT = ROOT / "docs" / "images" / "hatless-refs"
 RCON = ROOT / "server-config" / "rcon.ps1"
 ENDPOINT = "https://gen.pollinations.ai/v1/images/edits"
-VIEWS = ("front", "three", "side", "back")  # grid order: top left, top right, bottom left, bottom right
-CAMERAS = {"front": "0 0.8 0.68 0.64", "three": "35 0.8 0.7 0.64", "side": "270 0.8 0.68 0.64", "back": "180 0.8 0.68 0.64"}
+VIEWS = hp.GRIDS["level"]  # grid order: top left, top right, bottom left, bottom right
+# studio camera per view ("yaw dist height lookZ") and the grids' crops: tools/hatless_proj.py, which the rebuild
+# projects through. The crown is the part the four level views constrain least: a second grid looks down on it,
+# keeping front and side as anchors (`<skin>-studio-top.jpg`, edited to `<skin>-top.jpg`)
+CAMERAS = {view: " ".join(str(x) for x in cam) for view, cam in hp.CAMERAS.items()}
+TOP_VIEWS = hp.GRIDS["top"]
+CROP_TOP = hp.CROP_TOP
 
 # skin -> (who, headgear to remove, what the bare head shows)
 HATLESS: dict[int, tuple[str, str, str]] = {
@@ -68,10 +77,11 @@ def rcon(*args: str) -> None:
     subprocess.run(["pwsh", "-NoProfile", str(RCON), *args], check=True, capture_output=True)
 
 
-def shoot(player: str, skins: list[int]) -> None:
+def shoot(player: str, skins: list[int], views=VIEWS) -> None:
     lst = ",".join(str(s) for s in skins)
     n = len(skins)
-    for view, cam in CAMERAS.items():
+    for view in views:
+        cam = CAMERAS[view]
         rcon("studio", player, *cam.split())
         time.sleep(2.5)
         rcon("clua", player, f"local L={{{lst}}} local i=0 local function step() i=i+1 if L[i] then setElementModel(localPlayer, L[i]) end end step() setTimer(step, 3000, {n})")
@@ -81,15 +91,20 @@ def shoot(player: str, skins: list[int]) -> None:
         print(f"{view}: {n} shots")
 
 
-def grid(skin: int):
+def grid(skin: int, views=VIEWS):
     from PIL import Image
 
     g = Image.new("RGB", (1024, 1024))
-    for i, view in enumerate(VIEWS):
+    for i, view in enumerate(views):
         im = Image.open(SHOTS / f"orig-{skin}-{view}.jpg")
-        w = im.size[0]
-        g.paste(im.crop((w // 2 - 300, 0, w // 2 + 300, 600)).resize((512, 512)), ((i % 2) * 512, (i // 2) * 512))
+        w, top = im.size[0], CROP_TOP.get(view, 0)
+        g.paste(im.crop((w // 2 - 300, top, w // 2 + 300, top + 600)).resize((512, 512)), ((i % 2) * 512, (i // 2) * 512))
     return g
+
+
+def prompt_top(skin: int) -> str:
+    who, hat, bare = HATLESS[skin]
+    return f"This image shows one low-poly GTA San Andreas character ({who}) on a green screen from four angles in a 2x2 grid: top left seen from above (looking down on the top of the head), top right from behind and above, bottom left front, bottom right side profile. Edit it: remove the {hat} from every view and show the character bare-headed with {bare}, on an anatomically correct skull; in the two views from above the round crown of the head and the hair on top must be clearly visible. Keep everything else identical: the four views in the same grid positions and scale, the same face, ears, neck, shoulders, green background and low-poly game texture style."
 
 
 def edit(skin: int, key: str) -> str:
@@ -118,13 +133,17 @@ def edit(skin: int, key: str) -> str:
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("action", choices=("shoot", "edit"))
+    ap.add_argument("action", choices=("shoot", "shoot-top", "grid-top", "edit"))
     ap.add_argument("skins", nargs="*", type=int)
     ap.add_argument("--player", default="VIRUXE")
     args = ap.parse_args(argv)
     skins = args.skins or list(HATLESS)
-    if args.action == "shoot":
-        shoot(args.player, skins)
+    if args.action in ("shoot", "shoot-top"):
+        shoot(args.player, skins, VIEWS if args.action == "shoot" else ("top", "topback"))
+        return 0
+    if args.action == "grid-top":
+        for s in skins:
+            grid(s, TOP_VIEWS).save(OUT / f"{s}-studio-top.jpg", quality=88)
         return 0
     key = os.environ.get("POLLINATIONS_KEY")
     if not key:

@@ -203,8 +203,10 @@ def files_needed(entries) -> list[str]:
 
 
 def ped_files(out_dir: Path) -> list[str]:
-    """DFF files of the hatless ped variants listed in <out_dir>/peds.lua (tools/extract_ped_models.py)."""
-    return listed_dffs(out_dir / "peds.lua")
+    """DFF and TXD files of the hatless ped variants listed in <out_dir>/peds.lua (tools/extract_ped_models.py)."""
+    manifest = out_dir / "peds.lua"
+    txds = re.findall(r'txd = "([^"]+)"', manifest.read_text(encoding="ascii")) if manifest.is_file() else []
+    return sorted(listed_dffs(manifest) + [f"{name}.txd" for name in txds])
 
 
 def hat_files(out_dir: Path) -> list[str]:

@@ -85,6 +85,36 @@ Kontext, Qwen-Image-Edit) share one anonymous ZeroGPU quota, which runs out afte
 four sides, flat-lit and without the game. Use it to compare an original skin, its twin and the reference while
 remodelling.
 
+## Rebuilding a head from its reference (#89)
+
+`tools/hatless_rebuild.py` replaces a twin's bare head with one built from its reference image. The studio camera is
+known (`tools/hatless_proj.py`), and so is each skin's Head bone matrix in the studio
+(`tools/data/hatless_calib.json`, taken with `calibrate`). So every point of the head maps to the reference pixel
+that shows it:
+
+| reference | rebuilt (Blender) |
+| :---: | :---: |
+| ![pilot 61, reference](../images/hatless-refs/61.jpg) | ![pilot 61, rebuilt](../images/hatless-rebuilt-61.jpg) |
+
+1. Add the skin to `PLANES`, the cut plane in Head bone metres: `front` at the brow, `back` under the hat's rim. Read
+   both off a side shot with height lines drawn on it; the bone sits at the jaw on these skins, the brow near 0.1.
+   `blocks` lists atlas cells (col, row) of headgear that escapes the automatic rule, such as a visor.
+2. `python -m tools.hatless_rebuild prep <skin>` registers the images: the mesh against the studio silhouette (the
+   idle pose shifts the head a few pixels), and the reference against the studio grid below the brow. The image
+   model re-frames each view, by up to about 50 px and 5%. It also measures the studio's lighting factor, so the
+   hair texture is not lit twice. The results go to `tools/data/hatless_prep.json`.
+3. `python -m tools.hatless_rebuild build <skin>` runs `tools/blender/rebuild_head.py`:
+   - It cuts above the plane and deletes the hat's own atlas blocks: blocks used above the plane and nowhere on the
+     kept face, neck or body, plus the ones `port_hats.py` and `HEADGEAR` list.
+   - It carves a skull out of the reference's silhouettes in the four views.
+   - It bakes a 256x256 hair texture from the reference.
+   - It writes `<name>_nohat.dff` and `<name>_nohat.txd`. That TXD holds only the hair; `models` imports it into the
+     base skin's shared dictionary, and `peds.lua` lists it.
+4. Restart `models` and look at the twin bare in the studio. `tools/blender/render_head.py` shows it without the
+   game.
+
+Rebuilt so far: 2, 35, 36, 37 and 61. The other 17 keep their domes until they get a plane.
+
 ## Hat items from the cut (#77)
 
 The faces the remodel deletes are the skin's own hat, so `tools/port_hats.py` turns the distinct ones into items.
