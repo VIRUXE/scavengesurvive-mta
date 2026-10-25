@@ -57,6 +57,31 @@ Two facts cost a long detour: a DFF stores one UV per vertex, so a hairline vert
 copy; and the exporter is fine with new vertices, so when a head looks stretched in the game compare the dome's
 size with the face, not the file.
 
+## Reference images (#89)
+
+GTA models no skull under a hat, so the bare head has to be invented. `tools/hatless_refs.py` makes a reference for
+each headgear skin:
+
+1. `python -m tools.hatless_refs shoot` takes four studio shots of every original skin through `rcon.ps1`: front,
+   three-quarter, side and back, at head height. It needs the dev server up, the player logged in and no other
+   session using the studio. Allow about 5 minutes for all 22.
+2. `POLLINATIONS_KEY=sk_... python -m tools.hatless_refs edit [skin ...]` pastes each skin's four views into one 2x2
+   grid (`docs/images/hatless-refs/<skin>-studio.jpg`). It sends the grid to Pollinations `gpt-image-2` with the
+   skin's row of `HATLESS`: who it is, the headgear, and the hair to show. The result is `<skin>.jpg`. One call per
+   skin keeps the hair consistent across the four views; skins that already have a result are skipped. Each call
+   costs about 0.031 Pollen, and the key must be allowed to use `gpt-image-2` on enter.pollinations.ai/keys.
+
+| studio | generated |
+| :---: | :---: |
+| ![pilot 61, studio](../images/hatless-refs/61-studio.jpg) | ![pilot 61, bare-headed](../images/hatless-refs/61.jpg) |
+
+Done so far: 2, 4, 35, 36, 37 and 61. Codex CLI's built-in image tool is hidden on a ChatGPT Free plan. The free
+FLUX.1 Kontext Hugging Face Space edits one view at a time and stops after about three anonymous runs.
+
+`blender -b --python tools/blender/render_head.py -- <dff> <txd> <out prefix>` renders a head from the same four
+sides, flat-lit and without the game. Use it to compare an original skin, its twin and the reference while
+remodelling.
+
 ## Hat items from the cut (#77)
 
 The faces the remodel deletes are the skin's own hat, so `tools/port_hats.py` turns the distinct ones into items.
