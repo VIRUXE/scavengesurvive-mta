@@ -1,6 +1,6 @@
 """Rebuild a bare head for a GTA:SA ped whose mesh carries a hat: run inside Blender with the DragonFF add-on.
 
-    blender --python tools/blender/remodel_head.py -- <ped dir> <out dir> [--only heads|hats|both] [--blocks c,r;c,r] [skin ...]
+    blender --python tools/blender/remodel_head.py -- <ped dir> <out dir> [--only heads|hats|both] [--blocks c,r;c,r] [--above c,r,h] [skin ...]
 
 <ped dir> holds <name>.dff and <name>.txd (tools/extract_ped_models.py puts them in models/work when run with
 --keep). For each skin in HEADS the script imports the ped with its texture, deletes the headgear, flattens the cut,
@@ -66,7 +66,7 @@ HEADS = {
 }
 
 
-def remodel(src_dir, out_dir, name, tex, cap_floor=0.045, dark_floor=-0.03, dark_lum=0.12, bright_floor=None, bright_lum=0.7, profile=P, apex=0.09, hair_uv=None, cap_blocks=None, only="both", hat_blocks=None):
+def remodel(src_dir, out_dir, name, tex, cap_floor=0.045, dark_floor=-0.03, dark_lum=0.12, bright_floor=None, bright_lum=0.7, profile=P, apex=0.09, hair_uv=None, cap_blocks=None, only="both", hat_blocks=None, hat_above=None):
     for o in list(bpy.data.objects):
         bpy.data.objects.remove(o, do_unlink=True)
     for i in list(bpy.data.images):
@@ -129,7 +129,7 @@ def remodel(src_dir, out_dir, name, tex, cap_floor=0.045, dark_floor=-0.03, dark
     notes = []
     if only in ("both", "hats"):
         to_bone = (arm.matrix_world @ head.matrix_local).inverted() @ ob.matrix_world
-        notes.append(export_hat(doomed, uvl, to_bone, name, tex, img, out_dir, hat_blocks))
+        notes.append(export_hat(doomed, uvl, to_bone, name, tex, img, out_dir, hat_blocks, hat_above))
     if only == "hats":
         bm.free()
         return f"{name}: " + "; ".join(notes)
@@ -234,18 +234,22 @@ def remodel(src_dir, out_dir, name, tex, cap_floor=0.045, dark_floor=-0.03, dark
 # in the Head bone's bind frame (DragonFF rebuilds the bone from the skin's inverse bind matrix, so the bone's rest
 # matrix is that frame), they make a static object that `items` attaches on SA-MP bone 2 at zero offset: the game
 # places an attachment in the bone's own axes, which are rotated against the ped's model space (#77).
-def export_hat(faces, uvl, to_bone, name, tex, img, out_dir, blocks=None):
+def export_hat(faces, uvl, to_bone, name, tex, img, out_dir, blocks=None, above=None):
     hb = bmesh.new()
     huv = hb.loops.layers.uv.new()
     verts = {}
     lining = 0
     for f in faces:
         # GTA models a skull patch under its hats, textured with a smear of the face, and the rules cut it with
-        # the hat: only faces in the hat's own atlas blocks (tools/port_hats.py) go into the object
+        # the hat: only faces in the hat's own atlas blocks (tools/port_hats.py) go into the object, and a block
+        # listed in `above` only from that height over the bone up
         if blocks is not None:
             cu = sum(l[uvl].uv.x for l in f.loops) / len(f.loops)
             cv = sum(l[uvl].uv.y for l in f.loops) / len(f.loops)
-            if (int((cu % 1.0) * 8), int(((1 - cv) % 1.0) * 8)) not in blocks:
+            block = (int((cu % 1.0) * 8), int(((1 - cv) % 1.0) * 8))
+            floor = (above or {}).get(block)
+            height = (to_bone @ f.calc_center_median()).x
+            if block not in blocks and floor is None or floor is not None and height < floor:
                 lining += 1
                 continue
         vs = []
@@ -307,9 +311,14 @@ if __name__ == "__main__":
         i = argv.index("--blocks")
         hat_blocks = {tuple(int(v) for v in b.split(",")) for b in argv[i + 1].split(";")}
         del argv[i : i + 2]
+    hat_above = None  # "c,r,h;c,r,h": blocks that are hat only from h metres over the Head bone up
+    if "--above" in argv:
+        i = argv.index("--above")
+        hat_above = {(int(c), int(r)): float(h) for c, r, h in (b.split(",") for b in argv[i + 1].split(";"))}
+        del argv[i : i + 2]
     src_dir, out_dir = argv[0], argv[1]
     skins = [int(s) for s in argv[2:]] or list(HEADS)
     addon_utils.enable("DragonFF", default_set=False)
     for skin in skins:
         spec = dict(HEADS[skin])
-        print(remodel(src_dir, out_dir, spec.pop("name"), spec.pop("tex"), only=only, hat_blocks=hat_blocks, **spec))
+        print(remodel(src_dir, out_dir, spec.pop("name"), spec.pop("tex"), only=only, hat_blocks=hat_blocks, hat_above=hat_above, **spec))

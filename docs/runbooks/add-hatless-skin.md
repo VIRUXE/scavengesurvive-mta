@@ -80,6 +80,10 @@ scale 1.1 at zero offset. Add a `CUT_HAT_FIT` row for a skin that needs one, not
 hat from six angles, worn and alone, and from the side camera (`studio <p> 270 1.4 0.75 0.65`), not the face
 preset, which looks up at the brim and makes the hat seem pitched back.
 
+A block can be hat only above a height (`above={(c, r): metres}` in the row) when it shares the atlas with the hair
+under it, as the bucket hat's crown top does. To check a block choice, colour the unfiltered cut by block in Blender
+(one material per block, four views): the skull patch sits well inside the crown's radius, the shell on it.
+
 Left out on purpose: headgear a SA-MP object already covers (police caps, SWAT and army helmets, the pizza cap, the
 beanie) and cuts that are mostly hair (dwayne's mullet, bikerb's bandana).
 

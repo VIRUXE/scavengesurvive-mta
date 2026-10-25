@@ -113,7 +113,10 @@ def read_hats(path: Path) -> dict[int, str]:
 def export_hat(blender: Path, work: Path, out: Path, hat: dict) -> str:
     blocks = ";".join(f"{c},{r}" for c, r in sorted(hat["blocks"]))
     cmd = [str(blender), "-b", "--python", str(REMODEL_SCRIPT), "--", str(work), str(out), "--only", "hats"]
-    cmd += ["--blocks", blocks, str(hat["skin"])]
+    cmd += ["--blocks", blocks]
+    if hat.get("above"):
+        cmd += ["--above", ";".join(f"{c},{r},{h}" for (c, r), h in sorted(hat["above"].items()))]
+    cmd.append(str(hat["skin"]))
     res = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
     notes = [line for line in res.stdout.splitlines() if ": hat of" in line]
     if res.returncode != 0:
