@@ -632,7 +632,10 @@ net.handler("towRequested", function(player)
     toast(player, "TRAILER_ATTACHED")
 end, { rate = 3 })
 
--- Roadside interaction: repair, locksmith, lock-breaking, trunk container, refuelling
+-- getVehicleWheelStates order (front-left, rear-left, front-right, rear-right) -> upstream tyre repair message
+local TIRE_REPAIRED = { "TIREREPFL", "TIREREPBL", "TIREREPFR", "TIREREPBR" }
+
+-- Roadside interaction: repair, locksmith, lock-breaking, trunk container, refuelling, headlights, wheels
 net.handler("vehicleInteractRequested", function(player, vehicle)
     if not isElement(vehicle) or not info[vehicle] or isPedDead(player) then
         return
@@ -651,6 +654,29 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
     local held = exports.items:getHeld(player)
     local uname = held and held.uname
     local hp = getElementHealth(vehicle)
+
+    -- Case 0: a held Wheel replaces the nearest burst or missing tyre (upstream core/item/wheel.pwn)
+    if uname == "Wheel" then
+        local rad = math.rad(vrz or 0)
+        local dx, dy = px - vx, py - vy
+        local localX = dx * math.cos(rad) + dy * math.sin(rad)
+        local localY = -dx * math.sin(rad) + dy * math.cos(rad)
+        local frontLeft, rearLeft, frontRight, rearRight = getVehicleWheelStates(vehicle)
+        local tires = { frontLeft, rearLeft, frontRight, rearRight }
+        local wheel = vlogic.nearestDamagedWheel(localX, localY, tires)
+        if not wheel then
+            return
+        end
+
+        tires[wheel] = 0
+        setVehicleWheelStates(vehicle, tires[1], tires[2], tires[3], tires[4])
+        inf.damage = type(inf.damage) == "table" and inf.damage or {}
+        inf.damage.tires = tires
+        db.exec("UPDATE vehicles SET damage = ? WHERE id = ?", { toJSON(inf.damage), inf.id })
+        exports.items:destroyItem(held.id, player)
+        toast(player, TIRE_REPAIRED[wheel])
+        return
+    end
 
     -- Case 1a: Front, Headlight item replaces the first broken light (upstream core/item/headlight.pwn)
     if vlogic.isFront(angle) and uname == "Headlight" then

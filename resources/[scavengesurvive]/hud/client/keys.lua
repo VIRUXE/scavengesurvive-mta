@@ -39,6 +39,7 @@ return function(ctx)
         Crowbar = true,
         LockBreaker = true,
         Headlight = true,
+        Wheel = true,
     }
 
     local TREATMENTS = { Bandage = true, AntiSepBandage = true, Medkit = true, DoctorBag = true, Pills = true }
@@ -96,6 +97,9 @@ return function(ctx)
         if held and (held.category == "food" or TREATMENTS[held.uname]) then
             return triggerServerEvent("itemUseRequested", localPlayer, held.id)
         end
+        if held and held.category == "bag" then
+            return triggerServerEvent("itemBagOpenRequested", localPlayer)
+        end
         triggerServerEvent("itemPickupRequested", localPlayer)
     end)
 
@@ -118,6 +122,9 @@ return function(ctx)
             return
         end
         local held = ctx.getHeld()
+        if not held and getElementData(localPlayer, "items.bag") then
+            return triggerServerEvent("itemUnwearRequested", localPlayer, "bag")
+        end
         local isCalibreWep = held and held.category == "weapon" and held.calibre ~= nil and not held.liquid
         local key = string.lower(getKeyBoundToCommand("dropitem") or "n")
         if not isCalibreWep or not isKeyHeld(key, "dropitem") then
