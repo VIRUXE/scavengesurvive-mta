@@ -354,3 +354,20 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
     - d. **Petrol Can amount.** Refuel a car (or fuel the barbecue) from a full Petrol Can, wait 5 s (the held-data
       flush), drop the can, pick it up and refuel again: the can holds what was left, not 20 L again
       (`SELECT data FROM items WHERE type_uname = 'GasCan' AND holder_kind = 'held'` shows `amount`).
+
+34. **Anticheat (#100).** One level-2+ staff account and one player. First confirm `anticheat` starts without SQL,
+    missing-event or ACL errors after `run-local.ps1` applies the schema.
+    - a. **Detection fields.** As staff, `/field add smoke 995 995 1005 995 1005 1005 995 1005 0 20`, then
+      `/gotopos 1000 1000 5` while on duty. `/field log smoke` lists the staff entry; repeat `/gotopos` after leaving
+      the field and confirm each entry is logged once. `/field remove smoke` removes it.
+    - b. **Staff exemptions.** While on duty, use `/gotopos` across the map and confirm no anticheat teleport
+      rollback; go off duty and walk normally with no alerts.
+    - c. **Focus timeout.** With `player.max_tab_out_time` set to 60, move a non-staff player out of MTA focus for
+      more than 60 seconds and confirm the server logs and disconnects that player; restore focus before the limit
+      and confirm the timer clears.
+    - d. **Ping policy.** On a test client with controllable network latency, hold ping above the configured limit
+      for 10 seconds and confirm the kick. Confirm short spikes do not kick, the 10-second join grace applies, and
+      staff on duty are exempt. Do not change a production ping limit to run this check.
+    - e. **Native movement and event guards.** Confirm the deployed server build supports `onPlayerTeleport`,
+      `onPlayerTriggerEventThreshold`, and `onPlayerTriggerInvalidEvent`; inspect server logs for a safe test event
+      threshold breach in a private test server. No production cheat tools are needed for this smoke step.
