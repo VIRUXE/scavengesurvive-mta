@@ -12,8 +12,8 @@ and starts it. Every step is safe to run again. Stop the server first; the scrip
    if missing. `local.settings.xml` is git-ignored: put the DB password there, never in the example.
 4. Rebuilds `mods\deathmatch\mtaserver.conf` from `mtaserver.conf.stock` (saved on the first run): removes every stock
    `<resource>` line, adds the lines from `resources.xml`, and sets `elementdata_whitelisted=1`, `fpslimit=60`,
-   `scriptdebugloglevel=3`, `servername`, and `ase=0` so the dev server (open dev commands) is never advertised on the
-   master list.
+   `scriptdebugloglevel=3`, `voice=1` (built-in voice chat, stock sample rate and quality), `servername`, and `ase=0`
+   so the dev server (open dev commands) is never advertised on the master list.
 5. Junctions `mods\deathmatch\resources\[scavengesurvive]` to this repo, so edits are live after `restart <name>`.
 6. Edits `acl.xml` (original saved as `acl.xml.stock`): rebuilds a `ScavengeSurvive` group holding every resource in
    `resources.xml` with an ACL granting `function.loadstring` (the stock `Default` ACL denies it, and every resource

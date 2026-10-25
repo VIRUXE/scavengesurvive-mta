@@ -58,6 +58,7 @@ function Set-ConfValue([string]$Text, [string]$Tag, [string]$Value) {
 $text = Set-ConfValue $text "elementdata_whitelisted" "1"
 $text = Set-ConfValue $text "fpslimit" "60"
 $text = Set-ConfValue $text "scriptdebugloglevel" "3"
+$text = Set-ConfValue $text "voice" "1" # built-in voice chat; stock voice_samplerate=1 (16 kHz) and voice_quality=4 kept
 $text = Set-ConfValue $text "servername" "Scavenge and Survive (dev)"
 $text = Set-ConfValue $text "ase" "0" # dev server with open dev commands: never advertise it on the master list
 [IO.File]::WriteAllText($conf, $text, $Utf8)
