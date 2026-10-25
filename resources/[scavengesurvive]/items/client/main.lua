@@ -46,6 +46,14 @@ addEventHandler("clothesChangeStopped", localPlayer, function()
     exports.ui:progressCancel()
 end)
 
+local function isKeyHeld(key, cmd)
+    if getKeyState(key) then
+        return true
+    end
+    local dev = getResourceFromName("dev")
+    return dev and getResourceState(dev) == "running" and exports.dev:isHeld(cmd or key) == true
+end
+
 -- treatments (server/medical.lua): the healer holds the interact key, letting go cancels; the patient sees the bar
 local treatmentTimer = nil
 addEventHandler("treatmentStarted", localPlayer, function(durationMs, healer)
@@ -58,7 +66,7 @@ addEventHandler("treatmentStarted", localPlayer, function(durationMs, healer)
     end
     local key = string.lower(getKeyBoundToCommand("interact") or "f")
     treatmentTimer = setTimer(function()
-        if not getKeyState(key) then
+        if not isKeyHeld(key, "interact") then
             killTimer(treatmentTimer)
             triggerServerEvent("treatmentCancelRequested", localPlayer)
         end

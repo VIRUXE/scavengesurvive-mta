@@ -26,15 +26,15 @@ local exitZipline -- defined with the zipline code below; a ladder grab while ri
 
 local function keyHeld(control)
     local keys = getBoundKeys(control)
-    if not keys then
-        return false
-    end
-    for key in pairs(keys) do
-        if getKeyState(key) then
-            return true
+    if keys then
+        for key in pairs(keys) do
+            if getKeyState(key) then
+                return true
+            end
         end
     end
-    return false
+    local dev = getResourceFromName("dev")
+    return dev and getResourceState(dev) == "running" and exports.dev:isHeld(control) == true
 end
 
 local function busy()

@@ -98,6 +98,14 @@ return function(ctx)
         triggerServerEvent("itemPickupRequested", localPlayer)
     end)
 
+    local function isKeyHeld(key, cmd)
+        if getKeyState(key) then
+            return true
+        end
+        local dev = getResourceFromName("dev")
+        return dev and getResourceState(dev) == "running" and exports.dev:isHeld(cmd or key) == true
+    end
+
     addCommandHandler("dropitem", function()
         if not guard() or listIsOpen() then
             return
@@ -111,12 +119,12 @@ return function(ctx)
         local held = ctx.getHeld()
         local isCalibreWep = held and held.category == "weapon" and held.calibre ~= nil and not held.liquid
         local key = string.lower(getKeyBoundToCommand("dropitem") or "n")
-        if not isCalibreWep or not getKeyState(key) then
+        if not isCalibreWep or not isKeyHeld(key, "dropitem") then
             return triggerServerEvent("itemDropRequested", localPlayer)
         end
         local startTick = getTickCount()
         holdTimer = setTimer(function()
-            if not getKeyState(key) then
+            if not isKeyHeld(key, "dropitem") then
                 killTimer(holdTimer)
                 holdTimer = nil
                 triggerServerEvent("itemDropRequested", localPlayer)

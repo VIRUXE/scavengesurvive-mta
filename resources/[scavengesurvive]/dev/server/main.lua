@@ -257,6 +257,7 @@ local RCON_HELP = {
     "lua <code>                    run server-side Lua and print its return values, e.g. lua return getPlayerCount()",
     "screenshot <player> [w h]     ask that client for a screenshot; saved as dev/screenshots/<player>-<time>.jpg",
     "key <player> <command|key>    run a bound command (interact, inventory) or client key (arrow_d, enter, escape)",
+    "hold <player> <command> <ms>  hold a bound command or key for <ms> (0 releases early) so hold polls see it",
     "clua <player> <code>          run a Lua chunk on that client; its return values land in its chat (rcon chat)",
     "chat <player> [n|clear]       last n (20) chat lines that client received (screenshots omit the chat box)",
     "studio <player> [cam|off]     green-screen studio; cam = preset (front back left right threequarter top face",
@@ -391,6 +392,18 @@ function rcon(line)
         else
             triggerClientEvent(p, "devKeyPressed", p, bound)
             put("%s pressed %s", who, bound)
+        end
+    elseif verb == "hold" then
+        local who, bound, msArg = rest:match("^(%S+)%s+(%S+)%s+(%S+)$")
+        local p = who and getPlayerFromName(who)
+        local ms = tonumber(msArg)
+        if not p or not ms or ms < 0 then
+            ok = false
+            put("usage: hold <player> <command> <ms>")
+        else
+            ms = math.floor(ms)
+            triggerClientEvent(p, "devKeyPressed", p, bound, ms)
+            put(ms > 0 and string.format("%s holding %s for %d ms", who, bound, ms) or (who .. " released " .. bound))
         end
     elseif verb == "clua" then
         local who, code = rest:match("^(%S+)%s+(.+)$")

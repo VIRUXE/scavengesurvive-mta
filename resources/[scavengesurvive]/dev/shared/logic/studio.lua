@@ -128,4 +128,32 @@ function studio.freeDimension(used)
     return d
 end
 
+-- rcon "hold <player> <command|key> <ms>" (#98): keeps a bound command and its key marked as held until now + ms;
+-- ms = 0 releases it early without pressing the command again.
+function studio.holdSet(heldUntil, command, boundKey, now, ms)
+    local name = type(command) == "string" and string.lower(command)
+    if not name or name == "" then
+        return false
+    end
+    local untilTick = ms > 0 and (now + ms) or nil
+    heldUntil[name] = untilTick
+    if type(boundKey) == "string" and boundKey ~= "" then
+        heldUntil[string.lower(boundKey)] = untilTick
+    end
+    return ms > 0
+end
+
+function studio.holdActive(heldUntil, name, now)
+    name = type(name) == "string" and string.lower(name)
+    local untilTick = name and heldUntil[name]
+    if not untilTick then
+        return false
+    end
+    if now < untilTick then
+        return true
+    end
+    heldUntil[name] = nil
+    return false
+end
+
 return studio

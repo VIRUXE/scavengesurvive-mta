@@ -14,6 +14,7 @@
     <script src="client/studio.lua" type="client"/>
     <file src="shared/logic/studio.lua"/>
     <export function="rcon" type="server" http="true"/>
+    <export function="isHeld" type="client"/>
     <aclrequest>
         <right name="function.restartResource" access="true"/>
         <right name="function.startResource" access="true"/>
