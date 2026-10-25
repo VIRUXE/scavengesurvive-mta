@@ -15,6 +15,7 @@
     <resource src="building" startup="1" protected="0"/>
     <resource src="world" startup="1" protected="0"/>
     <resource src="weapons" startup="1" protected="0"/>
+    <resource src="anticheat" startup="1" protected="0"/>
     <resource src="chat" startup="1" protected="0"/>
     <resource src="hud" startup="1" protected="0"/>
     <resource src="staff" startup="1" protected="0"/>

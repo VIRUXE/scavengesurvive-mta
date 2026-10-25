@@ -21,6 +21,7 @@ INSERT INTO settings (skey, svalue) VALUES
 ('player.auto_ip_login','0'),
 ('player.combat_log_window','30'),
 ('player.login_freeze_time','8'),
+('player.max_tab_out_time','60'),
 ('player.ping_limit','400'),
 ('server.motd',''),
 ('server.rules',''),

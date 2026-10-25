@@ -5,7 +5,8 @@ from pathlib import Path
 from .common import SEED_HEADER, write_text
 
 SETTINGS = {
-    "player.combat_log_window": "30", "player.login_freeze_time": "8", "player.ping_limit": "400",
+    "player.combat_log_window": "30", "player.login_freeze_time": "8", "player.max_tab_out_time": "60",
+    "player.ping_limit": "400",
     "spawn.bagtype": "Satchel", "spawn.new_blood": "90", "spawn.new_food": "80", "spawn.new_bleed": "0.0001",
     "spawn.new_items": "Knife", "spawn.res_blood": "100", "spawn.res_food": "40", "spawn.res_bleed": "0",
     "spawn.res_items": "AntiSepBandage", "loot.spawn_multiplier": "1.0", "loot.despawn_minutes": "120",

@@ -1,0 +1,13 @@
+<meta>
+    <info author="scavengesurvive-mta" type="script" name="anticheat" description="Server-side sanity checks and MTA event abuse handling" version="0.1.0"/>
+    <min_mta_version server="1.6.0-9.22930" client="1.6.0-9.22649"/>
+    <include resource="lib"/>
+    <include resource="auth"/>
+    <include resource="staff"/>
+    <script src="server/main.lua" type="server"/>
+    <file src="server/fields.lua"/>
+    <script src="client/focus.lua" type="client"/>
+    <aclrequest>
+        <right name="function.kickPlayer" access="true" />
+    </aclrequest>
+</meta>

@@ -25,6 +25,31 @@ CREATE TABLE IF NOT EXISTS `accounts` (
   KEY `ix_accounts_serial` (`last_serial`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci WITH SYSTEM VERSIONING;
 
+CREATE TABLE IF NOT EXISTS `anticheat_field_logs` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `field_id` int(11) NOT NULL,
+  `player_name` varchar(64) NOT NULL,
+  `x` float NOT NULL,
+  `y` float NOT NULL,
+  `z` float NOT NULL,
+  `logged_at` datetime NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `ix_anticheat_field_logs_field` (`field_id`,`id`),
+  KEY `ix_anticheat_field_logs_player` (`player_name`,`logged_at`),
+  CONSTRAINT `fk_anticheat_field_logs_field` FOREIGN KEY (`field_id`) REFERENCES `anticheat_fields` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+
+CREATE TABLE IF NOT EXISTS `anticheat_fields` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(64) NOT NULL,
+  `points` text NOT NULL,
+  `min_z` float NOT NULL,
+  `max_z` float NOT NULL,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_anticheat_fields_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+
 CREATE TABLE IF NOT EXISTS `bans` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `account_id` int(11) DEFAULT NULL,
