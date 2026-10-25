@@ -40,6 +40,26 @@ function M.isDriverSide(angle)
     return angle > 225 and angle < 315
 end
 
+-- MTA wheel states are ordered front-left, rear-left, front-right, rear-right.
+-- Pick the damaged wheel nearest the player in the vehicle's local XY plane.
+function M.nearestDamagedWheel(x, y, tires)
+    if type(tires) ~= "table" or #tires ~= 4 then
+        return nil
+    end
+    local positions = { { -1, 1 }, { -1, -1 }, { 1, 1 }, { 1, -1 } }
+    local best, bestDistance
+    for i, state in ipairs(tires) do
+        if state ~= 0 then
+            local dx, dy = x - positions[i][1], y - positions[i][2]
+            local distance = dx * dx + dy * dy
+            if not bestDistance or distance < bestDistance then
+                best, bestDistance = i, distance
+            end
+        end
+    end
+    return best
+end
+
 -- Server-side reach for roadside interaction, from the vehicle's centre. The client asks within 5.5 m (hud keys.lua);
 -- the slack covers latency and position sync, a little more on longer vehicles.
 local REACH = { small = 6.5, medium = 7.0, large = 8.0 }

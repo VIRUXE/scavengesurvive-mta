@@ -39,6 +39,7 @@ return function(ctx)
         Crowbar = true,
         LockBreaker = true,
         Headlight = true,
+        Wheel = true,
     }
 
     local TREATMENTS = { Bandage = true, AntiSepBandage = true, Medkit = true, DoctorBag = true, Pills = true }

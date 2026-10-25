@@ -16,6 +16,13 @@ describe("vehicles logic", function()
         assert.is_true(vlogic.isDriverSide(vlogic.angleToVehicle(0, -10, 0, 0, 90)))
     end)
 
+    it("selects the nearest damaged wheel in vehicle-local coordinates", function()
+        assert.equals(1, vlogic.nearestDamagedWheel(-1, 1, { 1, 0, 1, 0 }))
+        assert.equals(4, vlogic.nearestDamagedWheel(1, -1, { 0, 0, 0, 1 }))
+        assert.is_nil(vlogic.nearestDamagedWheel(-1, 1, { 0, 0, 0, 0 }))
+        assert.is_nil(vlogic.nearestDamagedWheel(0, 0, { 0, 1 }))
+    end)
+
     it("calculates fuel drain smoothly", function()
         -- 0 fuel remains 0
         assert.equals(0, vlogic.fuelDrain(0, 15, 60, 1))
