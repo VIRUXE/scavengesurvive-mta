@@ -111,11 +111,11 @@ return function(ctx)
         return parts
     end
 
-    -- The type's rest rotation and the row's heading, then turned onto the slope it lies on (ground_nx / ground_ny,
-    -- set by the death drop and /dropall; false when flat).
+    -- The type's rest rotation added to the row's heading (upstream CreateItemInWorld with applyrotoffsets), then
+    -- turned onto the slope it lies on (ground_nx / ground_ny, set by the death drop and /dropall; false when flat).
     local function orient(obj, r, t)
         setElementPosition(obj, r.x, r.y, r.z + (t and t.modelz or 0))
-        setElementRotation(obj, t and t.rotx or 0, t and t.roty or 0, r.rz or 0)
+        setElementRotation(obj, t and t.rotx or 0, t and t.roty or 0, (r.rz or 0) + (t and t.rotz or 0))
         local nx, ny = tonumber(r.ground_nx) or 0, tonumber(r.ground_ny) or 0
         if nx ~= 0 or ny ~= 0 then
             setElementMatrix(obj, geometry.tilt(getElementMatrix(obj), nx, ny))

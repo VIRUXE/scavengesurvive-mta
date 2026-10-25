@@ -292,3 +292,7 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
     - d. **Toggle.** `/tooltips` says `Tooltips disabled`, pickups then show no tip; reconnect and it is still off
       (`accounts.tooltips`), `/tooltips` again turns it back on.
     - e. `/help` no longer lists `/restartinfo`; `/restartinfo` and `/hudscale` do nothing (not ported).
+    - f. **Rest rotation** (#92). `/additem` and drop the types with a non-zero `rotz` (Sign, Torso, Wheel,
+      Cupboard, Backpack, MediumBag, LargeBackpack, LocksmithKit, LaserPoint, Door, Cross, RedPanel, Burger, Beanie,
+      CaptainsCap, SwatHelmet): each now sits turned by that `rotz` from the old look, nothing sinks into the
+      ground, and the look survives `rr items`.
