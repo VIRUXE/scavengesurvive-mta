@@ -96,6 +96,22 @@ function M.repairToolForHealth(health)
     return nil -- fully repaired
 end
 
+-- Help tip for a driver getting in (upstream key-actions.pwn _ShowRepairTip): bands inclusive at the top, and
+-- anything up to HEALTH_MAX counts as slightly broken; nil above it. Upstream pairs "very broken" with the wrench.
+function M.repairTipKey(health)
+    local h = health or 1000
+    if h <= M.HEALTH_CHUNK_2 then
+        return "TUTORVEHVER"
+    elseif h <= M.HEALTH_CHUNK_3 then
+        return "TUTORVEHBRO"
+    elseif h <= M.HEALTH_CHUNK_4 then
+        return "TUTORVEHBIT"
+    elseif h <= M.HEALTH_MAX then
+        return "TUTORVEHSLI"
+    end
+    return nil
+end
+
 function M.canBreakLock(lockState, itemUname)
     if lockState == M.LOCK_OPEN then
         return false, "NOT_LOCKED"

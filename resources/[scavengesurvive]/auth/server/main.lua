@@ -406,6 +406,18 @@ addCommandHandler("lang", function(player, _, code)
     util.log("auth", "info", "%s set language %s", account.name, code)
 end)
 
+-- /tooltips (upstream commands.pwn): the pickup and vehicle tips (ui's showTip) on or off; stored on the account.
+addCommandHandler("tooltips", function(player)
+    local account = getElementType(player) == "player" and session[player]
+    if not account then
+        return
+    end
+    account.tooltips = not account.tooltips
+    db.exec("UPDATE accounts SET tooltips = ? WHERE id = ?", { account.tooltips and 1 or 0, account.id })
+    local key = account.tooltips and "TOOLTIPSON" or "TOOLTIPSOFF"
+    outputChatBox(exports.data:t(account.lang, key), player, 255, 255, 0, true)
+end)
+
 -- /welcome (upstream commands.pwn): the welcome box again, closable at once
 addCommandHandler("welcome", function(player)
     if getElementType(player) == "player" then
@@ -450,6 +462,9 @@ function getAdminLevel(player)
 end
 function getLanguage(player)
     return session[player] and session[player].lang or "en"
+end
+function tooltipsOn(player)
+    return session[player] ~= nil and session[player].tooltips == true
 end
 function isAuthenticated(player)
     return session[player] ~= nil

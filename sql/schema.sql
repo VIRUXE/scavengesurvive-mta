@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS `accounts` (
   `password_hash` char(60) NOT NULL,
   `admin_level` tinyint(4) NOT NULL DEFAULT 0,
   `lang` varchar(8) NOT NULL DEFAULT 'en',
+  `tooltips` tinyint(1) NOT NULL DEFAULT 1,
   `registered_at` datetime NOT NULL DEFAULT current_timestamp(),
   `last_login_at` datetime DEFAULT NULL,
   `last_ip` varchar(45) DEFAULT NULL,

@@ -116,6 +116,29 @@ def test_death_drops_everything_and_marks_dead(db, character):
         assert (row["x"], row["y"]) == (101.0, 200.0)
 
 
+def test_drop_all_drops_everything_and_stays_alive(db, character):
+    ch, cid = character["character_id"], character["inventory_container_id"]
+    a, b = make_world_item(db), make_world_item(db)
+    call(db, "item_pickup", a, ch)
+    call(db, "container_put", a, ch, cid)
+    call(db, "item_pickup", b, ch)
+    clothes = "SELECT COUNT(*) AS n FROM items WHERE type_uname = 'Clothes'"
+    with db.cursor() as cur:
+        cur.execute(clothes)
+        before = cur.fetchone()["n"]
+    ok, code, payload = call(db, "character_drop_all", ch, 100.0, 200.0, 5.0, 0, 0)
+    assert code == "OK" and payload == {"dropped": 2}
+    with db.cursor() as cur:
+        cur.execute("SELECT alive FROM characters WHERE id=%s", (ch,))
+        assert cur.fetchone()["alive"] == 1
+        cur.execute("SELECT COUNT(*) AS n FROM items WHERE id IN (%s,%s) AND x IS NOT NULL", (a, b))
+        assert cur.fetchone()["n"] == 2
+        cur.execute(clothes)
+        assert cur.fetchone()["n"] == before
+    call(db, "character_death_drop", ch, 100.0, 200.0, 5.0, 0, 0)
+    assert call(db, "character_drop_all", ch, 100.0, 200.0, 5.0, 0, 0)[1] == "NOT_ALIVE"
+
+
 def test_concurrent_pickup_exactly_one_winner(db):
     # Several rounds, both workers released together by a barrier: the first round on a near-empty
     # items table is serialised by a full-scan row lock, later rounds use uq_items_holder_kind (gap locks).

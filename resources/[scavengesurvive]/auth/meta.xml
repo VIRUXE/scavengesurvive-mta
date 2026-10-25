@@ -16,6 +16,7 @@
     <export function="getAdminLevel" type="server"/>
     <export function="getLanguage" type="server"/>
     <export function="isAuthenticated" type="server"/>
+    <export function="tooltipsOn" type="server"/>
     <export function="setSessionAdminLevel" type="server"/>
     <export function="setWhitelistEnabled" type="server"/>
     <export function="isWhitelistEnabled" type="server"/>

@@ -869,8 +869,12 @@ net.handler("trunkCloseRequested", function(player)
     end
 end, { rate = 3 })
 
-addEventHandler("onVehicleEnter", resourceRoot, function()
+addEventHandler("onVehicleEnter", resourceRoot, function(player, seat)
     markUsed(source)
+    local key = seat == 0 and vlogic.repairTipKey(getElementHealth(source))
+    if key then
+        exports.ui:showTip(player, exports.data:t(exports.auth:getLanguage(player), key), false, 20000)
+    end
 end)
 
 addEventHandler("onPlayerQuit", root, function()

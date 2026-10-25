@@ -297,16 +297,16 @@ local function playerCommand(name, fn)
     end)
 end
 
-local function showInfo(p, title, key)
-    triggerClientEvent(p, "chatInfoShown", p, title, logic.dialogBody(exports.data:t(lang(p), key)))
+local function showInfo(p, title, body)
+    triggerClientEvent(p, "chatInfoShown", p, title, body)
 end
 
 playerCommand("help", function(p)
-    showInfo(p, "General Information", "GENCOMDHELP")
+    showInfo(p, "General Information", logic.helpBody(exports.data:t(lang(p), "GENCOMDHELP")))
 end)
 
 playerCommand("chatinfo", function(p)
-    showInfo(p, "Information about #33CCFFChat", "GENCOMDCHAT")
+    showInfo(p, "Information about #33CCFFChat", logic.dialogBody(exports.data:t(lang(p), "GENCOMDCHAT")))
 end)
 
 local function sayList(p, header, settingKey)

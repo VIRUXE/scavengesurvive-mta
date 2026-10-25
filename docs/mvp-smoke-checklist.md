@@ -262,3 +262,15 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
       staff duty it says to go off duty first.
     - d. **Death.** Die: a Clothes item holding the skin you died in lies 1 m east of the body, next to the rest of
       the death drop, and its label names that skin's type.
+30. **Player commands: /dropall, /tooltips** (#91). One client.
+    - a. **Surrender.** Hold an item, wear a bag with something in it, a hat and armour, carry inventory items, then
+      `/dropall`: the hands-up animation plays, everything lies in a ring around you (the bag still holds its
+      contents), the gear tiles are empty, no Clothes item appears and you stay alive. Moving ends the animation.
+    - b. **Pickup tip.** Pick up an M9 (or any item with a `_T` text): a green paragraph at the lower left with the
+      blue `Type /tooltips to toggle these messages` one blank line below it, gone after 20 s or when the item is
+      dropped. An item type without a text shows nothing.
+    - c. **Repair tip.** Damage a car below 990 and get in as the driver: the matching "slightly / a bit / broken /
+      very broken" text for 20 s; a passenger sees nothing.
+    - d. **Toggle.** `/tooltips` says `Tooltips disabled`, pickups then show no tip; reconnect and it is still off
+      (`accounts.tooltips`), `/tooltips` again turns it back on.
+    - e. `/help` no longer lists `/restartinfo`; `/restartinfo` and `/hudscale` do nothing (not ported).

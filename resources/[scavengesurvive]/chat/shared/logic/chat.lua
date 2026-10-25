@@ -181,6 +181,19 @@ function chat.dialogBody(text)
     return (tostring(text or ""):gsub("\t", "    "))
 end
 
+-- GENCOMDHELP lines of upstream commands the port leaves out: /restartinfo (the port has no scheduled restart and
+-- saves continuously, so upstream's restart and saving notes do not apply).
+chat.DROPPED_HELP = { "restartinfo" }
+
+-- The /help body: each dropped command's line and the blank line after it removed, tabs expanded.
+function chat.helpBody(text)
+    local out = tostring(text or "")
+    for _, name in ipairs(chat.DROPPED_HELP) do
+        out = out:gsub("\t[^\n]*/" .. name .. " [^\n]*\n\n", "")
+    end
+    return chat.dialogBody(out)
+end
+
 -- server.rules / server.staff (upstream settings.ini arrays): entries separated by "|", blanks dropped.
 function chat.listSetting(value)
     local out = {}

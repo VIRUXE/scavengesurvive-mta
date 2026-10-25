@@ -83,6 +83,17 @@ describe("vehicles logic", function()
         assert.is_false(vlogic.canUseKey({ code = 12345 }, 0))
     end)
 
+    it("picks the repair tip of upstream's health bands", function()
+        assert.equals("TUTORVEHVER", vlogic.repairTipKey(300))
+        assert.equals("TUTORVEHVER", vlogic.repairTipKey(450))
+        assert.equals("TUTORVEHBRO", vlogic.repairTipKey(451))
+        assert.equals("TUTORVEHBRO", vlogic.repairTipKey(650))
+        assert.equals("TUTORVEHBIT", vlogic.repairTipKey(800))
+        assert.equals("TUTORVEHSLI", vlogic.repairTipKey(990))
+        assert.is_nil(vlogic.repairTipKey(991))
+        assert.is_nil(vlogic.repairTipKey(nil))
+    end)
+
     it("matches trailer hitches", function()
         local bobcat = { trailerHitch = "small" }
         local smallTrailer = { trailer = true, size = "small" }

@@ -12,6 +12,7 @@ local sw, sh = guiGetScreenSize()
 local ctx = { canvas = canvas, dialog = dialog, c = canvas.new(sw, sh) }
 ctx.draw = loadModule("client/draw.lua")(ctx)
 local actionText = loadModule("client/actiontext.lua")(ctx)
+local tip = loadModule("client/tip.lua")(ctx)
 local progress = loadModule("client/progress.lua")(ctx)
 local list = loadModule("client/list.lua")(ctx)
 local dialogbox = loadModule("client/dialogbox.lua")(ctx)
@@ -24,7 +25,17 @@ addEventHandler("onClientRender", root, function()
         dialogbox.draw()
     end
     progress.draw()
+    tip.draw()
     actionText.draw()
+end)
+
+-- the server side (server/main.lua) sends the tips of players who have them on
+addEventHandler("helpTipShown", localPlayer, function(text, footer, ms)
+    tip.show(text, footer, ms)
+end)
+
+addEventHandler("helpTipHidden", localPlayer, function()
+    tip.hide()
 end)
 
 -- Exports (MTA needs global functions): other resources call exports.ui:actionText(...) etc.
@@ -39,6 +50,15 @@ end
 -- Older name kept for callers: a 3 s action text (the colour arguments are ignored, upstream is always white).
 function toast(text)
     return actionText.show(text, 3000)
+end
+
+-- help tip (tip.lua): body, optional blue footer line, ms (0 keeps it until hidden)
+function tipShow(text, footer, ms)
+    return tip.show(text, footer, ms)
+end
+
+function tipHide()
+    return tip.hide()
 end
 
 function progressStart(label, durationMs)

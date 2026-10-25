@@ -19,6 +19,7 @@ local function toAccount(row)
         name = row.name,
         adminLevel = row.admin_level or 0,
         lang = row.lang or "en",
+        tooltips = row.tooltips ~= 0,
         active = row.active ~= 0,
     }
 end
@@ -27,8 +28,8 @@ function accounts.new(deps)
     local self = { attempts = {} }
 
     function self.lookup(name, cb)
-        local sql = "SELECT id, name, password_hash, admin_level, lang, active, last_ip, last_serial FROM accounts"
-            .. " WHERE name = ?"
+        local sql = "SELECT id, name, password_hash, admin_level, lang, tooltips, active, last_ip, last_serial"
+            .. " FROM accounts WHERE name = ?"
         deps.db.one(sql, { name }, function(row)
             cb(row)
         end)
@@ -58,7 +59,15 @@ function accounts.new(deps)
                         if not ok2 then
                             return cb(false, "DB_ERROR")
                         end
-                        cb(true, "OK", { id = insertId, name = name, adminLevel = 0, lang = "en", active = true })
+                        local account = {
+                            id = insertId,
+                            name = name,
+                            adminLevel = 0,
+                            lang = "en",
+                            tooltips = true,
+                            active = true,
+                        }
+                        cb(true, "OK", account)
                     end
                 )
             end)
