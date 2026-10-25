@@ -319,6 +319,25 @@ return function(ctx)
     end
 
     local function renderBodyPanel(px, py, pw, ph, s)
+        -- upstream ShowPlayerHealthInfo: "Food Infect" and "Wound Infect" in red, each active drug in yellow (#94)
+        local extra = {}
+        local infection = type(charStats.infection) == "table" and charStats.infection or {}
+        if infection.food then
+            extra[#extra + 1] = { "Food Infect", tocolor(255, 0, 0, 255) }
+        end
+        if infection.wound then
+            extra[#extra + 1] = { "Wound Infect", tocolor(255, 0, 0, 255) }
+        end
+        local drugs = type(charStats.drugs) == "table" and charStats.drugs or {}
+        for _, name in ipairs({ "Antibiotic", "Painkill", "Lsd", "Air", "Morphine", "Adrenaline", "Heroin" }) do
+            if drugs[name] then
+                extra[#extra + 1] = { name, tocolor(255, 255, 0, 255) }
+            end
+        end
+        -- seven body parts, bleed and hunger, the status rows and the footer: the panel grows past its usual
+        -- height when every row would not fit (a stack of drugs dropped the last ones)
+        local lineH = 13 * s
+        ph = math.max(ph, 22 * s + (9 + #extra) * lineH + 4 * s + 22 * s)
         drawPanel(px, py, pw, ph)
         dxDrawRectangle(px, py, pw, 18 * s, tocolor(50, 50, 50, 255))
         dxDrawText(
@@ -351,7 +370,6 @@ return function(ctx)
         end
 
         local startY = py + 22 * s
-        local lineH = 13 * s
         for i, pt in ipairs(parts) do
             local col = pt.count > 0 and tocolor(255, 60, 60, 255) or tocolor(220, 220, 220, 255)
             dxDrawText(
@@ -392,26 +410,8 @@ return function(ctx)
         )
 
         local footerY = py + ph - 18 * s
-        -- upstream ShowPlayerHealthInfo: "Food Infect" and "Wound Infect" in red, each active drug in yellow (#94)
-        local extra = {}
-        local infection = type(charStats.infection) == "table" and charStats.infection or {}
-        if infection.food then
-            extra[#extra + 1] = { "Food Infect", tocolor(255, 0, 0, 255) }
-        end
-        if infection.wound then
-            extra[#extra + 1] = { "Wound Infect", tocolor(255, 0, 0, 255) }
-        end
-        local drugs = type(charStats.drugs) == "table" and charStats.drugs or {}
-        for _, name in ipairs({ "Antibiotic", "Painkill", "Lsd", "Air", "Morphine", "Adrenaline", "Heroin" }) do
-            if drugs[name] then
-                extra[#extra + 1] = { name, tocolor(255, 255, 0, 255) }
-            end
-        end
         for i, row in ipairs(extra) do
             local y = statusY + lineH * (i + 1)
-            if y + lineH > footerY then
-                break
-            end
             dxDrawText(row[1], px + 8 * s, y, px + pw, y + lineH, row[2], 0.85 * s, "default-bold")
         end
         dxDrawRectangle(px, footerY, pw, 18 * s, tocolor(50, 50, 50, 255))
