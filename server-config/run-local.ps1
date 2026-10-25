@@ -16,14 +16,14 @@ if (-not (Test-Path -LiteralPath (Join-Path $Dm "mtaserver.conf"))) { throw "No 
 if (Get-Process -Name "MTA Server" -ErrorAction SilentlyContinue) { throw "MTA Server is running; stop it first (type 'shutdown' in its console)." }
 $Utf8 = [Text.UTF8Encoding]::new($false)
 
-# (a) database: create, sql/schema.sql (missing tables only), procedures, events, seeds
+# (a) database: create, sql/schema.sql (missing tables only; every routine, trigger and event replaced), seeds
 $sqlArgs = @("-m", "tools.sqltool", "--db", $DbName, "--user", $DbUser)
 if ($DbPassword) { $sqlArgs += @("--password", $DbPassword) }
 if ($Reset) { $sqlArgs += "--reset" }
 Push-Location $Repo
 try { & python @sqlArgs "apply"; if ($LASTEXITCODE -ne 0) { throw "sqltool failed ($LASTEXITCODE)" } } finally { Pop-Location }
 
-# (b) the despawn/cleanup events in sql/events need the scheduler
+# (b) the despawn/cleanup events in sql/schema.sql need the scheduler
 $dbAuth = @("-u", $DbUser)
 if ($DbPassword) { $dbAuth += "--password=$DbPassword" }
 if (-not (Get-Command $MariaDb -ErrorAction SilentlyContinue)) { throw "No '$MariaDb' on PATH; add MariaDB's bin directory or pass -MariaDb <path>" }

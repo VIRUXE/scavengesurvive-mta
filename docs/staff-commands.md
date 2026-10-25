@@ -66,7 +66,7 @@ Durations (`/mute`, `/ban`): a bare number is seconds; `10m`, `2h`, `3d`, `2w`, 
   `bans.lua`, `reports.lua`, `duty.lua`: the commands.
 - `resources/[scavengesurvive]/auth/shared/logic/access.lua`: ban query and whitelist decision (busted:
   `tests/lua/spec/auth_access_spec.lua`); `auth/server/main.lua` applies them on join and login.
-- `sql/schema.sql` (`bans`, `whitelist`, `reports`, `staff_actions`, `accounts.warnings/muted/mute_until`), `sql/procedures/staff_{ban,unban,warn}.sql`, `sql/events/0002_expire_bans.sql`
+- `sql/schema.sql` (`bans`, `whitelist`, `reports`, `staff_actions`, `accounts.warnings/muted/mute_until`), procedures `staff_ban`, `staff_unban`, `staff_warn` and event `ev_expire_bans` in `sql/schema.sql`
   (pytest: `tests/sql/test_staff.py`).
 - ACL: `function.kickPlayer` and `function.restartResource` on the `ScavengeSurvive` ACL (`server-config/run-local.ps1`).
 

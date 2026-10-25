@@ -6,7 +6,8 @@
 3. Pick an issue from the [project board](https://github.com/users/VIRUXE/projects/3) or open one with a template.
    Work is tracked there: a commit that fixes, advances or re-scopes an issue closes or comments on it.
 4. Write the failing test first, then the code. Pure logic goes in `shared/logic/*.lua` (busted), data conversion in
-   `tools/convert` (pytest), multi-row DB work in `sql/procedures` (pytest against the live test database).
+   `tools/convert` (pytest), multi-row DB work in a stored procedure created live and dumped into `sql/schema.sql`
+   (pytest against the live test database).
 5. Before committing, the four local checks must pass: `.lua/bin/busted.bat tests/lua`,
    `.lua/bin/luacheck.bat resources`, `stylua --check resources`, `pytest -q`.
 6. Commit straight to `main` with a conventional-commit message (`feat(items): …`). There is no CI and there are no
