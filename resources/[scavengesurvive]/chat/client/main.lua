@@ -23,7 +23,7 @@ local KNOB = tocolor(0x78, 0, 0, 0xFA)
 local HOVER = tocolor(255, 255, 255, 0x88)
 local BOX = tocolor(0, 0, 0, 100)
 
-local state = { open = false, freq = logic.FREQ_DEFAULT, mode = logic.MODE.LOCAL, oldMode = logic.MODE.RADIO }
+local state = { open = false, freq = logic.FREQ_DEFAULT, mode = logic.MODE.GLOBAL, oldMode = logic.MODE.RADIO }
 local typing = false -- the frequency dialog is open (and for one short moment after it answers)
 
 local function uiListIsOpen()
