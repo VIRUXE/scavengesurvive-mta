@@ -21,6 +21,7 @@ local state = {
     byId = {}, -- character id -> player
     lastSpawn = {}, -- player -> last spawnpoint index (no two spawns in a row at the same place)
     creating = {}, -- players with a character_create in flight
+    awaitingRespawn = {}, -- player -> true once the last death's character_death_drop committed
     settings = {}, -- gamemode settings map (db.settings)
     combat = combatlog.new(),
     knockout = {}, -- player -> { untilTick, timer }
@@ -219,14 +220,16 @@ addEventHandler("playerAuthenticated", root, function(accountId)
 end)
 
 net.handler("respawnRequested", function(player)
-    local st = state.byPlayer[player]
-    if st and st.hp > 0 then
+    -- only after a committed death: character_create would retire a character that is still alive in the DB (still
+    -- loading, or its death drop failed) without dropping its items
+    if state.byPlayer[player] or state.creating[player] or not state.awaitingRespawn[player] then
         return
     end
     local accountId = exports.auth:getAccountId(player)
     if not accountId then
         return
     end
+    state.awaitingRespawn[player] = nil
     triggerClientEvent(player, "deathScreenShown", player, false)
     createAndSpawn(player, accountId, survival.RESPAWN)
 end, { rate = 1 })
@@ -264,6 +267,7 @@ local function forget(player, quitReason)
     state.byPlayer[player] = nil
     state.lastSpawn[player] = nil
     state.creating[player] = nil
+    state.awaitingRespawn[player] = nil
 end
 -- auth's own onPlayerQuit handler runs first (it started first) and raises playerLoggedOut with the quit reason,
 -- so that is where a quitting player is seen; the direct onPlayerQuit handler covers a player who never logged in.

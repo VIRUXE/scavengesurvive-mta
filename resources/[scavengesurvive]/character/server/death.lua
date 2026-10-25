@@ -67,7 +67,7 @@ return function(ctx)
             x, y, z, int, dim = real[1], real[2], real[3], real[4], real[5]
             measure = false
         end
-        local c = { player = player, st = st, charId = st.id, cause = cause, killer = killer }
+        local c = { player = player, st = st, charId = st.id, cause = cause, killer = killer, silent = silent }
         groundSpots(player, x, y, z, measure, function(spots)
             local ring, clothes = drop.split(spots)
             local params = { c.charId, x, y, z, int, dim, toJSON(ring, true), toJSON(clothes, true) }
@@ -76,7 +76,10 @@ return function(ctx)
                     return
                 end
                 if not res or not res.ok then
+                    -- the character stays alive in the DB: a reconnect loads it again instead of orphaning its items
                     util.log("character", "error", "death_drop failed for %d", c.charId)
+                elseif not c.silent then
+                    state.awaitingRespawn[c.player] = true
                 end
                 triggerEvent("characterDied", c.player, c.charId, c.cause, c.killer)
                 if state.byId[c.charId] == c.player then

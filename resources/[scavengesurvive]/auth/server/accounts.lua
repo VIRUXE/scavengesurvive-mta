@@ -12,6 +12,8 @@ end
 
 local accounts = {}
 local MAX_ATTEMPTS = 5
+-- failed logins are counted per serial over this window, so reconnecting does not reset them
+local LOCK_MS = 10 * 60 * 1000
 
 local function toAccount(row)
     return {
@@ -25,7 +27,21 @@ local function toAccount(row)
 end
 
 function accounts.new(deps)
-    local self = { attempts = {} }
+    local self = { attempts = {} } -- serial -> { n = failures, since = tick of the first failure }
+    local now = deps.now or getTickCount
+    -- hashing and verifying are asynchronous: the player may have quit by the time they return
+    local present = deps.present or function()
+        return true
+    end
+
+    local function attemptsFor(serial)
+        local a = self.attempts[serial]
+        if a and now() - a.since >= LOCK_MS then
+            self.attempts[serial] = nil
+            return nil
+        end
+        return a
+    end
 
     function self.lookup(name, cb)
         local sql = "SELECT id, name, password_hash, admin_level, lang, tooltips, active, last_ip, last_serial"
@@ -51,6 +67,9 @@ function accounts.new(deps)
                 return cb(false, "EXISTS")
             end
             deps.hash(pw, function(hash)
+                if not present(player) then
+                    return cb(false, "GONE")
+                end
                 deps.db.exec(
                     "INSERT INTO accounts (name, password_hash, last_ip, last_serial, last_login_at)"
                         .. " VALUES (?, ?, ?, ?, NOW())",
@@ -77,13 +96,16 @@ function accounts.new(deps)
     -- cb(ok, code, account, attempts): a wrong password, or one shorter than four characters (upstream counts
     -- those as a try too), comes back as BAD_PASSWORD with the running attempt count.
     function self.login(player, name, pw, cb)
-        local key = tostring(player)
-        if (self.attempts[key] or 0) >= MAX_ATTEMPTS then
+        local serial = tostring(deps.serial(player))
+        local a = attemptsFor(serial)
+        if a and a.n >= MAX_ATTEMPTS then
             return cb(false, "TOO_MANY_ATTEMPTS")
         end
         local function failed()
-            self.attempts[key] = (self.attempts[key] or 0) + 1
-            return cb(false, "BAD_PASSWORD", nil, self.attempts[key])
+            local cur = attemptsFor(serial) or { n = 0, since = now() }
+            cur.n = cur.n + 1
+            self.attempts[serial] = cur
+            return cb(false, "BAD_PASSWORD", nil, cur.n)
         end
         if #pw < 4 then
             return failed()
@@ -102,7 +124,10 @@ function accounts.new(deps)
                 if not match then
                     return failed()
                 end
-                self.attempts[key] = nil
+                self.attempts[serial] = nil
+                if not present(player) then
+                    return cb(false, "GONE")
+                end
                 deps.db.exec(
                     "UPDATE accounts SET last_login_at = NOW(), last_ip = ?, last_serial = ? WHERE id = ?",
                     { deps.ip(player), deps.serial(player), row.id }
@@ -138,14 +163,10 @@ function accounts.new(deps)
 
     -- Auto-login (access.autoLoginAllowed already matched the row's IP and serial): no password, same bookkeeping.
     function self.loginTrusted(player, row, cb)
-        self.attempts[tostring(player)] = nil
+        self.attempts[tostring(deps.serial(player))] = nil
         local sql = "UPDATE accounts SET last_login_at = NOW(), last_ip = ?, last_serial = ? WHERE id = ?"
         deps.db.exec(sql, { deps.ip(player), deps.serial(player), row.id })
         cb(true, "OK", toAccount(row))
-    end
-
-    function self.forget(player)
-        self.attempts[tostring(player)] = nil
     end
 
     return self

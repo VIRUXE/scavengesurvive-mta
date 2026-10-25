@@ -32,6 +32,7 @@ return function(ctx)
                 local vx, vy, vz = getElementVelocity(player)
                 local speed = math.sqrt(vx * vx + vy * vy + vz * vz)
                 local mult = survival.movementMultiplier(speed, getPedOccupiedVehicle(player) ~= false)
+                local bleedBefore = st.bleed
                 local s, events = survival.tick(st, mult, math.random)
                 st.hp, st.food, st.bleed, st.dirty = s.hp, s.food, s.bleed, true
                 ctx.treatment.tick(player, st, 1000)
@@ -39,20 +40,30 @@ return function(ctx)
                 M.sendStats(player, false)
                 for _, e in ipairs(events) do
                     if e == "died" then
-                        ctx.die(player, st.food <= 0 and "starvation" or "bleeding", false)
+                        ctx.die(player, survival.deathCause(bleedBefore, st.food), false)
                     end
                 end
             end
         end
     end, 1000, 0)
 
+    -- Where the character is: a dev tool holding the ped somewhere else (the studio) records the real spot, so a
+    -- flush never stores the studio set or its private dimension.
+    local function placeOf(player)
+        local real = getElementData(player, "character.realPosition")
+        if type(real) == "table" then
+            return real[1], real[2], real[3], real[4], real[5]
+        end
+        local x, y, z = getElementPosition(player)
+        return x, y, z, getElementInterior(player), getElementDimension(player)
+    end
+
     function M.flushOne(player, st)
         if not st.dirty or st.dead then
             return
         end
-        local x, y, z = getElementPosition(player)
+        local x, y, z, int, dim = placeOf(player)
         local _, _, rz = getElementRotation(player)
-        local int, dim = getElementInterior(player), getElementDimension(player)
         local sql = "UPDATE characters SET hp = ?, food = ?, bleed = ?, x = ?, y = ?, z = ?, rz = ?,"
             .. " interior = ?, dimension = ?, skills = ?, infection = ?, drugs = ? WHERE id = ? AND alive = 1"
         local inf, drugs = medical.encodeInfection(st.infection), medical.encodeDrugs(st.drugs)
@@ -64,12 +75,13 @@ return function(ctx)
         local rows = {}
         for player, st in pairs(state.byPlayer) do
             if isElement(player) and (st.dirty or force) and st.hp > 0 and not st.dead then
-                local x, y, z = getElementPosition(player)
+                local x, y, z, int, dim = placeOf(player)
                 local _, _, rz = getElementRotation(player)
                 local row = { id = st.id, hp = st.hp, food = st.food, bleed = st.bleed, x = x, y = y, z = z, rz = rz }
                 -- skills change a few times a minute at most: sent only when they did (the procedure keeps the column)
                 row.skills = st.skillsDirty and skills.encode(st.skills) or nil
                 row.infection, row.drugs = medical.encodeInfection(st.infection), medical.encodeDrugs(st.drugs)
+                row.interior, row.dimension = int, dim
                 rows[#rows + 1] = row
                 st.dirty, st.skillsDirty = false, false
             end
