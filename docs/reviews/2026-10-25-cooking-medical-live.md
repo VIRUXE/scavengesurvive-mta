@@ -46,4 +46,4 @@ so step 32's outcomes went through `exports.character:treatPlayer(p, p, uname, d
 ## Still open
 
 The **F**-hold UX by hand (bars, release cancels), 32 c, 32 e wear-off, 32 h (two clients), 33 c on screen, and the
-`F Cook` change above. Filed as follow-up issues (see #95 / #94 comments).
+`F Cook` change above. Filed as follow-up issues: #96 (item type colours, the Burnt Log renders brown), #97 (Petrol Can / Fire Lighter at a barbecue take the nearest item), #98 (rcon key hold for the treatment holds).
