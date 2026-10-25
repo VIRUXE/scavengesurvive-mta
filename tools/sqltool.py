@@ -66,7 +66,7 @@ def apply(args) -> None:
         with connect(args, None) as c, c.cursor() as cur:
             cur.execute(f"DROP DATABASE IF EXISTS `{args.db}`")
     with connect(args, None) as c, c.cursor() as cur:
-        cur.execute(f"CREATE DATABASE IF NOT EXISTS `{args.db}` CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci")
+        cur.execute(f"CREATE DATABASE IF NOT EXISTS `{args.db}` CHARACTER SET utf8mb4 COLLATE utf8mb4_uca1400_ai_ci")
     with connect(args, args.db) as c, c.cursor() as cur:
         for st in statements(SCHEMA.read_text(encoding="utf-8")):
             cur.execute(st)

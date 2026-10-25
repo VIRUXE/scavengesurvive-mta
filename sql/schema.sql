@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS `accounts` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_accounts_name` (`name`),
   KEY `ix_accounts_serial` (`last_serial`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci WITH SYSTEM VERSIONING;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci WITH SYSTEM VERSIONING;
 
 CREATE TABLE IF NOT EXISTS `anticheat_field_logs` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS `anticheat_field_logs` (
   KEY `ix_anticheat_field_logs_field` (`field_id`,`id`),
   KEY `ix_anticheat_field_logs_player` (`player_name`,`logged_at`),
   CONSTRAINT `fk_anticheat_field_logs_field` FOREIGN KEY (`field_id`) REFERENCES `anticheat_fields` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
 CREATE TABLE IF NOT EXISTS `anticheat_fields` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS `anticheat_fields` (
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_anticheat_fields_name` (`name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
 CREATE TABLE IF NOT EXISTS `bans` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -67,7 +67,7 @@ CREATE TABLE IF NOT EXISTS `bans` (
   KEY `ix_bans_ip` (`ip`,`active`),
   KEY `ix_bans_serial` (`serial`,`active`),
   KEY `ix_bans_expiry` (`active`,`expires_at`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci WITH SYSTEM VERSIONING;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci WITH SYSTEM VERSIONING;
 
 CREATE TABLE IF NOT EXISTS `characters` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -101,7 +101,7 @@ CREATE TABLE IF NOT EXISTS `characters` (
   UNIQUE KEY `uq_characters_alive_account` (`alive_account`),
   KEY `ix_characters_account` (`account_id`),
   CONSTRAINT `fk_characters_account` FOREIGN KEY (`account_id`) REFERENCES `accounts` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
 CREATE TABLE IF NOT EXISTS `connection_log` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
@@ -115,7 +115,7 @@ CREATE TABLE IF NOT EXISTS `connection_log` (
   KEY `ix_connection_log_serial` (`serial`),
   KEY `ix_connection_log_account` (`account_id`),
   KEY `ix_connection_log_ip` (`ip`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
 CREATE TABLE IF NOT EXISTS `containers` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -130,7 +130,7 @@ CREATE TABLE IF NOT EXISTS `containers` (
   KEY `ix_containers_owner_char` (`owner_char_id`),
   CONSTRAINT `fk_containers_owner_item` FOREIGN KEY (`owner_item_id`) REFERENCES `items` (`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_containers_owner_vehicle` FOREIGN KEY (`owner_vehicle_id`) REFERENCES `vehicles` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
 CREATE TABLE IF NOT EXISTS `item_types` (
   `uname` varchar(32) NOT NULL,
@@ -143,7 +143,7 @@ CREATE TABLE IF NOT EXISTS `item_types` (
   `container_size` smallint(6) GENERATED ALWAYS AS (cast(coalesce(json_value(`category_data`,'$.size'),json_value(`category_data`,'$.bag_size')) as signed)) STORED,
   PRIMARY KEY (`uname`),
   CONSTRAINT `chk_item_types_data` CHECK (`category_data` is null or json_valid(`category_data`))
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
 CREATE TABLE IF NOT EXISTS `items` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -178,7 +178,7 @@ CREATE TABLE IF NOT EXISTS `items` (
   CONSTRAINT `fk_items_type` FOREIGN KEY (`type_uname`) REFERENCES `item_types` (`uname`),
   CONSTRAINT `chk_items_one_location` CHECK ((`x` is not null) + (`container_id` is not null) + (`holder_char_id` is not null) = 1),
   CONSTRAINT `chk_items_data` CHECK (`data` is null or json_valid(`data`))
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci WITH SYSTEM VERSIONING;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci WITH SYSTEM VERSIONING;
 
 CREATE TABLE IF NOT EXISTS `loot_spawn_state` (
   `spawn_id` int(11) NOT NULL,
@@ -186,7 +186,7 @@ CREATE TABLE IF NOT EXISTS `loot_spawn_state` (
   PRIMARY KEY (`spawn_id`),
   KEY `ix_loot_spawn_state_due` (`next_roll_at`),
   CONSTRAINT `fk_loot_spawn_state_spawn` FOREIGN KEY (`spawn_id`) REFERENCES `loot_spawns` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
 CREATE TABLE IF NOT EXISTS `loot_spawns` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -204,7 +204,7 @@ CREATE TABLE IF NOT EXISTS `loot_spawns` (
   PRIMARY KEY (`id`),
   SPATIAL KEY `sp_loot_spawns_pos` (`pos`),
   KEY `ix_loot_spawns_zone` (`zone`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
 CREATE TABLE IF NOT EXISTS `reports` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -225,14 +225,14 @@ CREATE TABLE IF NOT EXISTS `reports` (
   PRIMARY KEY (`id`),
   KEY `ix_reports_active` (`active`,`created_at`),
   KEY `ix_reports_name` (`name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
 CREATE TABLE IF NOT EXISTS `settings` (
   `skey` varchar(48) NOT NULL,
   `svalue` varchar(255) NOT NULL,
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   PRIMARY KEY (`skey`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
 CREATE TABLE IF NOT EXISTS `staff_actions` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
@@ -247,7 +247,7 @@ CREATE TABLE IF NOT EXISTS `staff_actions` (
   KEY `ix_staff_actions_actor` (`actor_account_id`,`created_at`),
   KEY `ix_staff_actions_target` (`target_name`,`created_at`),
   KEY `ix_staff_actions_action` (`action`,`created_at`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
 CREATE TABLE IF NOT EXISTS `supply_drop_points` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -259,7 +259,7 @@ CREATE TABLE IF NOT EXISTS `supply_drop_points` (
   `used_at` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `ix_supply_drop_points_used` (`used_at`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
 CREATE TABLE IF NOT EXISTS `vehicle_spawn_state` (
   `spawn_id` int(11) NOT NULL,
@@ -267,7 +267,7 @@ CREATE TABLE IF NOT EXISTS `vehicle_spawn_state` (
   PRIMARY KEY (`spawn_id`),
   KEY `ix_vehicle_spawn_state_due` (`next_roll_at`),
   CONSTRAINT `fk_vehicle_spawn_state_spawn` FOREIGN KEY (`spawn_id`) REFERENCES `vehicle_spawns` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
 CREATE TABLE IF NOT EXISTS `vehicle_spawns` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -286,7 +286,7 @@ CREATE TABLE IF NOT EXISTS `vehicle_spawns` (
   SPATIAL KEY `sp_vehicle_spawns_pos` (`pos`),
   KEY `ix_vehicle_spawns_file` (`file`),
   CONSTRAINT `ck_vehicle_spawns_target` CHECK (`group_name` is null <> (`type_name` is null))
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
 CREATE TABLE IF NOT EXISTS `vehicles` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -312,7 +312,7 @@ CREATE TABLE IF NOT EXISTS `vehicles` (
   KEY `fk_vehicles_trailer` (`trailer_id`),
   CONSTRAINT `fk_vehicles_spawn` FOREIGN KEY (`spawn_id`) REFERENCES `vehicle_spawns` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_vehicles_trailer` FOREIGN KEY (`trailer_id`) REFERENCES `vehicles` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
 CREATE TABLE IF NOT EXISTS `weapon_cache_points` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -323,14 +323,14 @@ CREATE TABLE IF NOT EXISTS `weapon_cache_points` (
   `used_at` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `ix_weapon_cache_points_used` (`used_at`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
 CREATE TABLE IF NOT EXISTS `whitelist` (
   `name` varchar(24) NOT NULL,
   `added_by` varchar(24) NOT NULL DEFAULT 'Server',
   `added_at` datetime NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
 CREATE TABLE IF NOT EXISTS `world_budget` (
   `category` varchar(16) NOT NULL,
@@ -340,7 +340,7 @@ CREATE TABLE IF NOT EXISTS `world_budget` (
   `allowance` int(11) NOT NULL DEFAULT 0,
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   PRIMARY KEY (`category`,`zone`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
 CREATE TABLE IF NOT EXISTS `world_crates` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -354,7 +354,7 @@ CREATE TABLE IF NOT EXISTS `world_crates` (
   UNIQUE KEY `uq_world_crates_container` (`container_id`),
   KEY `ix_world_crates_kind` (`kind`),
   CONSTRAINT `fk_world_crates_container` FOREIGN KEY (`container_id`) REFERENCES `containers` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
 CREATE TABLE IF NOT EXISTS `world_items_pos` (
   `item_id` int(11) NOT NULL,
@@ -362,7 +362,7 @@ CREATE TABLE IF NOT EXISTS `world_items_pos` (
   PRIMARY KEY (`item_id`),
   SPATIAL KEY `sp_world_items_pos` (`pos`),
   CONSTRAINT `fk_world_items_pos_item` FOREIGN KEY (`item_id`) REFERENCES `items` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
 SET FOREIGN_KEY_CHECKS = 1;
 
@@ -1138,7 +1138,7 @@ BEGIN
   INSERT INTO items (type_uname, hitpoints, data, x, y, z, rz, interior, dimension, loot_spawn_id, loot_zone, despawn_at)
     SELECT j.u, 5, j.data, j.x, j.y, j.z, j.rz, s.interior, s.dimension, s.id, s.zone, NOW() + INTERVAL p_despawn_minutes MINUTE
     FROM JSON_TABLE(p_rolls, '$[0][*]' COLUMNS (sid INT PATH '$.s', NESTED PATH '$.items[*]' COLUMNS (
-      u VARCHAR(32) PATH '$.u', data LONGTEXT PATH '$.data', x FLOAT PATH '$.x', y FLOAT PATH '$.y', z FLOAT PATH '$.z',
+      u VARCHAR(32) COLLATE utf8mb4_uca1400_ai_ci PATH '$.u', data LONGTEXT PATH '$.data', x FLOAT PATH '$.x', y FLOAT PATH '$.y', z FLOAT PATH '$.z',
       rz FLOAT PATH '$.rz'))) j
     JOIN loot_spawns s ON s.id = j.sid
     JOIN item_types t ON t.uname = j.u;
@@ -1155,7 +1155,7 @@ BEGIN
   UPDATE world_budget b
     JOIN (SELECT s.zone, COUNT(*) AS n
           FROM JSON_TABLE(p_rolls, '$[0][*]' COLUMNS (sid INT PATH '$.s', NESTED PATH '$.items[*]' COLUMNS (
-            u VARCHAR(32) PATH '$.u'))) j
+            u VARCHAR(32) COLLATE utf8mb4_uca1400_ai_ci PATH '$.u'))) j
           JOIN loot_spawns s ON s.id = j.sid JOIN item_types t ON t.uname = j.u GROUP BY s.zone) z ON z.zone = b.zone
     SET b.allowance = GREATEST(b.allowance - z.n, 0)
     WHERE b.category = 'loot';
