@@ -3,14 +3,21 @@
 #   pwsh server-config/rcon.ps1 rr items
 #   pwsh server-config/rcon.ps1 cmd Bob additem M9Pistol
 #   pwsh server-config/rcon.ps1 lua return getPlayerCount()
-# Credentials come from local.settings.xml (*dev.http_user / *dev.http_pass). Prints the output lines; exit 1 on ok=false.
+#   pwsh server-config/rcon.ps1 -Prod players
+# Credentials come from local.settings.xml (*dev.http_user / *dev.http_pass); -Prod targets nasa on the LAN with
+# prod.settings.xml (git-ignored, same two settings). Prints the output lines; exit 1 on ok=false.
 [CmdletBinding()]
 param(
     [Parameter(Position = 0, ValueFromRemainingArguments = $true)][string[]]$Command,
     [string]$Url = "http://127.0.0.1:22005",
-    [string]$Settings = (Join-Path $PSScriptRoot "local.settings.xml")
+    [string]$Settings = (Join-Path $PSScriptRoot "local.settings.xml"),
+    [switch]$Prod
 )
 $ErrorActionPreference = "Stop"
+if ($Prod) {
+    $Url = "http://192.168.1.100:22005"
+    $Settings = Join-Path $PSScriptRoot "prod.settings.xml"
+}
 if (-not $Command) { $Command = @("help") }
 $xml = [xml](Get-Content -LiteralPath $Settings -Raw)
 $user = ($xml.settings.setting | Where-Object { $_.name -eq "*dev.http_user" }).value
