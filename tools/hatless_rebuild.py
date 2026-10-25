@@ -2,6 +2,7 @@
 
     python -m tools.hatless_rebuild calibrate [--player VIRUXE]   # Head bone matrices in the studio -> tools/data
     python -m tools.hatless_rebuild prep [skin ...]               # registration + lighting -> tools/data
+    python -m tools.hatless_rebuild skull [skin ...]              # ellipsoid cranium fitted to the reference
     python -m tools.hatless_rebuild build [skin ...]              # Blender -> models/files, peds.lua, meta.xml
 
 A twin's head is rebuilt from `docs/images/hatless-refs/<skin>.jpg` (tools/hatless_refs.py): the studio's camera is
@@ -190,6 +191,110 @@ def prep(skins: list[int]) -> None:
     PREP.write_text(json.dumps({k: data[k] for k in sorted(data, key=int)}, indent=1) + "\n", encoding="ascii")
 
 
+def ellipsoid_points(params, n: int = 40):
+    """Surface points of the skull ellipsoid in Head bone space: centre (up, fwd, side), radii (up, fwd, side), pitch
+    (radians, about the side axis)."""
+    cx, cy, cz, ra, rb, rc, pitch = params
+    t, p = np.meshgrid(np.linspace(0, np.pi, n), np.linspace(0, 2 * np.pi, 2 * n, endpoint=False))
+    unit = np.stack([np.cos(t), np.sin(t) * np.cos(p), np.sin(t) * np.sin(p)], -1).reshape(-1, 3)
+    pts = unit * [ra, rb, rc]
+    c, s = np.cos(pitch), np.sin(pitch)
+    pts = np.stack([pts[:, 0] * c - pts[:, 1] * s, pts[:, 0] * s + pts[:, 1] * c, pts[:, 2]], 1)
+    return pts + [cx, cy, cz]
+
+
+def fit_skull(skin: int, mesh: dict, prep: dict) -> list[float]:
+    """The ellipsoid cranium whose outline best matches the top of the reference's head in all four level views.
+
+    The image model draws each view a little differently, so a visual hull carved point by point is lumpy and too
+    small or too big where one view disagrees; one smooth ellipsoid fitted to every view's head contour (the topmost
+    head pixel per column, above the brow) averages that out and is a believable skull."""
+    from PIL import Image
+
+    plane = PLANES[skin]
+    bone_m = json.loads(CALIB.read_text())[str(skin)]
+    ref = np.asarray(Image.open(REFS / f"{skin}.jpg").convert("RGB").resize((1024, 1024))).astype(np.float32) / 255
+    solid = ~((ref[..., 1] > ref[..., 0] + 0.2) & (ref[..., 1] > ref[..., 2] + 0.2))
+    v, w = np.array(mesh["verts"]), np.array(mesh["headw"])
+    face = v[(w > 0.5) & (v[:, 0] > 0) & (v[:, 0] < plane["front"])]
+
+    def to_ref(view, pts):
+        g = hp.to_grid("level", view, hp.to_shot(view, hp.to_world(bone_m, pts)), prep["offset"][view])
+        return hp.to_reference("level", view, g, prep["ref_xform"][view])
+
+    BIN = 4
+    targets = {}
+    for view in hp.GRIDS["level"]:
+        ox, oy = hp.cell_origin("level", view)
+        fx = to_ref(view, face)
+        brow = int(fx[:, 1].min())
+        x0, x1 = int(fx[:, 0].min()) - 80, int(fx[:, 0].max()) + 80
+        cols, rows = {}, {}
+        for x in range(max(ox, x0), min(ox + 512, x1), BIN):
+            ys = np.nonzero(solid[oy:brow, x])[0]
+            if len(ys):
+                cols[x // BIN] = oy + ys[0]
+        for y in range(oy, brow, BIN):  # each row's left and right edge: the back of the skull, its width
+            xs = np.nonzero(solid[y, max(ox, x0) : min(ox + 512, x1)])[0]
+            if len(xs):
+                rows[y // BIN] = (max(ox, x0) + xs[0], max(ox, x0) + xs[-1])
+        targets[view] = (cols, rows, brow)
+
+    def cost(params):
+        pts = ellipsoid_points(params)
+        total, count = 0.0, 0
+        for view, (cols, rows, brow) in targets.items():
+            xy = to_ref(view, pts)
+            above = xy[xy[:, 1] < brow]
+            top, span = {}, {}
+            for x, y in above:
+                k = int(x) // BIN
+                top[k] = min(top.get(k, 1e9), y)
+                r = int(y) // BIN
+                lo, hi = span.get(r, (1e9, -1e9))
+                span[r] = (min(lo, x), max(hi, x))
+            for k in set(cols) | set(top):
+                total += abs(cols[k] - top[k]) if k in cols and k in top else 25.0  # one outline is wider here
+                count += 1
+            for r in set(rows) | set(span):
+                if r in rows and r in span:
+                    total += abs(rows[r][0] - span[r][0]) + abs(rows[r][1] - span[r][1])
+                else:
+                    total += 50.0
+                count += 2
+        return total / max(1, count)
+
+    head = v[w > 0.5]
+    params = np.array([plane["front"] - 0.01, head[:, 1].mean() - 0.01, head[:, 2].mean(), 0.10, 0.11, 0.08, 0.0])
+    steps = np.array([0.01, 0.01, 0.0, 0.01, 0.01, 0.01, 0.1])  # a head is symmetric: the centre stays on its midline
+    best = cost(params)
+    for _ in range(6):
+        improved = True
+        while improved:
+            improved = False
+            for i in range(len(params)):
+                for sign in (1, -1):
+                    trial = params.copy()
+                    trial[i] += sign * steps[i]
+                    c = cost(trial)
+                    if c < best:
+                        best, params, improved = c, trial, True
+        steps /= 2
+    print(f"{skin} skull: centre {np.round(params[:3], 3)}, radii {np.round(params[3:6], 3)}, pitch {params[6]:.2f}, outline error {best:.1f} px")
+    return [round(float(x), 4) for x in params]
+
+
+def skull(skins: list[int]) -> None:
+    data = json.loads(PREP.read_text())
+    with tempfile.TemporaryDirectory() as tmp:
+        work = Path(tmp)
+        for skin in skins:
+            name, tex = extract(skin, work)
+            blender("dump", str(work), name, tex, str(work / f"{name}.json"), str(work / f"{name}-atlas.png"))
+            data[str(skin)]["skull"] = fit_skull(skin, json.loads((work / f"{name}.json").read_text()), data[str(skin)])
+    PREP.write_text(json.dumps({k: data[k] for k in sorted(data, key=int)}, indent=1) + "\n", encoding="ascii")
+
+
 def build(skins: list[int]) -> None:
     calib, preps = json.loads(CALIB.read_text()), json.loads(PREP.read_text())
     files = MODELS / "files"
@@ -198,7 +303,7 @@ def build(skins: list[int]) -> None:
         for skin in skins:
             name, tex = extract(skin, work)
             p = preps[str(skin)]
-            job = dict(ped_dir=str(work), name=name, tex=tex, out_dir=str(work), plane=PLANES[skin], listed_blocks=listed_blocks(skin), bone_matrix=calib[str(skin)], offset=p["offset"], ref_xform=p["ref_xform"], light=p["light"], reference=str(REFS / f"{skin}.jpg"))
+            job = dict(ped_dir=str(work), name=name, tex=tex, out_dir=str(work), plane=PLANES[skin], listed_blocks=listed_blocks(skin), bone_matrix=calib[str(skin)], offset=p["offset"], ref_xform=p["ref_xform"], light=p["light"], skull=p.get("skull"), reference=str(REFS / f"{skin}.jpg"))
             (work / "job.json").write_text(json.dumps(job), encoding="utf8")
             print(next(line for line in blender("build", str(work / "job.json")).splitlines() if line.startswith("REBUILT")))
             for ext in ("dff", "txd"):
@@ -211,7 +316,7 @@ def build(skins: list[int]) -> None:
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("action", choices=("calibrate", "prep", "build"))
+    ap.add_argument("action", choices=("calibrate", "prep", "skull", "build"))
     ap.add_argument("skins", nargs="*", type=int)
     ap.add_argument("--player", default="VIRUXE")
     args = ap.parse_args(argv)
@@ -220,7 +325,7 @@ def main(argv=None) -> int:
     if args.action != "calibrate" and unknown:
         print(f"no cut plane for {unknown}: add them to PLANES", file=sys.stderr)
         return 2
-    {"calibrate": lambda: calibrate(args.player), "prep": lambda: prep(skins), "build": lambda: build(skins)}[args.action]()
+    {"calibrate": lambda: calibrate(args.player), "prep": lambda: prep(skins), "skull": lambda: skull(skins), "build": lambda: build(skins)}[args.action]()
     return 0
 
 

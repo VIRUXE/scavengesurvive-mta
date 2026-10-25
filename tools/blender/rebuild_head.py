@@ -117,18 +117,18 @@ def build(job):
 
     ref = image_rows(job["reference"])
     solid = ~((ref[..., 1] > ref[..., 0] + 0.2) & (ref[..., 1] > ref[..., 2] + 0.2))
-    tinted = (ref[..., 1] > ref[..., 0] + 0.06) & (ref[..., 1] > ref[..., 2] + 0.06)  # green-screen fringe: never hair
+    tinted = ref[..., 1] > np.maximum(ref[..., 0], ref[..., 2]) * 1.12 + 0.02  # green-screen fringe: never hair
 
     def sample(view, w):
         xy = np.round(ref_xy(view, w)).astype(int)
         return np.clip(xy[:, 1], 0, ref.shape[0] - 1), np.clip(xy[:, 0], 0, ref.shape[1] - 1)
 
     def inside(pts):
+        # head where three of the four views agree: the image model draws each view a little differently, and a strict
+        # intersection lets the smallest one shave the occiput
         w = world(pts)
-        ok = np.ones(len(pts), bool)
-        for view in views:
-            ok &= solid[sample(view, w)]
-        return ok
+        votes = sum(solid[sample(view, w)].astype(int) for view in views)
+        return votes >= len(views) - 1
 
     # 1. cut
     me = ob.data
@@ -178,6 +178,20 @@ def build(job):
     side = np.cross(up, fwd)
     rim = np.array([list(v.co) for v in loop])
     d0 = (rim - cc) / np.linalg.norm(rim - cc, axis=1)[:, None]
+    # the skull fitted by tools/hatless_rebuild.py skull: an ellipsoid in Head bone space (centre, radii, pitch about
+    # the side axis); each ring vertex lands where its ray from the head's centre leaves it
+    skull = job.get("skull")
+
+    def skull_hit(origin, direction):
+        cx, cy, cz, ra, rb, rc, pitch = skull
+        o = bone(origin) - [cx, cy, cz]
+        dv = np.asarray(direction) @ tb[:3, :3].T
+        c, s = math.cos(-pitch), math.sin(-pitch)
+        rot = np.array([[c, -s, 0], [s, c, 0], [0, 0, 1]])
+        o, dv = rot @ o / [ra, rb, rc], rot @ dv / [ra, rb, rc]
+        a, b, cq = dv @ dv, 2 * (o @ dv), o @ o - 1
+        disc = b * b - 4 * a * cq
+        return max(0.02, (-b + math.sqrt(max(disc, 0.0))) / (2 * a))
     rs = np.linspace(0.26, 0.02, 241)
     grid = np.zeros((K + 2, n, 3))  # level 0 = rim, level K+1 = apex
     grid[0] = rim
@@ -186,22 +200,32 @@ def build(job):
         for i in range(n):
             om = math.acos(max(-1.0, min(1.0, float(d0[i] @ up))))
             d = up if om < 1e-6 or k == K + 1 else (math.sin((1 - t) * om) * d0[i] + math.sin(t * om) * up) / math.sin(om)
+            if skull is not None:
+                grid[k, i] = cc + skull_hit(cc, d) * d
+                continue
             cand = cc + rs[:, None] * d
             ok = inside(cand)
             grid[k, i] = cand[np.argmax(ok)] if ok.any() else cc + 0.08 * d
     rad = np.linalg.norm(grid - cc, axis=2)
     dirs = (grid - cc) / rad[..., None]
-    for _ in range(15):
-        sm = rad.copy()
-        sm[1:-1] = (rad[1:-1] * 2 + np.roll(rad[1:-1], 1, 1) + np.roll(rad[1:-1], -1, 1) + rad[:-2] + rad[2:]) / 6
-        sm[-1] = rad[-1].mean()
-        rad[1:] = sm[1:]
-    for _ in range(3):
+    # a carved hull is lumpy: smooth around each ring (the rim, whose radius is the neck's at the back, must not pull
+    # the skull in). A fitted ellipsoid is smooth already and keeps its shape. Either way the radius grows only slowly
+    # from the rim over the face, where a fast bulge reads as a visor; behind the ears the occiput swells freely.
+    if skull is None:
+        for _ in range(8):
+            sm = rad.copy()
+            sm[1:-1] = (rad[1:-1] * 4 + np.roll(rad[1:-1], 1, 1) + np.roll(rad[1:-1], -1, 1) + rad[:-2] + rad[2:]) / 8
+            sm[-1] = rad[-1].mean()
+            rad[1:] = sm[1:]
+    face = np.clip(d0 @ fwd, 0, 1)  # 1 for rim vertices straight ahead
+    for _ in range(3 if skull is None else 1):
         for k in range(1, K + 2):
-            rad[k] = np.minimum(rad[k], rad[k - 1] * (1.06 if k == 1 else 1.10))
-        sm = rad.copy()
-        sm[1:-1] = (rad[1:-1] * 2 + np.roll(rad[1:-1], 1, 1) + np.roll(rad[1:-1], -1, 1)) / 4
-        rad[1:-1] = sm[1:-1]
+            limit = (1.06 if k == 1 else 1.10) + (1 - face) * (0.4 if skull is None else 1.0)
+            rad[k] = np.minimum(rad[k], rad[k - 1] * limit)
+        if skull is None:
+            sm = rad.copy()
+            sm[1:-1] = (rad[1:-1] * 2 + np.roll(rad[1:-1], 1, 1) + np.roll(rad[1:-1], -1, 1)) / 4
+            rad[1:-1] = sm[1:-1]
         rad[-1] = rad[-1].mean()
     grid[1:] = cc + dirs[1:] * rad[1:, :, None]
     grid[-1] = grid[-1].mean(0)
