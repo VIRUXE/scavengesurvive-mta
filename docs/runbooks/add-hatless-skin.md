@@ -116,6 +116,15 @@ that shows it:
    game.
 
 Rebuilt: every headgear skin except the helmeted cops with sunglasses (4, 119, 284), whose cut still takes the glasses.
+Superseded by the cranium transplant below: the carved skulls read as helmets from most angles.
+
+## Cranium transplant (#89, current)
+
+The installed twins (all but 4, 119 and 284) keep their own face, ears and neck. Everything above a brow, temple and
+nape seam is the cranium of another ped from the game, aligned to the face, one different donor per skin, with the
+hair recoloured to the reference. Donors and per-skin settings are in `tools/data/hatless_transplant.json`. The scripts
+in `tools/blender/transplant/` run inside a live Blender through the Blender MCP; that folder's README has the steps,
+how the seam, join and texture work, and the known flaws and open work (4/119/284, a headless port).
 
 ## Hat items from the cut (#77)
 
