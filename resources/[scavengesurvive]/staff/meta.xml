@@ -17,6 +17,7 @@
     <file src="server/reports.lua"/>
     <file src="server/duty.lua"/>
     <export function="getLevel" type="server"/>
+    <export function="getMotd" type="server"/>
     <export function="isOnDuty" type="server"/>
     <export function="isMuted" type="server"/>
     <export function="logAction" type="server"/>

@@ -15,6 +15,9 @@ ui 6, auth 7, character 8, items 9, loot 10, hud 11, weapons 12, dev/config 13),
    `/changepass` alone prints the usage line; `/changepass wrong newpass` says the password doesn't match;
    `/changepass <old> abc` says 4 to 32 characters; `/changepass <old> newpass` confirms with the new password in blue,
    and the next login takes `newpass` only (#82).
+   On join A reads the orange `Scavenge and Survive (Copyright (C) 2016 Barnaby "Southclaws" Keene)` line and, when
+   a MoTD is set, `MoTD: …`; B reads `A has joined`. A quitting shows B `A left the server.`, a timeout `A lost
+   connection.`, a kick nothing (#84).
 3. **DB round trip.** A: `/dbtest` prints `dbtest: <n> ms ok=false code=UNKNOWN_TYPE` with n < 50.
 4. **Pick up / drop.** A: `/additem Wrench`. Within 2 s a "Wrench" label appears at the item. **F** picks it up
    (the key list changes to Put away / Drop item), **N** drops it at your feet, **F** picks it up again. B sees each change.
@@ -151,7 +154,7 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
     - h. **Accounts.** `/profile B`, `/history B`, `/aliases B`, `/ip B`, `/adminlist`, `/players` print or list
       without errors; `/setadmin B 1` promotes B live (B's `/acmds` works without relog); `/setactive B 0` kicks B and
       blocks B's login (`INACTIVE`); `/setactive B 1`; `/resetpassword B newpass` lets B log in with the new password;
-      `/setmotd Welcome` is shown to B on login and `/setmotd off` clears it; `/restart world` restarts the resource.
+      `/setmotd Welcome` is shown to B on join (`MoTD: Welcome`, #84) and `/setmotd off` clears it; `/restart world` restarts the resource.
     - i. **Login alias report** (#83). B logs in from A's PC (or under a second name on B's): A reads
       `Aliases: (n) …` in yellow. Ban B's other name while it is offline (`/ban <name> 1h test`), then log in as B
       again: A also reads the red `Warning: One or more of those aliases is banned!`; with A offline, B is kicked

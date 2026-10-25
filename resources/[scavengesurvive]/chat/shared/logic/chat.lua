@@ -146,4 +146,33 @@ function chat.hit(ux, uy)
     return nil
 end
 
+-- Join and quit lines (upstream player.pwn OnPlayerConnect / OnPlayerDisconnect). The copyright line stays as
+-- upstream asked ("DO NOT REMOVE THIS MESSAGE"); the name is in upstream's connect colour B8B8B8; MTA has no
+-- player ids, so "NAME (id) has joined" loses the id.
+chat.COPYRIGHT = 'Scavenge and Survive #33CCFF(Copyright (C) 2016 Barnaby "Southclaws" Keene)'
+
+-- { text, r, g, b, toAll } in send order; the MoTD line only when one is set.
+function chat.joinLines(name, motd)
+    local lines = {
+        { text = chat.COPYRIGHT, r = 255, g = 170, b = 0 },
+        { text = string.format(" >  #B8B8B8%s#FFFFFF has joined", name), r = 255, g = 255, b = 255, toAll = true },
+    }
+    if type(motd) == "string" and motd ~= "" then
+        lines[#lines + 1] = { text = " >  MoTD: #33CCFF" .. motd, r = 255, g = 255, b = 0 }
+    end
+    return lines
+end
+
+-- MTA quit types to upstream's two reasons; kicks and bans print nothing (upstream reason 2 had no line).
+local QUIT_LINES = {
+    Quit = " >  %s left the server.",
+    ["Timed out"] = " >  %s lost connection.",
+    ["Bad Connection"] = " >  %s lost connection.",
+    Unknown = " >  %s lost connection.",
+}
+function chat.quitLine(name, quitType)
+    local fmt = QUIT_LINES[quitType]
+    return fmt and string.format(fmt, name) or nil
+end
+
 return chat

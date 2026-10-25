@@ -285,8 +285,19 @@ addEventHandler("characterSpawned", root, function(charId)
     end, source)
 end)
 
-addEventHandler("onPlayerQuit", root, function()
+addEventHandler("onPlayerJoin", root, function()
+    local name = getPlayerName(source)
+    for _, line in ipairs(logic.joinLines(name, exports.staff:getMotd())) do
+        outputChatBox(line.text, line.toAll and root or source, line.r, line.g, line.b, true)
+    end
+end)
+
+addEventHandler("onPlayerQuit", root, function(quitType)
     state[source] = nil
+    local line = logic.quitLine(getPlayerName(source), quitType)
+    if line then
+        outputChatBox(line, root, 175, 175, 175)
+    end
 end)
 
 addEventHandler("onResourceStart", resourceRoot, function()

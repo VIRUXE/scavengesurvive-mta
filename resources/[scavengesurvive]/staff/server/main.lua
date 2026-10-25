@@ -328,10 +328,6 @@ addEventHandler("playerAuthenticated", root, function()
     if not state.ready then
         return
     end
-    local motd = state.settings["server.motd"]
-    if motd and motd ~= "" then
-        ctx.say(source, " >  #33CCFF%s", motd)
-    end
     loadMute(source)
     modules.moderation.checkAliases(source)
 end)
@@ -386,6 +382,11 @@ addEventHandler("onResourceStop", resourceRoot, function()
 end)
 
 -- Exports
+-- chat shows it on join (upstream OnPlayerConnect "MoTD: ..."); "" when none is set
+function getMotd()
+    local motd = state.settings["server.motd"]
+    return type(motd) == "string" and motd or ""
+end
 function getLevel(player)
     return ctx.level(player)
 end
