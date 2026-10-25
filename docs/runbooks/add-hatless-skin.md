@@ -75,11 +75,14 @@ each headgear skin:
 | :---: | :---: |
 | ![pilot 61, studio](../images/hatless-refs/61-studio.jpg) | ![pilot 61, bare-headed](../images/hatless-refs/61.jpg) |
 
-Done so far: 2, 4, 35, 36, 37 and 61. Codex CLI's built-in image tool is hidden on a ChatGPT Free plan. The free
-FLUX.1 Kontext Hugging Face Space edits one view at a time and stops after about three anonymous runs.
+All 22 skins have a reference. Pollinations made 2, 4, 35, 36, 37 and 61 until the free balance ran out. Gemini in
+the browser made the other 16: upload the `-studio.jpg` grid to a new chat, give it the `prompt(skin)` text and
+download the full-size image. It returns 2048x2048, so resize it to 1024. On SWAT 285 the prompt keeps the
+balaclava. Codex CLI's built-in image tool is hidden on a ChatGPT Free plan. The free Hugging Face Spaces (FLUX.1
+Kontext, Qwen-Image-Edit) share one anonymous ZeroGPU quota, which runs out after about three images.
 
-`blender -b --python tools/blender/render_head.py -- <dff> <txd> <out prefix>` renders a head from the same four
-sides, flat-lit and without the game. Use it to compare an original skin, its twin and the reference while
+`blender -b --python tools/blender/render_head.py -- <out prefix> <dff> <txd> [txd ...]` renders a head from the same
+four sides, flat-lit and without the game. Use it to compare an original skin, its twin and the reference while
 remodelling.
 
 ## Hat items from the cut (#77)
