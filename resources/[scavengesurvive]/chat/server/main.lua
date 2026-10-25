@@ -1,7 +1,7 @@
 -- Chat delivery by mode (upstream core/player/chat.pwn): every chat line is cancelled and re-sent by this
 -- resource to the right audience; /g /l /r /me /quiet /freq /radio; the radio frequency persists on the
--- character (characters.radio_freq in sql/schema.sql), every spawn starts in global chat. Mutes themselves live in staff
--- (exports.staff:isMuted / mutePlayer). Built-in voice follows the same audiences (Voice section below).
+-- character (characters.radio_freq in sql/schema.sql), every spawn starts in global chat. Mutes themselves live in
+-- staff (exports.staff:isMuted / mutePlayer). Built-in voice follows the same audiences (Voice section below).
 local db = loadstring(exports.lib:getModule("db"), "=lib/db.lua")()
 local net = loadstring(exports.lib:getModule("net"), "=lib/net.lua")()
 local logic
