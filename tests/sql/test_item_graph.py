@@ -283,7 +283,7 @@ def test_gear_wear_and_unwear(db, character):
     assert call(db, "item_pickup", hat1, ch)[1] == "OK"
 
     # Wear hat1
-    ok, code, payload = call(db, "item_wear", hat1, ch, "hat")
+    ok, code, payload = call(db, "item_wear", hat1, ch, "hat", None)
     assert (ok, code) == (1, "OK")
     assert payload["slot"] == "hat"
     with db.cursor() as cur:
@@ -295,7 +295,7 @@ def test_gear_wear_and_unwear(db, character):
     assert call(db, "item_pickup", hat2, ch)[1] == "OK"
 
     # Wear hat2 -> should swap with hat1 (hat1 goes back to held)
-    ok_sw, code_sw, payload_sw = call(db, "item_wear", hat2, ch, "hat")
+    ok_sw, code_sw, payload_sw = call(db, "item_wear", hat2, ch, "hat", None)
     assert (ok_sw, code_sw) == (1, "OK")
     assert payload_sw["swapped_id"] == hat1
     with db.cursor() as cur:
@@ -319,7 +319,7 @@ def test_gear_wear_and_unwear(db, character):
     assert call(db, "container_put", hat2, ch, inv)[1] == "OK"
 
     # Wear directly from inventory
-    ok_w_inv, code_w_inv, _ = call(db, "item_wear", hat2, ch, "hat")
+    ok_w_inv, code_w_inv, _ = call(db, "item_wear", hat2, ch, "hat", None)
     assert (ok_w_inv, code_w_inv) == (1, "OK")
     with db.cursor() as cur:
         cur.execute("SELECT holder_kind, container_id FROM items WHERE id=%s", (hat2,))

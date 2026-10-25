@@ -159,6 +159,7 @@ loadFile("server/use.lua")({
     cooking = cooking,
     cookers = cookers,
     world = world,
+    openContainerId = containers.openContainerId,
     clothes = loadFile("server/clothes.lua")({
         db = db,
         state = state,
@@ -167,6 +168,7 @@ loadFile("server/use.lua")({
         charId = charId,
         toast = toast,
         sendInventory = containers.sendInventory,
+        openContainerId = containers.openContainerId,
     }),
 })
 

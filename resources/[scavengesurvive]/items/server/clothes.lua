@@ -25,7 +25,11 @@ return function(ctx)
     local function finish(player, c)
         changing[player] = nil
         triggerClientEvent(player, "clothesChangeStopped", player)
-        db.call("clothes_swap", { c.itemId, charId(player), c.skin }, function(res, cc)
+        local openContainerId = c.openContainerId
+        if openContainerId and ctx.openContainerId(player) ~= openContainerId then
+            openContainerId = nil
+        end
+        db.call("clothes_swap", { c.itemId, charId(player), c.skin, openContainerId, n = 4 }, function(res, cc)
             if not isElement(cc.player) then
                 return
             end
@@ -64,7 +68,7 @@ return function(ctx)
     local M = {}
 
     -- Clothes use: data is the item's decoded data (nil when it never held a stored skin)
-    function M.use(player, itemId, data, fromHand)
+    function M.use(player, itemId, data, fromHand, openContainerId)
         if changing[player] then
             return
         end
@@ -77,7 +81,16 @@ return function(ctx)
             return toast(player, "CLOTHESWRGE")
         end
         local x, y, z = getElementPosition(player)
-        local c = { itemId = itemId, skin = skin, fromHand = fromHand, x = x, y = y, z = z, left = clothes.HOLD_MS }
+        local c = {
+            itemId = itemId,
+            skin = skin,
+            fromHand = fromHand,
+            openContainerId = openContainerId,
+            x = x,
+            y = y,
+            z = z,
+            left = clothes.HOLD_MS,
+        }
         c.timer = setTimer(tick, CHECK_MS, 0, player)
         changing[player] = c
         triggerClientEvent(player, "clothesChangeStarted", player, clothes.HOLD_MS)

@@ -10,9 +10,10 @@ return function(ctx)
     local itemType, charId, toast = ctx.type, ctx.charId, ctx.toast
 
     local COOKERS = { "Campfire", "Barbecue" }
-    local OWNED_SQL = "SELECT i.type_uname AS uname, i.data FROM items i "
+    local OWNED_SQL = "SELECT i.type_uname AS uname, i.data, i.container_id FROM items i "
         .. "LEFT JOIN containers c ON c.id = i.container_id LEFT JOIN items owner ON owner.id = c.owner_item_id "
-        .. "WHERE i.id = ? AND (i.holder_char_id = ? OR c.owner_char_id = ? OR owner.holder_char_id = ?)"
+        .. "WHERE i.id = ? AND (i.holder_char_id = ? OR c.owner_char_id = ? OR owner.holder_char_id = ? "
+        .. "OR i.container_id = ?)"
 
     local function eat(player, itemId, t, fromHand, data)
         local food = t.categoryData or {}
@@ -39,12 +40,12 @@ return function(ctx)
         end)
     end
 
-    local function use(player, itemId, uname, fromHand, data)
+    local function use(player, itemId, uname, fromHand, data, openContainerId)
         if not triggerEvent("itemUseAttempted", player, itemId, uname) then
             return -- cancelled by a handler that consumed it
         end
         if uname == "Clothes" then
-            return ctx.clothes.use(player, itemId, data, fromHand)
+            return ctx.clothes.use(player, itemId, data, fromHand, openContainerId)
         end
         if fromHand and ctx.medical.isTreatment(uname) then
             return ctx.medical.start(player, state.held[player])
@@ -85,15 +86,24 @@ return function(ctx)
         if held and held.id == itemId then
             return use(player, itemId, held.uname, true, held.data)
         end
-        -- only items the character owns (inventory or worn bag) can be used
-        db.one(OWNED_SQL, { itemId, cid, cid, cid }, function(row, c)
+        -- Items in the currently open side container can also be used (for example a ground bag).
+        local openContainerId = ctx.openContainerId(player)
+        db.one(OWNED_SQL, { itemId, cid, cid, cid, openContainerId or -1 }, function(row, c)
             if not isElement(c.player) then
                 return
+            end
+            if
+                row
+                and openContainerId
+                and tonumber(row.container_id) == tonumber(openContainerId)
+                and ctx.openContainerId(c.player) ~= openContainerId
+            then
+                row = nil
             end
             if not row then
                 return toast(c.player, "NOT_OWNER")
             end
-            use(c.player, c.itemId, row.uname, false, ctx.decodeData(row.data))
-        end, { player = player, itemId = itemId })
+            use(c.player, c.itemId, row.uname, false, ctx.decodeData(row.data), openContainerId)
+        end, { player = player, itemId = itemId, openContainerId = openContainerId })
     end, { rate = 3 })
 end

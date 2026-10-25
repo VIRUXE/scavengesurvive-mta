@@ -548,33 +548,65 @@ BEGIN
   SELECT 1 AS ok, 'OK' AS code, JSON_OBJECT('updated', CAST(v_n AS SIGNED)) AS payload;
 END//
 
-CREATE OR REPLACE PROCEDURE `clothes_swap`(IN p_item_id INT, IN p_char_id INT, IN p_new_skin SMALLINT)
+CREATE OR REPLACE PROCEDURE `clothes_swap`(
+  IN p_item_id INT,
+  IN p_char_id INT,
+  IN p_new_skin SMALLINT,
+  IN p_open_container_id INT
+)
 BEGIN
   DECLARE v_old SMALLINT DEFAULT NULL;
   DECLARE v_type VARCHAR(32) DEFAULT NULL;
+  DECLARE v_item_char INT DEFAULT NULL;
+  DECLARE v_item_container INT DEFAULT NULL;
+  DECLARE v_cont_owner_char INT DEFAULT NULL;
+  DECLARE v_owner_item INT DEFAULT NULL;
+  DECLARE v_owner_holder INT DEFAULT NULL;
+  DECLARE v_cont_kind VARCHAR(16) DEFAULT NULL;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
+
   SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
   START TRANSACTION;
+
   SELECT skin INTO v_old FROM characters WHERE id = p_char_id AND alive = 1 FOR UPDATE;
-  -- p_char_id IS NOT NULL: with <=> a NULL caller would otherwise match unowned (world) items
-  SELECT i.type_uname INTO v_type FROM items i
-    LEFT JOIN containers c ON c.id = i.container_id
-    LEFT JOIN items owner ON owner.id = c.owner_item_id
-    WHERE i.id = p_item_id AND p_char_id IS NOT NULL
-      AND (i.holder_char_id <=> p_char_id OR c.owner_char_id <=> p_char_id OR owner.holder_char_id <=> p_char_id)
-    FOR UPDATE;
+  SELECT holder_char_id, container_id, type_uname
+    INTO v_item_char, v_item_container, v_type
+    FROM items WHERE id = p_item_id FOR UPDATE;
+
+  IF v_item_container IS NOT NULL THEN
+    SELECT owner_char_id, owner_item_id, kind
+      INTO v_cont_owner_char, v_owner_item, v_cont_kind
+      FROM containers WHERE id = v_item_container FOR UPDATE;
+    IF v_owner_item IS NOT NULL THEN
+      SELECT holder_char_id INTO v_owner_holder
+        FROM items WHERE id = v_owner_item FOR UPDATE;
+    END IF;
+  END IF;
+
   IF v_old IS NULL THEN
     ROLLBACK;
     SELECT 0 AS ok, 'NO_CHARACTER' AS code, NULL AS payload;
-  ELSEIF v_type IS NULL OR v_type <> 'Clothes' THEN
+  ELSEIF v_type IS NULL OR v_type <> 'Clothes' OR NOT (
+    p_char_id IS NOT NULL AND (
+      v_item_char <=> p_char_id
+      OR v_cont_owner_char <=> p_char_id
+      OR (v_cont_kind = 'bag' AND v_owner_holder <=> p_char_id)
+      OR (p_open_container_id IS NOT NULL AND v_item_container <=> p_open_container_id)
+    )
+  ) THEN
     ROLLBACK;
     SELECT 0 AS ok, 'NOT_OWNED' AS code, NULL AS payload;
   ELSE
-    -- upstream OnHoldActionFinish: the item now holds the clothes the character took off
+    
     UPDATE items SET data = JSON_OBJECT('skin', CAST(v_old AS SIGNED)) WHERE id = p_item_id;
     UPDATE characters SET skin = p_new_skin WHERE id = p_char_id;
     COMMIT;
-    SELECT 1 AS ok, 'OK' AS code, JSON_OBJECT('item_id', CAST(p_item_id AS SIGNED), 'old_skin', CAST(v_old AS SIGNED), 'new_skin', CAST(p_new_skin AS SIGNED)) AS payload;
+    SELECT 1 AS ok, 'OK' AS code,
+      JSON_OBJECT(
+        'item_id', CAST(p_item_id AS SIGNED),
+        'old_skin', CAST(v_old AS SIGNED),
+        'new_skin', CAST(p_new_skin AS SIGNED)
+      ) AS payload;
   END IF;
 END//
 
@@ -1073,14 +1105,22 @@ BEGIN
   END IF;
 END//
 
-CREATE OR REPLACE PROCEDURE `item_wear`(IN p_item_id INT, IN p_char_id INT, IN p_holder_kind VARCHAR(16))
+CREATE OR REPLACE PROCEDURE `item_wear`(
+  IN p_item_id INT,
+  IN p_char_id INT,
+  IN p_holder_kind VARCHAR(16),
+  IN p_open_container_id INT
+)
 BEGIN
   DECLARE v_item_char INT DEFAULT NULL;
   DECLARE v_item_kind VARCHAR(16) DEFAULT NULL;
   DECLARE v_item_container INT DEFAULT NULL;
   DECLARE v_item_slot INT DEFAULT NULL;
   DECLARE v_old_id INT DEFAULT NULL;
-  DECLARE v_cont_owner INT DEFAULT NULL;
+  DECLARE v_cont_owner_char INT DEFAULT NULL;
+  DECLARE v_owner_item INT DEFAULT NULL;
+  DECLARE v_owner_holder INT DEFAULT NULL;
+  DECLARE v_cont_kind VARCHAR(16) DEFAULT NULL;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
 
   IF p_holder_kind NOT IN ('hat', 'mask', 'armour', 'holster', 'bag') THEN
@@ -1094,13 +1134,24 @@ BEGIN
     INTO v_item_char, v_item_kind, v_item_container, v_item_slot
     FROM items WHERE id = p_item_id FOR UPDATE;
 
-  IF v_item_char <=> p_char_id THEN
-    SET v_cont_owner = p_char_id;
-  ELSEIF v_item_container IS NOT NULL THEN
-    SELECT owner_char_id INTO v_cont_owner FROM containers WHERE id = v_item_container;
+  IF v_item_container IS NOT NULL THEN
+    SELECT owner_char_id, owner_item_id, kind
+      INTO v_cont_owner_char, v_owner_item, v_cont_kind
+      FROM containers WHERE id = v_item_container FOR UPDATE;
+    IF v_owner_item IS NOT NULL THEN
+      SELECT holder_char_id INTO v_owner_holder
+        FROM items WHERE id = v_owner_item FOR UPDATE;
+    END IF;
   END IF;
 
-  IF NOT (v_cont_owner <=> p_char_id) THEN
+  IF NOT (
+    p_char_id IS NOT NULL AND (
+      v_item_char <=> p_char_id
+      OR v_cont_owner_char <=> p_char_id
+      OR (v_cont_kind = 'bag' AND v_owner_holder <=> p_char_id)
+      OR (p_open_container_id IS NOT NULL AND v_item_container <=> p_open_container_id)
+    )
+  ) THEN
     ROLLBACK;
     SELECT 0 AS ok, 'NOT_OWNER' AS code, NULL AS payload;
   ELSE
@@ -1108,7 +1159,7 @@ BEGIN
       FROM items WHERE holder_char_id = p_char_id AND holder_kind = p_holder_kind FOR UPDATE;
 
     IF v_old_id IS NOT NULL THEN
-      -- Temporarily clear holder_kind to prevent duplicate key collision during swap
+      
       UPDATE items SET holder_kind = NULL WHERE id = v_old_id;
     END IF;
 
@@ -1118,11 +1169,14 @@ BEGIN
 
     IF v_old_id IS NOT NULL THEN
       IF v_item_kind = 'held' THEN
-        UPDATE items SET holder_char_id = p_char_id, holder_kind = 'held', container_id = NULL, slot = NULL WHERE id = v_old_id;
+        UPDATE items SET holder_char_id = p_char_id, holder_kind = 'held', container_id = NULL, slot = NULL
+          WHERE id = v_old_id;
       ELSEIF v_item_container IS NOT NULL THEN
-        UPDATE items SET holder_char_id = NULL, holder_kind = NULL, container_id = v_item_container, slot = v_item_slot WHERE id = v_old_id;
+        UPDATE items SET holder_char_id = NULL, holder_kind = NULL, container_id = v_item_container, slot = v_item_slot
+          WHERE id = v_old_id;
       ELSE
-        UPDATE items SET holder_char_id = p_char_id, holder_kind = 'held', container_id = NULL, slot = NULL WHERE id = v_old_id;
+        UPDATE items SET holder_char_id = p_char_id, holder_kind = 'held', container_id = NULL, slot = NULL
+          WHERE id = v_old_id;
       END IF;
     END IF;
 

@@ -25,6 +25,31 @@ return function(ctx)
 
     local sendInventory
 
+    function M.openContainerId(player)
+        local cont = activeContainer[player]
+        if not cont then
+            return nil
+        end
+        if cont.vehicle and not isElement(cont.vehicle) then
+            activeContainer[player] = nil
+            return nil
+        end
+        if cont.heldItemId then
+            local held = state.held[player]
+            if not held or held.id ~= cont.heldItemId then
+                activeContainer[player] = nil
+                return nil
+            end
+        elseif cont.pos then
+            local px, py, pz = getElementPosition(player)
+            if getDistanceBetweenPoints3D(px, py, pz, cont.pos.x, cont.pos.y, cont.pos.z) > 4.0 then
+                activeContainer[player] = nil
+                return nil
+            end
+        end
+        return cont.containerId
+    end
+
     local function put(player, cid, itemId, containerId, onFull)
         db.call("container_put", { itemId, cid, containerId }, function(res, c)
             if not isElement(c.player) then
@@ -537,8 +562,9 @@ return function(ctx)
         if not cid or not itemId then
             return
         end
+        local openContainerId = M.openContainerId(player)
         db.one(
-            "SELECT id, type_uname AS uname, hitpoints AS hp, data FROM items WHERE id = ?",
+            "SELECT id, type_uname AS uname, hitpoints AS hp, data, container_id FROM items WHERE id = ?",
             { itemId },
             function(row, c)
                 if not row or not isElement(c.player) then
@@ -548,7 +574,11 @@ return function(ctx)
                 if not slot then
                     return toast(c.player, "NOT_WEARABLE")
                 end
-                db.call("item_wear", { c.itemId, c.cid, slot }, function(res, c2)
+                local allowedOpenContainerId = c.openContainerId
+                if allowedOpenContainerId and M.openContainerId(c.player) ~= allowedOpenContainerId then
+                    allowedOpenContainerId = nil
+                end
+                db.call("item_wear", { c.itemId, c.cid, slot, allowedOpenContainerId, n = 4 }, function(res, c2)
                     if not isElement(c2.player) then
                         return
                     end
@@ -580,7 +610,7 @@ return function(ctx)
                     toast(c2.player, "EQUIPPED")
                 end, { player = c.player, row = row })
             end,
-            { player = player, itemId = itemId, cid = cid }
+            { player = player, itemId = itemId, cid = cid, openContainerId = openContainerId }
         )
     end, { rate = 5 })
 
