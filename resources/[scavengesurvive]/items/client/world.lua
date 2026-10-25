@@ -11,6 +11,7 @@ return function(ctx)
     local geometry = ctx.geometry
     local cooking = ctx.cooking
     local objects = {} -- id -> { obj | parts, pitched, row, uname, hp, x, y, z, name, fires }
+    local labelVisibility = {} -- id -> { visible, checkedAt }
     local shaders = {} -- tent material key -> shader, or false when its texture could not be read
     local typeCache = {}
 
@@ -78,6 +79,7 @@ return function(ctx)
             end
             objects[id] = nil
         end
+        labelVisibility[id] = nil
     end
 
     -- Upstream retextures the tent parts with stock GTA textures (SetDynamicObjectMaterial); here a replace
@@ -227,38 +229,67 @@ return function(ctx)
 
     addEventHandler("onClientRender", root, function()
         local px, py, pz = getElementPosition(localPlayer)
+        local cx, cy, cz = getCameraMatrix()
+        local now = getTickCount()
         local _, sh = guiGetScreenSize()
         for _, e in pairs(objects) do
             local dx, dy, dz = e.x - px, e.y - py, e.z - pz
             local d2 = dx * dx + dy * dy + dz * dz
-            if d2 < 15 * 15 then
-                local sx, sy = getScreenFromWorldPosition(e.x, e.y, e.z + 0.5, 0, false)
-                if sx then
-                    local scale = (sh / 1080) * (d2 < 9 and 1.1 or 0.9)
-                    dxDrawText(
-                        e.name,
-                        sx + 1,
-                        sy + 1,
-                        sx + 1,
-                        sy + 1,
-                        tocolor(0, 0, 0, 200),
-                        scale,
-                        "default-bold",
-                        "center",
-                        "center"
-                    )
-                    dxDrawText(
-                        e.name,
-                        sx,
-                        sy,
-                        sx,
-                        sy,
-                        tocolor(255, 255, 0, 230),
-                        scale,
-                        "default-bold",
-                        "center",
-                        "center"
-                    )
+            if d2 < 4 * 4 then
+                local visibility = labelVisibility[e.row.id]
+                if not visibility or now - visibility.checkedAt >= 300 then
+                    local obj = isElement(e.obj) and e.obj or nil
+                    labelVisibility[e.row.id] = {
+                        visible = isLineOfSightClear(
+                            cx,
+                            cy,
+                            cz,
+                            e.x,
+                            e.y,
+                            e.z + 0.5,
+                            true,
+                            true,
+                            false,
+                            true,
+                            true,
+                            false,
+                            false,
+                            false,
+                            obj
+                        ),
+                        checkedAt = now,
+                    }
+                    visibility = labelVisibility[e.row.id]
+                end
+                if visibility.visible then
+                    local sx, sy = getScreenFromWorldPosition(e.x, e.y, e.z + 0.5, 0, false)
+                    if sx then
+                        local scale = (sh / 1080) * (d2 < 9 and 1.1 or 0.9)
+                        dxDrawText(
+                            e.name,
+                            sx + 1,
+                            sy + 1,
+                            sx + 1,
+                            sy + 1,
+                            tocolor(0, 0, 0, 200),
+                            scale,
+                            "default-bold",
+                            "center",
+                            "center"
+                        )
+                        dxDrawText(
+                            e.name,
+                            sx,
+                            sy,
+                            sx,
+                            sy,
+                            tocolor(255, 255, 0, 230),
+                            scale,
+                            "default-bold",
+                            "center",
+                            "center"
+                        )
+                    end
                 end
             end
         end
