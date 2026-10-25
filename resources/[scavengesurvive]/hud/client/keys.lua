@@ -63,6 +63,16 @@ return function(ctx)
         return exports.world:tryInteract() == true
     end
 
+    -- F is both interact and GTA's enter_exit: a press that opens a trunk (or is pressed while the trunk/inventory
+    -- list is open) must not also start the enter task (#113). The server's onVehicleStartEnter only sees it too late.
+    local TRUNK_ENTER_BLOCK_MS = 1000
+    local blockEnterUntil = 0
+    addEventHandler("onClientVehicleStartEnter", root, function(player)
+        if player == localPlayer and (getTickCount() < blockEnterUntil or listIsOpen()) then
+            cancelEvent()
+        end
+    end)
+
     addCommandHandler("interact", function()
         if not guard() or listIsOpen() then
             return
@@ -90,6 +100,7 @@ return function(ctx)
             local angle = (math.deg(math.atan2(localX, localY)) + 360) % 360
             local isRear = angle > 155 and angle < 205
             if (uname and VEHICLE_TOOLS[uname]) or isRear then
+                blockEnterUntil = getTickCount() + TRUNK_ENTER_BLOCK_MS
                 return triggerServerEvent("vehicleInteractRequested", localPlayer, nearVeh)
             end
         end
