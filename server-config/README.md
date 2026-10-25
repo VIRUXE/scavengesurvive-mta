@@ -60,6 +60,9 @@ Allowed for everyone while the `dev` setting `*dev.open` is `true` (the default)
 `admin_level > 0`. Commands: `/additem <uname>`, `/rollloot`, `/stats`, `/sethp <n>`, `/setfood <n>`, `/setbleed <n>`, `/weather [id|NAME]`, `/zone [x y]`, `/vehcount`, `/vehrespawn`,
 `/dbtest`, `/rr <resource>` (also `rr <resource>` in the server console).
 
+**Never run `dev` with `*dev.open=true` on a server other people can reach**: anyone could spawn items, set stats and
+restart resources.
+
 ## Economy settings (table `settings`, ADR 0001)
 
 Read on resource start (`rr loot`, `rr vehicles` after a change). Carrying capacity: `loot.items_per_point` (2.0) ×
