@@ -1,7 +1,7 @@
 -- Chat delivery by mode (upstream core/player/chat.pwn): every chat line is cancelled and re-sent by this
 -- resource to the right audience; /g /l /r /me /quiet /freq /radio; the radio frequency and mode persist on the
 -- character (characters.radio_freq / chat_mode in sql/schema.sql). Mutes themselves live in staff
--- (exports.staff:isMuted / mutePlayer).
+-- (exports.staff:isMuted / mutePlayer). Built-in voice follows the same audiences (Voice section below).
 local db = loadstring(exports.lib:getModule("db"), "=lib/db.lua")()
 local net = loadstring(exports.lib:getModule("net"), "=lib/net.lua")()
 local logic
@@ -14,7 +14,7 @@ end
 local MODE = logic.MODE
 
 local ready = false
-local state = {} -- player -> { mode, oldMode, freq, quiet, streak, lastTick, charId }
+local state = {} -- player -> { mode, oldMode, freq, quiet, streak, lastTick, charId, voiceWarned }
 
 local function get(p)
     local st = state[p]
@@ -112,35 +112,41 @@ local function nearby(p, range)
     return out
 end
 
+-- Who a line in this mode reaches: local and /me within 40 m in the same dimension, global everyone not /quiet,
+-- admin every staff member, anything else the speaker's radio frequency.
+local function audience(p, mode)
+    if mode == MODE.LOCAL or mode == "me" then
+        return nearby(p, logic.LOCAL_RANGE)
+    end
+    local out = {}
+    for _, o in ipairs(getElementsByType("player")) do
+        local os = state[o]
+        local hit
+        if mode == MODE.GLOBAL then
+            hit = not (os and os.quiet)
+        elseif mode == MODE.ADMIN then
+            hit = staffLevel(o) > 0
+        else
+            hit = os and logic.sameFrequency(os.freq, get(p).freq)
+        end
+        if hit then
+            out[#out + 1] = o
+        end
+    end
+    return out
+end
+
 -- Delivers one message in a mode (0-3, or "me" for /me). Logged like upstream's [CHAT] lines.
 local function deliver(p, text, mode)
     local name = getPlayerName(p)
     local st = get(p)
-    local audience, rgb, tag
+    local rgb, tag = logic.COLOURS[2], string.format("RADIO %.2f", st.freq)
     if mode == MODE.LOCAL or mode == "me" then
-        audience, rgb, tag = nearby(p, logic.LOCAL_RANGE), logic.COLOURS[0], mode == "me" and "LOCALME" or "LOCAL"
+        rgb, tag = logic.COLOURS[0], mode == "me" and "LOCALME" or "LOCAL"
     elseif mode == MODE.GLOBAL then
-        audience, rgb, tag = {}, logic.COLOURS[1], "GLOBAL"
-        for _, o in ipairs(getElementsByType("player")) do
-            if not (state[o] and state[o].quiet) then
-                audience[#audience + 1] = o
-            end
-        end
+        rgb, tag = logic.COLOURS[1], "GLOBAL"
     elseif mode == MODE.ADMIN then
-        audience, rgb, tag = {}, logic.COLOURS[3], "ADMIN"
-        for _, o in ipairs(getElementsByType("player")) do
-            if staffLevel(o) > 0 then
-                audience[#audience + 1] = o
-            end
-        end
-    else
-        audience, rgb, tag = {}, logic.COLOURS[2], string.format("RADIO %.2f", st.freq)
-        for _, o in ipairs(getElementsByType("player")) do
-            local os = state[o]
-            if os and logic.sameFrequency(os.freq, st.freq) then
-                audience[#audience + 1] = o
-            end
-        end
+        rgb, tag = logic.COLOURS[3], "ADMIN"
     end
     local colourHex = nil
     if mode == MODE.ADMIN then
@@ -149,7 +155,7 @@ local function deliver(p, text, mode)
             colourHex = string.format("#%02X%02X%02X", c[1], c[2], c[3])
         end
     end
-    send(logic.format(mode, name, text, st.freq, colourHex), audience, rgb)
+    send(logic.format(mode, name, text, st.freq, colourHex), audience(p, mode), rgb)
     outputServerLog(string.format("[CHAT] [%s] %s: %s", tag, name, text))
 end
 
@@ -293,6 +299,55 @@ addEventHandler("characterSpawned", root, function(charId)
 end)
 
 -- ---------------------------------------------------------------------------------------------------------
+-- Voice (MTA built-in, <voice>1</voice> in mtaserver.conf): a talking player is heard by the text audience of
+-- their chat mode joined with the local range, re-chosen every VOICE_REFRESH_MS while they talk. Not logged in or
+-- muted: the voice start is cancelled, a muted player is told once per mute.
+local talking = {} -- player -> refresh timer while the voice key is held
+
+local function voiceRefresh(p)
+    if not isElement(p) then
+        return
+    end
+    if not exports.auth:isAuthenticated(p) or isMuted(p) then
+        setPlayerVoiceBroadcastTo(p, {})
+        return
+    end
+    local lists = {}
+    for i, mode in ipairs(logic.voiceModes(get(p).mode)) do
+        lists[i] = audience(p, mode)
+    end
+    setPlayerVoiceBroadcastTo(p, logic.voiceRecipients(p, lists))
+end
+
+local function voiceStopped(p)
+    if talking[p] and isTimer(talking[p]) then
+        killTimer(talking[p])
+    end
+    talking[p] = nil
+end
+
+addEventHandler("onPlayerVoiceStart", root, function()
+    local st = get(source)
+    if not exports.auth:isAuthenticated(source) or isMuted(source) then
+        cancelEvent()
+        if isMuted(source) and not st.voiceWarned then
+            st.voiceWarned = true
+            outputChatBox(logic.VOICE_MUTED, source, 255, 255, 0)
+        end
+        return
+    end
+    st.voiceWarned = nil
+    voiceRefresh(source)
+    if not talking[source] then
+        talking[source] = setTimer(voiceRefresh, logic.VOICE_REFRESH_MS, 0, source)
+    end
+end)
+
+addEventHandler("onPlayerVoiceStop", root, function()
+    voiceStopped(source)
+end)
+
+-- ---------------------------------------------------------------------------------------------------------
 -- Info commands (upstream player/commands.pwn): message boxes for /help and /chatinfo, chat lines for the rest.
 
 -- addCommandHandler also hands console commands over; these only make sense for a player
@@ -367,6 +422,7 @@ addEventHandler("onPlayerJoin", root, function()
 end)
 
 addEventHandler("onPlayerQuit", root, function(quitType)
+    voiceStopped(source)
     state[source] = nil
     local line = logic.quitLine(getPlayerName(source), quitType)
     if line then

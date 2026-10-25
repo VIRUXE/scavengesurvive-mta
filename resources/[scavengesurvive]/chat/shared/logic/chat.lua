@@ -44,6 +44,32 @@ function chat.isMode(mode)
     return mode == 0 or mode == 1 or mode == 2 or mode == 3
 end
 
+-- Voice (MTA built-in voice) follows the text modes: a speaker is always heard within the local range, and in a
+-- transmitting mode (global, radio, admin) also by that mode's text audience. The modes whose audiences are joined.
+chat.VOICE_REFRESH_MS = 500
+chat.VOICE_MUTED = " >  You are muted: nobody hears your voice until the mute ends."
+
+function chat.voiceModes(mode)
+    if mode == chat.MODE.LOCAL or not chat.isMode(mode) then
+        return { chat.MODE.LOCAL }
+    end
+    return { chat.MODE.LOCAL, mode }
+end
+
+-- Joins audience lists into one recipient list, each listener once, the speaker left out (no echo).
+function chat.voiceRecipients(speaker, lists)
+    local seen, out = { [speaker] = true }, {}
+    for _, list in ipairs(lists) do
+        for _, listener in ipairs(list) do
+            if not seen[listener] then
+                seen[listener] = true
+                out[#out + 1] = listener
+            end
+        end
+    end
+    return out
+end
+
 -- Three messages within a second each mute the sender for 30 s; a quiet second lowers the streak by one.
 -- st = { streak, lastTick } is mutated. Returns true when the mute triggers.
 function chat.flood(st, nowMs)

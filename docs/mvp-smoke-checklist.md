@@ -225,6 +225,11 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
       A sends four messages inside a second: the first three go out and the fourth is refused with `Muted from global
       chat for 30 seconds for chat flooding` (upstream mutes when the streak reaches 3), `/profile A` shows muted, and
       30 s later `You are now un-muted`. A level-0 account cannot `/a`.
+    - e. **Voice** (built-in MTA voice, `<voice>1</voice>`). Both in local mode: B within 40 m (same dimension) hears
+      A talk, B 50 m away does not, and walking out of range while A keeps talking cuts A off within about half a
+      second. Both `/freq 101.3` and `/r`: B hears A anywhere; A in `/g`: everyone without `/quiet` hears A. Nobody
+      hears their own voice. `/mute A 30s testing`: A's voice reaches nobody and A sees `You are muted: nobody hears
+      your voice until the mute ends` once (not on every key press); after the un-mute A is heard again.
 25. **House loot** (#48). Walk into a hollow house in San Fierro (e.g. the Ocean Flats block, model 19490 at
     -2787.6, -161.0): `world_civilian` items lie at the upstream offsets inside half of the houses (seed
     `0006_house_loot.sql`, 116 points, ids above 11062); they roll like any spawn (`loot_spawn_state.next_roll_at`,
