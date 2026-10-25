@@ -308,3 +308,26 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
       `/setskill <result uname> 1` halves that recipe's hold, and the list shows the item type's name.
     - c. **Persistence.** Reconnect, or `rr character` (flush on stop): the list is unchanged
       (`SELECT skills FROM characters WHERE alive = 1`). Die and respawn: `No skills yet`.
+32. **Treatment, infection and drugs** (#94). a-g one client, h two clients (A treats B). `/additem` gives the
+    zeroed data (`Pills (Antibiotics)`, `Injector (Empty)`, a Doctor's Bag without charges); the other pills and
+    injections come from loot (`/rollloot` near a loot spot, or a supply crate).
+    - a. **Labels.** Loot a Pills, an Injector and a Doctor's Bag: the inventory shows `Pills (LSD)`,
+      `Injector (Morphine)`, `Doctor's Bag (2/3, Painkill)` and the like, the same after a pickup and a drop.
+    - b. **Bandage.** `/setbleed 0.5`, hold a Dirty Bandage and hold **F**: a 4 s bar, then the yellow chat line
+      `Reduced bleedrate from … to …` and the bandage is gone; about one time in three `Your wound has become
+      infected!` and Health Status lists `Wound Infect` in red. Letting go of **F** before the bar ends cancels it
+      and keeps the bandage. An Antiseptic Bandage cures `Wound Infect` and is spent.
+    - c. **Wounds.** Take a few wounds (fall, or B shoots A), then use a Medkit or a Doctor's Bag: `Healed N wounds`
+      (1-2 on yourself); the Doctor's Bag also stops the bleed, gives its drug and shows one charge less.
+    - d. **Painkiller.** `/sethp 30` (the screen darkens), use `Pills (Painkiller)`: a 1 s bar, `Taken Painkill`,
+      hp +10, the darkness gone while Health Status lists `Painkill` in yellow.
+    - e. **LSD.** Use `Pills (LSD)`: the sky turns to 22:03 with weather 33 and stays there; after 300 s
+      `Lsd has worn off` and the server's weather and clock come back.
+    - f. **Food infection.** `/additem Meat` and eat it raw: 70 % of its food, Health Status lists `Food Infect` and
+      the camera wobbles now and then. `Pills (Antibiotics)` cures it (and the wound infection half the time).
+    - g. **Persistence.** With an infection and a drug active, reconnect or `rr character`: both are still listed,
+      the drug with its time left (`SELECT infection, drugs FROM characters WHERE alive = 1`). Die and respawn:
+      neither is listed.
+    - h. **Others.** A stands within 1.5 m of B and holds **F** with a Bandage or Medkit: B sees a `Being treated`
+      bar and gets the outcome (2-3 wounds from a Medkit). A walking away (0.8 m) or B leaving 2.5 m cancels it.
+      Knock B out and inject `Injector (Adrenaline)`: B wakes up; A's injector is now `Injector (Empty)`.
