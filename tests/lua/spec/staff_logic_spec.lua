@@ -187,3 +187,29 @@ describe("staff alias modes and serials", function()
         assert.is_nil(staff.normaliseSerial(""))
     end)
 end)
+
+describe("staff post-login alias report", function()
+    it("reports nothing without aliases", function()
+        assert.is_nil(staff.aliasReport({}, 3))
+    end)
+    it("lists six names, counts all and asks for the highest alias level, at least 1", function()
+        local rows = {}
+        for i = 1, 8 do
+            rows[i] = { name = "n" .. i, lvl = i == 3 and 2 or 0, banned = 0 }
+        end
+        local r = staff.aliasReport(rows, 1)
+        assert.equals(8, r.count)
+        assert.equals("n1, n2, n3, n4, n5, n6", r.list)
+        assert.equals(2, r.level)
+        assert.is_false(r.banned)
+        assert.is_false(r.kick)
+        assert.equals(1, staff.aliasReport({ { name = "a", lvl = 0, banned = 0 } }, 1).level)
+    end)
+    it("warns on a single banned alias and kicks only with no staff online", function()
+        local rows = { { name = "evader", lvl = "0", banned = "1" } }
+        local r = staff.aliasReport(rows, 1)
+        assert.is_true(r.banned)
+        assert.is_false(r.kick)
+        assert.is_true(staff.aliasReport(rows, 0).kick)
+    end)
+end)

@@ -152,6 +152,10 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
       without errors; `/setadmin B 1` promotes B live (B's `/acmds` works without relog); `/setactive B 0` kicks B and
       blocks B's login (`INACTIVE`); `/setactive B 1`; `/resetpassword B newpass` lets B log in with the new password;
       `/setmotd Welcome` is shown to B on login and `/setmotd off` clears it; `/restart world` restarts the resource.
+    - i. **Login alias report** (#83). B logs in from A's PC (or under a second name on B's): A reads
+      `Aliases: (n) …` in yellow. Ban B's other name while it is offline (`/ban <name> 1h test`), then log in as B
+      again: A also reads the red `Warning: One or more of those aliases is banned!`; with A offline, B is kicked
+      with `One of your previously used accounts is banned.` `/unban <name>` afterwards.
 23. **Supply drops and weapons caches** (#47). A at level 4.
     - a. `/sc` lists the five types with their player requirements; `/sc 1` prints the yellow `[EBS]: SUPPLY DROP:
       "Food and Medical"` (or `"Unknown"`) `INCOMING AT: "staff request"` line for everyone, a blip appears on the

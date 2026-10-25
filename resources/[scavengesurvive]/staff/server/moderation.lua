@@ -379,6 +379,39 @@ return function(ctx)
         end,
     })
 
+    -- After every login (upstream CheckForExtraAccounts): other names from this IP or serial, their highest staff
+    -- level and whether any is banned. Catches a name banned while offline, whose bans row has no IP or serial yet.
+    local ALIAS_LOGIN_SQL = "SELECT c.name, MAX(COALESCE(a.admin_level, 0)) AS lvl, MAX(EXISTS(SELECT 1 FROM bans b"
+        .. " WHERE b.name = c.name AND b.active = 1 AND (b.expires_at IS NULL OR b.expires_at > NOW()))) AS banned"
+        .. " FROM connection_log c LEFT JOIN accounts a ON a.id = c.account_id"
+        .. " WHERE c.name <> ? AND (c.serial = ? OR c.ip = ?) GROUP BY c.name ORDER BY c.name LIMIT 32"
+    function M.checkAliases(p)
+        local params = { getPlayerName(p), getPlayerSerial(p), getPlayerIP(p) }
+        db.query(ALIAS_LOGIN_SQL, params, function(rows, pl)
+            if not rows or not isElement(pl) then
+                return
+            end
+            local staffOnline = 0
+            for _, other in ipairs(getElementsByType("player")) do
+                if ctx.level(other) >= 1 then
+                    staffOnline = staffOnline + 1
+                end
+            end
+            local report = logic.aliasReport(rows, staffOnline)
+            if not report then
+                return
+            end
+            if report.banned then
+                ctx.msgStaff(1, "#FF5050 >  Warning: One or more of those aliases is banned!")
+            end
+            if report.kick then
+                ctx.util.log("staff", "info", "%s kicked: banned alias among %s", getPlayerName(pl), report.list)
+                return ctx.kick(pl, nil, logic.ALIAS_BANNED_KICK)
+            end
+            ctx.msgStaff(report.level, " >  Aliases: #33CCFF(%d)#FFAA00 %s", report.count, report.list)
+        end, p)
+    end
+
     function M.forget(p)
         if state.frozen[p] then
             unfreeze(p, true)

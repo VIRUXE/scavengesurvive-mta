@@ -323,6 +323,7 @@ local function loadMute(p)
     end, p)
 end
 
+local modules = {}
 addEventHandler("playerAuthenticated", root, function()
     if not state.ready then
         return
@@ -332,6 +333,7 @@ addEventHandler("playerAuthenticated", root, function()
         ctx.say(source, " >  #33CCFF%s", motd)
     end
     loadMute(source)
+    modules.moderation.checkAliases(source)
 end)
 
 addEventHandler("characterDied", root, function(_, _, killer)
@@ -340,7 +342,6 @@ addEventHandler("characterDied", root, function(_, _, killer)
     end
 end)
 
-local modules = {}
 for _, name in ipairs({ "moderation", "bans", "reports", "duty" }) do
     modules[name] = loadFile("server/" .. name .. ".lua")(ctx)
 end

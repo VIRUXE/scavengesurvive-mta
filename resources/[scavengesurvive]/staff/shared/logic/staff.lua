@@ -201,6 +201,34 @@ function staff.aliasMode(arg)
     return staff.ALIAS_MODES[tostring(arg):lower()]
 end
 
+-- Post-login alias report (upstream aliases.pwn CheckForExtraAccounts): rows are { name, lvl, banned } for the
+-- other names seen from the player's IP or serial. Staff at or above the highest alias's level (at least 1) read
+-- "Aliases: (n) a, b, ..." (six names at most, as upstream); a banned alias warns level 1+ in red and, with no staff
+-- online, kicks the player instead. Upstream only looked for bans with two or more aliases; any count does here.
+staff.ALIAS_REPORT_NAMES = 6
+staff.ALIAS_BANNED_KICK = "One of your previously used accounts is banned."
+
+function staff.aliasReport(rows, staffOnline)
+    if #rows == 0 then
+        return nil
+    end
+    local names, level, banned = {}, 1, false
+    for i, r in ipairs(rows) do
+        if i <= staff.ALIAS_REPORT_NAMES then
+            names[#names + 1] = r.name
+        end
+        level = math.max(level, tonumber(r.lvl) or 0)
+        banned = banned or tonumber(r.banned) == 1
+    end
+    return {
+        count = #rows,
+        list = table.concat(names, ", "),
+        level = level,
+        banned = banned,
+        kick = banned and staffOnline == 0,
+    }
+end
+
 -- getPlayerSerial is 32 upper-case hex digits; returns that form of `text`, or nil when it is not a serial.
 function staff.normaliseSerial(text)
     local s = tostring(text or ""):upper()

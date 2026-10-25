@@ -83,7 +83,8 @@ CREATE TABLE IF NOT EXISTS `connection_log` (
   `left_at` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `ix_connection_log_serial` (`serial`),
-  KEY `ix_connection_log_account` (`account_id`)
+  KEY `ix_connection_log_account` (`account_id`),
+  KEY `ix_connection_log_ip` (`ip`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
 CREATE TABLE IF NOT EXISTS `containers` (
