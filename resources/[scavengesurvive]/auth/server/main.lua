@@ -10,9 +10,11 @@ end
 local accountsModule = loadFile("server/accounts.lua")
 local access = loadFile("shared/logic/access.lua")
 local prompts = loadFile("shared/logic/prompt.lua")
+local rules = loadFile("shared/logic/rules.lua")
 
 local session = {} -- player -> account table
 local pending = {} -- player -> true while a login/register request is in flight
+local changing = {} -- player -> true while a /changepass request is in flight
 local checking = {} -- player -> true while the join-time ban lookup is in flight
 local wantsPrompt = {} -- player -> true when the client was ready before the ban lookup finished
 local blocked = {} -- player -> true once a ban (or the whitelist) kicked them
@@ -243,6 +245,7 @@ addEventHandler("onPlayerQuit", root, function(reason)
     end
     session[source] = nil
     pending[source] = nil
+    changing[source] = nil
     checking[source] = nil
     wantsPrompt[source] = nil
     blocked[source] = nil
@@ -276,6 +279,35 @@ addCommandHandler("lang", function(player, _, code)
     db.exec("UPDATE accounts SET lang = ? WHERE id = ?", { code, account.id })
     outputChatBox(string.format(" >  Language set to %s.", code), player, 255, 255, 0)
     util.log("auth", "info", "%s set language %s", account.name, code)
+end)
+
+-- /changepass <old> <new> (upstream commands.pwn): verify the old password, store a new bcrypt hash.
+addCommandHandler("changepass", function(player, _, oldPw, newPw)
+    if getElementType(player) ~= "player" then
+        return
+    end
+    local account = session[player]
+    local lang = account and account.lang or "en"
+    if not account then
+        return outputChatBox(exports.data:t(lang, "LOGGEDINREQ"), player, 255, 255, 0, true)
+    end
+    if not oldPw or not newPw then
+        return outputChatBox(exports.data:t(lang, "CHANGEPASSW"), player, 255, 255, 0, true)
+    end
+    if changing[player] or not accounts then
+        return
+    end
+    changing[player] = true
+    accounts.changePassword(account.id, oldPw, newPw, function(_, code)
+        changing[player] = nil
+        if not isElement(player) then
+            return
+        end
+        local reply = rules.changePasswordReply(code)
+        local r, g, b = unpack(reply.color)
+        outputChatBox(exports.data:t(lang, reply.key, newPw), player, r, g, b, true)
+        util.log("auth", "info", "%s /changepass: %s", account.name, code)
+    end)
 end)
 
 function getAccountId(player)

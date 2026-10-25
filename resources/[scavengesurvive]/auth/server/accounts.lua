@@ -105,6 +105,30 @@ function accounts.new(deps)
         end)
     end
 
+    -- cb(ok, code): OK, WEAK_PASSWORD (new one outside 4..32), NO_MATCH (old one wrong) or DB_ERROR.
+    function self.changePassword(accountId, oldPw, newPw, cb)
+        local valid, reason = rules.validatePassword(newPw)
+        if not valid then
+            return cb(false, reason)
+        end
+        deps.db.one("SELECT password_hash FROM accounts WHERE id = ?", { accountId }, function(row)
+            if not row then
+                return cb(false, "DB_ERROR")
+            end
+            deps.verify(oldPw, row.password_hash, function(match)
+                if not match then
+                    return cb(false, "NO_MATCH")
+                end
+                deps.hash(newPw, function(hash)
+                    local sql = "UPDATE accounts SET password_hash = ? WHERE id = ?"
+                    deps.db.exec(sql, { hash, accountId }, function(ok)
+                        cb(ok and true or false, ok and "OK" or "DB_ERROR")
+                    end)
+                end)
+            end)
+        end)
+    end
+
     function self.forget(player)
         self.attempts[tostring(player)] = nil
     end

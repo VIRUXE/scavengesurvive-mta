@@ -12,6 +12,9 @@ ui 6, auth 7, character 8, items 9, loot 10, hud 11, weapons 12, dev/config 13),
    information_schema.processlist WHERE db='scavengesurvive'"` shows 5 (auth, character, items, loot, dev).
 2. **Account.** A registers, logs in and spawns on the shoreline. The HUD shows the stock health bar, the hunger bar above it, the watch bottom-left and the key list on the right; **H** opens the inventory dialog listing `[01]Knife`.
    Relog and log in again with the same password.
+   `/changepass` alone prints the usage line; `/changepass wrong newpass` says the password doesn't match;
+   `/changepass <old> abc` says 4 to 32 characters; `/changepass <old> newpass` confirms with the new password in blue,
+   and the next login takes `newpass` only (#82).
 3. **DB round trip.** A: `/dbtest` prints `dbtest: <n> ms ok=false code=UNKNOWN_TYPE` with n < 50.
 4. **Pick up / drop.** A: `/additem Wrench`. Within 2 s a "Wrench" label appears at the item. **F** picks it up
    (the key list changes to Put away / Drop item), **N** drops it at your feet, **F** picks it up again. B sees each change.
