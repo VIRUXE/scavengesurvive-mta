@@ -346,3 +346,6 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
     - c. **Persistence.** `rr items` while the Meat cooks: the cook still finishes on time
       (`SELECT data FROM items WHERE type_uname IN ('Campfire', 'Barbecue') AND x IS NOT NULL`). Ten minutes after
       it was lit (two in the rain, weather 8 or 16) the campfire turns into three Burnt Logs.
+    - d. **Petrol Can amount.** Refuel a car (or fuel the barbecue) from a full Petrol Can, wait 5 s (the held-data
+      flush), drop the can, pick it up and refuel again: the can holds what was left, not 20 L again
+      (`SELECT data FROM items WHERE type_uname = 'GasCan' AND holder_kind = 'held'` shows `amount`).
