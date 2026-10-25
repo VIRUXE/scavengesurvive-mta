@@ -36,11 +36,18 @@ function survival.loadWounds(bleed, isNew)
     return (tonumber(bleed) or 0) > 0 and 1 or 0
 end
 
--- rng() must return a float in [0,1)
+-- rng() must return a float in [0,1). state.infection = { food, wound } and state.drugs = { [name] = ms } are
+-- optional (#94): food infection adds one idle food rate, wound infection halves the regeneration, and the drug
+-- effects of bleed.pwn and drugfx.pwn apply once per tick (upstream ran Air and Adrenaline twice, ADR 0007).
 function survival.tick(state, movementMult, rng)
     local s = { hp = state.hp, food = state.food, bleed = state.bleed, wounds = state.wounds or 0 }
     local events = {}
-    s.food = clamp(s.food - survival.IDLE_FOOD_RATE * movementMult, 0, 100)
+    local infection, drugs = state.infection or {}, state.drugs or {}
+    local drain = survival.IDLE_FOOD_RATE * movementMult
+    if infection.food then
+        drain = drain + survival.IDLE_FOOD_RATE
+    end
+    s.food = clamp(s.food - drain, 0, 100)
     if s.food < 20 then
         s.hp = s.hp - (20 - s.food) / 30
     end
@@ -62,7 +69,16 @@ function survival.tick(state, movementMult, rng)
             s.bleed = 0
         end
     else
-        s.hp = s.hp + survival.REGEN_PER_FOOD * s.food
+        s.hp = s.hp + survival.REGEN_PER_FOOD * s.food * (infection.wound and 0.5 or 1.0)
+    end
+    if drugs.Morphine and rng() < 0.8 then
+        s.hp = s.hp + 0.5
+    end
+    if drugs.Air and rng() < 0.5 then
+        s.hp = s.hp - 1.0
+    end
+    if drugs.Adrenaline then
+        s.hp = s.hp + 0.01
     end
     s.hp = clamp(s.hp, 0, 100)
     s.bleed = clamp(s.bleed, 0, 1)

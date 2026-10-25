@@ -1,7 +1,9 @@
 -- Survival tick, stat sync to the owning client and the periodic DB flush of every spawned character.
--- ctx = { db, util, survival, skills, state, die } built by server/main.lua; die comes from server/death.lua.
+-- ctx = { db, util, survival, skills, medical, state, die, treatment } built by server/main.lua; die comes from
+-- server/death.lua, treatment (server/medical.lua) is set after this module loads.
 return function(ctx)
     local db, util, survival, skills, state = ctx.db, ctx.util, ctx.survival, ctx.skills, ctx.state
+    local medical = ctx.medical
     local FLUSH_MS = 10000
     local M = {}
 
@@ -18,6 +20,7 @@ return function(ctx)
             return
         end
         local payload = { hp = st.hp, food = st.food, bleed = st.bleed, wounds = st.wounds }
+        payload.infection, payload.drugs = st.infection, st.drugs
         st.lastSent = payload
         triggerClientEvent(player, "characterStatsSynced", player, payload)
         triggerEvent("characterStatsChanged", player, payload)
@@ -31,6 +34,7 @@ return function(ctx)
                 local mult = survival.movementMultiplier(speed, getPedOccupiedVehicle(player) ~= false)
                 local s, events = survival.tick(st, mult, math.random)
                 st.hp, st.food, st.bleed, st.dirty = s.hp, s.food, s.bleed, true
+                ctx.treatment.tick(player, st, 1000)
                 setElementHealth(player, math.max(1, st.hp))
                 M.sendStats(player, false)
                 for _, e in ipairs(events) do
@@ -50,8 +54,9 @@ return function(ctx)
         local _, _, rz = getElementRotation(player)
         local int, dim = getElementInterior(player), getElementDimension(player)
         local sql = "UPDATE characters SET hp = ?, food = ?, bleed = ?, x = ?, y = ?, z = ?, rz = ?,"
-            .. " interior = ?, dimension = ?, skills = ? WHERE id = ? AND alive = 1"
-        db.exec(sql, { st.hp, st.food, st.bleed, x, y, z, rz, int, dim, skills.encode(st.skills), st.id })
+            .. " interior = ?, dimension = ?, skills = ?, infection = ?, drugs = ? WHERE id = ? AND alive = 1"
+        local inf, drugs = medical.encodeInfection(st.infection), medical.encodeDrugs(st.drugs)
+        db.exec(sql, { st.hp, st.food, st.bleed, x, y, z, rz, int, dim, skills.encode(st.skills), inf, drugs, st.id })
         st.dirty, st.skillsDirty = false, false
     end
 
@@ -64,6 +69,7 @@ return function(ctx)
                 local row = { id = st.id, hp = st.hp, food = st.food, bleed = st.bleed, x = x, y = y, z = z, rz = rz }
                 -- skills change a few times a minute at most: sent only when they did (the procedure keeps the column)
                 row.skills = st.skillsDirty and skills.encode(st.skills) or nil
+                row.infection, row.drugs = medical.encodeInfection(st.infection), medical.encodeDrugs(st.drugs)
                 rows[#rows + 1] = row
                 st.dirty, st.skillsDirty = false, false
             end

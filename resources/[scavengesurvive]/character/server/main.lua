@@ -13,10 +13,11 @@ local spawnpoints = loadFile("shared/logic/spawnpoints.lua")
 local combatlog = loadFile("shared/logic/combatlog.lua")
 local drop = loadFile("shared/logic/drop.lua")
 local skills = loadFile("shared/logic/skills.lua")
+local medical = loadFile("shared/logic/medical.lua")
 
 -- Every spawned character, shared with the tick and death modules (they capture this table).
 local state = {
-    byPlayer = {}, -- player -> { id, hp, food, bleed, wounds, skills, skillsDirty, dirty, dead, inventoryContainerId }
+    byPlayer = {}, -- player -> { id, hp, food, bleed, wounds, infection, drugs, skills, skillsDirty, dirty, dead, ... }
     byId = {}, -- character id -> player
     lastSpawn = {}, -- player -> last spawnpoint index (no two spawns in a row at the same place)
     creating = {}, -- players with a character_create in flight
@@ -57,8 +58,18 @@ local function clearStatuses(player, restoreControls)
 end
 state.clearStatuses = clearStatuses
 local death = loadFile("server/death.lua")({ db = db, net = net, util = util, drop = drop, state = state })
-local tickCtx = { db = db, util = util, survival = survival, skills = skills, state = state, die = death.die }
+local tickCtx = { db = db, util = util, survival = survival, skills = skills, medical = medical, state = state }
+tickCtx.die = death.die
 local tick = loadFile("server/tick.lua")(tickCtx)
+local medicalCtx = { medical = medical, state = state, sendStats = tick.sendStats }
+medicalCtx.wake = function(p)
+    return wakeUpPlayer(p)
+end
+medicalCtx.isKnockedOut = function(p)
+    return isKnockedOut(p)
+end
+local treatment = loadFile("server/medical.lua")(medicalCtx)
+tickCtx.treatment = treatment
 
 -- The client's watch turns red while the combat-log window is open (upstream IsPlayerCombatLogging reads the
 -- same damage clock); ms = 0 turns it white again.
@@ -90,6 +101,11 @@ local function loadSkills(text)
     return skills.fromList(type(text) == "string" and fromJSON("[" .. text .. "]") or nil)
 end
 
+-- characters.drugs is the column text like skills; characters.infection a bit mask (shared/logic/medical.lua)
+local function loadDrugs(text)
+    return medical.decodeDrugs(type(text) == "string" and fromJSON("[" .. text .. "]") or nil)
+end
+
 local function sendSkills(player, st)
     triggerClientEvent(player, "characterSkillsSynced", player, skills.rows(st.skills))
 end
@@ -102,6 +118,8 @@ local function spawnFromRow(player, row, isNew)
         bleed = row.bleed,
         wounds = survival.loadWounds(row.bleed, isNew),
         skills = loadSkills(row.skills),
+        infection = medical.decodeInfection(row.infection),
+        drugs = loadDrugs(row.drugs),
         dirty = false,
         inventoryContainerId = row.inventory_container_id,
         lastSent = { hp = -1, food = -1, bleed = -1 },
@@ -159,7 +177,8 @@ end
 
 local function loadOrCreate(player, accountId)
     db.one(
-        "SELECT id, hp, food, bleed, skills, x, y, z, rz, skin, interior, dimension, inventory_container_id"
+        "SELECT id, hp, food, bleed, skills, infection, drugs, x, y, z, rz, skin, interior, dimension,"
+            .. " inventory_container_id"
             .. " FROM characters WHERE account_id = ? AND alive = 1",
         { accountId },
         function(row, ctx)
@@ -274,7 +293,45 @@ end
 
 function getStats(player)
     local st = state.byPlayer[player]
-    return st and { hp = st.hp, food = st.food, bleed = st.bleed, wounds = st.wounds } or false
+    if not st then
+        return false
+    end
+    return { hp = st.hp, food = st.food, bleed = st.bleed, wounds = st.wounds, infection = st.infection }
+end
+
+-- Treatment (#94): items calls treatPlayer at the end of a medical, pill or injector hold; returns
+-- { used, consume, data } (data = the item's new data, nil to keep it).
+function treatPlayer(healer, patient, uname, data)
+    return treatment.treat(healer, patient, uname, data)
+end
+
+-- The hold a treatment item starts on patient (nil when uname is not one), shortened by the healer's skill.
+function treatmentHold(healer, uname, patient)
+    local ms, skill = medical.holdFor(uname, isKnockedOut(patient))
+    if not ms then
+        return false
+    end
+    return skill and skillTimeModifier(healer, ms, skill) or ms
+end
+
+-- Loot data for a Doctor's Bag, Pills or Injector (JSON text), false for anything else.
+function medicalLootData(uname)
+    return medical.lootData(uname, math.random) or false
+end
+
+function setInfection(player, kind, on)
+    local st = state.byPlayer[player]
+    return st and not st.dead and treatment.setInfection(player, st, kind, on) or false
+end
+
+function applyDrug(player, name, ms)
+    local st = state.byPlayer[player]
+    return st and not st.dead and treatment.applyDrug(player, st, name, ms) or false
+end
+
+function hasDrug(player, name)
+    local st = state.byPlayer[player]
+    return st ~= nil and st.drugs[name] ~= nil
 end
 
 function modifyStat(player, key, delta)

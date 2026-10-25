@@ -10,11 +10,13 @@
     <script src="client/deathscreen.lua" type="client"/>
     <script src="client/ground.lua" type="client"/>
     <script src="client/skills.lua" type="client"/>
+    <script src="client/medical.lua" type="client"/>
     <file src="shared/logic/survival.lua"/>
     <file src="shared/logic/spawnpoints.lua"/>
     <file src="shared/logic/combatlog.lua"/>
     <file src="shared/logic/drop.lua"/>
     <file src="shared/logic/skills.lua"/>
+    <file src="shared/logic/medical.lua"/>
     <export function="getCharacterId" type="server"/>
     <export function="getPlayerByCharacterId" type="server"/>
     <export function="getInventoryContainerId" type="server"/>
@@ -26,6 +28,13 @@
     <export function="getSkill" type="server"/>
     <export function="skillTimeModifier" type="server"/>
     <export function="skillsOpen" type="client"/>
+    <export function="treatPlayer" type="server"/>
+    <export function="setInfection" type="server"/>
+    <export function="applyDrug" type="server"/>
+    <export function="hasDrug" type="server"/>
+    <export function="treatmentHold" type="server"/>
+    <export function="medicalLootData" type="server"/>
+    <export function="medicalLabel" type="client"/>
     <export function="applyWound" type="server"/>
     <export function="knockOutPlayer" type="server"/>
     <export function="wakeUpPlayer" type="server"/>

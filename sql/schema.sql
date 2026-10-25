@@ -55,6 +55,8 @@ CREATE TABLE IF NOT EXISTS `characters` (
   `bleed` float NOT NULL DEFAULT 0,
   `wounds` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '[]' CHECK (json_valid(`wounds`)),
   `skills` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '[]' CHECK (json_valid(`skills`)),
+  `infection` tinyint(3) unsigned NOT NULL DEFAULT 0,
+  `drugs` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '[]' CHECK (json_valid(`drugs`)),
   `x` float NOT NULL,
   `y` float NOT NULL,
   `z` float NOT NULL,

@@ -8,9 +8,10 @@ BEGIN
     JOIN JSON_TABLE(p_rows, '$[0][*]' COLUMNS (
       id INT PATH '$.id', hp FLOAT PATH '$.hp', food FLOAT PATH '$.food', bleed FLOAT PATH '$.bleed',
       x FLOAT PATH '$.x', y FLOAT PATH '$.y', z FLOAT PATH '$.z', rz FLOAT PATH '$.rz',
-      skills LONGTEXT PATH '$.skills')) j ON j.id = c.id
+      skills LONGTEXT PATH '$.skills', infection INT PATH '$.infection', drugs LONGTEXT PATH '$.drugs')) j ON j.id = c.id
     SET c.hp = j.hp, c.food = j.food, c.bleed = j.bleed, c.x = j.x, c.y = j.y, c.z = j.z, c.rz = j.rz,
-      c.skills = COALESCE(j.skills, c.skills)
+      c.skills = COALESCE(j.skills, c.skills), c.infection = COALESCE(j.infection, c.infection),
+      c.drugs = COALESCE(j.drugs, c.drugs)
     WHERE c.alive = 1;
   SET v_n = ROW_COUNT();
   COMMIT;
