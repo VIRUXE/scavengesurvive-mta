@@ -1,6 +1,6 @@
 -- Chat delivery by mode (upstream core/player/chat.pwn): every chat line is cancelled and re-sent by this
--- resource to the right audience; /g /l /r /me /quiet /freq /radio; the radio frequency and mode persist on the
--- character (characters.radio_freq / chat_mode in sql/schema.sql). Mutes themselves live in staff
+-- resource to the right audience; /g /l /r /me /quiet /freq /radio; the radio frequency persists on the
+-- character (characters.radio_freq in sql/schema.sql), every spawn starts in global chat. Mutes themselves live in staff
 -- (exports.staff:isMuted / mutePlayer). Built-in voice follows the same audiences (Voice section below).
 local db = loadstring(exports.lib:getModule("db"), "=lib/db.lua")()
 local net = loadstring(exports.lib:getModule("net"), "=lib/net.lua")()
@@ -20,7 +20,7 @@ local function get(p)
     local st = state[p]
     if not st then
         st = {
-            mode = MODE.LOCAL,
+            mode = MODE.GLOBAL,
             oldMode = MODE.RADIO,
             freq = logic.FREQ_DEFAULT,
             quiet = false,
@@ -275,24 +275,21 @@ net.handler("chatModeRequested", function(p, mode)
     end
 end, { rate = 5 })
 
--- Frequency and mode travel with the character (upstream saved them in the player file).
+-- The frequency travels with the character (upstream saved it in the player file); the mode always starts global.
 addEventHandler("characterSpawned", root, function(charId)
     local st = get(source)
     st.charId = charId
     if not ready then
         return sync(source)
     end
-    db.one("SELECT radio_freq, chat_mode FROM characters WHERE id = ?", { charId }, function(row, p)
+    db.one("SELECT radio_freq FROM characters WHERE id = ?", { charId }, function(row, p)
         if not isElement(p) then
             return
         end
         local s = get(p)
+        s.mode = MODE.GLOBAL
         if row then
             s.freq = logic.clampFreq(row.radio_freq)
-            s.mode = logic.isMode(tonumber(row.chat_mode)) and tonumber(row.chat_mode) or MODE.LOCAL
-            if s.mode == MODE.ADMIN and staffLevel(p) < 1 then
-                s.mode = MODE.LOCAL
-            end
         end
         sync(p)
     end, source)
