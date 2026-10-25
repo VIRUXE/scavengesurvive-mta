@@ -296,7 +296,43 @@ return function(ctx)
 
     -- "Open satchel": the bag in hand shows its contents as the side container (upstream itemtype/backpack.pwn
     -- _DisplayBagDialog). Bags on the ground still need hold-to-pick-up and container_put/take access (#108).
-    net.handler("itemBagOpenRequested", function(player)
+    net.handler("itemBagOpenRequested", function(player, worldItemId)
+        if worldItemId ~= nil then
+            worldItemId = tonumber(worldItemId)
+            if not worldItemId or not charId(player) then
+                return
+            end
+            local radius = tonumber(state.settings["items.pickup_radius"]) or 2.0
+            db.one(
+                "SELECT i.id, i.type_uname AS uname, i.x, i.y, i.z, i.interior, i.dimension "
+                    .. "FROM items i JOIN world_items_pos p ON p.item_id = i.id "
+                    .. "WHERE i.id = ? AND i.container_id IS NULL AND i.holder_char_id IS NULL "
+                    .. "AND i.holder_kind IS NULL AND i.x IS NOT NULL",
+                { worldItemId },
+                function(row, c)
+                    if not isElement(c.player) or not row then
+                        return
+                    end
+                    local t = itemType(row.uname)
+                    if not t or t.category ~= "bag" then
+                        return
+                    end
+                    if
+                        (row.interior or 0) ~= getElementInterior(c.player)
+                        or (row.dimension or 0) ~= getElementDimension(c.player)
+                    then
+                        return
+                    end
+                    local px, py = getElementPosition(c.player)
+                    if getDistanceBetweenPoints2D(px, py, row.x, row.y) > radius then
+                        return
+                    end
+                    M.openWorldContainer(c.player, row)
+                end,
+                { player = player }
+            )
+            return
+        end
         local bag = state.held[player]
         local t = bag and itemType(bag.uname)
         if t and t.category == "bag" then

@@ -47,4 +47,5 @@
     <export function="setAttachPreview" type="client"/>
     <export function="getAttachConfig" type="client"/>
     <export function="nearbyCooker" type="client"/>
+    <export function="nearbyBag" type="client"/>
 </meta>

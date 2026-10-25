@@ -33,6 +33,10 @@ function nearbyCooker()
     return world.nearbyCooker(2.0) or false
 end
 
+function nearbyBag()
+    return world.nearbyBag(2.0) or false
+end
+
 function getAttachConfig(slot)
     return attach.getConfig(slot)
 end

@@ -318,5 +318,24 @@ return function(ctx)
         end
         return nil
     end
+
+    function M.nearbyBag(reach)
+        local px, py, pz = getElementPosition(localPlayer)
+        local dim, int = getElementDimension(localPlayer), getElementInterior(localPlayer)
+        local nearest, nearestDist = nil, reach * reach
+        for id, e in pairs(objects) do
+            local t = itemType(e.uname)
+            if t and t.category == "bag" then
+                local r = e.row
+                local dx, dy, dz = e.x - px, e.y - py, e.z - pz
+                local dist = dx * dx + dy * dy + dz * dz
+                local same = (r.dimension or 0) == dim and (r.interior or 0) == int
+                if same and math.abs(dz) < 3 and dist < nearestDist then
+                    nearest, nearestDist = id, dist
+                end
+            end
+        end
+        return nearest
+    end
     return M
 end

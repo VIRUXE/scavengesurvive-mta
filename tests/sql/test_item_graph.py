@@ -71,6 +71,34 @@ def test_cannot_put_bag_inside_itself(db, character):
     assert call(db, "container_put", bag, ch, bag_container)[1] == "SELF_CONTAINMENT"
 
 
+def test_world_bag_container_allows_put_and_take(db, character):
+    ch = character["character_id"]
+    ok, code, payload = call(db, "item_create", "T_Satchel", 5, None, 10.0, 20.0, 3.0, 0.0, 0, 0, None, None)
+    assert (ok, code) == (1, "OK")
+    bag_container = payload["container_id"]
+    item = make_world_item(db)
+    assert call(db, "item_pickup", item, ch)[1] == "OK"
+    assert call(db, "container_put", item, ch, bag_container)[1] == "OK"
+    assert call(db, "container_take", item, ch)[1] == "OK"
+
+
+def test_nested_world_bag_container_is_not_open_to_everyone(db, character):
+    ch = character["character_id"]
+    ok, code, outer = call(db, "item_create", "T_Satchel", 5, None, 10.0, 20.0, 3.0, 0.0, 0, 0, None, None)
+    assert (ok, code) == (1, "OK")
+    outer_container = outer["container_id"]
+    ok, code, inner = call(db, "item_create_in_container", "T_Satchel", outer_container)
+    assert (ok, code) == (1, "OK")
+    with db.cursor() as cur:
+        cur.execute("SELECT id FROM containers WHERE owner_item_id=%s AND kind='bag'", (inner["item_id"],))
+        inner_container = cur.fetchone()["id"]
+
+    held = call(db, "item_create_held", "T_Wrench", ch)[2]["item_id"]
+    assert call(db, "container_put", held, ch, inner_container)[1] == "NOT_OWNER"
+    nested_item = call(db, "item_create_in_container", "T_Wrench", inner_container)[2]["item_id"]
+    assert call(db, "container_take", nested_item, ch)[1] == "NOT_OWNER"
+
+
 def test_wear_bag_refuses_a_second_one_without_an_error(db, character):
     ch = character["character_id"]
     bags = [make_world_item(db, "T_Satchel") for _ in range(2)]
@@ -352,3 +380,61 @@ def test_safebox_and_tent_containers(db, character):
         cur.execute("SELECT holder_char_id, holder_kind, container_id FROM items WHERE id=%s", (it,))
         r2 = cur.fetchone()
         assert r2["holder_char_id"] == ch and r2["holder_kind"] == "held" and r2["container_id"] is None
+
+
+def test_container_move_between_containers(db, character):
+    ch = character["character_id"]
+
+    # Create two bags: bag1 (held) and bag2 (worn)
+    ok1, _, p1 = call(db, "item_create", "T_Satchel", 5, None, 0.0, 0.0, 3.0, 0.0, 0, 0, None, None)
+    bag1, cont1 = p1["item_id"], p1["container_id"]
+    ok2, _, p2 = call(db, "item_create", "T_Satchel", 5, None, 0.0, 0.0, 3.0, 0.0, 0, 0, None, None)
+    bag2, cont2 = p2["item_id"], p2["container_id"]
+
+    # Wear bag2
+    assert call(db, "item_pickup", bag2, ch)[1] == "OK"
+    assert call(db, "bag_wear", bag2, ch)[1] == "OK"
+
+    # Put an item into bag1
+    it1 = make_world_item(db, "T_Wrench")
+    assert call(db, "item_pickup", it1, ch)[1] == "OK"
+    assert call(db, "container_put", it1, ch, cont1)[1] == "OK"
+
+    # Hold bag1
+    assert call(db, "item_pickup", bag1, ch)[1] == "OK"
+
+    # Move it1 from cont1 (held bag) to cont2 (worn bag)
+    ok, code, payload = call(db, "container_move", it1, ch, cont2, cont1)
+    assert (ok, code) == (1, "OK")
+    assert payload["item_id"] == it1
+    assert payload["from_container_id"] == cont1
+    assert payload["to_container_id"] == cont2
+    assert payload["slot"] == 0
+
+    with db.cursor() as cur:
+        cur.execute("SELECT container_id, slot FROM items WHERE id=%s", (it1,))
+        r = cur.fetchone()
+        assert r["container_id"] == cont2 and r["slot"] == 0
+
+    # Move back from worn bag (cont2) to held bag (cont1)
+    ok_back, code_back, payload_back = call(db, "container_move", it1, ch, cont1, cont1)
+    assert (ok_back, code_back) == (1, "OK")
+    assert payload_back["from_container_id"] == cont2
+    assert payload_back["to_container_id"] == cont1
+    assert payload_back["slot"] == 0
+
+    # Cannot move bag inside itself
+    assert call(db, "container_move", bag1, ch, cont1, cont1)[1] == "SELF_CONTAINMENT"
+
+    # Moving from or to a container not owned by the character that is not the open container returns NOT_OWNER
+    it_other = make_world_item(db, "T_Wrench")
+    with db.cursor() as cur:
+        cur.execute("INSERT INTO containers (kind, size) VALUES ('safebox', 10)")
+        unowned_cont = cur.lastrowid
+        cur.execute("UPDATE items SET container_id=%s, slot=0, x=NULL, y=NULL, z=NULL WHERE id=%s", (unowned_cont, it_other))
+
+    assert call(db, "container_move", it_other, ch, cont2, cont1)[1] == "NOT_OWNER"
+    assert call(db, "container_move", it1, ch, unowned_cont, cont1)[1] == "NOT_OWNER"
+    # When unowned_cont is the validated open container, move is permitted
+    assert call(db, "container_move", it_other, ch, cont2, unowned_cont)[1] == "OK"
+

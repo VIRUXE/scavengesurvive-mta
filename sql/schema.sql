@@ -728,6 +728,7 @@ BEGIN
   DECLARE v_owner_item INT DEFAULT NULL;
   DECLARE v_owner_vehicle INT DEFAULT NULL;
   DECLARE v_owner_holder INT DEFAULT NULL;
+  DECLARE v_owner_container INT DEFAULT NULL;
   DECLARE v_kind VARCHAR(16) DEFAULT NULL;
   DECLARE v_size INT DEFAULT NULL;
   DECLARE v_used INT DEFAULT 0;
@@ -743,7 +744,7 @@ BEGIN
   SELECT COUNT(*) INTO v_held FROM items WHERE id = p_item_id AND holder_char_id = p_char_id AND holder_kind = 'held' FOR UPDATE;
   SELECT t.size INTO v_item_size FROM items i JOIN item_types t ON t.uname = i.type_uname WHERE i.id = p_item_id;
   IF v_owner_item IS NOT NULL THEN
-    SELECT holder_char_id INTO v_owner_holder FROM items WHERE id = v_owner_item;
+    SELECT holder_char_id, container_id INTO v_owner_holder, v_owner_container FROM items WHERE id = v_owner_item;
   END IF;
   IF v_size IS NULL OR v_held = 0 THEN
     ROLLBACK;
@@ -751,7 +752,7 @@ BEGIN
   ELSEIF v_owner_item = p_item_id THEN
     ROLLBACK;
     SELECT 0 AS ok, 'SELF_CONTAINMENT' AS code, NULL AS payload;
-  ELSEIF NOT (v_owner_char <=> p_char_id OR v_owner_holder <=> p_char_id OR v_owner_vehicle IS NOT NULL OR v_kind IN ('safebox', 'tent', 'supply')) THEN
+  ELSEIF NOT (v_owner_char <=> p_char_id OR v_owner_holder <=> p_char_id OR v_owner_vehicle IS NOT NULL OR v_kind IN ('safebox', 'tent', 'supply') OR (v_kind = 'bag' AND v_owner_item IS NOT NULL AND v_owner_holder IS NULL AND v_owner_container IS NULL)) THEN
     ROLLBACK;
     SELECT 0 AS ok, 'NOT_OWNER' AS code, NULL AS payload;
   ELSE
@@ -776,6 +777,7 @@ BEGIN
   DECLARE v_owner_item INT DEFAULT NULL;
   DECLARE v_owner_vehicle INT DEFAULT NULL;
   DECLARE v_owner_holder INT DEFAULT NULL;
+  DECLARE v_owner_container INT DEFAULT NULL;
   DECLARE v_kind VARCHAR(16) DEFAULT NULL;
   DECLARE v_held INT DEFAULT 0;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
@@ -790,10 +792,10 @@ BEGIN
       INTO v_owner_char, v_owner_item, v_owner_vehicle, v_kind
       FROM containers WHERE id = v_cont FOR UPDATE;
     IF v_owner_item IS NOT NULL THEN
-      SELECT holder_char_id INTO v_owner_holder FROM items WHERE id = v_owner_item;
+      SELECT holder_char_id, container_id INTO v_owner_holder, v_owner_container FROM items WHERE id = v_owner_item;
     END IF;
     SELECT COUNT(*) INTO v_held FROM items WHERE holder_char_id = p_char_id AND holder_kind = 'held' FOR UPDATE;
-    IF NOT (v_owner_char <=> p_char_id OR v_owner_holder <=> p_char_id OR v_owner_vehicle IS NOT NULL OR v_kind IN ('safebox', 'tent', 'supply')) THEN
+    IF NOT (v_owner_char <=> p_char_id OR v_owner_holder <=> p_char_id OR v_owner_vehicle IS NOT NULL OR v_kind IN ('safebox', 'tent', 'supply') OR (v_kind = 'bag' AND v_owner_item IS NOT NULL AND v_owner_holder IS NULL AND v_owner_container IS NULL)) THEN
       ROLLBACK;
       SELECT 0 AS ok, 'NOT_OWNER' AS code, NULL AS payload;
     ELSEIF v_held > 0 THEN

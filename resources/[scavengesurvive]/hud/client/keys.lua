@@ -3,6 +3,7 @@
 -- N for 300 ms on a calibre weapon unloads it (tapping N drops the item).
 return function(ctx)
     local holdTimer = nil
+    local interactHoldTimer = nil
 
     local function guard()
         return not (
@@ -44,6 +45,7 @@ return function(ctx)
 
     local TREATMENTS = { Bandage = true, AntiSepBandage = true, Medkit = true, DoctorBag = true, Pills = true }
     TREATMENTS.AutoInjec = true
+    local isKeyHeld
 
     local function getNearbyVehicle()
         local px, py, pz = getElementPosition(localPlayer)
@@ -86,6 +88,28 @@ return function(ctx)
         if exports.loot:tryOpenCrate() == true then
             return
         end
+        local bagId = exports.items:nearbyBag()
+        if bagId then
+            if isTimer(interactHoldTimer) then
+                return
+            end
+            local key = string.lower(getKeyBoundToCommand("interact") or "f")
+            local startTick = getTickCount()
+            interactHoldTimer = setTimer(function()
+                if not isKeyHeld(key, "interact") then
+                    killTimer(interactHoldTimer)
+                    interactHoldTimer = nil
+                    if getTickCount() - startTick < 500 then
+                        triggerServerEvent("itemBagOpenRequested", localPlayer, bagId)
+                    end
+                elseif getTickCount() - startTick >= 500 then
+                    killTimer(interactHoldTimer)
+                    interactHoldTimer = nil
+                    triggerServerEvent("itemPickupRequested", localPlayer)
+                end
+            end, 50, 0)
+            return
+        end
         local nearVeh, nearDist = getNearbyVehicle()
         local held = ctx.getHeld()
         local uname = held and held.uname
@@ -118,7 +142,7 @@ return function(ctx)
         triggerServerEvent("itemPickupRequested", localPlayer)
     end)
 
-    local function isKeyHeld(key, cmd)
+    isKeyHeld = function(key, cmd)
         if getKeyState(key) then
             return true
         end
@@ -195,6 +219,10 @@ return function(ctx)
         if isTimer(holdTimer) then
             killTimer(holdTimer)
             holdTimer = nil
+        end
+        if isTimer(interactHoldTimer) then
+            killTimer(interactHoldTimer)
+            interactHoldTimer = nil
         end
         bindKey("y", "down", "chatbox", "teamsay")
     end)
