@@ -18,6 +18,7 @@
     <resource src="anticheat" startup="1" protected="0"/>
     <resource src="chat" startup="1" protected="0"/>
     <resource src="discordchat" startup="1" protected="0"/>
+    <resource src="presence" startup="1" protected="0"/>
     <resource src="hud" startup="1" protected="0"/>
     <resource src="staff" startup="1" protected="0"/>
     <resource src="dev" startup="1" protected="0"/>

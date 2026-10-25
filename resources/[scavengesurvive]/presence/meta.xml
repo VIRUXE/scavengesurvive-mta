@@ -1,0 +1,13 @@
+<meta>
+    <info author="scavengesurvive-mta" type="script" name="presence" description="Discord Rich Presence: server name, player count and a join button" version="0.1.0"/>
+    <min_mta_version server="1.6.0" client="1.6.0"/>
+    <script src="shared/events.lua" type="shared"/>
+    <script src="server/main.lua" type="server"/>
+    <script src="client/main.lua" type="client"/>
+    <settings>
+        <!-- Discord application "Scavenge & Survive" (discord.com/developers/applications) -->
+        <setting name="*appId" value="1564023462010429470"/>
+        <!-- mtasa:// or https:// link for the presence button, empty hides it -->
+        <setting name="*joinUrl" value="mtasa://185.103.74.67:22003"/>
+    </settings>
+</meta>

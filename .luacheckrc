@@ -46,3 +46,6 @@ files["resources/**/crafting/server/**"] = { std = "lua51+mta_shared+mta_server"
 files["resources/**/staff/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "getLevel", "getMotd", "isOnDuty", "isMuted", "logAction", "mutePlayer", "getLevelColour", "runCommand" }, read_globals = { "clearChatBox" } }
 files["resources/**/chat/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "getRadio", "setChatMode", "sendAs", "sendGlobalExternal" } }
 files["resources/**/chat/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "radioOpen" } }
+-- getMaxPlayers/getServerName and the Discord Rich Presence functions postdate the generated .luacheck lists
+files["resources/**/presence/server/**"] = { std = "lua51+mta_shared+mta_server", read_globals = { "getMaxPlayers", "getServerName" } }
+files["resources/**/presence/client/**"] = { std = "lua51+mta_shared+mta_client", read_globals = { "isDiscordRichPresenceConnected", "resetDiscordRichPresenceData", "setDiscordApplicationID", "setDiscordRichPresenceButton", "setDiscordRichPresenceDetails", "setDiscordRichPresencePartySize", "setDiscordRichPresenceStartTime", "setDiscordRichPresenceState" } }
