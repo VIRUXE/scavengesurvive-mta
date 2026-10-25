@@ -53,6 +53,9 @@ Later the same evening `tools/blender/remodel_head.py` (Blender, live viewport p
 headgear skins bare heads: a skin band over the brow and a dome of hair in the ped's own hair/atlas texels,
 weighted to the Head bone: police and sheriffs (4, 119, 284, 265, 283, 288), military and SWAT (287, 285),
 firefighters (277-279), services and civilian (61, 35, 268, 155, 205, 161, 36, 37, 2, 311), and bikers (247, 248, 254).
+
+Correction (2026-10-25, #87): Tenpenny (265) is bald and dwayne (268) has a blond ponytail; neither wears headgear,
+so both left `HEADGEAR` and `HEADS` and lost their twins. That leaves 22 headgear skins.
 Maccer 2 carries custom hair sampling and a contoured hairline matching his dirty-blond mop. The images below show the twins under the helmet, bare with the earlier cut-only twins, and bare with the remodelled heads.
 
 ![twins under the helmet](../images/hatless-twins-helmet.jpg)

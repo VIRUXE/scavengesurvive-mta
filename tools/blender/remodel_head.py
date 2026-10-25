@@ -38,7 +38,6 @@ HEADS = {
     4: dict(name="sfpdm1", tex="SFPDM1"),
     119: dict(name="lvpdm1", tex="LVPDM1", dark_floor=-0.005),
     284: dict(name="lapdm1", tex="LAPDM1", dark_floor=None, bright_floor=-0.03, bright_lum=0.6),
-    265: dict(name="tenpen", tex="tenpen", dark_floor=None),
     283: dict(name="csher", tex="csher", dark_floor=None),
     288: dict(name="dsher", tex="dsher", dark_floor=None),
     # Military & SWAT
@@ -51,7 +50,6 @@ HEADS = {
     # Civilian & Services
     61: dict(name="wmyplt", tex="wmyplt", dark_floor=-0.005, cap_blocks={(6, 6)}),
     35: dict(name="hmogar", tex="hmogar", dark_floor=None, cap_blocks={(6, 4), (7, 4)}, apex=0.07),
-    268: dict(name="dwayne", tex="dwayne", dark_floor=None),
     155: dict(name="wmypizz", tex="wmypizz", dark_floor=None, cap_blocks=PIZZA_BLOCKS),
     205: dict(name="wfyburg", tex="wfyburg", dark_floor=None),
     161: dict(name="cwmyfr", tex="cwmyfr", dark_floor=None),

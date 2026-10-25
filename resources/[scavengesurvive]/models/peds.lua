@@ -13,8 +13,6 @@ return {
     [247] = { dff = "bikera_nohat" },
     [248] = { dff = "bikerb_nohat" },
     [254] = { dff = "bikdrug_nohat" },
-    [265] = { dff = "tenpen_nohat" },
-    [268] = { dff = "dwayne_nohat" },
     [277] = { dff = "lafd1_nohat" },
     [278] = { dff = "lvfd1_nohat" },
     [279] = { dff = "sffd1_nohat" },

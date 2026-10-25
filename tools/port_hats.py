@@ -6,7 +6,7 @@ origin, that `items` attaches on SA-MP bone 2 at zero offset (items/shared/logic
 ids are the port's own, above SA-MP's range (PORT_MODEL_MIN); `models/hats.lua` maps them to the files and the
 converters add one item type per row (tools/convert/item_types.py) and its loot rows (tools/convert/loot_tables.py).
 Skins whose headgear a SA-MP object already covers (police caps, SWAT and army helmets, the pizza cap, the beanie)
-are left out, as are the cuts that are mostly hair (dwayne's mullet, bikerb's bandana).
+are left out, as are the cuts that are mostly hair (bikerb's bandana).
 """
 PORT_MODEL_MIN = 20001
 
