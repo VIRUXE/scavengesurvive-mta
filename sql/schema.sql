@@ -738,7 +738,9 @@ BEGIN
   DECLARE v_size INT DEFAULT NULL;
   DECLARE v_zone VARCHAR(8) DEFAULT NULL;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
-  SELECT category, container_size INTO v_cat, v_size FROM item_types WHERE uname = p_type_uname;
+  -- item_types' collation ignores case, so take the stored spelling: the Lua side looks types up exactly and
+  -- shows an unknown one as the fallback crate (/additem backpack)
+  SELECT uname, category, container_size INTO p_type_uname, v_cat, v_size FROM item_types WHERE uname = p_type_uname;
   IF v_cat IS NULL THEN
     SELECT 0 AS ok, 'UNKNOWN_TYPE' AS code, NULL AS payload;
   ELSE
@@ -769,7 +771,9 @@ BEGIN
   DECLARE v_item INT DEFAULT 0;
   DECLARE v_cont INT DEFAULT NULL;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
-  SELECT category, container_size INTO v_cat, v_size FROM item_types WHERE uname = p_type_uname;
+  -- item_types' collation ignores case, so take the stored spelling: the Lua side looks types up exactly and
+  -- shows an unknown one as the fallback crate (/additem backpack)
+  SELECT uname, category, container_size INTO p_type_uname, v_cat, v_size FROM item_types WHERE uname = p_type_uname;
   IF v_cat IS NULL THEN
     SELECT 0 AS ok, 'UNKNOWN_TYPE' AS code, NULL AS payload;
   ELSE
@@ -809,8 +813,8 @@ BEGIN
   DECLARE v_slot INT DEFAULT 0;
   DECLARE v_item INT;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
-  SELECT category, size, container_size INTO v_cat, v_item_size, v_bag_size
-    FROM item_types WHERE uname = p_type_uname;
+  SELECT uname, category, size, container_size INTO p_type_uname, v_cat, v_item_size, v_bag_size
+    FROM item_types WHERE uname = p_type_uname; -- stored spelling, as in item_create
   IF v_cat IS NULL THEN
     SELECT 0 AS ok, 'UNKNOWN_TYPE' AS code, NULL AS payload;
   ELSE
