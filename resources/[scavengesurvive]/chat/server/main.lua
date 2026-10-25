@@ -302,7 +302,6 @@ end)
 -- Voice (MTA built-in, <voice>1</voice> in mtaserver.conf): a talking player is heard by the text audience of
 -- their chat mode joined with the local range, re-chosen every VOICE_REFRESH_MS while they talk. Not logged in or
 -- muted: the voice start is cancelled, a muted player is told once per mute.
--- luacheck: read globals setPlayerVoiceBroadcastTo (missing from .luacheck/mta_server.lua)
 local talking = {} -- player -> refresh timer while the voice key is held
 
 local function voiceRefresh(p)
