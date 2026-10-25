@@ -5,6 +5,9 @@ import pymysql
 
 from tests.sql.conftest import ARGS, DB, call
 
+# drop spots as character drop.lua sends them through MTA toJSON (outer [ ] wrapper), z the measured ground
+RING = json.dumps([[[101.5, 200.0, 4.1], [100.0, 201.5, 4.6]]])
+
 
 def make_world_item(db, uname="T_Wrench", x=10.0, y=20.0, z=3.0):
     ok, code, payload = call(db, "item_create", uname, 5, None, x, y, z, 0.0, 0, 0, None, None)
@@ -102,7 +105,7 @@ def test_death_drops_everything_and_marks_dead(db, character):
     call(db, "item_pickup", a, ch)
     call(db, "container_put", a, ch, cid)
     call(db, "item_pickup", b, ch)
-    ok, code, payload = call(db, "character_death_drop", ch, 100.0, 200.0, 5.0, 0, 0)
+    ok, code, payload = call(db, "character_death_drop", ch, 100.0, 200.0, 5.0, 0, 0, RING, 4.2)
     assert code == "OK" and payload["dropped"] == 2
     with db.cursor() as cur:
         cur.execute("SELECT alive FROM characters WHERE id=%s", (ch,))
@@ -110,10 +113,10 @@ def test_death_drops_everything_and_marks_dead(db, character):
         cur.execute("SELECT COUNT(*) AS n FROM items WHERE id IN (%s,%s) AND x IS NOT NULL", (a, b))
         assert cur.fetchone()["n"] == 2
         # upstream death.pwn: a Clothes item with the dead character's skin, 1 m east of the body
-        cur.execute("SELECT type_uname, data, x, y FROM items WHERE id=%s", (payload["clothes_item_id"],))
+        cur.execute("SELECT type_uname, data, x, y, z FROM items WHERE id=%s", (payload["clothes_item_id"],))
         row = cur.fetchone()
         assert row["type_uname"] == "Clothes" and json.loads(row["data"]) == {"skin": 0}
-        assert (row["x"], row["y"]) == (101.0, 200.0)
+        assert (row["x"], row["y"], round(row["z"], 2)) == (101.0, 200.0, 4.2)
 
 
 def test_drop_all_drops_everything_and_stays_alive(db, character):
@@ -126,17 +129,18 @@ def test_drop_all_drops_everything_and_stays_alive(db, character):
     with db.cursor() as cur:
         cur.execute(clothes)
         before = cur.fetchone()["n"]
-    ok, code, payload = call(db, "character_drop_all", ch, 100.0, 200.0, 5.0, 0, 0)
+    ok, code, payload = call(db, "character_drop_all", ch, RING, 0, 0)
     assert code == "OK" and payload == {"dropped": 2}
     with db.cursor() as cur:
         cur.execute("SELECT alive FROM characters WHERE id=%s", (ch,))
         assert cur.fetchone()["alive"] == 1
-        cur.execute("SELECT COUNT(*) AS n FROM items WHERE id IN (%s,%s) AND x IS NOT NULL", (a, b))
-        assert cur.fetchone()["n"] == 2
+        cur.execute("SELECT x, y, z FROM items WHERE id IN (%s,%s) ORDER BY id", (a, b))
+        got = [(r["x"], r["y"], round(r["z"], 2)) for r in cur.fetchall()]
+        assert got == [(101.5, 200.0, 4.1), (100.0, 201.5, 4.6)]
         cur.execute(clothes)
         assert cur.fetchone()["n"] == before
-    call(db, "character_death_drop", ch, 100.0, 200.0, 5.0, 0, 0)
-    assert call(db, "character_drop_all", ch, 100.0, 200.0, 5.0, 0, 0)[1] == "NOT_ALIVE"
+    call(db, "character_death_drop", ch, 100.0, 200.0, 5.0, 0, 0, RING, 4.2)
+    assert call(db, "character_drop_all", ch, RING, 0, 0)[1] == "NOT_ALIVE"
 
 
 def test_concurrent_pickup_exactly_one_winner(db):

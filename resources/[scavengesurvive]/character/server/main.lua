@@ -11,6 +11,7 @@ end
 local survival = loadFile("shared/logic/survival.lua")
 local spawnpoints = loadFile("shared/logic/spawnpoints.lua")
 local combatlog = loadFile("shared/logic/combatlog.lua")
+local drop = loadFile("shared/logic/drop.lua")
 
 -- Every spawned character, shared with the tick and death modules (they capture this table).
 local state = {
@@ -54,7 +55,7 @@ local function clearStatuses(player, restoreControls)
     end
 end
 state.clearStatuses = clearStatuses
-local death = loadFile("server/death.lua")({ db = db, util = util, state = state })
+local death = loadFile("server/death.lua")({ db = db, net = net, util = util, drop = drop, state = state })
 local tick = loadFile("server/tick.lua")({ db = db, util = util, survival = survival, state = state, die = death.die })
 
 -- The client's watch turns red while the combat-log window is open (upstream IsPlayerCombatLogging reads the

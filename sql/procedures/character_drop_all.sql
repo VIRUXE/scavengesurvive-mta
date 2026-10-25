@@ -1,5 +1,5 @@
-CREATE OR REPLACE PROCEDURE character_drop_all(IN p_char_id INT, IN p_x FLOAT, IN p_y FLOAT, IN p_z FLOAT,
-  IN p_interior TINYINT, IN p_dimension INT)
+CREATE OR REPLACE PROCEDURE character_drop_all(IN p_char_id INT, IN p_ring LONGTEXT, IN p_interior TINYINT,
+  IN p_dimension INT)
 BEGIN
   -- /dropall (upstream commands.pwn DropItems(death = false)): the death drop without dying, no Clothes item.
   DECLARE v_n INT DEFAULT 0;
@@ -13,7 +13,7 @@ BEGIN
     ROLLBACK;
     SELECT 0 AS ok, 'NOT_ALIVE' AS code, NULL AS payload;
   ELSE
-    CALL character_drop_items(p_char_id, v_inv, p_x, p_y, p_z, p_interior, p_dimension, v_n);
+    CALL character_drop_items(p_char_id, v_inv, p_ring, p_interior, p_dimension, v_n);
     COMMIT;
     SELECT 1 AS ok, 'OK' AS code, JSON_OBJECT('dropped', CAST(v_n AS SIGNED)) AS payload;
   END IF;

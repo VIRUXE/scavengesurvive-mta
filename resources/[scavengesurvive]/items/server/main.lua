@@ -189,28 +189,12 @@ addEventHandler("characterDied", root, function()
     hands.clearGear(source)
 end)
 
--- /dropall (upstream commands.pwn): hands up and everything carried, worn and in the inventory on the ground,
--- like the death drop without dying (character_drop_all); the next world sync shows the items.
-addCommandHandler("dropall", function(player)
-    local cid = getElementType(player) == "player" and charId(player)
-    if not cid then
-        return
-    end
-    local x, y, z = getElementPosition(player)
-    local params = { cid, x, y, z - 0.9, getElementInterior(player), getElementDimension(player) }
-    db.call("character_drop_all", params, function(res, p)
-        if not isElement(p) then
-            return
-        end
-        if not res or not res.ok then
-            return toast(p, res and res.code or "DB_ERROR")
-        end
-        hands.setHeld(p, nil)
-        hands.setWorn(p, nil)
-        hands.clearGear(p)
-        exports.ui:hideTip(p)
-        setPedAnimation(p, "ROB_BANK", "SHP_HandsUp_Scr", -1, false, false, true, true)
-    end, player)
+-- /dropall (character, character_drop_all) put everything on the ground; the next world sync shows it
+addEventHandler("characterItemsDropped", root, function()
+    hands.setHeld(source, nil)
+    hands.setWorn(source, nil)
+    hands.clearGear(source)
+    exports.ui:hideTip(source)
 end)
 
 -- Help tips (upstream ui/tool-tip.pwn): an item picked up shows its "<first 9 letters of the uname>_T" text for

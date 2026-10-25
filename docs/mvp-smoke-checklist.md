@@ -266,6 +266,9 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
     - a. **Surrender.** Hold an item, wear a bag with something in it, a hat and armour, carry inventory items, then
       `/dropall`: the hands-up animation plays, everything lies in a ring around you (the bag still holds its
       contents), the gear tiles are empty, no Clothes item appears and you stay alive. Moving ends the animation.
+    - a2. **Ground.** Repeat a. and die (`/kill` or a fall) on a steep hillside and on a building's stairs: every
+      item rests on the ground under its own spot, none floats or sinks; the death Clothes item too. Dying in deep
+      water puts them 0.9 m under where you were (the fallback).
     - b. **Pickup tip.** Pick up an M9 (or any item with a `_T` text): a green paragraph at the lower left with the
       blue `Type /tooltips to toggle these messages` one blank line below it, gone after 20 s or when the item is
       dropped. An item type without a text shows nothing.

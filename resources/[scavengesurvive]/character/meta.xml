@@ -7,9 +7,11 @@
     <script src="shared/events.lua" type="shared"/>
     <script src="server/main.lua" type="server"/>
     <script src="client/deathscreen.lua" type="client"/>
+    <script src="client/ground.lua" type="client"/>
     <file src="shared/logic/survival.lua"/>
     <file src="shared/logic/spawnpoints.lua"/>
     <file src="shared/logic/combatlog.lua"/>
+    <file src="shared/logic/drop.lua"/>
     <export function="getCharacterId" type="server"/>
     <export function="getPlayerByCharacterId" type="server"/>
     <export function="getInventoryContainerId" type="server"/>
