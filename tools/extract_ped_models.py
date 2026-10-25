@@ -119,7 +119,7 @@ def export_hat(blender: Path, work: Path, out: Path, hat: dict) -> str:
     cmd.append(str(hat["skin"]))
     res = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
     notes = [line for line in res.stdout.splitlines() if ": hat of" in line]
-    if res.returncode != 0:
+    if res.returncode != 0 or "Traceback" in res.stdout + res.stderr:
         raise RuntimeError(f"blender failed exporting {hat['dff']}: {res.stderr[-800:]}")
     return "; ".join(notes)
 

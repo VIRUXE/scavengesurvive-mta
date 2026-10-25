@@ -262,10 +262,84 @@ def export_hat(faces, uvl, to_bone, name, tex, img, out_dir, blocks=None, above=
         nf.smooth = f.smooth
         for l, ol in zip(nf.loops, f.loops):
             l[huv].uv = ol[uvl].uv
+    # These are isolated atlas scraps rather than part of the hat shell: one under the fire helmet's front brim,
+    # and three hair triangles on the bucket hat's rear underside. Keep the filter spatial and skin-specific so
+    # small attached details on the other hats remain intact.
+    if name in ("lafd1", "maccer"):
+        remaining = set(hb.faces)
+        scraps = []
+        while remaining:
+            seed = remaining.pop()
+            component = {seed}
+            stack = [seed]
+            while stack:
+                face = stack.pop()
+                for edge in face.edges:
+                    for linked in edge.link_faces:
+                        if linked in remaining:
+                            remaining.remove(linked)
+                            component.add(linked)
+                            stack.append(linked)
+            if len(component) != 1:
+                continue
+            face = next(iter(component))
+            center = face.calc_center_median()
+            if name == "lafd1" and center.x < 0.01 and center.y > 0.08:
+                scraps.extend(component)
+            elif name == "maccer" and center.x < 0.09 and center.y < 0:
+                scraps.extend(component)
+        if scraps:
+            bmesh.ops.delete(hb, geom=scraps, context="FACES_ONLY")
+            loose = [v for v in hb.verts if not v.link_faces]
+            if loose:
+                bmesh.ops.delete(hb, geom=loose, context="VERTS")
     # A ped is drawn without back-face culling, an object is not, and a GTA hat's faces are wound every which way;
     # worse, MTA culls an attached object on the opposite side from a free-standing one (studio, 2026-10-25). So the
     # shell is made double-sided: consistent normals, then every face again with its winding reversed, as the
     # SA-MP hats are. A few hundred extra triangles per hat.
+    # The golf cap and sheriff hat had open crown-back loops where the original skin's hair used to sit. Close only
+    # those small upper loops; the large lower boundary is the opening that lets the hat sit on a head.
+    if name in ("wmygol1", "csher"):
+        remaining = {e for e in hb.edges if e.is_boundary}
+        closed = 0
+        while remaining:
+            seed = remaining.pop()
+            boundary = {seed}
+            stack = [seed]
+            while stack:
+                edge = stack.pop()
+                for vert in edge.verts:
+                    for linked in vert.link_edges:
+                        if linked in remaining:
+                            remaining.remove(linked)
+                            boundary.add(linked)
+                            stack.append(linked)
+            verts = {v for edge in boundary for v in edge.verts}
+            center = tuple(sum(v.co[i] for v in verts) / len(verts) for i in range(3))
+            is_crown_back = (
+                name == "wmygol1" and len(boundary) == 10 and center[0] > 0.17 and abs(center[1]) < 0.02
+            ) or (
+                name == "csher" and len(boundary) == 8 and center[0] > 0.17 and center[1] < 0
+            )
+            if not is_crown_back:
+                continue
+            uv_at_vert = {}
+            for edge in boundary:
+                for face in edge.link_faces:
+                    for loop in face.loops:
+                        if loop.edge == edge:
+                            uv_at_vert[loop.vert] = loop[huv].uv.copy()
+                            other = edge.other_vert(loop.vert)
+                            other_loop = next(item for item in face.loops if item.vert == other)
+                            uv_at_vert[other] = other_loop[huv].uv.copy()
+            fill = bmesh.ops.holes_fill(hb, edges=list(boundary), sides=0)
+            for face in fill.get("faces", []):
+                for loop in face.loops:
+                    if loop.vert in uv_at_vert:
+                        loop[huv].uv = uv_at_vert[loop.vert]
+                closed += 1
+        if closed:
+            print(f"{name}: closed {closed} crown-back loop(s)")
     hb.faces.ensure_lookup_table()
     bmesh.ops.recalc_face_normals(hb, faces=hb.faces[:])
     dup = bmesh.ops.duplicate(hb, geom=hb.faces[:])
