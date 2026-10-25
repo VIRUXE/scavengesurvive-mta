@@ -5,7 +5,6 @@ __pycache__/
 .venv/
 *.egg-info/
 server-config/local.settings.xml
-server-config/prod.settings.xml
 server-config/run/
 # brackets are a character class in gitignore patterns; escape them
 resources/\[scavengesurvive\]/dev/screenshots/
