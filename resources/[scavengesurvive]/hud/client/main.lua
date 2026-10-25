@@ -49,7 +49,10 @@ local state = {
     frequency = watch.DEFAULT_FREQUENCY,
     keys = {},
     hidden = false, -- setHidden(true): the dev studio wants clean screenshots
+    skillNotice = false, -- { text, untilTick }: "+Repair" after a skill gain (skillGained from character)
 }
+local SKILL_NOTICE_MS = 5000
+local GREEN = tocolor(0, 255, 0, 255) -- upstream skl_PlayerNotification colour 16711935 (0x00FF00FF)
 local typeCache, vehicleTypeCache = {}, {}
 
 local function itemType(uname)
@@ -126,6 +129,34 @@ addEventHandler("deathScreenShown", root, function(show)
         setPlayerHudComponentVisible("all", false)
     end
 end)
+
+-- upstream skills.pwn: "+<skill>" at 320,430 for five seconds; a skill named after an item type shows its name
+addEventHandler("skillGained", root, function(name)
+    local t = itemType(name)
+    state.skillNotice = { text = "+" .. (t and t.name or tostring(name)), untilTick = getTickCount() + SKILL_NOTICE_MS }
+end)
+
+local function drawSkillNotice()
+    local n = state.skillNotice
+    if not n then
+        return
+    end
+    if getTickCount() > n.untilTick then
+        state.skillNotice = false
+        return
+    end
+    draw.text({
+        text = n.text,
+        x = 320,
+        y = 430,
+        font = 1,
+        lx = 0.4,
+        ly = 1.4,
+        colour = GREEN,
+        align = "center",
+        outline = 1,
+    })
+end
 
 addEventHandler("heldItemChanged", root, function(item)
     if item then
@@ -323,6 +354,7 @@ addEventHandler("onClientRender", root, function()
     drawAmmo()
     drawKeyActions(driver)
     drawWatch(vehicle)
+    drawSkillNotice()
     if driver then
         drawVehiclePanel(vehicle)
     end

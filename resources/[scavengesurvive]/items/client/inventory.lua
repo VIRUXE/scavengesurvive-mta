@@ -193,8 +193,9 @@ return function(ctx)
             if p.trunk then
                 rows[#rows + 1] = { id = "nav:trunk", label = tname .. " >" }
             end
-            -- upstream's extra list items (AddInventoryListItem): radio.pwn adds "Radio"
+            -- upstream's extra list items (AddInventoryListItem): radio.pwn adds "Radio", skills.pwn "Skills"
             rows[#rows + 1] = { id = "extra:radio", label = "Radio" }
+            rows[#rows + 1] = { id = "extra:skills", label = "Skills" }
         end
         exports.ui:listOpen("inventory", title, rows)
     end
@@ -227,6 +228,9 @@ return function(ctx)
             elseif rowId == "extra:radio" then
                 exports.ui:listClose()
                 return exports.chat:radioOpen()
+            elseif rowId == "extra:skills" then
+                exports.ui:listClose()
+                return exports.character:skillsOpen()
             end
             if last then
                 open(last)

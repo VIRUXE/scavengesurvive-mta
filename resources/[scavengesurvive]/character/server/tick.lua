@@ -1,7 +1,7 @@
 -- Survival tick, stat sync to the owning client and the periodic DB flush of every spawned character.
--- ctx = { db, util, survival, state, die } built by server/main.lua; die comes from server/death.lua.
+-- ctx = { db, util, survival, skills, state, die } built by server/main.lua; die comes from server/death.lua.
 return function(ctx)
-    local db, util, survival, state = ctx.db, ctx.util, ctx.survival, ctx.state
+    local db, util, survival, skills, state = ctx.db, ctx.util, ctx.survival, ctx.skills, ctx.state
     local FLUSH_MS = 10000
     local M = {}
 
@@ -48,12 +48,11 @@ return function(ctx)
         end
         local x, y, z = getElementPosition(player)
         local _, _, rz = getElementRotation(player)
-        db.exec(
-            "UPDATE characters SET hp = ?, food = ?, bleed = ?, x = ?, y = ?, z = ?, rz = ?,"
-                .. " interior = ?, dimension = ? WHERE id = ? AND alive = 1",
-            { st.hp, st.food, st.bleed, x, y, z, rz, getElementInterior(player), getElementDimension(player), st.id }
-        )
-        st.dirty = false
+        local int, dim = getElementInterior(player), getElementDimension(player)
+        local sql = "UPDATE characters SET hp = ?, food = ?, bleed = ?, x = ?, y = ?, z = ?, rz = ?,"
+            .. " interior = ?, dimension = ?, skills = ? WHERE id = ? AND alive = 1"
+        db.exec(sql, { st.hp, st.food, st.bleed, x, y, z, rz, int, dim, skills.encode(st.skills), st.id })
+        st.dirty, st.skillsDirty = false, false
     end
 
     function M.flushAll(force)
@@ -62,9 +61,11 @@ return function(ctx)
             if isElement(player) and (st.dirty or force) and st.hp > 0 and not st.dead then
                 local x, y, z = getElementPosition(player)
                 local _, _, rz = getElementRotation(player)
-                rows[#rows + 1] =
-                    { id = st.id, hp = st.hp, food = st.food, bleed = st.bleed, x = x, y = y, z = z, rz = rz }
-                st.dirty = false
+                local row = { id = st.id, hp = st.hp, food = st.food, bleed = st.bleed, x = x, y = y, z = z, rz = rz }
+                -- skills change a few times a minute at most: sent only when they did (the procedure keeps the column)
+                row.skills = st.skillsDirty and skills.encode(st.skills) or nil
+                rows[#rows + 1] = row
+                st.dirty, st.skillsDirty = false, false
             end
         end
         if #rows == 0 then

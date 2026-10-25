@@ -12,10 +12,11 @@ local survival = loadFile("shared/logic/survival.lua")
 local spawnpoints = loadFile("shared/logic/spawnpoints.lua")
 local combatlog = loadFile("shared/logic/combatlog.lua")
 local drop = loadFile("shared/logic/drop.lua")
+local skills = loadFile("shared/logic/skills.lua")
 
 -- Every spawned character, shared with the tick and death modules (they capture this table).
 local state = {
-    byPlayer = {}, -- player -> { id, hp, food, bleed, wounds, dirty, dead, inventoryContainerId, lastSent }
+    byPlayer = {}, -- player -> { id, hp, food, bleed, wounds, skills, skillsDirty, dirty, dead, inventoryContainerId }
     byId = {}, -- character id -> player
     lastSpawn = {}, -- player -> last spawnpoint index (no two spawns in a row at the same place)
     creating = {}, -- players with a character_create in flight
@@ -56,7 +57,8 @@ local function clearStatuses(player, restoreControls)
 end
 state.clearStatuses = clearStatuses
 local death = loadFile("server/death.lua")({ db = db, net = net, util = util, drop = drop, state = state })
-local tick = loadFile("server/tick.lua")({ db = db, util = util, survival = survival, state = state, die = death.die })
+local tickCtx = { db = db, util = util, survival = survival, skills = skills, state = state, die = death.die }
+local tick = loadFile("server/tick.lua")(tickCtx)
 
 -- The client's watch turns red while the combat-log window is open (upstream IsPlayerCombatLogging reads the
 -- same damage clock); ms = 0 turns it white again.
@@ -83,6 +85,15 @@ local function startingItems(charId, isNew)
     end
 end
 
+-- characters.skills arrives as the column text; a new character has none (false/nil).
+local function loadSkills(text)
+    return skills.fromList(type(text) == "string" and fromJSON("[" .. text .. "]") or nil)
+end
+
+local function sendSkills(player, st)
+    triggerClientEvent(player, "characterSkillsSynced", player, skills.rows(st.skills))
+end
+
 local function spawnFromRow(player, row, isNew)
     local st = {
         id = row.id,
@@ -90,6 +101,7 @@ local function spawnFromRow(player, row, isNew)
         food = row.food,
         bleed = row.bleed,
         wounds = survival.loadWounds(row.bleed, isNew),
+        skills = loadSkills(row.skills),
         dirty = false,
         inventoryContainerId = row.inventory_container_id,
         lastSent = { hp = -1, food = -1, bleed = -1 },
@@ -107,6 +119,7 @@ local function spawnFromRow(player, row, isNew)
         startingItems(row.id, row.hp == survival.NEW.hp)
     end
     tick.sendStats(player, true)
+    sendSkills(player, st)
 end
 
 local function createAndSpawn(player, accountId, stats)
@@ -146,7 +159,7 @@ end
 
 local function loadOrCreate(player, accountId)
     db.one(
-        "SELECT id, hp, food, bleed, x, y, z, rz, skin, interior, dimension, inventory_container_id"
+        "SELECT id, hp, food, bleed, skills, x, y, z, rz, skin, interior, dimension, inventory_container_id"
             .. " FROM characters WHERE account_id = ? AND alive = 1",
         { accountId },
         function(row, ctx)
@@ -283,6 +296,43 @@ function modifyStat(player, key, delta)
         death.die(player, "stat", false)
     end
     return st[key]
+end
+
+-- Skills (#93, shared/logic/skills.lua): callers shorten an action with skillTimeModifier when it starts and call
+-- gainSkill when it finishes. Skills belong to the character, so a respawn starts from none.
+local function changeSkill(player, st, name, amount)
+    st.skillsDirty, st.dirty = true, true
+    triggerClientEvent(player, "skillGained", player, name, amount)
+    sendSkills(player, st)
+    return amount
+end
+
+function gainSkill(player, name, mult)
+    local st = state.byPlayer[player]
+    if not st or st.dead then
+        return false
+    end
+    local amount = skills.gain(st.skills, name, mult)
+    return amount and changeSkill(player, st, name, amount)
+end
+
+function setSkill(player, name, amount)
+    local st = state.byPlayer[player]
+    if not st or st.dead then
+        return false
+    end
+    local v = skills.set(st.skills, name, amount)
+    return v and changeSkill(player, st, name, v)
+end
+
+function getSkill(player, name)
+    local st = state.byPlayer[player]
+    return st and skills.value(st.skills, name) or 0
+end
+
+function skillTimeModifier(player, ms, name)
+    local st = state.byPlayer[player]
+    return st and skills.timeModifier(st.skills, ms, name) or ms
 end
 
 function killCharacter(player, cause, killer)

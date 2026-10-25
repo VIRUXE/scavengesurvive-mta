@@ -18,3 +18,15 @@ def test_character_flush_ignores_dead(db, character):
     call(db, "character_death_drop", ch, 0.0, 0.0, 3.0, 0, 0, RING, CLOTHES)
     ok, code, payload = call(db, "character_flush", f'[[{{"id":{ch},"hp":99,"food":99,"bleed":0,"x":0,"y":0,"z":0,"rz":0}}]]')
     assert payload["updated"] == 0
+
+
+def test_character_flush_writes_skills_only_when_sent(db, character):
+    ch = character["character_id"]
+    skills = '[[\\"Repair\\",0.020000]]'
+    rows = f'[[{{"id":{ch},"hp":50,"food":50,"bleed":0,"x":0,"y":0,"z":0,"rz":0,"skills":"{skills}"}}]]'
+    call(db, "character_flush", rows)
+    call(db, "character_flush", f'[[{{"id":{ch},"hp":40,"food":40,"bleed":0,"x":0,"y":0,"z":0,"rz":0}}]]')
+    with db.cursor() as cur:
+        cur.execute("SELECT JSON_VALUE(skills, '$[0][0]') AS name, JSON_VALUE(skills, '$[0][1]') AS amount FROM characters WHERE id=%s", (ch,))
+        r = cur.fetchone()
+        assert r["name"] == "Repair" and float(r["amount"]) == 0.02

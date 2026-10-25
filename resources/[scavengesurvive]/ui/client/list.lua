@@ -1,7 +1,8 @@
 -- The SA-MP list dialog in dx: title "(used/size)", rows with a red selected row, scrollbar, two buttons.
 -- Level 1 lists the rows the caller gave; the left button on a row with actions opens level 2, a second dialog
 -- titled with the row label listing its actions with Accept/Back (inventory-dialog.inc / container-dialog.inc).
--- A row without actions is a navigation row: the left button emits actionId "select" for it.
+-- A row without actions is a navigation row: the left button emits actionId "select" for it. A row may carry
+-- colour = { r, g, b } for its label.
 -- Emits uiListActionSelected(listId, rowId, actionId) and uiListClosed(listId). One dialog at a time.
 return function(ctx)
     local dialog, canvas, c = ctx.dialog, ctx.canvas, ctx.c
@@ -101,7 +102,8 @@ return function(ctx)
             if v.index == st.selected then
                 rect(v, COL.selected)
             end
-            local colour = v.row.empty and COL.empty or COL.text
+            local rc = v.row.colour -- optional { r, g, b } (the Skills list colours each level)
+            local colour = v.row.empty and COL.empty or (rc and tocolor(rc[1], rc[2], rc[3], 255)) or COL.text
             dxDrawText(
                 v.row.label,
                 v.x + L.textPad,
