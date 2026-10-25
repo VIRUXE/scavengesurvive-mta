@@ -9,8 +9,11 @@ local function loadFile(path)
 end
 local drops = loadFile("shared/logic/drops.lua")
 
+-- smoke_flare blows along the effect's local Y axis, so a -90 pitch points it up instead of sideways (#112)
+local FLARE_RX = -90
+
 local function effectFor(ms, x, y, z)
-    local fx = createEffect("smoke_flare", x, y, z)
+    local fx = createEffect("smoke_flare", x, y, z, FLARE_RX, 0, 0)
     if not fx then
         return nil
     end
@@ -29,7 +32,7 @@ addEventHandler("supplyDropStarted", root, function(obj, x, y)
     local _, _, z = getElementPosition(obj)
     local fx = effectFor(10 * 60 * 1000, x, y, z + 1.5)
     if fx then
-        attachElements(fx, obj, 0, 0, 1.5)
+        attachElements(fx, obj, 0, 0, 1.5, FLARE_RX, 0, 0)
         addEventHandler("onClientElementDestroy", obj, function()
             if isElement(fx) then
                 destroyElement(fx)
