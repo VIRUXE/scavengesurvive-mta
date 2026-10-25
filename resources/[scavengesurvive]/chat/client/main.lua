@@ -1,7 +1,7 @@
 -- The radio panel (core/ui/radio.pwn) in dx: RADIO title, dial strip, two 0.5 MHz knobs, global/freq toggle,
--- "Frequency: x", power, Close; hover 0xFFFFFF88. Opens with R in a vehicle or /radio; clicking the frequency opens
--- upstream's input dialog, the mouse wheel over it fine-tunes by 0.01 MHz (port addition). Hit tests run in canvas
--- units.
+-- "Frequency: x", power, Close; hover 0xFFFFFF88. Opens with R in a vehicle, /radio or the inventory's Radio row;
+-- clicking the frequency opens upstream's input dialog, the mouse wheel over it fine-tunes by 0.01 MHz (port
+-- addition). Hit tests run in canvas units.
 local function loadFile(path, chunkName)
     local f = fileOpen(path, true)
     local src = fileRead(f, fileGetSize(f))
@@ -90,6 +90,11 @@ end)
 addEventHandler("chatRadioOpened", root, function()
     open()
 end)
+
+-- the inventory's "Radio" row (upstream radio.pwn AddInventoryListItem)
+function radioOpen()
+    open()
+end
 
 -- upstream ShowFrequencyDialog: a number in range retunes, anything else asks again, Cancel leaves it be
 local FREQ_BODY = string.format("Enter a frequency between %.1f and %.1f", logic.FREQ_MIN, logic.FREQ_MAX)

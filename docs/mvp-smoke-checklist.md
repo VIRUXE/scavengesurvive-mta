@@ -217,6 +217,8 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
       87.5 and 108.0`, Accept / Cancel) over the panel. `101.3` + Enter retunes to 101.30 and the panel stays
       open; `120`, `abc` or an empty field asks again; Escape or Cancel closes only the dialog, the panel stays.
       Clicks on the dialog do not reach the knobs under it.
+    - c3. **Inventory row** (#49). Open the inventory on foot: the last row is `Radio` (after the bag and trunk
+      rows); selecting it closes the inventory and opens the RADIO panel. Bag and trunk views have no Radio row.
     - d. **Persistence and guards.** A relogs: frequency and mode are back (`characters.radio_freq`, `chat_mode`).
       A sends four messages inside a second: the first three go out and the fourth is refused with `Muted from global
       chat for 30 seconds for chat flooding` (upstream mutes when the streak reaches 3), `/profile A` shows muted, and
