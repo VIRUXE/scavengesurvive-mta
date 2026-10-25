@@ -40,6 +40,14 @@ function M.isDriverSide(angle)
     return angle > 225 and angle < 315
 end
 
+-- Server-side reach for roadside interaction, from the vehicle's centre. The client asks within 5.5 m (hud keys.lua);
+-- the slack covers latency and position sync, a little more on longer vehicles.
+local REACH = { small = 6.5, medium = 7.0, large = 8.0 }
+
+function M.maxReachDistance(size)
+    return REACH[size] or REACH.medium
+end
+
 -- Upstream: fuel -= ((fuelcons / 100) * (((speed / 60) / 60) / 10) + 0.0001) per tick (1s)
 function M.fuelDrain(fuel, consumptionRate, speedKmh, dtSeconds)
     if (fuel or 0) <= 0 then
