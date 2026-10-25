@@ -179,6 +179,7 @@ local function create(row)
         spawnX = row.spawn_x and tonumber(row.spawn_x) or nil,
         spawnY = row.spawn_y and tonumber(row.spawn_y) or nil,
         leftSpawn = (tonumber(row.left_spawn) or 0) > 0,
+        damage = row.damage and row.damage ~= "" and row.damage ~= false and fromJSON(row.damage) or {},
         usedTick = 0,
     }
 
@@ -508,8 +509,12 @@ local function cancelHoldAction(player)
     activeActions[player] = nil
 end
 
--- Door lock enforcement: cancel entry on locked vehicles
+-- Entry enforcement: no entering during a roadside hold (repair, refuel, locksmith, lock-break), nor into locked vehicles
 addEventHandler("onVehicleStartEnter", root, function(player)
+    if activeActions[player] then
+        cancelEvent()
+        return
+    end
     local inf = info[source]
     if inf and inf.locked and inf.locked > 0 then
         cancelEvent()
@@ -647,7 +652,32 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
     local uname = held and held.uname
     local hp = getElementHealth(vehicle)
 
-    -- Case 1: Front (Bonnet) Repair
+    -- Case 1a: Front, Headlight item replaces the first broken light (upstream core/item/headlight.pwn)
+    if vlogic.isFront(angle) and uname == "Headlight" then
+        local brokenLight = nil
+        for light = 0, 3 do
+            if getVehicleLightState(vehicle, light) ~= 0 then
+                brokenLight = light
+                break
+            end
+        end
+        if not brokenLight then
+            return
+        end
+
+        setVehicleLightState(vehicle, brokenLight, 0)
+        inf.damage = type(inf.damage) == "table" and inf.damage or {}
+        inf.damage.lights = inf.damage.lights or {}
+        for light = 0, 3 do
+            inf.damage.lights[light + 1] = getVehicleLightState(vehicle, light)
+        end
+        db.exec("UPDATE vehicles SET damage = ? WHERE id = ?", { toJSON(inf.damage), inf.id })
+        exports.items:destroyItem(held.id, player)
+        toast(player, "REPAIRED")
+        return
+    end
+
+    -- Case 1b: Front (Bonnet) Repair
     if vlogic.isFront(angle) and (uname == "Wrench" or uname == "Screwdriver" or uname == "Hammer") then
         local toolNeeded = vlogic.repairToolForHealth(hp)
         if not toolNeeded then

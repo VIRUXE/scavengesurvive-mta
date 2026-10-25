@@ -218,10 +218,11 @@ return function(ctx)
     end
 
     addEventHandler("inventoryOpened", root, function(p)
-        last = p
-        if p.trunk and view ~= "inventory" and view ~= "bag" then
+        if p.trunk and (not last or p.trunkContainerId ~= last.trunkContainerId) then
             view = "trunk"
-        elseif not p.trunk and view == "trunk" then
+        end
+        last = p
+        if not p.trunk and view == "trunk" then
             view = "inventory"
         end
         open(p)

@@ -141,6 +141,7 @@ return function(ctx)
                 else
                     payload.trunk = {}
                     payload.capacity.trunk = { used = 0, size = tr.size or 40, uname = tr.title or "Container" }
+                    payload.trunkContainerId = tr.containerId
                     payload.containerWorldItemId = tr.worldItemId or false
                     byId[tr.containerId] = { rows = payload.trunk, cap = payload.capacity.trunk }
                     ids[#ids + 1] = string.format("%d", tr.containerId)
