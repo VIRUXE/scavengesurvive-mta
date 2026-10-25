@@ -15,6 +15,8 @@ SETTINGS = {
     "server.whitelist": "0", "server.motd": "",
     # upstream server/whitelist-auto-toggle and player/auto-ip-login, both off by default (#86)
     "server.whitelist_auto": "0", "player.auto_ip_login": "0",
+    # upstream wl_NonWhitelistTime: seconds a player not listed keeps playing after the whitelist turns on (#90)
+    "server.whitelist_kick_s": "300",
     # upstream server/rules and server/staff arrays for /rules and /admins, entries separated by "|"
     "server.rules": "", "server.staff": "", "staff.max_warnings": "5", "staff.warn_ban_hours": "24",
     # M8 supply drops and weapon caches (core/world/supply-crate.pwn, weapons-cache.pwn: tick 60 s, cooldown 600 s,

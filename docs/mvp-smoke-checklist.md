@@ -166,6 +166,11 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
       `Auto-whitelist: Deactivated the whitelist.`; after A quits, B (not listed) is refused. `UPDATE settings SET
       svalue = '1' WHERE skey = 'player.auto_ip_login'`, `rr auth`: A is logged in without the dialog, B from another
       PC under A's name still gets it. Set both back to 0.
+    - k. **Whitelist countdown** (#90). With B (not listed, level 0) logged in, `UPDATE settings SET svalue = '30'
+      WHERE skey = 'server.whitelist_kick_s'`, `rr auth` (both log in again), then A: `/whitelist on`. B sees
+      `Not whitelisted` / `Time remaining: 00:30` counting down at the top right; `/whitelist add B` hides it; `/whitelist
+      remove B` starts it again; at 00:00 B reads the not-whitelisted lines and is kicked with `Not in whitelist`.
+      Repeat with `/whitelist off` before zero: the text goes away and B stays. Set the setting back to 300.
 23. **Supply drops and weapons caches** (#47). A at level 4.
     - a. `/sc` lists the five types with their player requirements; `/sc 1` prints the yellow `[EBS]: SUPPLY DROP:
       "Food and Medical"` (or `"Unknown"`) `INCOMING AT: "staff request"` line for everyone, a blip appears on the

@@ -27,6 +27,7 @@ INSERT INTO settings (skey, svalue) VALUES
 ('server.staff',''),
 ('server.whitelist','0'),
 ('server.whitelist_auto','0'),
+('server.whitelist_kick_s','300'),
 ('spawn.bagtype','Satchel'),
 ('spawn.new_bleed','0.0001'),
 ('spawn.new_blood','90'),

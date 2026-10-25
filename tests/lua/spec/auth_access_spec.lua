@@ -51,4 +51,26 @@ describe("auth whitelist auto mode and auto-login", function()
         assert.is_false(access.autoLoginAllowed(true, { last_ip = false, last_serial = false }, "", ""))
         assert.is_false(access.autoLoginAllowed(true, nil, "1.2.3.4", "ABC"))
     end)
+    it("gives players who are neither staff nor listed the whitelist countdown", function()
+        local candidates = {
+            { key = "a", name = "Alice", adminLevel = 0 },
+            { key = "b", name = "Bob", adminLevel = 0 },
+            { key = "m", name = "Mod", adminLevel = 1 },
+        }
+        local targets = access.countdownTargets(candidates, { alice = true })
+        assert.same({ "b" }, targets)
+        assert.same({ "a", "b" }, access.countdownTargets(candidates, {}))
+    end)
+    it("reads the countdown length, falling back to upstream's 300 s", function()
+        assert.equals(120, access.whitelistKickSeconds("120"))
+        assert.equals(300, access.whitelistKickSeconds(nil))
+        assert.equals(300, access.whitelistKickSeconds("0"))
+        assert.equals(300, access.whitelistKickSeconds("x"))
+    end)
+    it("binds one placeholder per candidate name and formats the textdraw text", function()
+        assert.equals("SELECT name FROM whitelist WHERE name IN (?, ?, ?)", access.listedSql(3))
+        assert.equals("Not whitelisted\nTime remaining: 05:00", access.countdownText(300))
+        assert.equals("Not whitelisted\nTime remaining: 00:09", access.countdownText(9))
+        assert.equals("Not whitelisted\nTime remaining: 00:00", access.countdownText(-2))
+    end)
 end)

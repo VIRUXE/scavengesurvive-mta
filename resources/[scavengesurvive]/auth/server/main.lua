@@ -23,9 +23,101 @@ local promptLang = {} -- player -> language of the dialog texts (the account's, 
 local whitelistEnabled = false
 local whitelistAuto = false
 local autoIpLogin = false
+local whitelistKickS = access.WHITELIST_KICK_S
+local countdown = {} -- player -> { timer, ends } while a player not listed waits for the whitelist kick
 local accounts
 local finish -- defined after prompt, which calls it for an auto-login
 local warnedNoDb = false
+
+local function kickLater(player, reason)
+    blocked[player] = true
+    setTimer(function(p, r)
+        if isElement(p) then
+            kickPlayer(p, r)
+        end
+    end, 1000, 1, player, reason)
+end
+
+local function t(player, key, ...)
+    return exports.data:t(promptLang[player] or "en", key, ...)
+end
+
+-- Whitelist countdown (upstream whitelist.pwn): one timer per player, the client counts the seconds down itself.
+local function stopCountdown(player, quiet)
+    local cd = countdown[player]
+    if not cd then
+        return
+    end
+    countdown[player] = nil
+    if isTimer(cd.timer) then
+        killTimer(cd.timer)
+    end
+    if not quiet and isElement(player) then
+        triggerClientEvent(player, "whitelistCountdownChanged", player, false)
+    end
+end
+
+local function startCountdown(player)
+    local account = session[player]
+    if countdown[player] or not account or account.adminLevel > 0 then
+        return
+    end
+    local timer = setTimer(function()
+        countdown[player] = nil
+        if not isElement(player) or not whitelistEnabled then
+            return
+        end
+        outputChatBox(t(player, "WHITELISTAC"), player, 255, 255, 0, true)
+        outputChatBox(t(player, "WHITELISTNO"), player, 255, 255, 0, true)
+        util.log("auth", "info", "%s kicked: not whitelisted after the countdown", account.name)
+        kickLater(player, "Not in whitelist")
+    end, whitelistKickS * 1000, 1)
+    countdown[player] = { timer = timer, ends = getTickCount() + whitelistKickS * 1000 }
+    triggerClientEvent(player, "whitelistCountdownChanged", player, whitelistKickS)
+end
+
+-- The whitelist just turned on: every logged-in player who is neither staff nor listed starts a countdown.
+local function startCountdowns()
+    local candidates, names = {}, {}
+    for p, account in pairs(session) do
+        if account.adminLevel == 0 and not countdown[p] then
+            candidates[#candidates + 1] = { key = p, name = account.name, adminLevel = account.adminLevel }
+            names[#names + 1] = account.name
+        end
+    end
+    if #names == 0 then
+        return
+    end
+    db.query(access.listedSql(#names), names, function(rows)
+        if not whitelistEnabled or rows == false then
+            return
+        end
+        local listed = {}
+        for _, r in ipairs(rows) do
+            listed[string.lower(r.name)] = true
+        end
+        local targets = access.countdownTargets(candidates, listed)
+        for _, p in ipairs(targets) do
+            if isElement(p) then
+                startCountdown(p)
+            end
+        end
+        util.log("auth", "info", "whitelist on: %d player(s) not listed get %d s", #targets, whitelistKickS)
+    end)
+end
+
+local function setWhitelist(flag)
+    if flag == whitelistEnabled then
+        return
+    end
+    whitelistEnabled = flag
+    if flag then
+        return startCountdowns()
+    end
+    for p in pairs(countdown) do
+        stopCountdown(p)
+    end
+end
 
 -- Whitelist auto mode: recount level 2+ staff in session (minus a leaving player) and flip the switch.
 local function applyAutoWhitelist(leaving, announceTo)
@@ -39,24 +131,11 @@ local function applyAutoWhitelist(leaving, announceTo)
     if nextState == nil then
         return
     end
-    whitelistEnabled = nextState
+    setWhitelist(nextState)
     util.log("auth", "info", "auto-whitelist: whitelist %s (%d staff online)", nextState and "on" or "off", staffOnline)
     if not nextState and isElement(announceTo) then
         outputChatBox(" >  Auto-whitelist: Deactivated the whitelist.", announceTo, 255, 255, 0)
     end
-end
-
-local function kickLater(player, reason)
-    blocked[player] = true
-    setTimer(function(p, r)
-        if isElement(p) then
-            kickPlayer(p, r)
-        end
-    end, 1000, 1, player, reason)
-end
-
-local function t(player, key, ...)
-    return exports.data:t(promptLang[player] or "en", key, ...)
 end
 
 -- Ban check on join (upstream BanCheck in OnPlayerConnect): name, IP or serial; the prompt waits for the answer.
@@ -113,6 +192,7 @@ addEventHandler("onResourceStart", resourceRoot, function()
         whitelistEnabled = access.whitelistEnabledFromSetting(map["server.whitelist"])
         whitelistAuto = access.whitelistEnabledFromSetting(map["server.whitelist_auto"])
         autoIpLogin = access.whitelistEnabledFromSetting(map["player.auto_ip_login"])
+        whitelistKickS = access.whitelistKickSeconds(map["server.whitelist_kick_s"])
         applyAutoWhitelist()
     end)
 end)
@@ -181,8 +261,16 @@ end
 -- scripts run on that player: onPlayerResourceStart fires then, on join and again for every
 -- connected player when auth restarts.
 addEventHandler("onPlayerResourceStart", root, function(res)
-    if res == getThisResource() and not session[source] then
-        prompt(source)
+    if res ~= getThisResource() then
+        return
+    end
+    if not session[source] then
+        return prompt(source)
+    end
+    local cd = countdown[source]
+    if cd then
+        local left = math.ceil((cd.ends - getTickCount()) / 1000)
+        triggerClientEvent(source, "whitelistCountdownChanged", source, left)
     end
 end)
 
@@ -279,6 +367,7 @@ addEventHandler("onPlayerQuit", root, function(reason)
     if account then
         applyAutoWhitelist(source)
     end
+    stopCountdown(source, true)
     session[source] = nil
     pending[source] = nil
     changing[source] = nil
@@ -371,12 +460,28 @@ function setSessionAdminLevel(player, level)
         return false
     end
     session[player].adminLevel = tonumber(level) or 0
+    if session[player].adminLevel > 0 then
+        stopCountdown(player)
+    end
     applyAutoWhitelist()
     return true
 end
 function setWhitelistEnabled(flag)
-    whitelistEnabled = flag == true
+    setWhitelist(flag == true)
     return whitelistEnabled
+end
+-- staff after /whitelist add|remove: a listed player stops counting down, a removed one starts while it is on
+function whitelistNameChanged(name, listed)
+    name = string.lower(tostring(name))
+    for p, account in pairs(session) do
+        if string.lower(account.name) == name then
+            if listed then
+                stopCountdown(p)
+            elseif whitelistEnabled then
+                startCountdown(p)
+            end
+        end
+    end
 end
 function setWhitelistAuto(flag)
     whitelistAuto = flag == true

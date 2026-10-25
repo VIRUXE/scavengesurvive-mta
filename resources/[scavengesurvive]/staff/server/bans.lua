@@ -148,7 +148,8 @@ return function(ctx)
         end,
     })
 
-    -- Whitelist: rows in `whitelist`, the switch in settings server.whitelist; auth enforces it at login.
+    -- Whitelist: rows in `whitelist`, the switch in settings server.whitelist; auth enforces it at login and gives
+    -- players already on a countdown when it turns on.
     local function setWhitelistEnabled(p, flag)
         state.settings["server.whitelist"] = flag and "1" or "0"
         local sql = "INSERT INTO settings (skey, svalue) VALUES ('server.whitelist', ?)"
@@ -194,6 +195,7 @@ return function(ctx)
                     end
                     ctx.say(actor, " >  Added #33CCFF%s #FFFF00to the whitelist.", name)
                     ctx.log(actor, "whitelist_add", name)
+                    exports.auth:whitelistNameChanged(name, true)
                 end, p)
             elseif verb == "remove" and name then
                 db.exec("DELETE FROM whitelist WHERE name = ?", { name }, function(ok, actor, affected)
@@ -205,6 +207,7 @@ return function(ctx)
                     end
                     ctx.say(actor, " >  Removed #33CCFF%s #FFFF00from the whitelist.", name)
                     ctx.log(actor, "whitelist_remove", name)
+                    exports.auth:whitelistNameChanged(name, false)
                 end, p)
             elseif verb == "?" and name then
                 db.one("SELECT name FROM whitelist WHERE name = ?", { name }, function(row, actor)

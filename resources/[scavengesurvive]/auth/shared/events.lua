@@ -10,6 +10,7 @@ addEvent("authPromptDismissed", true)
 -- server to client
 addEvent("authPromptShown", true)
 addEvent("authWelcomeShown", true)
+addEvent("whitelistCountdownChanged", true) -- seconds left, or false to hide
 
 -- client-local (raised by ui)
 addEvent("uiDialogResponded", false)

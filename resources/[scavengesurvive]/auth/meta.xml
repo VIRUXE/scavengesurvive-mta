@@ -7,6 +7,7 @@
     <script src="shared/events.lua" type="shared"/>
     <script src="server/main.lua" type="server"/>
     <script src="client/login.lua" type="client"/>
+    <script src="client/whitelist.lua" type="client"/>
     <file src="server/accounts.lua"/>
     <file src="shared/logic/rules.lua"/>
     <file src="shared/logic/access.lua"/>
@@ -20,6 +21,7 @@
     <export function="isWhitelistEnabled" type="server"/>
     <export function="setWhitelistAuto" type="server"/>
     <export function="isWhitelistAuto" type="server"/>
+    <export function="whitelistNameChanged" type="server"/>
     <aclrequest>
         <right name="function.kickPlayer" access="true"/>
     </aclrequest>

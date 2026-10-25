@@ -48,6 +48,37 @@ function access.autoWhitelist(auto, enabled, staffOnline)
     return nil
 end
 
+-- Whitelist countdown (upstream whitelist.pwn ToggleWhitelist / _UpdateWhitelistCountdown): when the whitelist
+-- turns on, every logged-in player who is neither staff nor listed gets server.whitelist_kick_s seconds, then a kick.
+access.WHITELIST_KICK_S = 300
+function access.whitelistKickSeconds(value)
+    local n = math.floor(tonumber(value) or access.WHITELIST_KICK_S)
+    return n > 0 and n or access.WHITELIST_KICK_S
+end
+
+-- candidates = { { key = <any>, name = string, adminLevel = number }, ... }; listed = set of listed names in
+-- lower case (the whitelist column compares without case). Returns the keys that must start a countdown.
+function access.countdownTargets(candidates, listed)
+    local out = {}
+    for _, c in ipairs(candidates) do
+        if (tonumber(c.adminLevel) or 0) == 0 and not listed[string.lower(c.name)] then
+            out[#out + 1] = c.key
+        end
+    end
+    return out
+end
+
+-- The SQL that picks the listed names out of n candidates.
+function access.listedSql(n)
+    return "SELECT name FROM whitelist WHERE name IN (" .. string.rep("?, ", n - 1) .. "?)"
+end
+
+-- The upstream textdraw text, mm:ss (a line break where the textdraw had ~n~).
+function access.countdownText(seconds)
+    seconds = math.max(0, math.floor(tonumber(seconds) or 0))
+    return string.format("Not whitelisted\nTime remaining: %02d:%02d", math.floor(seconds / 60), seconds % 60)
+end
+
 -- Auto-login (upstream player/auto-ip-login, setting player.auto_ip_login, off by default): skip the password
 -- dialog when the account's last login came from this address. Upstream matched the IP alone; the port also
 -- needs the serial, so a shared or NATed IP is not enough.
