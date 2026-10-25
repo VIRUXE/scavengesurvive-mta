@@ -237,6 +237,7 @@ end, { rate = 5 })
 local function dispatch(p, def, argsText)
     local lvl = ctx.level(p)
     if not logic.canUse(lvl, def.level) then
+        ctx.sayLang(p, "CMDERROR4")
         return false
     end
     if def.playerOnly and isConsole(p) then
