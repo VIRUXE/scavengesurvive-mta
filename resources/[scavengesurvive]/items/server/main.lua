@@ -186,6 +186,17 @@ addEventHandler("onResourceStart", resourceRoot, function()
     end
 end)
 
+-- MTA drops a client event the client has not added yet: a sync sent before this player's items scripts ran
+-- (`restart items`, a slow download) marked ids as sent that the client never drew. Once they run, start the
+-- projection from scratch.
+addEventHandler("onPlayerResourceStart", root, function(res)
+    if res ~= getThisResource() or not charId(source) then
+        return
+    end
+    state.sent[source] = {}
+    world.syncPlayer(source)
+end)
+
 addEventHandler("characterSpawned", root, function()
     -- keep an existing sent-set: the client still shows those objects, the diff stays exact
     state.sent[source] = state.sent[source] or {}
