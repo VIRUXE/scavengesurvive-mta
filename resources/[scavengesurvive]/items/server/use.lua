@@ -1,11 +1,14 @@
 -- Food is the MVP use-case; treatments held in hand start a hold (server/medical.lua, #94); other categories are
 -- handled by other resources through itemUseAttempted (cancel = consumed).
--- ctx = { medical, db, net, state, type, charId, toast, destroy, sendInventory, decodeData, cooking, clothes } built
--- by server/main.lua.
+-- Food in hand next to a campfire or barbecue goes onto it instead (upstream OnPlayerUseItemWithItem: the interact
+-- key at a world item uses the held item with it).
+-- ctx = { medical, db, net, state, type, charId, toast, destroy, sendInventory, decodeData, cooking, cookers, world,
+-- clothes } built by server/main.lua.
 return function(ctx)
     local db, net, state = ctx.db, ctx.net, ctx.state
     local itemType, charId, toast = ctx.type, ctx.charId, ctx.toast
 
+    local COOKERS = { "Campfire", "Barbecue" }
     local OWNED_SQL = "SELECT i.type_uname AS uname, i.data FROM items i "
         .. "LEFT JOIN containers c ON c.id = i.container_id LEFT JOIN items owner ON owner.id = c.owner_item_id "
         .. "WHERE i.id = ? AND (i.holder_char_id = ? OR c.owner_char_id = ? OR owner.holder_char_id = ?)"
@@ -46,9 +49,29 @@ return function(ctx)
             return ctx.medical.start(player, state.held[player])
         end
         local t = itemType(uname)
-        if t and t.category == "food" then
-            eat(player, itemId, t, fromHand, data)
+        if not t or t.category ~= "food" then
+            return
         end
+        if not fromHand then
+            return eat(player, itemId, t, fromHand, data)
+        end
+        local x, y = getElementPosition(player)
+        local r = tonumber(state.settings["items.pickup_radius"]) or 2.0
+        local int, dim = getElementInterior(player), getElementDimension(player)
+        local sql = ctx.world.findNearestSql(x, y, r, int, dim, COOKERS)
+        db.one(sql, {}, function(row, c)
+            if not isElement(c.player) then
+                return
+            end
+            local held = state.held[c.player]
+            if not held or held.id ~= c.itemId then
+                return
+            end
+            if row then
+                return ctx.cookers.interact(c.player, charId(c.player), held, row)
+            end
+            eat(c.player, c.itemId, t, true, c.data)
+        end, { player = player, itemId = itemId, data = data })
     end
 
     net.handler("itemUseRequested", function(player, itemId)

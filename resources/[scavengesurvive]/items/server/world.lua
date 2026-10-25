@@ -19,9 +19,13 @@ return function(ctx)
             .. "'), p.pos)"
     end
 
-    function M.findNearestSql(x, y, r, interior, dimension)
+    -- unames: optional list of type unames (server constants) the nearest item must be one of
+    function M.findNearestSql(x, y, r, interior, dimension, unames)
         local point = string.format("POINT(%g, %g)", x, y)
         local where = "ST_Distance(p.pos, " .. point .. ") <= " .. string.format("%g", r)
+        if unames then
+            where = where .. " AND i.type_uname IN ('" .. table.concat(unames, "', '") .. "')"
+        end
         if interior and dimension then
             where = where
                 .. string.format(" AND IFNULL(i.interior, 0) = %d AND IFNULL(i.dimension, 0) = %d", interior, dimension)

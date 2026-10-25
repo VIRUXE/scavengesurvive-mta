@@ -59,9 +59,32 @@ return function(ctx)
         end, { player = player, foodId = held.id, uname = row.uname, code = code })
     end
 
+    -- empty hands at a campfire: the food lying on it (same x/y as the fire, so the nearest item is a tie)
+    local function campfireTake(player, cid, row)
+        local where = string.format("ST_Distance(p.pos, POINT(%f, %f)) <= 0.3 AND i.id <> %d", row.x, row.y, row.id)
+        local sql = "SELECT i.id, i.type_uname AS uname, i.hitpoints AS hp, i.data FROM world_items_pos p "
+            .. "JOIN items i ON i.id = p.item_id WHERE "
+            .. where
+        db.query(sql, {}, function(rows)
+            if not isElement(player) or state.held[player] then
+                return
+            end
+            for _, r in ipairs(rows or {}) do
+                if cooking.isFood(itemType(r.uname)) then
+                    if busy[r.id] then
+                        return toast(player, "COOKING")
+                    end
+                    return hands.pickup(player, cid, r)
+                end
+            end
+        end)
+    end
+
     local function campfire(player, cid, held, row)
-        local t = held and itemType(held.uname)
-        if not cooking.isFood(t) then
+        if not held then
+            return campfireTake(player, cid, row)
+        end
+        if not cooking.isFood(itemType(held.uname)) then
             return -- nothing else to do with a campfire, and it is never picked up
         end
         local ok, code, nextData = cooking.campfireAdd(decode(row), held.id, now())

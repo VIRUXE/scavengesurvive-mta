@@ -140,7 +140,8 @@ local containers = loadFile("server/containers.lua")({
 hands.setContainers(containers)
 local cookingCtx = { db = db, state = state, type = itemType, toast = toast, world = world, hands = hands }
 cookingCtx.cooking = cooking
-hands.setCooking(loadFile("server/cooking.lua")(cookingCtx))
+local cookers = loadFile("server/cooking.lua")(cookingCtx)
+hands.setCooking(cookers)
 -- the held items' ammo, batched (hands.queueData)
 setTimer(hands.flushData, 5000, 0)
 local medical = loadFile("server/medical.lua")({ db = db, net = net, state = state, destroy = destroy })
@@ -156,6 +157,8 @@ loadFile("server/use.lua")({
     sendInventory = containers.sendInventory,
     decodeData = hands.decodeData,
     cooking = cooking,
+    cookers = cookers,
+    world = world,
     clothes = loadFile("server/clothes.lua")({
         db = db,
         state = state,
