@@ -37,6 +37,8 @@ Scavenge & Survive ported to MTA:SA 1.6 (Lua 5.1) with MariaDB 13.0 (12.2 also v
 - No global tables used as static classes or singletons for a resource's state (`Maps = { stats = {}, … }`, `Character.byPlayer`): new code keeps state in file-local tables or closures, returns a module table, and passes state as arguments. The older `Character`/`Items`/`UI` globals are converted when their resource is reworked, not in passing.
 - Never call `engineSetPoolCapacity("building", …)`: MTA grows the building pool on demand, and re-applying a capacity on a resource restart shrank a pool in use and crashed the client (2026-10-22).
 - Style: `stylua` and `luacheck` clean before every commit. Conventional commits (`feat(items): …`).
+- Git: commit straight to `main`; never create a branch unless asked. On prod the resources are a symlink into this
+  clone, so switching branches there swaps the files the live server runs.
 - Never commit `server-config/local.settings.xml` (holds the DB password).
 - SA-MP-only object models (ids 11682–11753, 18631+) live in the `models` resource (`manifest.lua` + `files/`, both
   committed). When an item type starts using one that is not in the pack, run `python -m tools.extract_samp_models`
