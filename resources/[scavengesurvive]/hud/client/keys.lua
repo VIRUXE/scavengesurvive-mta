@@ -96,8 +96,9 @@ return function(ctx)
         if uname == "GasCan" then
             return triggerServerEvent("fuelPumpInteractRequested", localPlayer)
         end
-        -- food is eaten; a held treatment starts its hold, and letting go of the key cancels it (items, #94)
-        if held and (held.category == "food" or TREATMENTS[held.uname]) then
+        -- food is eaten; a held treatment starts its hold, and letting go of the key cancels it (items, #94);
+        -- held Clothes start the clothes change (#110)
+        if held and (held.category == "food" or TREATMENTS[held.uname] or held.uname == "Clothes") then
             return triggerServerEvent("itemUseRequested", localPlayer, held.id)
         end
         if held and held.category == "bag" then
