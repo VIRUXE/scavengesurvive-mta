@@ -263,6 +263,16 @@ def test_disarm_and_create_held(db, character):
         assert row["holder_char_id"] == ch and row["holder_kind"] == "held"
 
 
+def test_create_held_bag_gets_its_container(db, character):
+    # a bag made in the hand (a crafted ParaBag) needs a container like item_create gives one
+    ok, code, payload = call(db, "item_create_held", "T_Satchel", character["character_id"])
+    assert (ok, code) == (1, "OK")
+    with db.cursor() as cur:
+        cur.execute("SELECT id, kind, size FROM containers WHERE owner_item_id=%s", (payload["item_id"],))
+        row = cur.fetchone()
+    assert row["id"] == payload["container_id"] and row["kind"] == "bag" and row["size"] == 7
+
+
 def test_gear_wear_and_unwear(db, character):
     ch = character["character_id"]
     inv = character["inventory_container_id"]

@@ -733,9 +733,11 @@ BEGIN
   DECLARE v_alive INT DEFAULT 0;
   DECLARE v_held INT DEFAULT 0;
   DECLARE v_cat VARCHAR(16) DEFAULT NULL;
+  DECLARE v_size INT DEFAULT NULL;
   DECLARE v_item INT DEFAULT 0;
+  DECLARE v_cont INT DEFAULT NULL;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
-  SELECT category INTO v_cat FROM item_types WHERE uname = p_type_uname;
+  SELECT category, container_size INTO v_cat, v_size FROM item_types WHERE uname = p_type_uname;
   IF v_cat IS NULL THEN
     SELECT 0 AS ok, 'UNKNOWN_TYPE' AS code, NULL AS payload;
   ELSE
@@ -753,8 +755,14 @@ BEGIN
       INSERT INTO items (type_uname, hitpoints, holder_char_id, holder_kind)
         VALUES (p_type_uname, 5, p_char_id, 'held');
       SET v_item = LAST_INSERT_ID();
+      -- a bag or safebox gets its container, as in item_create (a crafted ParaBag had none)
+      IF v_cat IN ('bag', 'safebox') THEN
+        INSERT INTO containers (kind, size, owner_item_id) VALUES (v_cat, IFNULL(v_size, 8), v_item);
+        SET v_cont = LAST_INSERT_ID();
+      END IF;
       COMMIT;
-      SELECT 1 AS ok, 'OK' AS code, JSON_OBJECT('item_id', CAST(v_item AS SIGNED)) AS payload;
+      SELECT 1 AS ok, 'OK' AS code,
+        JSON_OBJECT('item_id', CAST(v_item AS SIGNED), 'container_id', CAST(v_cont AS SIGNED)) AS payload;
     END IF;
   END IF;
 END//
