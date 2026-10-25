@@ -535,6 +535,22 @@ return function(ctx)
         return false
     end
 
+    local BARBECUE = { "Barbecue" }
+    local TENT = { "TentPack" }
+    local TARGETS = { GasCan = BARBECUE, FireLighter = BARBECUE, Crowbar = TENT }
+
+    local function runCrafting(action, player)
+        local res = getResourceFromName and getResourceFromName("crafting")
+        if not res or getResourceState(res) ~= "running" then
+            return
+        end
+        if action == "deconstruct" then
+            exports.crafting:deconstruct(player)
+        elseif action == "groundCraft" then
+            exports.crafting:groundCraft(player)
+        end
+    end
+
     -- row = { id, uname, hp, data (JSON text) } of a world item: into the empty hand
     function M.pickup(player, cid, row)
         db.call("item_pickup", { row.id, cid }, function(res, c)
@@ -563,13 +579,22 @@ return function(ctx)
         end
         local x, y = getElementPosition(player)
         local r = tonumber(state.settings["items.pickup_radius"]) or 2.0
-        local sql = world.findNearestSql(x, y, r, getElementInterior(player), getElementDimension(player))
+        local unames = held and TARGETS[held.uname]
+        local sql = world.findNearestSql(x, y, r, getElementInterior(player), getElementDimension(player), unames)
         db.one(sql, {}, function(row, c)
-            if not isElement(c.player) or not row then
+            if not isElement(c.player) then
                 return
             end
             local curHeld = state.held[c.player]
             local curUname = curHeld and curHeld.uname
+            if not row then
+                if curUname == "Crowbar" then
+                    runCrafting("deconstruct", c.player)
+                elseif curUname == "FireLighter" then
+                    runCrafting("groundCraft", c.player)
+                end
+                return
+            end
             local rData = decodeData(row.data)
 
             -- TentPack interactions
@@ -586,6 +611,9 @@ return function(ctx)
                         return containers and containers.pitchTent(c.player, row.id)
                     end
                 end
+            end
+            if curUname == "Crowbar" then
+                return runCrafting("deconstruct", c.player)
             end
 
             -- campfires and barbecues (server/cooking.lua), and the food they are cooking

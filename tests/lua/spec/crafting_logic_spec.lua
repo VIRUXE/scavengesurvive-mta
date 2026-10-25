@@ -142,5 +142,12 @@ describe("crafting logic", function()
             assert.is_nil(craft.getDeconstructInfo("Bandage", "Crowbar"))
             assert.is_nil(craft.getDeconstructInfo("Knife", "Crowbar"))
         end)
+
+        it("lists all constructed item types a Crowbar can deconstruct (#97)", function()
+            assert.same(
+                { "Campfire", "Barricade", "SmallBox", "Workbench", "LargeFrame", "Door", "MetalGate", "PlotPole" },
+                craft.deconstructables("Crowbar")
+            )
+        end)
     end)
 end)

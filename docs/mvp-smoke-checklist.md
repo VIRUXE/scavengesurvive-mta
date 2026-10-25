@@ -119,7 +119,7 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
     - **Crafting & Workbench**:
       - In-hand combine: Hold `Knife` and click `Clothes` in inventory -> click `Combine`: instant craft produces `Bandage` in inventory while preserving the `Knife`. Combine `Bottle` + `Bandage` -> `MolotovEmpty`.
       - Ground construction: Drop ingredients on ground (e.g. 2x `WoodLog`), hold `FireLighter`, press **F** (or `/craft`): 3-second construction progress bar consumes logs and spawns `Campfire`. Hold `Hammer` near 3x `WoodLog` -> builds `Barricade`. Hold `Hammer` near 2x `WoodLog` + 2x `CorPanel` -> builds `Workbench`.
-      - Deconstruction: Hold `Crowbar` and press **F** near constructed object (`Campfire`, `Workbench`, `Barricade`, `LargeFrame`): timed deconstruction progress bar dismantles the object and returns raw materials.
+      - Deconstruction: Hold `Crowbar` and press **F** near constructed object (`Campfire`, `Workbench`, `Barricade`, `LargeFrame`), even with another item lying closer (#97): timed deconstruction progress bar dismantles the object and returns raw materials.
       - Workbench crafting: Place materials in Workbench 16-slot container (e.g. `CorPanel` + `Battery` + tool `Screwdriver`), press **F** at Workbench: crafts `Keypad` inside container.
     - **Defences, Keypads and Plot Poles**:
       - Defences (`LargeFrame`, `Door`, `MetalGate`): Press **F** on an unlocked door/gate to swing it open (+90 deg rotation) with 5-second auto-latch closing.
@@ -342,11 +342,12 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
       label reads `Meat (Cooked)` (data `{"cooked": 1}`); **F** with empty hands at the campfire takes it off. Hold
       the cooked Meat at the fire: the hint reads `F Eat` and **F** eats it (full food, no `Food Infect`); cooked
       food and food that cannot be cooked are always eaten.
-    - b. **Barbecue.** Drop the Barbecue. **F** with the Fire Lighter: `Needs fuel from a Petrol Can`. **F** with the
-      Petrol Can: `1L of petrol added / 10 BBQ uses`. Put a Meat on it (`Food added`), then **F** with the Fire
-      Lighter: `BBQ Lit / Cook time: 30 seconds`, two small fires under the grill, the barbecue cannot be picked
-      up. 30 s later the fires go out and the Meat reads `Meat (Cooked)`; **F** with empty hands takes the Meat off,
-      a second **F** picks the barbecue up. **F** with a cooked Meat at the barbecue eats it.
+    - b. **Barbecue.** Drop the Barbecue (and another item next to it, #97). **F** with the Fire Lighter: `Needs fuel
+      from a Petrol Can`. **F** with the Petrol Can: `1L of petrol added / 10 BBQ uses`. Put a Meat on it (`Food
+      added`), then **F** with the Fire Lighter: `BBQ Lit / Cook time: 30 seconds`, two small fires under the grill,
+      the barbecue cannot be picked up. 30 s later the fires go out and the Meat reads `Meat (Cooked)`; **F** with
+      empty hands takes the Meat off, a second **F** picks the barbecue up. **F** with a cooked Meat at the barbecue
+      eats it.
     - c. **Persistence.** `rr items` while the Meat cooks: the cook still finishes on time
       (`SELECT data FROM items WHERE type_uname IN ('Campfire', 'Barbecue') AND x IS NOT NULL`). Ten minutes after
       it was lit (two in the rain, weather 8 or 16) the campfire turns into three Burnt Logs.

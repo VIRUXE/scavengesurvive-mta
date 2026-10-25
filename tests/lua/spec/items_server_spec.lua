@@ -145,4 +145,55 @@ describe("items server sql builders", function()
         assert.is_nil(state.sent.p1[5])
         assert.is_nil(state.sent.p2[5])
     end)
+    -- #97: GasCan and FireLighter look for a Barbecue in reach; Crowbar looks for a TentPack then deconstructs
+    it("filters itemPickupRequested to Barbecue for GasCan/FireLighter and TentPack/deconstruct for Crowbar", function()
+        db.connect("items")
+        _G.getElementPosition = function()
+            return 10, 20, 3
+        end
+        _G.getElementInterior, _G.getElementDimension = function()
+            return 0
+        end, function()
+            return 0
+        end
+        local crafted = {}
+        _G.getResourceFromName = function(name)
+            return name == "crafting" and "res_crafting" or nil
+        end
+        _G.getResourceState = function()
+            return "running"
+        end
+        _G.exports = {
+            crafting = {
+                deconstruct = function(_, p)
+                    crafted[#crafted + 1] = { "deconstruct", p }
+                end,
+                groundCraft = function(_, p)
+                    crafted[#crafted + 1] = { "groundCraft", p }
+                end,
+            },
+        }
+        newHands(function()
+            return { category = "generic" }
+        end)
+        mock.addElement("p1")
+        _G.client, _G.source = "p1", "p1"
+        state.held["p1"] = { id = 1, uname = "GasCan", hp = 3, data = { amount = 20 } }
+        mock.fire("itemPickupRequested")
+        assert.matches("i%.type_uname IN %('Barbecue'%)", mock.queries[#mock.queries].sql)
+
+        mock.tick = 1000
+        state.held["p1"] = { id = 2, uname = "FireLighter", hp = 1, data = {} }
+        mock.fire("itemPickupRequested")
+        assert.matches("i%.type_uname IN %('Barbecue'%)", mock.queries[#mock.queries].sql)
+        mock.answer(#mock.queries, {}) -- no barbecue in reach -> ground craft (e.g. 2 WoodLogs -> Campfire)
+        assert.same({ { "groundCraft", "p1" } }, crafted)
+
+        mock.tick = 2000
+        state.held["p1"] = { id = 3, uname = "Crowbar", hp = 2, data = {} }
+        mock.fire("itemPickupRequested")
+        assert.matches("i%.type_uname IN %('TentPack'%)", mock.queries[#mock.queries].sql)
+        mock.answer(#mock.queries, {}) -- no tent in reach -> deconstruct
+        assert.same({ { "groundCraft", "p1" }, { "deconstruct", "p1" } }, crafted)
+    end)
 end)

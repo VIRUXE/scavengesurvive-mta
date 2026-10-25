@@ -334,6 +334,16 @@ function M.matchWorkbench(containerCounts, toolUname)
     return matches
 end
 
+function M.deconstructables(toolUname)
+    local out = {}
+    for _, r in ipairs(M.RECIPES) do
+        if r.removalTool and (not toolUname or r.removalTool == toolUname) then
+            out[#out + 1] = r.result.uname
+        end
+    end
+    return out
+end
+
 function M.getDeconstructInfo(productUname, toolUname)
     for _, r in ipairs(M.RECIPES) do
         if r.result.uname == productUname and r.removalTool then

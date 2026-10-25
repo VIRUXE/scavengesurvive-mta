@@ -189,6 +189,8 @@ local function tryGroundCraft(player, _cid, held, px, py, pz, rz, int, dim)
 end
 
 -- 3. Deconstruction: Dismantle world item with Crowbar
+local CROWBAR_TARGETS = "'" .. table.concat(craft.deconstructables("Crowbar"), "', '") .. "'"
+
 local function tryDeconstruct(player, _cid, held, px, py, _pz, rz, int, dim)
     if not held or held.uname ~= "Crowbar" then
         return
@@ -196,9 +198,12 @@ local function tryDeconstruct(player, _cid, held, px, py, _pz, rz, int, dim)
     local query = "SELECT i.id, i.type_uname, i.x, i.y, i.z FROM world_items_pos p "
         .. "JOIN items i ON i.id = p.item_id "
         .. "WHERE ST_Distance(p.pos, POINT(?, ?)) <= 2.5 "
-        .. "AND i.container_id IS NULL AND i.holder_char_id IS NULL "
+        .. "AND i.type_uname IN ("
+        .. CROWBAR_TARGETS
+        .. ") AND i.container_id IS NULL AND i.holder_char_id IS NULL "
+        .. "AND IFNULL(i.interior, 0) = ? AND IFNULL(i.dimension, 0) = ? "
         .. "ORDER BY ST_Distance(p.pos, POINT(?, ?)) ASC LIMIT 1"
-    db.one(query, { px, py, px, py }, function(target, c)
+    db.one(query, { px, py, int or 0, dim or 0, px, py }, function(target, c)
         if not isElement(c.player) or not target then
             return
         end
