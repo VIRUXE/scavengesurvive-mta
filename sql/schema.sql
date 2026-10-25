@@ -125,6 +125,8 @@ CREATE TABLE IF NOT EXISTS `items` (
   `y` float DEFAULT NULL,
   `z` float DEFAULT NULL,
   `rz` float DEFAULT NULL,
+  `ground_nx` float DEFAULT NULL,
+  `ground_ny` float DEFAULT NULL,
   `interior` tinyint(4) DEFAULT NULL,
   `dimension` int(11) DEFAULT NULL,
   `container_id` int(11) DEFAULT NULL,

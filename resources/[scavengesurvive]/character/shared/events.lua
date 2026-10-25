@@ -8,11 +8,11 @@ addEvent("characterItemsDropped", false)
 
 -- client to server (handlers registered with net.handler)
 addEvent("respawnRequested", true)
-addEvent("groundHeightsReported", true)
+addEvent("groundSurfaceReported", true)
 
 -- server to client / client-local
 addEvent("characterStatsSynced", true)
 addEvent("deathScreenShown", true)
 addEvent("knockedOut", true)
 addEvent("combatWindowChanged", true)
-addEvent("groundHeightsRequested", true)
+addEvent("groundSurfaceRequested", true)

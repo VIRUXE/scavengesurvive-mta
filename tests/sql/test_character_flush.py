@@ -1,5 +1,5 @@
 from tests.sql.conftest import call
-from tests.sql.test_item_graph import RING
+from tests.sql.test_item_graph import CLOTHES, RING
 
 
 def test_character_flush_updates_rows(db, character):
@@ -15,6 +15,6 @@ def test_character_flush_updates_rows(db, character):
 
 def test_character_flush_ignores_dead(db, character):
     ch = character["character_id"]
-    call(db, "character_death_drop", ch, 0.0, 0.0, 3.0, 0, 0, RING, 2.1, 0.0)
+    call(db, "character_death_drop", ch, 0.0, 0.0, 3.0, 0, 0, RING, CLOTHES)
     ok, code, payload = call(db, "character_flush", f'[[{{"id":{ch},"hp":99,"food":99,"bleed":0,"x":0,"y":0,"z":0,"rz":0}}]]')
     assert payload["updated"] == 0

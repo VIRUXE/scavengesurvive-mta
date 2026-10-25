@@ -4,7 +4,8 @@ return function(ctx)
     local db, state, geometry, diff = ctx.db, ctx.state, ctx.geometry, ctx.diff
     local M = {}
 
-    local COLS = "i.id, i.type_uname AS uname, i.hitpoints AS hp, i.data, i.x, i.y, i.z, i.rz, i.interior, i.dimension"
+    local COLS = "i.id, i.type_uname AS uname, i.hitpoints AS hp, i.data, i.x, i.y, i.z, i.rz,"
+        .. " i.ground_nx, i.ground_ny, i.interior, i.dimension"
     local FROM = " FROM world_items_pos p JOIN items i ON i.id = p.item_id WHERE "
 
     -- Numbers are formatted into the SQL (never `?` literals); positions come from the server, never the client.

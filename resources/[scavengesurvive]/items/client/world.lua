@@ -1,12 +1,13 @@
 -- World items as client-side objects with a name label, from the server's per-player sync deltas.
--- ctx = { models, ammo, tent, clothes } from client/main.lua. A pitched TentPack is six objects (shared/logic/tent.lua)
--- placed with upstream's SA-MP rotations as they are: SA-MP's CreateObject and MTA's createObject both go
--- through GTA's own ZXY CMatrix::SetRotate (#55).
+-- ctx = { models, ammo, tent, clothes, geometry } from client/main.lua. A pitched TentPack is six objects
+-- (shared/logic/tent.lua) placed with upstream's SA-MP rotations as they are: SA-MP's CreateObject and MTA's
+-- createObject both go through GTA's own ZXY CMatrix::SetRotate (#55).
 return function(ctx)
     local models = ctx.models
     local ammo = ctx.ammo
     local tent = ctx.tent
     local clothes = ctx.clothes
+    local geometry = ctx.geometry
     local objects = {} -- id -> { obj | parts, pitched, row, uname, hp, x, y, z, name }
     local shaders = {} -- tent material key -> shader, or false when its texture could not be read
     local typeCache = {}
@@ -110,13 +111,22 @@ return function(ctx)
         return parts
     end
 
+    -- The type's rest rotation and the row's heading, then turned onto the slope it lies on (ground_nx / ground_ny,
+    -- set by the death drop and /dropall; false when flat).
+    local function orient(obj, r, t)
+        setElementPosition(obj, r.x, r.y, r.z + (t and t.modelz or 0))
+        setElementRotation(obj, t and t.rotx or 0, t and t.roty or 0, r.rz or 0)
+        local nx, ny = tonumber(r.ground_nx) or 0, tonumber(r.ground_ny) or 0
+        if nx ~= 0 or ny ~= 0 then
+            setElementMatrix(obj, geometry.tilt(getElementMatrix(obj), nx, ny))
+        end
+    end
+
     local function createItemObject(r, t)
-        local z = r.z + (t and t.modelz or 0)
-        local rx, ry = t and t.rotx or 0, t and t.roty or 0
-        local obj = createObject(models.forType(t), r.x, r.y, z, rx, ry, r.rz or 0)
-            or createObject(models.FALLBACK, r.x, r.y, z, rx, ry, r.rz or 0)
+        local obj = createObject(models.forType(t), r.x, r.y, r.z) or createObject(models.FALLBACK, r.x, r.y, r.z)
         if obj then
             place(obj, r)
+            orient(obj, r, t)
         end
         return obj
     end
@@ -136,8 +146,7 @@ return function(ctx)
             if e then
                 e.name = formatName(t, r)
                 if isElement(e.obj) then -- the row came again because it moved or turned (a door swung)
-                    setElementPosition(e.obj, r.x, r.y, r.z + (t and t.modelz or 0))
-                    setElementRotation(e.obj, t and t.rotx or 0, t and t.roty or 0, r.rz or 0)
+                    orient(e.obj, r, t)
                 end
             else
                 e = {
