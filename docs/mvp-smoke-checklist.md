@@ -310,7 +310,8 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
       (`SELECT skills FROM characters WHERE alive = 1`). Die and respawn: `No skills yet`.
 32. **Treatment, infection and drugs** (#94). a-g one client, h two clients (A treats B). `/additem` gives the
     zeroed data (`Pills (Antibiotics)`, `Injector (Empty)`, a Doctor's Bag without charges); the other pills and
-    injections come from loot (`/rollloot` near a loot spot, or a supply crate).
+    injections come from loot (`/rollloot` near a loot spot, or a supply crate). The holds need **F** physically held
+    (the client polls the key); over rcon only the outcomes can be driven (`exports.character:treatPlayer`).
     - a. **Labels.** Loot a Pills, an Injector and a Doctor's Bag: the inventory shows `Pills (LSD)`,
       `Injector (Morphine)`, `Doctor's Bag (2/3, Painkill)` and the like, the same after a pickup and a drop.
     - b. **Bandage.** `/setbleed 0.5`, hold a Dirty Bandage and hold **F**: a 4 s bar, then the yellow chat line
@@ -334,15 +335,18 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
       Knock B out and inject `Injector (Adrenaline)`: B wakes up; A's injector is now `Injector (Empty)`.
 33. **Cooking** (#95). One client; `/additem` a Meat, a Fire Lighter, two Wood Logs, a Barbecue and a Petrol Can.
     - a. **Campfire.** Drop the two Wood Logs, hold the Fire Lighter and hold **F** next to them: a Campfire with
-      flames. **F** with empty hands does nothing (a campfire is never picked up). Hold the Meat (labelled
-      `Meat (Uncooked)` in the inventory and on the ground) and press **F** at the fire: `Food added / 1 minute cook
-      time`, the Meat sits on the fire and **F** on it says `Still cooking`. After about a minute the label reads
-      `Meat (Cooked)`; pick it up and eat it: full food, no `Food Infect`.
+      flames. **F** with empty hands and nothing on it does nothing (a campfire is never picked up). Hold the Meat
+      (labelled `Meat (Uncooked)` in the inventory and on the ground) and press **F** at the fire: uncooked food that can
+      be cooked goes onto a Campfire or Barbecue within reach (the key hint reads `F Cook`, not `F Eat`), `Food added
+      / 1 minute cook time`, the Meat sits on the fire and **F** on it says `Still cooking`. After about a minute the
+      label reads `Meat (Cooked)` (data `{"cooked": 1}`); **F** with empty hands at the campfire takes it off. Hold
+      the cooked Meat at the fire: the hint reads `F Eat` and **F** eats it (full food, no `Food Infect`); cooked
+      food and food that cannot be cooked are always eaten.
     - b. **Barbecue.** Drop the Barbecue. **F** with the Fire Lighter: `Needs fuel from a Petrol Can`. **F** with the
       Petrol Can: `1L of petrol added / 10 BBQ uses`. Put a Meat on it (`Food added`), then **F** with the Fire
       Lighter: `BBQ Lit / Cook time: 30 seconds`, two small fires under the grill, the barbecue cannot be picked
       up. 30 s later the fires go out and the Meat reads `Meat (Cooked)`; **F** with empty hands takes the Meat off,
-      a second **F** picks the barbecue up. A cooked Meat is refused (`Food already cooked`).
+      a second **F** picks the barbecue up. **F** with a cooked Meat at the barbecue eats it.
     - c. **Persistence.** `rr items` while the Meat cooks: the cook still finishes on time
       (`SELECT data FROM items WHERE type_uname IN ('Campfire', 'Barbecue') AND x IS NOT NULL`). Ten minutes after
       it was lit (two in the rain, weather 8 or 16) the campfire turns into three Burnt Logs.
