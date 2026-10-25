@@ -300,3 +300,11 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
       Cupboard, Backpack, MediumBag, LargeBackpack, LocksmithKit, LaserPoint, Door, Cross, RedPanel, Burger, Beanie,
       CaptainsCap, SwatHelmet): each now sits turned by that `rotz` from the old look, nothing sinks into the
       ground, and the look survives `rr items`.
+31. **Skills** (#93). One client.
+    - a. **Gain.** Repair a damaged car at the bonnet with the right tool: green `+Repair` at the bottom centre for
+      5 s. Inventory > `Skills` lists `Repair (Novice)` in yellow; Back returns to the inventory, Close shuts it.
+    - b. **Time.** `/setskill Repair 1`, then repair again: the bar runs 1.5 s instead of 3 s and the list shows
+      `Repair (Master)` in pink. Workbench and ground construction train the skill named after the result's uname:
+      `/setskill <result uname> 1` halves that recipe's hold, and the list shows the item type's name.
+    - c. **Persistence.** Reconnect, or `rr character` (flush on stop): the list is unchanged
+      (`SELECT skills FROM characters WHERE alive = 1`). Die and respawn: `No skills yet`.
