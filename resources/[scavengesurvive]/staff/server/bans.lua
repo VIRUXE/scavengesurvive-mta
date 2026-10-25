@@ -30,45 +30,96 @@ return function(ctx)
         end, { actor = actor, name = name, reason = reason, online = online })
     end
 
+    -- An online player or an offline account the actor outranks: go(actor, { name, account, ip, serial, online }).
+    local function resolveTarget(p, lvl, query, go)
+        local entry = logic.findPlayer(query, ctx.onlinePlayers())
+        if entry then
+            local target = entry.player
+            if target == p then
+                return ctx.say(p, " >  You cannot ban yourself.")
+            end
+            if ctx.level(target) > 0 and not logic.outranks(lvl, ctx.level(target), false) then
+                return ctx.say(p, " >  %s is staff of your level or higher.", entry.name)
+            end
+            local account = ctx.accountId(target) and { id = ctx.accountId(target) } or nil
+            local t =
+                { name = entry.name, account = account, ip = getPlayerIP(target), serial = getPlayerSerial(target) }
+            t.online = target
+            return go(p, t)
+        end
+        -- offline: the account supplies the last IP and serial
+        ctx.lookupAccount(query, function(row, actor)
+            if not row then
+                return ctx.say(actor, " >  The account '%s' does not exist.", query)
+            end
+            local level = tonumber(row.admin_level) or 0
+            if level > 0 and not logic.outranks(lvl, level, false) then
+                return ctx.say(actor, " >  %s is staff of your level or higher.", row.name)
+            end
+            go(actor, { name = row.name, account = row, ip = row.last_ip or nil, serial = row.last_serial or nil })
+        end, p)
+    end
+
+    -- Upstream ban-command.pwn: the reason input, then the duration input (Back returns to the reason). Upstream
+    -- banned the name as "Pending" before the first dialog; the port bans only once both answers are in.
+    local askReason
+
+    local function askDuration(actor, t, reason)
+        local function answered(ok, text)
+            if not ok then
+                return askReason(actor, t)
+            end
+            local seconds = logic.parseDuration(text)
+            if not seconds then
+                return askDuration(actor, t, reason)
+            end
+            banNow(actor, t.name, t.account, t.ip, t.serial, reason, seconds, t.online)
+        end
+        local body = "Enter the ban duration below: a number and m, h, d, w or mo (30m, 12h, 3 days, 2 weeks, 1 month)."
+            .. " Type 'forever' for a permanent ban."
+        local title, buttons = "Please enter ban duration", { "Continue", "Back" }
+        ctx.openDialog(actor, "ban_duration", "input", title, body, buttons, answered)
+    end
+
+    askReason = function(actor, t)
+        local function answered(ok, text)
+            if not ok then
+                return
+            end
+            local reason = logic.trim(text)
+            if reason == "" then
+                return askReason(actor, t)
+            end
+            askDuration(actor, t, reason)
+        end
+        local body = "Enter the ban reason for "
+            .. t.name
+            .. " below. The character limit is 128."
+            .. " After this screen you can choose the ban duration."
+        local title, buttons = "Please enter ban reason", { "Continue", "Cancel" }
+        ctx.openDialog(actor, "ban_reason", "input", title, body, buttons, answered)
+    end
+
     ctx.command({
         name = "ban",
         level = 2,
-        usage = "/ban <player|name> <duration|forever> <reason>",
-        help = "Ban an account by name, IP and serial (duration: 30m, 12h, 3d, 2w, 1mo, forever)",
+        usage = "/ban <player|name> [<duration|forever> <reason>]",
+        help = "Ban an account by name, IP and serial (duration: 30m, 12h, 3d, 2w, 1mo, forever); the name alone asks",
         fn = function(p, args, lvl)
+            if args[1] and not args[2] then
+                return resolveTarget(p, lvl, args[1], askReason)
+            end
             local seconds = logic.parseDuration(args[2] or "")
             local reason = logic.tail(args, 3)
             if not args[1] or not seconds or not reason then
                 if args[2] and not seconds then
                     return ctx.say(p, " >  '%s' is not a duration (30m, 12h, 3d, 2w, 1mo or forever).", args[2])
                 end
-                return ctx.say(p, " >  Usage: /ban <player|name> <duration|forever> <reason>")
+                return ctx.say(p, " >  Usage: /ban <player|name> [<duration|forever> <reason>]")
             end
-            local entry = logic.findPlayer(args[1], ctx.onlinePlayers())
-            if entry then
-                local target = entry.player
-                if target == p then
-                    return ctx.say(p, " >  You cannot ban yourself.")
-                end
-                if ctx.level(target) > 0 and not logic.outranks(lvl, ctx.level(target), false) then
-                    return ctx.say(p, " >  %s is staff of your level or higher.", entry.name)
-                end
-                local account = ctx.accountId(target) and { id = ctx.accountId(target) } or nil
-                local ip, serial = getPlayerIP(target), getPlayerSerial(target)
-                return banNow(p, entry.name, account, ip, serial, reason, seconds, target)
-            end
-            -- offline: the account supplies the last IP and serial
-            ctx.lookupAccount(args[1], function(row, actor)
-                if not row then
-                    return ctx.say(actor, " >  The account '%s' does not exist.", args[1])
-                end
-                if
-                    (tonumber(row.admin_level) or 0) > 0 and not logic.outranks(lvl, tonumber(row.admin_level), false)
-                then
-                    return ctx.say(actor, " >  %s is staff of your level or higher.", row.name)
-                end
-                banNow(actor, row.name, row, row.last_ip or nil, row.last_serial or nil, reason, seconds, nil)
-            end, p)
+            resolveTarget(p, lvl, args[1], function(actor, t)
+                banNow(actor, t.name, t.account, t.ip, t.serial, reason, seconds, t.online)
+            end)
         end,
     })
 

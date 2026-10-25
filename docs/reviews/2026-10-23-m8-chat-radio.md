@@ -11,7 +11,7 @@ New `chat` resource. Upstream `core/player/chat.pwn` (modes, flood mute, line sp
 | `[Local] (id) Name: text` | `[Local] Name: text` (light blue), `[Global]` white, `[101.30]` orange, `[Admin]` in the staff level colour | MTA has no player ids |
 | Chat bubbles (`SetPlayerChatBubble`) | none | MTA has no chat bubble; nametags are hidden anyway |
 | Flood: 3 messages within 1 s = 30 s mute (in chat.pwn's own mute) | same rule in `chat.flood`, the mute itself goes through `exports.staff:mutePlayer` so it persists and shows in `/profile` | one mute system |
-| Frequency input dialog (87.5-108.0) | knobs ±0.5, mouse wheel over the frequency ±0.01, `/freq <value>` | no input dialog in the dx kit |
+| Frequency input dialog (87.5-108.0) | knobs ±0.5, mouse wheel over the frequency ±0.01, `/freq <value>` | no input dialog in the dx kit (2026-10-25, #85: clicking the frequency now opens it) |
 | Knob sprites `LD_DRV:nawtxt` | boxes in the knob colour with `<` `>` | no sprite shipped |
 | Radio opened from the inventory "Radio" row or R in a vehicle | R in a vehicle (hud lists `R Open radio`) or `/radio` anywhere | the inventory list is owned by `items`, in progress in another session |
 | Frequency/mode saved in the player file | `characters.radio_freq`, `chat_mode` (migration 0008) | |

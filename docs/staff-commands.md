@@ -46,7 +46,7 @@ Durations (`/mute`, `/ban`): a bare number is seconds; `10m`, `2h`, `3d`, `2w`, 
 
 | Upstream | Port | Why |
 | --- | --- | --- |
-| `/ban [name]` then two input dialogs (reason, duration) | `/ban <name> <duration> <reason>` | the dx UI kit has list dialogs only; no text input |
+| `/ban [name]` bans the name as "Pending", then two input dialogs (reason, duration) | `/ban <name>` opens the same two dialogs and bans once both are answered; `/ban <name> <duration> <reason>` skips them | Cancel leaves no half-made permanent ban behind; durations take the port's units (`30m`, `3 days`, `forever`) |
 | `/report` menu with 4 modes and an input dialog | the same dialog chain, plus `/report <name\|near\|killer> [reason]` to skip the menu | port addition; `near` = closest player within 100 m not on duty, `killer` = the last player who killed you (upstream fell back to the last player who hit you) |
 | Duty logs the character out of the world (`Logout`) | character stays loaded, duty = damage immunity + skin + tags | `character` has no suspend/resume export yet; follow-up when that resource is reworked |
 | `/country`, `/allcountry` (GeoIP) | not ported | no GeoIP service; `/ip` shows IP and serial |
