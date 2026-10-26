@@ -572,7 +572,8 @@ net.handler("fuelPumpInteractRequested", function(player)
     activeActions[player] = { actionType = "pump", timer = timer }
 end, { rate = 3 })
 
--- Entry enforcement: no entering during a roadside hold (repair, refuel, locksmith, lock-break), nor into locked vehicles
+-- Entry enforcement: no entering during a roadside hold (repair, refuel, locksmith, lock-break), nor into locked
+-- vehicles
 addEventHandler("onVehicleStartEnter", root, function(player)
     if activeActions[player] then
         cancelEvent()
