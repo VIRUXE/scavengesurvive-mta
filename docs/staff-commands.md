@@ -8,7 +8,7 @@ details); bans and warnings write theirs inside the `staff_ban` / `staff_warn` p
 | Level | Upstream name | Commands |
 | --- | --- | --- |
 | 1 | Game Master | `/a`, `/mute`, `/unmute`, `/warn`, `/kick`, `/msg`, `/clearchat`, `/aliases`, `/serial`, `/history`, `/reports`, `/acmds` |
-| 2 | Moderator | `/duty`, `/goto`, `/get`, `/gotopos`, `/freeze`, `/unfreeze`, `/ban`, `/unban`, `/banlist`, `/banned`, `/spec`, `/free`, `/nametags`, `/profile`, `/setmotd`, `/deletereports` |
+| 2 | Moderator | `/duty`, `/goto`, `/get`, `/gotopos`, `/freeze`, `/unfreeze`, `/ban`, `/unban`, `/banlist`, `/banned`, `/spec`, `/free`, `/nametags`, `/profile`, `/setmotd`, `/deletereports`, `/field` |
 | 3 | Administrator | `/whitelist`, `/ip`, `/setactive`, `/resetpassword`, `/adminlist` |
 | 4 | Lead | `/players`, `/setadmin`, `/restart`, `/sc [type]` (supply crate here), `/wc` (weapons cache here) |
 | 5 | Developer | everything above, `/setskill <skill> <0-1> [player]`; the debug toggles live in the `dev` resource (`/sethp`, `/setfood`, `/setbleed`, `/weather`, `/additem`, `/rr`, `/move`, `/fly`) |
@@ -41,6 +41,10 @@ Durations (`/mute`, `/ban`): a bare number is seconds; `10m`, `2h`, `3d`, `2w`, 
   `staff.duty`; `weapons` ignores player hits on a victim with that flag.
 - `/spec` parks the watcher frozen, invisible and without collisions where they stood, follows the target's
   dimension and interior, and the arrow keys cycle through players; `/free` or `/spec off` returns them.
+- `/field add <name> <x1 y1 x2 y2 x3 y3 x4 y4 minZ maxZ>` draws a detection field (upstream `detfield*.pwn`): the
+  `anticheat` resource logs each player's entry once (`anticheat_field_logs`, server log) and never punishes;
+  `/field list`, `/field log <name>` (last 10 entries) and `/field remove <name>`. Adds and removes are
+  `field_add` / `field_remove` rows in `staff_actions`. See `docs/anticheat.md` for what the fields are for.
 
 ## Intentional deviations
 
@@ -57,13 +61,15 @@ Durations (`/mute`, `/ban`): a bare number is seconds; `10m`, `2h`, `3d`, `2w`, 
 | Player-list gpci views (accounts by hash, hashes by name) | `/serial <serial>` (level 1) lists the names seen with a raw serial in `connection_log`, hiding accounts that outrank the caller; `/history <name> [n]` lists a name's serials and IPs per login | the serial replaces the gpci hash; both lookups are logged in `staff_actions` |
 | Reports listed with red (banned) / yellow (unread) rows | `[banned]` / `[new]` markers | the dx list draws no colour codes |
 | Mutes end on disconnect | mutes persist on the account | upstream's own comment says they should save; the file-based save never did |
+| Detection fields: a dialog editor (`/detfield`) with drawing, renaming, per-entry deletion and per-field player exceptions | `/field add\|list\|log\|remove` (level 2, logged), no exceptions | the port has no dialogs (ADR 0003 dx UI); fields only log, so an exception would only save a staff member a log line; decision recorded in `docs/anticheat.md` |
 
 ## Where things are
 
 - `resources/[scavengesurvive]/staff/shared/logic/staff.lua`: levels, registry, durations, lookup, list rows
   (busted: `tests/lua/spec/staff_logic_spec.lua`).
 - `server/main.lua`: level gate, action log, mutes, MOTD, list-dialog plumbing; `server/moderation.lua`,
-  `bans.lua`, `reports.lua`, `duty.lua`: the commands.
+  `bans.lua`, `reports.lua`, `duty.lua`, `fields.lua`: the commands (`fields.lua` writes `anticheat_fields` and
+  calls `exports.anticheat:refreshFields()`; the sweep itself is `anticheat/server/fields.lua`).
 - `resources/[scavengesurvive]/auth/shared/logic/access.lua`: ban query and whitelist decision (busted:
   `tests/lua/spec/auth_access_spec.lua`); `auth/server/main.lua` applies them on join and login.
 - `sql/schema.sql` (`bans`, `whitelist`, `reports`, `staff_actions`, `accounts.warnings/muted/mute_until`), procedures `staff_ban`, `staff_unban`, `staff_warn` and event `ev_expire_bans` in `sql/schema.sql`

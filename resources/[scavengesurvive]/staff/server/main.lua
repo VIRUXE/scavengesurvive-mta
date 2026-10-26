@@ -1,6 +1,6 @@
 -- Staff resource: commands gated by accounts.admin_level (1 Game Master, 2 Moderator, 3 Administrator, 4 Lead,
 -- 5 Developer), the staff action log, mutes, the MOTD and the list-dialog plumbing shared by the command modules
--- (server/moderation.lua, bans.lua, reports.lua, duty.lua). Upstream: gamemodes/sss/core/admin/*.pwn.
+-- (server/moderation.lua, bans.lua, reports.lua, duty.lua, fields.lua). Upstream: gamemodes/sss/core/admin/*.pwn.
 local db = loadstring(exports.lib:getModule("db"), "=lib/db.lua")()
 local net = loadstring(exports.lib:getModule("net"), "=lib/net.lua")()
 local util = loadstring(exports.lib:getModule("util"), "=lib/util.lua")()
@@ -368,7 +368,7 @@ addEventHandler("characterDied", root, function(_, _, killer)
     end
 end)
 
-for _, name in ipairs({ "moderation", "bans", "reports", "duty" }) do
+for _, name in ipairs({ "moderation", "bans", "reports", "duty", "fields" }) do
     modules[name] = loadFile("server/" .. name .. ".lua")(ctx)
 end
 

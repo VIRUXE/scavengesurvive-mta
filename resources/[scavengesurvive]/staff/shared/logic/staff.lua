@@ -323,4 +323,40 @@ function staff.kickNeedsApproval(actorLevel, highestOnline)
     return (highestOnline or 0) > (actorLevel or 0)
 end
 
+-- /field add <name> <x1 y1 x2 y2 x3 y3 x4 y4 minZ maxZ> (args = the words after "add"): the field to insert, or
+-- nil and one of ARGS, NAME, NUMBER, ZBAND. Points are the polygon's corners in order around its boundary.
+function staff.parseField(args)
+    if #args ~= 11 then
+        return nil, "ARGS"
+    end
+    local name = args[1]
+    if not name:match("^[%w_%-]+$") or #name > 64 then
+        return nil, "NAME"
+    end
+    local nums = {}
+    for i = 2, 11 do
+        nums[i - 1] = tonumber(args[i])
+        if not nums[i - 1] then
+            return nil, "NUMBER"
+        end
+    end
+    if nums[9] >= nums[10] then
+        return nil, "ZBAND"
+    end
+    local points = {}
+    for i = 1, 8, 2 do
+        points[#points + 1] = { nums[i], nums[i + 1] }
+    end
+    return { name = name, points = points, minZ = nums[9], maxZ = nums[10] }
+end
+
+-- One line for the staff_actions details column: name, corners and Z band.
+function staff.fieldSummary(field)
+    local corners = {}
+    for i, p in ipairs(field.points) do
+        corners[i] = string.format("%.1f,%.1f", p[1], p[2])
+    end
+    return string.format("%s [%s] z %.1f..%.1f", field.name, table.concat(corners, " "), field.minZ, field.maxZ)
+end
+
 return staff

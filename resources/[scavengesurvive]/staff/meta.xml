@@ -16,6 +16,7 @@
     <file src="server/bans.lua"/>
     <file src="server/reports.lua"/>
     <file src="server/duty.lua"/>
+    <file src="server/fields.lua"/>
     <export function="getLevel" type="server"/>
     <export function="getMotd" type="server"/>
     <export function="isOnDuty" type="server"/>

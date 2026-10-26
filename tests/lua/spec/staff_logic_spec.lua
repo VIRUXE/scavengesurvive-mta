@@ -218,3 +218,33 @@ describe("staff post-login alias report", function()
         assert.is_true(staff.aliasReport(rows, 0).kick)
     end)
 end)
+
+describe("detection field arguments", function()
+    local words = { "smoke", "995", "995", "1005", "995", "1005", "1005", "995", "1005", "0", "20" }
+    it("parses /field add into a named four-point polygon with a Z band", function()
+        local field, err = staff.parseField(words)
+        assert.is_nil(err)
+        assert.same({
+            name = "smoke",
+            points = { { 995, 995 }, { 1005, 995 }, { 1005, 1005 }, { 995, 1005 } },
+            minZ = 0,
+            maxZ = 20,
+        }, field)
+        assert.equals(
+            "smoke [995.0,995.0 1005.0,995.0 1005.0,1005.0 995.0,1005.0] z 0.0..20.0",
+            staff.fieldSummary(field)
+        )
+    end)
+    it("names the first problem with the arguments", function()
+        assert.same({ nil, "ARGS" }, { staff.parseField({ "smoke", "1", "2" }) })
+        local bad = { unpack(words) }
+        bad[1] = "no spaces!"
+        assert.same({ nil, "NAME" }, { staff.parseField(bad) })
+        bad = { unpack(words) }
+        bad[5] = "east"
+        assert.same({ nil, "NUMBER" }, { staff.parseField(bad) })
+        bad = { unpack(words) }
+        bad[10], bad[11] = "20", "20"
+        assert.same({ nil, "ZBAND" }, { staff.parseField(bad) })
+    end)
+end)

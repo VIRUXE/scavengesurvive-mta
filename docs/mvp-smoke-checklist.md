@@ -364,7 +364,8 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
     missing-event or ACL errors after `run-local.ps1` applies the schema.
     - a. **Detection fields.** As staff, `/field add smoke 995 995 1005 995 1005 1005 995 1005 0 20`, then
       `/gotopos 1000 1000 5` while on duty. `/field log smoke` lists the staff entry; repeat `/gotopos` after leaving
-      the field and confirm each entry is logged once. `/field remove smoke` removes it.
+      the field and confirm each entry is logged once. `/field remove smoke` removes it; `staff_actions` holds a
+      `field_add` and a `field_remove` row for the staff account (`/acmds` lists `/field` at level 2).
     - b. **Staff exemptions.** While on duty, use `/gotopos` across the map and confirm no anticheat teleport
       rollback; go off duty and walk normally with no alerts.
     - c. **Focus timeout.** With `player.max_tab_out_time` set to 60, move a non-staff player out of MTA focus for
