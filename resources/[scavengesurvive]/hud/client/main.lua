@@ -37,7 +37,8 @@ local STOCK = {
     radio = false,
 }
 -- Actions the port implements; the rest of upstream's lines wait for their features.
-local SUPPORTS = { eat = true, openbag = true, reload = true, unload = true, uncuff = true, radio = true, removebag = true }
+local SUPPORTS =
+    { eat = true, openbag = true, reload = true, unload = true, uncuff = true, radio = true, removebag = true }
 
 local state = {
     spawned = false,

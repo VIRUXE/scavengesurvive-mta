@@ -15,6 +15,7 @@ local skins = loadFile("shared/logic/skins.lua")
 apparel.skins = skins
 local clothes = loadFile("shared/logic/clothes.lua")
 local cooking = loadFile("shared/logic/cooking.lua")
+local liquids = loadFile("shared/logic/liquids.lua")
 
 -- export: whether a ped model is a woman (staff picks the duty skin from it)
 function isFemaleSkin(skin)
@@ -144,9 +145,31 @@ local cookers = loadFile("server/cooking.lua")(cookingCtx)
 hands.setCooking(cookers)
 -- the held items' ammo, batched (hands.queueData)
 setTimer(hands.flushData, 5000, 0)
-local medical = loadFile("server/medical.lua")({ db = db, net = net, state = state, destroy = destroy })
+local medical = loadFile("server/medical.lua")({ db = db, state = state, destroy = destroy })
+-- a held item's data rewritten in place (a sip from a container): the row, the hand and the client
+local function writeHeldData(player, itemId, data)
+    db.exec("UPDATE items SET data = ? WHERE id = ?", { toJSON(data):sub(2, -2), itemId })
+    local held = state.held[player]
+    if held and held.id == itemId then
+        held.data = data
+        triggerClientEvent(player, "heldItemChanged", player, held)
+    end
+end
+local drinking = loadFile("server/drinking.lua")({
+    state = state,
+    liquids = liquids,
+    type = itemType,
+    toast = toast,
+    writeHeldData = writeHeldData,
+})
+-- the interact key released during a treatment or a drink (items/client/main.lua)
+net.handler("treatmentCancelRequested", function(player)
+    medical.cancel(player)
+    drinking.cancel(player)
+end)
 loadFile("server/use.lua")({
     medical = medical,
+    drinking = drinking,
     db = db,
     net = net,
     state = state,

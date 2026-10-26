@@ -15,13 +15,14 @@ local spawnedAt = {}
 local vehicleExitedAt = {}
 local settings = {}
 local db = loadstring(exports.lib:getModule("db"), "=lib/db.lua")()
-local fields = (function()
-    local f = fileOpen("server/fields.lua", true)
+local net = loadstring(exports.lib:getModule("net"), "=lib/net.lua")()
+local function loadFile(path)
+    local f = fileOpen(path, true)
     local src = fileRead(f, fileGetSize(f))
     fileClose(f)
-    local createFields = assert(loadstring(src, "=anticheat/fields.lua"))()
-    return createFields(db)
-end)()
+    return assert(loadstring(src, "=anticheat/" .. path))()
+end
+local fields = loadFile("server/fields.lua")(db, loadFile("shared/logic/fields.lua"))
 
 local function playerName(player)
     return isElement(player) and getPlayerName(player) or "<left>"
@@ -61,16 +62,12 @@ addEventHandler("onPlayerVehicleExit", root, function()
     vehicleExitedAt[source] = getTickCount()
 end)
 
-addEvent("anticheatFocusChanged", true)
-addEventHandler("anticheatFocusChanged", root, function(isFocused)
-    if client ~= source or getElementType(source) ~= "player" then
-        return
-    end
+net.handler("anticheatFocusChanged", function(player, isFocused)
     if isFocused == true then
-        minimizedSince[source] = nil
-    elseif isFocused == false and not minimizedSince[source] then
-        minimizedSince[source] = getTickCount()
-        log(source, "focus", "game minimized")
+        minimizedSince[player] = nil
+    elseif isFocused == false and not minimizedSince[player] then
+        minimizedSince[player] = getTickCount()
+        log(player, "focus", "game minimized")
     end
 end)
 
@@ -152,12 +149,16 @@ setTimer(function()
     end
 end, 1000, 0)
 
-addCommandHandler("field", fields.command)
+-- staff's /field calls this after every add or remove
+function refreshFields()
+    fields.refresh()
+end
+
 setTimer(fields.update, 1000, 0)
 
 addEventHandler("onResourceStart", resourceRoot, function()
     if db.connect("anticheat") then
-        fields.load()
+        fields.refresh()
         db.settings(function(map)
             settings = map or {}
         end)

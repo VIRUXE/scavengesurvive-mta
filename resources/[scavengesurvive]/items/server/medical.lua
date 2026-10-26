@@ -2,9 +2,9 @@
 -- with a Bandage, Antiseptic Bandage, Medkit, Doctor's Bag, Pills or Injector in hand starts a hold on the player
 -- next to you (pills: always yourself), else on yourself; letting go, moving, the patient walking off, a new item in
 -- hand, dying or leaving cancels it. The rules (hold time, outcome) live in character's shared/logic/medical.lua.
--- ctx = { db, net, state, destroy, sendInventory } built by server/main.lua.
+-- ctx = { db, state, destroy } built by server/main.lua, which routes treatmentCancelRequested here.
 return function(ctx)
-    local db, net, state = ctx.db, ctx.net, ctx.state
+    local db, state = ctx.db, ctx.state
     local CHECK_MS, MAX_MOVE, NEXT_TO, MAX_REACH = 250, 0.8, 1.5, 2.5
     local active = {} -- healer -> { itemId, uname, patient, x, y, z, left, timer }
     local M = {}
@@ -146,9 +146,9 @@ return function(ctx)
         return TREATMENTS[uname] == true
     end
 
-    net.handler("treatmentCancelRequested", function(player)
+    function M.cancel(player)
         stop(player)
-    end)
+    end
 
     addEventHandler("onPlayerQuit", root, function()
         stop(source)

@@ -218,3 +218,88 @@ describe("staff post-login alias report", function()
         assert.is_true(staff.aliasReport(rows, 0).kick)
     end)
 end)
+
+describe("detection field arguments", function()
+    local words = { "smoke", "995", "995", "1005", "995", "1005", "1005", "995", "1005", "0", "20" }
+    it("parses /field add into a named four-point polygon with a Z band", function()
+        local field, err = staff.parseField(words)
+        assert.is_nil(err)
+        assert.same({
+            name = "smoke",
+            points = { { 995, 995 }, { 1005, 995 }, { 1005, 1005 }, { 995, 1005 } },
+            minZ = 0,
+            maxZ = 20,
+        }, field)
+        assert.equals(
+            "smoke [995.0,995.0 1005.0,995.0 1005.0,1005.0 995.0,1005.0] z 0.0..20.0",
+            staff.fieldSummary(field)
+        )
+    end)
+    it("names the first problem with the arguments", function()
+        assert.same({ nil, "ARGS" }, { staff.parseField({ "smoke", "1", "2" }) })
+        local bad = { unpack(words) }
+        bad[1] = "no spaces!"
+        assert.same({ nil, "NAME" }, { staff.parseField(bad) })
+        bad = { unpack(words) }
+        bad[5] = "east"
+        assert.same({ nil, "NUMBER" }, { staff.parseField(bad) })
+        bad = { unpack(words) }
+        bad[10], bad[11] = "20", "20"
+        assert.same({ nil, "ZBAND" }, { staff.parseField(bad) })
+    end)
+end)
+
+describe("staff panel forms", function()
+    local function kinds(usage)
+        local out = {}
+        for _, f in ipairs(staff.usageFields(usage)) do
+            out[#out + 1] = f.kind .. ":" .. f.name .. (f.optional and "?" or "")
+        end
+        return out
+    end
+    it("reads text, player and choice fields from a usage line", function()
+        assert.same(
+            { "player:player|name", "text:duration|forever?", "text:reason?" },
+            kinds("/ban <player|name> [<duration|forever> <reason>]")
+        )
+        assert.same(
+            { "choice:add|remove|?|list|on|off|auto", "text:name?" },
+            kinds("/whitelist add|remove|?|list|on|off|auto [name]")
+        )
+        assert.same({ "text:name", "choice:i|s?" }, kinds("/aliases <name> [i|s]"))
+        assert.same({ "text:skill", "text:0-1", "player:player?" }, kinds("/setskill <skill> <0-1> [player]"))
+        assert.same({ "text:type 1-5?" }, kinds("/sc [type 1-5]"))
+        assert.same({}, kinds("/duty"))
+    end)
+    it("offers the literal alternatives of a player field as picker items, 'name' aside", function()
+        local spec = staff.usageFields("/spec <player|next|prev|off>")[1]
+        assert.same({ "next", "prev", "off" }, spec.options)
+        assert.same({}, staff.usageFields("/ip <player|name>")[1].options)
+        local field = staff.usageFields("/field add|list|log|remove ...")
+        assert.same({ "add", "list", "log", "remove" }, field[1].options)
+        assert.same({ name = "arguments", kind = "text", optional = true }, field[2])
+    end)
+    it("joins the filled fields in order and refuses gaps", function()
+        local fields = staff.usageFields("/ban <player|name> [<duration|forever> <reason>]")
+        assert.equals("Bob", staff.commandArgs(fields, { " Bob ", "", "" }))
+        assert.equals("Bob 1h spam and more", staff.commandArgs(fields, { "Bob", "1h", "spam and more" }))
+        assert.same({ nil, "Fill in player|name." }, { staff.commandArgs(fields, { "", "", "" }) })
+        assert.same(
+            { nil, "Fill in duration|forever before reason." },
+            { staff.commandArgs(fields, { "Bob", "", "x" }) }
+        )
+        assert.equals("", staff.commandArgs({}, {}))
+    end)
+    it("flattens the level groups for the panel with each command's fields", function()
+        local reg = staff.newRegistry()
+        local fn = function() end
+        staff.register(reg, { name = "goto", level = 2, usage = "/goto <player>", help = "tp", fn = fn })
+        staff.register(reg, { name = "a", level = 1, usage = "/a <message>", help = "staff chat", fn = fn })
+        staff.register(reg, { name = "players", level = 4, usage = "/players", fn = fn })
+        local cmds = staff.panelCommands(reg, 2)
+        assert.same({ "goto", "a" }, { cmds[1].name, cmds[2].name })
+        assert.equals("Moderator", cmds[1].levelName)
+        assert.equals("player", cmds[1].fields[1].kind)
+        assert.same({}, staff.panelCommands(reg, 0))
+    end)
+end)

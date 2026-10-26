@@ -53,7 +53,8 @@ function roll.fill(tbl, count, rng)
     return out
 end
 
--- Computes the initial JSON string for loot-spawned ammo tins and calibre weapons (core/weapon/{loot,ammunition}.pwn).
+-- Computes the initial JSON string for loot-spawned ammo tins and calibre weapons (core/weapon/{loot,ammunition}.pwn)
+-- and liquid containers (itemtype/liquid-container.pwn OnItemCreateInWorld, #122).
 -- Looted items whose data character's medical rules roll (exports.character:medicalLootData, #94).
 roll.MEDICAL_DATA = { DoctorBag = true, Pills = true, AutoInjec = true }
 
@@ -62,6 +63,9 @@ function roll.initialItemData(def, tableName, ammoTypes, rand)
         return nil
     end
     local rng = rand or math.random
+    if def.category == "liquid" then
+        return roll.liquidData(def, rng)
+    end
     if def.category == "ammo" and def.categoryData.calibre then
         local cap = math.max(1, math.floor(tonumber(def.categoryData.rounds) or 1))
         local rounds = cap <= 1 and 1 or rng(1, cap - 1)
@@ -89,6 +93,28 @@ function roll.initialItemData(def, tableName, ammoTypes, rand)
         return '{"mag":0,"reserve":0}'
     end
     return nil
+end
+
+-- Every listed liquid whose chance beats a 0-99 roll is a candidate; one of them fills the container to a random
+-- level (upstream frandom(capacity)). nil when none qualifies: the container spawns empty. rng(a, b) is an integer
+-- in [a, b], rng() a float in [0, 1). items/shared/logic/liquids.lua reads the { amount, liquid } this writes.
+function roll.liquidData(def, rng)
+    rng = rng or math.random
+    local list = def.categoryData and def.categoryData.liquids
+    if type(list) ~= "table" or #list == 0 then
+        return nil
+    end
+    local candidates = {}
+    for _, entry in ipairs(list) do
+        if rng(0, 99) <= (tonumber(entry[2]) or 0) then
+            candidates[#candidates + 1] = entry[1]
+        end
+    end
+    if #candidates == 0 then
+        return nil
+    end
+    local capacity = tonumber(def.categoryData.capacity) or 0
+    return string.format('{"amount":%.3f,"liquid":%q}', rng() * capacity, candidates[rng(1, #candidates)])
 end
 
 return roll

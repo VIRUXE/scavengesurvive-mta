@@ -151,3 +151,13 @@ describe("crafting logic", function()
         end)
     end)
 end)
+
+describe("crafting logic: ground tools", function()
+    it("lists the tools the ground recipes are built with", function()
+        local tools = craft.groundTools()
+        assert.is_true(tools.Hammer)
+        assert.is_true(tools.Screwdriver)
+        assert.is_true(tools.FireLighter)
+        assert.is_nil(tools.Knife) -- a combine and workbench tool only
+    end)
+end)

@@ -16,14 +16,17 @@ detection-field parity.
 | Client event flood | MTA's `onPlayerTriggerEventThreshold` kicks the client that exceeds the server's configured event trigger threshold. |
 | Invalid client event | MTA's `onPlayerTriggerInvalidEvent` kicks the client that attempts an event that is missing or not remote-enabled. |
 | Alt-tab | Client MTA-focus loss is reported to the server. A player is kicked after `player.max_tab_out_time` seconds (default 60); staff on duty are exempt. |
-| Detection fields | Four-point XY polygons with a Z band log each player's entry once. They never punish players. See `/field` below. |
+| Detection fields | Four-point XY polygons with a Z band log each player's entry once (`anticheat/server/fields.lua`, pure logic in `shared/logic/fields.lua`). They never punish players. Staff manage them with `/field` in the `staff` resource, see below. |
 
 The MTA server's event trigger threshold and `player_teleport_alert` control the native movement and event alarms.
-The focus report depends on the client resource, so it is an AFK policy signal rather than a tamper-proof fact.
+The focus report depends on the client resource (`anticheatFocusChanged`, a `net.handler` event declared in
+`shared/events.lua`), so it is an AFK policy signal rather than a tamper-proof fact.
 
 ## Detection fields
 
-Level 2+ staff can use:
+The command lives in the `staff` resource (`staff/server/fields.lua`, level 2, listed in `docs/staff-commands.md`)
+like every other privileged command, and each add or remove is a `field_add` / `field_remove` row in
+`staff_actions`. After a change it calls `exports.anticheat:refreshFields()` so the sweep reloads the table.
 
 ```text
 /field add <name> <x1 y1 x2 y2 x3 y3 x4 y4 minZ maxZ>
@@ -35,6 +38,13 @@ Level 2+ staff can use:
 The polygon points are in order around the boundary. Entries are written to `anticheat_field_logs` and printed to
 the server log. The log command shows the latest 10 entries. This is a smaller interface than upstream's dialog
 editor: it does not support player exceptions, renaming, drawing, or per-entry deletion.
+
+**Decision (2026-10-26, #100):** neither the dialog editor nor the per-field player exceptions get a follow-up port.
+The staff panel (`docs/staff-commands.md`, CEGUI) gives `/field add` a form with a field per argument, which
+covers everything the editor did that matters on a live server; renaming is a remove and an add. Exceptions existed upstream so that a staff member
+crossing a field did not fill its log; here a field never punishes, the log is read by the same staff and shows
+who entered, and a line from a staff member on duty is easy to tell apart (`/field log`). If a field ever gains
+consequences, exceptions come back as an `anticheat_field_exceptions` table keyed by account, not by name.
 
 ## Replaced or dropped checks
 

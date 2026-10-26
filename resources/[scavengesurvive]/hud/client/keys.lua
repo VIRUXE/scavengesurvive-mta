@@ -132,8 +132,9 @@ return function(ctx)
             return triggerServerEvent("fuelPumpInteractRequested", localPlayer)
         end
         -- food is eaten; a held treatment starts its hold, and letting go of the key cancels it (items, #94);
-        -- held Clothes start the clothes change (#110)
-        if held and (held.category == "food" or TREATMENTS[held.uname] or held.uname == "Clothes") then
+        -- held Clothes start the clothes change (#110); a liquid container is drunk from, sip per hold (#122)
+        local drinkable = held and held.category == "liquid"
+        if held and (held.category == "food" or drinkable or TREATMENTS[held.uname] or held.uname == "Clothes") then
             return triggerServerEvent("itemUseRequested", localPlayer, held.id)
         end
         if held and held.category == "bag" then

@@ -323,4 +323,153 @@ function staff.kickNeedsApproval(actorLevel, highestOnline)
     return (highestOnline or 0) > (actorLevel or 0)
 end
 
+-- /field add <name> <x1 y1 x2 y2 x3 y3 x4 y4 minZ maxZ> (args = the words after "add"): the field to insert, or
+-- nil and one of ARGS, NAME, NUMBER, ZBAND. Points are the polygon's corners in order around its boundary.
+function staff.parseField(args)
+    if #args ~= 11 then
+        return nil, "ARGS"
+    end
+    local name = args[1]
+    if not name:match("^[%w_%-]+$") or #name > 64 then
+        return nil, "NAME"
+    end
+    local nums = {}
+    for i = 2, 11 do
+        nums[i - 1] = tonumber(args[i])
+        if not nums[i - 1] then
+            return nil, "NUMBER"
+        end
+    end
+    if nums[9] >= nums[10] then
+        return nil, "ZBAND"
+    end
+    local points = {}
+    for i = 1, 8, 2 do
+        points[#points + 1] = { nums[i], nums[i + 1] }
+    end
+    return { name = name, points = points, minZ = nums[9], maxZ = nums[10] }
+end
+
+-- One line for the staff_actions details column: name, corners and Z band.
+function staff.fieldSummary(field)
+    local corners = {}
+    for i, p in ipairs(field.points) do
+        corners[i] = string.format("%.1f,%.1f", p[1], p[2])
+    end
+    return string.format("%s [%s] z %.1f..%.1f", field.name, table.concat(corners, " "), field.minZ, field.maxZ)
+end
+
+-- Staff panel forms: the argument fields of a usage line ("/ban <player|name> [<duration|forever> <reason>]").
+-- <...> is a text field, or a player picker when its first alternative is "player" (the other alternatives,
+-- "name" aside, become extra picker items); a bare a|b|c is a choice; [...] marks what it holds optional; ...
+-- is optional free text. A field is { name, kind = "player" | "choice" | "text", optional, options | nil }, in
+-- usage order.
+local function addUsageField(fields, content, optional, bare)
+    if content == "..." then
+        fields[#fields + 1] = { name = "arguments", kind = "text", optional = true }
+        return
+    end
+    local alts = {}
+    for alt in content:gmatch("[^|]+") do
+        alts[#alts + 1] = alt
+    end
+    if alts[1] == "player" then
+        local options = {}
+        for i = 2, #alts do
+            if alts[i] ~= "name" then
+                options[#options + 1] = alts[i]
+            end
+        end
+        fields[#fields + 1] = { name = content, kind = "player", optional = optional, options = options }
+    elseif bare and #alts > 1 then
+        fields[#fields + 1] = { name = content, kind = "choice", optional = optional, options = alts }
+    elseif bare and not optional then
+        return -- a literal word in the usage, not an argument
+    else
+        fields[#fields + 1] = { name = content, kind = "text", optional = optional }
+    end
+end
+
+local function parseUsage(seg, optional, fields)
+    local i = 1
+    while i <= #seg do
+        local ch = seg:sub(i, i)
+        if ch == "[" then
+            local depth, j = 1, i + 1
+            while j <= #seg and depth > 0 do
+                local c = seg:sub(j, j)
+                if c == "[" then
+                    depth = depth + 1
+                elseif c == "]" then
+                    depth = depth - 1
+                end
+                j = j + 1
+            end
+            local inner = seg:sub(i + 1, j - 2)
+            if inner:find("<", 1, true) then
+                parseUsage(inner, true, fields)
+            else
+                addUsageField(fields, inner, true, not inner:find("%s"))
+            end
+            i = j
+        elseif ch == "<" then
+            local close = seg:find(">", i, true) or #seg + 1
+            addUsageField(fields, seg:sub(i + 1, close - 1), optional, false)
+            i = close + 1
+        elseif ch:match("%s") then
+            i = i + 1
+        else
+            local j = seg:find("[%s%[<]", i) or #seg + 1
+            addUsageField(fields, seg:sub(i, j - 1), optional, true)
+            i = j
+        end
+    end
+end
+
+function staff.usageFields(usage)
+    local fields = {}
+    local rest = tostring(usage or ""):gsub("^%s*/%S*%s*", "")
+    parseUsage(rest, false, fields)
+    return fields
+end
+
+-- The argument text for a command from the form's values (one per field, in order): the filled fields joined
+-- by spaces. nil and a message when a required field is blank or a blank optional field is followed by a
+-- filled one (arguments are positional).
+function staff.commandArgs(fields, values)
+    local parts, blank = {}, nil
+    for i, f in ipairs(fields) do
+        local v = staff.trim(values[i])
+        if v == "" then
+            if not f.optional then
+                return nil, "Fill in " .. f.name .. "."
+            end
+            blank = blank or f.name
+        elseif blank then
+            return nil, "Fill in " .. blank .. " before " .. f.name .. "."
+        else
+            parts[#parts + 1] = v
+        end
+    end
+    return table.concat(parts, " ")
+end
+
+-- The staff panel's command list for a level: commandsFor's groups flattened, each command with its fields.
+function staff.panelCommands(reg, level)
+    local out = {}
+    for _, group in ipairs(staff.commandsFor(reg, level)) do
+        for _, c in ipairs(group.commands) do
+            out[#out + 1] = {
+                name = c.name,
+                level = group.level,
+                levelName = group.name,
+                usage = c.usage,
+                help = c.help,
+                fields = staff.usageFields(c.usage),
+            }
+        end
+    end
+    return out
+end
+
 return staff

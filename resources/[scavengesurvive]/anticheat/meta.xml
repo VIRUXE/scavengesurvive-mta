@@ -4,9 +4,12 @@
     <include resource="lib"/>
     <include resource="auth"/>
     <include resource="staff"/>
+    <script src="shared/events.lua" type="shared"/>
     <script src="server/main.lua" type="server"/>
+    <file src="shared/logic/fields.lua"/>
     <file src="server/fields.lua"/>
     <script src="client/focus.lua" type="client"/>
+    <export function="refreshFields" type="server"/>
     <aclrequest>
         <right name="function.kickPlayer" access="true" />
     </aclrequest>

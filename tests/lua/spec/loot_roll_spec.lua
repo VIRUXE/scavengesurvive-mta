@@ -47,3 +47,45 @@ describe("loot roll", function()
         end
     end)
 end)
+
+describe("loot roll: liquid containers", function()
+    local BOTTLE = {
+        category = "liquid",
+        categoryData = { capacity = 0.5, liquids = { { "Water", 100.0 }, { "Orange", 50.0 } }, reusable = true },
+    }
+    -- rng(a, b) draws from the queue, rng() the fixed fraction
+    local function rngOf(ints, fraction)
+        local i = 0
+        return function(a)
+            if a == nil then
+                return fraction
+            end
+            i = i + 1
+            return ints[i] or a
+        end
+    end
+    it("fills a container with one of the liquids whose chance beat the roll, to a random level", function()
+        -- Water 100 keeps on 99, Orange 50 drops on 60; the pick is 1 of 1; 0.8 of 0.5 L
+        assert.equals(
+            '{"amount":0.400,"liquid":"Water"}',
+            roll.initialItemData(BOTTLE, "civilian", nil, rngOf({ 99, 60, 1 }, 0.8))
+        )
+        -- both qualify, the second is picked
+        assert.equals(
+            '{"amount":0.250,"liquid":"Orange"}',
+            roll.initialItemData(BOTTLE, "civilian", nil, rngOf({ 0, 50, 2 }, 0.5))
+        )
+    end)
+    it("spawns a container empty when no liquid qualifies or the type lists none", function()
+        local never = { category = "liquid", categoryData = { capacity = 0.33, liquids = { { "Turpentine", 1.0 } } } }
+        assert.is_nil(roll.initialItemData(never, "industrial", nil, rngOf({ 2 }, 0.5)))
+        assert.is_nil(
+            roll.initialItemData(
+                { category = "liquid", categoryData = { capacity = 0.5, liquids = {} } },
+                "x",
+                nil,
+                rngOf({}, 0.5)
+            )
+        )
+    end)
+end)

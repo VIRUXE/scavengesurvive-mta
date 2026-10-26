@@ -1,52 +1,50 @@
--- Client half of staff: draws the server's list, message and input dialogs through ui, relays the answers back,
--- shows the spectate banner with arrow-key cycling, and draws name tags over players when the server turns them on.
-local listKey = nil
+-- Client half of staff: the CEGUI dialogs the server opens (client/dialogs.lua) and the staff panel
+-- (client/panel.lua), the spectate banner with arrow-key cycling, and name tags over players when the server
+-- turns them on. This resource shows the cursor itself while one of its windows is open.
+local function loadFile(path)
+    local f = fileOpen(path, true)
+    local src = fileRead(f, fileGetSize(f))
+    fileClose(f)
+    return assert(loadstring(src, "=staff/" .. path))()
+end
+local logic = loadFile("shared/logic/staff.lua")
 local spectating = nil -- player element being watched
 local nametags = false
 
+-- Windows open at once; the cursor and the no-binds-when-editing input mode follow the count.
+local ctx = { logic = logic }
+local openWindows, savedInputMode = 0, nil
+function ctx.cursor(delta)
+    openWindows = math.max(0, openWindows + delta)
+    if openWindows == 1 and delta > 0 then
+        savedInputMode = guiGetInputMode()
+        guiSetInputMode("no_binds_when_editing")
+        showCursor(true)
+    elseif openWindows == 0 and delta < 0 then
+        guiSetInputMode(savedInputMode or "allow_binds")
+        showCursor(false)
+    end
+end
+local dialogs = loadFile("client/dialogs.lua")(ctx)
+local panel = loadFile("client/panel.lua")(ctx)
+
 addEventHandler("staffListOpened", root, function(key, title, rows, buttons)
-    listKey = key
-    exports.ui:listOpen("staff:" .. key, title, rows, buttons)
+    dialogs.listOpen(key, title, rows, buttons)
 end)
 
--- cleared before listClose so the uiListClosed it emits is not echoed: the server closed this list itself
 addEventHandler("staffListDismissed", root, function()
-    if listKey then
-        listKey = nil
-        exports.ui:listClose()
-    end
+    dialogs.listDismiss()
 end)
-
-addEventHandler("uiListActionSelected", root, function(listId, rowId, actionId)
-    local key = tostring(listId):match("^staff:(.+)$")
-    if not key or key ~= listKey then
-        return
-    end
-    triggerServerEvent("staffListActionSelected", localPlayer, key, rowId, actionId)
-end)
-
-addEventHandler("uiListClosed", root, function(listId)
-    local key = tostring(listId):match("^staff:(.+)$")
-    if key and key == listKey then
-        listKey = nil
-        triggerServerEvent("staffListClosed", localPlayer, key)
-    end
-end)
-
-local dialogKey = nil
 
 addEventHandler("staffDialogOpened", root, function(key, style, title, body, left, right)
-    dialogKey = key
-    exports.ui:dialogOpen("staff:" .. key, style, title, body, left, right)
+    dialogs.dialogOpen(key, style, title, body, left, right)
 end)
 
-addEventHandler("uiDialogResponded", root, function(id, accepted, text)
-    local key = tostring(id):match("^staff:(.+)$")
-    if not key or key ~= dialogKey then
-        return
+-- Escape answers the open dialog or closes the list, then the panel; swallowed so the main menu stays shut.
+addEventHandler("onClientKey", root, function(button, press)
+    if press and button == "escape" and (dialogs.escape() or panel.escape()) then
+        cancelEvent()
     end
-    dialogKey = nil
-    triggerServerEvent("staffDialogResponded", localPlayer, key, accepted, text)
 end)
 
 -- Spectate banner and arrow keys (upstream spectate.pwn: left/right switch target).
@@ -126,13 +124,6 @@ end)
 -- /kick, /ban, /mute, /unmute and /restart (logic.CHAT_BRIDGED) are MTA console commands too; typed in chat
 -- they would reach the server's hardcoded handler and the Default ACL's denial instead of the staff resource,
 -- so the client forwards them with their arguments and the server cancels the hardcoded path.
-local function loadFile(path)
-    local f = fileOpen(path, true)
-    local src = fileRead(f, fileGetSize(f))
-    fileClose(f)
-    return assert(loadstring(src, "=staff/" .. path))()
-end
-local logic = loadFile("shared/logic/staff.lua")
 for name in pairs(logic.CHAT_BRIDGED) do
     addCommandHandler(name, function(_, ...)
         triggerServerEvent("staffCommandIssued", localPlayer, name, table.concat({ ... }, " "))

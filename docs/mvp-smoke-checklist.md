@@ -119,6 +119,8 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
     - **Crafting & Workbench**:
       - In-hand combine: Hold `Knife` and click `Clothes` in inventory -> click `Combine`: instant craft produces `Bandage` in inventory while preserving the `Knife`. Combine `Bottle` + `Bandage` -> `MolotovEmpty`.
       - Ground construction: Drop ingredients on ground (e.g. 2x `WoodLog`), hold `FireLighter`, press **F** (or `/craft`): 3-second construction progress bar consumes logs and spawns `Campfire`. Hold `Hammer` near 3x `WoodLog` -> builds `Barricade`. Hold `Hammer` near 2x `WoodLog` + 2x `CorPanel` -> builds `Workbench`.
+        With the ingredients within reach, **F** with the tool in hand builds (it no longer says `You are already
+        holding an item`, #116); a tool in hand next to items that match no recipe says `Cannot craft these items`.
       - Deconstruction: Hold `Crowbar` and press **F** near constructed object (`Campfire`, `Workbench`, `Barricade`, `LargeFrame`), even with another item lying closer (#97): timed deconstruction progress bar dismantles the object and returns raw materials.
       - Workbench crafting: Place materials in Workbench 16-slot container (e.g. `CorPanel` + `Battery` + tool `Screwdriver`), press **F** at Workbench: crafts `Keypad` inside container.
     - **Defences, Keypads and Plot Poles**:
@@ -132,7 +134,10 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
     immunity, the kick request and the MOTD on login still need the second PC). Driving A by script: replies are read
     with `rcon.ps1 chat A`, since screenshots never include the chat box.
     - a. **Boot and gate.** `scripts.log` has no `Access denied` for `staff`; B types `/acmds` and gets MTA's unknown
-      command notice; A's `/acmds` opens the list dialog with the Lead, Administrator, Moderator and Game Master groups.
+      command notice; A's `/acmds` opens the CEGUI list with the Lead, Administrator, Moderator and Game Master groups.
+      B presses P: nothing opens; A presses P: the staff panel lists the same commands; picking `/goto` shows a
+      player field with B in the picker, Run with it blank says `Fill in player.`, with B picked it teleports (on
+      duty) and the reply shows in the panel's output box; Escape closes the panel.
     - b. **Mute.** A: `/mute B 30s testing`. B sees `Muted from global chat for 30 seconds`, B's chat lines do not
       appear for A and B gets `You are muted. Time remaining: …`; after 30 s B sees `You are now un-muted`. `/mute B
       forever x`, B relogs: still muted; `/unmute B` lifts it. `staff_actions` has `mute` and `unmute` rows.
@@ -364,7 +369,8 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
     missing-event or ACL errors after `run-local.ps1` applies the schema.
     - a. **Detection fields.** As staff, `/field add smoke 995 995 1005 995 1005 1005 995 1005 0 20`, then
       `/gotopos 1000 1000 5` while on duty. `/field log smoke` lists the staff entry; repeat `/gotopos` after leaving
-      the field and confirm each entry is logged once. `/field remove smoke` removes it.
+      the field and confirm each entry is logged once. `/field remove smoke` removes it; `staff_actions` holds a
+      `field_add` and a `field_remove` row for the staff account (`/acmds` lists `/field` at level 2).
     - b. **Staff exemptions.** While on duty, use `/gotopos` across the map and confirm no anticheat teleport
       rollback; go off duty and walk normally with no alerts.
     - c. **Focus timeout.** With `player.max_tab_out_time` set to 60, move a non-staff player out of MTA focus for
@@ -376,3 +382,16 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
     - e. **Native movement and event guards.** Confirm the deployed server build supports `onPlayerTeleport`,
       `onPlayerTriggerEventThreshold`, and `onPlayerTriggerInvalidEvent`; inspect server logs for a safe test event
       threshold breach in a private test server. No production cheat tools are needed for this smoke step.
+
+35. **Discord reports of 2026-10-26** (#116, #118, #120, #121, #122). One client.
+    - a. **Drinking (#122, #118).** `/additem Bottle` and `/additem GasCan` give empty containers (`Bottle (Empty)`
+      in the inventory, **F** says `It is empty`); a looted Bottle, Can Drink, Milk Carton or Apple Juice reads
+      `(Water 0.4/0.50)`-style with a random level, and a looted Petrol Can `(Petrol 13.2/20.00)` rather than a
+      fixed amount. Hold **F** with a filled Bottle: the drinking animation and a 1 s hold bar repeat, the label
+      drops 0.2 L per sip, the hunger bar rises per sip (Milk 2.1, Water 0.5), letting go stops it, and the last sip
+      ends with `It is empty`. Drinking from a Petrol Can lowers food (-8 per sip, as upstream).
+    - b. **Carry items and vehicles (#120).** Holding a `Wheel` or `SmallBox`, try to enter any vehicle: entry is
+      refused with `Put that down before getting in`; drop it and enter normally.
+    - c. **Pickup and drop animations (#121).** Pick up a Bandage: a short bend (BOM_Plant_In); drop it: the same.
+      Pick up a Wheel: the lift animation, then the carry pose while walking; equipping a Wheel from the bag
+      shows the carry pose; dropping it plays the put-down animation and clears the pose.

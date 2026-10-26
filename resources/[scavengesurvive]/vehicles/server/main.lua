@@ -572,11 +572,19 @@ net.handler("fuelPumpInteractRequested", function(player)
     activeActions[player] = { actionType = "pump", timer = timer }
 end, { rate = 3 })
 
--- Entry enforcement: no entering during a roadside hold (repair, refuel, locksmith, lock-break), nor into locked vehicles
+-- Entry enforcement: no entering during a roadside hold (repair, refuel, locksmith, lock-break), nor into locked
+-- vehicles, nor with a carried item (wheel, box, panel: useCarryAnim) in hand. Upstream dropped the carried item on
+-- the spot (OnPlayerEnterVehicle); the port refuses instead so nothing is left behind by accident (#120).
 addEventHandler("onVehicleStartEnter", root, function(player)
     if activeActions[player] then
         cancelEvent()
         return
+    end
+    local held = exports.items:getHeld(player)
+    local heldType = held and exports.data:itemType(held.uname)
+    if heldType and heldType.useCarryAnim then
+        cancelEvent()
+        return toast(player, "CARRY_NO_VEHICLE")
     end
     local inf = info[source]
     if inf and inf.locked and inf.locked > 0 then
