@@ -173,9 +173,10 @@ function ctx.kick(target, actor, reason, delayMs)
     return true
 end
 
--- List dialogs: the server owns the rows and the meaning of each action; the client only draws (ui:listOpen)
--- and echoes uiListActionSelected back as staffListActionSelected. onClose runs when the player closes the list
--- (the right button on level 1, as upstream's "Back"), not when the server replaces or dismisses it.
+-- List dialogs: the server owns the rows and the meaning of each action; the client only draws them as CEGUI
+-- windows (client/dialogs.lua) and sends the chosen row and action back as staffListActionSelected. onClose runs
+-- when the player closes the list (the right button on level 1, as upstream's "Back"), not when the server
+-- replaces or dismisses it.
 function ctx.openList(p, key, title, rows, buttons, handler, onClose)
     if not isElement(p) or isConsole(p) then
         return ctx.say(p, " >  (dialogs need a connected player)")
@@ -209,7 +210,7 @@ net.handler("staffListClosed", function(player, key)
     end
 end)
 
--- Message and input dialogs (ui:dialogOpen, style "msgbox" or "input"): handler(accepted, text) runs once with the
+-- Message and input dialogs (style "msgbox", "input" or "password"): handler(accepted, text) runs once with the
 -- player's answer. Opening one closes the player's list first; the handler may open the next dialog or list.
 function ctx.openDialog(p, key, style, title, body, buttons, handler)
     if not isElement(p) or isConsole(p) then
@@ -256,7 +257,8 @@ end
 -- Names in logic.CHAT_BRIDGED (kick, ban, mute, unmute, restart) are MTA console commands too: a player typing
 -- them hits the server's hardcoded handler first, the stock Default ACL denies it ("ACL: Access denied") and the
 -- script handler below never runs. client/main.lua forwards those through staffCommandIssued instead, and the
--- onPlayerCommand handler cancels the hardcoded path so MTA neither acts on them nor prints the denial.
+-- onPlayerCommand handler cancels the hardcoded path so MTA neither acts on them nor prints the denial. The
+-- staff panel (client/panel.lua) sends every command the same way; dispatch applies the same level gate.
 function ctx.command(def)
     logic.register(ctx.reg, def)
     addCommandHandler(def.name, function(p, _, ...)
@@ -271,11 +273,16 @@ addEventHandler("onPlayerCommand", root, function(command)
 end)
 
 net.handler("staffCommandIssued", function(player, name, argsText)
-    local def = logic.CHAT_BRIDGED[name] and ctx.reg.byName[name]
+    local def = ctx.reg.byName[tostring(name)]
     if def then
         dispatch(player, def, tostring(argsText or ""))
     end
 end, { rate = 5 })
+
+-- The staff panel's command list for the player's level; empty for players, so the client opens nothing.
+net.handler("staffPanelRequested", function(player)
+    triggerClientEvent(player, "staffPanelShown", player, logic.panelCommands(ctx.reg, ctx.level(player)))
+end, { rate = 2 })
 
 -- ---------------------------------------------------------------------------------------------------------
 -- Mutes (upstream admin/mute.pwn + player/chat.pwn), persisted on the account so they survive a relog.

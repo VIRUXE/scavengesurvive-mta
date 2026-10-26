@@ -469,7 +469,13 @@ return function(ctx)
         help = "This list",
         needsDb = false,
         fn = function(p, _, lvl)
-            local rows = {}
+            local rows = {
+                {
+                    id = "panel",
+                    label = "P or /staffpanel opens the staff panel with a form per command",
+                    empty = true,
+                },
+            }
             for _, group in ipairs(logic.commandsFor(ctx.reg, lvl)) do
                 rows[#rows + 1] = {
                     id = "lvl" .. group.level,

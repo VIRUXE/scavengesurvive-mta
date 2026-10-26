@@ -45,6 +45,8 @@ files["resources/**/building/client/**"] = { std = "lua51+mta_shared+mta_client"
 files["resources/**/crafting/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "groundCraft", "deconstruct", "workbenchCraft" } }
 -- clearChatBox postdates the generated .luacheck/mta_server.lua list
 files["resources/**/staff/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "getLevel", "getMotd", "isOnDuty", "isMuted", "logAction", "mutePlayer", "getLevelColour", "runCommand" }, read_globals = { "clearChatBox" } }
+-- the CEGUI grid list, combo box, memo and label functions postdate the generated .luacheck/mta_client.lua list
+files["resources/**/staff/client/**"] = { std = "lua51+mta_shared+mta_client", read_globals = { "guiCreateGridList", "guiGridListAddColumn", "guiGridListAddRow", "guiGridListClear", "guiGridListGetSelectedItem", "guiGridListSetItemColor", "guiGridListSetItemText", "guiGridListSetSortingEnabled", "guiCreateComboBox", "guiComboBoxAddItem", "guiComboBoxGetSelected", "guiComboBoxGetItemText", "guiCreateMemo", "guiMemoSetReadOnly", "guiMemoSetCaretIndex", "guiLabelSetColor", "guiLabelSetHorizontalAlign", "guiSetPosition", "guiGetInputMode" } }
 files["resources/**/anticheat/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "refreshFields" } }
 files["resources/**/chat/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "getRadio", "setChatMode", "sendAs", "sendGlobalExternal" } }
 files["resources/**/chat/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "radioOpen" } }

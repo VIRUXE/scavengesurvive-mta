@@ -40,8 +40,8 @@ the server log. The log command shows the latest 10 entries. This is a smaller i
 editor: it does not support player exceptions, renaming, drawing, or per-entry deletion.
 
 **Decision (2026-10-26, #100):** neither the dialog editor nor the per-field player exceptions get a follow-up port.
-The port has no dialogs (ADR 0003, dx UI over CEGUI/CEF) and the command covers everything the editor did that
-matters on a live server; renaming is a remove and an add. Exceptions existed upstream so that a staff member
+The staff panel (`docs/staff-commands.md`, CEGUI) gives `/field add` a form with a field per argument, which
+covers everything the editor did that matters on a live server; renaming is a remove and an add. Exceptions existed upstream so that a staff member
 crossing a field did not fill its log; here a field never punishes, the log is read by the same staff and shows
 who entered, and a line from a staff member on duty is easy to tell apart (`/field log`). If a field ever gains
 consequences, exceptions come back as an `anticheat_field_exceptions` table keyed by account, not by name.

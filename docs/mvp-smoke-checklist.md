@@ -132,7 +132,10 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
     immunity, the kick request and the MOTD on login still need the second PC). Driving A by script: replies are read
     with `rcon.ps1 chat A`, since screenshots never include the chat box.
     - a. **Boot and gate.** `scripts.log` has no `Access denied` for `staff`; B types `/acmds` and gets MTA's unknown
-      command notice; A's `/acmds` opens the list dialog with the Lead, Administrator, Moderator and Game Master groups.
+      command notice; A's `/acmds` opens the CEGUI list with the Lead, Administrator, Moderator and Game Master groups.
+      B presses P: nothing opens; A presses P: the staff panel lists the same commands; picking `/goto` shows a
+      player field with B in the picker, Run with it blank says `Fill in player.`, with B picked it teleports (on
+      duty) and the reply shows in the panel's output box; Escape closes the panel.
     - b. **Mute.** A: `/mute B 30s testing`. B sees `Muted from global chat for 30 seconds`, B's chat lines do not
       appear for A and B gets `You are muted. Time remaining: …`; after 30 s B sees `You are now un-muted`. `/mute B
       forever x`, B relogs: still muted; `/unmute B` lifts it. `staff_actions` has `mute` and `unmute` rows.

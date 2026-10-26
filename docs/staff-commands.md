@@ -18,6 +18,18 @@ Durations (`/mute`, `/ban`): a bare number is seconds; `10m`, `2h`, `3d`, `2w`, 
 `forever`, `perm`, `0` or `-1` mean no expiry. Player arguments accept a unique prefix or substring of the name
 (case-insensitive); exact names win.
 
+## Staff panel and dialogs (CEGUI)
+
+Every staff command can also be run from the **staff panel**: `P` (the `staffpanel` command bind, rebindable in
+MTA's settings) or `/staffpanel` opens a CEGUI window listing the commands the player's level allows, with a form
+built from each command's usage line (`client/panel.lua`): `<...>` is a text field, a bare `a|b|c` is a drop-down,
+`<player...>` is a text field with a picker of the players online, `[...]` is optional. **Run** sends the line
+through `staffCommandIssued`, which applies the same level gate as chat (`dispatch` in `server/main.lua`), so the
+panel adds no permissions; the replies arrive in the chat box and are echoed in the panel's output box. The list,
+message and input dialogs the commands open (`/acmds`, `/banlist`, `/reports`, `/ban <name>`, `/report`, …) are
+CEGUI windows too (`client/dialogs.lua`): a grid list with two buttons, a row's actions in the same window, Enter
+and Escape for the two buttons. Players (level 0) get nothing from the key, as they get nothing from `/acmds`.
+
 ## Rules carried over from upstream
 
 - A staff member may act only on players of a **lower** level, or on themselves (`level1.pwn` "return 3").
@@ -61,12 +73,14 @@ Durations (`/mute`, `/ban`): a bare number is seconds; `10m`, `2h`, `3d`, `2w`, 
 | Player-list gpci views (accounts by hash, hashes by name) | `/serial <serial>` (level 1) lists the names seen with a raw serial in `connection_log`, hiding accounts that outrank the caller; `/history <name> [n]` lists a name's serials and IPs per login | the serial replaces the gpci hash; both lookups are logged in `staff_actions` |
 | Reports listed with red (banned) / yellow (unread) rows | `[banned]` / `[new]` markers | the dx list draws no colour codes |
 | Mutes end on disconnect | mutes persist on the account | upstream's own comment says they should save; the file-based save never did |
-| Detection fields: a dialog editor (`/detfield`) with drawing, renaming, per-entry deletion and per-field player exceptions | `/field add\|list\|log\|remove` (level 2, logged), no exceptions | the port has no dialogs (ADR 0003 dx UI); fields only log, so an exception would only save a staff member a log line; decision recorded in `docs/anticheat.md` |
+| Detection fields: a dialog editor (`/detfield`) with drawing, renaming, per-entry deletion and per-field player exceptions | `/field add\|list\|log\|remove` (level 2, logged, a form in the staff panel), no exceptions | the panel's form replaces the editor; fields only log, so an exception would only save a staff member a log line; decision recorded in `docs/anticheat.md` |
 
 ## Where things are
 
 - `resources/[scavengesurvive]/staff/shared/logic/staff.lua`: levels, registry, durations, lookup, list rows
   (busted: `tests/lua/spec/staff_logic_spec.lua`).
+- `client/panel.lua` (the CEGUI staff panel, `P`), `client/dialogs.lua` (the CEGUI list and input dialogs),
+  `client/main.lua` (cursor and input mode, spectate banner, name tags).
 - `server/main.lua`: level gate, action log, mutes, MOTD, list-dialog plumbing; `server/moderation.lua`,
   `bans.lua`, `reports.lua`, `duty.lua`, `fields.lua`: the commands (`fields.lua` writes `anticheat_fields` and
   calls `exports.anticheat:refreshFields()`; the sweep itself is `anticheat/server/fields.lua`).
