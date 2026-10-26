@@ -622,6 +622,9 @@ return function(ctx)
         if not cid or (isIncapacitated and isIncapacitated(player)) then
             return
         end
+        if state.lastHolster and state.lastHolster[player] and (getTickCount() - state.lastHolster[player] < 1000) then
+            return
+        end
         local held = state.held[player]
         if tryPlayerInteraction(player, cid, held) then
             return

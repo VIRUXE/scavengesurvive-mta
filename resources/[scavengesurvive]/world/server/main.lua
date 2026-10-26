@@ -32,9 +32,9 @@ addEventHandler("onResourceStart", resourceRoot, function()
     setTimer(syncClock, weather.CLOCK_SYNC_MS, 0)
     setTimer(function()
         if weather.shouldChange(getTickCount() - lastChange, math.random) then
-            apply(weather.pick(math.random), "rolled")
+            apply(weather.pick(math.random, current), "rolled")
         end
-    end, weather.CHECK_MS, 0)
+    end, weather.CHECK_INTERVAL_MS or 60000, 0)
 end)
 
 function getWeather()

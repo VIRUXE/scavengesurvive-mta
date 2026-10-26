@@ -37,8 +37,16 @@ local STOCK = {
     radio = false,
 }
 -- Actions the port implements; the rest of upstream's lines wait for their features.
-local SUPPORTS =
-    { eat = true, openbag = true, reload = true, unload = true, uncuff = true, radio = true, removebag = true }
+local SUPPORTS = {
+    eat = true,
+    openbag = true,
+    reload = true,
+    unload = true,
+    uncuff = true,
+    radio = true,
+    removebag = true,
+    holster = true,
+}
 
 local state = {
     spawned = false,
@@ -254,6 +262,7 @@ local function drawKeyActions(driver)
         nearCrate = exports.loot:nearbyCrate() or nil,
         nearCooker = nearCooker(held),
         cuffedNearby = not held and hasCuffedPlayerNearby() or false,
+        hasHolster = getElementData(localPlayer, "items.holster") ~= false,
         supports = SUPPORTS,
     }, state.keys)
     local scale = canvas.textScale(c, 1.5, 1)

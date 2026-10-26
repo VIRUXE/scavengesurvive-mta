@@ -68,6 +68,9 @@ function M.lines(ctx, keys)
     end
     local h = ctx.held
     if not h then
+        if ctx.hasHolster then
+            add("putaway", "Draw weapon", "holster")
+        end
         if ctx.cuffedNearby then
             add("interact", "Remove handcuffs", "uncuff")
         end

@@ -35,6 +35,14 @@ describe("crafting logic", function()
             assert.is_true(res.consumeB)
         end)
 
+        it("combines Fusebox + Battery into PowerSupply consuming both (#119)", function()
+            local res = craft.matchCombine("Fusebox", "Battery")
+            assert.is_not_nil(res)
+            assert.are.equal("PowerSupply", res.recipe.result.uname)
+            assert.is_true(res.consumeA)
+            assert.is_true(res.consumeB)
+        end)
+
         it("returns nil for non-matching items", function()
             assert.is_nil(craft.matchCombine("Knife", "Hammer"))
             assert.is_nil(craft.matchCombine("WoodLog", "Bottle"))
@@ -94,6 +102,14 @@ describe("crafting logic", function()
     end)
 
     describe("workbench crafting", function()
+        it("matches PowerSupply with Battery and Fusebox in container and Screwdriver held", function()
+            local container = { Battery = 1, Fusebox = 1 }
+            local matches = craft.matchWorkbench(container, "Screwdriver")
+            assert.are.equal(1, #matches)
+            assert.are.equal("PowerSupply", matches[1].name)
+            assert.are.equal(12000, matches[1].buildTime)
+        end)
+
         it("matches LocksmithKit with CorPanel, Screwdriver, Hammer in container and Wrench held", function()
             local container = { CorPanel = 1, Screwdriver = 1, Hammer = 1 }
             local matches = craft.matchWorkbench(container, "Wrench")

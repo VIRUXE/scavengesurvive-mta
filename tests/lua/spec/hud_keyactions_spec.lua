@@ -39,6 +39,11 @@ describe("hud key actions", function()
         local l =
             keyactions.lines({ spawned = true, held = false, hasBag = true, supports = { removebag = true } }, KEYS)
         assert.same({ "H Open inventory", "N Remove bag" }, texts(l))
+        local h = keyactions.lines(
+            { spawned = true, held = false, hasHolster = true, supports = { holster = true } },
+            KEYS
+        )
+        assert.same({ "Y Draw weapon", "H Open inventory" }, texts(h))
     end)
     it("food: Eat, Put away, Drop item, Open inventory (the footage order)", function()
         local l = keyactions.lines(

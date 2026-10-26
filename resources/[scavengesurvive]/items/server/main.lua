@@ -137,6 +137,7 @@ local containers = loadFile("server/containers.lua")({
     apparel = apparel,
     world = world,
     refreshPlayer = refreshPlayer,
+    isIncapacitated = isIncapacitated,
 })
 hands.setContainers(containers)
 local cookingCtx = { db = db, state = state, type = itemType, toast = toast, world = world, hands = hands }
@@ -319,12 +320,21 @@ function createStartingItems(cid, unames)
     return true
 end
 
-function destroyItem(itemId, player)
+function destroyItem(itemId, player, cb)
     itemId = tonumber(itemId)
     if not itemId or not isElement(player) then
+        if cb then
+            cb(false, "INVALID_ARGS")
+        end
         return false
     end
-    return destroy(itemId, player)
+    return destroy(itemId, player, cb)
+end
+
+function sendInventory(player)
+    if isElement(player) then
+        containers.sendInventory(player)
+    end
 end
 
 function destroyWorldItem(itemId)

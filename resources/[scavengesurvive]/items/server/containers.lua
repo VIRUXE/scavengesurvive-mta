@@ -6,7 +6,10 @@ return function(ctx)
     local apparel = ctx.apparel
     local world = ctx.world
     local refreshPlayer = ctx.refreshPlayer
+    local isIncapacitated = ctx.isIncapacitated
     local activeContainer = {} -- player -> { vehicle, containerId, title, size, worldItemId, pos = {x, y, z} }
+    local lastHolster = {}
+    state.lastHolster = lastHolster
     local M = {}
 
     local CONTAINERS_SQL = "SELECT c.id, c.kind, c.size, owner.type_uname AS uname FROM containers c "
@@ -91,13 +94,107 @@ return function(ctx)
         if not cid then
             return
         end
-        if not item then
-            return toast(player, "NOT_HELD")
+        local now = getTickCount()
+        if lastHolster[player] and (now - lastHolster[player] < 1000) then
+            return
         end
+        if getPedOccupiedVehicle(player) or (activeContainer[player] and activeContainer[player].containerId) then
+            return
+        end
+        if isIncapacitated and isIncapacitated(player) then
+            return
+        end
+        local staffRes = getResourceFromName and getResourceFromName("staff")
+        if staffRes and getResourceState(staffRes) == "running" and exports.staff:isOnDuty(player) then
+            return
+        end
+
+        if not item then
+            local holstered = state.holster and state.holster[player]
+            if not holstered then
+                return toast(player, "NOT_HELD")
+            end
+            lastHolster[player] = now
+            local anim = apparel and apparel.holsterAnim(holstered.uname)
+                or { block = "PED", anim = "PHONE_IN", time = 300 }
+            setPedAnimation(player, anim.block, anim.anim, anim.time, false, false, false, false)
+            setTimer(function(pl, hItem)
+                if not isElement(pl) or charId(pl) ~= cid then
+                    return
+                end
+                db.call("item_unwear", { cid, "holster" }, function(res, c)
+                    if not isElement(c.player) then
+                        return
+                    end
+                    if not res or not res.ok then
+                        return toast(c.player, res and res.code or "DB_ERROR")
+                    end
+                    hands.setGear(c.player, "holster", nil)
+                    c.hItem.data = hands.decodeData(c.hItem.data)
+                    hands.setHeld(c.player, c.hItem)
+                    sendInventory(c.player)
+                    toast(c.player, "EQUIPPED")
+                end, { player = pl, hItem = hItem })
+            end, anim.time, 1, player, holstered)
+            return
+        end
+
         local t = itemType(item.uname)
         if t and t.category == "bag" then
             return wearBag(player, cid, item)
         end
+
+        local slot = apparel and apparel.slotFor(item.uname)
+        if slot == "holster" then
+            lastHolster[player] = now
+            local anim = apparel.holsterAnim(item.uname) or { block = "PED", anim = "PHONE_IN", time = 300 }
+            setPedAnimation(player, anim.block, anim.anim, anim.time, false, false, false, false)
+            setTimer(function(pl, heldItem)
+                if not isElement(pl) or charId(pl) ~= cid then
+                    return
+                end
+                if not state.held[pl] or state.held[pl].id ~= heldItem.id then
+                    return
+                end
+                local openContainerId = M.openContainerId(pl)
+                db.call("item_wear", { heldItem.id, cid, "holster", openContainerId, n = 4 }, function(res, c)
+                    if not isElement(c.player) then
+                        return
+                    end
+                    if not res or not res.ok then
+                        return toast(c.player, res and res.code or "DB_ERROR")
+                    end
+                    c.heldItem.data = hands.decodeData(c.heldItem.data)
+                    hands.setGear(c.player, "holster", c.heldItem)
+                    local swId = res.payload and res.payload.swapped_id
+                    if swId then
+                        db.one(
+                            "SELECT id, type_uname AS uname, hitpoints AS hp, data, holder_kind AS kind "
+                                .. "FROM items WHERE id = ?",
+                            { swId },
+                            function(swRow, c2)
+                                if swRow and isElement(c2.player) then
+                                    swRow.data = hands.decodeData(swRow.data)
+                                    if swRow.kind == "held" then
+                                        hands.setHeld(c2.player, swRow)
+                                    elseif state.held[c2.player] and state.held[c2.player].id == c.heldItem.id then
+                                        hands.setHeld(c2.player, nil)
+                                    end
+                                end
+                                sendInventory(c.player)
+                            end,
+                            { player = c.player }
+                        )
+                    else
+                        hands.setHeld(c.player, nil)
+                        sendInventory(c.player)
+                    end
+                    toast(c.player, "EQUIPPED")
+                end, { player = pl, heldItem = heldItem })
+            end, anim.time, 1, player, item)
+            return
+        end
+
         local cont = activeContainer[player]
         if cont and cont.containerId then
             return put(player, cid, item.id, cont.containerId, function()
@@ -672,6 +769,8 @@ return function(ctx)
                                     swRow.data = hands.decodeData(swRow.data)
                                     if swRow.kind == "held" then
                                         hands.setHeld(c3.player, swRow)
+                                    elseif state.held[c3.player] and state.held[c3.player].id == c2.row.id then
+                                        hands.setHeld(c3.player, nil)
                                     end
                                 end
                                 sendInventory(c2.player)
@@ -679,6 +778,9 @@ return function(ctx)
                             { player = c2.player }
                         )
                     else
+                        if state.held[c2.player] and state.held[c2.player].id == c2.row.id then
+                            hands.setHeld(c2.player, nil)
+                        end
                         sendInventory(c2.player)
                     end
                     toast(c2.player, "EQUIPPED")

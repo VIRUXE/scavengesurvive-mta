@@ -123,6 +123,24 @@ function M.slotFor(uname)
     return nil
 end
 
+--- Upstream holster animation (core/itemtype/holster.pwn): thigh items 300 ms (PED PHONE_IN),
+--- Spade/Sword 600 ms (GOGGLES GOGGLES_PUT_ON), long weapons on spine 800 ms (GOGGLES GOGGLES_PUT_ON).
+---@param uname string
+---@return { block: string, anim: string, time: number }|nil
+function M.holsterAnim(uname)
+    local cfg = HOLSTERS[uname]
+    if not cfg then
+        return nil
+    end
+    if cfg.bone == 8 then
+        return { block = "PED", anim = "PHONE_IN", time = 300 }
+    elseif uname == "Spade" or uname == "Sword" then
+        return { block = "GOGGLES", anim = "GOGGLES_PUT_ON", time = 600 }
+    else
+        return { block = "GOGGLES", anim = "GOGGLES_PUT_ON", time = 800 }
+    end
+end
+
 --- Whether a hat item was cut off a skin (worn at zero offset, tools/port_hats.py).
 ---@param uname string
 ---@return boolean

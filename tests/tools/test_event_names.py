@@ -17,6 +17,9 @@ COMPARE_RE = re.compile(r'[=~]=\s*"[^"]*"')  # `mode == "login"` is a comparison
 
 # MTA built-in events are global names that start with "on"; they are never ours.
 MTA_BUILTIN_PREFIX = "on"
+# Third-party resource events that we handle or register locally
+THIRD_PARTY_EVENTS = {"onDiscordPacket"}
+
 
 
 def _lua_files():
@@ -43,6 +46,8 @@ def test_addevent_names_are_camel_case_without_on_prefix():
     bad = []
     for path in _lua_files():
         for name in ADD_EVENT_RE.findall(path.read_text(encoding="utf-8")):
+            if name in THIRD_PARTY_EVENTS:
+                continue
             if not NAME_RE.match(name) or name.startswith(MTA_BUILTIN_PREFIX):
                 bad.append(f"{path.relative_to(ROOT)}: {name}")
     assert not bad, "\n".join(bad)

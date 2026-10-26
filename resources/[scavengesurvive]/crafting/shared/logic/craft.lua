@@ -38,6 +38,16 @@ addRecipe({
     result = { uname = "ParaBag", count = 1 },
 })
 
+addRecipe({
+    name = "PowerSupply",
+    kind = "combine",
+    ingredients = {
+        { uname = "Fusebox", count = 1, keep = false },
+        { uname = "Battery", count = 1, keep = false },
+    },
+    result = { uname = "PowerSupply", count = 1 },
+})
+
 -- 2. Ground Construction Recipes
 addRecipe({
     name = "Campfire",
@@ -176,6 +186,18 @@ addRecipe({
 })
 
 -- 3. Workbench Recipes (crafted in Workbench 16-slot container)
+addRecipe({
+    name = "PowerSupply",
+    kind = "workbench",
+    tool = "Screwdriver",
+    buildTime = 12000,
+    ingredients = {
+        { uname = "Battery", count = 1, keep = false },
+        { uname = "Fusebox", count = 1, keep = false },
+    },
+    result = { uname = "PowerSupply", count = 1 },
+})
+
 addRecipe({
     name = "Keypad",
     kind = "workbench",

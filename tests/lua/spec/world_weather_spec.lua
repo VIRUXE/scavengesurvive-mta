@@ -40,6 +40,19 @@ describe("world weather", function()
         -- a high roll keeps only the chance-1.0 types and lands on the last of them
         assert.equals(18, weather.pick(rng({ 0.99999 })))
     end)
+    it("excludes current weather when rolling a change", function()
+        -- With 20 rolls of 0, all candidates 0..19 qualify.
+        -- When excludeId is 0, the first element is now id 1.
+        local values = {}
+        for _ = 1, 20 do
+            values[#values + 1] = 0
+        end
+        values[#values + 1] = 0 -- index 0 -> first element of candidate list
+        assert.equals(1, weather.pick(rng(values), 0))
+    end)
+    it("defines 1-minute check interval for weather change evaluations", function()
+        assert.equals(60000, weather.CHECK_INTERVAL_MS)
+    end)
     it("changes with 10 % chance once 10 minutes have passed", function()
         assert.is_false(weather.shouldChange(600000, rng({ 0 })))
         assert.is_true(weather.shouldChange(600001, rng({ 0.0999 })))

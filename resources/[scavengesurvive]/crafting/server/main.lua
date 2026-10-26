@@ -71,31 +71,36 @@ net.handler("combineRequested", function(player, invItemId)
                 exports.items:destroyItem(row.id, c.player)
             end
             if match.consumeA then
-                exports.items:destroyItem(c.held.id, c.player)
-                -- Created item becomes held
-                db.call("item_create_held", { r.result.uname, c.cid }, function(res, c2)
-                    if not isElement(c2.player) then
+                exports.items:destroyItem(c.held.id, c.player, function(ok)
+                    if not ok or not isElement(c.player) then
                         return
                     end
-                    if res and res.ok then
-                        local newId = res.payload and res.payload.item_id
-                        if newId then
-                            db.one(
-                                "SELECT id, type_uname AS uname, hitpoints AS hp, data FROM items WHERE id = ?",
-                                { newId },
-                                function(nRow, c3)
-                                    if nRow and isElement(c3.player) then
-                                        exports.items:setHeld(c3.player, nRow)
-                                        toast(c3.player, "CRAFTED")
-                                    end
-                                end,
-                                { player = c2.player }
-                            )
+                    -- Created item becomes held once the previous held item has been removed from DB
+                    db.call("item_create_held", { r.result.uname, c.cid }, function(res, c2)
+                        if not isElement(c2.player) then
+                            return
                         end
-                    else
-                        toast(c2.player, res and res.code or "DB_ERROR")
-                    end
-                end, { player = c.player })
+                        if res and res.ok then
+                            local newId = res.payload and res.payload.item_id
+                            if newId then
+                                db.one(
+                                    "SELECT id, type_uname AS uname, hitpoints AS hp, data FROM items WHERE id = ?",
+                                    { newId },
+                                    function(nRow, c3)
+                                        if nRow and isElement(c3.player) then
+                                            exports.items:setHeld(c3.player, nRow)
+                                            exports.items:sendInventory(c3.player)
+                                            toast(c3.player, "CRAFTED")
+                                        end
+                                    end,
+                                    { player = c2.player }
+                                )
+                            end
+                        else
+                            toast(c2.player, res and res.code or "DB_ERROR")
+                        end
+                    end, { player = c.player })
+                end)
             else
                 -- Held tool is kept, created item goes to inventory container
                 db.call("item_create_in_container", { r.result.uname, invContId }, function(res, c2)
@@ -103,6 +108,7 @@ net.handler("combineRequested", function(player, invItemId)
                         return
                     end
                     if res and res.ok then
+                        exports.items:sendInventory(c2.player)
                         toast(c2.player, "CRAFTED")
                     else
                         toast(c2.player, res and res.code or "DB_ERROR")

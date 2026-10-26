@@ -383,7 +383,7 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
       `onPlayerTriggerEventThreshold`, and `onPlayerTriggerInvalidEvent`; inspect server logs for a safe test event
       threshold breach in a private test server. No production cheat tools are needed for this smoke step.
 
-35. **Discord reports of 2026-10-26** (#116, #118, #120, #121, #122). One client.
+35. **Discord reports of 2026-10-26** (#116, #117, #118, #119, #120, #121, #122, #123). One client.
     - a. **Drinking (#122, #118).** `/additem Bottle` and `/additem GasCan` give empty containers (`Bottle (Empty)`
       in the inventory, **F** says `It is empty`); a looted Bottle, Can Drink, Milk Carton or Apple Juice reads
       `(Water 0.4/0.50)`-style with a random level, and a looted Petrol Can `(Petrol 13.2/20.00)` rather than a
@@ -395,3 +395,10 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
     - c. **Pickup and drop animations (#121).** Pick up a Bandage: a short bend (BOM_Plant_In); drop it: the same.
       Pick up a Wheel: the lift animation, then the carry pose while walking; equipping a Wheel from the bag
       shows the carry pose; dropping it plays the put-down animation and clears the pose.
+    - d. **Weather cycle (#117).** Weather re-evaluates every minute once 10 minutes have passed since the last change
+      (10% roll), and picks a different weather rather than repeating the same rain.
+    - e. **Crafting combine (#119).** Hold a `Fusebox` and open inventory with a `Battery`: the `Combine` action produces
+      a `PowerSupply` in hands and updates inventory slots.
+    - f. **Holster (#123).** Holding a holsterable weapon (`M9Pistol`, `DesertEagle`, `AK47Rifle`), press **Y** to
+      holster it with its holster animation (300 ms for thigh pistols, 800 ms for back rifles); hands become empty.
+      With empty hands and a holstered weapon, HUD displays `Y Draw weapon` and pressing **Y** equips it.

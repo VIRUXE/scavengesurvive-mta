@@ -2,8 +2,9 @@
 -- list, re-rolled with a 10 % chance every 10 minutes; the in-game clock follows the host's real time.
 -- Pure logic: rng() returns a float in [0,1); the caller supplies the tick and the real-time table.
 local weather = {}
-weather.CHECK_MS = 600000 -- upstream task WeatherUpdate[600000]
-weather.CHANGE_CHANCE = 10 -- percent, checked once per CHECK_MS after at least CHECK_MS since the last change
+weather.CHECK_MS = 600000 -- upstream cooldown: at least 10 minutes between weather changes
+weather.CHECK_INTERVAL_MS = 60000 -- evaluate change chance every minute once cooldown expires
+weather.CHANGE_CHANCE = 10 -- percent chance per minute once CHECK_MS has passed
 weather.MINUTE_MS = 60000 -- one game minute per real minute: the clock is the host's clock
 weather.CLOCK_SYNC_MS = 60000
 
@@ -71,11 +72,23 @@ function weather.candidates(rng)
     return out
 end
 
--- a new weather id; the chance-1.0 types always qualify, so the list is never empty (the guard mirrors upstream)
-function weather.pick(rng)
+-- a new weather id; the chance-1.0 types always qualify, so the list is never empty (the guard mirrors upstream).
+-- When excludeId is given and other candidates qualify, prefers a different weather so transitions don't stall.
+function weather.pick(rng, excludeId)
     local list = weather.candidates(rng)
     if #list == 0 then
         return 0
+    end
+    if excludeId and #list > 1 then
+        local filtered = {}
+        for _, id in ipairs(list) do
+            if id ~= excludeId then
+                filtered[#filtered + 1] = id
+            end
+        end
+        if #filtered > 0 then
+            list = filtered
+        end
     end
     return list[math.floor(rng() * #list) + 1]
 end
