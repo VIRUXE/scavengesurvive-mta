@@ -119,6 +119,8 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
     - **Crafting & Workbench**:
       - In-hand combine: Hold `Knife` and click `Clothes` in inventory -> click `Combine`: instant craft produces `Bandage` in inventory while preserving the `Knife`. Combine `Bottle` + `Bandage` -> `MolotovEmpty`.
       - Ground construction: Drop ingredients on ground (e.g. 2x `WoodLog`), hold `FireLighter`, press **F** (or `/craft`): 3-second construction progress bar consumes logs and spawns `Campfire`. Hold `Hammer` near 3x `WoodLog` -> builds `Barricade`. Hold `Hammer` near 2x `WoodLog` + 2x `CorPanel` -> builds `Workbench`.
+        With the ingredients within reach, **F** with the tool in hand builds (it no longer says `You are already
+        holding an item`, #116); a tool in hand next to items that match no recipe says `Cannot craft these items`.
       - Deconstruction: Hold `Crowbar` and press **F** near constructed object (`Campfire`, `Workbench`, `Barricade`, `LargeFrame`), even with another item lying closer (#97): timed deconstruction progress bar dismantles the object and returns raw materials.
       - Workbench crafting: Place materials in Workbench 16-slot container (e.g. `CorPanel` + `Battery` + tool `Screwdriver`), press **F** at Workbench: crafts `Keypad` inside container.
     - **Defences, Keypads and Plot Poles**:
@@ -380,3 +382,16 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
     - e. **Native movement and event guards.** Confirm the deployed server build supports `onPlayerTeleport`,
       `onPlayerTriggerEventThreshold`, and `onPlayerTriggerInvalidEvent`; inspect server logs for a safe test event
       threshold breach in a private test server. No production cheat tools are needed for this smoke step.
+
+35. **Discord reports of 2026-10-26** (#116, #118, #120, #121, #122). One client.
+    - a. **Drinking (#122, #118).** `/additem Bottle` and `/additem GasCan` give empty containers (`Bottle (Empty)`
+      in the inventory, **F** says `It is empty`); a looted Bottle, Can Drink, Milk Carton or Apple Juice reads
+      `(Water 0.4/0.50)`-style with a random level, and a looted Petrol Can `(Petrol 13.2/20.00)` rather than a
+      fixed amount. Hold **F** with a filled Bottle: the drinking animation and a 1 s hold bar repeat, the label
+      drops 0.2 L per sip, the hunger bar rises per sip (Milk 2.1, Water 0.5), letting go stops it, and the last sip
+      ends with `It is empty`. Drinking from a Petrol Can lowers food (-8 per sip, as upstream).
+    - b. **Carry items and vehicles (#120).** Holding a `Wheel` or `SmallBox`, try to enter any vehicle: entry is
+      refused with `Put that down before getting in`; drop it and enter normally.
+    - c. **Pickup and drop animations (#121).** Pick up a Bandage: a short bend (BOM_Plant_In); drop it: the same.
+      Pick up a Wheel: the lift animation, then the carry pose while walking; equipping a Wheel from the bag
+      shows the carry pose; dropping it plays the put-down animation and clears the pose.

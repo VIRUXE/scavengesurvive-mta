@@ -7,8 +7,10 @@ return function(ctx)
     local models = ctx and ctx.models -- client/models.lua: which model id draws an item type on this client
     local preview = ctx and ctx.preview -- client/preview.lua: live dxDrawModel3D previews inside the gear tiles
     local cooking = ctx and ctx.cooking -- shared/logic/cooking.lua: "(Cooked)" / "(Uncooked)" on food
+    local liquids = ctx and ctx.liquids -- shared/logic/liquids.lua: "(Water 0.4/0.50)" on liquid containers
     local MESSAGES = {
         HANDS_FULL = "You are already holding an item",
+        LIQUID_EMPTY = "It is empty",
         CARRY_NO_VEHICLE = "Put that down before getting in",
         NOT_IN_WORLD = "It is gone",
         CONTAINER_FULL = "Extra slots required",
@@ -147,6 +149,8 @@ return function(ctx)
             name = exports.character:medicalLabel(it.uname, name, it.data)
         elseif cooking and cooking.isFood(t) then
             name = cooking.label(t, name, it.data)
+        elseif liquids and liquids.isContainer(t) then
+            name = liquids.label(t, name, it.data)
         elseif ammo and t then
             local defA = t.categoryData and defaultAmmo(t.categoryData.calibre) or nil
             name = ammo.displayName(t, it.data, itemType, calibreName, defA)
