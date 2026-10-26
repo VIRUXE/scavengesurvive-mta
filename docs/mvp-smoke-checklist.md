@@ -358,7 +358,12 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
       it was lit (two in the rain, weather 8 or 16) the campfire turns into three Burnt Logs.
     - d. **Petrol Can amount.** Refuel a car (or fuel the barbecue) from a full Petrol Can, wait 5 s (the held-data
       flush), drop the can, pick it up and refuel again: the can holds what was left, not 20 L again
-      (`SELECT data FROM items WHERE type_uname = 'GasCan' AND holder_kind = 'held'` shows `amount`).
+      (`SELECT data FROM items WHERE type_uname = 'GasCan' AND holder_kind = 'held'` shows `amount`). The label
+      follows it in the inventory and on the ground: `Petrol Can (20.0 L)` from `/additem GasCan`, `(10.0 L)`
+      after one refuel, `(Empty)` at zero.
+    - e. **Loot amount (#118).** Loot-spawned cans vary: `SELECT data FROM items WHERE type_uname = 'GasCan'`
+      after a few rolls shows different `amount` values between 0 and 20, none `NULL`, and each can's world label
+      shows that amount.
 
 34. **Anticheat (#100).** One level-2+ staff account and one player. First confirm `anticheat` starts without SQL,
     missing-event or ACL errors after `run-local.ps1` applies the schema.

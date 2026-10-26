@@ -14,13 +14,16 @@ local clothes = loadModule("shared/logic/clothes.lua")
 local models = loadModule("client/models.lua")()
 local geometry = loadModule("shared/logic/geometry.lua")
 local cooking = loadModule("shared/logic/cooking.lua")
+local liquid = loadModule("shared/logic/liquid.lua")
 local worldCtx = { models = models, ammo = ammo, tent = tent, clothes = clothes, geometry = geometry }
 worldCtx.cooking = cooking
+worldCtx.liquid = liquid
 local world = loadModule("client/world.lua")(worldCtx)
 local attach = loadModule("client/attach.lua")({ models = models, apparel = apparel })
 local preview = loadModule("client/preview.lua")({ logic = loadModule("shared/logic/preview.lua"), models = models })
 local inventoryCtx = { ammo = ammo, apparel = apparel, clothes = clothes, models = models, preview = preview }
 inventoryCtx.cooking = cooking
+inventoryCtx.liquid = liquid
 loadModule("client/inventory.lua")(inventoryCtx)
 
 -- client exports for the attachedit resource: preview offsets on the local player's own attachments

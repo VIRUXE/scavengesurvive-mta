@@ -53,7 +53,8 @@ function roll.fill(tbl, count, rng)
     return out
 end
 
--- Computes the initial JSON string for loot-spawned ammo tins and calibre weapons (core/weapon/{loot,ammunition}.pwn).
+-- Computes the initial JSON string for loot-spawned ammo tins, calibre weapons (core/weapon/{loot,ammunition}.pwn)
+-- and liquid containers (a Petrol Can holds a random share of its capacity, never the full 20 L every time, #118).
 -- Looted items whose data character's medical rules roll (exports.character:medicalLootData, #94).
 roll.MEDICAL_DATA = { DoctorBag = true, Pills = true, AutoInjec = true }
 
@@ -62,6 +63,15 @@ function roll.initialItemData(def, tableName, ammoTypes, rand)
         return nil
     end
     local rng = rand or math.random
+    if def.category == "liquid" then
+        local capacity = tonumber(def.categoryData.capacity) or 0
+        if capacity <= 0 then
+            return nil
+        end
+        -- rng() is a float in [0, 1): 0.1 L steps, so a can is never "0.0 L" yet not empty
+        local amount = math.floor(rng() * capacity * 10 + 0.5) / 10
+        return string.format('{"amount":%.1f}', amount)
+    end
     if def.category == "ammo" and def.categoryData.calibre then
         local cap = math.max(1, math.floor(tonumber(def.categoryData.rounds) or 1))
         local rounds = cap <= 1 and 1 or rng(1, cap - 1)

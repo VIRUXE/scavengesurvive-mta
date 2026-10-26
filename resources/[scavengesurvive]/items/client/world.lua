@@ -1,6 +1,6 @@
 -- World items as client-side objects with a name label, from the server's per-player sync deltas.
--- ctx = { models, ammo, tent, clothes, geometry, cooking } from client/main.lua. A pitched TentPack is six objects
--- (shared/logic/tent.lua) placed with upstream's SA-MP rotations as they are: SA-MP's CreateObject and MTA's
+-- ctx = { models, ammo, tent, clothes, geometry, cooking, liquid } from client/main.lua. A pitched TentPack is six
+-- objects (shared/logic/tent.lua) placed with upstream's SA-MP rotations as they are: SA-MP's CreateObject and MTA's
 -- createObject both go through GTA's own ZXY CMatrix::SetRotate (#55). A campfire burns and a barbecue's burners
 -- burn while it cooks (#95): GTA "fire" effects, since upstream's fire objects (18701) are SA-MP particles.
 return function(ctx)
@@ -10,6 +10,7 @@ return function(ctx)
     local clothes = ctx.clothes
     local geometry = ctx.geometry
     local cooking = ctx.cooking
+    local liquid = ctx.liquid
     local objects = {} -- id -> { obj | parts, pitched, row, uname, hp, x, y, z, name, fires }
     local labelVisibility = {} -- id -> { visible, checkedAt }
     local shaders = {} -- tent material key -> shader, or false when its texture could not be read
@@ -53,6 +54,9 @@ return function(ctx)
         end
         if cooking.isFood(t) then
             return cooking.label(t, t.name, r.data)
+        end
+        if liquid and liquid.isContainer(t) then
+            return liquid.label(t, t.name, r.data)
         end
         if ammo and t then
             local defA = t.categoryData and defaultAmmo(t.categoryData.calibre) or nil

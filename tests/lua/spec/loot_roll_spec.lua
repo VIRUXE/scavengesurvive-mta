@@ -47,3 +47,23 @@ describe("loot roll", function()
         end
     end)
 end)
+
+describe("loot initial item data", function()
+    local CAN =
+        { category = "liquid", categoryData = { capacity = 20.0, liquids = { { "Petrol", 100.0 } }, reusable = true } }
+    it("rolls a liquid container's amount from its capacity (#118)", function()
+        assert.equals('{"amount":10.0}', roll.initialItemData(CAN, "world_civilian", nil, seq({ 0.5 })))
+        assert.equals('{"amount":0.0}', roll.initialItemData(CAN, "world_civilian", nil, seq({ 0.0 })))
+        assert.equals('{"amount":19.9}', roll.initialItemData(CAN, "world_civilian", nil, seq({ 0.997 })))
+        assert.equals('{"amount":12.3}', roll.initialItemData(CAN, "world_civilian", nil, seq({ 0.6174 })))
+    end)
+    it("leaves a container without a capacity and other generic types alone", function()
+        assert.is_nil(
+            roll.initialItemData({ category = "liquid", categoryData = {} }, "world_civilian", nil, seq({ 0.5 }))
+        )
+        assert.is_nil(
+            roll.initialItemData({ category = "generic", categoryData = {} }, "world_civilian", nil, seq({ 0.5 }))
+        )
+        assert.is_nil(roll.initialItemData({ category = "generic" }, "world_civilian", nil, seq({ 0.5 })))
+    end)
+end)

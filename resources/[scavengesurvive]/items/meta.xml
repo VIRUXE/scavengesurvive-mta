@@ -19,6 +19,7 @@
     <file src="shared/logic/preview.lua"/>
     <file src="shared/logic/tent.lua"/>
     <file src="shared/logic/cooking.lua"/>
+    <file src="shared/logic/liquid.lua"/>
     <file src="client/models.lua"/>
     <file src="server/cooking.lua"/>
     <file src="client/preview.lua"/>
