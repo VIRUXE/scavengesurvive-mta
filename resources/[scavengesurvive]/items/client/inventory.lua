@@ -9,6 +9,7 @@ return function(ctx)
     local cooking = ctx and ctx.cooking -- shared/logic/cooking.lua: "(Cooked)" / "(Uncooked)" on food
     local MESSAGES = {
         HANDS_FULL = "You are already holding an item",
+        CARRY_NO_VEHICLE = "Put that down before getting in",
         NOT_IN_WORLD = "It is gone",
         CONTAINER_FULL = "Extra slots required",
         PUT_AWAY = "Put away",
