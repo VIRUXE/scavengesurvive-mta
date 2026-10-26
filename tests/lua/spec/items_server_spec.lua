@@ -151,11 +151,12 @@ describe("items server sql builders", function()
         _G.getElementPosition = function()
             return 10, 20, 3
         end
-        _G.getElementInterior, _G.getElementDimension = function()
-            return 0
-        end, function()
-            return 0
-        end
+        _G.getElementInterior, _G.getElementDimension =
+            function()
+                return 0
+            end, function()
+                return 0
+            end
         local crafted = {}
         _G.getResourceFromName = function(name)
             return name == "crafting" and "res_crafting" or nil
@@ -195,5 +196,83 @@ describe("items server sql builders", function()
         assert.matches("i%.type_uname IN %('TentPack'%)", mock.queries[#mock.queries].sql)
         mock.answer(#mock.queries, {}) -- no tent in reach -> deconstruct
         assert.same({ { "groundCraft", "p1" }, { "deconstruct", "p1" } }, crafted)
+    end)
+
+    it("holstering and unholstering with itemPutAwayRequested does not open inventory", function()
+        db.connect("items")
+        local apparel = {
+            slotFor = function(uname)
+                return uname == "M9Pistol" and "holster" or nil
+            end,
+            holsterAnim = function()
+                return { block = "PED", anim = "PHONE_IN", time = 300 }
+            end,
+        }
+        _G.setPedAnimation = function() end
+        _G.getPedOccupiedVehicle = function()
+            return false
+        end
+
+        dofile(ITEMS .. "server/containers.lua")({
+            db = db,
+            net = load("net"),
+            state = state,
+            type = function(uname)
+                return { uname = uname, category = "weapon" }
+            end,
+            apparel = apparel,
+            charId = charId,
+            toast = function(p, code)
+                mock.calls[#mock.calls + 1] = { "toast", p, code }
+            end,
+            hands = {
+                setGear = function(p, slot, it)
+                    state[slot] = state[slot] or {}
+                    state[slot][p] = it
+                end,
+                setHeld = function(p, it)
+                    state.held[p] = it
+                end,
+                decodeData = function(d)
+                    return d
+                end,
+            },
+            world = newWorld(),
+        })
+
+        mock.addElement("p1")
+        _G.client, _G.source = "p1", "p1"
+        state.held["p1"] = { id = 10, uname = "M9Pistol", hp = 1, data = {} }
+
+        -- 1. Holster held weapon
+        mock.fire("itemPutAwayRequested")
+        mock.runTimers()
+        assert.matches("CALL item_wear", mock.queries[#mock.queries].sql)
+        mock.answer(#mock.queries, { { ok = 1, code = "OK", payload = "{}" } })
+
+        assert.is_nil(state.held["p1"])
+        assert.is_table(state.holster["p1"])
+        assert.equals(10, state.holster["p1"].id)
+
+        -- Verify inventoryOpened was NOT triggered
+        for _, c in ipairs(mock.calls) do
+            assert.is_false(c[1] == "triggerClientEvent" and c[3] == "inventoryOpened")
+        end
+
+        -- 2. Unholster weapon
+        mock.tick = mock.tick + 2000
+        mock.fire("itemPutAwayRequested")
+        mock.runTimers()
+        assert.matches("CALL item_unwear", mock.queries[#mock.queries].sql)
+        mock.answer(#mock.queries, { { ok = 1, code = "OK", payload = "{}" } })
+
+        assert.is_nil(state.holster["p1"])
+        assert.is_table(state.held["p1"])
+        assert.equals(10, state.held["p1"].id)
+
+        -- Verify inventoryOpened was still NOT triggered
+        for _, c in ipairs(mock.calls) do
+            assert.is_false(c[1] == "triggerClientEvent" and c[3] == "inventoryOpened")
+        end
     end)
 end)

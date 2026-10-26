@@ -132,7 +132,6 @@ return function(ctx)
                     hands.setGear(c.player, "holster", nil)
                     c.hItem.data = hands.decodeData(c.hItem.data)
                     hands.setHeld(c.player, c.hItem)
-                    sendInventory(c.player)
                     toast(c.player, "EQUIPPED")
                 end, { player = pl, hItem = hItem })
             end, anim.time, 1, player, holstered)
@@ -181,13 +180,11 @@ return function(ctx)
                                         hands.setHeld(c2.player, nil)
                                     end
                                 end
-                                sendInventory(c.player)
                             end,
                             { player = c.player }
                         )
                     else
                         hands.setHeld(c.player, nil)
-                        sendInventory(c.player)
                     end
                     toast(c.player, "EQUIPPED")
                 end, { player = pl, heldItem = heldItem })
