@@ -13,4 +13,5 @@
     <export function="groundCraft" type="server"/>
     <export function="deconstruct" type="server"/>
     <export function="workbenchCraft" type="server"/>
+    <export function="isConstructionTool" type="server"/>
 </meta>

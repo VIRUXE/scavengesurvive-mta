@@ -334,6 +334,17 @@ function M.matchWorkbench(containerCounts, toolUname)
     return matches
 end
 
+-- The tools the ground recipes are built with, as a set: { Hammer = true, ... }.
+function M.groundTools()
+    local out = {}
+    for _, r in ipairs(M.RECIPES) do
+        if r.kind == "ground" and r.tool then
+            out[r.tool] = true
+        end
+    end
+    return out
+end
+
 function M.deconstructables(toolUname)
     local out = {}
     for _, r in ipairs(M.RECIPES) do

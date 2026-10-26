@@ -539,6 +539,15 @@ return function(ctx)
     local TENT = { "TentPack" }
     local TARGETS = { GasCan = BARBECUE, FireLighter = BARBECUE, Crowbar = TENT }
 
+    -- Hammer, Screwdriver, Wrench, ...: the tools of the ground recipes (crafting/shared/logic/craft.lua)
+    local function isConstructionTool(uname)
+        local res = uname and getResourceFromName and getResourceFromName("crafting")
+        if not res or getResourceState(res) ~= "running" then
+            return false
+        end
+        return exports.crafting:isConstructionTool(uname) == true
+    end
+
     local function runCrafting(action, player)
         local res = getResourceFromName and getResourceFromName("crafting")
         if not res or getResourceState(res) ~= "running" then
@@ -639,6 +648,11 @@ return function(ctx)
                 if bRes and getResourceState(bRes) == "running" then
                     return exports.building:interactDefence(c.player, row)
                 end
+            end
+
+            -- a construction tool in hand next to the ingredients on the ground builds (crafting, #116)
+            if curHeld and isConstructionTool(curUname) then
+                return runCrafting("groundCraft", c.player)
             end
 
             local curType = curHeld and itemType(curHeld.uname) or nil

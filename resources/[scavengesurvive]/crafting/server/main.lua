@@ -115,7 +115,7 @@ net.handler("combineRequested", function(player, invItemId)
 end, { rate = 3 })
 
 -- 2. Ground Construction: Combine ground ingredients with held tool
-local function tryGroundCraft(player, _cid, held, px, py, pz, rz, int, dim)
+local function tryGroundCraft(player, _cid, held, px, py, pz, rz, int, dim, quiet)
     local toolUname = held and held.uname
     local query = "SELECT i.id, i.type_uname, i.x, i.y, i.z FROM world_items_pos p "
         .. "JOIN items i ON i.id = p.item_id "
@@ -134,6 +134,9 @@ local function tryGroundCraft(player, _cid, held, px, py, pz, rz, int, dim)
         end
         local matches = craft.matchGround(counts, c.toolUname)
         if #matches == 0 then
+            if not c.quiet then
+                toast(c.player, "NO_RECIPE")
+            end
             return
         end
         local recipe = matches[1]
@@ -185,7 +188,7 @@ local function tryGroundCraft(player, _cid, held, px, py, pz, rz, int, dim)
             )
         end, ms, 1, c.player, recipe, itemsByUname, px, py, pz, rz, int, dim)
         activeHold[c.player] = { timer = timer, action = "construct" }
-    end, { player = player, toolUname = toolUname })
+    end, { player = player, toolUname = toolUname, quiet = quiet })
 end
 
 -- 3. Deconstruction: Dismantle world item with Crowbar
@@ -356,7 +359,7 @@ addCommandHandler("craft", function(player)
         return tryDeconstruct(player, cid, held, px, py, pz, rz, int, dim)
     end
     tryWorkbenchCraft(player, cid, held, px, py)
-    tryGroundCraft(player, cid, held, px, py, pz, rz, int, dim)
+    tryGroundCraft(player, cid, held, px, py, pz, rz, int, dim, true) -- the workbench path already said NO_RECIPE
 end)
 
 function groundCraft(player)
@@ -394,6 +397,12 @@ function workbenchCraft(player)
     local px, py = getElementPosition(player)
     tryWorkbenchCraft(player, cid, held, px, py)
     return true
+end
+
+-- items' interact key: a tool of a ground recipe in hand builds from the items on the ground (#116)
+local GROUND_TOOLS = craft.groundTools()
+function isConstructionTool(uname)
+    return GROUND_TOOLS[tostring(uname)] == true
 end
 
 util.log("crafting", "info", "crafting engine initialized with %d recipes", #craft.RECIPES)
