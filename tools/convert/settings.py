@@ -6,6 +6,7 @@ from .common import SEED_HEADER, write_text
 
 SETTINGS = {
     "player.combat_log_window": "30", "player.login_freeze_time": "8", "player.max_tab_out_time": "60",
+    "player.idle_kick": "1",
     "player.ping_limit": "400",
     "spawn.bagtype": "Satchel", "spawn.new_blood": "90", "spawn.new_food": "80", "spawn.new_bleed": "0.0001",
     "spawn.new_items": "Knife", "spawn.res_blood": "100", "spawn.res_food": "40", "spawn.res_bleed": "0",

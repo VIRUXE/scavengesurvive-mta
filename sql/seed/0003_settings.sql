@@ -20,6 +20,7 @@ INSERT INTO settings (skey, svalue) VALUES
 ('loot.supply_tick_s','60'),
 ('player.auto_ip_login','0'),
 ('player.combat_log_window','30'),
+('player.idle_kick','1'),
 ('player.login_freeze_time','8'),
 ('player.max_tab_out_time','60'),
 ('player.ping_limit','400'),

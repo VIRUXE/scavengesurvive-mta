@@ -14,6 +14,7 @@ local lastTeleportAlert = {}
 local spawnedAt = {}
 local vehicleExitedAt = {}
 local settings = {}
+local idleKickEnabled = true
 local db = loadstring(exports.lib:getModule("db"), "=lib/db.lua")()
 local net = loadstring(exports.lib:getModule("net"), "=lib/net.lua")()
 local function loadFile(path)
@@ -23,6 +24,7 @@ local function loadFile(path)
     return assert(loadstring(src, "=anticheat/" .. path))()
 end
 local fields = loadFile("server/fields.lua")(db, loadFile("shared/logic/fields.lua"))
+local focusLogic = loadFile("shared/logic/focus.lua")
 
 local function playerName(player)
     return isElement(player) and getPlayerName(player) or "<left>"
@@ -139,12 +141,9 @@ setTimer(function()
         end
 
         local minimizedAt = minimizedSince[player]
-        if minimizedAt and not onDuty then
-            local minimizedFor = now - minimizedAt
-            if maxTabOutTime <= 0 or minimizedFor >= maxTabOutTime * 1000 then
-                kick(player, string.format("game unfocused for over %d seconds", maxTabOutTime))
-                minimizedSince[player] = nil
-            end
+        if focusLogic.shouldKick(idleKickEnabled, maxTabOutTime, minimizedAt, now, onDuty) then
+            kick(player, string.format("game unfocused for over %d seconds", maxTabOutTime))
+            minimizedSince[player] = nil
         end
     end
 end, 1000, 0)
@@ -154,6 +153,35 @@ function refreshFields()
     fields.refresh()
 end
 
+function isIdleKickEnabled()
+    return idleKickEnabled
+end
+
+function setIdleKickEnabled(enabled)
+    idleKickEnabled = (enabled == true)
+    if not idleKickEnabled then
+        minimizedSince = {}
+    end
+    return idleKickEnabled
+end
+
+function toggleIdleKick()
+    return setIdleKickEnabled(not idleKickEnabled)
+end
+
+function getMaxTabOutTime()
+    return tonumber(settings["player.max_tab_out_time"]) or DEFAULT_MAX_TAB_OUT_TIME
+end
+
+function setMaxTabOutTime(seconds)
+    local s = tonumber(seconds)
+    if s and s >= 0 then
+        settings["player.max_tab_out_time"] = tostring(s)
+        return true
+    end
+    return false
+end
+
 setTimer(fields.update, 1000, 0)
 
 addEventHandler("onResourceStart", resourceRoot, function()
@@ -161,6 +189,9 @@ addEventHandler("onResourceStart", resourceRoot, function()
         fields.refresh()
         db.settings(function(map)
             settings = map or {}
+            if settings["player.idle_kick"] == "0" then
+                idleKickEnabled = false
+            end
         end)
     end
 end)

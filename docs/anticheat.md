@@ -15,7 +15,7 @@ detection-field parity.
 | Ping | Every second, kick after 10 consecutive samples above `player.ping_limit` (default 400 ms; +100 ms with 10 or fewer players). New connections receive a 10-second grace period. Staff on duty are exempt. |
 | Client event flood | MTA's `onPlayerTriggerEventThreshold` kicks the client that exceeds the server's configured event trigger threshold. |
 | Invalid client event | MTA's `onPlayerTriggerInvalidEvent` kicks the client that attempts an event that is missing or not remote-enabled. |
-| Alt-tab | Client MTA-focus loss is reported to the server. A player is kicked after `player.max_tab_out_time` seconds (default 60); staff on duty are exempt. |
+| Alt-tab / Idle | Client MTA-focus loss is reported to the server. A player is kicked after `player.max_tab_out_time` seconds (default 60); staff on duty are exempt. Can be toggled on/off or configured via `/idlekick [on|off|<seconds>]` (staff command) and setting `player.idle_kick`. |
 | Detection fields | Four-point XY polygons with a Z band log each player's entry once (`anticheat/server/fields.lua`, pure logic in `shared/logic/fields.lua`). They never punish players. Staff manage them with `/field` in the `staff` resource, see below. |
 
 The MTA server's event trigger threshold and `player_teleport_alert` control the native movement and event alarms.

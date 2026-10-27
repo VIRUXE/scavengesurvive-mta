@@ -7,7 +7,7 @@ details); bans and warnings write theirs inside the `staff_ban` / `staff_warn` p
 
 | Level | Upstream name | Commands |
 | --- | --- | --- |
-| 1 | Game Master | `/a`, `/mute`, `/unmute`, `/warn`, `/kick`, `/msg`, `/clearchat`, `/aliases`, `/serial`, `/history`, `/reports`, `/acmds` |
+| 1 | Game Master | `/a`, `/mute`, `/unmute`, `/warn`, `/kick`, `/idlekick`, `/msg`, `/clearchat`, `/aliases`, `/serial`, `/history`, `/reports`, `/acmds` |
 | 2 | Moderator | `/duty`, `/goto`, `/get`, `/gotopos`, `/freeze`, `/unfreeze`, `/ban`, `/unban`, `/banlist`, `/banned`, `/spec`, `/free`, `/nametags`, `/profile`, `/setmotd`, `/deletereports`, `/field` |
 | 3 | Administrator | `/whitelist`, `/ip`, `/setactive`, `/resetpassword`, `/adminlist` |
 | 4 | Lead | `/players`, `/setadmin`, `/restart`, `/sc [type]` (supply crate here), `/wc` (weapons cache here) |

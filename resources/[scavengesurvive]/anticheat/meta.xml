@@ -7,9 +7,15 @@
     <script src="shared/events.lua" type="shared"/>
     <script src="server/main.lua" type="server"/>
     <file src="shared/logic/fields.lua"/>
+    <file src="shared/logic/focus.lua"/>
     <file src="server/fields.lua"/>
     <script src="client/focus.lua" type="client"/>
     <export function="refreshFields" type="server"/>
+    <export function="isIdleKickEnabled" type="server"/>
+    <export function="setIdleKickEnabled" type="server"/>
+    <export function="toggleIdleKick" type="server"/>
+    <export function="getMaxTabOutTime" type="server"/>
+    <export function="setMaxTabOutTime" type="server"/>
     <aclrequest>
         <right name="function.kickPlayer" access="true" />
     </aclrequest>

@@ -157,6 +157,95 @@ return function(ctx)
         end,
     })
 
+    local function setIdleKick(p, args)
+        local arg = args[1] and args[1]:lower()
+        local newState
+        local newSeconds = nil
+        local secondsNum = tonumber(arg)
+        local res = getResourceFromName("anticheat")
+        local running = res and getResourceState(res) == "running"
+
+        if secondsNum then
+            if secondsNum <= 0 then
+                newState = false
+            else
+                newState = true
+                newSeconds = math.floor(secondsNum)
+            end
+        elseif arg == "on" or arg == "1" or arg == "enable" or arg == "true" then
+            newState = true
+        elseif arg == "off" or arg == "0" or arg == "disable" or arg == "false" then
+            newState = false
+        elseif not arg or arg == "" then
+            if running then
+                newState = not exports.anticheat:isIdleKickEnabled()
+            else
+                newState = not (state.settings and state.settings["player.idle_kick"] ~= "0")
+            end
+        else
+            return ctx.say(p, " >  Usage: /idlekick [on|off|<seconds>]")
+        end
+
+        if running then
+            if newSeconds then
+                exports.anticheat:setMaxTabOutTime(newSeconds)
+            end
+            exports.anticheat:setIdleKickEnabled(newState)
+        end
+
+        if state.ready then
+            if not state.settings then
+                state.settings = {}
+            end
+            state.settings["player.idle_kick"] = newState and "1" or "0"
+            local sql = "INSERT INTO settings (skey, svalue) VALUES ('player.idle_kick', ?)"
+                .. " ON DUPLICATE KEY UPDATE svalue = VALUES(svalue)"
+            db.exec(sql, { newState and "1" or "0" })
+            if newSeconds then
+                state.settings["player.max_tab_out_time"] = tostring(newSeconds)
+                local sql2 = "INSERT INTO settings (skey, svalue) VALUES ('player.max_tab_out_time', ?)"
+                    .. " ON DUPLICATE KEY UPDATE svalue = VALUES(svalue)"
+                db.exec(sql2, { tostring(newSeconds) })
+            end
+        end
+
+        local statusStr
+        if not newState then
+            statusStr = "disabled"
+        elseif newSeconds then
+            statusStr = string.format("enabled (%ds)", newSeconds)
+        else
+            local curSeconds = 60
+            if running then
+                curSeconds = exports.anticheat:getMaxTabOutTime() or 60
+            elseif state.settings then
+                curSeconds = tonumber(state.settings["player.max_tab_out_time"]) or 60
+            end
+            statusStr = string.format("enabled (%ds)", curSeconds)
+        end
+
+        ctx.msgStaff(1, " >  Idle kick %s by %s.", statusStr, ctx.name(p))
+        ctx.log(p, "idlekick_" .. (newState and "on" or "off"), nil, nil, statusStr)
+    end
+
+    ctx.command({
+        name = "idlekick",
+        level = 1,
+        usage = "/idlekick [on|off|<seconds>]",
+        help = "Toggle the idle / tab-out kick",
+        needsDb = false,
+        fn = setIdleKick,
+    })
+
+    ctx.command({
+        name = "toggleidlekick",
+        level = 1,
+        usage = "/toggleidlekick [on|off|<seconds>]",
+        help = "Toggle the idle / tab-out kick",
+        needsDb = false,
+        fn = setIdleKick,
+    })
+
     ctx.command({
         name = "msg",
         level = 1,
