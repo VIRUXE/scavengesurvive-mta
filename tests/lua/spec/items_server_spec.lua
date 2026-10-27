@@ -102,6 +102,22 @@ describe("items server sql builders", function()
         assert.same({ "p1", 16, 1, true }, given[4])
         assert.equals(4, #given)
     end)
+    it("holding a carried item (Wheel) does not set a carry animation loop that freezes movement", function()
+        local animCalls = {}
+        _G.setPedAnimation = function(player, block, anim, time, loop)
+            animCalls[#animCalls + 1] = { player = player, block = block, anim = anim, time = time, loop = loop }
+        end
+        local hands = newHands(function(uname)
+            return { uname = uname, useCarryAnim = true }
+        end)
+        mock.addElement("p1")
+        hands.setHeld("p1", { id = 42, uname = "Wheel", hp = 5, data = {} })
+        mock.runTimers()
+        for _, call in ipairs(animCalls) do
+            assert.not_equals("crry_prtial", call.anim)
+        end
+        assert.equals(42, state.held["p1"].id)
+    end)
     it("orders nearest-first with a distance cap", function()
         local sql = newWorld().findNearestSql(1, 2, 2.0)
         assert.matches("ST_Distance%(p.pos, POINT%(1, 2%)%) <= 2", sql)

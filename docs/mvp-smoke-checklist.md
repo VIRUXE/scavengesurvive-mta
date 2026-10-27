@@ -393,8 +393,8 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
     - b. **Carry items and vehicles (#120).** Holding a `Wheel` or `SmallBox`, try to enter any vehicle: entry is
       refused with `Put that down before getting in`; drop it and enter normally.
     - c. **Pickup and drop animations (#121).** Pick up a Bandage: a short bend (BOM_Plant_In); drop it: the same.
-      Pick up a Wheel: the lift animation, then the carry pose while walking; equipping a Wheel from the bag
-      shows the carry pose; dropping it plays the put-down animation and clears the pose.
+      Pick up a Wheel: short bend animation, held in hand without locking movement; player can walk, run, sprint
+      and jump freely while holding it; dropping it plays the bend animation and places it on the ground.
     - d. **Weather cycle (#117).** Weather re-evaluates every minute once 10 minutes have passed since the last change
       (10% roll), and picks a different weather rather than repeating the same rain.
     - e. **Crafting combine (#119).** Hold a `Fusebox` and open inventory with a `Battery`: the `Combine` action produces

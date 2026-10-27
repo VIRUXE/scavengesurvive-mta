@@ -159,37 +159,19 @@ return function(ctx)
         end
     end
 
-    -- upstream SIF item.inc: a carried type (useCarryAnim: wheels, boxes, panels) is lifted and put down with the
-    -- CARRY animations and held in the carry pose; anything else gets the short bend of BOM_Plant_In (#121)
-    local CARRY_LIFT_MS = 400
+    -- Bending animation for pickup and drop (#121). Note: in MTA, setPedAnimation runs as a primary task and
+    -- blocks player WASD movement (issue #3915); two-handed carried items (useCarryAnim: Wheel, boxes, panels)
+    -- cannot hold CARRY crry_prtial without freezing player movement (875e85b), so they hang in hand while moving.
     local function anim(player, ...)
         if setPedAnimation and isElement(player) then
             setPedAnimation(player, ...)
         end
     end
-    local function isCarried(uname)
-        local t = itemType(uname)
-        return t ~= nil and t.useCarryAnim == true
+    function M.pickupAnim(player, _uname)
+        anim(player, "BOMBER", "BOM_Plant_In", 450, false, false, true, false)
     end
-    function M.pickupAnim(player, uname)
-        if isCarried(uname) then
-            anim(player, "CARRY", "liftup", -1, false, false, false, false)
-        else
-            anim(player, "BOMBER", "BOM_Plant_In", 450, false, false, true, false)
-        end
-    end
-    function M.dropAnim(player, uname)
-        if isCarried(uname) then
-            anim(player, "CARRY", "putdwn", -1, false, false, false, false)
-        else
-            anim(player, "BOMBER", "BOM_Plant_In", 450, false, false, true, false)
-        end
-    end
-    local function carryPose(player, itemId)
-        local cur = state.held[player]
-        if cur and cur.id == itemId then
-            anim(player, "CARRY", "crry_prtial", -1, true, true, true, false)
-        end
+    function M.dropAnim(player, _uname)
+        anim(player, "BOMBER", "BOM_Plant_In", 450, false, false, true, false)
     end
 
     function M.clearHeld(player)
@@ -203,9 +185,6 @@ return function(ctx)
             local w = baseWeapon(itemType(item.uname))
             if w then
                 takeWeapon(player, w)
-            end
-            if isCarried(item.uname) then
-                anim(player)
             end
         end
         state.held[player] = nil
@@ -231,9 +210,6 @@ return function(ctx)
             state.held[player] = item
             publish(player, "items.held", item)
             publishAmmo(player, item)
-            if isCarried(item.uname) then
-                setTimer(carryPose, CARRY_LIFT_MS, 1, player, item.id) -- after the lift, or at once from the bag
-            end
             local w = baseWeapon(t)
             if w then
                 local rounds = ammoFor(t, item.data)
