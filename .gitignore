@@ -12,3 +12,6 @@ resources/\[scavengesurvive\]/attachedit/attachedit-out.lua
 *.zip
 luacov.*
 .luacheckcache
+tools/blender/*
+!tools/blender/*.blend
+
