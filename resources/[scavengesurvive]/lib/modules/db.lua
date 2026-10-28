@@ -92,7 +92,7 @@ function db.call(proc, params, cb, ctx)
         local row = rows[1] or {}
         local payload = nil
         if row.payload and row.payload ~= false and row.payload ~= "" then
-            payload = fromJSON(row.payload)
+            payload = type(row.payload) == "table" and row.payload or fromJSON(row.payload)
         end
         cb({ ok = tonumber(row.ok) == 1, code = row.code or "NO_RESULT", payload = payload }, ctx)
     end, {}, db.conn, sql, unpack(params, 1, n))

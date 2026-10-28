@@ -1,7 +1,11 @@
 <meta>
-    <info author="scavengesurvive-mta" type="script" name="discordchat" description="Relays global chat to and from Discord through the discord bridge resource" version="0.1.0"/>
+    <info author="scavengesurvive-mta" type="script" name="discordchat" description="Relays global chat and join-part activity to and from Discord through the discord bridge resource" version="0.2.0"/>
     <min_mta_version server="1.6.0"/>
     <include resource="chat"/>
     <script src="shared/events.lua" type="server"/>
     <script src="server/main.lua" type="server"/>
+    <file src="shared/logic/discordchat.lua"/>
+    <settings>
+        <setting name="*joinPartChannel" value="1564285345426833608" friendlyname="Discord channel ID or name for join/part activity"/>
+    </settings>
 </meta>

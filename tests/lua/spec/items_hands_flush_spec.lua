@@ -197,4 +197,55 @@ describe("items hands data batching", function()
         bare.flushData()
         assert.equals(1, #mock.queries)
     end)
+
+    it("decodeData safely preserves Lua tables and parses JSON strings", function()
+        assert.same({}, hands.decodeData(nil))
+        assert.same({}, hands.decodeData(""))
+        assert.same({}, hands.decodeData(false))
+        assert.same({}, hands.decodeData(123))
+
+        -- A table is returned directly without corrupting or wiping
+        local tbl = { mag = 2, reserve = 0, ammoItem = "AmmoHomeBuck" }
+        local res = hands.decodeData(tbl)
+        assert.are.equal(tbl, res)
+        assert.equals(2, res.mag)
+
+        -- A valid JSON string is parsed into a table
+        local jsonStr = '{"mag":3,"reserve":0,"ammoItem":"AmmoBuck"}'
+        local parsed = hands.decodeData(jsonStr)
+        assert.same({ mag = 3, reserve = 0, ammoItem = "AmmoBuck" }, parsed)
+    end)
+
+    it("clearHeld flushes held weapon data even if not previously queued by fire", function()
+        mock.addElement("p1")
+        state.held["p1"] = { id = 42, uname = "PumpShotgun", data = { mag = 1, reserve = 0, ammoItem = "AmmoBuck" } }
+        -- Not explicitly queued with hands.queueData before
+        hands.clearHeld("p1")
+        assert.is_nil(state.held["p1"])
+        local qs = flushQueries()
+        assert.equals(1, #qs)
+        local rows, n = flushRows(qs[1])
+        assert.equals(1, n)
+        assert.same({ mag = 1, reserve = 0, ammoItem = "AmmoBuck" }, mock.json.decode(rows[42]))
+    end)
+
+    it("itemDropRequested flushes held weapon data before calling item_drop", function()
+        mock.addElement("p1")
+        _G.client, _G.source = "p1", "p1"
+        state.held["p1"] = { id = 55, uname = "PumpShotgun", data = { mag = 2, reserve = 0, ammoItem = "AmmoBuck" } }
+        _G.getElementPosition = function() return 100, 200, 10 end
+        _G.getElementRotation = function() return 0, 0, 90 end
+        _G.getElementInterior = function() return 0 end
+        _G.getElementDimension = function() return 0 end
+
+        mock.fire("itemDropRequested")
+        local qs = mock.queries
+        -- First query should be item_data_flush
+        assert.is_true(#qs >= 2)
+        assert.matches("CALL item_data_flush", qs[1].sql)
+        local rows = flushRows(qs[1])
+        assert.same({ mag = 2, reserve = 0, ammoItem = "AmmoBuck" }, mock.json.decode(rows[55]))
+        -- Second query should be item_drop
+        assert.matches("CALL item_drop", qs[2].sql)
+    end)
 end)

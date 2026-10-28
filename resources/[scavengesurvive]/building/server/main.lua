@@ -41,8 +41,15 @@ local function toast(player, code)
 end
 
 local function decodeData(data)
-    if type(data) == "string" and data ~= "" then
-        return fromJSON(data) or {}
+    if not data or data == "" or data == false then
+        return {}
+    end
+    if type(data) == "table" then
+        return data
+    end
+    if type(data) == "string" then
+        local t = fromJSON(data)
+        return type(t) == "table" and t or {}
     end
     return {}
 end

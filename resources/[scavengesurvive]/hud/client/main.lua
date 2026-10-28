@@ -46,6 +46,9 @@ local SUPPORTS = {
     radio = true,
     removebag = true,
     holster = true,
+    special = true,
+    wearbag = true,
+    drink = true,
 }
 
 local state = {

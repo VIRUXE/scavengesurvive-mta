@@ -168,6 +168,18 @@ net.handler("treatmentCancelRequested", function(player)
     medical.cancel(player)
     drinking.cancel(player)
 end)
+local clothesInstance = loadFile("server/clothes.lua")({
+    db = db,
+    state = state,
+    clothes = clothes,
+    skins = skins,
+    charId = charId,
+    toast = toast,
+    sendInventory = containers.sendInventory,
+    openContainerId = containers.openContainerId,
+})
+containers.setClothes(clothesInstance)
+
 loadFile("server/use.lua")({
     medical = medical,
     drinking = drinking,
@@ -184,16 +196,7 @@ loadFile("server/use.lua")({
     cookers = cookers,
     world = world,
     openContainerId = containers.openContainerId,
-    clothes = loadFile("server/clothes.lua")({
-        db = db,
-        state = state,
-        clothes = clothes,
-        skins = skins,
-        charId = charId,
-        toast = toast,
-        sendInventory = containers.sendInventory,
-        openContainerId = containers.openContainerId,
-    }),
+    clothes = clothesInstance,
 })
 
 addEventHandler("onResourceStart", resourceRoot, function()

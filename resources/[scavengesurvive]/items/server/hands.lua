@@ -51,8 +51,15 @@ return function(ctx)
     M.ammoFor = ammoFor
 
     local function decodeData(data)
-        if data and data ~= false and data ~= "" then
-            return fromJSON(data) or {}
+        if not data or data == "" or data == false then
+            return {}
+        end
+        if type(data) == "table" then
+            return data
+        end
+        if type(data) == "string" then
+            local t = fromJSON(data)
+            return type(t) == "table" and t or {}
         end
         return {}
     end
@@ -179,6 +186,9 @@ return function(ctx)
         publishAmmo(player, nil)
         local item = state.held[player]
         if item then
+            if item.data then
+                M.queueData(item)
+            end
             M.flushData(item.id)
         end
         if item and isElement(player) then
@@ -694,6 +704,10 @@ return function(ctx)
         if not item then
             return toast(player, "NOT_HELD")
         end
+        if item.data then
+            M.queueData(item)
+        end
+        M.flushData(item.id)
         local x, y, z = getElementPosition(player)
         local _, _, rz = getElementRotation(player)
         local dx, dy = geometry.dropPosition(x, y, rz, 1.0)

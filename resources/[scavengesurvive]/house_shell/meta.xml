@@ -1,0 +1,9 @@
+<meta>
+    <info author="scavengesurvive-mta" type="script" name="house_shell" description="Open shell replacement for GTA:SA object 3250" version="0.1.0"/>
+    <min_mta_version client="1.6.0-9.21695"/>
+    <download_priority_group>90</download_priority_group>
+    <script src="client/main.lua" type="client"/>
+    <file src="files/des_westrn9.col"/>
+    <file src="files/des_westrn9.txd"/>
+    <file src="files/des_westrn9.dff"/>
+</meta>

@@ -7,7 +7,7 @@ Presence shows nothing, or the bridge has to be set up on another host.
 
 | Piece | Where | Notes |
 | --- | --- | --- |
-| `discordchat` (this repo) | `resources/[scavengesurvive]/discordchat` | relays `/g` global chat only; `chat` raises `globalChatSent`, Discord lines arrive through `exports.chat:sendGlobalExternal` as `[Discord] name: text` |
+| `discordchat` (this repo) | `resources/[scavengesurvive]/discordchat` | relays `/g` global chat to `#in-game-chat` and join/quit/kick/ban/nickchange activity to `#join-part` (`1564285345426833608`); `chat` raises `globalChatSent`, Discord lines arrive through `exports.chat:sendGlobalExternal` as `[Discord] name: text` |
 | `presence` (this repo) | `resources/[scavengesurvive]/presence` | Rich Presence; `*appId` / `*joinUrl` settings in its `meta.xml` |
 | `discord` (third party, MIT) | `$DM/resources/[discord]/discord`, not in git | transport from [botder/mtasa-discord-bot](https://github.com/botder/mtasa-discord-bot); its `discord-events` resource is not installed (it relays every chat mode); `config.xml` holds the channel name and the shared passphrase |
 | `ml_sockets.so` 1.4 | `$MTA/x64/modules/`, `<module src="ml_sockets.so"/>` in `mtaserver.conf` | from `nightly.mtasa.com/files/modules/64/`; loads only at server start |
@@ -19,8 +19,9 @@ the guild set in `config.json` (it leaves any other) and only in the channel nam
 
 Local changes to the vendored relay (reapply after an upstream update): the socket server listens on
 `127.0.0.1` only (`library/Server.js`); `Bot.sendMessage` passes `allowedMentions: { parse: [] }` so relayed
-text never pings; `Bot._channelCreate` no longer deletes every new channel (upstream compared discord.js 14's
-numeric channel types against `"text"`).
+text never pings; `Bot.sendMessageTo` and `Bot.getChannel` resolve channels by ID or name; `PlayerEventHandler` routes
+join/quit/kick/ban/nickchange activity to `joinPartChannel` (`1564285345426833608`); `Bot._channelCreate` no longer
+deletes every new channel (upstream compared discord.js 14's numeric channel types against `"text"`).
 
 ## Check
 

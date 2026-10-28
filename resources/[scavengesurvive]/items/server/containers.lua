@@ -27,6 +27,11 @@ return function(ctx)
     end
 
     local sendInventory
+    local clothesRef = ctx.clothes
+
+    function M.setClothes(c)
+        clothesRef = c
+    end
 
     function M.openContainerId(player)
         local cont = activeContainer[player]
@@ -54,6 +59,15 @@ return function(ctx)
     end
 
     local function put(player, cid, itemId, containerId, onFull)
+        local held = state.held[player]
+        if held and held.id == itemId then
+            if held.data and hands.queueData then
+                hands.queueData(held)
+            end
+            if hands.flushData then
+                hands.flushData(itemId)
+            end
+        end
         db.call("container_put", { itemId, cid, containerId }, function(res, c)
             if not isElement(c.player) then
                 return
@@ -89,7 +103,7 @@ return function(ctx)
         end, { player = player, item = item })
     end
 
-    net.handler("itemPutAwayRequested", function(player)
+    net.handler("itemPutAwayRequested", function(player, target)
         local cid, item = charId(player), state.held[player]
         if not cid then
             return
@@ -98,7 +112,7 @@ return function(ctx)
         if lastHolster[player] and (now - lastHolster[player] < 1000) then
             return
         end
-        if getPedOccupiedVehicle(player) or (activeContainer[player] and activeContainer[player].containerId) then
+        if getPedOccupiedVehicle(player) then
             return
         end
         if isIncapacitated and isIncapacitated(player) then
@@ -110,6 +124,9 @@ return function(ctx)
         end
 
         if not item then
+            if activeContainer[player] and activeContainer[player].containerId then
+                return
+            end
             local holstered = state.holster and state.holster[player]
             if not holstered then
                 return toast(player, "NOT_HELD")
@@ -138,9 +155,51 @@ return function(ctx)
             return
         end
 
+        if target == "bag" then
+            return wornBag(cid, function(bag, c)
+                if not isElement(c.player) then
+                    return
+                end
+                if not bag then
+                    return toast(c.player, "CONTAINER_FULL")
+                end
+                put(c.player, cid, item.id, bag.id, function()
+                    toast(c.player, "CONTAINER_FULL")
+                end)
+            end, { player = player })
+        elseif target == "trunk" then
+            local cont = activeContainer[player]
+            if cont and cont.containerId then
+                return put(player, cid, item.id, cont.containerId, function()
+                    toast(player, "CONTAINER_FULL")
+                end)
+            end
+            return
+        elseif target == "inventory" then
+            local inv = exports.character:getInventoryContainerId(player)
+            if not inv then
+                return
+            end
+            return put(player, cid, item.id, inv, function()
+                toast(player, "INVENTORY_FULL")
+            end)
+        end
+
         local t = itemType(item.uname)
         if t and t.category == "bag" then
             return wearBag(player, cid, item)
+        end
+
+        local cont = activeContainer[player]
+        if cont and cont.containerId then
+            return put(player, cid, item.id, cont.containerId, function()
+                toast(player, "CONTAINER_FULL")
+            end)
+        end
+
+        local cl = clothesRef or ctx.clothes
+        if item.uname == "Clothes" and cl then
+            return cl.use(player, item.id, item.data, true)
         end
 
         local slot = apparel and apparel.slotFor(item.uname)
@@ -154,6 +213,12 @@ return function(ctx)
                 end
                 if not state.held[pl] or state.held[pl].id ~= heldItem.id then
                     return
+                end
+                if heldItem.data and hands.queueData then
+                    hands.queueData(heldItem)
+                end
+                if hands.flushData then
+                    hands.flushData(heldItem.id)
                 end
                 local openContainerId = M.openContainerId(pl)
                 db.call("item_wear", { heldItem.id, cid, "holster", openContainerId, n = 4 }, function(res, c)
@@ -192,12 +257,6 @@ return function(ctx)
             return
         end
 
-        local cont = activeContainer[player]
-        if cont and cont.containerId then
-            return put(player, cid, item.id, cont.containerId, function()
-                toast(player, "CONTAINER_FULL")
-            end)
-        end
         local inv = exports.character:getInventoryContainerId(player)
         if not inv then
             return
@@ -689,7 +748,7 @@ return function(ctx)
     net.handler("itemContainerMoveRequested", function(player, itemId, target)
         local cid = charId(player)
         itemId = tonumber(itemId)
-        if not cid or not itemId or (target ~= "bag" and target ~= "trunk") then
+        if not cid or not itemId or (target ~= "bag" and target ~= "trunk" and target ~= "inventory") then
             return
         end
         local sideContId = M.openContainerId(player)
@@ -721,6 +780,12 @@ return function(ctx)
                 return
             end
             executeMove(sideContId)
+        elseif target == "inventory" then
+            local inv = exports.character:getInventoryContainerId(player)
+            if not inv then
+                return
+            end
+            executeMove(inv)
         end
     end, { rate = 5 })
 
@@ -738,6 +803,15 @@ return function(ctx)
                 if not row or not isElement(c.player) then
                     return
                 end
+                local cl = clothesRef or ctx.clothes
+                if row.uname == "Clothes" and cl then
+                    local allowedOpenContainerId = c.openContainerId
+                    if allowedOpenContainerId and M.openContainerId(c.player) ~= allowedOpenContainerId then
+                        allowedOpenContainerId = nil
+                    end
+                    local fromHand = state.held[c.player] and state.held[c.player].id == row.id or false
+                    return cl.use(c.player, row.id, hands.decodeData(row.data), fromHand, allowedOpenContainerId)
+                end
                 local slot = apparel and apparel.slotFor(row.uname)
                 if not slot then
                     return toast(c.player, "NOT_WEARABLE")
@@ -745,6 +819,15 @@ return function(ctx)
                 local allowedOpenContainerId = c.openContainerId
                 if allowedOpenContainerId and M.openContainerId(c.player) ~= allowedOpenContainerId then
                     allowedOpenContainerId = nil
+                end
+                local curHeld = state.held[c.player]
+                if curHeld and curHeld.id == c.itemId then
+                    if curHeld.data and hands.queueData then
+                        hands.queueData(curHeld)
+                    end
+                    if hands.flushData then
+                        hands.flushData(c.itemId)
+                    end
                 end
                 db.call("item_wear", { c.itemId, c.cid, slot, allowedOpenContainerId, n = 4 }, function(res, c2)
                     if not isElement(c2.player) then

@@ -159,16 +159,22 @@ return function(ctx)
     end
 
     -- "[%02d]%s": the type size then the name, one "<Empty>" per free slot
-    local function rowsFor(list, cap, moveAction)
+    local function rowsFor(list, cap, moveActions, emptyAction)
         local rows = {}
         for _, it in ipairs(list or {}) do
             local t = itemType(it.uname)
             local actions = { { id = "take", label = "Equip" }, { id = "use", label = "Use" } }
-            if apparel and apparel.isWearable(it.uname) then
+            if (apparel and apparel.isWearable(it.uname)) or it.uname == "Clothes" then
                 actions[#actions + 1] = { id = "wear", label = "Wear" }
             end
-            if moveAction then
-                actions[#actions + 1] = moveAction
+            if moveActions then
+                if moveActions.id then
+                    actions[#actions + 1] = moveActions
+                else
+                    for _, act in ipairs(moveActions) do
+                        actions[#actions + 1] = act
+                    end
+                end
             end
             if last and last.held then
                 actions[#actions + 1] = { id = "combine", label = "Combine" }
@@ -179,8 +185,16 @@ return function(ctx)
                 actions = actions,
             }
         end
+        local emptyRow = { label = "<Empty>", empty = true }
+        if emptyAction then
+            emptyRow = {
+                id = emptyAction.id,
+                label = "<Empty>",
+                actions = { emptyAction },
+            }
+        end
         for _ = 1, math.max(0, (cap.size or 0) - (cap.used or 0)) do
-            rows[#rows + 1] = { label = "<Empty>", empty = true }
+            rows[#rows + 1] = emptyRow
         end
         return rows
     end
@@ -197,9 +211,16 @@ return function(ctx)
         local tname = p.capacity and p.capacity.trunk and p.capacity.trunk.uname or "Trunk"
         if view == "trunk" and p.trunk then
             title = string.format("%s (%d/%d)", tname, p.capacity.trunk.used, p.capacity.trunk.size)
-            local moveAction = p.bag and { id = "move:bag", label = "Move to bag" } or nil
-            rows = rowsFor(p.trunk, p.capacity.trunk, moveAction)
+            local moveActions = { { id = "move:inventory", label = "Move to Inventory" } }
+            if p.bag then
+                moveActions[#moveActions + 1] = { id = "move:bag", label = "Move to " .. bname }
+            end
+            local emptyAction = last and last.held and { id = "put_held:trunk", label = "Store in " .. tname } or nil
+            rows = rowsFor(p.trunk, p.capacity.trunk, moveActions, emptyAction)
             rows[#rows + 1] = { id = "nav:inventory", label = "My Inventory >" }
+            if p.bag then
+                rows[#rows + 1] = { id = "nav:bag", label = bname .. " >" }
+            end
             if p.containerWorldItemId and #p.trunk == 0 then
                 rows[#rows + 1] = {
                     id = "action:pickup_container:" .. tostring(p.containerWorldItemId),
@@ -208,13 +229,29 @@ return function(ctx)
             end
         elseif view == "bag" and p.bag then
             title = string.format("%s (%d/%d)", bname, p.capacity.bag.used, p.capacity.bag.size)
-            local moveAction = p.trunk and { id = "move:trunk", label = "Move to " .. tname } or nil
-            rows = rowsFor(p.bag, p.capacity.bag, moveAction)
+            local moveActions = { { id = "move:inventory", label = "Move to Inventory" } }
+            if p.trunk then
+                moveActions[#moveActions + 1] = { id = "move:trunk", label = "Move to " .. tname }
+            end
+            local emptyAction = last and last.held and { id = "put_held:bag", label = "Store in " .. bname } or nil
+            rows = rowsFor(p.bag, p.capacity.bag, moveActions, emptyAction)
             rows[#rows + 1] = { id = "nav:inventory", label = "My Inventory >" }
+            if p.trunk then
+                rows[#rows + 1] = { id = "nav:trunk", label = tname .. " >" }
+            end
         else
             view = "inventory"
             title = string.format("Inventory (%d/%d)", p.capacity.inv.used, p.capacity.inv.size)
-            rows = rowsFor(p.inventory, p.capacity.inv)
+            local moveActions = {}
+            if p.bag then
+                moveActions[#moveActions + 1] = { id = "move:bag", label = "Move to " .. bname }
+            end
+            if p.trunk then
+                moveActions[#moveActions + 1] = { id = "move:trunk", label = "Move to " .. tname }
+            end
+            local emptyAction = last and last.held and { id = "put_held:inventory", label = "Store in Inventory" }
+                or nil
+            rows = rowsFor(p.inventory, p.capacity.inv, #moveActions > 0 and moveActions or nil, emptyAction)
             if p.bag then
                 rows[#rows + 1] = { id = "nav:bag", label = bname .. " >" }
             end
@@ -274,6 +311,14 @@ return function(ctx)
             triggerServerEvent("itemContainerMoveRequested", localPlayer, rowId, "bag")
         elseif actionId == "move:trunk" then
             triggerServerEvent("itemContainerMoveRequested", localPlayer, rowId, "trunk")
+        elseif actionId == "move:inventory" then
+            triggerServerEvent("itemContainerMoveRequested", localPlayer, rowId, "inventory")
+        elseif actionId == "put_held:bag" then
+            triggerServerEvent("itemPutAwayRequested", localPlayer, "bag")
+        elseif actionId == "put_held:trunk" then
+            triggerServerEvent("itemPutAwayRequested", localPlayer, "trunk")
+        elseif actionId == "put_held:inventory" then
+            triggerServerEvent("itemPutAwayRequested", localPlayer, "inventory")
         elseif actionId == "combine" then
             triggerServerEvent("combineRequested", localPlayer, rowId)
         end
@@ -503,12 +548,27 @@ return function(ctx)
                     view = (view == "bag") and "inventory" or "bag"
                     open(last)
                 elseif sl.id == "held" and last.held then
-                    triggerServerEvent("itemPutAwayRequested", localPlayer)
+                    if last.held.uname == "Clothes" then
+                        exports.ui:listClose()
+                        triggerServerEvent("itemWearRequested", localPlayer, last.held.id)
+                    else
+                        local target = (view == "bag" and "bag") or (view == "trunk" and "trunk") or nil
+                        triggerServerEvent("itemPutAwayRequested", localPlayer, target)
+                    end
                 elseif sl.id ~= "bag" and sl.id ~= "held" then
                     local isEquipped = last.gear and last.gear[sl.id]
                     if isEquipped then
                         triggerServerEvent("itemUnwearRequested", localPlayer, sl.id)
-                    elseif last.held and apparel and apparel.slotFor(last.held.uname) == sl.id then
+                    elseif
+                        last.held
+                        and (
+                            (apparel and apparel.slotFor(last.held.uname) == sl.id)
+                            or (sl.id == "armour" and last.held.uname == "Clothes")
+                        )
+                    then
+                        if last.held.uname == "Clothes" then
+                            exports.ui:listClose()
+                        end
                         triggerServerEvent("itemWearRequested", localPlayer, last.held.id)
                     end
                 end

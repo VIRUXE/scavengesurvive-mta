@@ -31,7 +31,7 @@ describe("items server sql builders", function()
     before_each(function()
         mock.install()
         mock.settings = {}
-        state = { settings = {}, sent = {}, held = {}, worn = {}, typeCache = {} }
+        state = { settings = {}, sent = {}, held = {}, worn = {}, holster = {}, hat = {}, mask = {}, armour = {}, typeCache = {} }
         geometry = dofile(ITEMS .. "shared/logic/geometry.lua")
         diff = dofile(ITEMS .. "shared/logic/diff.lua")
         db = load("db")
@@ -290,5 +290,374 @@ describe("items server sql builders", function()
         for _, c in ipairs(mock.calls) do
             assert.is_false(c[1] == "triggerClientEvent" and c[3] == "inventoryOpened")
         end
+    end)
+
+    it("holstering a shotgun with 2 bullets and unholstering preserves 2 bullets without replenishing", function()
+        db.connect("items")
+        local types = {
+            PumpShotgun = {
+                name = "Shotgun",
+                category = "weapon",
+                categoryData = { baseWeapon = 25, calibre = "12g", magSize = 6, maxReserveMags = 1 },
+            },
+        }
+        local apparel = {
+            slotFor = function(uname)
+                return uname == "PumpShotgun" and "holster" or nil
+            end,
+            holsterAnim = function()
+                return { block = "PED", anim = "PHONE_IN", time = 300 }
+            end,
+        }
+        _G.setPedAnimation = function() end
+        _G.getPedOccupiedVehicle = function() return false end
+        _G.giveWeapon = function() end
+        _G.takeWeapon = function() end
+
+        local realHands = dofile(ITEMS .. "server/hands.lua")({
+            db = db,
+            net = load("net"),
+            state = state,
+            geometry = geometry,
+            world = newWorld(),
+            type = function(u) return types[u] end,
+            charId = charId,
+            toast = function() end,
+            ammo = dofile(ITEMS .. "shared/logic/ammo.lua"),
+        })
+
+        dofile(ITEMS .. "server/containers.lua")({
+            db = db,
+            net = load("net"),
+            state = state,
+            type = function(u) return types[u] end,
+            apparel = apparel,
+            charId = charId,
+            toast = function(p, code)
+                mock.calls[#mock.calls + 1] = { "toast", p, code }
+            end,
+            hands = realHands,
+            world = newWorld(),
+        })
+
+        mock.addElement("p1")
+        _G.client, _G.source = "p1", "p1"
+        realHands.setHeld("p1", { id = 10, uname = "PumpShotgun", hp = 5, data = { mag = 2, reserve = 0, ammoItem = "AmmoHomeBuck" } })
+        assert.equals(2, state.held["p1"].data.mag)
+
+        -- 1. Holster held weapon
+        mock.fire("itemPutAwayRequested")
+        mock.runTimers()
+        assert.matches("CALL item_wear", mock.queries[#mock.queries].sql)
+        mock.answer(#mock.queries, { { ok = 1, code = "OK", payload = "{}" } })
+
+        assert.is_nil(state.held["p1"])
+        assert.is_table(state.holster["p1"])
+        assert.equals(10, state.holster["p1"].id)
+        assert.equals(2, state.holster["p1"].data.mag)
+        assert.equals("AmmoHomeBuck", state.holster["p1"].data.ammoItem)
+
+        -- 2. Unholster weapon
+        mock.tick = mock.tick + 2000
+        mock.fire("itemPutAwayRequested")
+        mock.runTimers()
+        assert.matches("CALL item_unwear", mock.queries[#mock.queries].sql)
+        mock.answer(#mock.queries, { { ok = 1, code = "OK", payload = "{}" } })
+
+        assert.is_nil(state.holster["p1"])
+        assert.is_table(state.held["p1"])
+        assert.equals(10, state.held["p1"].id)
+        assert.equals(2, state.held["p1"].data.mag)
+        assert.equals("AmmoHomeBuck", state.held["p1"].data.ammoItem)
+    end)
+
+    it("holstering a Mac10 (Uzi) with 14 bullets and unholstering preserves 14 bullets", function()
+        db.connect("items")
+        local types = {
+            Mac10 = {
+                name = "Mac-10",
+                category = "weapon",
+                categoryData = { baseWeapon = 28, calibre = "9mm", magSize = 30, maxReserveMags = 1 },
+            },
+        }
+        local apparel = {
+            slotFor = function(uname)
+                return uname == "Mac10" and "holster" or nil
+            end,
+            holsterAnim = function()
+                return { block = "PED", anim = "PHONE_IN", time = 300 }
+            end,
+        }
+        _G.setPedAnimation = function() end
+        _G.getPedOccupiedVehicle = function() return false end
+        _G.giveWeapon = function() end
+        _G.takeWeapon = function() end
+
+        local realHands = dofile(ITEMS .. "server/hands.lua")({
+            db = db,
+            net = load("net"),
+            state = state,
+            geometry = geometry,
+            world = newWorld(),
+            type = function(u) return types[u] end,
+            charId = charId,
+            toast = function() end,
+            ammo = dofile(ITEMS .. "shared/logic/ammo.lua"),
+        })
+
+        dofile(ITEMS .. "server/containers.lua")({
+            db = db,
+            net = load("net"),
+            state = state,
+            type = function(u) return types[u] end,
+            apparel = apparel,
+            charId = charId,
+            toast = function(p, code)
+                mock.calls[#mock.calls + 1] = { "toast", p, code }
+            end,
+            hands = realHands,
+            world = newWorld(),
+        })
+
+        mock.addElement("p1")
+        _G.client, _G.source = "p1", "p1"
+        realHands.setHeld("p1", { id = 20, uname = "Mac10", hp = 5, data = { mag = 14, reserve = 0, ammoItem = "Ammo9mm" } })
+        assert.equals(14, state.held["p1"].data.mag)
+
+        -- Holster
+        mock.fire("itemPutAwayRequested")
+        mock.runTimers()
+        assert.matches("CALL item_wear", mock.queries[#mock.queries].sql)
+        mock.answer(#mock.queries, { { ok = 1, code = "OK", payload = "{}" } })
+
+        assert.is_table(state.holster["p1"])
+        assert.equals(14, state.holster["p1"].data.mag)
+
+        -- Unholster
+        mock.tick = mock.tick + 2000
+        mock.fire("itemPutAwayRequested")
+        mock.runTimers()
+        assert.matches("CALL item_unwear", mock.queries[#mock.queries].sql)
+        mock.answer(#mock.queries, { { ok = 1, code = "OK", payload = "{}" } })
+
+        assert.is_table(state.held["p1"])
+        assert.equals(14, state.held["p1"].data.mag)
+    end)
+
+    it("itemPutAwayRequested with target = 'bag' flushes held data before calling container_put", function()
+        db.connect("items")
+        local flushedId = nil
+        dofile(ITEMS .. "server/containers.lua")({
+            db = db,
+            net = load("net"),
+            state = state,
+            type = function(uname)
+                return { uname = uname, category = "weapon" }
+            end,
+            apparel = {
+                slotFor = function() return nil end,
+            },
+            charId = charId,
+            toast = function() end,
+            hands = {
+                setHeld = function(p, it)
+                    state.held[p] = it
+                end,
+                queueData = function(it) end,
+                flushData = function(id)
+                    flushedId = id
+                end,
+                decodeData = function(d) return d end,
+            },
+            world = newWorld(),
+        })
+
+        mock.addElement("p1")
+        _G.client, _G.source = "p1", "p1"
+        state.held["p1"] = { id = 44, uname = "PumpShotgun", hp = 5, data = { mag = 1, reserve = 0, ammoItem = "AmmoBuck" } }
+
+        mock.fire("itemPutAwayRequested", "bag")
+        -- wornBag query
+        mock.answer(#mock.queries, { { id = 99, uname = "Backpack" } })
+
+        assert.equals(44, flushedId)
+        assert.matches("CALL container_put", mock.queries[#mock.queries].sql)
+    end)
+
+    it("itemPutAwayRequested with target = 'bag' stores held item into the worn bag directly", function()
+        db.connect("items")
+        dofile(ITEMS .. "server/containers.lua")({
+            db = db,
+            net = load("net"),
+            state = state,
+            type = function(uname)
+                return { uname = uname, category = "misc" }
+            end,
+            apparel = {
+                slotFor = function()
+                    return nil
+                end,
+            },
+            charId = charId,
+            toast = function(p, code)
+                mock.calls[#mock.calls + 1] = { "toast", p, code }
+            end,
+            hands = {
+                setHeld = function(p, it)
+                    state.held[p] = it
+                end,
+                decodeData = function(d)
+                    return d
+                end,
+            },
+            world = newWorld(),
+        })
+
+        mock.addElement("p1")
+        _G.client, _G.source = "p1", "p1"
+        state.held["p1"] = { id = 42, uname = "Burger", hp = 1, data = {} }
+
+        mock.fire("itemPutAwayRequested", "bag")
+        -- wornBag queries items JOIN containers to find the worn bag's container ID
+        assert.matches("holder_kind = 'bag'", mock.queries[#mock.queries].sql)
+        mock.answer(#mock.queries, { { id = 77, size = 16, uname = "Backpack" } })
+
+        -- then calls container_put with bag container id (77)
+        assert.matches("CALL container_put", mock.queries[#mock.queries].sql)
+        assert.same({ 42, 7, 77 }, mock.queries[#mock.queries].params)
+        mock.answer(#mock.queries, { { ok = 1, code = "OK", payload = "{}" } })
+
+        assert.is_nil(state.held["p1"])
+        assert.same({ "toast", "p1", "PUT_AWAY" }, mock.calls[#mock.calls])
+    end)
+
+    it("itemContainerMoveRequested with target = 'inventory' moves item to character inventory", function()
+        db.connect("items")
+        _G.exports = {
+            character = {
+                getInventoryContainerId = function()
+                    return 55
+                end,
+            },
+        }
+
+        dofile(ITEMS .. "server/containers.lua")({
+            db = db,
+            net = load("net"),
+            state = state,
+            type = function(uname)
+                return { uname = uname, category = "misc" }
+            end,
+            charId = charId,
+            toast = function(p, code)
+                mock.calls[#mock.calls + 1] = { "toast", p, code }
+            end,
+            hands = {},
+            world = newWorld(),
+        })
+
+        mock.addElement("p1")
+        _G.client, _G.source = "p1", "p1"
+
+        mock.fire("itemContainerMoveRequested", 99, "inventory")
+        assert.matches("CALL container_move", mock.queries[#mock.queries].sql)
+        assert.same({ 99, 7, 55, nil }, mock.queries[#mock.queries].params)
+    end)
+
+    it("itemPutAwayRequested with held Clothes wears them instead of putting into inventory", function()
+        db.connect("items")
+        local clothesUsed = {}
+        dofile(ITEMS .. "server/containers.lua")({
+            db = db,
+            net = load("net"),
+            state = state,
+            type = function(uname)
+                return { uname = uname, category = "generic" }
+            end,
+            apparel = {
+                slotFor = function()
+                    return nil
+                end,
+            },
+            clothes = {
+                use = function(p, itemId, data, fromHand)
+                    clothesUsed[#clothesUsed + 1] = { player = p, itemId = itemId, data = data, fromHand = fromHand }
+                end,
+            },
+            charId = charId,
+            toast = function(p, code)
+                mock.calls[#mock.calls + 1] = { "toast", p, code }
+            end,
+            hands = {
+                setHeld = function(p, it)
+                    state.held[p] = it
+                end,
+                decodeData = function(d)
+                    return d
+                end,
+            },
+            world = newWorld(),
+        })
+
+        mock.addElement("p1")
+        _G.client, _G.source = "p1", "p1"
+        state.held["p1"] = { id = 777, uname = "Clothes", hp = 2, data = { skin = 60 } }
+
+        mock.fire("itemPutAwayRequested")
+        assert.equals(1, #clothesUsed)
+        assert.equals("p1", clothesUsed[1].player)
+        assert.equals(777, clothesUsed[1].itemId)
+        assert.is_true(clothesUsed[1].fromHand)
+    end)
+
+    it("itemWearRequested with Clothes wears them via clothes.use", function()
+        db.connect("items")
+        local clothesUsed = {}
+        dofile(ITEMS .. "server/containers.lua")({
+            db = db,
+            net = load("net"),
+            state = state,
+            type = function(uname)
+                return { uname = uname, category = "generic" }
+            end,
+            apparel = {
+                slotFor = function()
+                    return nil
+                end,
+            },
+            clothes = {
+                use = function(p, itemId, data, fromHand, openContainerId)
+                    clothesUsed[#clothesUsed + 1] = {
+                        player = p,
+                        itemId = itemId,
+                        data = data,
+                        fromHand = fromHand,
+                        openContainerId = openContainerId,
+                    }
+                end,
+            },
+            charId = charId,
+            toast = function(p, code)
+                mock.calls[#mock.calls + 1] = { "toast", p, code }
+            end,
+            hands = {
+                decodeData = function(d)
+                    return d
+                end,
+            },
+            world = newWorld(),
+        })
+
+        mock.addElement("p1")
+        _G.client, _G.source = "p1", "p1"
+
+        mock.fire("itemWearRequested", 888)
+        assert.matches("SELECT id, type_uname AS uname", mock.queries[#mock.queries].sql)
+        mock.answer(#mock.queries, { { id = 888, uname = "Clothes", hp = 2, data = { skin = 192 } } })
+
+        assert.equals(1, #clothesUsed)
+        assert.equals("p1", clothesUsed[1].player)
+        assert.equals(888, clothesUsed[1].itemId)
+        assert.is_false(clothesUsed[1].fromHand)
     end)
 end)

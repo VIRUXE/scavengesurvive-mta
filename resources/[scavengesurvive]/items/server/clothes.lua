@@ -18,13 +18,21 @@ return function(ctx)
         end
         changing[player] = nil
         if isElement(player) then
+            if setPedAnimation then
+                setPedAnimation(player)
+            end
             triggerClientEvent(player, "clothesChangeStopped", player)
         end
     end
 
     local function finish(player, c)
         changing[player] = nil
-        triggerClientEvent(player, "clothesChangeStopped", player)
+        if isElement(player) then
+            if setPedAnimation then
+                setPedAnimation(player)
+            end
+            triggerClientEvent(player, "clothesChangeStopped", player)
+        end
         local openContainerId = c.openContainerId
         if openContainerId and ctx.openContainerId(player) ~= openContainerId then
             openContainerId = nil
@@ -37,15 +45,18 @@ return function(ctx)
                 return toast(cc.player, res and res.code or "DB_ERROR")
             end
             setElementModel(cc.player, cc.skin)
-            local nextData = { skin = res.payload and res.payload.old_skin }
+            local payload = res.payload
+            local oldSkin = payload and payload.old_skin
+            local nextData = { skin = oldSkin }
             local held = state.held[cc.player]
             if held and held.id == cc.itemId then
                 held.data = nextData
                 triggerClientEvent(cc.player, "heldItemChanged", cc.player, held)
             end
-            if not cc.fromHand then
+            if ctx.sendInventory then
                 ctx.sendInventory(cc.player)
             end
+            toast(cc.player, "EQUIPPED")
         end, { player = player, itemId = c.itemId, skin = c.skin, fromHand = c.fromHand })
     end
 
@@ -79,6 +90,12 @@ return function(ctx)
         local female = skins.isFemale(getElementModel(player))
         if (clothes.gender(skin) == clothes.FEMALE) ~= female then
             return toast(player, "CLOTHESWRGE")
+        end
+        if setElementVelocity and isElement(player) then
+            setElementVelocity(player, 0, 0, 0)
+        end
+        if setPedAnimation and isElement(player) then
+            setPedAnimation(player, "COP_AMBIENT", "Copbrowse_loop", -1, true, false, false, false)
         end
         local x, y, z = getElementPosition(player)
         local c = {
