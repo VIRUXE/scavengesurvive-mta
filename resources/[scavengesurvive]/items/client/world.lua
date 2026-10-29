@@ -123,9 +123,25 @@ return function(ctx)
         return parts
     end
 
+    -- a built defence (building resource): data.defence, either JSON shape; nil while the item just lies there
+    local function builtDefence(r)
+        local data = type(r.data) == "table" and r.data or nil
+        local def = data and (data.defence or (type(data[1]) == "table" and data[1].defence))
+        return type(def) == "table" and def.active == true and def or nil
+    end
+
     -- The type's rest rotation added to the row's heading (upstream CreateItemInWorld with applyrotoffsets), then
     -- turned onto the slope it lies on (ground_nx / ground_ny, set by the death drop and /dropall; false when flat).
     local function orient(obj, r, t)
+        -- loose items are walked through; a built defence is a wall (upstream's defence objects collide)
+        local def = builtDefence(r)
+        setElementCollisionsEnabled(obj, def ~= nil)
+        if def then
+            -- its row already holds the raised z and full heading, data the pose
+            setElementPosition(obj, r.x, r.y, r.z)
+            setElementRotation(obj, def.rx or 0, def.ry or 0, r.rz or 0)
+            return
+        end
         setElementPosition(obj, r.x, r.y, r.z + (t and t.modelz or 0))
         setElementRotation(obj, t and t.rotx or 0, t and t.roty or 0, (r.rz or 0) + (t and t.rotz or 0))
         local nx, ny = tonumber(r.ground_nx) or 0, tonumber(r.ground_ny) or 0

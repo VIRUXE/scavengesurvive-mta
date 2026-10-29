@@ -157,8 +157,8 @@ local function handleDefenceInteract(player, row)
         return triggerClientEvent(player, "keypadOpened", player, row.id, false)
     end
 
-    -- 5. Normal door/gate open/close toggle
-    if defences.isDoorOrGate(row.type_uname) then
+    -- 5. Normal door/gate open/close toggle (rows from items' nearest-item search name the type `uname`)
+    if defences.isDoorOrGate(row.type_uname or row.uname) then
         local willOpen = (d.open ~= true)
         setDoorOpenState(row, willOpen, function()
             exports.items:refreshPlayer(player)
@@ -182,6 +182,148 @@ local function handleDefenceInteract(player, row)
             end
         end)
     end
+end
+
+-- Building and taking down defences (upstream StartBuildingDefence and the crowbar in _InteractDefenceWithItem).
+-- Reached from items' interact key with a Hammer, Screwdriver or Crowbar in hand next to a defence item. Both re-check
+-- the tool, the distance and the row when the hold ends, so walking off or swapping tools cancels.
+local DEFENCE_ROW = "SELECT id, type_uname, data, x, y, z, rz FROM items "
+    .. "WHERE id = ? AND container_id IS NULL AND holder_char_id IS NULL"
+
+local function heldUname(player)
+    local held = exports.items:getHeld(player)
+    return held and held.uname
+end
+
+local function holdDefenceAction(player, row, tool, label, ms, finish)
+    cancelBreak(player)
+    triggerClientEvent(player, "vehicleHoldStarted", player, label, ms)
+    activeBreaks[player] = setTimer(function(pl, itemId, x, y, z)
+        activeBreaks[pl] = nil
+        if not isElement(pl) or heldUname(pl) ~= tool then
+            return
+        end
+        local px, py, pz = getElementPosition(pl)
+        if getDistanceBetweenPoints3D(px, py, pz, x, y, z) > 3.5 then
+            return
+        end
+        db.one(DEFENCE_ROW, { itemId }, function(cur, c)
+            if cur and isElement(c.player) then
+                finish(c.player, cur)
+            end
+        end, { player = pl })
+    end, ms, 1, player, row.id, row.x, row.y, row.z)
+end
+
+function buildDefence(player, itemId)
+    local tool = heldUname(player)
+    local pose = defences.TOOL_POSE[tool]
+    itemId = tonumber(itemId)
+    if not charId(player) or not pose or not itemId then
+        return
+    end
+    db.one(DEFENCE_ROW, { itemId }, function(row, c)
+        if not row or not isElement(c.player) then
+            return
+        end
+        local t = exports.data:itemType(row.type_uname)
+        if not (t and t.defence) or defences.state(decodeData(row.data)) then
+            return
+        end
+        local px, py, pz = getElementPosition(c.player)
+        if getDistanceBetweenPoints3D(px, py, pz, row.x, row.y, row.z) > 3.0 then
+            return
+        end
+        local ms = exports.character:skillTimeModifier(c.player, defences.BUILD_MS, "Construction")
+        holdDefenceAction(c.player, row, c.tool, "Building " .. t.name, ms, function(pl, cur)
+            if defences.state(decodeData(cur.data)) then
+                return
+            end
+            local z, rz, st = defences.build(t.defence, c.pose, cur.z, cur.rz, t.rotz)
+            local d = decodeData(cur.data)
+            d.defence = st
+            -- a built defence stays: no despawn timer, no longer a loot spawn's item
+            db.exec(
+                "UPDATE items SET z = ?, rz = ?, data = ?, despawn_at = NULL, loot_spawn_id = NULL "
+                    .. "WHERE id = ? AND x IS NOT NULL",
+                { z, rz, encodeData(d), cur.id },
+                function()
+                    exports.items:resendWorldItem(cur.id)
+                    util.log(
+                        "building",
+                        "info",
+                        "built defence %d (%s, %s) at %f, %f, %f rz %f",
+                        cur.id,
+                        cur.type_uname,
+                        st.pose,
+                        cur.x,
+                        cur.y,
+                        z,
+                        rz
+                    )
+                    if isElement(pl) then
+                        exports.character:gainSkill(pl, "Construction")
+                        toast(pl, "DEFENCE_BUILT")
+                    end
+                end
+            )
+        end)
+    end, { player = player, tool = tool, pose = pose })
+end
+
+function removeDefence(player, itemId)
+    itemId = tonumber(itemId)
+    if not charId(player) or heldUname(player) ~= "Crowbar" or not itemId then
+        return
+    end
+    db.one(DEFENCE_ROW, { itemId }, function(row, c)
+        if not row or not isElement(c.player) then
+            return
+        end
+        local t = exports.data:itemType(row.type_uname)
+        if not (t and t.defence and defences.state(decodeData(row.data))) then
+            return
+        end
+        local px, py, pz = getElementPosition(c.player)
+        if getDistanceBetweenPoints3D(px, py, pz, row.x, row.y, row.z) > 3.0 then
+            return
+        end
+        if not defences.isBehind(t.defence, row.rz, row.x, row.y, px, py) then
+            return toast(c.player, "DEFENCE_FRONT")
+        end
+        local ms = exports.character:skillTimeModifier(c.player, defences.REMOVE_MS, "Construction")
+        holdDefenceAction(c.player, row, "Crowbar", "Removing " .. t.name, ms, function(pl, cur)
+            local d = decodeData(cur.data)
+            local st = defences.state(d)
+            if not st then
+                return
+            end
+            local z, rz = defences.unbuild(t.defence, st, cur.z, cur.rz, t.rotz)
+            d.defence = nil
+            db.exec(
+                "UPDATE items SET z = ?, rz = ?, data = ? WHERE id = ? AND x IS NOT NULL",
+                { z, rz, encodeData(d), cur.id },
+                function()
+                    exports.items:resendWorldItem(cur.id)
+                    if isElement(pl) then
+                        toast(pl, "DEFENCE_REMOVED")
+                    end
+                end
+            )
+            -- upstream's [CROWBAR] line, kept so a wrongly broken base can be put back
+            util.log(
+                "building",
+                "info",
+                "%s removed defence %d (%s) at %f, %f, %f",
+                getPlayerName(pl),
+                cur.id,
+                cur.type_uname,
+                cur.x,
+                cur.y,
+                cur.z
+            )
+        end)
+    end, { player = player })
 end
 
 net.handler("buildingInteractRequested", function(player, itemId)

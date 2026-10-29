@@ -76,4 +76,55 @@ describe("defences logic", function()
             assert.are.equal(90, defences.calculateDoorRotation(90, false))
         end)
     end)
+    describe("building a defence", function()
+        -- upstream: DefineDefenceItem(item_CorPanel, 0.0, 90.0, 0.0, 90.0, 90.0, 0.0, 1.21428, true)
+        local cor = { vertical = { 0.0, 90.0, 0.0 }, horizontal = { 90.0, 90.0, 0.0 }, zOffset = 1.21428 }
+        -- upstream: DefineDefenceItem(item_WoodPanel, 90.0, 0.0, 23.5, 0.0, 0.0, 0.0, 1.0161, false)
+        local wood = { vertical = { 90.0, 0.0, 23.5 }, horizontal = { 0.0, 0.0, 0.0 }, zOffset = 1.0161 }
+
+        it("maps the tool in hand to a pose", function()
+            assert.are.equal("vertical", defences.TOOL_POSE.Screwdriver)
+            assert.are.equal("horizontal", defences.TOOL_POSE.Hammer)
+            assert.is_nil(defences.TOOL_POSE.Crowbar)
+        end)
+
+        it("stands a defence up with a screwdriver, raised by its z offset", function()
+            local z, rz, st = defences.build(wood, "vertical", 10.0, 350.0, 0.0)
+            assert.are.equal(11.0161, z)
+            assert.are.equal(13.5, rz)
+            assert.are.same({ active = true, pose = "vertical", rx = 90.0, ry = 0.0 }, st)
+        end)
+
+        it("lays a defence down with a hammer at its own height", function()
+            local z, rz, st = defences.build(cor, "horizontal", 10.0, 45.0, 0.0)
+            assert.are.equal(10.0, z)
+            assert.are.equal(45.0, rz)
+            assert.are.same({ active = true, pose = "horizontal", rx = 90.0, ry = 90.0 }, st)
+        end)
+
+        it("restores the lying position when taken down", function()
+            local z, rz, st = defences.build(wood, "vertical", 10.0, 350.0, 5.0)
+            local z2, rz2 = defences.unbuild(wood, st, z, rz, 5.0)
+            assert.is_true(math.abs(z2 - 10.0) < 1e-9)
+            assert.is_true(math.abs(rz2 - 350.0) < 1e-9)
+        end)
+
+        it("reads the built state from item data in either JSON shape", function()
+            local st = { active = true, pose = "vertical", rx = 0, ry = 90 }
+            assert.are.equal(st, defences.state({ defence = st }))
+            assert.are.equal(st, defences.state({ { defence = st } }))
+            assert.is_nil(defences.state({ defence = { active = false } }))
+            assert.is_nil(defences.state({}))
+            assert.is_nil(defences.state(nil))
+        end)
+
+        it("only lets a crowbar work from the back side", function()
+            -- a defence at the origin facing north (rz 0): the player south of it is behind it
+            assert.is_true(defences.isBehind(cor, 0, 0, 0, 0, -2))
+            assert.is_false(defences.isBehind(cor, 0, 0, 0, 0, 2))
+            -- turned to face east (rz 270): west of it is behind
+            assert.is_true(defences.isBehind(cor, 270, 0, 0, -2, 0))
+            assert.is_false(defences.isBehind(cor, 270, 0, 0, 2, 0))
+        end)
+    end)
 end)

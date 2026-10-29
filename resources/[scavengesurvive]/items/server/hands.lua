@@ -564,6 +564,35 @@ return function(ctx)
     local TENT = { "TentPack" }
     local TARGETS = { GasCan = BARBECUE, FireLighter = BARBECUE, Crowbar = TENT }
 
+    -- a Crowbar reaches tents and defences (building resource), built ones or not: the type list once data is up
+    local crowbarTargets = nil
+    local function targetsFor(uname)
+        if uname ~= "Crowbar" then
+            return TARGETS[uname]
+        end
+        if not crowbarTargets then
+            crowbarTargets = { unpack(TENT) }
+            for _, u in ipairs(exports.data:itemTypes() or {}) do
+                local t = itemType(u)
+                if t and t.defence then
+                    crowbarTargets[#crowbarTargets + 1] = u
+                end
+            end
+        end
+        return crowbarTargets
+    end
+
+    local function buildingRunning()
+        local res = getResourceFromName and getResourceFromName("building")
+        return res and getResourceState(res) == "running"
+    end
+
+    -- the item data's built-defence state ({ active = true, pose, rx, ry }, building/shared/logic/defences.lua)
+    local function builtDefence(data)
+        local d = type(data) == "table" and (data.defence or (type(data[1]) == "table" and data[1].defence))
+        return type(d) == "table" and d.active == true
+    end
+
     -- Hammer, Screwdriver, Wrench, ...: the tools of the ground recipes (crafting/shared/logic/craft.lua)
     local function isConstructionTool(uname)
         local res = uname and getResourceFromName and getResourceFromName("crafting")
@@ -617,7 +646,7 @@ return function(ctx)
         end
         local x, y = getElementPosition(player)
         local r = tonumber(state.settings["items.pickup_radius"]) or 2.0
-        local unames = held and TARGETS[held.uname]
+        local unames = held and targetsFor(held.uname)
         local sql = world.findNearestSql(x, y, r, getElementInterior(player), getElementDimension(player), unames)
         db.one(sql, {}, function(row, c)
             if not isElement(c.player) then
@@ -650,6 +679,20 @@ return function(ctx)
                     end
                 end
             end
+            -- Defences: a Hammer lays one down and a Screwdriver stands one up where it lies; once built it is never
+            -- picked up again, a Crowbar takes it down from behind and anything else works its door or keypad
+            local rowType = itemType(row.uname)
+            if rowType and rowType.defence and buildingRunning() then
+                local built = builtDefence(rData)
+                if not built and (curUname == "Hammer" or curUname == "Screwdriver") then
+                    return exports.building:buildDefence(c.player, row.id)
+                elseif built and curUname == "Crowbar" then
+                    return exports.building:removeDefence(c.player, row.id)
+                elseif built then
+                    return exports.building:interactDefence(c.player, row)
+                end
+            end
+
             if curUname == "Crowbar" then
                 return runCrafting("deconstruct", c.player)
             end

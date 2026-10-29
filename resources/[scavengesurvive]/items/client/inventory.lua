@@ -97,6 +97,9 @@ return function(ctx)
         WRONG_PASSCODE = "Incorrect passcode",
         DOOR_OPENED = "Opened",
         DOOR_CLOSED = "Closed",
+        DEFENCE_BUILT = "Defence built",
+        DEFENCE_REMOVED = "Defence removed",
+        DEFENCE_FRONT = "You can only remove a defence from the inside",
         PLOTPOLEENT = "Entering claimed territory",
         PLOTPOLEEXT = "Leaving claimed territory",
     }

@@ -40,6 +40,16 @@ def test_categories_are_attached():
     assert types["_calibres"]["9mm"] == 0.25
 
 
+def test_defences_carry_their_built_rotations():
+    types = _load()
+    # upstream: DefineDefenceItem(item_CorPanel, 0.0, 90.0, 0.0, 90.0, 90.0, 0.0, 1.21428, true)
+    assert types["CorPanel"]["defence"] == {"vertical": [0.0, 90.0, 0.0], "horizontal": [90.0, 90.0, 0.0],
+                                            "zOffset": 1.21428, "movable": True}
+    assert types["WoodPanel"]["defence"]["vertical"] == [90.0, 0.0, 23.5]
+    assert types["WoodPanel"]["defence"]["movable"] is False
+    assert types["CorPanel"]["category"] == "generic" and "defence" not in types["Knife"]
+
+
 def test_lua_and_sql_output_are_deterministic_and_complete():
     types = _load()
     lua, sql = it.render_lua(types), it.render_sql(types)

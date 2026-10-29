@@ -162,7 +162,7 @@ describe("items server sql builders", function()
         assert.is_nil(state.sent.p2[5])
     end)
     -- #97: GasCan and FireLighter look for a Barbecue in reach; Crowbar looks for a TentPack then deconstructs
-    it("filters itemPickupRequested to Barbecue for GasCan/FireLighter and TentPack/deconstruct for Crowbar", function()
+    it("filters itemPickupRequested to Barbecue for GasCan/FireLighter and tents/defences/deconstruct for Crowbar", function()
         db.connect("items")
         _G.getElementPosition = function()
             return 10, 20, 3
@@ -189,8 +189,16 @@ describe("items server sql builders", function()
                     crafted[#crafted + 1] = { "groundCraft", p }
                 end,
             },
+            data = {
+                itemTypes = function()
+                    return { "TentPack", "CorPanel", "Knife" }
+                end,
+            },
         }
-        newHands(function()
+        newHands(function(uname)
+            if uname == "CorPanel" then
+                return { category = "generic", defence = { vertical = { 0, 90, 0 }, horizontal = { 90, 90, 0 } } }
+            end
             return { category = "generic" }
         end)
         mock.addElement("p1")
@@ -209,8 +217,9 @@ describe("items server sql builders", function()
         mock.tick = 2000
         state.held["p1"] = { id = 3, uname = "Crowbar", hp = 2, data = {} }
         mock.fire("itemPickupRequested")
-        assert.matches("i%.type_uname IN %('TentPack'%)", mock.queries[#mock.queries].sql)
-        mock.answer(#mock.queries, {}) -- no tent in reach -> deconstruct
+        -- a crowbar also reaches defences, to take a built one down (building resource)
+        assert.matches("i%.type_uname IN %('TentPack', 'CorPanel'%)", mock.queries[#mock.queries].sql)
+        mock.answer(#mock.queries, {}) -- no tent or defence in reach -> deconstruct
         assert.same({ { "groundCraft", "p1" }, { "deconstruct", "p1" } }, crafted)
     end)
 
