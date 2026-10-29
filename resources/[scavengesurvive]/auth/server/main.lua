@@ -463,6 +463,9 @@ end)
 function getAccountId(player)
     return session[player] and session[player].id or false
 end
+function getAccountName(player)
+    return session[player] and session[player].name or false
+end
 function getAdminLevel(player)
     return session[player] and session[player].adminLevel or 0
 end

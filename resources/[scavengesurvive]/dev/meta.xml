@@ -13,8 +13,10 @@
     <script src="client/main.lua" type="client"/>
     <script src="client/studio.lua" type="client"/>
     <file src="shared/logic/studio.lua"/>
+    <file src="shared/logic/item_spawn.lua"/>
     <export function="rcon" type="server" http="true"/>
     <export function="isHeld" type="client"/>
+    <export function="isItemSpawnAllowed" type="server"/>
     <aclrequest>
         <right name="function.restartResource" access="true"/>
         <right name="function.startResource" access="true"/>
@@ -26,6 +28,7 @@
     </aclrequest>
     <settings>
         <setting name="*open" value="true" friendlyname="Everyone may use dev commands"/>
+        <setting name="*item_spawners" value="kingsergio" friendlyname="Comma-separated account or player names allowed to spawn items"/>
         <setting name="*http_user" value="rcon" friendlyname="Account for the HTTP rcon export"/>
         <setting name="*http_pass" value="" friendlyname="Its password; empty disables the rcon account"/>
     </settings>

@@ -74,4 +74,40 @@ function discordchat.nickChangePayload(previous, nick, channel)
     return payload
 end
 
+function discordchat.itemSpawnPayload(playerName, itemUname, itemId, zone, channel)
+    local player = discordchat.strip(playerName)
+    local item = discordchat.strip(itemUname)
+    if player == "" or item == "" then
+        return nil, nil
+    end
+    local idStr = itemId and (" (ID: " .. tostring(itemId) .. ")") or ""
+    local zoneClean = zone and discordchat.strip(zone) or nil
+    local zoneStr = (zoneClean and zoneClean ~= "" and zoneClean ~= "none") and (" in " .. zoneClean) or ""
+    local payload = {
+        player = player,
+        item = item,
+        id = itemId and tostring(itemId) or nil,
+        zone = (zoneClean and zoneClean ~= "" and zoneClean ~= "none") and zoneClean or nil,
+        text = string.format(":package: **%s** spawned item **%s**%s%s", player, item, idStr, zoneStr),
+    }
+    if channel then
+        payload.channel = channel
+    end
+    return "staff.log", payload
+end
+
+function discordchat.staffLogPayload(text, channel)
+    local cleaned = discordchat.strip(text)
+    if cleaned == "" then
+        return nil, nil
+    end
+    local payload = {
+        text = cleaned,
+    }
+    if channel then
+        payload.channel = channel
+    end
+    return "staff.log", payload
+end
+
 return discordchat

@@ -80,4 +80,44 @@ describe("discordchat logic", function()
         assert.is_nil(discordchat.nickChangePayload("#FF0000Nick", "#00FF00Nick", "1564285345426833608"))
         assert.is_nil(discordchat.nickChangePayload("", "NewNick"))
     end)
+
+    it("builds staff.log payload for item spawning", function()
+        local packet, payload =
+            discordchat.itemSpawnPayload("KingSergio", "M9Pistol", 42, "Fort Carson", "1563498523507425421")
+        assert.equals("staff.log", packet)
+        assert.same({
+            player = "KingSergio",
+            item = "M9Pistol",
+            id = "42",
+            zone = "Fort Carson",
+            channel = "1563498523507425421",
+            text = ":package: **KingSergio** spawned item **M9Pistol** (ID: 42) in Fort Carson",
+        }, payload)
+
+        -- Strips color codes and handles missing optional fields
+        local p2, pl2 = discordchat.itemSpawnPayload("#FF0000KingSergio", "Wrench", nil, nil, nil)
+        assert.equals("staff.log", p2)
+        assert.same({
+            player = "KingSergio",
+            item = "Wrench",
+            text = ":package: **KingSergio** spawned item **Wrench**",
+        }, pl2)
+
+        -- Empty player or item returns nil
+        assert.is_nil(discordchat.itemSpawnPayload("", "M9Pistol"))
+        assert.is_nil(discordchat.itemSpawnPayload("KingSergio", ""))
+        assert.is_nil(discordchat.itemSpawnPayload(nil, "M9Pistol"))
+    end)
+
+    it("builds generic staff.log payload", function()
+        local packet, payload = discordchat.staffLogPayload("Important staff note", "1563498523507425421")
+        assert.equals("staff.log", packet)
+        assert.same({
+            text = "Important staff note",
+            channel = "1563498523507425421",
+        }, payload)
+
+        assert.is_nil(discordchat.staffLogPayload(""))
+        assert.is_nil(discordchat.staffLogPayload(nil))
+    end)
 end)

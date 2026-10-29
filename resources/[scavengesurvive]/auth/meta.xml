@@ -13,6 +13,7 @@
     <file src="shared/logic/access.lua"/>
     <file src="shared/logic/prompt.lua"/>
     <export function="getAccountId" type="server"/>
+    <export function="getAccountName" type="server"/>
     <export function="getAdminLevel" type="server"/>
     <export function="getLanguage" type="server"/>
     <export function="isAuthenticated" type="server"/>

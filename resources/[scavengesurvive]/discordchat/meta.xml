@@ -5,7 +5,10 @@
     <script src="shared/events.lua" type="server"/>
     <script src="server/main.lua" type="server"/>
     <file src="shared/logic/discordchat.lua"/>
+    <export function="logItemSpawn" type="server"/>
+    <export function="sendStaffLog" type="server"/>
     <settings>
         <setting name="*joinPartChannel" value="1564285345426833608" friendlyname="Discord channel ID or name for join/part activity"/>
+        <setting name="*staffChannel" value="1563498523507425421" friendlyname="Discord channel ID or name for staff logs"/>
     </settings>
 </meta>

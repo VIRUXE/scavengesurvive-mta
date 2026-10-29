@@ -21,6 +21,37 @@ local function getJoinPartChannel()
     return (type(val) == "string" and val ~= "") and val or "1564285345426833608"
 end
 
+local function getStaffChannel()
+    local val = get("staffChannel")
+    return (type(val) == "string" and val ~= "") and val or "1563498523507425421"
+end
+
+function logItemSpawn(playerName, itemUname, itemId, zone)
+    local res = bridge()
+    if not res then
+        return false
+    end
+    local packet, payload = logic.itemSpawnPayload(playerName, itemUname, itemId, zone, getStaffChannel())
+    if packet and payload then
+        call(res, "send", packet, payload)
+        return true
+    end
+    return false
+end
+
+function sendStaffLog(text)
+    local res = bridge()
+    if not res then
+        return false
+    end
+    local packet, payload = logic.staffLogPayload(text, getStaffChannel())
+    if packet and payload then
+        call(res, "send", packet, payload)
+        return true
+    end
+    return false
+end
+
 addEventHandler("globalChatSent", root, function(text)
     local res = bridge()
     if res and getElementType(source) == "player" then

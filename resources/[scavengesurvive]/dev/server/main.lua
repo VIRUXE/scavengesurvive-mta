@@ -2,6 +2,14 @@ local db = loadstring(exports.lib:getModule("db"), "=lib/db.lua")()
 local net = loadstring(exports.lib:getModule("net"), "=lib/net.lua")()
 local ready = false
 
+local function loadFile(path, chunkName)
+    local f = fileOpen(path, true)
+    local src = fileRead(f, fileGetSize(f))
+    fileClose(f)
+    return assert(loadstring(src, chunkName))()
+end
+local itemSpawnLogic = loadFile("shared/logic/item_spawn.lua", "=dev/item_spawn_logic.lua")
+
 -- Chat lines as each client saw them (client/main.lua forwards onClientChatMessage), oldest first, 100 kept.
 local CHAT_KEEP = 100
 local chatSeen = {} -- player -> { { at = "HH:MM:SS", text = s }, ... }
@@ -68,7 +76,105 @@ local function setStat(key, hi)
     end
 end
 
-command("additem", function(p, uname)
+function isItemSpawnAllowed(p)
+    if not isElement(p) then
+        return getElementType(p) == "console"
+    end
+    if getElementType(p) == "console" then
+        return true
+    end
+    local isOpen = tostring(get("open")) == "true"
+    local okLevel, level = pcall(function()
+        return exports.auth:getAdminLevel(p)
+    end)
+    local adminLevel = okLevel and tonumber(level) or 0
+    local pName = getPlayerName(p)
+    local okAccName, accName = pcall(function()
+        return exports.auth:getAccountName(p)
+    end)
+    local okAccId, accId = pcall(function()
+        return exports.auth:getAccountId(p)
+    end)
+    local allowedList = get("item_spawners")
+    return itemSpawnLogic.isAllowed({
+        isConsole = false,
+        isOpen = isOpen,
+        adminLevel = adminLevel,
+        playerName = pName,
+        accountName = okAccName and accName or nil,
+        accountId = okAccId and accId or nil,
+        allowedList = allowedList,
+    })
+end
+
+local function logItemSpawn(p, uname, itemId, x, y, z)
+    local okLevel, lvl = pcall(function()
+        return exports.auth:getAdminLevel(p)
+    end)
+    local actorLevel = okLevel and tonumber(lvl) or 0
+    if not itemSpawnLogic.shouldLogItemSpawn(actorLevel) then
+        return
+    end
+
+    local actorName = isElement(p) and getElementType(p) == "player" and getPlayerName(p) or "Console"
+    local zone = isElement(p) and getElementType(p) == "player" and exports.maps:getPlayerZone(p) or nil
+
+    -- 1. Log to Discord staff channel
+    local logged = false
+    local dc = getResourceFromName("discordchat")
+    if dc and getResourceState(dc) == "running" then
+        local ok, res = pcall(function()
+            return exports.discordchat:logItemSpawn(actorName, uname, itemId, zone)
+        end)
+        if ok and res then
+            logged = true
+        end
+    end
+    if not logged then
+        local d = getResourceFromName("discord")
+        if d and getResourceState(d) == "running" then
+            local payload = {
+                player = actorName,
+                item = tostring(uname),
+                id = itemId and tostring(itemId) or nil,
+                zone = zone,
+                channel = "1563498523507425421",
+                text = itemSpawnLogic.formatLog(actorName, uname, itemId, zone),
+            }
+            pcall(function()
+                call(d, "send", "staff.log", payload)
+            end)
+        end
+    end
+
+    -- 2. Log to staff_actions table if staff resource is running
+    local st = getResourceFromName("staff")
+    if st and getResourceState(st) == "running" then
+        local zoneStr = zone and (" " .. tostring(zone)) or ""
+        pcall(function()
+            exports.staff:logAction(
+                actorName,
+                "item_spawn",
+                tostring(uname),
+                string.format("id=%s pos=%.1f,%.1f,%.1f%s", tostring(itemId or "none"), x or 0, y or 0, z or 0, zoneStr)
+            )
+        end)
+    end
+end
+
+local function itemCommand(name, fn)
+    addCommandHandler(name, function(p, _, ...)
+        if getElementType(p) ~= "player" then
+            return say(p, "/%s is player-only", name)
+        end
+        if not isItemSpawnAllowed(p) then
+            return say(p, "not allowed")
+        end
+        fn(p, ...)
+    end)
+end
+
+local function handleAddItem(p, uname)
     if not uname then
         return say(p, "usage: /additem <uname>")
     end
@@ -76,8 +182,9 @@ command("additem", function(p, uname)
         return say(p, "db not connected")
     end
     local x, y, z = getElementPosition(p)
-    local params =
-        { uname, nil, nil, x + 1, y, z - 0.9, 0, getElementInterior(p), getElementDimension(p), nil, nil, n = 11 }
+    local interior = getElementInterior(p)
+    local dimension = getElementDimension(p)
+    local params = { uname, nil, nil, x + 1, y, z - 0.9, 0, interior, dimension, nil, nil, n = 11 }
     db.call("item_create", params, function(res, ctx)
         if not isElement(ctx.player) then
             return
@@ -88,10 +195,15 @@ command("additem", function(p, uname)
         if not res.ok then
             return say(ctx.player, "item_create %s: code=%s", ctx.uname, res.code)
         end
-        say(ctx.player, "created %s id=%s", ctx.uname, tostring(res.payload and res.payload.item_id))
+        local itemId = res.payload and res.payload.item_id
+        say(ctx.player, "created %s id=%s", ctx.uname, tostring(itemId))
         exports.items:refreshPlayer(ctx.player)
-    end, { player = p, uname = uname })
-end)
+        logItemSpawn(ctx.player, ctx.uname, itemId, ctx.x, ctx.y, ctx.z)
+    end, { player = p, uname = uname, x = x, y = y, z = z })
+end
+
+itemCommand("additem", handleAddItem)
+itemCommand("spawnitem", handleAddItem)
 
 command("rollloot", function(p)
     local x, y = getElementPosition(p)
@@ -232,12 +344,6 @@ addEventHandler("devFlyActiveChanged", root, function(isFlying)
     end
 end)
 
-local function loadFile(path, chunkName)
-    local f = fileOpen(path, true)
-    local src = fileRead(f, fileGetSize(f))
-    fileClose(f)
-    return assert(loadstring(src, chunkName))()
-end
 local studio = loadFile("server/studio.lua", "=dev/studio.lua")({
     logic = loadFile("shared/logic/studio.lua", "=dev/studio_logic.lua"),
     say = say,
