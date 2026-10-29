@@ -192,6 +192,9 @@ def render_manifest(entries) -> str:
     return "\n".join(lines) + "\n"
 
 
+HOUSE_SHELL_RE = re.compile(r"^[a-z]{2}house\d$")
+
+
 def files_needed(entries) -> list[str]:
     names = set()
     for e in entries.values():
@@ -199,6 +202,8 @@ def files_needed(entries) -> list[str]:
         names.add(e["dff"] + ".dff")
         if "txd" in e:
             names.add(e["txd"] + ".txd")
+        if HOUSE_SHELL_RE.match(e["dff"]):
+            names.add("house_window.txd")  # glass for the window panes, see tools/glaze_house_windows.py
     return sorted(names)
 
 

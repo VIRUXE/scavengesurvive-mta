@@ -5,6 +5,11 @@
 local ids = {} -- SA-MP model -> allocated MTA model
 local allocated = {}
 local keep = {} -- col/dff/txd elements stay alive while the models are in use
+-- The house shells (lshouse1 ... sfhouse4) have translucent glass panes in their window openings, textured
+-- house_window (tools/make_house_window.py). house_window.txd adds it to their vanilla dictionaries, once per
+-- shared dictionary.
+local HOUSE_SHELL = "^%a%ahouse%d$"
+local windowTextureAdded = {} -- vanilla TXD id -> true
 
 addEvent("sampModelsChanged", false)
 
@@ -53,6 +58,14 @@ local function loadModel(e, txds)
         local txdId = engineGetModelTXDID(e.txdModel)
         if not txdId or not engineSetModelTXDID(id, txdId) then
             return nil, "txd of model " .. e.txdModel
+        end
+        if e.dff:match(HOUSE_SHELL) and not windowTextureAdded[txdId] then
+            windowTextureAdded[txdId] = true
+            local glass = loadTxd("house_window", txds)
+            -- without it the panes stay untextured; not worth dropping the house
+            if not glass or not engineImportTXD(glass, id) then
+                outputDebugString("models: house_window.txd not imported for " .. e.dff, 2)
+            end
         end
     end
     local dff = engineLoadDFF("files/" .. e.dff .. ".dff")
