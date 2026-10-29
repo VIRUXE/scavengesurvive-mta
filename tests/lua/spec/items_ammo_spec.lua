@@ -52,6 +52,16 @@ describe("items ammo logic", function()
         assert.is_false(Ammo.isAmmoItem(m9))
     end)
 
+    it("reads ammo rounds with fallback to default capacity without capping stored counts", function()
+        assert.equals(0, Ammo.ammoRounds(m9, { rounds = 50 }))
+        assert.equals(200, Ammo.ammoRounds(ammo9, nil))
+        assert.equals(200, Ammo.ammoRounds(ammo9, {}))
+        assert.equals(0, Ammo.ammoRounds(ammo9, { rounds = 0 }))
+        assert.equals(50, Ammo.ammoRounds(ammo9, { rounds = 50 }))
+        -- Stored rounds exceeding category cap are preserved
+        assert.equals(350, Ammo.ammoRounds(ammo9, { rounds = 350 }))
+    end)
+
     it("resolves weapon state with backwards-compatible defaults and explicit zero mag", function()
         assert.same({ mag = 17, reserve = 0, ammoItem = "Ammo9mm" }, Ammo.weaponState(m9, nil, "Ammo9mm"))
         assert.same({ mag = 17, reserve = 0, ammoItem = "Ammo9mm" }, Ammo.weaponState(m9, {}, "Ammo9mm"))
@@ -80,7 +90,8 @@ describe("items ammo logic", function()
     end)
 
     it("unloads mag and reserve into an ammo tin specification", function()
-        local ok, unloadedState, spawned = Ammo.unload(m9, { mag = 10, reserve = 15, ammoItem = "Ammo9mmFMJ" }, "Ammo9mm")
+        local ok, unloadedState, spawned =
+            Ammo.unload(m9, { mag = 10, reserve = 15, ammoItem = "Ammo9mmFMJ" }, "Ammo9mm")
         assert.is_true(ok)
         assert.same({ mag = 0, reserve = 0, ammoItem = nil }, unloadedState)
         assert.same({ uname = "Ammo9mmFMJ", data = { rounds = 25 } }, spawned)
@@ -97,14 +108,24 @@ describe("items ammo logic", function()
         assert.equals("AMWRONGCALI", codeCal)
 
         -- Different ammo type in loaded weapon rejected
-        local okDiff, codeDiff =
-            Ammo.transfer(ammo9fmj, { rounds = 50 }, m9, { mag = 5, reserve = 0, ammoItem = "Ammo9mm" }, "Ammo9mm")
+        local okDiff, codeDiff = Ammo.transfer(
+            ammo9fmj,
+            { rounds = 50 },
+            m9,
+            { mag = 5, reserve = 0, ammoItem = "Ammo9mm" },
+            "Ammo9mm"
+        )
         assert.is_false(okDiff)
         assert.equals("AMDIFFATYPE", codeDiff)
 
         -- Ammo tin -> unloaded weapon fills mag then reserve
-        local okLoad, codeLoad, nextTin, nextWep, moved =
-            Ammo.transfer(ammo9, { rounds = 50 }, m9, { mag = 0, reserve = 0 }, "Ammo9mm")
+        local okLoad, codeLoad, nextTin, nextWep, moved = Ammo.transfer(
+            ammo9,
+            { rounds = 50 },
+            m9,
+            { mag = 0, reserve = 0 },
+            "Ammo9mm"
+        )
         assert.is_true(okLoad)
         assert.equals("AMTRANS", codeLoad)
         assert.equals(50, moved)
@@ -115,9 +136,54 @@ describe("items ammo logic", function()
         local okMix, codeMix = Ammo.transfer(ammo9, { rounds = 10 }, ammo9fmj, { rounds = 10 })
         assert.is_false(okMix)
         assert.equals("AMMIXINTINS", codeMix)
+
+        -- Box-to-box merges move all rounds without capping at categoryData.rounds
+        local okBox, codeBox, srcBox, dstBox, movedBox = Ammo.transfer(ammo9, { rounds = 150 }, ammo9, { rounds = 120 })
+        assert.is_true(okBox)
+        assert.equals("AMTRANS", codeBox)
+        assert.equals(150, movedBox)
+        assert.same({ rounds = 0 }, srcBox)
+        assert.same({ rounds = 270 }, dstBox)
+
+        -- Weapon -> ammo tin moves mag + reserve
+        local okWtoT, codeWtoT, nextSrcW, nextDstT, movedWtoT = Ammo.transfer(
+            m9,
+            { mag = 17, reserve = 34, ammoItem = "Ammo9mm" },
+            ammo9,
+            { rounds = 10 },
+            "Ammo9mm"
+        )
+        assert.is_true(okWtoT)
+        assert.equals("AMTRANS", codeWtoT)
+        assert.equals(51, movedWtoT)
+        assert.same({ mag = 0, reserve = 0, ammoItem = nil }, nextSrcW)
+        assert.same({ rounds = 61 }, nextDstT)
+
+        -- Weapon -> ammo tin rejects calibre mismatch
+        local okWCal, codeWCal = Ammo.transfer(
+            m9,
+            { mag = 17, reserve = 0, ammoItem = "Ammo9mm" },
+            ammo556,
+            { rounds = 10 },
+            "Ammo9mm"
+        )
+        assert.is_false(okWCal)
+        assert.equals("AMWRONGCALI", codeWCal)
+
+        -- Weapon -> ammo tin rejects different loaded ammo type
+        local okWDiff, codeWDiff = Ammo.transfer(
+            m9,
+            { mag = 17, reserve = 0, ammoItem = "Ammo9mmFMJ" },
+            ammo9,
+            { rounds = 10 },
+            "Ammo9mm"
+        )
+        assert.is_false(okWDiff)
+        assert.equals("AMDIFFATYPE", codeWDiff)
     end)
 
     it("routes held/world interactions and flags depleted ammo tins for deletion", function()
+        -- Held weapon pulls ammo from world ammo tin (depleted tin flagged for deletion)
         local ok, code, nextHeld, nextWorld, moved, delWorld, delHeld = Ammo.interactTransfer(
             m9,
             { mag = 0, reserve = 0 },
@@ -132,6 +198,44 @@ describe("items ammo logic", function()
         assert.is_false(delHeld)
         assert.same({ mag = 10, reserve = 0, ammoItem = "Ammo9mm" }, nextHeld)
         assert.same({ rounds = 0 }, nextWorld)
+
+        -- Held ammo tin pulls all ammo from world weapon (world weapon is emptied, not deleted)
+        local okW, codeW, nextHeldTin, nextWorldWep, movedW, delWorldW, delHeldW = Ammo.interactTransfer(
+            ammo9,
+            { rounds = 10 },
+            m9,
+            { mag = 17, reserve = 15, ammoItem = "Ammo9mm" },
+            "Ammo9mm"
+        )
+        assert.is_true(okW)
+        assert.equals("AMTRANS", codeW)
+        assert.equals(32, movedW)
+        assert.is_false(delWorldW)
+        assert.is_false(delHeldW)
+        assert.same({ rounds = 42 }, nextHeldTin)
+        assert.same({ mag = 0, reserve = 0, ammoItem = nil }, nextWorldWep)
+
+        -- Held ammo tin pulling from world weapon rejects mismatched ammo type
+        local okDiffW, codeDiffW = Ammo.interactTransfer(
+            ammo9,
+            { rounds = 10 },
+            m9,
+            { mag = 17, reserve = 0, ammoItem = "Ammo9mmFMJ" },
+            "Ammo9mm"
+        )
+        assert.is_false(okDiffW)
+        assert.equals("AMDIFFATYPE", codeDiffW)
+
+        -- Held ammo tin pulling from world weapon rejects wrong calibre
+        local okCalW, codeCalW = Ammo.interactTransfer(
+            ammo556,
+            { rounds = 10 },
+            m9,
+            { mag = 17, reserve = 0, ammoItem = "Ammo9mm" },
+            "Ammo9mm"
+        )
+        assert.is_false(okCalW)
+        assert.equals("AMWRONGCALI", codeCalW)
     end)
 
     it("rolls civilian vs military loot ammo and formats item display names", function()

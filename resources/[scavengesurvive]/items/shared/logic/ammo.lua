@@ -65,7 +65,7 @@ function Ammo.ammoRounds(def, data)
     if type(data) ~= "table" or data.rounds == nil then
         return cap
     end
-    return math.max(0, math.min(cap, math.floor(tonumber(data.rounds) or 0)))
+    return math.max(0, math.floor(tonumber(data.rounds) or 0))
 end
 
 function Ammo.rollLootData(def, lootIndex, ammoTypes, rand)
@@ -190,9 +190,21 @@ function Ammo.transfer(srcDef, srcData, dstDef, dstData, defaultAmmo)
         end
         local srcRounds = Ammo.ammoRounds(srcDef, srcData)
         local dstRounds = Ammo.ammoRounds(dstDef, dstData)
-        local cap = math.max(0, math.floor(tonumber(dstDef.categoryData.rounds) or 0))
-        local moved = math.min(srcRounds, math.max(0, cap - dstRounds))
-        return true, "AMTRANS", { rounds = srcRounds - moved }, { rounds = dstRounds + moved }, moved
+        local moved = srcRounds
+        return true, "AMTRANS", { rounds = 0 }, { rounds = dstRounds + moved }, moved
+    end
+
+    if srcIsWep and dstIsAmmo then
+        local srcState = Ammo.weaponState(srcDef, srcData, defaultAmmo)
+        local srcTotal = srcState.mag + srcState.reserve
+        if srcTotal > 0 and srcState.ammoItem and srcState.ammoItem ~= dstDef.uname then
+            return false, "AMDIFFATYPE"
+        end
+        local dstRounds = Ammo.ammoRounds(dstDef, dstData)
+        local moved = srcTotal
+        local nextSrc = { mag = 0, reserve = 0, ammoItem = nil }
+        local nextDst = { rounds = dstRounds + moved }
+        return true, "AMTRANS", nextSrc, nextDst, moved
     end
 
     if srcIsWep and dstIsWep then
@@ -233,18 +245,10 @@ function Ammo.transfer(srcDef, srcData, dstDef, dstData, defaultAmmo)
 end
 
 -- Routes interaction between a held item and a world item following core/weapon/interact.pwn:
--- holding a weapon pulls ammo from a world weapon/ammo tin into the held weapon;
--- holding an ammo tin pushes ammo into a world weapon, or pulls ammo from a world ammo tin into the held tin.
+-- holding a weapon pulls ammo from a world weapon or world ammo tin into the held weapon;
+-- holding an ammo tin pulls ammo from a world weapon or world ammo tin into the held tin.
 -- Returns ok, code, nextHeldData, nextWorldData, moved, deleteWorldItem, deleteHeldItem
 function Ammo.interactTransfer(heldDef, heldData, worldDef, worldData, defaultAmmo)
-    if Ammo.isAmmoItem(heldDef) and Ammo.isCalibreWeapon(worldDef) then
-        local ok, code, nextHeld, nextWorld, moved = Ammo.transfer(heldDef, heldData, worldDef, worldData, defaultAmmo)
-        if not ok then
-            return false, code
-        end
-        local delHeld = (nextHeld.rounds or 0) <= 0
-        return true, code, nextHeld, nextWorld, moved, false, delHeld
-    end
     local ok, code, nextWorld, nextHeld, moved = Ammo.transfer(worldDef, worldData, heldDef, heldData, defaultAmmo)
     if not ok then
         return false, code
