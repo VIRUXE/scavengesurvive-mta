@@ -15,7 +15,7 @@ import sys
 
 import bmesh
 import bpy
-from mathutils import Vector
+from mathutils import Matrix, Vector
 
 bpy.ops.preferences.addon_enable(module="DragonFF")
 from DragonFF.gtaLib.dff import dff  # noqa: E402
@@ -115,21 +115,47 @@ for n in names:
     me.materials.append(gm); mi=len(me.materials)-1
     bm=bmesh.new(); bm.from_mesh(me)
     uv=bm.loops.layers.uv.active; col=bm.loops.layers.color.active if bm.loops.layers.color else None
+    FRAME_UV=(0.03,0.5)  # opaque frame pixels of house_window
+    def box(bm,c,h_axis,outn,su,sv,sn):
+        """Axis-aligned box centred at c, su wide along the wall, sv tall, sn deep along the outward normal."""
+        basis=Matrix((h_axis*su,Vector((0,0,sv)),outn*sn)).transposed()  # columns: along the wall, up, outward
+        m=Matrix.Translation(c)@basis.to_4x4()
+        r=bmesh.ops.create_cube(bm,size=1.0,matrix=m,calc_uvs=False)
+        fs={f for v in r['verts'] for f in v.link_faces}
+        bmesh.ops.recalc_face_normals(bm,faces=list(fs))
+        for f in fs:
+            f.material_index=mi
+            for l in f.loops:
+                l[uv].uv=FRAME_UV
+                if col: l[col]=(1,1,1,1)
     for P,outn in wins:
         h_axis=Vector((-outn.y,outn.x,0)).normalized()
         us=[p.dot(h_axis) for p in P]; zs=[p.z for p in P]
         u0,u1,z0,z1=min(us),max(us),min(zs),max(zs)
+        w,hh=u1-u0,z1-z0
+        ref=P[0]; uc=(u0+u1)/2; zc=(z0+z1)/2
+        def at(u,z,n=0.0): return h_axis*(u-ref.dot(h_axis))+Vector((ref.x,ref.y,z))+outn*n
+        T,D=0.07,0.07  # frame bar width, frame depth (from 0.03 outside the wall to 0.04 inside)
+        # frame: four bars, each overlapping the wall edge by a little
+        box(bm,at(uc,z1-T/2,-0.005),h_axis,outn,w,T,D)
+        box(bm,at(uc,z0+T/2,-0.005),h_axis,outn,w,T,D)
+        box(bm,at(u0+T/2,zc,-0.005),h_axis,outn,T,hh-2*T,D)
+        box(bm,at(u1-T/2,zc,-0.005),h_axis,outn,T,hh-2*T,D)
+        # mullions: thinner, set back with the glass
+        if w>1.1: box(bm,at(uc,zc,-0.02),h_axis,outn,0.035,hh-2*T,0.04)
+        if hh>1.0: box(bm,at(uc,zc,-0.02),h_axis,outn,w-2*T,0.035,0.04)
+        # sill below, head trim above, standing proud of the wall
+        box(bm,at(uc,z0-0.03,0.04),h_axis,outn,w+0.18,0.06,0.16)
+        box(bm,at(uc,z1+0.025,0.015),h_axis,outn,w+0.12,0.05,0.07)
+        # glass, recessed behind the frame and visible from both sides
+        gu0,gu1,gz0,gz1=u0+T,u1-T,z0+T,z1-T
         for flip in (False,True):
-            vv=[bm.verts.new(p+outn*(0.005 if not flip else -0.005)) for p in P]
-            try: f=bm.faces.new(vv)
-            except ValueError: continue
-            f.material_index=mi
-            if f.normal.dot(outn)<0 != flip: f.normal_flip()
-            if (f.normal.dot(outn)>0)==flip: f.normal_flip()
+            vv=[bm.verts.new(at(gu,gz,-0.03)) for gu,gz in ((gu0,gz0),(gu1,gz0),(gu1,gz1),(gu0,gz1))]
+            f=bm.faces.new(vv); f.material_index=mi
+            if (f.normal.dot(outn)>0)==flip: bmesh.ops.reverse_faces(bm,faces=[f])
             for l in f.loops:
-                p=l.vert.co; u=(p.dot(h_axis)-u0)/(u1-u0); v=(p.z-z0)/(z1-z0)
-                if flip: u=1-u
-                l[uv].uv=(u,v)
+                i=vv.index(l.vert); u=(0.12,0.88,0.88,0.12)[i]; v=(0.12,0.12,0.88,0.88)[i]
+                l[uv].uv=(1-u if flip else u,v)
                 if col: l[col]=(1,1,1,1)
     bm.to_mesh(me); bm.free()
     os.makedirs(dst,exist_ok=True)

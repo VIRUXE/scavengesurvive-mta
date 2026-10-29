@@ -1,4 +1,4 @@
-"""Writes the window pane texture of the SA-MP house shells: an opaque frame and cross bars around tinted, mostly
+"""Writes the window pane texture of the SA-MP house shells: an opaque frame border (sampled by the frame and sill geometry) around tinted, mostly
 transparent glass. Output: models/files/house_window.txd (what the client imports) and, for Blender, house_window.PNG
 (tools/glaze_house_windows.py reads it from its texture directory).
 
@@ -9,7 +9,7 @@ import sys
 import zlib
 
 SIZE = 128
-FRAME, BAR = 9, 5
+FRAME = 9
 FRAME_RGBA = (206, 208, 212, 255)
 GLASS_RGBA = (150, 196, 222, 70)
 SHADE_RGBA = (255, 255, 255, 110)  # a faint diagonal glint across the glass
@@ -18,8 +18,7 @@ VERSION = 0x1803FFFF  # GTA:SA
 
 def pixel(x: int, y: int) -> tuple[int, int, int, int]:
     border = x < FRAME or y < FRAME or x >= SIZE - FRAME or y >= SIZE - FRAME
-    bars = abs(x - SIZE // 2) < BAR // 2 + 1 or abs(y - SIZE // 2) < BAR // 2 + 1
-    if border or bars:
+    if border:
         shade = 18 if (x + y) % 2 else 0  # a little grain so the frame is not flat
         return tuple(c - shade for c in FRAME_RGBA[:3]) + (255,)
     if 0 <= (x + y) % 56 < 6 and (x + y) < SIZE * 1.5:
