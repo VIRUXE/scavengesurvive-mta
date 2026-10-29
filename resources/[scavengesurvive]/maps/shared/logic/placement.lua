@@ -15,12 +15,21 @@ placement.SWING_DOORS = {
     [1523] = true,
 }
 
+-- Wire fence panels of the roadblocks: createBuilding cannot break, so they are objects with setObjectBreakable.
+placement.BREAKABLE = {
+    [1651] = true,
+}
+
 function placement.isSampModel(model)
     return model >= 18631 or (model >= 11682 and model <= 11753)
 end
 
 function placement.isSwingDoor(model)
     return placement.SWING_DOORS[model] == true
+end
+
+function placement.isBreakable(model)
+    return placement.BREAKABLE[model] == true
 end
 
 -- SA-MP virtual world / interior (-1 = any) -> MTA dimension / interior
@@ -47,7 +56,7 @@ function placement.kind(o, sampId)
     if dim ~= 0 or int ~= 0 then
         return "object"
     end
-    if model <= placement.OBJECT_MODEL_MAX or placement.isSwingDoor(model) then
+    if model <= placement.OBJECT_MODEL_MAX or placement.isSwingDoor(model) or placement.isBreakable(model) then
         return "object"
     end
     return "building"
