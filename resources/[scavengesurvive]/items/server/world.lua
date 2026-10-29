@@ -33,6 +33,29 @@ return function(ctx)
         return "SELECT " .. COLS .. FROM .. where .. " ORDER BY ST_Distance(p.pos, " .. point .. ") ASC LIMIT 1"
     end
 
+    -- Strip sensitive server-only fields (e.g. defence passcodes) before sending world item data to clients.
+    local function sanitizeData(data)
+        if type(data) ~= "table" then
+            return data
+        end
+        if data.passcode ~= nil then
+            data.passcode = nil
+        end
+        if type(data[1]) == "table" and data[1].passcode ~= nil then
+            data[1].passcode = nil
+        end
+        local d = data.defence or (type(data[1]) == "table" and data[1].defence)
+        if type(d) == "table" then
+            if d.passcode ~= nil then
+                local p = tostring(d.passcode)
+                d.locked = (p ~= "" and p ~= "0" and p ~= "0000")
+                d.passcode = nil
+            end
+        end
+        return data
+    end
+    M.sanitizeData = sanitizeData
+
     function M.syncPlayer(player)
         local radius = tonumber(state.settings["items.sync_radius"]) or 150
         local x, y = getElementPosition(player)
@@ -48,6 +71,9 @@ return function(ctx)
                         r.data = fromJSON(r.data)
                     elseif r.data == false then
                         r.data = nil
+                    end
+                    if type(r.data) == "table" then
+                        sanitizeData(r.data)
                     end
                     visible[#visible + 1] = r
                 end

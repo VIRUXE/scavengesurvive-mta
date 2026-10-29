@@ -100,6 +100,13 @@ return function(ctx)
         DEFENCE_BUILT = "Defence built",
         DEFENCE_REMOVED = "Defence removed",
         DEFENCE_FRONT = "You can only remove a defence from the inside",
+        DEFNOTMOVAB = "You cannot install a motor on that type of defence",
+        DEFINSTMOTO = "Motor installed to defence",
+        DEFNEEDMOTO = "You must install a motor before installing a keypad!",
+        DEFINSTKEYP = "Keypad installed to defence",
+        DEFINSTADKP = "Advanced Keypad installed to defence",
+        DEFMOVINGIT = "Moving defence, please stand back.",
+        DEFCODEZERO = "Leaving the code at 0 will allow the code to be set again.",
         PLOTPOLEENT = "Entering claimed territory",
         PLOTPOLEEXT = "Leaving claimed territory",
     }

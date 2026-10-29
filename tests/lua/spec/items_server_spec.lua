@@ -44,6 +44,33 @@ describe("items server sql builders", function()
         )
         assert.is_nil(sql:find("?", 1, true))
     end)
+    it("sanitizes world defence passcodes before sending to clients", function()
+        local world = newWorld()
+        local data1 = {
+            defence = { active = true, motor = true, keypad = 1, passcode = "1234" },
+        }
+        world.sanitizeData(data1)
+        assert.is_nil(data1.defence.passcode)
+        assert.is_true(data1.defence.locked)
+
+        local data1b = {
+            defence = { active = true, motor = true, keypad = 1, passcode = "0000" },
+        }
+        world.sanitizeData(data1b)
+        assert.is_nil(data1b.defence.passcode)
+        assert.is_false(data1b.defence.locked)
+
+        local data2 = {
+            { defence = { active = true, motor = true, keypad = 2, passcode = "4321" } },
+        }
+        world.sanitizeData(data2)
+        assert.is_nil(data2[1].defence.passcode)
+        assert.is_true(data2[1].defence.locked)
+
+        local data3 = { passcode = "9999" }
+        world.sanitizeData(data3)
+        assert.is_nil(data3.passcode)
+    end)
     it("ignores DB callbacks for a player who quit before the query returned", function()
         db.connect("items")
         _G.createObject = function()
@@ -221,6 +248,22 @@ describe("items server sql builders", function()
         assert.matches("i%.type_uname IN %('TentPack', 'CorPanel'%)", mock.queries[#mock.queries].sql)
         mock.answer(#mock.queries, {}) -- no tent or defence in reach -> deconstruct
         assert.same({ { "groundCraft", "p1" }, { "deconstruct", "p1" } }, crafted)
+
+        -- Motor, Keypad, AdvancedKeypad target defence types
+        mock.tick = 3000
+        state.held["p1"] = { id = 4, uname = "Motor", hp = 1, data = {} }
+        mock.fire("itemPickupRequested")
+        assert.matches("i%.type_uname IN %('CorPanel'%)", mock.queries[#mock.queries].sql)
+
+        mock.tick = 4000
+        state.held["p1"] = { id = 5, uname = "Keypad", hp = 1, data = {} }
+        mock.fire("itemPickupRequested")
+        assert.matches("i%.type_uname IN %('CorPanel'%)", mock.queries[#mock.queries].sql)
+
+        mock.tick = 5000
+        state.held["p1"] = { id = 6, uname = "AdvancedKeypad", hp = 1, data = {} }
+        mock.fire("itemPickupRequested")
+        assert.matches("i%.type_uname IN %('CorPanel'%)", mock.queries[#mock.queries].sql)
     end)
 
     it("holstering and unholstering with itemPutAwayRequested does not open inventory", function()

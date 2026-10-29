@@ -562,24 +562,44 @@ return function(ctx)
 
     local BARBECUE = { "Barbecue" }
     local TENT = { "TentPack" }
-    local TARGETS = { GasCan = BARBECUE, FireLighter = BARBECUE, Crowbar = TENT }
+    local TARGETS = { GasCan = BARBECUE, FireLighter = BARBECUE }
 
-    -- a Crowbar reaches tents and defences (building resource), built ones or not: the type list once data is up
-    local crowbarTargets = nil
-    local function targetsFor(uname)
-        if uname ~= "Crowbar" then
-            return TARGETS[uname]
+    local defenceTargets = nil
+    local function getDefenceTargets()
+        if defenceTargets and #defenceTargets > 0 then
+            return defenceTargets
         end
-        if not crowbarTargets then
-            crowbarTargets = { unpack(TENT) }
-            for _, u in ipairs(exports.data:itemTypes() or {}) do
+        local list = {}
+        local all = exports.data and exports.data:itemTypes()
+        if all and #all > 0 then
+            for _, u in ipairs(all) do
                 local t = itemType(u)
                 if t and t.defence then
+                    list[#list + 1] = u
+                end
+            end
+            defenceTargets = list
+        end
+        return list
+    end
+
+    -- Crowbar reaches tents and defences; Motor, Keypad, AdvancedKeypad reach defences (building resource)
+    local crowbarTargets = nil
+    local function targetsFor(uname)
+        if uname == "Motor" or uname == "Keypad" or uname == "AdvancedKeypad" then
+            return getDefenceTargets()
+        end
+        if uname == "Crowbar" then
+            local defs = getDefenceTargets()
+            if not crowbarTargets or (#crowbarTargets <= #TENT and #defs > 0) then
+                crowbarTargets = { unpack(TENT) }
+                for _, u in ipairs(defs) do
                     crowbarTargets[#crowbarTargets + 1] = u
                 end
             end
+            return crowbarTargets
         end
-        return crowbarTargets
+        return TARGETS[uname]
     end
 
     local function buildingRunning()

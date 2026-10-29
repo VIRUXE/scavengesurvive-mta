@@ -13,12 +13,25 @@ local function loadModule(path)
 end
 
 local defences = loadModule("shared/logic/defences.lua")
-local autoCloseTimers = {} -- itemId -> timer
 local plotPoleColshapes = {} -- itemId -> colshape
 local activeBreaks = {} -- player -> timer
+local movingDefences = {} -- itemId -> timer
+local pendingSetup = {} -- player -> defence itemId
+local pendingOpen = {} -- player -> defence itemId
+local passCooldown = {} -- player -> duration in ms (cooldown)
+local passFails = {} -- player -> fail count
+local lastPassEntry = {} -- player -> timestamp (tick count)
+
+local DEFENCE_ROW = "SELECT id, type_uname, data, x, y, z, rz, interior, dimension FROM items "
+    .. "WHERE id = ? AND container_id IS NULL AND holder_char_id IS NULL"
 
 local function charId(player)
     return exports.character:getCharacterId(player)
+end
+
+local function heldUname(player)
+    local held = exports.items:getHeld(player)
+    return held and held.uname
 end
 
 local function cancelBreak(player)
@@ -30,10 +43,24 @@ end
 
 addEventHandler("onPlayerQuit", root, function()
     cancelBreak(source)
+    pendingSetup[source] = nil
+    pendingOpen[source] = nil
+    passCooldown[source] = nil
+    passFails[source] = nil
+    lastPassEntry[source] = nil
 end)
 
 addEventHandler("characterDied", root, function()
     cancelBreak(source)
+    pendingSetup[source] = nil
+    pendingOpen[source] = nil
+    passCooldown[source] = nil
+    passFails[source] = nil
+    lastPassEntry[source] = nil
+end)
+
+net.handler("holdActionCancelRequested", function(player)
+    cancelBreak(player)
 end)
 
 local function toast(player, code)
@@ -58,141 +85,29 @@ local function encodeData(t)
     return toJSON(t, true)
 end
 
-local function setDoorOpenState(itemRow, isOpen, cb)
-    local d = decodeData(itemRow.data)
-    d.open = isOpen
-    local baseRz = tonumber(d.baseRz) or tonumber(itemRow.rz) or 0
-    d.baseRz = baseRz
-    local newRz = defences.calculateDoorRotation(baseRz, isOpen)
-    db.exec("UPDATE items SET rz = ?, data = ? WHERE id = ?", { newRz, encodeData(d), itemRow.id }, function()
-        exports.items:resendWorldItem(itemRow.id) -- the sync only resends rows a client lacks (#73)
-        if cb then
-            cb(newRz)
-        end
-    end)
+local function isPasscodeUnset(passcode)
+    if not passcode or passcode == "" then
+        return true
+    end
+    local n = tonumber(passcode)
+    return n == nil or n == 0
 end
 
-local function handleDefenceInteract(player, row)
-    local cid = charId(player)
-    if not cid then
-        return
+local function isPlayerNearDefence(player, row, maxDist)
+    if not isElement(player) or not row then
+        return false
     end
-    local held = exports.items:getHeld(player)
-    local heldUname = held and held.uname
-    local d = decodeData(row.data)
-
-    -- 1. Installing a Keypad
-    if heldUname == "Keypad" then
-        if d.keypad then
-            return toast(player, "KEYPAD_ALREADY")
-        end
-        exports.items:destroyItem(held.id, player)
-        return triggerClientEvent(player, "keypadOpened", player, row.id, true)
+    local px, py, pz = getElementPosition(player)
+    if getDistanceBetweenPoints3D(px, py, pz, row.x, row.y, row.z) > (maxDist or 3.0) then
+        return false
     end
-
-    -- 2. Lock breaking with LockBreaker
-    if heldUname == "LockBreaker" and (d.keypad or d.passcode) then
-        triggerClientEvent(player, "vehicleHoldStarted", player, "Breaking lock", 10000)
-        local timer = setTimer(function(pl, itId)
-            activeBreaks[pl] = nil
-            if not isElement(pl) then
-                return
-            end
-            db.one("SELECT id, type_uname, data, rz FROM items WHERE id = ?", { itId }, function(itRow, c)
-                if not itRow or not isElement(c.player) then
-                    return
-                end
-                local curD = decodeData(itRow.data)
-                curD.keypad = nil
-                curD.passcode = nil
-                setDoorOpenState(itRow, true, function()
-                    exports.items:refreshPlayer(c.player)
-                    toast(c.player, "LOCKBROKEN")
-                end)
-            end, { player = pl })
-        end, 10000, 1, player, row.id)
-        activeBreaks[player] = timer
-        return
+    if getElementInterior(player) ~= (row.interior or 0) then
+        return false
     end
-
-    -- 3. Hacking with HackDevice
-    if heldUname == "HackDevice" and d.keypad then
-        triggerClientEvent(player, "vehicleHoldStarted", player, "Hacking keypad", 8000)
-        local timer = setTimer(function(pl, itId)
-            activeBreaks[pl] = nil
-            if not isElement(pl) then
-                return
-            end
-            db.one("SELECT id, type_uname, data, rz FROM items WHERE id = ?", { itId }, function(itRow, c)
-                if not itRow or not isElement(c.player) then
-                    return
-                end
-                setDoorOpenState(itRow, true, function()
-                    exports.items:refreshPlayer(c.player)
-                    toast(c.player, "KEYPAD_HACKED")
-                    if isTimer(autoCloseTimers[itId]) then
-                        killTimer(autoCloseTimers[itId])
-                    end
-                    autoCloseTimers[itId] = setTimer(function(closingId)
-                        autoCloseTimers[closingId] = nil
-                        db.one("SELECT id, type_uname, data, rz FROM items WHERE id = ?", { closingId }, function(clRow)
-                            if clRow then
-                                setDoorOpenState(clRow, false, function()
-                                    for _, p in ipairs(getElementsByType("player")) do
-                                        exports.items:refreshPlayer(p)
-                                    end
-                                end)
-                            end
-                        end)
-                    end, 10000, 1, itId)
-                end)
-            end, { player = pl })
-        end, 8000, 1, player, row.id)
-        activeBreaks[player] = timer
-        return
+    if getElementDimension(player) ~= (row.dimension or 0) then
+        return false
     end
-
-    -- 4. Locked with Keypad
-    if d.keypad and d.passcode and d.passcode ~= "" then
-        return triggerClientEvent(player, "keypadOpened", player, row.id, false)
-    end
-
-    -- 5. Normal door/gate open/close toggle (rows from items' nearest-item search name the type `uname`)
-    if defences.isDoorOrGate(row.type_uname or row.uname) then
-        local willOpen = (d.open ~= true)
-        setDoorOpenState(row, willOpen, function()
-            exports.items:refreshPlayer(player)
-            toast(player, willOpen and "DOOR_OPENED" or "DOOR_CLOSED")
-            if willOpen then
-                if isTimer(autoCloseTimers[row.id]) then
-                    killTimer(autoCloseTimers[row.id])
-                end
-                autoCloseTimers[row.id] = setTimer(function(itId)
-                    autoCloseTimers[itId] = nil
-                    db.one("SELECT id, type_uname, data, rz FROM items WHERE id = ?", { itId }, function(itRow)
-                        if itRow then
-                            setDoorOpenState(itRow, false, function()
-                                for _, p in ipairs(getElementsByType("player")) do
-                                    exports.items:refreshPlayer(p)
-                                end
-                            end)
-                        end
-                    end)
-                end, 5000, 1, row.id)
-            end
-        end)
-    end
-end
-
--- Building and taking down defences (upstream StartBuildingDefence and the crowbar in _InteractDefenceWithItem).
--- Reached from items' interact key with a Hammer, Screwdriver or Crowbar in hand next to a defence item. Both re-check
--- the tool, the distance and the row when the hold ends, so walking off or swapping tools cancels.
-local DEFENCE_ROW = "SELECT id, type_uname, data, x, y, z, rz FROM items "
-    .. "WHERE id = ? AND container_id IS NULL AND holder_char_id IS NULL"
-
-local function heldUname(player)
-    local held = exports.items:getHeld(player)
-    return held and held.uname
+    return true
 end
 
 local function holdDefenceAction(player, row, tool, label, ms, finish)
@@ -215,6 +130,179 @@ local function holdDefenceAction(player, row, tool, label, ms, finish)
     end, ms, 1, player, row.id, row.x, row.y, row.z)
 end
 
+local function moveDefence(itemId, player)
+    itemId = tonumber(itemId)
+    if not itemId then
+        return
+    end
+    if isTimer(movingDefences[itemId]) then
+        return
+    end
+    movingDefences[itemId] = setTimer(function(id, pl)
+        movingDefences[id] = nil
+        db.one(DEFENCE_ROW, { id }, function(row, c)
+            if not row then
+                return
+            end
+            local d = decodeData(row.data)
+            local st = defences.state(d)
+            local t = exports.data:itemType(row.type_uname)
+            if not st or not (t and t.defence) then
+                return
+            end
+
+            -- Upstream MoveDefence: after 1500 ms, if any player is within 4.0 of the item retry 1500 ms later
+            local itemInt = row.interior or 0
+            local itemDim = row.dimension or 0
+            for _, p in ipairs(getElementsByType("player")) do
+                if getElementInterior(p) == itemInt and getElementDimension(p) == itemDim then
+                    local px, py, pz = getElementPosition(p)
+                    if getDistanceBetweenPoints3D(px, py, pz, row.x, row.y, row.z) < 4.0 then
+                        moveDefence(id, c.player)
+                        return
+                    end
+                end
+            end
+
+            -- otherwise toggle pose vertical<->horizontal
+            local newZ, newRz, newSt = defences.toggle(t.defence, st, row.z, row.rz)
+            d.defence = newSt
+            db.exec(
+                "UPDATE items SET z = ?, rz = ?, data = ? WHERE id = ? AND x IS NOT NULL",
+                { newZ, newRz, encodeData(d), row.id },
+                function()
+                    exports.items:resendWorldItem(row.id)
+                    local poseLabel = (newSt.pose == "vertical") and "CLOSED" or "OPEN"
+                    local pName = isElement(c.player) and getPlayerName(c.player) or "unknown"
+                    util.log(
+                        "building",
+                        "info",
+                        "[DEFMOVE] Player %s moved defence %d (%s) into %s position at %.1f, %.1f, %.1f",
+                        pName,
+                        row.id,
+                        row.type_uname,
+                        poseLabel,
+                        row.x,
+                        row.y,
+                        newZ
+                    )
+                end
+            )
+        end, { player = pl })
+    end, 1500, 1, itemId, player)
+end
+
+local function handleDefenceInteract(player, row)
+    local cid = charId(player)
+    if not cid then
+        return
+    end
+    local d = decodeData(row.data)
+    local st = defences.state(d)
+    if not st then
+        return
+    end
+    local t = exports.data:itemType(row.type_uname or row.uname)
+    if not (t and t.defence) then
+        return
+    end
+
+    local held = exports.items:getHeld(player)
+    local tool = held and held.uname
+
+    local px, py = getElementPosition(player)
+    local isBehind = defences.isBehind(t.defence, row.rz, row.x, row.y, px, py, st.pose)
+
+    -- 1. Installing a Motor: works only from the back side
+    if tool == "Motor" and isBehind then
+        if not t.defence.movable then
+            return toast(player, "DEFNOTMOVAB")
+        end
+        local ms = exports.character:skillTimeModifier(player, 6000, "Construction")
+        holdDefenceAction(player, row, "Motor", "Modifying " .. t.name, ms, function(pl, cur)
+            local curData = decodeData(cur.data)
+            local curSt = defences.state(curData)
+            if not curSt then
+                return
+            end
+            local curHeld = exports.items:getHeld(pl)
+            if not curHeld or curHeld.uname ~= "Motor" then
+                return
+            end
+            curSt.motor = true
+            curData.defence = curSt
+            exports.items:destroyItem(curHeld.id, pl)
+            db.exec("UPDATE items SET data = ? WHERE id = ?", { encodeData(curData), cur.id }, function()
+                exports.items:resendWorldItem(cur.id)
+                if isElement(pl) then
+                    exports.character:gainSkill(pl, "Construction")
+                    toast(pl, "DEFINSTMOTO")
+                end
+            end)
+        end)
+        return
+    end
+
+    -- 2. Installing a Keypad or AdvancedKeypad: works only from the back side
+    if (tool == "Keypad" or tool == "AdvancedKeypad") and isBehind then
+        if not st.motor then
+            return toast(player, "DEFNEEDMOTO")
+        end
+        local keypadType = (tool == "AdvancedKeypad") and 2 or 1
+        local toastCode = (tool == "AdvancedKeypad") and "DEFINSTADKP" or "DEFINSTKEYP"
+        local ms = exports.character:skillTimeModifier(player, 6000, "Construction")
+        holdDefenceAction(player, row, tool, "Modifying " .. t.name, ms, function(pl, cur)
+            local curData = decodeData(cur.data)
+            local curSt = defences.state(curData)
+            if not curSt then
+                return
+            end
+            local curHeld = exports.items:getHeld(pl)
+            if not curHeld or curHeld.uname ~= tool then
+                return
+            end
+            curSt.keypad = keypadType
+            curData.defence = curSt
+            exports.items:destroyItem(curHeld.id, pl)
+            db.exec("UPDATE items SET data = ? WHERE id = ?", { encodeData(curData), cur.id }, function()
+                exports.items:resendWorldItem(cur.id)
+                if isElement(pl) then
+                    exports.character:gainSkill(pl, "Construction")
+                    toast(pl, toastCode)
+                    pendingSetup[pl] = cur.id
+                    triggerClientEvent(pl, "keypadOpened", pl, cur.id, true)
+                end
+            end)
+        end)
+        return
+    end
+
+    -- 3. Interacting (empty hand / any other item, or Motor/Keypad from front)
+    if not st.motor then
+        -- Without a motor, interacting does nothing beyond upstream (no swing)
+        return
+    end
+
+    if st.keypad then
+        if isPasscodeUnset(st.passcode) then
+            -- keypad installed and no passcode set (nil, "", "0000", or 0) -> setup UI
+            pendingSetup[player] = row.id
+            triggerClientEvent(player, "keypadOpened", player, row.id, true)
+        else
+            -- keypad + passcode -> enter-passcode UI
+            pendingOpen[player] = row.id
+            triggerClientEvent(player, "keypadOpened", player, row.id, false)
+        end
+    else
+        -- No keypad -> toast DEFMOVINGIT and move
+        toast(player, "DEFMOVINGIT")
+        moveDefence(row.id, player)
+    end
+end
+
+-- Building and taking down defences (upstream StartBuildingDefence and the crowbar in _InteractDefenceWithItem).
+-- Reached from items' interact key with a Hammer, Screwdriver or Crowbar in hand next to a defence item. Both re-check
+-- the tool, the distance and the row when the hold ends, so walking off or swapping tools cancels.
 function buildDefence(player, itemId)
     local tool = heldUname(player)
     local pose = defences.TOOL_POSE[tool]
@@ -281,28 +369,36 @@ function removeDefence(player, itemId)
             return
         end
         local t = exports.data:itemType(row.type_uname)
-        if not (t and t.defence and defences.state(decodeData(row.data))) then
+        local d = decodeData(row.data)
+        local st = defences.state(d)
+        if not (t and t.defence and st) then
             return
         end
         local px, py, pz = getElementPosition(c.player)
         if getDistanceBetweenPoints3D(px, py, pz, row.x, row.y, row.z) > 3.0 then
             return
         end
-        if not defences.isBehind(t.defence, row.rz, row.x, row.y, px, py) then
+        if not defences.isBehind(t.defence, row.rz, row.x, row.y, px, py, st.pose) then
             return toast(c.player, "DEFENCE_FRONT")
         end
         local ms = exports.character:skillTimeModifier(c.player, defences.REMOVE_MS, "Construction")
         holdDefenceAction(c.player, row, "Crowbar", "Removing " .. t.name, ms, function(pl, cur)
-            local d = decodeData(cur.data)
-            local st = defences.state(d)
-            if not st then
+            local curData = decodeData(cur.data)
+            local curSt = defences.state(curData)
+            if not curSt then
                 return
             end
-            local z, rz = defences.unbuild(t.defence, st, cur.z, cur.rz, t.rotz)
-            d.defence = nil
+            if movingDefences[cur.id] and isTimer(movingDefences[cur.id]) then
+                killTimer(movingDefences[cur.id])
+                movingDefences[cur.id] = nil
+            end
+            local z, rz = defences.unbuild(t.defence, curSt, cur.z, cur.rz, t.rotz)
+            curData.defence = nil
+            curData.keypad = nil
+            curData.passcode = nil
             db.exec(
                 "UPDATE items SET z = ?, rz = ?, data = ? WHERE id = ? AND x IS NOT NULL",
-                { z, rz, encodeData(d), cur.id },
+                { z, rz, encodeData(curData), cur.id },
                 function()
                     exports.items:resendWorldItem(cur.id)
                     if isElement(pl) then
@@ -332,23 +428,17 @@ net.handler("buildingInteractRequested", function(player, itemId)
     if not cid or not itemId then
         return
     end
-    db.one(
-        "SELECT id, type_uname, data, x, y, z, rz FROM items "
-            .. "WHERE id = ? AND container_id IS NULL AND holder_char_id IS NULL",
-        { itemId },
-        function(row, c)
-            if not isElement(c.player) or not row then
-                return
-            end
-            local px, py, pz = getElementPosition(c.player)
-            local d = getDistanceBetweenPoints3D(px, py, pz, row.x, row.y, row.z)
-            if d > 3.0 then
-                return
-            end
-            handleDefenceInteract(c.player, row)
-        end,
-        { player = player }
-    )
+    db.one(DEFENCE_ROW, { itemId }, function(row, c)
+        if not isElement(c.player) or not row then
+            return
+        end
+        local px, py, pz = getElementPosition(c.player)
+        local d = getDistanceBetweenPoints3D(px, py, pz, row.x, row.y, row.z)
+        if d > 3.0 then
+            return
+        end
+        handleDefenceInteract(c.player, row)
+    end, { player = player })
 end, { rate = 3 })
 
 net.handler("keypadSubmitted", function(player, defenceId, enteredCode)
@@ -357,42 +447,68 @@ net.handler("keypadSubmitted", function(player, defenceId, enteredCode)
     if not cid or not defenceId then
         return
     end
-    db.one(
-        "SELECT id, type_uname, data, x, y, z, rz FROM items "
-            .. "WHERE id = ? AND container_id IS NULL AND holder_char_id IS NULL",
-        { defenceId },
-        function(row, c)
-            if not isElement(c.player) or not row then
-                return
-            end
-            local d = decodeData(row.data)
-            if defences.verifyPasscode(d.passcode, c.enteredCode) then
-                triggerClientEvent(c.player, "keypadClosed", c.player)
-                setDoorOpenState(row, true, function()
-                    exports.items:refreshPlayer(c.player)
-                    toast(c.player, "ACCESS_GRANTED")
-                    if isTimer(autoCloseTimers[row.id]) then
-                        killTimer(autoCloseTimers[row.id])
-                    end
-                    autoCloseTimers[row.id] = setTimer(function(itId)
-                        autoCloseTimers[itId] = nil
-                        db.one("SELECT id, type_uname, data, rz FROM items WHERE id = ?", { itId }, function(itRow)
-                            if itRow then
-                                setDoorOpenState(itRow, false, function()
-                                    for _, p in ipairs(getElementsByType("player")) do
-                                        exports.items:refreshPlayer(p)
-                                    end
-                                end)
-                            end
-                        end)
-                    end, 5000, 1, row.id)
-                end)
+
+    if pendingOpen[player] ~= defenceId then
+        return
+    end
+
+    -- Throttle check: upstream def_LastPassEntry / def_Cooldown
+    local now = getTickCount()
+    local cooldown = passCooldown[player] or 2000
+    local lastEntry = lastPassEntry[player] or 0
+    if now - lastEntry < cooldown then
+        return
+    end
+
+    db.one(DEFENCE_ROW, { defenceId }, function(row, c)
+        if not isElement(c.player) or not row then
+            return
+        end
+        -- Distance, interior, dimension check: must be near the defence
+        if not isPlayerNearDefence(c.player, row, 3.0) then
+            return
+        end
+
+        local d = decodeData(row.data)
+        local st = defences.state(d)
+        if not st or not st.motor or not st.keypad then
+            return
+        end
+
+        if defences.verifyPasscode(st.passcode, c.enteredCode) then
+            -- Reset cooldown and fails on correct code
+            passCooldown[c.player] = nil
+            passFails[c.player] = nil
+            lastPassEntry[c.player] = nil
+            pendingOpen[c.player] = nil
+
+            triggerClientEvent(c.player, "keypadClosed", c.player)
+            toast(c.player, "DEFMOVINGIT")
+            moveDefence(row.id, c.player)
+        else
+            -- Upstream wrong-code throttle: after 5 fails, cooldown grows by 4000 ms
+            local fails = (passFails[c.player] or 0) + 1
+            if fails >= 5 then
+                passCooldown[c.player] = cooldown + 4000
+                passFails[c.player] = 0
             else
-                toast(c.player, "WRONG_PASSCODE")
+                passFails[c.player] = fails
+                passCooldown[c.player] = 2000
             end
-        end,
-        { player = player, enteredCode = enteredCode }
-    )
+            lastPassEntry[c.player] = getTickCount()
+
+            toast(c.player, "WRONG_PASSCODE")
+            util.log(
+                "building",
+                "info",
+                "[DEFFAIL] Player %s failed defence %d (%s) keypad code %s",
+                getPlayerName(c.player),
+                row.id,
+                row.type_uname,
+                tostring(c.enteredCode)
+            )
+        end
+    end, { player = player, enteredCode = enteredCode })
 end, { rate = 3 })
 
 net.handler("keypadInstallRequested", function(player, defenceId, newPasscode)
@@ -401,28 +517,47 @@ net.handler("keypadInstallRequested", function(player, defenceId, newPasscode)
     if not cid or not defenceId or not newPasscode then
         return
     end
-    db.one(
-        "SELECT id, type_uname, data, x, y, z, rz FROM items "
-            .. "WHERE id = ? AND container_id IS NULL AND holder_char_id IS NULL",
-        { defenceId },
-        function(row, c)
-            if not isElement(c.player) or not row then
-                return
-            end
-            local d = decodeData(row.data)
-            d.keypad = true
-            d.passcode = string.format("%04d", tonumber(c.newPasscode) or 0)
-            db.exec("UPDATE items SET data = ? WHERE id = ?", { encodeData(d), row.id }, function()
-                if isElement(c.player) then
-                    toast(c.player, "KEYPAD_INSTALLED")
+    -- Must have a pending setup for this defence id
+    if pendingSetup[player] ~= defenceId then
+        return
+    end
+    pendingSetup[player] = nil
+
+    db.one(DEFENCE_ROW, { defenceId }, function(row, c)
+        if not isElement(c.player) or not row then
+            return
+        end
+        -- Distance, interior, dimension check: must be near the defence
+        if not isPlayerNearDefence(c.player, row, 3.0) then
+            return
+        end
+        local d = decodeData(row.data)
+        local st = defences.state(d)
+        -- Defence must be built with a keypad
+        if not st or not st.keypad then
+            return
+        end
+        -- Passcode must be unset or "0000" / 0
+        if not isPasscodeUnset(st.passcode) then
+            return
+        end
+
+        local codeNum = tonumber(c.newPasscode) or 0
+        st.passcode = string.format("%04d", codeNum)
+        d.defence = st
+        db.exec("UPDATE items SET data = ? WHERE id = ?", { encodeData(d), row.id }, function()
+            exports.items:resendWorldItem(row.id)
+            if isElement(c.player) then
+                toast(c.player, "KEYPAD_INSTALLED")
+                if codeNum == 0 then
+                    toast(c.player, "DEFCODEZERO")
                 end
-            end)
-        end,
-        { player = player, newPasscode = newPasscode }
-    )
+            end
+        end)
+    end, { player = player, newPasscode = newPasscode })
 end, { rate = 3 })
 
--- 6. Plot Pole Colshapes
+-- Plot Pole Colshapes
 local function refreshPlotPoles()
     db.query(
         "SELECT id, x, y, z, interior, dimension FROM items "
@@ -477,6 +612,12 @@ addEventHandler("onResourceStop", resourceRoot, function()
         end
     end
     plotPoleColshapes = {}
+    for _, timer in pairs(movingDefences) do
+        if isTimer(timer) then
+            killTimer(timer)
+        end
+    end
+    movingDefences = {}
 end)
 
 function isInsideAnyPlotPole(x, y)
@@ -493,77 +634,6 @@ end
 
 function interactDefence(player, row)
     return handleDefenceInteract(player, row)
-end
-
-function submitPasscode(player, defenceId, enteredCode)
-    defenceId = tonumber(defenceId)
-    if not defenceId or not enteredCode then
-        return false
-    end
-    db.one(
-        "SELECT id, type_uname, data, x, y, z, rz FROM items "
-            .. "WHERE id = ? AND container_id IS NULL AND holder_char_id IS NULL",
-        { defenceId },
-        function(row, c)
-            if not isElement(c.player) or not row then
-                return
-            end
-            local d = decodeData(row.data)
-            local expected = d.passcode
-            if expected and string.format("%04d", tonumber(c.enteredCode) or 0) == expected then
-                setDoorOpenState(row, true, function()
-                    exports.items:refreshPlayer(c.player)
-                    toast(c.player, "ACCESS_GRANTED")
-                    if isTimer(autoCloseTimers[row.id]) then
-                        killTimer(autoCloseTimers[row.id])
-                    end
-                    autoCloseTimers[row.id] = setTimer(function(itId)
-                        autoCloseTimers[itId] = nil
-                        db.one("SELECT id, type_uname, data, rz FROM items WHERE id = ?", { itId }, function(clRow)
-                            if clRow then
-                                setDoorOpenState(clRow, false, function()
-                                    for _, p in ipairs(getElementsByType("player")) do
-                                        exports.items:refreshPlayer(p)
-                                    end
-                                end)
-                            end
-                        end)
-                    end, 5000, 1, row.id)
-                end)
-            else
-                toast(c.player, "WRONG_PASSCODE")
-            end
-        end,
-        { player = player, enteredCode = enteredCode }
-    )
-    return true
-end
-
-function installKeypad(player, defenceId, newPasscode)
-    defenceId = tonumber(defenceId)
-    if not defenceId or not newPasscode then
-        return false
-    end
-    db.one(
-        "SELECT id, type_uname, data, x, y, z, rz FROM items "
-            .. "WHERE id = ? AND container_id IS NULL AND holder_char_id IS NULL",
-        { defenceId },
-        function(row, c)
-            if not isElement(c.player) or not row then
-                return
-            end
-            local d = decodeData(row.data)
-            d.keypad = true
-            d.passcode = string.format("%04d", tonumber(c.newPasscode) or 0)
-            db.exec("UPDATE items SET data = ? WHERE id = ?", { encodeData(d), row.id }, function()
-                if isElement(c.player) then
-                    toast(c.player, "KEYPAD_INSTALLED")
-                end
-            end)
-        end,
-        { player = player, newPasscode = newPasscode }
-    )
-    return true
 end
 
 util.log("building", "info", "building system initialized")

@@ -2,6 +2,7 @@
 addEvent("buildingInteractRequested", true)
 addEvent("keypadSubmitted", true)
 addEvent("keypadInstallRequested", true)
+addEvent("holdActionCancelRequested", true)
 addEvent("lockBreakRequested", true)
 addEvent("deviceHackRequested", true)
 

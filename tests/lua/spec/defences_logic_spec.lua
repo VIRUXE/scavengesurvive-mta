@@ -11,13 +11,6 @@ describe("defences logic", function()
             assert.is_false(defences.isDefenceItem("WoodLog"))
             assert.is_false(defences.isDefenceItem("Bandage"))
         end)
-
-        it("identifies swinging doors and gates", function()
-            assert.is_true(defences.isDoorOrGate("Door"))
-            assert.is_true(defences.isDoorOrGate("MetalGate"))
-            assert.is_false(defences.isDoorOrGate("LargeFrame"))
-            assert.is_false(defences.isDoorOrGate("CorPanel"))
-        end)
     end)
 
     describe("passcode verification", function()
@@ -64,18 +57,6 @@ describe("defences logic", function()
         end)
     end)
 
-    describe("door swing rotation", function()
-        it("swings closed door open by +90 degrees", function()
-            assert.are.equal(90, defences.calculateDoorRotation(0, true))
-            assert.are.equal(180, defences.calculateDoorRotation(90, true))
-            assert.are.equal(0, defences.calculateDoorRotation(270, true))
-        end)
-
-        it("swings open door back to base angle", function()
-            assert.are.equal(0, defences.calculateDoorRotation(0, false))
-            assert.are.equal(90, defences.calculateDoorRotation(90, false))
-        end)
-    end)
     describe("building a defence", function()
         -- upstream: DefineDefenceItem(item_CorPanel, 0.0, 90.0, 0.0, 90.0, 90.0, 0.0, 1.21428, true)
         local cor = { vertical = { 0.0, 90.0, 0.0 }, horizontal = { 90.0, 90.0, 0.0 }, zOffset = 1.21428 }
@@ -125,6 +106,88 @@ describe("defences logic", function()
             -- turned to face east (rz 270): west of it is behind
             assert.is_true(defences.isBehind(cor, 270, 0, 0, -2, 0))
             assert.is_false(defences.isBehind(cor, 270, 0, 0, 2, 0))
+        end)
+    end)
+
+    describe("toggling pose (motor movement)", function()
+        -- upstream: DefineDefenceItem(item_CorPanel, 0.0, 90.0, 0.0, 90.0, 90.0, 0.0, 1.21428, true)
+        local cor = {
+            vertical = { 0.0, 90.0, 0.0 },
+            horizontal = { 90.0, 90.0, 0.0 },
+            zOffset = 1.21428,
+            movable = true,
+        }
+        -- upstream: DefineDefenceItem(item_WoodPanel, 90.0, 0.0, 23.5, 0.0, 0.0, 0.0, 1.0161, false)
+        local wood = {
+            vertical = { 90.0, 0.0, 23.5 },
+            horizontal = { 0.0, 0.0, 0.0 },
+            zOffset = 1.0161,
+            movable = false,
+        }
+
+        it("toggles vertical to horizontal, lowering z and applying horizontal rotation", function()
+            local st = { active = true, pose = "vertical", rx = 0.0, ry = 90.0, motor = true }
+            local newZ, newRz, newSt = defences.toggle(cor, st, 11.21428, 45.0)
+            assert.is_true(math.abs(newZ - 10.0) < 1e-5)
+            assert.is_true(math.abs(newRz - 45.0) < 1e-5)
+            assert.are.equal("horizontal", newSt.pose)
+            assert.are.equal(90.0, newSt.rx)
+            assert.are.equal(90.0, newSt.ry)
+            assert.is_true(newSt.motor)
+        end)
+
+        it("toggles horizontal to vertical, raising z and applying vertical rotation", function()
+            local st = {
+                active = true,
+                pose = "horizontal",
+                rx = 90.0,
+                ry = 90.0,
+                motor = true,
+                keypad = 1,
+                passcode = "1234",
+            }
+            local newZ, newRz, newSt = defences.toggle(cor, st, 10.0, 45.0)
+            assert.is_true(math.abs(newZ - 11.21428) < 1e-5)
+            assert.is_true(math.abs(newRz - 45.0) < 1e-5)
+            assert.are.equal("vertical", newSt.pose)
+            assert.are.equal(0.0, newSt.rx)
+            assert.are.equal(90.0, newSt.ry)
+            assert.is_true(newSt.motor)
+            assert.are.equal(1, newSt.keypad)
+            assert.are.equal("1234", newSt.passcode)
+        end)
+
+        it("handles rotation differences between vertical and horizontal poses", function()
+            local st = { active = true, pose = "vertical", rx = 90.0, ry = 0.0 }
+            -- WoodPanel: vertical rotz = 23.5, horizontal rotz = 0.0. delta = (0 - 23.5) = -23.5 -> +336.5
+            local newZ, newRz, newSt = defences.toggle(wood, st, 11.0161, 23.5)
+            assert.is_true(math.abs(newZ - 10.0) < 1e-5)
+            assert.is_true(math.abs(newRz - 0.0) < 1e-5)
+            assert.are.equal("horizontal", newSt.pose)
+
+            -- toggling back from horizontal to vertical restores z and rz
+            local z2, rz2, st2 = defences.toggle(wood, newSt, newZ, newRz)
+            assert.is_true(math.abs(z2 - 11.0161) < 1e-5)
+            assert.is_true(math.abs(rz2 - 23.5) < 1e-5)
+            assert.are.equal("vertical", st2.pose)
+        end)
+
+        it("allows unbuild to restore the original lying position from toggled pose", function()
+            -- CorPanel built vertical from lying pos (10.0, 30.0) with restRz = 0.0
+            local z1, rz1, st1 = defences.build(cor, "vertical", 10.0, 30.0, 0.0)
+            -- Motor moves it to horizontal
+            local z2, rz2, st2 = defences.toggle(cor, st1, z1, rz1)
+            -- Crowbar unbuilds it while in horizontal pose
+            local zUn, rzUn = defences.unbuild(cor, st2, z2, rz2, 0.0)
+            assert.is_true(math.abs(zUn - 10.0) < 1e-5)
+            assert.is_true(math.abs(rzUn - 30.0) < 1e-5)
+        end)
+
+        it("supports isBehind check in both vertical and horizontal poses", function()
+            assert.is_true(defences.isBehind(cor, 0, 0, 0, 0, -2, "vertical"))
+            assert.is_false(defences.isBehind(cor, 0, 0, 0, 0, 2, "vertical"))
+            assert.is_true(defences.isBehind(cor, 0, 0, 0, 0, -2, "horizontal"))
+            assert.is_false(defences.isBehind(cor, 0, 0, 0, 0, 2, "horizontal"))
         end)
     end)
 end)

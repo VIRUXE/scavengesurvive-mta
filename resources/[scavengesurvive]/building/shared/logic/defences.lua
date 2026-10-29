@@ -12,18 +12,8 @@ M.DEFENCES = {
     CrateDoor = true,
 }
 
-M.DOORS = {
-    Door = true,
-    MetalGate = true,
-    CrateDoor = true,
-}
-
 function M.isDefenceItem(uname)
     return M.DEFENCES[uname] == true
-end
-
-function M.isDoorOrGate(uname)
-    return M.DOORS[uname] == true
 end
 
 function M.verifyPasscode(expected, input)
@@ -101,20 +91,42 @@ function M.unbuild(def, state, z, rz, restRz)
     return z, ((rz or 0) - (restRz or 0) - def[state.pose][3]) % 360
 end
 
--- A crowbar only works from the defence's back side (upstream _InteractDefenceWithItem): the angle between the
--- defence's facing and the direction to the player is between 90 and 270 degrees.
-function M.isBehind(def, rz, x, y, px, py)
-    local toPlayer = (-math.deg(math.atan2(px - x, py - y))) % 360
-    local angle = ((rz or 0) - def.vertical[3] - toPlayer) % 360
-    return angle > 90 and angle < 270
+-- Toggling a built defence between vertical and horizontal poses (upstream MoveDefence / motor movement).
+-- Vertical to horizontal lowers z by zOffset and rotates by (horizontal[3] - vertical[3]).
+-- Horizontal to vertical raises z by zOffset and rotates by (vertical[3] - horizontal[3]).
+-- Returns new z, new rz, and a new state table with the updated pose and rotations, preserving other metadata.
+function M.toggle(def, state, z, rz)
+    local curPose = (state and state.pose) or "vertical"
+    local nextPose = (curPose == "vertical") and "horizontal" or "vertical"
+    local newZ, newRz
+    if curPose == "vertical" then
+        newZ = (z or 0) - (def.zOffset or 0)
+        newRz = ((rz or 0) + (def.horizontal[3] - def.vertical[3])) % 360
+    else
+        newZ = (z or 0) + (def.zOffset or 0)
+        newRz = ((rz or 0) + (def.vertical[3] - def.horizontal[3])) % 360
+    end
+    local rot = def[nextPose]
+    local newState = {}
+    if type(state) == "table" then
+        for k, v in pairs(state) do
+            newState[k] = v
+        end
+    end
+    newState.active = true
+    newState.pose = nextPose
+    newState.rx = rot[1]
+    newState.ry = rot[2]
+    return newZ, newRz, newState
 end
 
-function M.calculateDoorRotation(baseRz, isOpen)
-    baseRz = baseRz or 0
-    if isOpen then
-        return (baseRz + 90) % 360
-    end
-    return baseRz % 360
+-- A crowbar, motor, or keypad only works from the defence's back side (upstream _InteractDefenceWithItem): the angle
+-- between the defence's facing and the direction to the player is between 90 and 270 degrees.
+function M.isBehind(def, rz, x, y, px, py, pose)
+    local poseRotZ = (pose and def and def[pose] and def[pose][3]) or (def and def.vertical and def.vertical[3]) or 0
+    local toPlayer = (-math.deg(math.atan2(px - x, py - y))) % 360
+    local angle = ((rz or 0) - poseRotZ - toPlayer) % 360
+    return angle > 90 and angle < 270
 end
 
 return M

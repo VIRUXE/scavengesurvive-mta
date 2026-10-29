@@ -15,6 +15,4 @@
     <export function="interactDefence" type="server"/>
     <export function="buildDefence" type="server"/>
     <export function="removeDefence" type="server"/>
-    <export function="submitPasscode" type="server"/>
-    <export function="installKeypad" type="server"/>
 </meta>
