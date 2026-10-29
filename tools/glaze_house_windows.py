@@ -3,9 +3,10 @@ holes. Run inside Blender with the DragonFF addon enabled, after tools/extract_s
 
     blender -b --python tools/glaze_house_windows.py -- SRC_DIR OUT_DIR TEXTURE_DIR lshouse1 lshouse2 ...
 
-SRC_DIR holds the extracted DFFs, TEXTURE_DIR the house_window.PNG written by tools/make_house_window.py. Each opening is
+SRC_DIR holds the extracted DFFs, TEXTURE_DIR the house_window.PNG written by tools/make_house_window.py plus the four curtain PNGs named in
+CURTAINS, decoded from the game's TXDs (gta-scout's TXDReader). Each opening is
 a planar rectangular boundary loop in the wall, under 1.85 m tall (taller ones are doors, which the maps place as
-door objects); it gets a two-sided translucent pane textured house_window. The shells' triangles all say material 0 and the real
+door objects); it gets a recessed translucent pane textured house_window in a modelled frame, and a pair of curtains. The shells' triangles all say material 0 and the real
 split lives in the BinMesh chunk, which DragonFF ignores, so it is copied into the triangle records first.
 models/client/main.lua imports files/house_window.txd into the shells' vanilla dictionaries.
 """
@@ -49,6 +50,7 @@ def apply_binmesh_materials(src, dst):
 a = sys.argv[sys.argv.index("--") + 1:]
 src, dst, texdir, names = a[0], a[1], a[2], a[3:]
 GLASS = 'house_window'
+CURTAINS = ('ah_curtains1', 'AH_greencurtain', 'CJ_H_CURTAIN1', 'curtain_sink2')  # vanilla, in house_window.txd
 def loops_of(bm):
     seen=set(); out=[]
     for e in bm.edges:
@@ -113,6 +115,15 @@ for n in names:
     for nd in gm.node_tree.nodes:
         if nd.type=='TEX_IMAGE': nd.image=img; nd.label=GLASS
     me.materials.append(gm); mi=len(me.materials)-1
+    cname=CURTAINS[sum(map(ord,n))%len(CURTAINS)]  # one curtain per house
+    cm=base.copy(); cm.name=cname
+    cm['dff']=dict(base['dff']) if 'dff' in base.keys() else {}
+    try: cm.dff.tex_name=cname
+    except Exception as ex: print("dffprop",ex)
+    cimg=bpy.data.images.load(f"{texdir}/{cname}.PNG"); cimg.name=cname+'.PNG'
+    for nd in cm.node_tree.nodes:
+        if nd.type=='TEX_IMAGE': nd.image=cimg; nd.label=cname
+    me.materials.append(cm); ci=len(me.materials)-1
     bm=bmesh.new(); bm.from_mesh(me)
     uv=bm.loops.layers.uv.active; col=bm.loops.layers.color.active if bm.loops.layers.color else None
     FRAME_UV=(0.03,0.5)  # opaque frame pixels of house_window
@@ -127,6 +138,14 @@ for n in names:
             f.material_index=mi
             for l in f.loops:
                 l[uv].uv=FRAME_UV
+                if col: l[col]=(1,1,1,1)
+    def panel(bm,pts,uvs,outn):
+        """A curtain face, visible from both sides."""
+        for flip in (False,True):
+            vv=[bm.verts.new(p) for p in pts]; f=bm.faces.new(vv); f.material_index=ci
+            if (f.normal.dot(outn)>0)==flip: bmesh.ops.reverse_faces(bm,faces=[f])
+            for l in f.loops:
+                u,v=uvs[vv.index(l.vert)]; l[uv].uv=(1-u if flip else u,v)
                 if col: l[col]=(1,1,1,1)
     for P,outn in wins:
         h_axis=Vector((-outn.y,outn.x,0)).normalized()
@@ -147,6 +166,14 @@ for n in names:
         # sill below, head trim above, standing proud of the wall
         box(bm,at(uc,z0-0.03,0.04),h_axis,outn,w+0.18,0.06,0.16)
         box(bm,at(uc,z1+0.025,0.015),h_axis,outn,w+0.12,0.05,0.07)
+        # curtains: a gathered panel at each side, hung from the head and ending above the sill
+        if hh>0.7:
+            top,bot=z1-T-0.01,z0+T+0.1
+            pw=0.3*(w-2*T)
+            for a,b in ((u0+T,u0+T+pw),(u1-T-pw,u1-T)):
+                m_=(a+b)/2
+                for ua,ub,na,nb,ta,tb in ((a,m_,-0.08,-0.14,0.0,0.5),(m_,b,-0.14,-0.08,0.5,1.0)):
+                    panel(bm,[at(ua,bot,na),at(ub,bot,nb),at(ub,top,nb),at(ua,top,na)],[(ta,0.0),(tb,0.0),(tb,1.0),(ta,1.0)],outn)
         # glass, recessed behind the frame and visible from both sides
         gu0,gu1,gz0,gz1=u0+T,u1-T,z0+T,z1-T
         for flip in (False,True):
