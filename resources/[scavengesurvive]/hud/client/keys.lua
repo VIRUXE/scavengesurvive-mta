@@ -193,8 +193,16 @@ return function(ctx)
         end
         triggerServerEvent("itemPutAwayRequested", localPlayer)
     end)
-    addCommandHandler("reloadweapon", request("itemReloadRequested"))
-    addCommandHandler("unloadweapon", request("itemUnloadRequested"))
+    local function requestOnFoot(eventName)
+        return function()
+            if getPedOccupiedVehicle(localPlayer) then
+                return
+            end
+            request(eventName)()
+        end
+    end
+    addCommandHandler("reloadweapon", requestOnFoot("itemReloadRequested"))
+    addCommandHandler("unloadweapon", requestOnFoot("itemUnloadRequested"))
     addCommandHandler("inventory", function()
         if not guard() then
             return
@@ -205,10 +213,14 @@ return function(ctx)
         triggerServerEvent("inventoryOpenRequested", localPlayer)
     end)
 
-    local DEFAULTS = { interact = "f", dropitem = "n", putaway = "y", inventory = "h", reloadweapon = "r" }
+    local DEFAULTS = { interact = "f", dropitem = "n", putaway = "y", inventory = "i", reloadweapon = "r" }
     addEventHandler("onClientResourceStart", resourceRoot, function()
         -- MTA binds Y to team chat by default; the gamemode has no teams, so Y is ours (restored on stop)
         unbindKey("y", "down", "chatbox")
+        if string.lower(getKeyBoundToCommand("inventory") or "") == "h" then
+            unbindKey("h", "down", "inventory")
+            bindKey("i", "down", "inventory")
+        end
         for cmd, key in pairs(DEFAULTS) do
             if not getKeyBoundToCommand(cmd) then
                 bindKey(key, "down", cmd)

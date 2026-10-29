@@ -215,11 +215,33 @@ local function radioKey()
     end
 end
 
+local RADIO_CONTROLS = { "radio_next", "radio_previous" }
+local radioControlsWereEnabled = {}
+
+local function disableGameRadio()
+    setRadioChannel(0)
+end
+
 addEventHandler("onClientResourceStart", resourceRoot, function()
     bindKey("r", "down", radioKey)
+    for _, control in ipairs(RADIO_CONTROLS) do
+        radioControlsWereEnabled[control] = isControlEnabled(control)
+        toggleControl(control, false)
+    end
+    disableGameRadio()
+end)
+
+addEventHandler("onClientVehicleEnter", root, function(player)
+    if player ~= localPlayer then
+        return
+    end
+    disableGameRadio()
 end)
 
 addEventHandler("onClientResourceStop", resourceRoot, function()
     unbindKey("r", "down", radioKey)
+    for _, control in ipairs(RADIO_CONTROLS) do
+        toggleControl(control, radioControlsWereEnabled[control] ~= false)
+    end
     close()
 end)

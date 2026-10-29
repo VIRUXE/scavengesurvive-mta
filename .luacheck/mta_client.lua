@@ -10,7 +10,7 @@ return { read_globals = {
     "guiSetProperty", "guiSetFont", "guiBringToFront", "guiSetEnabled", "addCommandHandler", "isChatBoxInputActive",
     "isConsoleActive", "isMainMenuActive", "isMTAWindowActive", "setPlayerHudComponentVisible", "setCameraMatrix",
     "setCameraTarget", "fadeCamera", "getCameraMatrix", "setCameraDrunkLevel", "setBlurLevel", "playSound",
-    "playSound3D", "setSoundVolume", "getPedBonePosition", "toggleControl", "toggleAllControls",
+    "playSound3D", "setSoundVolume", "getPedBonePosition", "toggleControl", "setRadioChannel", "isControlEnabled", "toggleAllControls",
     "setElementBonePosition", "getElementBoneMatrix", "setElementMatrix", "setObjectScale", "engineLoadDFF", "engineLoadTXD", "engineLoadCOL",
     "engineReplaceModel", "engineImportTXD", "engineReplaceCOL", "engineRequestModel", "engineFreeModel",
     "engineGetModelTXDID", "engineSetModelTXDID", "engineSetModelLODDistance",
