@@ -1,5 +1,7 @@
--- Replaces the vanilla des_westrn9_ house for every client. The open DFF and matching COL
--- are exported from the installed GTA:SA model and the original cxref_oldwest TXD.
+-- Replaces the vanilla des_westrn9_ house (model 3250) for every client with an enterable copy: the same exterior,
+-- roof included, plus an open front doorway and a plastered interior with floor and ceiling. Built from the
+-- original gta3.img DFF in Blender with DragonFF; the COL (wall slabs, roof and ceiling surfaces) is rebuilt from
+-- it and the TXD is the original cxref_oldwest cut down to the 12 textures the model uses (#131).
 local MODEL_ID = 3250
 local collision, txd, dff
 local replacedCollision, replacedModel = false, false
