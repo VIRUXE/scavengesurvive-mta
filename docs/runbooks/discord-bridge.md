@@ -20,8 +20,9 @@ the guild set in `config.json` (it leaves any other) and only in the channel nam
 Local changes to the vendored relay (reapply after an upstream update): the socket server listens on
 `127.0.0.1` only (`library/Server.js`); `Bot.sendMessage` passes `allowedMentions: { parse: [] }` so relayed
 text never pings; `Bot.sendMessageTo` and `Bot.getChannel` resolve channels by ID or name; `PlayerEventHandler` routes
-join/quit/kick/ban/nickchange activity to `joinPartChannel` (`1564285345426833608`); `Bot._channelCreate` no longer
-deletes every new channel (upstream compared discord.js 14's numeric channel types against `"text"`).
+join/quit/kick/ban/nickchange activity to `joinPartChannel` (`1564285345426833608`); `ChatMessageHandler` routes
+`staff.log` and messages with `channel` to `staffChannel` (`1563498523507425421`) or the specified channel;
+`Bot._channelCreate` no longer deletes every new channel (upstream compared discord.js 14's numeric channel types against `"text"`).
 
 ## Check
 
