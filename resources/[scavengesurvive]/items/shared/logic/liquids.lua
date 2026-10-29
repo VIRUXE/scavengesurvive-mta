@@ -70,8 +70,8 @@ end
 -- amount (litres, 0 when unknown), liquid key (nil when the container is empty or unknown)
 function M.decode(t, data)
     local d = unwrap(data)
-    local amount = tonumber(d.amount) or 0
-    local liquid = type(d.liquid) == "string" and d.liquid or soleLiquid(t)
+    local amount = tonumber(d.amount or d[1]) or 0
+    local liquid = type(d.liquid) == "string" and d.liquid or (type(d[2]) == "string" and d[2] or soleLiquid(t))
     if amount < M.EMPTY_BELOW or not liquid then
         return 0, nil -- an amount of an unknown liquid is nothing drinkable
     end

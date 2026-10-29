@@ -20,6 +20,8 @@ describe("liquid containers", function()
         "assumes the only possible liquid when the data carries just an amount (vehicles write the Petrol Can so)",
         function()
             assert.same({ 12.5, "Petrol" }, { liquids.decode(GASCAN, { amount = 12.5 }) })
+            assert.same({ 20, "Petrol" }, { liquids.decode(GASCAN, { 20 }) })
+            assert.same({ 20, "Petrol" }, { liquids.decode(GASCAN, { { 20 } }) })
             assert.same({ 0, nil }, { liquids.decode(BOTTLE, { amount = 0.3 }) }) -- two candidates: unknown
         end
     )

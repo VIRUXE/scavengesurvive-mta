@@ -174,17 +174,53 @@ local function itemCommand(name, fn)
     end)
 end
 
-local function handleAddItem(p, uname)
-    if not uname then
-        return say(p, "usage: /additem <uname>")
+local function handleAddItem(p, ...)
+    local args = { ... }
+    if #args == 0 or not args[1] or args[1] == "" then
+        say(p, "Usage: /additem [itemid/itemname] [extradata format specifiers] [extradata array, comma separated]")
+        return say(
+            p,
+            "Example: `/additem gascan df 1, 4.5` create a petrol can with an integer and a float in extradata."
+        )
     end
     if not ready then
         return say(p, "db not connected")
     end
+
+    local query = args[1]
+    local specifiers = args[2]
+    local dataStr = #args >= 3 and table.concat(args, " ", 3) or nil
+
+    local itemsData = {
+        order = exports.data:itemTypes(),
+        itemType = function(u)
+            return exports.data:itemType(u)
+        end,
+    }
+
+    local uname, typeErr = itemSpawnLogic.resolveItemType(query, itemsData)
+    if not uname then
+        return say(p, "%s", typeErr)
+    end
+
+    local pData = nil
+    if specifiers and specifiers ~= "" then
+        local dataArr, dataErr = itemSpawnLogic.parseExtraData(specifiers, dataStr)
+        if not dataArr then
+            return say(p, "%s", dataErr)
+        end
+        pData = itemSpawnLogic.encodeJsonArray(dataArr)
+    end
+
     local x, y, z = getElementPosition(p)
+    local _, _, rz = getElementRotation(p)
+    local sx, sy, sz, srz = itemSpawnLogic.calculateSpawnPosition(x, y, z, rz)
     local interior = getElementInterior(p)
     local dimension = getElementDimension(p)
-    local params = { uname, nil, nil, x + 1, y, z - 0.9, 0, interior, dimension, nil, nil, n = 11 }
+
+    -- Upstream ACMD:additem shows a justification dialog for staff below lead level;
+    -- the port logs all spawns via logItemSpawn to Discord and staff_actions instead.
+    local params = { uname, nil, pData, sx, sy, sz, srz, interior, dimension, nil, nil, n = 11 }
     db.call("item_create", params, function(res, ctx)
         if not isElement(ctx.player) then
             return
@@ -199,7 +235,7 @@ local function handleAddItem(p, uname)
         say(ctx.player, "created %s id=%s", ctx.uname, tostring(itemId))
         exports.items:refreshPlayer(ctx.player)
         logItemSpawn(ctx.player, ctx.uname, itemId, ctx.x, ctx.y, ctx.z)
-    end, { player = p, uname = uname, x = x, y = y, z = z })
+    end, { player = p, uname = uname, x = sx, y = sy, z = sz })
 end
 
 itemCommand("additem", handleAddItem)
