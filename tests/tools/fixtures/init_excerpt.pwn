@@ -26,3 +26,5 @@
 	item_WoodPanel		= DefineItemType("Wood Ramp",			"WoodPanel",		5153,	11,	360.0, 23.537, 0.0,		0.0,	-0.342762, 0.908910, -0.453703, 296.326019, 46.126548, 226.118209, true, .buttonz = ITEM_FLOOR_OFFSET / 2, .maxhitpoints = 7);
 	DefineDefenceItem(item_CorPanel,	0.0, 90.0, 0.0,		90.0, 90.0, 0.0,	1.21428, true);
 	DefineDefenceItem(item_WoodPanel,	90.0, 0.0, 23.5,	0.0, 0.0, 0.0,		1.0161, false);
+	item_TntTimebomb	= DefineItemType("Timed TNT",			"TntTimebomb",		1252,	2,	270.0, 0.0, 0.0,		0.0,	.maxhitpoints = 2);
+	DefineExplosiveItem(item_TntTimebomb,	TIMED,		EXP_MEDIUM);

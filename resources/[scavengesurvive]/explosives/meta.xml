@@ -1,0 +1,15 @@
+<meta>
+    <info author="scavengesurvive-mta" type="script" name="explosives" description="Explosives: arming, detonating, item damage" version="0.1.0"/>
+    <min_mta_version server="1.6.0" client="1.6.0"/>
+    <include resource="lib"/>
+    <include resource="data"/>
+    <include resource="items"/>
+    <include resource="character"/>
+    <include resource="building"/>
+    <script src="shared/events.lua" type="shared"/>
+    <script src="server/main.lua" type="server"/>
+    <file src="shared/logic/explosives.lua"/>
+    <export function="detonateItem" type="server"/>
+    <export function="linkPhoneBomb" type="server"/>
+    <export function="checkTripMine" type="server"/>
+</meta>

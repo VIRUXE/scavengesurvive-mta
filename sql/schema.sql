@@ -873,6 +873,77 @@ BEGIN
   END IF;
 END//
 
+CREATE OR REPLACE PROCEDURE `explosion_damage`(IN p_rows JSON)
+BEGIN
+  DECLARE v_rows JSON;
+  DECLARE v_destroyed LONGTEXT DEFAULT "[]";
+  DECLARE v_damaged LONGTEXT DEFAULT "[]";
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
+
+  SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+  START TRANSACTION;
+
+  IF JSON_TYPE(JSON_EXTRACT(p_rows, "$[0]")) = "ARRAY" THEN
+    SET v_rows = JSON_EXTRACT(p_rows, "$[0]");
+  ELSE
+    SET v_rows = p_rows;
+  END IF;
+
+  SELECT COALESCE(JSON_ARRAYAGG(JSON_OBJECT(
+    "id", CAST(i.id AS SIGNED),
+    "uname", i.type_uname,
+    "x", i.x,
+    "y", i.y,
+    "z", i.z,
+    "rz", i.rz,
+    "data", JSON_QUERY(i.data, "$")
+  )), JSON_ARRAY())
+  INTO v_destroyed
+  FROM items i
+  JOIN JSON_TABLE(v_rows, "$[*]" COLUMNS (
+    id INT PATH "$.id",
+    dmg INT PATH "$.dmg"
+  )) j ON j.id = i.id
+  WHERE i.container_id IS NULL AND i.holder_char_id IS NULL
+    AND i.hitpoints <= COALESCE(j.dmg, 1);
+
+  DELETE i FROM items i
+  JOIN JSON_TABLE(v_rows, "$[*]" COLUMNS (
+    id INT PATH "$.id",
+    dmg INT PATH "$.dmg"
+  )) j ON j.id = i.id
+  WHERE i.container_id IS NULL AND i.holder_char_id IS NULL
+    AND i.hitpoints <= COALESCE(j.dmg, 1);
+
+  UPDATE items i
+  JOIN JSON_TABLE(v_rows, "$[*]" COLUMNS (
+    id INT PATH "$.id",
+    dmg INT PATH "$.dmg"
+  )) j ON j.id = i.id
+  SET i.hitpoints = i.hitpoints - COALESCE(j.dmg, 1)
+  WHERE i.container_id IS NULL AND i.holder_char_id IS NULL
+    AND i.hitpoints > COALESCE(j.dmg, 1);
+
+  SELECT COALESCE(JSON_ARRAYAGG(JSON_OBJECT(
+    "id", CAST(i.id AS SIGNED),
+    "hp", CAST(i.hitpoints AS SIGNED)
+  )), JSON_ARRAY())
+  INTO v_damaged
+  FROM items i
+  JOIN JSON_TABLE(v_rows, "$[*]" COLUMNS (
+    id INT PATH "$.id",
+    dmg INT PATH "$.dmg"
+  )) j ON j.id = i.id
+  WHERE i.container_id IS NULL AND i.holder_char_id IS NULL;
+
+  COMMIT;
+
+  SELECT 1 AS ok, "OK" AS code, JSON_OBJECT(
+    "destroyed", JSON_QUERY(v_destroyed, "$"),
+    "damaged", JSON_QUERY(v_damaged, "$")
+  ) AS payload;
+END//
+
 CREATE OR REPLACE PROCEDURE `item_create`(
   IN p_type_uname VARCHAR(32), IN p_hitpoints SMALLINT, IN p_data JSON,
   IN p_x FLOAT, IN p_y FLOAT, IN p_z FLOAT, IN p_rz FLOAT, IN p_interior TINYINT, IN p_dimension INT,

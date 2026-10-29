@@ -50,6 +50,12 @@ def test_defences_carry_their_built_rotations():
     assert types["CorPanel"]["category"] == "generic" and "defence" not in types["Knife"]
 
 
+def test_explosives_carry_trigger_and_preset():
+    types = _load()
+    assert types["TntTimebomb"]["explosive"] == {"trigger": "TIMED", "preset": "MEDIUM"}
+    assert types["TntTimebomb"]["category"] == "generic" and "explosive" not in types["Knife"]
+
+
 def test_lua_and_sql_output_are_deterministic_and_complete():
     types = _load()
     lua, sql = it.render_lua(types), it.render_sql(types)

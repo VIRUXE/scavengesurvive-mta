@@ -358,6 +358,19 @@ function destroyWorldItem(itemId)
     return true
 end
 
+function forgetWorldItem(itemId)
+    if world and world.forgetEverywhere then
+        world.forgetEverywhere(tonumber(itemId))
+    end
+end
+
+function dropHeld(player)
+    if hands and hands.dropHeld then
+        return hands.dropHeld(player)
+    end
+    return false
+end
+
 function destroyContainerItem(itemId)
     itemId = tonumber(itemId)
     if not itemId then

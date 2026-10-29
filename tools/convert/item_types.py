@@ -25,6 +25,7 @@ SAFEBOX_RE = re.compile(r"DefineSafeboxType\((.*?)\);", re.S)
 # defences: DefineDefenceItem(item_X, v_rx, v_ry, v_rz, h_rx, h_ry, h_rz, zoffset, movable): the rotation a built
 # defence stands at (screwdriver, vertical, raised by zoffset) or lies at (hammer, horizontal); rz adds to its heading
 DEFENCE_RE = re.compile(r"DefineDefenceItem\((.*?)\);", re.S)
+EXPLOSIVE_RE = re.compile(r"DefineExplosiveItem\((.*?)\);", re.S)
 # bags: DefineBagType(name, item_X, size) followed by SetBagOffsetsForSkin(tmp, skin, x, y, z, rx, ry, rz, sx, sy, sz)
 # lines for that bag (worn on SA-MP bone 1, the spine); a later line for the same skin overrides an earlier one
 BAG_RE = re.compile(r"DefineBagType\((.*?)\);|SetBagOffsetsForSkin\((.*?)\);", re.S)
@@ -183,6 +184,15 @@ def apply_categories(types: dict[str, dict], init_src: str, apparel_src: str) ->
         if t:
             f = [float(coerce(v)) for v in a[1:8]]
             t["defence"] = {"vertical": f[0:3], "horizontal": f[3:6], "zOffset": f[6], "movable": bool(coerce(a[8]))}
+    for argstr in EXPLOSIVE_RE.findall(init_src):
+        a = split_args(argstr)
+        t = target(a)
+        if t:
+            trigger = a[1].strip()
+            preset = a[2].strip()
+            if preset.startswith("EXP_"):
+                preset = preset[len("EXP_"):]
+            t["explosive"] = {"preset": preset, "trigger": trigger}
     bag = None
     for define, offsets in BAG_RE.findall(apparel_src):
         if define:

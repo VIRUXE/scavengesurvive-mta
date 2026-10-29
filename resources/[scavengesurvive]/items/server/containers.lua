@@ -350,18 +350,34 @@ return function(ctx)
                 if not rows or not isElement(c2.player) then
                     return
                 end
+                local triggered = false
+                local expRes = getResourceFromName("explosives")
+                local hasExplosives = expRes and getResourceState(expRes) == "running"
                 for _, r in ipairs(rows) do
                     local target = byId[r.cid]
+                    local itData = hands.decodeData(r.data)
                     if target then
                         target.rows[#target.rows + 1] = {
                             id = r.id,
                             uname = r.uname,
                             hp = r.hp,
                             category = r.category,
-                            data = hands.decodeData(r.data),
+                            data = itData,
                         }
                         target.cap.used = target.cap.used + (tonumber(r.isize) or 1)
                     end
+                    if hasExplosives and not triggered and target and target.rows ~= payload.inventory then
+                        local rType = itemType(r.uname)
+                        if rType and rType.explosive and rType.explosive.trigger == "MOTION" then
+                            if itData and itData.armed == 1 then
+                                triggered = true
+                                exports.explosives:detonateItem(r.id)
+                            end
+                        end
+                    end
+                end
+                if triggered then
+                    return
                 end
                 attachGearAndHeld(payload, c2.player)
                 triggerClientEvent(c2.player, "inventoryOpened", c2.player, payload)

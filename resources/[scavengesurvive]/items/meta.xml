@@ -45,6 +45,8 @@
     <export function="sendInventory" type="server"/>
     <export function="destroyWorldItem" type="server"/>
     <export function="destroyContainerItem" type="server"/>
+    <export function="forgetWorldItem" type="server"/>
+    <export function="dropHeld" type="server"/>
     <export function="isFemaleSkin" type="server"/>
     <export function="rollSpawnSkin" type="server"/>
     <export function="setAttachPreview" type="client"/>

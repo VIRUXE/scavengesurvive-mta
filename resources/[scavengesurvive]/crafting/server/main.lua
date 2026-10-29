@@ -62,6 +62,19 @@ net.handler("combineRequested", function(player, invItemId)
             end
             local match = craft.matchCombine(c.held.uname, row.uname)
             if not match then
+                local heldType = exports.data:itemType(c.held.uname)
+                local invType = exports.data:itemType(row.uname)
+                local heldExp = heldType and heldType.explosive
+                local invExp = invType and invType.explosive
+                if
+                    (c.held.uname == "MobilePhone" and invExp and invExp.trigger == "RADIO")
+                    or (row.uname == "MobilePhone" and heldExp and heldExp.trigger == "RADIO")
+                then
+                    local expRes = getResourceFromName("explosives")
+                    if expRes and getResourceState(expRes) == "running" then
+                        return exports.explosives:linkPhoneBomb(c.player, c.held, row)
+                    end
+                end
                 return toast(c.player, "NO_RECIPE")
             end
             local r = match.recipe

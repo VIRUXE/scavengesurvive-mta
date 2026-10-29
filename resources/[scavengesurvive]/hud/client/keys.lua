@@ -134,7 +134,19 @@ return function(ctx)
         -- food is eaten; a held treatment starts its hold, and letting go of the key cancels it (items, #94);
         -- held Clothes start the clothes change (#110); a liquid container is drunk from, sip per hold (#122)
         local drinkable = held and held.category == "liquid"
-        if held and (held.category == "food" or drinkable or TREATMENTS[held.uname] or held.uname == "Clothes") then
+        local heldType = held and held.uname and exports.data:itemType(held.uname)
+        local isExplosive = heldType and heldType.explosive
+        if
+            held
+            and (
+                held.category == "food"
+                or drinkable
+                or TREATMENTS[held.uname]
+                or held.uname == "Clothes"
+                or isExplosive
+                or held.uname == "MobilePhone"
+            )
+        then
             return triggerServerEvent("itemUseRequested", localPlayer, held.id)
         end
         if held and held.category == "bag" then

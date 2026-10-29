@@ -702,6 +702,20 @@ return function(ctx)
             -- Defences: a Hammer lays one down and a Screwdriver stands one up where it lies; once built it is never
             -- picked up again, a Crowbar takes it down from behind and anything else works its door or keypad
             local rowType = itemType(row.uname)
+            if curUname == "MobilePhone" and rowType and rowType.explosive and rowType.explosive.trigger == "RADIO" then
+                local expRes = getResourceFromName("explosives")
+                if expRes and getResourceState(expRes) == "running" then
+                    return exports.explosives:linkPhoneBomb(c.player, curHeld, row)
+                end
+            end
+            if rowType and rowType.explosive and rowType.explosive.trigger == "MOTION" then
+                local expRes = getResourceFromName("explosives")
+                if expRes and getResourceState(expRes) == "running" then
+                    if exports.explosives:checkTripMine(c.player, row) then
+                        return
+                    end
+                end
+            end
             if rowType and rowType.defence and buildingRunning() then
                 local built = builtDefence(rData)
                 if not built and (curUname == "Hammer" or curUname == "Screwdriver") then
@@ -745,13 +759,13 @@ return function(ctx)
         end, { player = player, charId = cid })
     end, { rate = 5 })
 
-    net.handler("itemDropRequested", function(player)
+    function M.dropHeld(player)
         local cid, item = charId(player), state.held[player]
         if not cid or (isIncapacitated and isIncapacitated(player)) then
-            return
+            return false, "INCAPACITATED"
         end
         if not item then
-            return toast(player, "NOT_HELD")
+            return false, "NOT_HELD"
         end
         if item.data then
             M.queueData(item)
@@ -773,6 +787,14 @@ return function(ctx)
             world.syncPlayer(c.player) -- the dropped item appears without waiting for the next tick
             triggerEvent("itemMoved", c.player, c.itemId, "held", "world")
         end, { player = player, itemId = item.id, uname = item.uname })
+        return true
+    end
+
+    net.handler("itemDropRequested", function(player)
+        local ok, err = M.dropHeld(player)
+        if not ok and err and isElement(player) then
+            toast(player, err)
+        end
     end, { rate = 5 })
 
     return M
