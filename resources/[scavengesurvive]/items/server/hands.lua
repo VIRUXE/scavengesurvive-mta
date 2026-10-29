@@ -708,20 +708,6 @@ return function(ctx)
                 return containers and containers.openWorldContainer(c.player, row)
             end
 
-            -- Defences
-            local isDefence = (
-                row.uname == "Door"
-                or row.uname == "MetalGate"
-                or row.uname == "CrateDoor"
-                or row.uname == "LargeFrame"
-            )
-            if isDefence and curUname ~= "Crowbar" then
-                local bRes = getResourceFromName("building")
-                if bRes and getResourceState(bRes) == "running" then
-                    return exports.building:interactDefence(c.player, row)
-                end
-            end
-
             -- a construction tool in hand next to the ingredients on the ground builds (crafting, #116)
             if curHeld and isConstructionTool(curUname) then
                 return runCrafting("groundCraft", c.player)
