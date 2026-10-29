@@ -11,7 +11,7 @@ return { read_globals = {
     "isConsoleActive", "isMainMenuActive", "isMTAWindowActive", "setPlayerHudComponentVisible", "setCameraMatrix",
     "setCameraTarget", "fadeCamera", "getCameraMatrix", "setCameraDrunkLevel", "setBlurLevel", "playSound",
     "playSound3D", "setSoundVolume", "getPedBonePosition", "toggleControl", "setRadioChannel", "isControlEnabled", "toggleAllControls",
-    "setElementBonePosition", "getElementBoneMatrix", "setElementMatrix", "setObjectScale", "engineLoadDFF", "engineLoadTXD", "engineLoadCOL",
+    "setElementBonePosition", "getElementBoneMatrix", "setElementMatrix", "setObjectScale", "setObjectBreakable", "engineLoadDFF", "engineLoadTXD", "engineLoadCOL",
     "engineReplaceModel", "engineImportTXD", "engineReplaceCOL", "engineRequestModel", "engineFreeModel",
     "engineGetModelTXDID", "engineSetModelTXDID", "engineSetModelLODDistance",
     "setElementStreamable", "createBuilding", "removeWorldModel", "setOcclusionsEnabled", "xmlLoadFile",
