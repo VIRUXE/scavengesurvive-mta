@@ -170,7 +170,8 @@ local rainOff = false
 local function insideShell(cx, cy, cz)
     for _, obj in ipairs(getElementsByType("object", root, true)) do
         if shells[getElementModel(obj)] then
-            local right, fwd, up, pos = getElementMatrix(obj)
+            local m = getElementMatrix(obj) -- rows: right, forward, up, position
+            local right, fwd, up, pos = m[1], m[2], m[3], m[4]
             local dx, dy, dz = cx - pos[1], cy - pos[2], cz - pos[3]
             local lx = dx * right[1] + dy * right[2] + dz * right[3]
             local ly = dx * fwd[1] + dy * fwd[2] + dz * fwd[3]
