@@ -204,6 +204,22 @@ local function moveDefence(itemId, player)
     end, 1500, 1, itemId, player)
 end
 
+-- upstream largeframe.pwn: the covering goes on or comes off; it is part of the built state, so it stays across a
+-- restart (upstream's OnDefenceLoad) and goes with the defence when a Crowbar takes it down
+local function toggleCovering(itemId)
+    db.one(DEFENCE_ROW, { itemId }, function(row)
+        local d = row and decodeData(row.data)
+        local st = d and defences.state(d)
+        if not st then
+            return
+        end
+        d.defence = defences.toggleCovering(st)
+        db.exec("UPDATE items SET data = ? WHERE id = ?", { encodeData(d), row.id }, function()
+            exports.items:resendWorldItem(row.id)
+        end)
+    end)
+end
+
 local function handleDefenceInteract(player, row)
     local cid = charId(player)
     if not cid then
@@ -290,6 +306,9 @@ local function handleDefenceInteract(player, row)
     end
 
     -- 3. Interacting (empty hand / any other item, or Motor/Keypad from front)
+    if defences.isCoverable(row.type_uname or row.uname) then
+        toggleCovering(row.id)
+    end
     if not st.motor then
         -- Without a motor, interacting does nothing beyond upstream (no swing)
         return

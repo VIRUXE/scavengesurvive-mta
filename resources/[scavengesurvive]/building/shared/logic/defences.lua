@@ -120,6 +120,24 @@ function M.toggle(def, state, z, rz)
     return newZ, newRz, newState
 end
 
+-- Upstream item/largeframe.pwn (its OnPlayerInteractDefence hook): every interaction with a built Large Frame puts a
+-- covering panel over it or takes it off again. The panel is state.covered, drawn by the items client.
+M.COVERABLE = { LargeFrame = true }
+
+function M.isCoverable(uname)
+    return M.COVERABLE[uname] == true
+end
+
+-- the state with the covering flipped, other fields kept
+function M.toggleCovering(state)
+    local newState = {}
+    for k, v in pairs(state) do
+        newState[k] = v
+    end
+    newState.covered = state.covered ~= true or nil
+    return newState
+end
+
 -- A crowbar, motor, or keypad only works from the defence's back side (upstream _InteractDefenceWithItem): the angle
 -- between the defence's facing and the direction to the player is between 90 and 270 degrees.
 function M.isBehind(def, rz, x, y, px, py, pose)

@@ -579,3 +579,9 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
     - d. A Screwdriver in hand, **F** at a desk with nothing else around: the Screwdriver goes on the desk. Lay a
       Refined Metal and three Wood Logs a step further off than the desk and **F** at the desk again: `Constructing
       Desk` starts and the Screwdriver stays in hand.
+48. **The Large Frame's covering** (#149, upstream `item/largeframe.pwn`). One client.
+    - a. Build a Large Frame (a Sledgehammer over four Refined Metal, or `/additem LargeFrame` and a Hammer). **F** at
+      it with empty hands: a garage-door panel lies across the top, 2.6 m up, along the frame's heading. Standing on
+      it holds the player.
+    - b. **F** again: the panel goes. **F** once more and `rr items`: it is back after the restart.
+    - c. A Crowbar from behind takes the frame down: the panel goes with it, and building the frame again shows none.

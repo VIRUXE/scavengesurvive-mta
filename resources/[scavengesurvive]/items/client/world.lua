@@ -101,6 +101,9 @@ return function(ctx)
             if isElement(e.shown) then
                 destroyElement(e.shown)
             end
+            if isElement(e.covering) then
+                destroyElement(e.covering)
+            end
             objects[id] = nil
         end
         labelVisibility[id] = nil
@@ -263,6 +266,25 @@ return function(ctx)
         end
     end
 
+    -- the panel over a built Large Frame (upstream largeframe.pwn: SA-MP 19908 at z + 2.6, rotated 0, 90, rz), while
+    -- data.defence.covered; it is a roof, so it collides
+    local function updateCovering(e, r)
+        if isElement(e.covering) then
+            destroyElement(e.covering)
+        end
+        e.covering = nil
+        local def = r.uname == "LargeFrame" and builtDefence(r)
+        local model = def and def.covered == true and models.forSamp(19908)
+        if not model then
+            return
+        end
+        local obj = createObject(model, r.x, r.y, r.z + 2.6, 0, 90, r.rz or 0)
+        if obj then
+            place(obj, r)
+            e.covering = obj
+        end
+    end
+
     -- a locker draws its open twin while someone has it open
     local function modelFor(r, t)
         if r.uname == small.LOCKER.uname then
@@ -303,6 +325,7 @@ return function(ctx)
                 updatePlant(e, r)
                 updateSmoke(e, r)
                 updateShown(e, r)
+                updateCovering(e, r)
             else
                 e = {
                     pitched = isPitched,
@@ -323,6 +346,7 @@ return function(ctx)
                 updatePlant(e, r)
                 updateSmoke(e, r)
                 updateShown(e, r)
+                updateCovering(e, r)
                 objects[r.id] = e
             end
         end
@@ -343,6 +367,7 @@ return function(ctx)
                 setElementModel(e.obj, modelFor(e.row, t))
                 models.applyTint(e.obj, t)
             end
+            updateCovering(e, e.row)
         end
     end)
 
