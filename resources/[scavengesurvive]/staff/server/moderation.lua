@@ -501,6 +501,34 @@ return function(ctx)
         end,
     })
 
+    -- upstream level5.pwn /knockout set the caller's knockout time; the port sets it on the caller or a named player,
+    -- and 0 wakes them at once (a long wound knockout otherwise has no way out)
+    ctx.command({
+        name = "knockout",
+        level = 5,
+        usage = "/knockout <ms> [player]",
+        help = "Set a knockout time, 0 wakes up",
+        needsDb = false,
+        fn = function(p, args)
+            local ms = tonumber(args[1])
+            if not ms or ms < 0 then
+                return ctx.say(p, " >  Usage: /knockout <ms> [player]")
+            end
+            local target = args[2] and ctx.target(p, args[2], true) or (not args[2] and p)
+            if not target or not isElement(target) then
+                return
+            end
+            if exports.character:isKnockedOut(target) then
+                exports.character:wakeUpPlayer(target)
+            end
+            if ms > 0 and not exports.character:knockOutPlayer(target, ms) then
+                return ctx.say(p, " >  %s has no living character.", getPlayerName(target))
+            end
+            ctx.say(p, " >  %s: knockout time set to %d ms", getPlayerName(target), ms)
+            ctx.log(p, "knockout", getPlayerName(target), ctx.accountId(target), tostring(ms))
+        end,
+    })
+
     -- After every login (upstream CheckForExtraAccounts): other names from this IP or serial, their highest staff
     -- level and whether any is banned. Catches a name banned while offline, whose bans row has no IP or serial yet.
     local ALIAS_LOGIN_SQL = "SELECT c.name, MAX(COALESCE(a.admin_level, 0)) AS lvl, MAX(EXISTS(SELECT 1 FROM bans b"
