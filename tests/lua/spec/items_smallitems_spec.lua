@@ -33,6 +33,13 @@ describe("small items", function()
             assert.are.equal("Note (12345678(...))", small.noteLabel("Note", { text = "123456789" }))
         end)
 
+        it("labels a code part with its digit, from either JSON shape", function()
+            assert.are.equal("Code (7)", small.codeLabel("Code", { digit = 7 }))
+            assert.are.equal("Code (0)", small.codeLabel("Code", { { digit = 0 } }))
+            assert.are.equal("Code", small.codeLabel("Code", {}))
+            assert.are.equal("Code", small.codeLabel("Code", nil))
+        end)
+
         it("splits a sign's text on backslashes and drops trailing empty lines", function()
             assert.same({ "KEEP OUT" }, small.signLines("KEEP OUT"))
             assert.same({ "KEEP", "OUT" }, small.signLines("KEEP\\OUT"))

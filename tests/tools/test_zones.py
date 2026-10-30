@@ -79,3 +79,36 @@ def test_parses_fixed_items():
     assert '{ "Workbench", 318.60028, 1145.81543, 7.54844, -181.56007, "sf" },' in features.render_lua([], [], rows)
     with pytest.raises(features.UnparsedLine):
         features.parse_fixtures("CreateItem(item_Medkit);", zone="sf")
+
+
+def test_parses_puzzle_objects():
+    from tools.convert import puzzles
+    src = ("\tCreateDynamicObject(2574, -2811.88, -1530.59, 139.84, 0.0, 0.0, 180.0);\n"
+           "\t// CreateDynamicObject(1, 1.0, 2.0, 3.0, 0.0, 0.0, 0.0);\n"
+           "\tCreateDynamicObject(5772, -965.8, 5142.5, 51.1, 0.0, 0.0, 10.0, RANCH_STUFF_VIRTUALW);\n"
+           "\tCaveLift = CreateDynamicObject(7246, -2759.47, 3756.86, 6.9, 270.0, 180.0, 340.9, RANCH_STUFF_VIRTUALW);\n")
+    rows = puzzles.parse_objects(src, "ranch")
+    assert rows == [
+        [2574, -2811.88, -1530.59, 139.84, 0.0, 0.0, 180.0, -1, -1, puzzles.DEFAULT_RANGE],
+        [5772, -965.8, 5142.5, 51.1, 0.0, 0.0, 10.0, 1, -1, puzzles.DEFAULT_RANGE],
+    ]
+    with pytest.raises(puzzles.UnparsedLine):
+        puzzles.parse_objects("CreateDynamicObject(model, 1.0, 2.0, 3.0, 0.0, 0.0, 0.0);", "ranch")
+    with pytest.raises(puzzles.UnparsedLine):
+        puzzles.parse_objects("CreateDynamicObject(1, Float(1.0), 2.0, 3.0, 0.0, 0.0, 0.0);", "ranch")
+    with pytest.raises(puzzles.UnparsedLine):
+        puzzles.parse_objects("CreateDynamicObject(1, 1.0, 2.0, 3.0, 0.0, 0.0, 0.0, SOME_WORLD);", "ranch")
+
+
+def test_parses_puzzle_items():
+    from tools.convert import puzzles
+    src = ("\tch_battery = CreateItem(item_Battery, 1.0, 2.0, 3.0, 0.0, 0.0, 32.04);\n"
+           "\tQuarryDoorKey = CreateItem(item_Key, 4.0, 5.0, 6.0);\n"
+           "\tpart = CreateItem(item_Code, coords[i][0], coords[i][1], coords[i][2]);\n")
+    rows = puzzles.parse_items(src, "mtchill")
+    assert rows == [
+        {"uname": "Battery", "x": 1.0, "y": 2.0, "z": 3.0, "rz": 32.04, "zone": "mtchill", "tag": "mtchill.ch_battery"},
+        {"uname": "Key", "x": 4.0, "y": 5.0, "z": 6.0, "rz": 0.0, "zone": "mtchill", "tag": "mtchill.QuarryDoorKey"},
+    ]
+    lua = puzzles.render_lua([], rows)
+    assert '{ "Battery", 1.0, 2.0, 3.0, 32.04, "mtchill", "mtchill.ch_battery" },' in lua

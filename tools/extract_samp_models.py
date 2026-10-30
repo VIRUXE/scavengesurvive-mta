@@ -129,8 +129,9 @@ def map_models_used(lua_text: str) -> list[int]:
 # SA-MP models that clients build structures from rather than item types or maps: the pitched tent's camo
 # panels and poles (items/shared/logic/tent.lua, upstream core/item/tent.pwn) and the open Locker the closed one
 # swaps to (items/shared/logic/smallitems.lua, upstream core/item/locker.pwn), and the blood pool a bleeding
-# player leaves behind (character/client/blood.lua, upstream core/char/bleed.pwn)
-STRUCTURE_MODELS = [19477, 19087, 11730, 19836]
+# player leaves behind (character/client/blood.lua, upstream core/char/bleed.pwn); the puzzles' spark under Mt Chiliad's
+# keypad and the ranch PC's screen (world/shared/logic/puzzles.lua, upstream world/puzzles/mtchill.pwn, ranch.pwn)
+STRUCTURE_MODELS = [19477, 19087, 11730, 19836, 18724, 19475]
 
 
 def all_models_used(items_path: Path, maps_dir: Path | None) -> list[int]:

@@ -7,14 +7,15 @@ local M = {}
 -- a fixture still counts as there while an item of its type lies this close to its spot (a nudged workbench)
 M.RADIUS = 2.0
 
--- fixtures: { { uname, x, y, z, rz, zone }, ... }; rows: the world items of those types, { type_uname, x, y }.
--- Returns the fixtures with no item of their type within M.RADIUS, each row used for one fixture at most.
+-- fixtures: { { uname, x, y, z, rz, zone [, tag] }, ... }; rows: the world items of those types,
+-- { type_uname, x, y, tag }. Returns the fixtures with no item of their type (and, for a puzzle item, of its tag)
+-- within M.RADIUS, each row used for one fixture at most.
 function M.missing(fixtures, rows)
     local used, out = {}, {}
     for _, f in ipairs(fixtures) do
         local found
         for i, r in ipairs(rows) do
-            if not used[i] and r.type_uname == f[1] then
+            if not used[i] and r.type_uname == f[1] and (f[7] == nil or r.tag == f[7]) then
                 local dx, dy = (tonumber(r.x) or 0) - f[2], (tonumber(r.y) or 0) - f[3]
                 if dx * dx + dy * dy <= M.RADIUS * M.RADIUS then
                     found = i

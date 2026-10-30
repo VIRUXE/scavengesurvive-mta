@@ -63,6 +63,9 @@ return function(ctx)
         if r.uname == "Note" then
             return small.noteLabel(t and t.name or r.uname, r.data)
         end
+        if r.uname == "CodePart" then
+            return small.codeLabel(t and t.name or r.uname, r.data)
+        end
         if r.uname == "StunGun" then
             return small.stunLabel(t and t.name or r.uname, r.data)
         end
@@ -549,6 +552,25 @@ return function(ctx)
             end
         end
         return nearest
+    end
+
+    -- the distance to the nearest world item in the player's world, or false: world's buttons give way to an item
+    -- lying nearer (upstream items are buttons too and the nearest one wins)
+    function M.nearestItemDistance()
+        local px, py, pz = getElementPosition(localPlayer)
+        local dim, int = getElementDimension(localPlayer), getElementInterior(localPlayer)
+        local best = nil
+        for _, e in pairs(objects) do
+            local r = e.row
+            if (r.dimension or 0) == dim and (r.interior or 0) == int then
+                local dx, dy, dz = e.x - px, e.y - py, e.z - pz
+                local dist = dx * dx + dy * dy + dz * dz
+                if not best or dist < best then
+                    best = dist
+                end
+            end
+        end
+        return best and math.sqrt(best) or false
     end
     return M
 end

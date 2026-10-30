@@ -1,5 +1,6 @@
 local util = loadstring(exports.lib:getModule("util"), "=lib/util.lua")()
 local db = assert(loadstring(exports.lib:getModule("db"), "=lib/db.lua"))()
+local net = assert(loadstring(exports.lib:getModule("net"), "=lib/net.lua"))()
 db.connect("world")
 
 local function loadFile(path, name)
@@ -11,21 +12,36 @@ end
 
 local weather = loadFile("shared/logic/weather.lua", "=world/weather.lua")
 local fixtures = loadFile("shared/logic/fixtures.lua", "=world/fixtures.lua")
+local puzzles = loadFile("shared/logic/puzzles.lua", "=world/puzzles.lua")
 local fixtureList = loadFile("data/features.lua", "=world/features_data.lua").fixtures
+for _, f in ipairs(loadFile("data/puzzles.lua", "=world/puzzles_data.lua").fixtures) do
+    fixtureList[#fixtureList + 1] = f
+end
+local buttonsSrv = loadFile("server/buttons.lua", "=world/server/buttons.lua")({
+    db = db,
+    net = net,
+    util = util,
+    buttons = loadFile("shared/logic/buttons.lua", "=world/buttons.lua"),
+    doors = loadFile("shared/logic/doors.lua", "=world/doors.lua"),
+    puzzles = puzzles,
+})
 
--- upstream creates the zone files' fixed items on every start; here the ones gone from the world are made again,
--- with no despawn time (shared/logic/fixtures.lua)
+-- upstream creates the zone files' fixed items and the puzzle items on every start; here the ones gone from the
+-- world are made again, with no despawn time, a puzzle item carrying its tag (shared/logic/fixtures.lua)
 local function placeFixtures()
     local types = fixtures.types(fixtureList)
     local marks = string.rep("?, ", #types - 1) .. "?"
-    local sql = "SELECT type_uname, x, y FROM items WHERE x IS NOT NULL AND type_uname IN (" .. marks .. ")"
+    local sql = "SELECT type_uname, x, y, data FROM items WHERE x IS NOT NULL AND type_uname IN (" .. marks .. ")"
     db.query(sql, types, function(rows)
         if not rows then
             return util.log("world", "warn", "fixtures: could not read the world items")
         end
+        for _, r in ipairs(rows) do
+            r.tag = puzzles.tagOf(type(r.data) == "string" and fromJSON(r.data))
+        end
         local missing = fixtures.missing(fixtureList, rows)
         for _, f in ipairs(missing) do
-            local args = { f[1], 5, nil, f[2], f[3], f[4], f[5], 0, 0, nil, nil, n = 11 }
+            local args = { f[1], 5, buttonsSrv.fixtureData(f[7]), f[2], f[3], f[4], f[5], 0, 0, nil, nil, n = 11 }
             db.call("item_create", args, function(res)
                 if not (res and res.ok) then
                     local why = res and res.code or "DB_ERROR"
@@ -58,6 +74,7 @@ end
 
 addEventHandler("onResourceStart", resourceRoot, function()
     placeFixtures()
+    buttonsSrv.start()
     setMinuteDuration(weather.MINUTE_MS)
     syncClock()
     apply(weather.initial(math.random), "at start")

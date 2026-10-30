@@ -1,13 +1,21 @@
 <meta>
-    <info author="scavengesurvive-mta" type="script" name="world" description="World state: weather, clock, ladders and ziplines" version="0.1.0"/>
+    <info author="scavengesurvive-mta" type="script" name="world" description="World state: weather, clock, ladders, ziplines, fixed items, buttons, doors and puzzles" version="0.1.0"/>
     <min_mta_version server="1.6.0" client="1.6.0"/>
     <include resource="lib"/>
+    <include resource="models"/>
     <script src="shared/events.lua" type="shared"/>
     <script src="server/main.lua" type="server"/>
     <script src="client/features.lua" type="client"/>
+    <script src="client/buttons.lua" type="client"/>
+    <file src="client/screen.fx"/>
+    <file src="server/buttons.lua"/>
     <file src="shared/logic/weather.lua"/>
     <file src="shared/logic/features.lua"/>
     <file src="shared/logic/fixtures.lua"/>
+    <file src="shared/logic/buttons.lua"/>
+    <file src="shared/logic/doors.lua"/>
+    <file src="shared/logic/puzzles.lua"/>
+    <file src="data/puzzles.lua"/>
     <file src="data/features.lua"/>
     <export function="getWeather" type="server"/>
     <export function="setGlobalWeather" type="server"/>

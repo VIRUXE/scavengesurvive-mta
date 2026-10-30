@@ -1,6 +1,7 @@
 -- Ladders and ziplines on the client (upstream samp-ladders / samp-zipline, see shared/logic/features.lua).
 -- The local player's movement is client-owned in MTA, so the climb and the ride run here: hud's interact key
--- calls tryInteract() first, and nearbyFeature() feeds the "F Climb ladder" / "F Grab zipline" lines.
+-- calls tryInteract() first, and nearbyFeature() feeds the "F Climb ladder" / "F Grab zipline" lines; a button in
+-- reach (client/buttons.lua) comes after them.
 local function loadFile(path, chunkName)
     local f = fileOpen(path, true)
     local src = fileRead(f, fileGetSize(f))
@@ -176,7 +177,7 @@ function nearbyFeature()
     if F.ziplineAt(ziplines, x, y, z) then
         return "zipline"
     end
-    return nil
+    return buttonNear() -- client/buttons.lua
 end
 
 -- hud's interact key: true when the press was used by a ladder or a zipline
@@ -203,7 +204,7 @@ function tryInteract()
         enterZipline(zi)
         return true
     end
-    return false
+    return buttonInteract() -- client/buttons.lua
 end
 
 -- The rope: a line between the anchors, drawn when either end is within 300 m (upstream used 2.46 m objects of

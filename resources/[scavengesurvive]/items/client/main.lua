@@ -57,6 +57,11 @@ function nearbyInspectable()
     return id or false, uname or false
 end
 
+-- the distance to the nearest world item, or false (world's buttons give way to a nearer item)
+function nearestItemDistance()
+    return world.nearestItemDistance()
+end
+
 -- the machine within reach (#145): the hud's F taps to open it and holds for its menu
 function nearbyMachine()
     return world.nearbyMachine(2.0) or false

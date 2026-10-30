@@ -190,6 +190,8 @@ return function(ctx)
             name = exports.character:medicalLabel(it.uname, name, it.data)
         elseif small and it.uname == "Note" then
             name = small.noteLabel(name, it.data)
+        elseif small and it.uname == "CodePart" then
+            name = small.codeLabel(name, it.data)
         elseif small and it.uname == "StunGun" then
             name = small.stunLabel(name, it.data)
         elseif gardening and it.uname == gardening.BAG then

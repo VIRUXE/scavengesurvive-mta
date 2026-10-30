@@ -4,7 +4,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from . import features, houseloot, item_types, lang, loot_tables, maps, settings, vspawn, zones
+from . import features, houseloot, item_types, lang, loot_tables, maps, puzzles, settings, vspawn, zones
 from .common import read_text
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -39,6 +39,8 @@ def main(argv=None) -> int:
         init = read_text(Path(args.src) / "gamemodes/sss/core/server/init.pwn")
         nl, nz, nf = features.convert(args.src, WORLD, list(item_types.parse_item_types(init)))
         print(f"features: {nl} ladders, {nz} ziplines, {nf} fixed items -> world/data/features.lua")
+        no, ni = puzzles.convert(args.src, WORLD)
+        print(f"puzzles: {no} objects, {ni} puzzle items -> world/data/puzzles.lua")
     if args.kind in ("all", "lang"):
         print("lang:", lang.convert(args.src, DATA))
     if args.kind in ("all", "vspawn"):

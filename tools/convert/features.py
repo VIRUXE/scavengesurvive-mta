@@ -18,8 +18,8 @@ LADDER_RE = re.compile(r"CreateLadder\s*\(\s*(" + NUM + r")\s*,\s*(" + NUM + r")
 ZIPLINE_RE = re.compile(r"CreateZipline\s*\(\s*(" + NUM + r")\s*,\s*(" + NUM + r")\s*,\s*(" + NUM + r")\s*,\s*(" + NUM
                         + r")\s*,\s*(" + NUM + r")\s*,\s*(" + NUM + r")\s*\)")
 ANY_RE = re.compile(r"Create(Ladder|Zipline)\s*\(")
-ITEM_RE = re.compile(r"CreateItem\s*\(\s*(?:item_(\w+)|ItemType:(\d+))\s*,\s*(" + NUM + r")\s*,\s*(" + NUM + r")\s*,\s*(" + NUM
-                     + r")((?:\s*,\s*" + NUM + r")*)\s*\)")
+ITEM_RE = re.compile(r"CreateItem\s*\(\s*(?:item_(\w+)|ItemType:(\d+))\s*,\s*(" + NUM + r")\s*,\s*(" + NUM
+                     + r")\s*,\s*(" + NUM + r")((?:\s*,\s*" + NUM + r")*)\s*\)")
 ANY_ITEM_RE = re.compile(r"CreateItem\s*\(")
 
 
@@ -37,8 +37,9 @@ def parse_features(src: str, zone: str) -> tuple[list[dict], list[dict]]:
 
 def parse_fixtures(src: str, zone: str, unames: list[str] = ()) -> list[dict]:
     """Every CreateItem(item_X, x, y, z[, rx, ry, rz]) in one zone file; only the heading is kept (the port's items
-    carry rz alone). A bare ItemType:N (one in LV) is upstream's Nth DefineItemType, looked up in `unames`. The SF barbecue passes a single 171.0 after z, which lands in rx upstream and tips it over: it is
-    taken as the heading it was meant to be."""
+    carry rz alone). A bare ItemType:N (one in LV) is upstream's Nth DefineItemType, looked up in `unames`. The SF
+    barbecue passes a single 171.0 after z, which lands in rx upstream and tips it over: it is taken as the heading it
+    was meant to be."""
     text = LINE_COMMENT_RE.sub("", BLOCK_COMMENT_RE.sub("", src))
     rows = []
     for m in ITEM_RE.finditer(text):

@@ -23,6 +23,17 @@ describe("world fixtures", function()
         assert.same({ bench2 }, fixtures.missing({ bench, bench2 }, rows))
     end)
 
+    it("counts a tagged puzzle item as there only when a row nearby carries its tag", function()
+        local battery = { "Battery", -2316.15, -1646.64, 483.43, 32.04, "mtchill", "mtchill.ch_battery" }
+        local plain = { type_uname = "Battery", x = -2316.0, y = -1646.5 }
+        local tagged = { type_uname = "Battery", x = -2316.0, y = -1646.5, tag = "mtchill.ch_battery" }
+        local other = { type_uname = "Battery", x = -2316.0, y = -1646.5, tag = "mtchill.ch_fusebox" }
+        assert.same({ battery }, fixtures.missing({ battery }, { plain }))
+        assert.same({ battery }, fixtures.missing({ battery }, { other }))
+        assert.same({}, fixtures.missing({ battery }, { tagged }))
+        assert.same({}, fixtures.missing({ battery }, { plain, tagged }))
+    end)
+
     it("lists the fixture types once, sorted", function()
         assert.same({ "Barbecue", "Workbench" }, fixtures.types({ bench, { "Barbecue", 0, 0, 0, 0, "sf" }, bench2 }))
     end)

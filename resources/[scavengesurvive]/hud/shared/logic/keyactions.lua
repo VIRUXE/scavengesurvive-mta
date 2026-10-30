@@ -23,7 +23,7 @@ M.CRATES = { supply = "Open supply crate", cache = "Open weapon cache" }
 
 -- ctx = {
 --   spawned, uiOpen, knockedOut, hudOff, driver, nearTrunk, nearBonnet, nearPlayer, cuffedNearby, hasBag,
---   nearFeature ("ladder" / "zipline" / "ladder_on" / "zipline_on"), nearCrate ("supply" / "cache"),
+--   nearFeature ("ladder" / "zipline" / "ladder_on" / "zipline_on" / "button:<label>"), nearCrate ("supply" / "cache"),
 --   held = false | { uname, category, isWeapon },
 --   nearCooker,                           -- uncooked food in hand next to a campfire or barbecue (#95): "Cook"
 --   nearMachine,                          -- a machine in reach (#145): "Access machine" / "(Hold) Machine menu"
@@ -59,6 +59,9 @@ function M.lines(ctx, keys)
         add("interact", "Climb ladder")
     elseif feature == "zipline" then
         add("interact", "Grab zipline")
+    elseif type(feature) == "string" and feature:sub(1, 7) == "button:" then
+        -- a button (world: a gate, a door, a puzzle): upstream's "Press F to <label>"
+        add("interact", feature:sub(8))
     end
     -- a landed supply crate or weapons cache (loot resource): upstream's button label next to the crate
     if M.CRATES[ctx.nearCrate] then

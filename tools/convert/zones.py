@@ -11,6 +11,7 @@ ARGS_RE = re.compile(
     r"\s*,\s*(" + NUM + r")(?:\s*,\s*(-?\d+))?(?:\s*,\s*(-?\d+))?(?:\s*,\s*(-?\d+))?\s*$")
 BLOCK_COMMENT_RE = re.compile(r"/\*.*?\*/", re.S)
 ZONES = ["ls", "sf", "lv", "rc", "fc", "bc", "tr"]
+PUZZLE_LOOT = [("codehunt", "sf"), ("mtchill", "fc"), ("ranch", "bc")]
 # core/world/supply-crate.pwn DefineSupplyDropPos("Name", x, y, z) and weapons-cache.pwn DefineWeaponsCachePos(x, y, z)
 SUPPLY_RE = re.compile(r"^\s*DefineSupplyDropPos\s*\(\s*\"([^\"]+)\"\s*,\s*(" + NUM + r")\s*,\s*(" + NUM + r")\s*,\s*("
                        + NUM + r")\s*\)\s*;")
@@ -88,6 +89,9 @@ def convert(src_root, out_seed) -> list[dict]:
         s, c = parse_drop_points(src, zone)
         supply += s
         caches += c
+    # the puzzles' own loot: the code hunt's SF lockup (codehunt.pwn LoadLockup_SF, 4 world_survivor spots)
+    for puzzle, zone in PUZZLE_LOOT:
+        rows += parse_zone(read_text(Path(src_root) / f"gamemodes/sss/world/puzzles/{puzzle}.pwn"), zone)
     write_text(Path(out_seed) / "0002_loot_spawns.sql", render_sql(rows))
     write_text(Path(out_seed) / "0005_drop_points.sql", render_drop_points_sql(supply, caches))
     return rows

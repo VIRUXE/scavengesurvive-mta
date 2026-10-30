@@ -48,6 +48,12 @@ function M.noteLabel(name, data)
     return name .. " (" .. text .. ")"
 end
 
+-- A code part (world puzzle, upstream codehunt.pwn SetItemNameExtra): "Code (7)", its digit of the lockup's code
+function M.codeLabel(name, data)
+    local digit = tonumber(unwrap(data).digit)
+    return digit and (name .. " (" .. digit .. ")") or name
+end
+
 -- A sign's text as lines: upstream turned every "\" into a line break
 function M.signLines(text)
     local lines = {}

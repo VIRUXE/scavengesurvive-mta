@@ -72,4 +72,5 @@
     <export function="nearbyBag" type="client"/>
     <export function="nearbyInspectable" type="client"/>
     <export function="nearbyMachine" type="client"/>
+    <export function="nearestItemDistance" type="client"/>
 </meta>
