@@ -127,8 +127,9 @@ def map_models_used(lua_text: str) -> list[int]:
 
 
 # SA-MP models that clients build structures from rather than item types or maps: the pitched tent's camo
-# panels and poles (items/shared/logic/tent.lua, upstream core/item/tent.pwn)
-STRUCTURE_MODELS = [19477, 19087]
+# panels and poles (items/shared/logic/tent.lua, upstream core/item/tent.pwn) and the open Locker the closed one
+# swaps to (items/shared/logic/smallitems.lua, upstream core/item/locker.pwn)
+STRUCTURE_MODELS = [19477, 19087, 11730]
 
 
 def all_models_used(items_path: Path, maps_dir: Path | None) -> list[int]:
@@ -336,7 +337,8 @@ def main(argv=None) -> int:
                 path, index = archives[archive]
                 target.write_bytes(read_img_entry(path, index[name]))
     (args.out / "manifest.lua").write_text(render_manifest(entries), encoding="ascii", newline="\n")
-    (args.out / "meta.xml").write_text(render_meta(entries, ped_files(args.out)), encoding="ascii", newline="\n")
+    meta = render_meta(entries, ped_files(args.out), hat_files(args.out))
+    (args.out / "meta.xml").write_text(meta, encoding="ascii", newline="\n")
     return 1 if problems else 0
 
 

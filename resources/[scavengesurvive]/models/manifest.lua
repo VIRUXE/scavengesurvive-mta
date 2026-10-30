@@ -9,6 +9,7 @@ return {
     [11722] = { dff = "saucebottle1", txdModel = 14653, dist = 50 },
     [11723] = { dff = "saucebottle2", txdModel = 14653, dist = 50 },
     [11729] = { dff = "gymlockerclosed1", txdModel = 14778, dist = 50 },
+    [11730] = { dff = "gymlockeropen1", txdModel = 14778, dist = 50 },
     [11735] = { dff = "wboot1", txdModel = 14817, dist = 50 },
     [11736] = { dff = "medicalsatchel1", txdModel = 14600, dist = 50 },
     [11737] = { dff = "rockstarmat1", txdModel = 14415, dist = 50 },
