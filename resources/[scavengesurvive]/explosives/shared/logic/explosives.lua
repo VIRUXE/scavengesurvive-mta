@@ -107,6 +107,17 @@ function M.filterItemsInRange(items, ex, ey, ez, range, interior, dimension)
     return out
 end
 
+-- Port change: upstream takes the preset's full itemDmg off every item in range (explosive.pwn:599). Here it falls
+-- off linearly with the distance from the blast to the item's origin, rounded up, so a stack loses the most at the
+-- charge and still at least 1 hitpoint anywhere inside the range; nothing outside it.
+function M.itemDamageAt(itemDmg, dist, range)
+    itemDmg, dist, range = tonumber(itemDmg) or 0, tonumber(dist) or 0, tonumber(range) or 0
+    if itemDmg <= 0 or range <= 0 or dist > range then
+        return 0
+    end
+    return math.max(1, math.ceil(itemDmg * (1 - dist / range)))
+end
+
 function M.calculateItemDamage(items, itemDmg)
     local destroyed = {}
     local damaged = {}

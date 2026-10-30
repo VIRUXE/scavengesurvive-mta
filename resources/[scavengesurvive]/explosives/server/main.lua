@@ -314,7 +314,9 @@ detonateItem = function(itemId)
                         end
                         local batch = {}
                         for _, it in ipairs(inRange) do
-                            batch[#batch + 1] = { id = it.id, dmg = preset.itemDmg }
+                            local dist = getDistanceBetweenPoints3D(x, y, z, it.x, it.y, it.z)
+                            local dmg = logic.itemDamageAt(preset.itemDmg, dist, preset.size)
+                            batch[#batch + 1] = { id = it.id, dmg = dmg }
                         end
                         db.call("explosion_damage", { toJSON(batch) }, function(res)
                             if not res or not res.payload then
