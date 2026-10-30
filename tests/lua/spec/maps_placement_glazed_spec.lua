@@ -15,7 +15,7 @@ describe("maps placement glazed shells", function()
 
     it("keeps panes beside the opening, other models in it and panes of unglazed shells", function()
         local shell = { 19489, 0, 0, 0, 0, 0, 0 }
-        local beside = { 19466, 6, 2, 1, 0, 0, 0 }
+        local beside = { 19466, 6, 2.5, 1, 0, 0, 0 } -- 1.5 m past the opening's end
         local door = { 1491, 6, 0, 1, 0, 0, 0 }
         local other = { 19491, 50, 0, 0, 0, 0, 0 }
         local otherPane = { 19325, 56, 0, 1, 0, 0, 0 }

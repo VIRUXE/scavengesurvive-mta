@@ -27,6 +27,9 @@ placement.PANES = {
     [19325] = true,
 }
 placement.SHELL_REACH = 20 -- metres from a shell's origin to its farthest window, with margin
+-- how far a pane's centre may sit past the end of an opening and still be the one upstream put in it: a pane slid
+-- 0.13 to 0.8 m along the wall hangs over the brick beside the glass
+placement.PANE_SLIP = 1.0
 
 -- true when pane row p sits in an opening that shell row s glazes; openings = glazed_windows.lua[s[1]]
 function placement.inGlazedOpening(p, s, openings)
@@ -36,7 +39,7 @@ function placement.inGlazedOpening(p, s, openings)
     for _, w in ipairs(openings) do
         local ox, oy, oz = x - w[1], y - w[2], z - w[3]
         local depth, along = ox * w[4] + oy * w[5], ox * -w[5] + oy * w[4]
-        if math.abs(depth) < 0.4 and math.abs(along) <= w[6] + 0.1 and math.abs(oz) <= w[7] + 0.1 then
+        if math.abs(depth) < 0.4 and math.abs(along) <= w[6] + placement.PANE_SLIP and math.abs(oz) <= w[7] + 0.1 then
             return true
         end
     end

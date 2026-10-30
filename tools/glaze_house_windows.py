@@ -17,6 +17,7 @@ import sys
 import bmesh
 import bpy
 from mathutils import Matrix, Vector
+from mathutils.bvhtree import BVHTree
 
 bpy.ops.preferences.addon_enable(module="DragonFF")
 from DragonFF.gtaLib.dff import dff  # noqa: E402
@@ -106,7 +107,7 @@ def map_panes(name):
         c,s_=math.cos(math.radians(-rz)),math.sin(math.radians(-rz))
         for px,py,pz,_ in [r for p in PANES for r in rows[p]]:
             dx,dy=px-x,py-y
-            if dx*dx+dy*dy<15*15 and abs(pz-z)<8: out.append(Vector((dx*c-dy*s_,dx*s_+dy*c,pz-z)))
+            if dx*dx+dy*dy<20*20 and abs(pz-z)<8: out.append(Vector((dx*c-dy*s_,dx*s_+dy*c,pz-z)))
     return out
 def loops_of(bm):
     seen=set(); out=[]
@@ -174,17 +175,29 @@ for n in names:
     print("WINDOWS",n,len(wins),[ (round(max(p.z for p in P)-min(p.z for p in P),2)) for P,_ in wins])
     # the room side of each window is lit like the interior wall around it, from the baked interior model next to the
     # shell in SRC_DIR; lit from the outside wall instead, a frame looked white in one room and brown in the next
-    lit_in=[]
+    lit_in=[]; room_vs=[]; room_ps=[]
     if os.path.exists(f"{src}/{n}int.dff"):
         before=set(bpy.data.objects)
         bpy.ops.import_scene.dff(filepath=f"{src}/{n}int.dff")
         for io in [x for x in bpy.data.objects if x not in before]:
+            if io.type=='MESH':
+                b0=len(room_vs); room_vs+=[io.matrix_world@v.co for v in io.data.vertices]; room_ps+=[[b0+i for i in pp.vertices] for pp in io.data.polygons]
             if io.type=='MESH' and io.data.color_attributes:
                 ib=bmesh.new(); ib.from_mesh(io.data); icols=list(ib.loops.layers.color)
                 lit_in+=[(l.vert.co.copy(),f.normal.copy(),[tuple(l[c]) for c in icols]) for f in ib.faces for l in f.loops]
                 ib.free()
             bpy.data.objects.remove(io,do_unlink=True)
     if not lit_in: print("no baked interior for",n,"- the room side takes the outside light")
+    room=BVHTree.FromPolygons(room_vs,room_ps) if room_ps else None
+    def walled_in(P,outn):
+        """Not a window: the interior's wall stands right behind it and the shell glues a box onto its solid wall
+        (lshouse1's and lshouse2's narrow one by the door); there is no window inside, so the box goes and the wall
+        stays plain."""
+        cen=sum(P,Vector())/4
+        return room is not None and room.ray_cast(cen-outn*0.01,-outn,0.5)[0] is not None
+    walled={k for k,(P,outn) in enumerate(wins) if walled_in(P,outn)}
+    glazed[shell_id(n)]=[g for k,g in enumerate(glazed[shell_id(n)]) if k not in walled]
+    if walled: print("WALLED IN",n,sorted(walled))
     # material
     base=me.materials[0]; gm=base.copy(); gm.name=GLASS
     gm['dff']=dict(base['dff']) if 'dff' in base.keys() else {}
@@ -215,6 +228,13 @@ for n in names:
     # the glass after the curtains: a geometry draws its materials in order, and glass drawn first hid what is behind it
     me.materials.append(gm); mi=len(me.materials)-1
     bm=bmesh.new(); bm.from_mesh(me)
+    # the boards plugging the walled-in openings: every face within the opening's outline, out to 0.4 m from the wall
+    for k in walled:
+        P,outn=wins[k]; ax=Vector((-outn.y,outn.x,0)).normalized(); us=[p.dot(ax) for p in P]; zs=[p.z for p in P]; d0=P[0].dot(outn)
+        def inside(v): return min(us)-0.01<=v.co.dot(ax)<=max(us)+0.01 and min(zs)-0.01<=v.co.z<=max(zs)+0.01 and -0.01<=v.co.dot(outn)-d0<=0.4
+        plug=[f for f in bm.faces if all(inside(v) for v in f.verts) and max(v.co.dot(outn)-d0 for v in f.verts)>0.02]
+        print("UNPLUGGED",n,k,len(plug),"faces")
+        bmesh.ops.delete(bm,geom=plug,context='FACES')
     uvl=bm.loops.layers.uv.active
     for f in [f for f in bm.faces if getattr(me.materials[f.material_index].dff,'tex_name','').lower().split('.')[0] in TWO_SIDED]:
         ls=list(reversed(f.loops)); g=bm.faces.new([bm.verts.new(l.vert.co) for l in ls]); g.material_index=f.material_index
@@ -242,6 +262,7 @@ for n in names:
         if len(near)==0 or len(near[0])<len(cols): return None
         return [tuple(sum(c[k][j] for c in near)/len(near) for j in range(4)) for k in range(len(cols))]
     light=light_in=[(1,1,1,1)]*len(cols)
+    shell_faces=list(bm.faces)  # the shell's own, before the frames and glass go in
     def paint(l,dim=1.0,inside=False):
         for c,v in zip(cols,light_in if inside else light): l[c]=(v[0]*dim,v[1]*dim,v[2]*dim,v[3])
     def box(bm,c,h_axis,outn,su,sv,sn):
@@ -253,9 +274,10 @@ for n in names:
         bmesh.ops.recalc_face_normals(bm,faces=list(fs))
         for f in fs:
             f.material_index=fi
-            for l in f.loops:
+            inside=(f.calc_center_median()-wall).dot(outn)<-0.01  # a face wholly on the room side; per corner, the
+            for l in f.loops:  # bars' tops and sides straddling the wall blended into the room's warm light, a glowing sill
                 l[uv].uv=FRAME_UV
-                paint(l,inside=(l.vert.co-wall).dot(outn)<-0.01)  # the room side of the wall plane
+                paint(l,inside=inside)
     def panel(bm,pts,uvs,outn):
         """A curtain or blind face, visible from both sides."""
         for flip in (False,True):
@@ -265,10 +287,21 @@ for n in names:
                 u,v=uvs[vv.index(l.vert)]; l[uv].uv=(1-u if flip else u,v)
                 paint(l,inside=True)  # in the room
     for k,(P,outn) in enumerate(wins):
+        if k in walled: continue
         light=wall_light(P,outn); light_in=room_light(P,outn) or light; wall=P[0]
         h_axis=Vector((-outn.y,outn.x,0)).normalized()
         us=[p.dot(h_axis) for p in P]; zs=[p.z for p in P]
         u0,u1,z0,z1=min(us),max(us),min(zs),max(zs)
+        # the shell's faces lining the hole (sill, jambs, head) carry their own prelight, glowing orange at night in
+        # lshouse2: lit like the wall around the window instead
+        def lining(f):
+            if abs(f.normal.dot(outn))>0.2: return False
+            pts=[(v.co.dot(h_axis),v.co.z,(v.co-wall).dot(outn)) for v in f.verts]
+            if any(not (u0-0.02<=u<=u1+0.02 and z0-0.02<=z<=z1+0.02 and -0.4<=d<=0.4) for u,z,d in pts): return False
+            return any(all(abs(q[i]-e)<0.02 for q in pts) for i,e in ((0,u0),(0,u1),(1,z0),(1,z1)))
+        for f in shell_faces:
+            if f.is_valid and lining(f):
+                for l in f.loops: paint(l)
         w,hh=u1-u0,z1-z0
         ref=P[0]; uc=(u0+u1)/2; zc=(z0+z1)/2
         def at(u,z,n=0.0): return h_axis*(u-ref.dot(h_axis))+Vector((ref.x,ref.y,z))+outn*n
