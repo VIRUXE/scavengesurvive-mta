@@ -118,3 +118,19 @@ def test_plan_takes_a_loose_vanilla_txd():
                                loose_txds={"particle": None})
     assert problems == [] and entries[19836]["txd"] == "particle"
     assert entries[19836]["src"]["txd"] == ("loose", "particle.txd")
+
+
+def test_props_are_listed_with_their_dff_col_and_txd(tmp_path):
+    (tmp_path / "props.lua").write_text('return {\n    [20201] = { dff = "ls_hatch", txd = "ls_hatch", dist = 150 },\n}\n',
+                                        encoding="ascii")
+    assert m.prop_files(tmp_path) == ["ls_hatch.col", "ls_hatch.dff", "ls_hatch.txd"]
+    assert m.prop_files(tmp_path / "missing") == []
+    meta = m.render_meta({}, props=m.prop_files(tmp_path))
+    assert '    <file src="props.lua"/>' in meta and '    <file src="files/ls_hatch.txd"/>' in meta
+    assert '<file src="props.lua"/>' not in m.render_meta({})
+
+
+def test_the_ls_hatch_is_port_model_20201_with_its_own_txd():
+    from tools import make_ls_hatch as h
+    assert h.MODEL_ID == 20201 and h.TEXTURE == "pave_manhole1"
+    assert '[20201] = { dff = "ls_hatch", txd = "ls_hatch", dist = 150 },' in h.render_props()

@@ -568,6 +568,10 @@
     <file src="files/wfyburg_hat.dff"/>
     <file src="files/wmygol1_hat.dff"/>
     <file src="files/wmyplt_hat.dff"/>
+    <file src="props.lua"/>
+    <file src="files/ls_hatch.col"/>
+    <file src="files/ls_hatch.dff"/>
+    <file src="files/ls_hatch.txd"/>
     <export function="resolve" type="client"/>
     <export function="hatlessSkin" type="client"/>
     <export function="bareSkin" type="client"/>

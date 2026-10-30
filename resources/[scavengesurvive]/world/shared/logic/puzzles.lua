@@ -35,11 +35,12 @@ M.SCREEN.text = table.concat({
 M.VIEW = { -691.141845, 942.489868, 13.759174, -689.749084, 946.223693, 14.104162 }
 
 -- objects the puzzles add to the normal world (world 0), { model, x, y, z, rx, ry, rz, world }: ranch.pwn's "LS
--- entrance (by Dogmeat)" is one cellar hatch on the grass at the Ganton ladder button, created upstream in
--- RANCH_STUFF_VIRTUALW with every other ranch object, so the button stood on bare grass; it marks a world-0 button
--- and stands there too
+-- entrance (by Dogmeat)" marks the Ganton ladder button with sw_well1 (a fenced countryside well), created upstream in
+-- RANCH_STUFF_VIRTUALW with every other ranch object, so the button stood on bare grass. A cast-iron hatch the port
+-- builds (model 20201, tools/make_ls_hatch.py) lies there instead at upstream's heading, sunk 1 cm into the grass and
+-- tilted with it (the ground under its corners, measured in game: 13.09 to 13.24, rising 8 degrees along its y)
 M.PROPS = {
-    { 12986, 2526.416015625, -1649.09375, 13.893012046814, 9.920654296875, 5.9490966796875, 210.89904785156, 0 },
+    { 20201, 2526.719482, -1648.620605, 13.157, 7.8, 0.86, 210.89904785156, 0 },
 }
 
 -- { id, x, y, z, world, label }; owner = "puzzles" when a press needs the puzzle's state, `to` = linked button
