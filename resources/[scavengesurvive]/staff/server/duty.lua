@@ -138,9 +138,10 @@ return function(ctx)
 
     ctx.command({
         name = "gotopos",
+        aliases = { "tp" },
         level = 2,
         playerOnly = true,
-        usage = "/gotopos <x> <y> <z>",
+        usage = "/gotopos (or /tp) <x> <y> <z>",
         help = "Teleport to coordinates (with or without commas)",
         needsDb = false,
         fn = function(p, args, lvl)

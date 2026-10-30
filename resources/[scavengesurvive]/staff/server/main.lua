@@ -261,9 +261,11 @@ end
 -- staff panel (client/panel.lua) sends every command the same way; dispatch applies the same level gate.
 function ctx.command(def)
     logic.register(ctx.reg, def)
-    addCommandHandler(def.name, function(p, _, ...)
-        dispatch(p, def, table.concat({ ... }, " "))
-    end)
+    for _, name in ipairs({ def.name, unpack(def.aliases or {}) }) do
+        addCommandHandler(name, function(p, _, ...)
+            dispatch(p, def, table.concat({ ... }, " "))
+        end)
+    end
 end
 
 addEventHandler("onPlayerCommand", root, function(command)

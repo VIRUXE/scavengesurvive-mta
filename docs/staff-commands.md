@@ -35,7 +35,8 @@ and Escape for the two buttons. Players (level 0) get nothing from the key, as t
 - A staff member may act only on players of a **lower** level, or on themselves (`level1.pwn` "return 3").
 - `/kick` by someone who is not the highest level online becomes a **request** sent to the highest staff online.
 - `staff.max_warnings` (5) warnings = a `staff.warn_ban_hours` (24 h) ban; the counter restarts afterwards.
-- `/goto`, `/get`, `/gotopos`, `/spec` need **duty** unless the actor is level 5.
+- `/goto`, `/get`, `/gotopos`, `/spec` need **duty** unless the actor is level 5. `/tp` is an alias of `/gotopos`
+  (a port addition).
 - Bans record name, IP **and serial** (upstream had no serial field; ADR 0007). `auth` refuses a joining player whose
   name, IP or serial matches an active ban, prints the date / reason / unban lines and kicks after one second.
   Timed bans expire through the `ev_expire_bans` scheduler event and are also filtered by expiry in every query.

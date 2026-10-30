@@ -49,7 +49,8 @@ function staff.outranks(actorLevel, targetLevel, isSelf)
     return (actorLevel or 0) > (targetLevel or 0)
 end
 
--- Command registry: { name = { name, level, usage, help, fn } } plus insertion order for /acmds.
+-- Command registry: { name = { name, level, usage, help, fn [, aliases] } } plus insertion order for /acmds. An
+-- alias (/tp for /gotopos) runs the same command and is found by name, but only the command itself is listed.
 function staff.newRegistry()
     return { byName = {}, order = {} }
 end
@@ -57,8 +58,13 @@ end
 function staff.register(reg, def)
     assert(def.name and def.level and def.fn, "staff.register: name, level and fn are required")
     assert(def.level >= 0 and def.level <= staff.MAX_LEVEL, "staff.register: bad level for " .. def.name)
+    assert(not reg.byName[def.name], "staff.register: " .. def.name .. " is taken")
     reg.byName[def.name] = def
     reg.order[#reg.order + 1] = def.name
+    for _, alias in ipairs(def.aliases or {}) do
+        assert(not reg.byName[alias], "staff.register: " .. alias .. " is taken")
+        reg.byName[alias] = def
+    end
     return def
 end
 
