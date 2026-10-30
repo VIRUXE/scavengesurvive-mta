@@ -466,4 +466,3 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
     - d. With `Endurance` at Master (`/lua return exports.character:setSkill(getPlayerFromName("A"), "Endurance",
       0.95)`), a jump out of a sprint carries about twice as far as a standing jump; a standing jump is unchanged.
     - e. Relog: the counters start again at 0 (session only), the skill stays.
-\n
