@@ -12,7 +12,7 @@ return function(ctx)
     local VANILLA_MELEE_MAX = 15
     local RELOAD_COOLDOWN_MS = 1000
     local lastReload = {}
-    local containers, cooking, small = nil, nil, nil
+    local containers, cooking, small, machinesSrv = nil, nil, nil, nil
     local M = {}
 
     function M.setContainers(c)
@@ -24,6 +24,10 @@ return function(ctx)
     end
 
     -- server/smallitems.lua: held-with-world pairs (Locator + phone, Stun Gun + Battery, can + bottle), dice drops
+    function M.setMachines(m)
+        machinesSrv = m
+    end
+
     function M.setSmall(s)
         small = s
     end
@@ -567,7 +571,11 @@ return function(ctx)
 
     local BARBECUE = { "Barbecue" }
     local TENT = { "TentPack" }
-    local TARGETS = { GasCan = BARBECUE, FireLighter = BARBECUE }
+    -- the Petrol Can also fuels the three machines (server/machines.lua, #145)
+    local TARGETS = {
+        GasCan = { "Barbecue", "ScrapMachine", "RefineMachine", "WaterMachine" },
+        FireLighter = BARBECUE,
+    }
 
     -- the barbecue list plus whatever the small items reach for (the Petrol Can also fills an Empty Molotov)
     local function withSmallTargets(uname, base)
@@ -759,6 +767,11 @@ return function(ctx)
 
             -- campfires and barbecues (server/cooking.lua), and the food they are cooking
             if cooking and cooking.interact(c.player, c.charId, curHeld, row) then
+                return
+            end
+
+            -- a machine (server/machines.lua): the tap opens its container or says how long the cook has left
+            if machinesSrv and machinesSrv.interact(c.player, c.charId, curHeld, row) then
                 return
             end
 

@@ -112,24 +112,32 @@ return function(ctx)
         -- a ground bag opens on a tap and is picked up on a 500 ms hold; a sign or a body lying there (empty hands)
         -- edits or investigates on a tap and is picked up on the hold (upstream "Press F to edit / investigate,
         -- Hold F to pick up", #136, #139)
+        -- a machine (#145, upstream "Press F to access machine / Hold F to open menu"): the tap opens its
+        -- container, the hold its menu, or a refuel that lasts as long as the key stays down
         local bagId = exports.items:nearbyBag()
         local inspectId, inspectUname = false, false
         if not bagId and not ctx.getHeld() then
             inspectId, inspectUname = exports.items:nearbyInspectable()
         end
-        if bagId or inspectId then
+        local machineId = not bagId and not inspectId and exports.items:nearbyMachine() or false
+        if bagId or inspectId or machineId then
             if isTimer(interactHoldTimer) then
                 return
             end
             local key = string.lower(getKeyBoundToCommand("interact") or "f")
             local startTick = getTickCount()
+            local menuSent = false
             interactHoldTimer = setTimer(function()
                 if not isKeyHeld(key, "interact") then
                     killTimer(interactHoldTimer)
                     interactHoldTimer = nil
-                    if getTickCount() - startTick < 500 then
+                    if menuSent then
+                        triggerServerEvent("machineHoldReleased", localPlayer)
+                    elseif getTickCount() - startTick < 500 then
                         if bagId then
                             triggerServerEvent("itemBagOpenRequested", localPlayer, bagId)
+                        elseif machineId then
+                            triggerServerEvent("itemPickupRequested", localPlayer)
                         elseif inspectUname == "Sign" then
                             triggerServerEvent("signEditRequested", localPlayer, inspectId)
                         elseif inspectUname == "PlantPot" then
@@ -138,10 +146,15 @@ return function(ctx)
                             triggerServerEvent("bodyInspectRequested", localPlayer, inspectId)
                         end
                     end
-                elseif getTickCount() - startTick >= 500 then
-                    killTimer(interactHoldTimer)
-                    interactHoldTimer = nil
-                    triggerServerEvent("itemPickupRequested", localPlayer)
+                elseif getTickCount() - startTick >= 500 and not menuSent then
+                    if machineId then
+                        menuSent = true
+                        triggerServerEvent("machineMenuRequested", localPlayer, machineId)
+                    else
+                        killTimer(interactHoldTimer)
+                        interactHoldTimer = nil
+                        triggerServerEvent("itemPickupRequested", localPlayer)
+                    end
                 end
             end, 50, 0)
             return

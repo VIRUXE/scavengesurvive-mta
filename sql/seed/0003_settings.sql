@@ -45,6 +45,8 @@ INSERT INTO settings (skey, svalue) VALUES
 ('vehicles.cap_multiplier','1.0'),
 ('vehicles.cooldown_hours','6'),
 ('vehicles.cooldown_jitter','0.33'),
+('vehicles.damage_bleed_mult','1.0'),
+('vehicles.damage_knock_mult','1.0'),
 ('vehicles.leave_radius','100'),
 ('vehicles.refill_floor','0.02'),
 ('vehicles.refill_rate','0.10'),

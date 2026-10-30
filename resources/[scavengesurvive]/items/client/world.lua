@@ -12,6 +12,7 @@ return function(ctx)
     local cooking = ctx.cooking
     local small = ctx.small
     local gardening = ctx.gardening
+    local machines = ctx.machines
     local SIGN_RANGE = 25 -- metres a sign's text can be read from
     local objects = {} -- id -> { obj | parts, pitched, row, uname, hp, x, y, z, name, fires, plant }
     local lockersOpen = {} -- locker item id -> true while someone has it open (lockerToggled, #143)
@@ -92,6 +93,9 @@ return function(ctx)
             end
             if isElement(e.plant) then
                 destroyElement(e.plant)
+            end
+            if isElement(e.smoke) then
+                destroyElement(e.smoke)
             end
             objects[id] = nil
         end
@@ -198,6 +202,23 @@ return function(ctx)
         end
     end
 
+    -- the smoke a machine gives off while it cooks (#145; upstream object 18726 at z - 1): data.machine.cooking
+    local function updateSmoke(e, r)
+        if isElement(e.smoke) then
+            destroyElement(e.smoke)
+        end
+        e.smoke = nil
+        if not machines.isMachine(r.uname) or not machines.state(r.data).cooking then
+            return
+        end
+        local fx = createEffect(machines.SMOKE_EFFECT, r.x, r.y, r.z + 0.5)
+        if fx then
+            setElementInterior(fx, r.interior or 0)
+            setElementDimension(fx, r.dimension or 0)
+            e.smoke = fx
+        end
+    end
+
     -- the plant a pot grows (#142): a sprout rising with the growth, then the kind's plant
     local function updatePlant(e, r)
         if isElement(e.plant) then
@@ -256,6 +277,7 @@ return function(ctx)
                 e.row = r
                 updateFires(e, r)
                 updatePlant(e, r)
+                updateSmoke(e, r)
             else
                 e = {
                     pitched = isPitched,
@@ -274,6 +296,7 @@ return function(ctx)
                 end
                 updateFires(e, r)
                 updatePlant(e, r)
+                updateSmoke(e, r)
                 objects[r.id] = e
             end
         end
@@ -435,6 +458,23 @@ return function(ctx)
                 local same = (r.dimension or 0) == dim and (r.interior or 0) == int
                 if same and dx * dx + dy * dy <= reach * reach and math.abs(dz) < 3 then
                     return id, e.uname
+                end
+            end
+        end
+        return nil
+    end
+
+    -- the machine within reach (hud: a tap opens it, a hold its menu), or nil
+    function M.nearbyMachine(reach)
+        local px, py, pz = getElementPosition(localPlayer)
+        local dim, int = getElementDimension(localPlayer), getElementInterior(localPlayer)
+        for id, e in pairs(objects) do
+            if machines.isMachine(e.uname) then
+                local r = e.row
+                local dx, dy, dz = e.x - px, e.y - py, e.z - pz
+                local same = (r.dimension or 0) == dim and (r.interior or 0) == int
+                if same and dx * dx + dy * dy <= reach * reach and math.abs(dz) < 3 then
+                    return id
                 end
             end
         end

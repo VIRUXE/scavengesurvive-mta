@@ -19,6 +19,7 @@ local liquids = loadFile("shared/logic/liquids.lua")
 local small = loadFile("shared/logic/smallitems.lua")
 local fishing = loadFile("shared/logic/fishing.lua")
 local gardening = loadFile("shared/logic/gardening.lua")
+local machines = loadFile("shared/logic/machines.lua")
 
 -- export: whether a ped model is a woman (staff picks the duty skin from it)
 function isFemaleSkin(skin)
@@ -234,6 +235,23 @@ local smallItems = loadFile("server/smallitems.lua")({
 hands.setSmall(smallItems)
 -- the Fishing Rod (#141)
 loadFile("server/fishing.lua")({ db = db, net = net, state = state, toast = toast, world = world, fishing = fishing })
+-- the scrap machine, the refining machine and the water purifier (#145)
+local machinesSrv = loadFile("server/machines.lua")({
+    db = db,
+    net = net,
+    state = state,
+    type = itemType,
+    toast = toast,
+    world = world,
+    hands = hands,
+    containers = containers,
+    machines = machines,
+    liquids = liquids,
+    decodeData = hands.decodeData,
+    charId = charId,
+})
+hands.setMachines(machinesSrv)
+containers.setMachines(machines, liquids)
 
 loadFile("server/use.lua")({
     medical = medical,

@@ -13,6 +13,8 @@ SETTINGS = {
     "spawn.res_items": "AntiSepBandage", "loot.spawn_multiplier": "1.0", "loot.despawn_minutes": "120",
     "loot.roll_batch": "300", "items.sync_radius": "150", "items.pickup_radius": "2.0",
     "vehicles.spawn_chance": "4.0",
+    # upstream vehicle.damage/bleed-mult and knock-mult (damage-vehicle.pwn): scale a ram's bleed and its knockout
+    "vehicles.damage_bleed_mult": "1.0", "vehicles.damage_knock_mult": "1.0",
     # M7 staff & ops: upstream settings.ini server/whitelist and server/motd; level1.pwn warn (5 warnings = 1 day ban)
     "server.whitelist": "0", "server.motd": "",
     # upstream server/whitelist-auto-toggle and player/auto-ip-login, both off by default (#86)

@@ -30,8 +30,8 @@ files["resources/**/maps/data/**"] = { std = "lua51", max_line_length = false }
 -- moveObject, createBlipAttachedTo (server) and createEffect (client) postdate the generated lists
 files["resources/**/loot/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "rollNear", "dropSupply", "dropWeaponCache", "supplyDropTypes", "dropStatus", "lootAllowances" }, read_globals = { "moveObject", "createBlipAttachedTo" } }
 files["resources/**/loot/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "nearbyCrate", "tryOpenCrate" }, read_globals = { "createEffect" } }
--- isPedDucked postdates the generated .luacheck/mta_server.lua list
-files["resources/**/weapons/server/**"] = { std = "lua51+mta_shared+mta_server", read_globals = { "isPedDucked" } }
+-- isPedDucked and getVehicleController postdate the generated .luacheck/mta_server.lua list
+files["resources/**/weapons/server/**"] = { std = "lua51+mta_shared+mta_server", read_globals = { "isPedDucked", "getVehicleController" } }
 files["resources/**/world/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "getWeather", "setGlobalWeather" } }
 files["resources/**/world/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "tryInteract", "nearbyFeature" }, read_globals = { "dxDrawLine3D", "getBoundKeys" } }
 files["resources/**/world/data/**"] = { std = "lua51", max_line_length = false }
@@ -40,7 +40,7 @@ files["resources/**/dev/server/**"] = { std = "lua51+mta_shared+mta_server", glo
 files["resources/**/discordchat/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "logItemSpawn", "sendStaffLog" } }
 files["resources/**/dev/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "isHeld" }, read_globals = { "executeCommandHandler", "dxDrawPrimitive3D", "getTime", "setTime", "getWeather", "setWeather", "getMinuteDuration", "setMinuteDuration", "createLight", "showChat", "isChatVisible" } }
 -- dxDrawModel3D, engineStreamingReleaseModel, getWorldFromScreenPosition, getElementMatrix and the shader functions postdate the generated lists
-files["resources/**/items/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "setAttachPreview", "getAttachConfig", "nearbyCooker", "nearbyBag", "nearbyInspectable" }, read_globals = { "dxDrawModel3D", "engineStreamingReleaseModel", "getWorldFromScreenPosition", "getElementMatrix", "engineGetModelTextures", "dxCreateShader", "dxSetShaderValue", "engineApplyShaderToWorldTexture", "createEffect" } }
+files["resources/**/items/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "setAttachPreview", "getAttachConfig", "nearbyCooker", "nearbyBag", "nearbyInspectable", "nearbyMachine" }, read_globals = { "dxDrawModel3D", "engineStreamingReleaseModel", "getWorldFromScreenPosition", "getElementMatrix", "engineGetModelTextures", "dxCreateShader", "dxSetShaderValue", "engineApplyShaderToWorldTexture", "createEffect" } }
 -- fileSetPos postdates the generated .luacheck/mta_shared.lua list
 files["resources/**/attachedit/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "rcon" }, read_globals = { "fileSetPos" } }
 -- getVehicleWheelStates and getVehicleLightState postdate the generated .luacheck/mta_server.lua list

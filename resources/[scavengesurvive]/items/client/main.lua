@@ -17,10 +17,12 @@ local cooking = loadModule("shared/logic/cooking.lua")
 local liquids = loadModule("shared/logic/liquids.lua")
 local small = loadModule("shared/logic/smallitems.lua")
 local gardening = loadModule("shared/logic/gardening.lua")
+local machines = loadModule("shared/logic/machines.lua")
 local worldCtx = { models = models, ammo = ammo, tent = tent, clothes = clothes, geometry = geometry }
 worldCtx.cooking = cooking
 worldCtx.small = small
 worldCtx.gardening = gardening
+worldCtx.machines = machines
 local world = loadModule("client/world.lua")(worldCtx)
 local attach = loadModule("client/attach.lua")({ models = models, apparel = apparel })
 local preview = loadModule("client/preview.lua")({ logic = loadModule("shared/logic/preview.lua"), models = models })
@@ -30,7 +32,7 @@ inventoryCtx.liquids = liquids
 inventoryCtx.small = small
 inventoryCtx.gardening = gardening
 loadModule("client/inventory.lua")(inventoryCtx)
-loadModule("client/text.lua")()
+loadModule("client/text.lua")(machines)
 
 -- client exports for the attachedit resource: preview offsets on the local player's own attachments
 function setAttachPreview(slot, offsets, scale)
@@ -53,6 +55,11 @@ function nearbyInspectable()
     return id or false, uname or false
 end
 
+-- the machine within reach (#145): the hud's F taps to open it and holds for its menu
+function nearbyMachine()
+    return world.nearbyMachine(2.0) or false
+end
+
 function getAttachConfig(slot)
     return attach.getConfig(slot)
 end
@@ -63,6 +70,15 @@ addEventHandler("clothesChangeStarted", localPlayer, function(durationMs)
 end)
 
 addEventHandler("clothesChangeStopped", localPlayer, function()
+    exports.ui:progressCancel()
+end)
+
+-- refuelling a machine (server/machines.lua, #145): the server moves the petrol while the key is held
+addEventHandler("machineRefuelStarted", localPlayer, function(durationMs)
+    exports.ui:progressStart("Refuelling...", durationMs)
+end)
+
+addEventHandler("machineRefuelStopped", localPlayer, function()
     exports.ui:progressCancel()
 end)
 
