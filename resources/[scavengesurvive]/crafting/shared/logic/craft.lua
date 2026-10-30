@@ -187,6 +187,74 @@ addRecipe({
     },
 })
 
+-- the machines (#145), upstream init.pwn:1329-1331: 30 s with a Screwdriver, 25 s with a Crowbar to take down, every
+-- part back; whatever lies in the machine's container goes with it (the container rows cascade, as upstream)
+addRecipe({
+    name = "ScrapMachine",
+    kind = "ground",
+    tool = "Screwdriver",
+    buildTime = 30000,
+    ingredients = {
+        { uname = "Canister", count = 1, keep = false },
+        { uname = "Motor", count = 1, keep = false },
+        { uname = "Fluctuator", count = 1, keep = false },
+        { uname = "PowerSupply", count = 1, keep = false },
+    },
+    result = { uname = "ScrapMachine", count = 1 },
+    removalTool = "Crowbar",
+    removalTime = 25000,
+    deconstructIngredients = {
+        { uname = "Canister", count = 1 },
+        { uname = "Motor", count = 1 },
+        { uname = "Fluctuator", count = 1 },
+        { uname = "PowerSupply", count = 1 },
+    },
+})
+
+addRecipe({
+    name = "RefineMachine",
+    kind = "ground",
+    tool = "Screwdriver",
+    buildTime = 30000,
+    ingredients = {
+        { uname = "Canister", count = 1, keep = false },
+        { uname = "Motor", count = 1, keep = false },
+        { uname = "Fluctuator", count = 1, keep = false },
+        { uname = "PowerSupply", count = 1, keep = false },
+    },
+    result = { uname = "RefineMachine", count = 1 },
+    removalTool = "Crowbar",
+    removalTime = 25000,
+    deconstructIngredients = {
+        { uname = "Canister", count = 1 },
+        { uname = "Motor", count = 1 },
+        { uname = "Fluctuator", count = 1 },
+        { uname = "PowerSupply", count = 1 },
+    },
+})
+
+addRecipe({
+    name = "WaterMachine",
+    kind = "ground",
+    tool = "Screwdriver",
+    buildTime = 30000,
+    ingredients = {
+        { uname = "Canister", count = 1, keep = false },
+        { uname = "Motor", count = 1, keep = false },
+        { uname = "Bucket", count = 1, keep = false },
+        { uname = "PowerSupply", count = 1, keep = false },
+    },
+    result = { uname = "WaterMachine", count = 1 },
+    removalTool = "Crowbar",
+    removalTime = 25000,
+    deconstructIngredients = {
+        { uname = "Canister", count = 1 },
+        { uname = "Motor", count = 1 },
+        { uname = "Bucket", count = 1 },
+        { uname = "PowerSupply", count = 1 },
+    },
+})
+
 -- 3. Workbench Recipes (crafted in Workbench 16-slot container)
 addRecipe({
     name = "PowerSupply",

@@ -94,6 +94,19 @@ describe("crafting logic", function()
             assert.is_true(foundWorkbench)
         end)
 
+        it("builds the machines with a Screwdriver and a Crowbar takes them down, every part back (#145)", function()
+            local names = {}
+            for _, m in ipairs(craft.matchGround({ Canister = 1, Motor = 1, Fluctuator = 1, PowerSupply = 1 }, "Screwdriver")) do
+                names[m.name] = true
+            end
+            assert.is_true(names.ScrapMachine and names.RefineMachine)
+            local water = craft.matchGround({ Canister = 1, Motor = 1, Bucket = 1, PowerSupply = 1 }, "Screwdriver")
+            assert.are.equal("WaterMachine", water[1].name)
+            local info = craft.getDeconstructInfo("ScrapMachine", "Crowbar")
+            assert.are.equal(25000, info.duration)
+            assert.are.equal(4, #info.ingredients)
+        end)
+
         it("returns empty list if ingredients missing", function()
             local ground = { WoodLog = 1 }
             local matches = craft.matchGround(ground, "Hammer")
@@ -160,10 +173,11 @@ describe("crafting logic", function()
         end)
 
         it("lists all constructed item types a Crowbar can deconstruct (#97)", function()
-            assert.same(
-                { "Campfire", "Barricade", "SmallBox", "Workbench", "LargeFrame", "Door", "MetalGate", "PlotPole" },
-                craft.deconstructables("Crowbar")
-            )
+            local expected = { "Campfire", "Barricade", "SmallBox", "Workbench", "LargeFrame", "Door", "MetalGate", "PlotPole" }
+            for _, u in ipairs({ "ScrapMachine", "RefineMachine", "WaterMachine" }) do
+                expected[#expected + 1] = u
+            end
+            assert.same(expected, craft.deconstructables("Crowbar"))
         end)
     end)
 end)

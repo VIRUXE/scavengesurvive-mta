@@ -64,8 +64,9 @@ function M.lines(ctx, keys)
     if M.CRATES[ctx.nearCrate] then
         add("interact", M.CRATES[ctx.nearCrate])
     end
-    -- a machine (items, #145): upstream's button "Press F to access machine / Hold F to open menu"
-    if ctx.nearMachine then
+    -- a machine (items, #145): upstream's button "Press F to access machine / Hold F to open menu"; a Crowbar in
+    -- hand takes it down instead (Deconstruct, a port deviation: upstream left it a TODO)
+    if ctx.nearMachine and not (ctx.held and ctx.held.uname == "Crowbar") then
         add("interact", "Access machine")
         add("interact", "(Hold) Machine menu")
     end

@@ -119,7 +119,9 @@ return function(ctx)
         if not bagId and not ctx.getHeld() then
             inspectId, inspectUname = exports.items:nearbyInspectable()
         end
-        local machineId = not bagId and not inspectId and exports.items:nearbyMachine() or false
+        -- a Crowbar in hand skips the machine: the plain pickup below deconstructs it (server/hands.lua)
+        local crowbar = (ctx.getHeld() or {}).uname == "Crowbar"
+        local machineId = not bagId and not inspectId and not crowbar and exports.items:nearbyMachine() or false
         if bagId or inspectId or machineId then
             if isTimer(interactHoldTimer) then
                 return

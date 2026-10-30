@@ -61,6 +61,14 @@ describe("hud key actions", function()
         assert.same("F (Hold) Machine menu", l[2])
         assert.same("H Open inventory", l[3])
     end)
+    it("a Crowbar at a machine only offers Deconstruct", function()
+        local ctx = { spawned = true, held = { uname = "Crowbar" }, nearMachine = true, supports = { special = true } }
+        local l = texts(keyactions.lines(ctx, KEYS))
+        assert.same("F Deconstruct", l[1])
+        for _, line in ipairs(l) do
+            assert.is_nil(line:find("machine", 1, true))
+        end
+    end)
     it("weapons clear the list: Holster, Reload, Unload, Drop, Inventory", function()
         local held = { uname = "DesertEagle", category = "weapon", isWeapon = true }
         local l = keyactions.lines(
