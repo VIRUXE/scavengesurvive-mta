@@ -196,8 +196,10 @@ addEventHandler("onClientResourceStart", resourceRoot, function()
     for _, o in ipairs(data.objects) do
         place(o[1], { o[2], o[3], o[4], o[5], o[6], o[7] }, o[8])
     end
-    for _, p in ipairs(doors.PROPS) do
-        place(p[1], { p[2], p[3], p[4], p[5], p[6], p[7] }, p[8])
+    for _, list in ipairs({ doors.PROPS, puzzles.PROPS }) do
+        for _, p in ipairs(list) do
+            place(p[1], { p[2], p[3], p[4], p[5], p[6], p[7] }, p[8])
+        end
     end
     for _, id in ipairs(reg.doorIds) do
         local d = reg.doors[id]
