@@ -9,6 +9,8 @@
 --   Molotov: a Petrol Can used with an Empty Molotov pours 0.5 L and the bottle becomes a Molotov.
 --   Shield: used from the hand it is planted standing in front of the player (weapons stops the shots it covers);
 --   HerpDerp: used, one of 25 random animations;
+--   Firework Box (#150): a Fire Lighter used on one lying there plants it, and 6 s later every client draws the
+--     rocket and its bursts (fireworkLaunched), at most one launch every 3 s across all boxes;
 --   Torso (the body a death leaves, #139): a tap of the interact key investigates it (bodyInspectRequested), a Knife
 --     used on it holds 3 s and takes one raw Meat, once, within a day.
 -- ctx = { db, net, state, type, charId, toast, destroy, destroyWorldItem, world, updateHeldData, decodeData,
@@ -18,6 +20,7 @@ return function(ctx)
     local db, net, state = ctx.db, ctx.net, ctx.state
     local itemType, charId, toast = ctx.type, ctx.charId, ctx.toast
     local small, liquids, decodeData = ctx.small, ctx.liquids, ctx.decodeData
+    local firework = ctx.firework
     local SIGN_REACH = 2.5
     local openNotes = {} -- player -> { itemId, fromHand, openContainerId }
     local openSigns = {} -- player -> itemId
@@ -357,7 +360,24 @@ return function(ctx)
         end, { player = player })
     end, { rate = 5 })
 
+    -- Firework Box (upstream firework.pwn): the box stays, so it can go up again once the cooldown has passed
+    local lastLaunch
+    local function launchFirework(player, _, row)
+        local now = getTickCount()
+        if lastLaunch and now - lastLaunch <= firework.COOLDOWN_MS then
+            return true
+        end
+        lastLaunch = now
+        setPedAnimation(player, "BOMBER", "BOM_Plant_In", 450, false, false, true, false)
+        local x, y, z, int, dim = row.x, row.y, row.z, row.interior or 0, row.dimension or 0
+        setTimer(function()
+            triggerClientEvent(root, "fireworkLaunched", resourceRoot, x, y, z, int, dim)
+        end, firework.FUSE_MS, 1)
+        return true
+    end
+
     local PAIRS = {
+        FireLighter = { FireworkBox = launchFirework },
         Locator = { MobilePhone = syncLocator },
         StunGun = { Battery = chargeStunGun },
         GasCan = { [small.MOLOTOV_FROM] = pourMolotov },

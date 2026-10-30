@@ -58,6 +58,7 @@ addEvent("lockerToggled", true)
 addEvent("machineMenuShown", true)
 addEvent("machineRefuelStarted", true)
 addEvent("machineRefuelStopped", true)
+addEvent("fireworkLaunched", true)
 addEvent("sampModelsChanged", false) -- fired by the models resource on every client
 addEvent("uiListActionSelected", false)
 addEvent("uiListClosed", false)

@@ -225,6 +225,7 @@ local smallItems = loadFile("server/smallitems.lua")({
     end,
     decodeData = hands.decodeData,
     small = small,
+    firework = loadFile("shared/logic/firework.lua"),
     liquids = liquids,
     sendInventory = containers.sendInventory,
     ownedSql = OWNED_SQL,

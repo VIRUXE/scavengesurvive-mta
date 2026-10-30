@@ -29,6 +29,8 @@
     <file src="shared/logic/machines.lua"/>
     <file src="server/machines.lua"/>
     <file src="shared/logic/furniture.lua"/>
+    <file src="shared/logic/firework.lua"/>
+    <file src="client/firework.lua"/>
     <file src="server/furniture.lua"/>
     <file src="client/text.lua"/>
     <file src="client/models.lua"/>

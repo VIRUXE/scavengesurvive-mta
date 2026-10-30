@@ -585,3 +585,10 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
       it holds the player.
     - b. **F** again: the panel goes. **F** once more and `rr items`: it is back after the restart.
     - c. A Crowbar from behind takes the frame down: the panel goes with it, and building the frame again shows none.
+49. **Firework Box** (#150, upstream `item/firework.pwn`). One client (a second sees its own bursts, shaped a little
+    differently).
+    - a. `/additem FireworkBox`, drop it, `/additem FireLighter`; **F** at the box: the plant animation, then 6 s later
+      a rocket climbs about 10 m from the box and bursts into four small flashes, each into three sparks flying
+      ~50 m out and down, each ending in four small fires that vanish where they stop.
+    - b. **F** again within 3 s of the last press: nothing. The box is still there and goes up again after that.
+    - c. A Fire Lighter with no box near still builds a Campfire from three Wood Logs.

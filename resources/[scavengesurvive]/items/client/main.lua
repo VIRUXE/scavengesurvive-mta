@@ -34,6 +34,7 @@ inventoryCtx.small = small
 inventoryCtx.gardening = gardening
 loadModule("client/inventory.lua")(inventoryCtx)
 loadModule("client/text.lua")(machines)
+loadModule("client/firework.lua")(loadModule("shared/logic/firework.lua"))
 
 -- client exports for the attachedit resource: preview offsets on the local player's own attachments
 function setAttachPreview(slot, offsets, scale)
