@@ -537,12 +537,15 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
       a knockout. A step off a kerb never wounds.
     - b. A swims under water until out of breath: each drowning tick knocks A out for 1.5 to 3 s (`KO_shot_stom`,
       the countdown bar) and takes up to 10 hp; surfacing ends it.
+      Swim down from the surface: a ped teleported under water stands on the seabed and never drowns.
     - c. A drives into B at speed: B reads `Wounded: torso` (or a leg) with bleed growing with A's speed; past
       55 km/h B is often knocked out for `1 + speed / 20` seconds on top. B's combat window opens (watch red) and
       a death gives A the kill (`[KILL]` in the log, the body reads "They bled to death."). At walking pace no
       wound at all; the server log reads `A rammed B at N km/h`.
     - d. A `/additem TntTimebomb`, plants it next to B and steps back: B is wounded (`torso` or a leg, bleeding)
       and, close to the blast, knocked out. A standing in a campfire loses a tenth of GTA's burn damage.
+      The blast reaches the client as weapon 16 or 19 (no creator), not 51; a flat `-20 hp` with no bleeding
+      means it took the fallback.
     - e. Give A duty (`/duty`): none of a to d touches A.
 46. **Machines** (#145, upstream `itemtype/machine.pwn`, `item/scrap-machine.pwn`, `refine-machine.pwn`,
     `water-purifier.pwn`). One client; the `machine_finish` procedure must be in the database (`sqltool apply`).
