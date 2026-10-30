@@ -37,7 +37,8 @@ local function unwrap(data)
     return data
 end
 
--- the same small generator the clothes use: a bag's seeds follow from its id until they are written
+-- the same small generator the clothes use: a bag's seeds follow from its id until they are written. Its first
+-- draws from a small seed are small too, so a few are thrown away first.
 function M.seeded(seed)
     local s = (math.floor(tonumber(seed) or 0) % 2147483646) + 1
     local function rand()
@@ -46,6 +47,9 @@ function M.seeded(seed)
     end
     local function randInt(n)
         return math.min(n, math.floor(rand() * n) + 1)
+    end
+    for _ = 1, 4 do
+        rand()
     end
     return rand, randInt
 end
