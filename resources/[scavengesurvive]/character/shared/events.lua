@@ -5,6 +5,7 @@ addEvent("characterSpawned", false)
 addEvent("characterDied", false)
 addEvent("characterStatsChanged", false)
 addEvent("characterItemsDropped", false)
+addEvent("itemCreated", false) -- items' event, triggered by death.lua for the body (#139)
 
 -- client to server (handlers registered with net.handler)
 addEvent("respawnRequested", true)

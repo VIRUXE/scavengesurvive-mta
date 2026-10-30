@@ -13,6 +13,11 @@ addEvent("engineToggleRequested", true)
 addEvent("lightsToggleRequested", true)
 addEvent("vehicleInteractRequested", true)
 addEvent("fuelPumpInteractRequested", true)
+addEvent("signEditRequested", true) -- handled by items (#136)
+addEvent("potInspectRequested", true) -- handled by items (#142)
+addEvent("bodyInspectRequested", true) -- handled by items (#139)
+addEvent("fishCastRequested", true) -- handled by items (#141)
+addEvent("fishCancelRequested", true) -- handled by items (#141)
 
 -- server to client / client-local
 addEvent("characterStatsSynced", true)
