@@ -1,11 +1,12 @@
-"""Writes the window pane texture of the SA-MP house shells: an opaque frame border (sampled by the frame and sill geometry) around tinted, mostly
-transparent glass. Output: models/files/house_window.txd (what the client imports) and, for Blender, house_window.PNG
+"""Writes the window pane texture of the SA-MP house shells: see-through glass, lighter at the head where it reflects the
+sky and darker toward the sill, with one soft reflection band (the opaque border is no longer sampled). Output: models/files/house_window.txd (what the client imports) and, for Blender, house_window.PNG
 (tools/glaze_house_windows.py reads it from its texture directory).
 
     python tools/make_house_window.py GTA_DIR OUT_TXD OUT_PNG
 
-The same TXD carries the curtains hung behind the glass (tools/glaze_house_windows.py): four vanilla textures copied
-byte for byte out of the game's IMGs, so the shells' dictionaries get them with the pane in one import.
+The same TXD carries the curtains and blinds hung behind the glass and the frames' painted wood
+(tools/glaze_house_windows.py): vanilla textures copied byte for byte out of the game's IMGs, so the shells'
+dictionaries get them with the pane in one import.
 """
 import os
 import struct
@@ -15,14 +16,23 @@ import zlib
 SIZE = 128
 FRAME = 9
 FRAME_RGBA = (206, 208, 212, 255)
-GLASS_RGBA = (150, 196, 222, 70)
-SHADE_RGBA = (255, 255, 255, 110)  # a faint diagonal glint across the glass
+GLASS_TOP = (178, 196, 206, 150)  # sky reflected at the head of the pane
+GLASS_BOTTOM = (64, 76, 84, 110)  # darker street reflection at the sill, more of the room showing through
 VERSION = 0x1803FFFF  # GTA:SA
-CURTAINS = (  # texture, IMG, TXD it lives in
+HANGINGS = (  # texture, IMG, TXD it lives in
     ("ah_curtains1", "gta_int.img", "ganghoos.txd"),
-    ("AH_greencurtain", "gta_int.img", "kit3hghg.txd"),
+    ("AH_blucurtain", "gta_int.img", "sfhosemed2.txd"),
+    ("AH_pinkcurtain", "gta_int.img", "cuntcuts.txd"),
     ("CJ_H_CURTAIN1", "gta_int.img", "hospital.txd"),
     ("curtain_sink2", "gta3.img", "col_wall2x.txd"),
+    ("curtain_sinkb", "gta_int.img", "carls_kit2.txd"),
+    ("AH_BLINDSM", "gta_int.img", "newcrak.txd"),
+    ("AH_wdblinds", "gta_int.img", "whorebar.txd"),
+    ("Bdup_Blinds", "gta_int.img", "lee_bdupsmain.txd"),
+    ("HS2_Blind2", "gta_int.img", "lahss2int2.txd"),
+    ("HS2_Blind3", "gta_int.img", "lahss2aint2.txd"),
+    ("ab_blinds", "gta_int.img", "papaerchaseoffice.txd"),
+    ("ws_doorframe", "gta3.img", "boxhses_sfsx.txd"),  # the window frames; the LS and LV shells' dictionaries lack it
 )
 
 
@@ -31,9 +41,9 @@ def pixel(x: int, y: int) -> tuple[int, int, int, int]:
     if border:
         shade = 18 if (x + y) % 2 else 0  # a little grain so the frame is not flat
         return tuple(c - shade for c in FRAME_RGBA[:3]) + (255,)
-    if 0 <= (x + y) % 56 < 6 and (x + y) < SIZE * 1.5:
-        return SHADE_RGBA
-    return GLASS_RGBA
+    t = (y - FRAME) / (SIZE - 2 * FRAME - 1)  # 0 at the top row, 1 at the bottom
+    band = 18 if abs((x - y) - 20) < 16 else 0  # one soft, wide reflection across the pane
+    return tuple(min(255, round(a + (b - a) * t) + band) for a, b in zip(GLASS_TOP[:3], GLASS_BOTTOM[:3])) + (round(GLASS_TOP[3] + (GLASS_BOTTOM[3] - GLASS_TOP[3]) * t),)
 
 
 def chunk(kind: int, body: bytes) -> bytes:
@@ -71,7 +81,7 @@ def txd(gta_dir: str) -> bytes:
     head += struct.pack("<HHBBBB", SIZE, SIZE, 32, 1, 4, 0x01)  # one mip, has alpha
     head += struct.pack("<I", len(data)) + data
     natives = [chunk(0x15, chunk(1, head) + chunk(3, b""))]
-    for texture, img, name in CURTAINS:
+    for texture, img, name in HANGINGS:
         natives.append(native_texture(img_entry(os.path.join(gta_dir, "models", img), name), texture))
     return chunk(0x16, chunk(1, struct.pack("<HH", len(natives), 0)) + b"".join(natives) + chunk(3, b""))
 
