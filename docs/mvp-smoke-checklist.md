@@ -603,3 +603,10 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
       ground, a vehicle's trunk: nothing happens. Stand up: all of them work again.
     - b. The same while `/knockout 5000` lasts, while cuffed and while on staff duty (`/duty`).
     - c. `/additem 0` and `/additem NULL` say `Item type 0 cannot be created`.
+52. **Bug reports** (#153, upstream `admin/bug-report.pwn`). One client; the `bug_reports` table must exist
+    (`sqltool apply`).
+    - a. `/bug`: the `Bug report` input dialog with upstream's text. Type a line of more than 31 characters and
+      Submit: the `BUGREPORTSU` line, and staff of level 1+ read ` >  <name> reported bug <text>`. `/bug door stuck`
+      files without the dialog.
+    - b. `/issues`: both reports, oldest first, the long one cut with `[...]`. Open one: reporter, reason and date.
+      At level 2+ Delete removes it and the list comes back without it; at level 0 or 1 only Back.

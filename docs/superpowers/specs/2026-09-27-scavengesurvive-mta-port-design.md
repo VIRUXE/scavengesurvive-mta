@@ -60,6 +60,7 @@ Legend: **Port** = reimplement behaviour in Lua · **Replace** = MTA-native mech
 | `core/admin/level1-5.pwn`, ban*, report*, mute, freeze, spectate, player-list, name-tags | Port | ACL groups for tiers; `setCameraTarget`; nametags client-side |
 | `core/admin/hack-detect.pwn`, `hack-trap.pwn`, `detfield*.pwn` | Drop (mostly) | MTA has built-in anticheat; keep server-side sanity checks only |
 | `core/admin/rcon.pwn` | Replace | ACL/admin resource |
+| `core/admin/bug-report.pwn` | Port | As built 2026-10-30 (#153): `staff/server/bugs.lua`, `/bug` and `/issues` for every player, table `bug_reports`, Delete from level 2 logged as `bug_delete` |
 | `core/server/settings.pwn` (INI), `auto-save.pwn`, `save-block.pwn` | Replace/Port | settings → DB table + meta.xml `<settings>`; auto-save unnecessary under write-through; save-block ported |
 | `core/io/*` (modio) | Replace | MariaDB |
 | `core/server/weather.pwn`, `info-message.pwn`, `text-tags.pwn` | Port | |

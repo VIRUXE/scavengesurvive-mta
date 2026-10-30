@@ -306,3 +306,17 @@ describe("staff panel forms", function()
         assert.same({}, staff.panelCommands(reg, 0))
     end)
 end)
+
+describe("bug reports", function()
+    it("lists a report as name and reason, cut where upstream's 32-byte buffer ended", function()
+        local short = { id = 1, name = "Ann", reason = "door stuck" }
+        local long = { id = 2, name = "Bo", reason = string.rep("x", 31) .. "tail" }
+        local rows = staff.bugRows({ short, long })
+        assert.same({ id = 1, label = "Ann: door stuck" }, rows[1])
+        assert.equals("Bo: " .. string.rep("x", 31) .. "[...]", rows[2].label)
+    end)
+    it("shows reporter, reason and date", function()
+        local text = staff.bugText({ name = "Ann", reason = "door stuck", created = "2026-10-30 21:00" })
+        assert.equals("Reporter:\n    Ann\n\nReason:\n    door stuck\n\nDate:\n    2026-10-30 21:00", text)
+    end)
+end)

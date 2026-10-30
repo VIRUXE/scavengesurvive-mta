@@ -472,4 +472,28 @@ function staff.panelCommands(reg, level)
     return out
 end
 
+-- Bug reports (upstream admin/bug-report.pwn). /issues lists the oldest 32 as "name: reason", the reason cut to the
+-- 31 characters upstream's list buffer held and marked "[...]" when it ran that long.
+staff.BUG_REASON_MAX = 128
+staff.BUG_LIST_MAX = 32
+staff.BUG_DELETE_LEVEL = 2 -- upstream GetPlayerAdminLevel(playerid) > 1
+
+function staff.bugRows(bugs)
+    local rows = {}
+    for _, b in ipairs(bugs) do
+        local reason = tostring(b.reason or "")
+        local label = tostring(b.name or "") .. ": " .. reason:sub(1, 31)
+        if #reason >= 31 then
+            label = label .. "[...]"
+        end
+        rows[#rows + 1] = { id = b.id, label = label }
+    end
+    return rows
+end
+
+-- the report's message box, upstream ShowBugReportInfo's three fields
+function staff.bugText(b)
+    return string.format("Reporter:\n    %s\n\nReason:\n    %s\n\nDate:\n    %s", b.name, b.reason, b.created)
+end
+
 return staff
