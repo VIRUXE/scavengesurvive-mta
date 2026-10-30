@@ -149,9 +149,10 @@ return function(ctx)
     -- The type's rest rotation added to the row's heading (upstream CreateItemInWorld with applyrotoffsets), then
     -- turned onto the slope it lies on (ground_nx / ground_ny, set by the death drop and /dropall; false when flat).
     local function orient(obj, r, t)
-        -- loose items are walked through; a built defence is a wall (upstream's defence objects collide)
+        -- loose items are walked through; a built defence is a wall (upstream's defence objects collide), and so is a
+        -- Locker, which stands as tall as a player
         local def = builtDefence(r)
-        setElementCollisionsEnabled(obj, def ~= nil)
+        setElementCollisionsEnabled(obj, def ~= nil or r.uname == small.LOCKER.uname)
         if def then
             -- its row already holds the raised z and full heading, data the pose
             setElementPosition(obj, r.x, r.y, r.z)
