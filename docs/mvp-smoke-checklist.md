@@ -563,4 +563,5 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
     - d. `/additem RefineMachine`: a Wrench put in is refused with `This machine only accepts Scrap Metal`; two
       Scrap Metal cook into two Refined Metal. `/additem WaterMachine`: only a Bottle of sea water goes in (fill
       one at the shore); it comes out as the same amount of Water.
-    - e. A Crowbar on a machine takes it down through the deconstruct hold as before (its parts drop).
+    - e. With a Crowbar in hand the key list reads only `F Deconstruct`; a 25 s hold takes the machine down and its
+      four parts drop (whatever was inside goes with it). A Screwdriver over the four parts builds one in 30 s.
