@@ -145,8 +145,6 @@ local function rollSpawn(s)
     return { s = s.id, cd = secs, items = items }
 end
 
--- Rolls due spawns inside a box around (x, y): spawns are due when next_roll_at has passed and no item from the
--- previous roll remains in the world; the zone must still have allowance and no player may be within
 -- A Heart Shaped Box that loot spawns comes with these inside (upstream item/heartshapedbox.pwn, #143): after a
 -- roll, every box of the batch whose container is still empty gets them, one item_create_in_container each.
 local LOVE_BOX, LOVE_BOX_CONTENTS = "HeartShapedBox", { "Dildo1", "Flowers", "AntiSepBandage", "ZorroMask" }
@@ -169,14 +167,8 @@ local function fillLoveBoxes(done)
             for _, uname in ipairs(LOVE_BOX_CONTENTS) do
                 db.call("item_create_in_container", { uname, row.cid }, function(res)
                     if not res or not res.ok then
-                        util.log(
-                            "loot",
-                            "warn",
-                            "love box %d: %s not added (%s)",
-                            row.cid,
-                            uname,
-                            res and res.code or "db"
-                        )
+                        local code = res and res.code or "db"
+                        util.log("loot", "warn", "love box %d: %s not added (%s)", row.cid, uname, code)
                     end
                 end)
             end
@@ -184,6 +176,8 @@ local function fillLoveBoxes(done)
     end)
 end
 
+-- Rolls due spawns inside a box around (x, y): spawns are due when next_roll_at has passed and no item from the
+-- previous roll remains in the world; the zone must still have allowance and no player may be within
 -- world.min_player_distance of the point. Every roll of the batch goes to the DB in one loot_roll call.
 function rollNear(x, y, radius)
     local batch = setting("loot.roll_batch", 300)
