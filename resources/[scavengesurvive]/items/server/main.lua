@@ -255,8 +255,9 @@ hands.setMachines(machinesSrv)
 containers.setMachines(machines, liquids)
 -- desks, tables, the gun case and the cupboard (#148)
 local furnitureCtx = { db = db, state = state, type = itemType, toast = toast, world = world, hands = hands }
-furnitureCtx.furniture, furnitureCtx.decodeData = furniture, hands.decodeData
-hands.setFurniture(loadFile("server/furniture.lua")(furnitureCtx))
+furnitureCtx.furniture, furnitureCtx.decodeData, furnitureCtx.charId = furniture, hands.decodeData, charId
+local furnitureSrv = loadFile("server/furniture.lua")(furnitureCtx)
+hands.setFurniture(furnitureSrv)
 
 loadFile("server/use.lua")({
     medical = medical,
@@ -375,6 +376,15 @@ function refreshPlayer(player)
     state.sent[player] = state.sent[player] or {}
     world.syncPlayer(player)
     return true
+end
+
+-- crafting: a construction tool on furniture with nothing to build goes on the furniture (#148)
+function placeOnFurniture(player, furnitureId)
+    furnitureId = tonumber(furnitureId)
+    if not isElement(player) or not furnitureId then
+        return false
+    end
+    return furnitureSrv.placeOn(player, furnitureId)
 end
 
 -- A world item's row changed in place (door swung, tent pitched): every client that shows it gets it again.

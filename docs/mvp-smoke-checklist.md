@@ -575,3 +575,6 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
     - c. `/additem GunCase` and drop it; **F** with the knife: the case shows it lying on its rack. **F** with a
       second item does nothing; a Desk in hand says `Extra 9 slots required`. `rr items`: the knife still shows.
       **F** with empty hands gives the knife back and the rack is empty. A Cupboard behaves the same.
+    - d. A Screwdriver in hand, **F** at a desk with nothing else around: the Screwdriver goes on the desk. Lay a
+      Refined Metal and three Wood Logs a step further off than the desk and **F** at the desk again: `Constructing
+      Desk` starts and the Screwdriver stays in hand.

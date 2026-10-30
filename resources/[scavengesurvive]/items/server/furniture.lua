@@ -2,7 +2,7 @@
 -- hand puts it on a Desk, Table, Barstool or Small Table, or into an empty Gun Case or Cupboard, which then shows it
 -- (furniture_display_put); with empty hands it takes the shown item back (furniture_display_take) or whatever lies
 -- on top. Furniture itself is never picked up (hands.pickup asks blocksPickup).
--- ctx = { db, state, type, toast, world, hands, furniture, decodeData } built by server/main.lua.
+-- ctx = { db, state, type, toast, world, hands, furniture, decodeData, charId } built by server/main.lua.
 return function(ctx)
     local db, state, world, hands, furniture = ctx.db, ctx.state, ctx.world, ctx.hands, ctx.furniture
     local toast, decodeData = ctx.toast, ctx.decodeData
@@ -116,6 +116,24 @@ return function(ctx)
             end
             M.interact(player, cid, held, row)
         end)
+    end
+
+    -- crafting found nothing to build with the tool in hand (exports.crafting:groundCraft's furnitureId): the
+    -- furniture the interact key was on takes it after all
+    function M.placeOn(player, furnitureId)
+        local cid = ctx.charId(player)
+        local held = state.held[player]
+        if not cid or not held then
+            return false
+        end
+        local sql = "SELECT id, type_uname AS uname, data, x, y, z, rz, interior, dimension FROM items "
+            .. "WHERE id = ? AND x IS NOT NULL"
+        db.one(sql, { furnitureId }, function(row)
+            if row and furniture.is(row.uname) and isElement(player) and state.held[player] == held then
+                M.interact(player, cid, held, row)
+            end
+        end)
+        return true
     end
 
     return M

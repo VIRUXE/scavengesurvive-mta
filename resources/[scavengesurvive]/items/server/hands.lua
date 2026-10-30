@@ -656,16 +656,19 @@ return function(ctx)
         return exports.crafting:isConstructionTool(uname) == true
     end
 
-    local function runCrafting(action, player)
+    -- furnitureId (groundCraft): no recipe matching puts the tool on that furniture instead (#148); false when the
+    -- crafting resource is not running
+    local function runCrafting(action, player, furnitureId)
         local res = getResourceFromName and getResourceFromName("crafting")
         if not res or getResourceState(res) ~= "running" then
-            return
+            return false
         end
         if action == "deconstruct" then
             exports.crafting:deconstruct(player)
         elseif action == "groundCraft" then
-            exports.crafting:groundCraft(player)
+            exports.crafting:groundCraft(player, furnitureId)
         end
+        return true
     end
 
     -- row = { id, uname, hp, data (JSON text) } of a world item: into the empty hand
@@ -775,7 +778,14 @@ return function(ctx)
                 return
             end
 
-            -- desks, tables and the gun case (server/furniture.lua)
+            -- desks, tables and the gun case (server/furniture.lua); a construction tool builds from the parts around
+            -- first and goes on the furniture only when nothing can be built
+            local onFurniture = furnitureSrv and furnitureSrv.blocksPickup(row.uname)
+            if onFurniture and curHeld and isConstructionTool(curUname) then
+                if runCrafting("groundCraft", c.player, row.id) then
+                    return
+                end
+            end
             if furnitureSrv and furnitureSrv.interact(c.player, c.charId, curHeld, row) then
                 return
             end

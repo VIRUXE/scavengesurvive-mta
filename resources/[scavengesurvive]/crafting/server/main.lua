@@ -143,14 +143,21 @@ net.handler("combineRequested", function(player, invItemId)
 end, { rate = 3 })
 
 -- 2. Ground Construction: Combine ground ingredients with held tool
-local function tryGroundCraft(player, _cid, held, px, py, pz, rz, int, dim, quiet)
+-- furnitureId (items, #148): the desk or table the interact key was on; with nothing to build the tool goes on it
+local function tryGroundCraft(player, _cid, held, px, py, pz, rz, int, dim, quiet, furnitureId)
     local toolUname = held and held.uname
     local query = "SELECT i.id, i.type_uname, i.x, i.y, i.z, i.data FROM world_items_pos p "
         .. "JOIN items i ON i.id = p.item_id "
         .. "WHERE ST_Distance(p.pos, POINT(?, ?)) <= 2.5 "
         .. "AND i.container_id IS NULL AND i.holder_char_id IS NULL"
     db.query(query, { px, py }, function(rows, c)
-        if not isElement(c.player) or not rows or #rows == 0 then
+        if not isElement(c.player) then
+            return
+        end
+        if not rows or #rows == 0 then
+            if c.furnitureId then
+                exports.items:placeOnFurniture(c.player, c.furnitureId)
+            end
             return
         end
         local counts = {}
@@ -162,6 +169,9 @@ local function tryGroundCraft(player, _cid, held, px, py, pz, rz, int, dim, quie
         end
         local matches = craft.matchGround(counts, c.toolUname)
         if #matches == 0 then
+            if c.furnitureId then
+                return exports.items:placeOnFurniture(c.player, c.furnitureId)
+            end
             if not c.quiet then
                 toast(c.player, "NO_RECIPE")
             end
@@ -241,7 +251,7 @@ local function tryGroundCraft(player, _cid, held, px, py, pz, rz, int, dim, quie
             )
         end, ms, 1, c.player, recipe, itemsByUname, px, py, pz, rz, int, dim, source)
         activeHold[c.player] = { timer = timer, action = "construct" }
-    end, { player = player, toolUname = toolUname, quiet = quiet })
+    end, { player = player, toolUname = toolUname, quiet = quiet, furnitureId = furnitureId })
 end
 
 -- 3. Deconstruction: Dismantle world item with Crowbar
@@ -412,7 +422,7 @@ addCommandHandler("craft", function(player)
     tryGroundCraft(player, cid, held, px, py, pz, rz, int, dim, true) -- the workbench path already said NO_RECIPE
 end)
 
-function groundCraft(player)
+function groundCraft(player, furnitureId)
     local cid = charId(player)
     if not cid then
         return false
@@ -421,7 +431,7 @@ function groundCraft(player)
     local px, py, pz = getElementPosition(player)
     local _, _, rz = getElementRotation(player)
     local int, dim = getElementInterior(player), getElementDimension(player)
-    tryGroundCraft(player, cid, held, px, py, pz, rz, int, dim)
+    tryGroundCraft(player, cid, held, px, py, pz, rz, int, dim, false, tonumber(furnitureId))
     return true
 end
 
