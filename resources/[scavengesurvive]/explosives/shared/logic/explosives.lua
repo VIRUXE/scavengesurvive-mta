@@ -107,15 +107,37 @@ function M.filterItemsInRange(items, ex, ey, ez, range, interior, dimension)
     return out
 end
 
--- Port change: upstream takes the preset's full itemDmg off every item in range (explosive.pwn:599). Here it falls
--- off linearly with the distance from the blast to the item's origin, rounded up, so a stack loses the most at the
--- charge and still at least 1 hitpoint anywhere inside the range; nothing outside it.
-function M.itemDamageAt(itemDmg, dist, range)
-    itemDmg, dist, range = tonumber(itemDmg) or 0, tonumber(dist) or 0, tonumber(range) or 0
-    if itemDmg <= 0 or range <= 0 or dist > range then
-        return 0
+-- The damage batch for explosion_damage, { id, dmg } per item. Port change: upstream takes the preset's full itemDmg
+-- off every item in range (explosive.pwn:599). Here built defences (isDefence(it)) share itemDmg as one pool, nearest
+-- to the blast first: each takes what it has left, the rest carries on to the next, so a 3-point charge against a
+-- 1-hitpoint wall breaks it and takes 2 off the one behind. Loose items still take the full itemDmg each.
+function M.spreadDamage(items, itemDmg, ex, ey, ez, isDefence)
+    local batch, defences = {}, {}
+    itemDmg = tonumber(itemDmg) or 0
+    if type(items) ~= "table" or itemDmg <= 0 then
+        return batch
     end
-    return math.max(1, math.ceil(itemDmg * (1 - dist / range)))
+    for _, it in ipairs(items) do
+        if isDefence(it) then
+            local dx, dy, dz = it.x - ex, it.y - ey, it.z - ez
+            defences[#defences + 1] = { it = it, d2 = dx * dx + dy * dy + dz * dz }
+        else
+            batch[#batch + 1] = { id = it.id, dmg = itemDmg }
+        end
+    end
+    table.sort(defences, function(a, b)
+        return a.d2 < b.d2
+    end)
+    local pool = itemDmg
+    for _, e in ipairs(defences) do
+        if pool <= 0 then
+            break
+        end
+        local dmg = math.min(pool, math.max(1, tonumber(e.it.hitpoints or e.it.hp) or 1))
+        batch[#batch + 1] = { id = e.it.id, dmg = dmg }
+        pool = pool - dmg
+    end
+    return batch
 end
 
 function M.calculateItemDamage(items, itemDmg)

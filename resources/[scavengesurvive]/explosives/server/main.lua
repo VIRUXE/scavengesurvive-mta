@@ -312,12 +312,10 @@ detonateItem = function(itemId)
                         if #inRange == 0 then
                             return
                         end
-                        local batch = {}
-                        for _, it in ipairs(inRange) do
-                            local dist = getDistanceBetweenPoints3D(x, y, z, it.x, it.y, it.z)
-                            local dmg = logic.itemDamageAt(preset.itemDmg, dist, preset.size)
-                            batch[#batch + 1] = { id = it.id, dmg = dmg }
+                        local isDefence = function(it)
+                            return defenceState(decodeData(it.data)) ~= nil
                         end
+                        local batch = logic.spreadDamage(inRange, preset.itemDmg, x, y, z, isDefence)
                         db.call("explosion_damage", { toJSON(batch) }, function(res)
                             if not res or not res.payload then
                                 return
