@@ -13,6 +13,8 @@ M.SPECIAL = {
     Clothes = "Wear clothes",
     Pills = "Take Pills",
     HerpDerp = "Herp-a-derp",
+    Note = "Read note", -- not upstream lines: the port's note and locator use the interact key (#136)
+    Locator = "Locate phone",
 }
 
 -- The interact verb next to a landed crate, by the loot resource's crate kind.

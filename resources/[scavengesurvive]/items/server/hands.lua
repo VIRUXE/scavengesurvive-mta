@@ -12,7 +12,7 @@ return function(ctx)
     local VANILLA_MELEE_MAX = 15
     local RELOAD_COOLDOWN_MS = 1000
     local lastReload = {}
-    local containers, cooking = nil, nil
+    local containers, cooking, small = nil, nil, nil
     local M = {}
 
     function M.setContainers(c)
@@ -21,6 +21,11 @@ return function(ctx)
 
     function M.setCooking(c)
         cooking = c
+    end
+
+    -- server/smallitems.lua: held-with-world pairs (Locator + phone, Stun Gun + Battery, can + bottle), dice drops
+    function M.setSmall(s)
+        small = s
     end
 
     local function baseWeapon(t)
@@ -564,6 +569,22 @@ return function(ctx)
     local TENT = { "TentPack" }
     local TARGETS = { GasCan = BARBECUE, FireLighter = BARBECUE }
 
+    -- the barbecue list plus whatever the small items reach for (the Petrol Can also fills an Empty Molotov)
+    local function withSmallTargets(uname, base)
+        local extra = small and small.targets(uname)
+        if not extra then
+            return base
+        end
+        local list = {}
+        for _, u in ipairs(base or {}) do
+            list[#list + 1] = u
+        end
+        for _, u in ipairs(extra) do
+            list[#list + 1] = u
+        end
+        return list
+    end
+
     local defenceTargets = nil
     local function getDefenceTargets()
         if defenceTargets and #defenceTargets > 0 then
@@ -599,7 +620,7 @@ return function(ctx)
             end
             return crowbarTargets
         end
-        return TARGETS[uname]
+        return withSmallTargets(uname, TARGETS[uname])
     end
 
     local function buildingRunning()
@@ -731,6 +752,11 @@ return function(ctx)
                 return runCrafting("deconstruct", c.player)
             end
 
+            -- a Locator on a phone, a Stun Gun on a Battery, a Petrol Can on an Empty Molotov (server/smallitems.lua)
+            if small and curHeld and small.interact(c.player, curHeld, row) then
+                return
+            end
+
             -- campfires and barbecues (server/cooking.lua), and the food they are cooking
             if cooking and cooking.interact(c.player, c.charId, curHeld, row) then
                 return
@@ -784,9 +810,12 @@ return function(ctx)
             end
             M.setHeld(c.player, nil)
             M.dropAnim(c.player, c.uname)
+            if small then
+                small.onDropped(c.player, { id = c.itemId, uname = c.uname }, c.x, c.y, c.z, c.rz) -- dice roll on
+            end
             world.syncPlayer(c.player) -- the dropped item appears without waiting for the next tick
             triggerEvent("itemMoved", c.player, c.itemId, "held", "world")
-        end, { player = player, itemId = item.id, uname = item.uname })
+        end, { player = player, itemId = item.id, uname = item.uname, x = dx, y = dy, z = z - 0.9, rz = rz })
         return true
     end
 

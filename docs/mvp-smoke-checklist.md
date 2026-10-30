@@ -421,3 +421,24 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
       **Y** end the tweak before doing their own thing.
     - f. Drop the two Wood Logs, hold the Hammer and press **F**: the `Barricade` is built and the pad opens without
       an arrow; a Campfire (Fire Lighter on the logs) or a Plot Pole opens no pad, as upstream.
+37. **Small item behaviours** (#136, upstream `note`, `sign`, `dice`, `locator`, `stungun`, `molotov.pwn`). One client,
+    two for the stun gun; `/additem Note`, `Sign`, `Dice`, `Locator`, `MobilePhone`, `StunGun`, `Battery`, `GasCan`,
+    `MolotovEmpty`.
+    - a. **Note.** Hold the Note, **F** (hud: `F Read note`): the input dialog `Write a message onto the note:`; `Done`
+      with a message stores it (`Note (first 8 letters(...))` in hand, in the inventory and on the ground); **F** again
+      shows the message with `Close` / `Tear`; `Tear` destroys it. `Use` from the inventory does the same. A written
+      note is never rewritten, and colour codes or line breaks in the text are dropped.
+    - b. **Sign.** Drop the Sign, empty hands, tap **F**: `Enter the text to display below ...`; `KEEP\OUT` draws
+      `KEEP` over `OUT` above the sign, readable from 25 m and after `rr items`; hold **F** 500 ms to pick it up.
+    - c. **Dice.** Drop the Dice: they land 40 cm ahead on a random face (`UPDATE` seen in `items.data` as
+      `{"face": n}`), the object lies on that face after `rr items`.
+    - d. **Locator.** Drop the Mobile Phone, hold the Locator, **F** on the phone: `Locator synced, you can now locate
+      the phone.`; walk off, **F** with the Locator: `Distance: 12.345`; pick the phone up with the other client or put
+      it in a safebox: the distance follows it; in a trunk: `Unable to trace the mobile phone`.
+    - e. **Stun gun.** Drop the Battery, hold the Stun Gun, **F** on it: `Stun Gun Charged`, the battery is gone and the
+      label reads `Stun Gun (Charged)`. Punch the second client: they are knocked out 60 s and the label reads
+      `(Uncharged)`; punch again: `Out of charge`, no wound either time.
+    - f. **Molotov.** Drop the Empty Molotov, hold a Petrol Can with petrol (fuel pump), **F** on the bottle: `Fuel
+      poured in bottle`, the can loses 0.5 L and a Molotov lies there (`/additem GasCan`, empty: `Petrol can empty`;
+      a Bottle of water in hand instead: nothing, it is not a can).
+

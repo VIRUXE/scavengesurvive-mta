@@ -100,8 +100,11 @@ return function(ctx)
         if exports.loot:tryOpenCrate() == true then
             return
         end
+        -- a ground bag opens on a tap and is picked up on a 500 ms hold; a sign lying there (empty hands) edits on
+        -- a tap and is picked up on the hold (upstream "Press F to edit, Hold F to pick up", #136)
         local bagId = exports.items:nearbyBag()
-        if bagId then
+        local signId = not bagId and not ctx.getHeld() and exports.items:nearbySign()
+        if bagId or signId then
             if isTimer(interactHoldTimer) then
                 return
             end
@@ -112,7 +115,11 @@ return function(ctx)
                     killTimer(interactHoldTimer)
                     interactHoldTimer = nil
                     if getTickCount() - startTick < 500 then
-                        triggerServerEvent("itemBagOpenRequested", localPlayer, bagId)
+                        if bagId then
+                            triggerServerEvent("itemBagOpenRequested", localPlayer, bagId)
+                        else
+                            triggerServerEvent("signEditRequested", localPlayer, signId)
+                        end
                     end
                 elseif getTickCount() - startTick >= 500 then
                     killTimer(interactHoldTimer)
@@ -144,7 +151,8 @@ return function(ctx)
             return triggerServerEvent("fuelPumpInteractRequested", localPlayer)
         end
         -- food is eaten; a held treatment starts its hold, and letting go of the key cancels it (items, #94);
-        -- held Clothes start the clothes change (#110); a liquid container is drunk from, sip per hold (#122)
+        -- held Clothes start the clothes change (#110); a liquid container is drunk from, sip per hold (#122);
+        -- a Note is read or written and a Locator traces its phone (#136)
         local drinkable = held and held.category == "liquid"
         local heldType = held and held.uname and exports.data:itemType(held.uname)
         local isExplosive = heldType and heldType.explosive
@@ -157,6 +165,8 @@ return function(ctx)
                 or held.uname == "Clothes"
                 or isExplosive
                 or held.uname == "MobilePhone"
+                or held.uname == "Note"
+                or held.uname == "Locator"
             )
         then
             return triggerServerEvent("itemUseRequested", localPlayer, held.id)

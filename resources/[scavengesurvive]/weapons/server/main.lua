@@ -131,6 +131,11 @@ net.handler("weaponHitReported", function(victim, attacker, weapon, bodypart, lo
     if weapon > 0 and getPedWeapon(attacker) ~= weapon then
         return
     end
+    -- a charged Stun Gun in hand knocks out instead of wounding (items/server/smallitems.lua, #136)
+    if weapon == 0 and exports.items:meleeHit(attacker, victim) == true then
+        pairs_[victim] = now
+        return
+    end
 
     local bleed, knockMult = hitBleed(attacker, weapon, dist)
     if not bleed or bleed <= 0 then

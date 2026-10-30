@@ -10,6 +10,8 @@ return function(ctx)
     local clothes = ctx.clothes
     local geometry = ctx.geometry
     local cooking = ctx.cooking
+    local small = ctx.small
+    local SIGN_RANGE = 25 -- metres a sign's text can be read from
     local objects = {} -- id -> { obj | parts, pitched, row, uname, hp, x, y, z, name, fires }
     local labelVisibility = {} -- id -> { visible, checkedAt }
     local shaders = {} -- tent material key -> shader, or false when its texture could not be read
@@ -53,6 +55,12 @@ return function(ctx)
         end
         if cooking.isFood(t) then
             return cooking.label(t, t.name, r.data)
+        end
+        if r.uname == "Note" then
+            return small.noteLabel(t and t.name or r.uname, r.data)
+        end
+        if r.uname == "StunGun" then
+            return small.stunLabel(t and t.name or r.uname, r.data)
         end
         if ammo and t then
             local defA = t.categoryData and defaultAmmo(t.categoryData.calibre) or nil
@@ -144,6 +152,11 @@ return function(ctx)
         end
         setElementPosition(obj, r.x, r.y, r.z + (t and t.modelz or 0))
         setElementRotation(obj, t and t.rotx or 0, t and t.roty or 0, (r.rz or 0) + (t and t.rotz or 0))
+        local face = r.uname == "Dice" and small.diceFace(r.data)
+        if face then -- thrown dice lie on the face they rolled
+            local rx, ry = small.diceRotation(face)
+            setElementRotation(obj, rx, ry, r.rz or 0)
+        end
         local nx, ny = tonumber(r.ground_nx) or 0, tonumber(r.ground_ny) or 0
         if nx ~= 0 or ny ~= 0 then
             setElementMatrix(obj, geometry.tilt(getElementMatrix(obj), nx, ny))
@@ -251,6 +264,31 @@ return function(ctx)
         for _, e in pairs(objects) do
             local dx, dy, dz = e.x - px, e.y - py, e.z - pz
             local d2 = dx * dx + dy * dy + dz * dz
+            -- a sign's text, upstream's material text on the sign object, hangs above it here
+            if e.uname == "Sign" and d2 < SIGN_RANGE * SIGN_RANGE then
+                local text = small.text(e.row.data)
+                if text ~= "" then
+                    local sx, sy = getScreenFromWorldPosition(e.x, e.y, e.z + 1.2, 0, false)
+                    if sx then
+                        local scale = (sh / 1080) * math.max(0.6, 1.6 - math.sqrt(d2) / SIGN_RANGE)
+                        local lines = table.concat(small.signLines(text), "\n")
+                        local white, shadow = tocolor(255, 255, 255, 240), tocolor(0, 0, 0, 220)
+                        dxDrawText(
+                            lines,
+                            sx + 1,
+                            sy + 1,
+                            sx + 1,
+                            sy + 1,
+                            shadow,
+                            scale,
+                            "default-bold",
+                            "center",
+                            "center"
+                        )
+                        dxDrawText(lines, sx, sy, sx, sy, white, scale, "default-bold", "center", "center")
+                    end
+                end
+            end
             if d2 < 4 * 4 then
                 local visibility = labelVisibility[e.row.id]
                 if not visibility or now - visibility.checkedAt >= 300 then
@@ -329,6 +367,23 @@ return function(ctx)
                 local same = (r.dimension or 0) == dim and (r.interior or 0) == int
                 if same and dx * dx + dy * dy <= reach * reach and math.abs(dz) < 3 then
                     return e.uname
+                end
+            end
+        end
+        return nil
+    end
+
+    -- The Sign lying within reach of the local player (the hud edits it on F), nil when none.
+    function M.nearbySign(reach)
+        local px, py, pz = getElementPosition(localPlayer)
+        local dim, int = getElementDimension(localPlayer), getElementInterior(localPlayer)
+        for id, e in pairs(objects) do
+            if e.uname == "Sign" then
+                local r = e.row
+                local dx, dy, dz = e.x - px, e.y - py, e.z - pz
+                local same = (r.dimension or 0) == dim and (r.interior or 0) == int
+                if same and dx * dx + dy * dy <= reach * reach and math.abs(dz) < 3 then
+                    return id
                 end
             end
         end

@@ -7,6 +7,7 @@ return function(ctx)
     local models = ctx and ctx.models -- client/models.lua: which model id draws an item type on this client
     local preview = ctx and ctx.preview -- client/preview.lua: live dxDrawModel3D previews inside the gear tiles
     local cooking = ctx and ctx.cooking -- shared/logic/cooking.lua: "(Cooked)" / "(Uncooked)" on food
+    local small = ctx and ctx.small -- shared/logic/smallitems.lua: the Note's message and the Stun Gun's charge
     local liquids = ctx and ctx.liquids -- shared/logic/liquids.lua: "(Water 0.4/0.50)" on liquid containers
     local MESSAGES = {
         HANDS_FULL = "You are already holding an item",
@@ -108,6 +109,12 @@ return function(ctx)
         DEFMOVINGIT = "Moving defence, please stand back.",
         DEFCODEZERO = "Leaving the code at 0 will allow the code to be set again.",
         PLOTPOLEENT = "Entering claimed territory",
+        LOCATORDIS = "Unable to trace the mobile phone",
+        LOCATORSYNC = "Locator synced, you can now locate the phone.",
+        STUNGUNCHAR = "Stun Gun Charged",
+        STUNGUNOUTC = "Out of charge",
+        MOLOPOURBOT = "Fuel poured in bottle",
+        FUELNOTPETR = "Fuel can does not contain petrol",
         ITEMTWKFINI = "Tweaking finished",
         ITEMTWKMOVE = "Cannot move item with players nearby",
         ITEMTWKTFAR = "Too far from original build position",
@@ -138,7 +145,11 @@ return function(ctx)
 
     addEventHandler("toastShown", root, function(code)
         local n = type(code) == "string" and code:match("^AMTRANS:(%d+)$")
-        local msg = n and string.format("Transferred %d rounds", tonumber(n) or 0) or MESSAGES[code] or tostring(code)
+        local dist = type(code) == "string" and code:match("^DISTANCE:([%d%.]+)$")
+        local msg = n and string.format("Transferred %d rounds", tonumber(n) or 0)
+            or dist and string.format("Distance: %.3f", tonumber(dist) or 0) -- upstream DISTANCEVAL
+            or MESSAGES[code]
+            or tostring(code)
         exports.ui:actionTextShow(msg, 3000)
     end)
 
@@ -161,6 +172,10 @@ return function(ctx)
             name = clothes.label(clothes.skinFor(it.id, it.data))
         elseif it.uname == "Pills" or it.uname == "AutoInjec" or it.uname == "DoctorBag" then
             name = exports.character:medicalLabel(it.uname, name, it.data)
+        elseif small and it.uname == "Note" then
+            name = small.noteLabel(name, it.data)
+        elseif small and it.uname == "StunGun" then
+            name = small.stunLabel(name, it.data)
         elseif cooking and cooking.isFood(t) then
             name = cooking.label(t, name, it.data)
         elseif liquids and liquids.isContainer(t) then

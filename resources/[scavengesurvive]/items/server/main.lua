@@ -16,6 +16,7 @@ apparel.skins = skins
 local clothes = loadFile("shared/logic/clothes.lua")
 local cooking = loadFile("shared/logic/cooking.lua")
 local liquids = loadFile("shared/logic/liquids.lua")
+local small = loadFile("shared/logic/smallitems.lua")
 
 -- export: whether a ped model is a woman (staff picks the duty skin from it)
 function isFemaleSkin(skin)
@@ -61,6 +62,12 @@ local function toast(player, code)
         triggerClientEvent(player, "toastShown", player, code)
     end
 end
+
+-- an item the character owns: held, in the inventory, in the worn bag, or in the side container they have open
+local OWNED_SQL = "SELECT i.type_uname AS uname, i.data, i.container_id FROM items i "
+    .. "LEFT JOIN containers c ON c.id = i.container_id LEFT JOIN items owner ON owner.id = c.owner_item_id "
+    .. "WHERE i.id = ? AND (i.holder_char_id = ? OR c.owner_char_id = ? OR owner.holder_char_id = ? "
+    .. "OR i.container_id = ?)"
 
 local world =
     loadFile("server/world.lua")({ db = db, state = state, geometry = geometry, diff = diff, charId = charId })
@@ -179,6 +186,29 @@ local clothesInstance = loadFile("server/clothes.lua")({
     openContainerId = containers.openContainerId,
 })
 containers.setClothes(clothesInstance)
+-- notes, signs, dice, the locator, the stun gun and the molotov (#136)
+local smallItems = loadFile("server/smallitems.lua")({
+    db = db,
+    net = net,
+    state = state,
+    type = itemType,
+    charId = charId,
+    toast = toast,
+    destroy = destroy,
+    destroyWorldItem = function(id)
+        return destroyWorldItem(id)
+    end,
+    world = world,
+    updateHeldData = function(player, data)
+        return updateHeldData(player, data)
+    end,
+    decodeData = hands.decodeData,
+    small = small,
+    liquids = liquids,
+    sendInventory = containers.sendInventory,
+    ownedSql = OWNED_SQL,
+})
+hands.setSmall(smallItems)
 
 loadFile("server/use.lua")({
     medical = medical,
@@ -197,6 +227,8 @@ loadFile("server/use.lua")({
     world = world,
     openContainerId = containers.openContainerId,
     clothes = clothesInstance,
+    small = smallItems,
+    ownedSql = OWNED_SQL,
 })
 
 addEventHandler("onResourceStart", resourceRoot, function()
@@ -451,6 +483,14 @@ function closeContainer(player)
     end
     containers.closeContainer(player)
     return true
+end
+
+-- weapons: a fist hit while holding a stun gun (server/smallitems.lua); true when the stun gun took the hit
+function meleeHit(attacker, victim)
+    if not isElement(attacker) or not isElement(victim) then
+        return false
+    end
+    return smallItems.meleeHit(attacker, victim) == true
 end
 
 function updateHeldData(player, nextData)

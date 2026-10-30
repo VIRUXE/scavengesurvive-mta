@@ -20,6 +20,9 @@
     <file src="shared/logic/tent.lua"/>
     <file src="shared/logic/cooking.lua"/>
     <file src="shared/logic/liquids.lua"/>
+    <file src="shared/logic/smallitems.lua"/>
+    <file src="server/smallitems.lua"/>
+    <file src="client/text.lua"/>
     <file src="client/models.lua"/>
     <file src="server/cooking.lua"/>
     <file src="server/drinking.lua"/>
@@ -38,6 +41,7 @@
     <export function="openSupplyContainer" type="server"/>
     <export function="closeContainer" type="server"/>
     <export function="updateHeldData" type="server"/>
+    <export function="meleeHit" type="server"/>
     <export function="createStartingItems" type="server"/>
     <export function="refreshPlayer" type="server"/>
     <export function="resendWorldItem" type="server"/>
@@ -53,4 +57,5 @@
     <export function="getAttachConfig" type="client"/>
     <export function="nearbyCooker" type="client"/>
     <export function="nearbyBag" type="client"/>
+    <export function="nearbySign" type="client"/>
 </meta>

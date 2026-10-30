@@ -15,15 +15,19 @@ local models = loadModule("client/models.lua")()
 local geometry = loadModule("shared/logic/geometry.lua")
 local cooking = loadModule("shared/logic/cooking.lua")
 local liquids = loadModule("shared/logic/liquids.lua")
+local small = loadModule("shared/logic/smallitems.lua")
 local worldCtx = { models = models, ammo = ammo, tent = tent, clothes = clothes, geometry = geometry }
 worldCtx.cooking = cooking
+worldCtx.small = small
 local world = loadModule("client/world.lua")(worldCtx)
 local attach = loadModule("client/attach.lua")({ models = models, apparel = apparel })
 local preview = loadModule("client/preview.lua")({ logic = loadModule("shared/logic/preview.lua"), models = models })
 local inventoryCtx = { ammo = ammo, apparel = apparel, clothes = clothes, models = models, preview = preview }
 inventoryCtx.cooking = cooking
 inventoryCtx.liquids = liquids
+inventoryCtx.small = small
 loadModule("client/inventory.lua")(inventoryCtx)
+loadModule("client/text.lua")()
 
 -- client exports for the attachedit resource: preview offsets on the local player's own attachments
 function setAttachPreview(slot, offsets, scale)
@@ -37,6 +41,11 @@ end
 
 function nearbyBag()
     return world.nearbyBag(2.0) or false
+end
+
+-- client export for the hud: the id of a Sign lying within reach (F edits it, a held F picks it up), else false
+function nearbySign()
+    return world.nearbySign(2.0) or false
 end
 
 function getAttachConfig(slot)
