@@ -14,6 +14,7 @@ local combatlog = loadFile("shared/logic/combatlog.lua")
 local drop = loadFile("shared/logic/drop.lua")
 local skills = loadFile("shared/logic/skills.lua")
 local medical = loadFile("shared/logic/medical.lua")
+local travel = loadFile("shared/logic/travel.lua")
 
 -- Every spawned character, shared with the tick and death modules (they capture this table).
 local state = {
@@ -71,6 +72,18 @@ medicalCtx.isKnockedOut = function(p)
 end
 local treatment = loadFile("server/medical.lua")(medicalCtx)
 tickCtx.treatment = treatment
+-- travel stats and the Endurance skill (#138)
+tickCtx.travel = loadFile("server/travel.lua")({
+    net = net,
+    travel = travel,
+    state = state,
+    gainSkill = function(p, name)
+        return gainSkill(p, name)
+    end,
+    isKnockedOut = function(p)
+        return isKnockedOut(p)
+    end,
+})
 
 -- The client's watch turns red while the combat-log window is open (upstream IsPlayerCombatLogging reads the
 -- same damage clock); ms = 0 turns it white again.

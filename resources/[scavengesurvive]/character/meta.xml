@@ -11,12 +11,15 @@
     <script src="client/ground.lua" type="client"/>
     <script src="client/skills.lua" type="client"/>
     <script src="client/medical.lua" type="client"/>
+    <script src="client/travel.lua" type="client"/>
     <file src="shared/logic/survival.lua"/>
     <file src="shared/logic/spawnpoints.lua"/>
     <file src="shared/logic/combatlog.lua"/>
     <file src="shared/logic/drop.lua"/>
     <file src="shared/logic/skills.lua"/>
     <file src="shared/logic/medical.lua"/>
+    <file src="shared/logic/travel.lua"/>
+    <file src="server/travel.lua"/>
     <export function="getCharacterId" type="server"/>
     <export function="getPlayerByCharacterId" type="server"/>
     <export function="getInventoryContainerId" type="server"/>

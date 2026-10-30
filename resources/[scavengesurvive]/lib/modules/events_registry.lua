@@ -106,6 +106,7 @@ return {
     signEditRequested = true,
     signTextSubmitted = true,
     noteOpened = true,
+    playerJumped = true,
     signEditOpened = true,
     supplyDropStarted = true,
     supplyCrateLanded = true,

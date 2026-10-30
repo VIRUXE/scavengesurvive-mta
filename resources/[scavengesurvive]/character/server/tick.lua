@@ -1,6 +1,6 @@
 -- Survival tick, stat sync to the owning client and the periodic DB flush of every spawned character.
--- ctx = { db, util, survival, skills, medical, state, die, treatment } built by server/main.lua; die comes from
--- server/death.lua, treatment (server/medical.lua) is set after this module loads.
+-- ctx = { db, util, survival, skills, medical, state, die, treatment, travel } built by server/main.lua; die comes
+-- from server/death.lua, treatment (server/medical.lua) and travel (server/travel.lua) are set after this loads.
 return function(ctx)
     local db, util, survival, skills, state = ctx.db, ctx.util, ctx.survival, ctx.skills, ctx.state
     local medical = ctx.medical
@@ -36,6 +36,9 @@ return function(ctx)
                 local s, events = survival.tick(st, mult, math.random)
                 st.hp, st.food, st.bleed, st.dirty = s.hp, s.food, s.bleed, true
                 ctx.treatment.tick(player, st, 1000)
+                if ctx.travel then
+                    ctx.travel.tick(player, 1000) -- travel stats and Endurance (#138)
+                end
                 setElementHealth(player, math.max(1, st.hp))
                 M.sendStats(player, false)
                 for _, e in ipairs(events) do

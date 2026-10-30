@@ -9,6 +9,7 @@ addEvent("characterItemsDropped", false)
 -- client to server (handlers registered with net.handler)
 addEvent("respawnRequested", true)
 addEvent("groundSurfaceReported", true)
+addEvent("playerJumped", true)
 addEvent("inventoryOpenRequested", true) -- handled by items (the Skills list's Back)
 
 -- server to client / client-local

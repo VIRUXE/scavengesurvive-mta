@@ -455,3 +455,15 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
       with **N**: it lies flat as any item.
     - e. **HerpDerp.** **F** with it in hand: a random tattoo-parlour or gang-sign animation each press.
 
+
+39. **Travel stats and Endurance** (#138, upstream `char/travel-stats.pwn`). One client.
+    - a. `/mstats` right after spawning: every `DIST_*` 0.0, `TIME_*` 0, `JUMPS: 0`. Sprint for a while, swim,
+      drive, crouch-walk: the matching lines grow (one second of sprinting is about 6.5 m, the others sort by speed),
+      and a vehicle trip shows under `DRIVING` only.
+    - b. Sprint 500 m in one go (a long straight road): `Endurance` appears in the inventory's Skills list; sprint
+      another 500 m within 10 s of that: no second gain until 10 s have passed; swim 200 m: a gain.
+    - c. Jump ten times on foot: a gain on the tenth; jumps in a vehicle or while knocked out count nothing.
+    - d. With `Endurance` at Master (`/lua return exports.character:setSkill(getPlayerFromName("A"), "Endurance",
+      0.95)`), a jump out of a sprint carries about twice as far as a standing jump; a standing jump is unchanged.
+    - e. Relog: the counters start again at 0 (session only), the skill stays.
+\n
