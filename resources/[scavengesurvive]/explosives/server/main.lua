@@ -321,6 +321,10 @@ detonateItem = function(itemId)
                                 return
                             end
                             local payload = res.payload
+                            -- the survivors' new hitpoints reach the clients' labels
+                            for _, it in ipairs(payload.damaged or {}) do
+                                exports.items:resendWorldItem(it.id)
+                            end
                             local destroyed = payload.destroyed or {}
                             for _, it in ipairs(destroyed) do
                                 exports.items:forgetWorldItem(it.id)

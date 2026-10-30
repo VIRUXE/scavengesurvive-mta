@@ -50,7 +50,19 @@ return function(ctx)
         return false
     end
 
+    -- a built defence (building resource): data.defence, either JSON shape; nil while the item just lies there
+    local function builtDefence(r)
+        local data = type(r.data) == "table" and r.data or nil
+        local def = data and (data.defence or (type(data[1]) == "table" and data[1].defence))
+        return type(def) == "table" and def.active == true and def or nil
+    end
+
     local function formatName(t, r)
+        -- upstream labels a built defence with its hitpoints (defences.pwn SetItemLabel "%d/%d")
+        if t and builtDefence(r) then
+            local hp = math.floor(tonumber(r.hp) or 0)
+            return string.format("%s\n%d/%d", t.name, hp, t.maxHitpoints or 0)
+        end
         if isPitchedTent(r) then
             return "Pitched Tent"
         end
@@ -151,13 +163,6 @@ return function(ctx)
             end
         end
         return parts
-    end
-
-    -- a built defence (building resource): data.defence, either JSON shape; nil while the item just lies there
-    local function builtDefence(r)
-        local data = type(r.data) == "table" and r.data or nil
-        local def = data and (data.defence or (type(data[1]) == "table" and data[1].defence))
-        return type(def) == "table" and def.active == true and def or nil
     end
 
     -- The type's rest rotation added to the row's heading (upstream CreateItemInWorld with applyrotoffsets), then
