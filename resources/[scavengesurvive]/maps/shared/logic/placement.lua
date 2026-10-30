@@ -20,6 +20,64 @@ placement.BREAKABLE = {
     [1651] = true,
 }
 
+-- SA-MP window001 and lsmall_window01: upstream glazes the house shells with them, but the shells now carry their own
+-- glass (tools/glaze_house_windows.py), so a pane inside one of the openings in shared/glazed_windows.lua is dropped.
+placement.PANES = {
+    [19466] = true,
+    [19325] = true,
+}
+placement.SHELL_REACH = 20 -- metres from a shell's origin to its farthest window, with margin
+
+-- true when pane row p sits in an opening that shell row s glazes; openings = glazed_windows.lua[s[1]]
+function placement.inGlazedOpening(p, s, openings)
+    local a = math.rad(-s[7])
+    local dx, dy = p[2] - s[2], p[3] - s[3]
+    local x, y, z = dx * math.cos(a) - dy * math.sin(a), dx * math.sin(a) + dy * math.cos(a), p[4] - s[4]
+    for _, w in ipairs(openings) do
+        local ox, oy, oz = x - w[1], y - w[2], z - w[3]
+        local depth, along = ox * w[4] + oy * w[5], ox * -w[5] + oy * w[4]
+        if math.abs(depth) < 0.4 and math.abs(along) <= w[6] + 0.1 and math.abs(oz) <= w[7] + 0.1 then
+            return true
+        end
+    end
+    return false
+end
+
+-- rows without the panes the shells glaze themselves, and how many were dropped; glazed = glazed_windows.lua
+function placement.dropGlazedPanes(rows, glazed)
+    local cell = placement.SHELL_REACH
+    local grid = {}
+    for _, o in ipairs(rows) do
+        if glazed[o[1]] then
+            local key = math.floor(o[2] / cell) .. ":" .. math.floor(o[3] / cell)
+            grid[key] = grid[key] or {}
+            table.insert(grid[key], o)
+        end
+    end
+    local function glazedBy(p)
+        local cx, cy = math.floor(p[2] / cell), math.floor(p[3] / cell)
+        for gx = cx - 1, cx + 1 do
+            for gy = cy - 1, cy + 1 do
+                for _, s in ipairs(grid[gx .. ":" .. gy] or {}) do
+                    if placement.inGlazedOpening(p, s, glazed[s[1]]) then
+                        return true
+                    end
+                end
+            end
+        end
+        return false
+    end
+    local kept, dropped = {}, 0
+    for _, o in ipairs(rows) do
+        if placement.PANES[o[1]] and glazedBy(o) then
+            dropped = dropped + 1
+        else
+            kept[#kept + 1] = o
+        end
+    end
+    return kept, dropped
+end
+
 function placement.isSampModel(model)
     return model >= 18631 or (model >= 11682 and model <= 11753)
 end
