@@ -8,9 +8,12 @@
     <script src="shared/events.lua" type="shared"/>
     <script src="server/main.lua" type="server"/>
     <script src="client/main.lua" type="client"/>
+    <script src="server/overheat.lua" type="server"/>
+    <script src="client/overheat.lua" type="client"/>
     <file src="shared/logic/spawn.lua"/>
     <file src="shared/logic/vehicle.lua"/>
     <file src="shared/logic/fuel-pumps.lua"/>
+    <file src="shared/logic/overheat.lua"/>
     <export function="getVehicleDbId" type="server"/>
     <export function="countVehicles" type="server"/>
     <export function="respawnAll" type="server"/>

@@ -592,3 +592,9 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
       ~50 m out and down, each ending in four small fires that vanish where they stop.
     - b. **F** again within 3 s of the last press: nothing. The box is still there and goes up again after that.
     - c. A Fire Lighter with no box near still builds a Campfire from three Wood Logs.
+50. **Weapon overheat** (#151, upstream `char/overheat.pwn`). One client, a Rhino (spawn chance 0.01: find one with
+    `lua` over `getElementsByType("vehicle")` for model 432, or move a spawned vehicle's row to 432).
+    - a. Get in as the driver: an empty red bar sits low in the middle of the screen. Get out: it goes.
+    - b. Engine on, fire the cannon once: the bar jumps to half and drains over 2 s. Two shots close together:
+      `Overheating!` over the bar. Three within about a second: the tank blows up and the bar starts empty.
+    - c. Engine off: firing adds nothing.
