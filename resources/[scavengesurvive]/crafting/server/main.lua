@@ -23,6 +23,15 @@ local function toast(player, code)
     triggerClientEvent(player, "toastShown", player, code)
 end
 
+-- a Key row's cut code (data as the vehicles resource writes it, toJSON({ code, model })), or nil for a blank key
+local function keyCode(data)
+    local t = type(data) == "string" and fromJSON(data)
+    if type(t) == "table" and type(t[1]) == "table" then
+        t = t[1]
+    end
+    return type(t) == "table" and tonumber(t.code) or nil
+end
+
 local function cancelHold(player)
     local h = activeHold[player]
     if h then
@@ -136,7 +145,7 @@ end, { rate = 3 })
 -- 2. Ground Construction: Combine ground ingredients with held tool
 local function tryGroundCraft(player, _cid, held, px, py, pz, rz, int, dim, quiet)
     local toolUname = held and held.uname
-    local query = "SELECT i.id, i.type_uname, i.x, i.y, i.z FROM world_items_pos p "
+    local query = "SELECT i.id, i.type_uname, i.x, i.y, i.z, i.data FROM world_items_pos p "
         .. "JOIN items i ON i.id = p.item_id "
         .. "WHERE ST_Distance(p.pos, POINT(?, ?)) <= 2.5 "
         .. "AND i.container_id IS NULL AND i.holder_char_id IS NULL"
@@ -159,11 +168,20 @@ local function tryGroundCraft(player, _cid, held, px, py, pz, rz, int, dim, quie
             return
         end
         local recipe = matches[1]
+        -- a key copy uses up a blank key first and keeps the cut one, whose data the copy then takes
+        local source
+        if recipe.copyData then
+            local list = itemsByUname[recipe.copyData]
+            table.sort(list, function(a, b)
+                return (keyCode(a.data) and 1 or 0) < (keyCode(b.data) and 1 or 0)
+            end)
+            source = keyCode(list[#list].data) and list[#list].data or nil
+        end
         cancelHold(c.player)
         -- upstream craft-construct.pwn: the skill is the result's uniqueid, its value shortens the build time
         local ms = exports.character:skillTimeModifier(c.player, recipe.buildTime, recipe.result.uname)
         triggerClientEvent(c.player, "craftHoldStarted", c.player, "Constructing " .. recipe.name, ms)
-        local timer = setTimer(function(pl, rec, byUname, cpx, cpy, cpz, crz, cint, cdim)
+        local timer = setTimer(function(pl, rec, byUname, cpx, cpy, cpz, crz, cint, cdim, src)
             activeHold[pl] = nil
             if not isElement(pl) then
                 return
@@ -196,22 +214,32 @@ local function tryGroundCraft(player, _cid, held, px, py, pz, rz, int, dim, quie
                         return
                     end
                     if res and res.ok then
+                        local newId = res.payload and tonumber(res.payload.item_id)
+                        if c2.source and newId then
+                            db.exec("UPDATE items SET data = ? WHERE id = ?", { c2.source, newId })
+                        end
                         exports.items:refreshPlayer(c2.player)
                         exports.character:gainSkill(c2.player, c2.skill)
                         toast(c2.player, "CRAFTED")
-                        -- upstream: the builder nudges the new item into place (building, #133)
-                        local newId = res.payload and tonumber(res.payload.item_id)
+                        -- upstream: the builder nudges the new item into place (building, #133), a set marked
+                        -- .defence = true becoming a defence lying flat first (ConvertItemToDefenceItem, pose 0)
                         local building = c2.tweak and newId and getResourceFromName("building")
                         if building and getResourceState(building) == "running" then
-                            exports.building:tweakItem(c2.player, newId)
+                            exports.building:tweakItem(c2.player, newId, c2.defence)
                         end
                     else
                         toast(c2.player, res and res.code or "DB_ERROR")
                     end
                 end,
-                { player = pl, skill = rec.result.uname, tweak = rec.tweak ~= false }
+                {
+                    player = pl,
+                    skill = rec.result.uname,
+                    tweak = rec.tweak ~= false,
+                    defence = rec.defence,
+                    source = src,
+                }
             )
-        end, ms, 1, c.player, recipe, itemsByUname, px, py, pz, rz, int, dim)
+        end, ms, 1, c.player, recipe, itemsByUname, px, py, pz, rz, int, dim, source)
         activeHold[c.player] = { timer = timer, action = "construct" }
     end, { player = player, toolUname = toolUname, quiet = quiet })
 end
@@ -219,7 +247,7 @@ end
 -- 3. Deconstruction: Dismantle world item with Crowbar
 local CROWBAR_TARGETS = "'" .. table.concat(craft.deconstructables("Crowbar"), "', '") .. "'"
 
-local function tryDeconstruct(player, _cid, held, px, py, _pz, rz, int, dim)
+local function tryDeconstruct(player, _cid, held, px, py, _pz, _rz, int, dim)
     if not held or held.uname ~= "Crowbar" then
         return
     end
@@ -244,7 +272,7 @@ local function tryDeconstruct(player, _cid, held, px, py, _pz, rz, int, dim)
         local ms = exports.character:skillTimeModifier(c.player, info.duration, target.type_uname)
         local label = "Deconstructing " .. target.type_uname
         triggerClientEvent(c.player, "craftHoldStarted", c.player, label, ms)
-        local timer = setTimer(function(pl, tgt, dInfo, crz, cint, cdim)
+        local timer = setTimer(function(pl, tgt, dInfo, cint, cdim)
             activeHold[pl] = nil
             if not isElement(pl) then
                 return
@@ -254,18 +282,15 @@ local function tryDeconstruct(player, _cid, held, px, py, _pz, rz, int, dim)
                 return toast(pl, "NEED_TOOL")
             end
             exports.items:destroyWorldItem(tgt.id)
-            for i, ing in ipairs(dInfo.ingredients or {}) do
-                local ox = (i % 2 == 0) and 0.3 or -0.3
-                local oy = (i > 2) and 0.3 or -0.3
-                db.call(
-                    "item_create",
-                    { ing.uname, 5, nil, tgt.x + ox, tgt.y + oy, tgt.z, crz, cint, cdim, nil, nil, n = 11 },
-                    function() end
-                )
+            -- upstream: each part at x + frandom(0.6), y + frandom(0.6), a random heading
+            for _, ing in ipairs(dInfo.ingredients) do
+                local x, y, prz = tgt.x + math.random() * 0.6, tgt.y + math.random() * 0.6, math.random() * 360
+                local args = { ing.uname, 5, nil, x, y, tgt.z, prz, cint, cdim, nil, nil, n = 11 }
+                db.call("item_create", args, function() end)
             end
             exports.items:refreshPlayer(pl)
             toast(pl, "DECONSTRUCTED")
-        end, ms, 1, c.player, target, info, rz, int, dim)
+        end, ms, 1, c.player, target, info, int, dim)
         activeHold[c.player] = { timer = timer, action = "deconstruct" }
     end, { player = player })
 end
@@ -299,8 +324,8 @@ local function tryWorkbenchCraft(player, _cid, held, px, py)
             end
             local recipe = matches[1]
             cancelHold(c2.player)
-            -- upstream workbench.pwn: the skill is the result's uniqueid
-            local ms = exports.character:skillTimeModifier(c2.player, recipe.buildTime, recipe.result.uname)
+            -- upstream workbench.pwn: 3.6 s per item on the bench, shortened by the skill of the result's uniqueid
+            local ms = exports.character:skillTimeModifier(c2.player, craft.workbenchTime(recipe), recipe.result.uname)
             triggerClientEvent(c2.player, "craftHoldStarted", c2.player, "Crafting " .. recipe.name, ms)
             local timer = setTimer(function(pl, rec, byUname, wbContId)
                 activeHold[pl] = nil

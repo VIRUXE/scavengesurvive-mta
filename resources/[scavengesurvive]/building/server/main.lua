@@ -312,6 +312,22 @@ local function handleDefenceInteract(player, row)
     end
 end
 
+-- Makes a lying item a built defence (upstream ConvertItemToDefenceItem): the pose's rotation and height, no despawn
+-- timer, no longer a loot spawn's item; done(z, rz, data) once the row is written
+local function activateDefence(row, t, pose, done)
+    local z, rz, st = defences.build(t.defence, pose, row.z, row.rz, t.rotz)
+    local d = decodeData(row.data)
+    d.defence = st
+    local sql = "UPDATE items SET z = ?, rz = ?, data = ?, despawn_at = NULL, loot_spawn_id = NULL "
+        .. "WHERE id = ? AND x IS NOT NULL"
+    db.exec(sql, { z, rz, encodeData(d), row.id }, function()
+        exports.items:resendWorldItem(row.id)
+        local where = string.format("%f, %f, %f rz %f", row.x, row.y, z, rz)
+        util.log("building", "info", "built defence %d (%s, %s) at %s", row.id, row.type_uname, st.pose, where)
+        done(z, rz, d)
+    end)
+end
+
 -- Building and taking down defences (upstream StartBuildingDefence and the crowbar in _InteractDefenceWithItem).
 -- Reached from items' interact key with a Hammer, Screwdriver or Crowbar in hand next to a defence item. Both re-check
 -- the tool, the distance and the row when the hold ends, so walking off or swapping tools cancels.
@@ -339,44 +355,23 @@ function buildDefence(player, itemId)
             if defences.state(decodeData(cur.data)) then
                 return
             end
-            local z, rz, st = defences.build(t.defence, c.pose, cur.z, cur.rz, t.rotz)
-            local d = decodeData(cur.data)
-            d.defence = st
-            -- a built defence stays: no despawn timer, no longer a loot spawn's item
-            db.exec(
-                "UPDATE items SET z = ?, rz = ?, data = ?, despawn_at = NULL, loot_spawn_id = NULL "
-                    .. "WHERE id = ? AND x IS NOT NULL",
-                { z, rz, encodeData(d), cur.id },
-                function()
-                    exports.items:resendWorldItem(cur.id)
-                    util.log(
-                        "building",
-                        "info",
-                        "built defence %d (%s, %s) at %f, %f, %f rz %f",
-                        cur.id,
-                        cur.type_uname,
-                        st.pose,
-                        cur.x,
-                        cur.y,
-                        z,
-                        rz
-                    )
-                    if isElement(pl) then
-                        exports.character:gainSkill(pl, "Construction")
-                        toast(pl, "DEFENCE_BUILT")
-                        -- upstream: the builder then nudges it into place, the arrow showing its front
-                        cur.z, cur.rz, cur.data = z, rz, d
-                        tweak.start(pl, cur, true)
-                    end
+            activateDefence(cur, t, c.pose, function(z, rz, d)
+                if isElement(pl) then
+                    exports.character:gainSkill(pl, "Construction")
+                    toast(pl, "DEFENCE_BUILT")
+                    -- upstream: the builder then nudges it into place, the arrow showing its front
+                    cur.z, cur.rz, cur.data = z, rz, d
+                    tweak.start(pl, cur, true)
                 end
-            )
+            end)
         end)
     end, { player = player, tool = tool, pose = pose })
 end
 
 -- crafting's ground construction (upstream SetCraftSetConstructible tweak = true): the finished item is tweaked
--- where it was built; a built defence also gets the arrow
-function tweakItem(player, itemId)
+-- where it was built; a built defence also gets the arrow. With a pose (a set marked .defence = true) the item is
+-- made a defence in that pose first.
+function tweakItem(player, itemId, pose)
     itemId = tonumber(itemId)
     if not charId(player) or not itemId then
         return false
@@ -387,8 +382,16 @@ function tweakItem(player, itemId)
         end
         local t = exports.data:itemType(row.type_uname)
         local built = t and t.defence and defences.state(decodeData(row.data)) ~= nil
+        if c.pose and t and t.defence and not built then
+            return activateDefence(row, t, c.pose, function(z, rz, d)
+                if isElement(c.player) then
+                    row.z, row.rz, row.data = z, rz, d
+                    tweak.start(c.player, row, true)
+                end
+            end)
+        end
         tweak.start(c.player, row, built == true)
-    end, { player = player })
+    end, { player = player, pose = pose })
     return true
 end
 

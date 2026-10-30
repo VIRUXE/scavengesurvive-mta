@@ -1,379 +1,132 @@
 -- Pure recipe matching logic for in-hand combining, ground construction, and workbench crafting.
--- Ported from upstream Scavenge & Survive (core/server/init.pwn, core/world/craft-construct.pwn).
+-- Ported from upstream Scavenge & Survive: the recipes are core/server/init.pwn's CRAFTING SET DEFINITIONS, line for
+-- line and in the same order (the first set that matches wins, as upstream _craft_FindCraftset), the rules
+-- core/world/craft-construct.pwn and core/item/workbench.pwn.
 local M = { RECIPES = {}, byName = {} }
+
+-- upstream ingredients are a list of item types, each consumed or kept; here { uname = n } of the consumed ones and
+-- `keep` of the kept ones, turned into { uname, count, keep } rows sorted by name so the order is deterministic
+local function ingredientRows(consumed, kept)
+    local rows = {}
+    for _, set in ipairs({ { consumed or {}, false }, { kept or {}, true } }) do
+        local names = {}
+        for uname in pairs(set[1]) do
+            names[#names + 1] = uname
+        end
+        table.sort(names)
+        for _, uname in ipairs(names) do
+            rows[#rows + 1] = { uname = uname, count = set[1][uname], keep = set[2] }
+        end
+    end
+    return rows
+end
 
 local function addRecipe(r)
     M.RECIPES[#M.RECIPES + 1] = r
     M.byName[r.name] = r
 end
 
--- 1. In-Hand Combine Recipes
-addRecipe({
-    name = "Bandage",
-    kind = "combine",
-    ingredients = {
-        { uname = "Knife", count = 1, keep = true },
-        { uname = "Clothes", count = 1, keep = false },
-    },
-    result = { uname = "Bandage", count = 1 },
-})
+-- 1. Items created by hand: { result, consumed, kept }
+local COMBINE = {
+    { "ParaBag", { Parachute = 1 }, { Knife = 1 } },
+    { "MolotovEmpty", { Bottle = 1, Bandage = 1 } },
+    { "Bandage", { Clothes = 1 }, { Knife = 1 } },
+    -- upstream also cuts the lock (array data cell 0 = 1); the port's WheelLock carries no cut state yet
+    { "WheelLock", { WheelLock = 1, LocksmithKit = 1 } },
+    -- upstream's Bottle + Bottle keeps both and makes a third: the liquid merge it stood for is commented out in
+    -- liquid-container.pwn, so all it does there is duplicate bottles; not ported
+}
+for _, c in ipairs(COMBINE) do
+    local r = { name = c[1], kind = "combine", ingredients = ingredientRows(c[2], c[3]) }
+    r.result = { uname = c[1], count = 1 }
+    addRecipe(r)
+end
 
-addRecipe({
-    name = "MolotovEmpty",
-    kind = "combine",
-    ingredients = {
-        { uname = "Bottle", count = 1, keep = false },
-        { uname = "Bandage", count = 1, keep = false },
-    },
-    result = { uname = "MolotovEmpty", count = 1 },
-})
+-- 2. Items created by using a tool on them in the world (SetCraftSetConstructible): { result, tool, build ms,
+-- consumed, kept, remove = Crowbar ms, tweak, defence }. Every removal tool upstream is the Crowbar; a set without
+-- one cannot be taken down. RefineMachine has the ScrapMachine's parts, so as upstream the ScrapMachine wins.
+local MACHINE = { Canister = 1, Motor = 1, Fluctuator = 1, PowerSupply = 1 }
+local POLE = { Canister = 1, RadioPole = 1, Fluctuator = 1, PowerSupply = 1 }
+local GROUND = {
+    { "Campfire", "FireLighter", 5000, { WoodLog = 3 }, tweak = false },
+    { "PlotPole", "Screwdriver", 20000, POLE, remove = 30000, tweak = false },
+    { "ScrapMachine", "Screwdriver", 30000, MACHINE, remove = 25000 },
+    { "RefineMachine", "Screwdriver", 30000, MACHINE, remove = 25000 },
+    { "WaterMachine", "Screwdriver", 30000, { Canister = 1, Motor = 1, Bucket = 1, PowerSupply = 1 }, remove = 25000 },
+    { "Workbench", "Hammer", 30000, { RefinedMetal = 2, WoodLog = 4 }, remove = 25000 },
+    { "Locker", "Sledgehammer", 30000, { MetalFrame = 2, RefinedMetal = 1 }, remove = 25000 },
+    { "Desk", "Screwdriver", 26500, { RefinedMetal = 1, WoodLog = 3 }, remove = 25000 },
+    { "Table", "Screwdriver", 28500, { RefinedMetal = 1, WoodLog = 4 }, remove = 25000 },
+    { "Barstool", "Screwdriver", 22500, { RefinedMetal = 1, WoodLog = 2, Clothes = 1 }, remove = 22000 },
+    { "SmallTable", "Screwdriver", 22500, { WoodLog = 4 }, remove = 22000 },
+    -- a key copy: the cut key stays and the new key takes its data (upstream locksmith.pwn OnPlayerConstructed)
+    { "Key", "Screwdriver", 18500, { Key = 1, Motor = 1 }, { Key = 1 }, tweak = false, copyData = "Key" },
+    { "LargeFrame", "Sledgehammer", 30000, { RefinedMetal = 4 }, remove = 22000, defence = "horizontal" },
+}
+for _, g in ipairs(GROUND) do
+    local r = { name = g[1], kind = "ground", tool = g[2], buildTime = g[3], result = { uname = g[1], count = 1 } }
+    r.ingredients = ingredientRows(g[4], g[5])
+    r.tweak, r.defence, r.copyData = g.tweak, g.defence, g.copyData
+    if g.remove then
+        r.removalTool, r.removalTime = "Crowbar", g.remove
+    end
+    addRecipe(r)
+end
 
-addRecipe({
-    name = "ParaBag",
-    kind = "combine",
-    ingredients = {
-        { uname = "Knife", count = 1, keep = true },
-        { uname = "Parachute", count = 1, keep = false },
-    },
-    result = { uname = "ParaBag", count = 1 },
-})
+-- 3. Items created with a workbench (SetConstructionSetWorkbench): { result, tool, consumed }. Upstream passes each a
+-- build time but workbench.pwn never reads it: the hold is 3.6 s per item on the bench (M.workbenchTime).
+local WORKBENCH = {
+    { "IedBomb", "Screwdriver", { FireworkBox = 1, PowerSupply = 1 } },
+    { "TntTimebomb", "Screwdriver", { Explosive = 1, Timer = 1 } },
+    { "TntTripMine", "Screwdriver", { Explosive = 1, Accelerometer = 1 } },
+    { "TntProxMine", "Screwdriver", { Explosive = 1, MotionSense = 1 } },
+    { "TntPhoneBomb", "Screwdriver", { Explosive = 1, MobilePhone = 1 } },
+    { "IedTimebomb", "Screwdriver", { IedBomb = 1, Timer = 1 } },
+    { "IedTripMine", "Screwdriver", { IedBomb = 1, Accelerometer = 1 } },
+    { "IedProxMine", "Screwdriver", { IedBomb = 1, MotionSense = 1 } },
+    { "IedPhoneBomb", "Screwdriver", { IedBomb = 1, MobilePhone = 1 } },
+    { "EmpTimebomb", "Screwdriver", { Fluctuator = 1, Timer = 1 } },
+    { "EmpTripMine", "Screwdriver", { Fluctuator = 1, Accelerometer = 1 } },
+    { "EmpProxMine", "Screwdriver", { Fluctuator = 1, MotionSense = 1 } },
+    { "EmpPhoneBomb", "Screwdriver", { Fluctuator = 1, MobilePhone = 1 } },
+    { "PowerSupply", "Screwdriver", { Battery = 1, Fusebox = 1 } },
+    { "StorageUnit", "Screwdriver", { Timer = 1, HardDrive = 1 } },
+    { "Fluctuator", "Screwdriver", { StunGun = 1, RadioPole = 1 } },
+    { "IoUnit", "Screwdriver", { MobilePhone = 1, Keypad = 1 } },
+    { "FluxCap", "Screwdriver", { PowerSupply = 1, Fluctuator = 1 } },
+    { "DataInterface", "Screwdriver", { StorageUnit = 1, IoUnit = 1 } },
+    { "HackDevice", "Screwdriver", { FluxCap = 1, DataInterface = 1 } },
+    { "Motor", "Screwdriver", { PowerSupply = 1, Timer = 1 } },
+    { "LocksmithKit", "Screwdriver", { Key = 1, Motor = 1 } },
+    { "StarterMotor", "Screwdriver", { Motor = 1, Fluctuator = 1 } },
+    { "AdvancedKeypad", "Screwdriver", { IoUnit = 1, PowerSupply = 1 } },
+    { "Locator", "Screwdriver", { MobilePhone = 1, RadioPole = 1, DataInterface = 1, PowerSupply = 1 } },
+    { "MetalFrame", "Hammer", { RefinedMetal = 4 } },
+    { "Canister", "Hammer", { MetalFrame = 1, RefinedMetal = 2 } },
+    { "LockBreaker", "Screwdriver", { LocksmithKit = 1, FluxCap = 1, RefinedMetal = 2, PowerSupply = 1 } },
+}
+for _, w in ipairs(WORKBENCH) do
+    local r = { name = w[1], kind = "workbench", tool = w[2], ingredients = ingredientRows(w[3]) }
+    r.result = { uname = w[1], count = 1 }
+    addRecipe(r)
+end
 
-addRecipe({
-    name = "PowerSupply",
-    kind = "combine",
-    ingredients = {
-        { uname = "Fusebox", count = 1, keep = false },
-        { uname = "Battery", count = 1, keep = false },
-    },
-    result = { uname = "PowerSupply", count = 1 },
-})
+-- how many of each item type a recipe takes, kept ones included: { uname = n }
+local function totals(r)
+    local out = {}
+    for _, ing in ipairs(r.ingredients) do
+        out[ing.uname] = (out[ing.uname] or 0) + ing.count
+    end
+    return out
+end
 
--- 2. Ground Construction Recipes
-addRecipe({
-    name = "Campfire",
-    kind = "ground",
-    tweak = false, -- upstream: the campfire and the plot pole are not nudged after building
-    tool = "FireLighter",
-    buildTime = 3000,
-    ingredients = {
-        { uname = "WoodLog", count = 2, keep = false },
-    },
-    result = { uname = "Campfire", count = 1 },
-    removalTool = "Crowbar",
-    removalTime = 3000,
-    deconstructIngredients = {
-        { uname = "WoodLog", count = 1 },
-    },
-})
-
-addRecipe({
-    name = "Barricade",
-    kind = "ground",
-    tool = "Hammer",
-    buildTime = 4000,
-    ingredients = {
-        { uname = "WoodLog", count = 3, keep = false },
-    },
-    result = { uname = "Barricade", count = 1 },
-    removalTool = "Crowbar",
-    removalTime = 5000,
-    deconstructIngredients = {
-        { uname = "WoodLog", count = 2 },
-    },
-})
-
-addRecipe({
-    name = "SmallBox",
-    kind = "ground",
-    tool = "Hammer",
-    buildTime = 4000,
-    ingredients = {
-        { uname = "WoodLog", count = 2, keep = false },
-    },
-    result = { uname = "SmallBox", count = 1 },
-    removalTool = "Crowbar",
-    removalTime = 5000,
-    deconstructIngredients = {
-        { uname = "WoodLog", count = 1 },
-    },
-})
-
-addRecipe({
-    name = "Workbench",
-    kind = "ground",
-    tool = "Hammer",
-    buildTime = 8000,
-    ingredients = {
-        { uname = "WoodLog", count = 2, keep = false },
-        { uname = "CorPanel", count = 2, keep = false },
-    },
-    result = { uname = "Workbench", count = 1 },
-    removalTool = "Crowbar",
-    removalTime = 8000,
-    deconstructIngredients = {
-        { uname = "WoodLog", count = 1 },
-        { uname = "CorPanel", count = 1 },
-    },
-})
-
-addRecipe({
-    name = "LargeFrame",
-    kind = "ground",
-    tool = "Hammer",
-    buildTime = 6000,
-    ingredients = {
-        { uname = "CorPanel", count = 4, keep = false },
-    },
-    result = { uname = "LargeFrame", count = 1 },
-    removalTool = "Crowbar",
-    removalTime = 10000,
-    deconstructIngredients = {
-        { uname = "CorPanel", count = 2 },
-    },
-})
-
-addRecipe({
-    name = "Door",
-    kind = "ground",
-    tool = "Screwdriver",
-    buildTime = 5000,
-    ingredients = {
-        { uname = "LargeFrame", count = 1, keep = false },
-        { uname = "CrateDoor", count = 1, keep = false },
-    },
-    result = { uname = "Door", count = 1 },
-    removalTool = "Crowbar",
-    removalTime = 8000,
-    deconstructIngredients = {
-        { uname = "LargeFrame", count = 1 },
-        { uname = "CrateDoor", count = 1 },
-    },
-})
-
-addRecipe({
-    name = "MetalGate",
-    kind = "ground",
-    tool = "Wrench",
-    buildTime = 6000,
-    ingredients = {
-        { uname = "LargeFrame", count = 1, keep = false },
-        { uname = "MetalFrame", count = 1, keep = false },
-    },
-    result = { uname = "MetalGate", count = 1 },
-    removalTool = "Crowbar",
-    removalTime = 10000,
-    deconstructIngredients = {
-        { uname = "LargeFrame", count = 1 },
-        { uname = "MetalFrame", count = 1 },
-    },
-})
-
-addRecipe({
-    name = "PlotPole",
-    kind = "ground",
-    tweak = false,
-    tool = "Screwdriver",
-    buildTime = 8000,
-    ingredients = {
-        { uname = "CorPanel", count = 2, keep = false },
-        { uname = "Battery", count = 1, keep = false },
-    },
-    result = { uname = "PlotPole", count = 1 },
-    removalTool = "Crowbar",
-    removalTime = 15000,
-    deconstructIngredients = {
-        { uname = "CorPanel", count = 1 },
-        { uname = "Battery", count = 1 },
-    },
-})
-
--- the machines (#145), upstream init.pwn:1329-1331: 30 s with a Screwdriver, 25 s with a Crowbar to take down, every
--- part back; whatever lies in the machine's container goes with it (the container rows cascade, as upstream)
-addRecipe({
-    name = "ScrapMachine",
-    kind = "ground",
-    tool = "Screwdriver",
-    buildTime = 30000,
-    ingredients = {
-        { uname = "Canister", count = 1, keep = false },
-        { uname = "Motor", count = 1, keep = false },
-        { uname = "Fluctuator", count = 1, keep = false },
-        { uname = "PowerSupply", count = 1, keep = false },
-    },
-    result = { uname = "ScrapMachine", count = 1 },
-    removalTool = "Crowbar",
-    removalTime = 25000,
-    deconstructIngredients = {
-        { uname = "Canister", count = 1 },
-        { uname = "Motor", count = 1 },
-        { uname = "Fluctuator", count = 1 },
-        { uname = "PowerSupply", count = 1 },
-    },
-})
-
-addRecipe({
-    name = "RefineMachine",
-    kind = "ground",
-    tool = "Screwdriver",
-    buildTime = 30000,
-    ingredients = {
-        { uname = "Canister", count = 1, keep = false },
-        { uname = "Motor", count = 1, keep = false },
-        { uname = "Fluctuator", count = 1, keep = false },
-        { uname = "PowerSupply", count = 1, keep = false },
-    },
-    result = { uname = "RefineMachine", count = 1 },
-    removalTool = "Crowbar",
-    removalTime = 25000,
-    deconstructIngredients = {
-        { uname = "Canister", count = 1 },
-        { uname = "Motor", count = 1 },
-        { uname = "Fluctuator", count = 1 },
-        { uname = "PowerSupply", count = 1 },
-    },
-})
-
-addRecipe({
-    name = "WaterMachine",
-    kind = "ground",
-    tool = "Screwdriver",
-    buildTime = 30000,
-    ingredients = {
-        { uname = "Canister", count = 1, keep = false },
-        { uname = "Motor", count = 1, keep = false },
-        { uname = "Bucket", count = 1, keep = false },
-        { uname = "PowerSupply", count = 1, keep = false },
-    },
-    result = { uname = "WaterMachine", count = 1 },
-    removalTool = "Crowbar",
-    removalTime = 25000,
-    deconstructIngredients = {
-        { uname = "Canister", count = 1 },
-        { uname = "Motor", count = 1 },
-        { uname = "Bucket", count = 1 },
-        { uname = "PowerSupply", count = 1 },
-    },
-})
-
--- 3. Workbench Recipes (crafted in Workbench 16-slot container)
-addRecipe({
-    name = "PowerSupply",
-    kind = "workbench",
-    tool = "Screwdriver",
-    buildTime = 12000,
-    ingredients = {
-        { uname = "Battery", count = 1, keep = false },
-        { uname = "Fusebox", count = 1, keep = false },
-    },
-    result = { uname = "PowerSupply", count = 1 },
-})
-
-addRecipe({
-    name = "Keypad",
-    kind = "workbench",
-    tool = "Screwdriver",
-    buildTime = 5000,
-    ingredients = {
-        { uname = "Battery", count = 1, keep = false },
-        { uname = "CorPanel", count = 1, keep = false },
-    },
-    result = { uname = "Keypad", count = 1 },
-})
-
-addRecipe({
-    name = "AdvancedKeypad",
-    kind = "workbench",
-    tool = "Screwdriver",
-    buildTime = 5000,
-    ingredients = {
-        { uname = "Keypad", count = 1, keep = false },
-        { uname = "Battery", count = 1, keep = false },
-    },
-    result = { uname = "AdvancedKeypad", count = 1 },
-})
-
-addRecipe({
-    name = "LocksmithKit",
-    kind = "workbench",
-    tool = "Wrench",
-    buildTime = 6000,
-    ingredients = {
-        { uname = "CorPanel", count = 1, keep = false },
-        { uname = "Screwdriver", count = 1, keep = false },
-        { uname = "Hammer", count = 1, keep = false },
-    },
-    result = { uname = "LocksmithKit", count = 1 },
-})
-
-addRecipe({
-    name = "LockBreaker",
-    kind = "workbench",
-    tool = "Wrench",
-    buildTime = 6000,
-    ingredients = {
-        { uname = "Crowbar", count = 1, keep = false },
-        { uname = "Battery", count = 1, keep = false },
-    },
-    result = { uname = "LockBreaker", count = 1 },
-})
-
-addRecipe({
-    name = "HackDevice",
-    kind = "workbench",
-    tool = "Screwdriver",
-    buildTime = 8000,
-    ingredients = {
-        { uname = "Keypad", count = 1, keep = false },
-        { uname = "Battery", count = 1, keep = false },
-    },
-    result = { uname = "HackDevice", count = 1 },
-})
-
-addRecipe({
-    name = "Shield",
-    kind = "workbench",
-    tool = "Hammer",
-    buildTime = 6000,
-    ingredients = {
-        { uname = "CorPanel", count = 2, keep = false },
-        { uname = "WoodLog", count = 1, keep = false },
-    },
-    result = { uname = "Shield", count = 1 },
-})
-
-addRecipe({
-    name = "Armour",
-    kind = "workbench",
-    tool = "Hammer",
-    buildTime = 8000,
-    ingredients = {
-        { uname = "CorPanel", count = 3, keep = false },
-        { uname = "Clothes", count = 2, keep = false },
-    },
-    result = { uname = "Armour", count = 1 },
-})
-
-addRecipe({
-    name = "Backpack",
-    kind = "workbench",
-    tool = "Knife",
-    buildTime = 5000,
-    ingredients = {
-        { uname = "Clothes", count = 3, keep = false },
-    },
-    result = { uname = "Backpack", count = 1 },
-})
-
-addRecipe({
-    name = "Rucksack",
-    kind = "workbench",
-    tool = "Knife",
-    buildTime = 7000,
-    ingredients = {
-        { uname = "Clothes", count = 5, keep = false },
-    },
-    result = { uname = "Rucksack", count = 1 },
-})
+local function itemCount(r)
+    local n = 0
+    for _, ing in ipairs(r.ingredients) do
+        n = n + ing.count
+    end
+    return n
+end
 
 function M.matchCombine(unameA, unameB)
     if not unameA or not unameB then
@@ -392,21 +145,51 @@ function M.matchCombine(unameA, unameB)
     return nil
 end
 
-local function hasIngredients(availableCounts, recipeIngredients)
-    for _, ing in ipairs(recipeIngredients) do
-        local have = availableCounts[ing.uname] or 0
-        if have < ing.count then
+local function hasIngredients(availableCounts, r)
+    for uname, n in pairs(totals(r)) do
+        if (availableCounts[uname] or 0) < n then
             return false
         end
     end
     return true
 end
 
+-- Upstream takes every item in reach and needs them to be exactly one set; the port reaches 2.5 m, so stray items
+-- nearby are allowed and the set that uses the most of what lies there comes first (4 logs and a Refined Metal make a
+-- Table, not a Desk), ties in definition order.
 function M.matchGround(availableCounts, toolUname)
     local matches = {}
     for _, r in ipairs(M.RECIPES) do
-        if r.kind == "ground" then
-            if (not r.tool or r.tool == toolUname) and hasIngredients(availableCounts, r.ingredients) then
+        if r.kind == "ground" and r.tool == toolUname and hasIngredients(availableCounts, r) then
+            matches[#matches + 1] = r
+        end
+    end
+    local order = {}
+    for i, r in ipairs(matches) do
+        order[r] = i
+    end
+    table.sort(matches, function(a, b)
+        local na, nb = itemCount(a), itemCount(b)
+        if na ~= nb then
+            return na > nb
+        end
+        return order[a] < order[b]
+    end)
+    return matches
+end
+
+-- the workbench's contents must be exactly one set (upstream _craft_FindCraftset), and the held item its tool
+function M.matchWorkbench(containerCounts, toolUname)
+    local matches = {}
+    for _, r in ipairs(M.RECIPES) do
+        if r.kind == "workbench" and r.tool == toolUname then
+            local need, exact = totals(r), true
+            for uname, n in pairs(containerCounts) do
+                if need[uname] ~= n then
+                    exact = false
+                end
+            end
+            if exact and hasIngredients(containerCounts, r) then
                 matches[#matches + 1] = r
             end
         end
@@ -414,16 +197,9 @@ function M.matchGround(availableCounts, toolUname)
     return matches
 end
 
-function M.matchWorkbench(containerCounts, toolUname)
-    local matches = {}
-    for _, r in ipairs(M.RECIPES) do
-        if r.kind == "workbench" then
-            if (not r.tool or r.tool == toolUname) and hasIngredients(containerCounts, r.ingredients) then
-                matches[#matches + 1] = r
-            end
-        end
-    end
-    return matches
+-- upstream workbench.pwn: GetPlayerSkillTimeModifier(playerid, itemcount * 3600, uniqueid)
+function M.workbenchTime(r)
+    return itemCount(r) * 3600
 end
 
 -- The tools the ground recipes are built with, as a set: { Hammer = true, ... }.
@@ -447,16 +223,19 @@ function M.deconstructables(toolUname)
     return out
 end
 
+-- Taking a constructed item down gives back every ingredient that was used up building it, one row per item; the
+-- kept ones never left the builder (upstream craft-construct.pwn OnHoldActionFinish).
 function M.getDeconstructInfo(productUname, toolUname)
     for _, r in ipairs(M.RECIPES) do
         if r.result.uname == productUname and r.removalTool then
             if not toolUname or r.removalTool == toolUname then
-                return {
-                    recipe = r,
-                    tool = r.removalTool,
-                    duration = r.removalTime or 5000,
-                    ingredients = r.deconstructIngredients or {},
-                }
+                local back = {}
+                for _, ing in ipairs(r.ingredients) do
+                    for _ = 1, ing.keep and 0 or ing.count do
+                        back[#back + 1] = { uname = ing.uname, count = 1 }
+                    end
+                end
+                return { recipe = r, tool = r.removalTool, duration = r.removalTime, ingredients = back }
             end
         end
     end

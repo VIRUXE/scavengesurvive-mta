@@ -117,12 +117,13 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
       - World safeboxes (`SmallBox`, `MediumBox`, `LargeBox`, `Locker`, `ToolBox`, `Capsule`, `Suitcase`, etc.): Press **F** near a world safebox to open its persistent container dialog; transfer items between hands and box. When empty, `[Pick up container]` option in dialog allows picking up the box into hands.
       - `TentPack`: Place on ground. Standing near it holding `Hammer`, press **F**: 3-second progress bar pitches the tent into a full 3D tent (model 3243) with a 16-slot container. Interacting with pitched tent opens tent container. Holding `Crowbar` near an empty tent and pressing **F** plays a 3-second packing progress bar, packing it back into portable `TentPack`.
     - **Crafting & Workbench**:
-      - In-hand combine: Hold `Knife` and click `Clothes` in inventory -> click `Combine`: instant craft produces `Bandage` in inventory while preserving the `Knife`. Combine `Bottle` + `Bandage` -> `MolotovEmpty`.
-      - Ground construction: Drop ingredients on ground (e.g. 2x `WoodLog`), hold `FireLighter`, press **F** (or `/craft`): 3-second construction progress bar consumes logs and spawns `Campfire`. Hold `Hammer` near 3x `WoodLog` -> builds `Barricade`. Hold `Hammer` near 2x `WoodLog` + 2x `CorPanel` -> builds `Workbench`.
+      - The recipes are upstream's `init.pwn` CRAFTING SET DEFINITIONS (`crafting/shared/logic/craft.lua`): 4 by hand, 13 on the ground, 28 on a workbench.
+      - In-hand combine: Hold `Knife` and click `Clothes` in inventory -> click `Combine`: instant craft produces `Bandage` in inventory while preserving the `Knife`. Combine `Bottle` + `Bandage` -> `MolotovEmpty`, `WheelLock` + `LocksmithKit` -> `WheelLock`.
+      - Ground construction: Drop ingredients on ground (e.g. 3x `WoodLog`), hold `FireLighter`, press **F** (or `/craft`): 5-second construction progress bar consumes logs and spawns `Campfire`. Hold `Hammer` near 2x `RefinedMetal` + 4x `WoodLog` -> builds `Workbench` (30 s). Hold `Screwdriver` near 1x `RefinedMetal` + 4x `WoodLog` -> `Table` (with 3 logs: `Desk`). Hold `Sledgehammer` near 4x `RefinedMetal` -> `LargeFrame`, built lying flat as a defence. Hold `Screwdriver` near a cut `Key`, a blank `Key` and a `Motor` -> the blank key and the Motor are used up and a copy of the cut key appears.
         With the ingredients within reach, **F** with the tool in hand builds (it no longer says `You are already
         holding an item`, #116); a tool in hand next to items that match no recipe says `Cannot craft these items`.
-      - Deconstruction: Hold `Crowbar` and press **F** near constructed object (`Campfire`, `Workbench`, `Barricade`, `LargeFrame`), even with another item lying closer (#97): timed deconstruction progress bar dismantles the object and returns raw materials.
-      - Workbench crafting: Place materials in Workbench 16-slot container (e.g. `CorPanel` + `Battery` + tool `Screwdriver`), press **F** at Workbench: crafts `Keypad` inside container.
+      - Deconstruction: Hold `Crowbar` and press **F** near constructed object (`Workbench`, `Locker`, `Desk`, `Table`, `Barstool`, `SmallTable`, `LargeFrame`, `PlotPole`, the machines), even with another item lying closer (#97): timed deconstruction progress bar dismantles the object and returns every part it was built from, scattered within 0.6 m. A `Campfire` cannot be taken down (no removal tool upstream).
+      - Workbench crafting: Place exactly one recipe's parts in the Workbench 16-slot container (e.g. `Battery` + `Fusebox`, tool `Screwdriver`), press **F** at Workbench: 3.6 s per item (7.2 s here) and crafts `PowerSupply` inside container. An extra item on the bench matches nothing.
     - **Defences, Keypads and Plot Poles**:
       - Defences (`LargeFrame`, `Door`, `MetalGate`): Press **F** on an unlocked door/gate to swing it open (+90 deg rotation) with 5-second auto-latch closing.
       - Keypad security: Hold `Keypad` item and press **F** on defence: installs keypad and opens 12-key Keypad UI to set 4-digit code. Interacting with locked defence opens Keypad UI: enter 4-digit code with mouse/numpad, press `>` (Enter); correct code grants access and swings door open for 5 seconds; wrong code plays error sound.
@@ -398,13 +399,13 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
       and jump freely while holding it; dropping it plays the bend animation and places it on the ground.
     - d. **Weather cycle (#117).** Weather re-evaluates every minute once 10 minutes have passed since the last change
       (10% roll), and picks a different weather rather than repeating the same rain.
-    - e. **Crafting combine (#119).** Hold a `Fusebox` and open inventory with a `Battery`: the `Combine` action produces
-      a `PowerSupply` in hands and updates inventory slots.
+    - e. **Crafting combine (#119).** Superseded: `Fusebox` + `Battery` is a workbench recipe upstream (Screwdriver), and
+      combining them in the hand now says `Cannot craft these items`.
     - f. **Holster (#123).** Holding a holsterable weapon (`M9Pistol`, `DesertEagle`, `AK47Rifle`), press **Y** to
       holster it with its holster animation (300 ms for thigh pistols, 800 ms for back rifles); hands become empty.
       With empty hands and a holstered weapon, HUD displays `Y Draw weapon` and pressing **Y** equips it.
 36. **Tweaking a built item** (#133, upstream `item-tweak.pwn`). One client; `/additem CrateDoor`, `/additem Screwdriver`,
-    `/additem Hammer`, two `/additem WoodLog`.
+    `/additem Hammer`, two `/additem RefinedMetal`, four `/additem WoodLog`.
     - a. Drop the Crate Door, hold the Screwdriver and press **F** on it: after the build hold, `Defence built` and a pad
       of eight buttons appears at the right of the screen (`L`, `R`, `^`, `<`, `>`, `v`, `Edit: [LALT]`, `Done`), a
       yellow arrow lies on the door pointing at its front (the side a Crowbar cannot take it down from), and the help
@@ -419,8 +420,8 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
     - e. Click `Done` (or press Enter with the mouse up): `Tweaking finished`, pad and arrow gone, the door stays
       where it was nudged (`rr items` keeps it there). **F** did nothing while the pad was up; **I**, **N** and
       **Y** end the tweak before doing their own thing.
-    - f. Drop the two Wood Logs, hold the Hammer and press **F**: the `Barricade` is built and the pad opens without
-      an arrow; a Campfire (Fire Lighter on the logs) or a Plot Pole opens no pad, as upstream.
+    - f. Drop the Refined Metal and the Wood Logs, hold the Hammer and press **F**: the `Workbench` is built and the pad
+      opens without an arrow; a Campfire (Fire Lighter on three logs) or a Plot Pole opens no pad, as upstream.
 37. **Small item behaviours** (#136, upstream `note`, `sign`, `dice`, `locator`, `stungun`, `molotov.pwn`). One client,
     two for the stun gun; `/additem Note`, `Sign`, `Dice`, `Locator`, `MobilePhone`, `StunGun`, `Battery`, `GasCan`,
     `MolotovEmpty`.

@@ -1,180 +1,208 @@
--- Tests for the crafting recipe engine (in-hand combine, ground construct, workbench, deconstruction).
+-- Tests for the crafting recipe engine (in-hand combine, ground construct, workbench, deconstruction), against
+-- upstream core/server/init.pwn's CRAFTING SET DEFINITIONS.
 local craft = loadfile("resources/[scavengesurvive]/crafting/shared/logic/craft.lua")()
 
+local function names(list)
+    local out = {}
+    for _, r in ipairs(list) do
+        out[#out + 1] = r.name
+    end
+    return out
+end
+
 describe("crafting logic", function()
-    describe("in-hand combine", function()
-        it("combines Knife + Clothes into Bandage, keeping the Knife", function()
-            local res = craft.matchCombine("Knife", "Clothes")
-            assert.is_not_nil(res)
-            assert.are.equal("Bandage", res.recipe.result.uname)
-            assert.is_false(res.consumeA) -- Knife kept
-            assert.is_true(res.consumeB) -- Clothes consumed
+    describe("the recipe list", function()
+        it("has upstream's sets: 4 by hand (Bottle + Bottle left out), 13 on the ground, 28 on a workbench", function()
+            local kinds = {}
+            for _, r in ipairs(craft.RECIPES) do
+                kinds[r.kind] = (kinds[r.kind] or 0) + 1
+            end
+            assert.same({ combine = 4, ground = 13, workbench = 28 }, kinds)
         end)
 
-        it("combines Clothes + Knife regardless of order", function()
-            local res = craft.matchCombine("Clothes", "Knife")
-            assert.is_not_nil(res)
+        it("only uses item types that exist", function()
+            local items = dofile("resources/[scavengesurvive]/data/generated/item_types.lua")
+            for _, r in ipairs(craft.RECIPES) do
+                assert.is_not_nil(items.byUname[r.result.uname], r.result.uname)
+                for _, ing in ipairs(r.ingredients) do
+                    assert.is_not_nil(items.byUname[ing.uname], r.name .. ": " .. ing.uname)
+                end
+                for _, tool in ipairs({ r.tool, r.removalTool }) do
+                    assert.is_not_nil(items.byUname[tool], r.name .. ": " .. tool)
+                end
+            end
+        end)
+
+        it("drops the recipes upstream never had", function()
+            for _, n in ipairs({
+                "Barricade",
+                "SmallBox",
+                "Door",
+                "MetalGate",
+                "Keypad",
+                "Shield",
+                "Armour",
+                "Backpack",
+                "Rucksack",
+            }) do
+                assert.is_nil(craft.byName[n], n)
+            end
+        end)
+    end)
+
+    describe("in-hand combine", function()
+        it("combines Knife + Clothes into Bandage, keeping the Knife, in either order", function()
+            local res = craft.matchCombine("Knife", "Clothes")
             assert.are.equal("Bandage", res.recipe.result.uname)
-            assert.is_true(res.consumeA) -- Clothes consumed
-            assert.is_false(res.consumeB) -- Knife kept
+            assert.is_false(res.consumeA)
+            assert.is_true(res.consumeB)
+            local rev = craft.matchCombine("Clothes", "Knife")
+            assert.is_true(rev.consumeA)
+            assert.is_false(rev.consumeB)
         end)
 
         it("combines Bottle + Bandage into MolotovEmpty consuming both", function()
             local res = craft.matchCombine("Bottle", "Bandage")
-            assert.is_not_nil(res)
             assert.are.equal("MolotovEmpty", res.recipe.result.uname)
-            assert.is_true(res.consumeA)
-            assert.is_true(res.consumeB)
+            assert.is_true(res.consumeA and res.consumeB)
         end)
 
-        it("combines Knife + Parachute into ParaBag", function()
+        it("combines Knife + Parachute into ParaBag, keeping the Knife", function()
             local res = craft.matchCombine("Knife", "Parachute")
-            assert.is_not_nil(res)
             assert.are.equal("ParaBag", res.recipe.result.uname)
             assert.is_false(res.consumeA)
             assert.is_true(res.consumeB)
         end)
 
-        it("combines Fusebox + Battery into PowerSupply consuming both (#119)", function()
-            local res = craft.matchCombine("Fusebox", "Battery")
-            assert.is_not_nil(res)
-            assert.are.equal("PowerSupply", res.recipe.result.uname)
-            assert.is_true(res.consumeA)
-            assert.is_true(res.consumeB)
+        it("combines WheelLock + LocksmithKit into a WheelLock consuming both", function()
+            local res = craft.matchCombine("LocksmithKit", "WheelLock")
+            assert.are.equal("WheelLock", res.recipe.result.uname)
+            assert.is_true(res.consumeA and res.consumeB)
         end)
 
-        it("returns nil for non-matching items", function()
+        it("does not make a Power Supply in the hand (a workbench recipe upstream) nor duplicate bottles", function()
+            assert.is_nil(craft.matchCombine("Fusebox", "Battery"))
+            assert.is_nil(craft.matchCombine("Bottle", "Bottle"))
             assert.is_nil(craft.matchCombine("Knife", "Hammer"))
-            assert.is_nil(craft.matchCombine("WoodLog", "Bottle"))
         end)
     end)
 
     describe("ground construction", function()
-        it("matches Campfire when 2x WoodLog and FireLighter held", function()
-            local ground = { WoodLog = 2 }
-            local matches = craft.matchGround(ground, "FireLighter")
-            assert.are.equal(1, #matches)
-            assert.are.equal("Campfire", matches[1].name)
-            assert.are.equal(3000, matches[1].buildTime)
+        it("builds a Campfire from 3 logs with a Fire Lighter in 5 s, not nudged", function()
+            local matches = craft.matchGround({ WoodLog = 3 }, "FireLighter")
+            assert.same({ "Campfire" }, names(matches))
+            assert.are.equal(5000, matches[1].buildTime)
+            assert.is_false(matches[1].tweak)
+            assert.same({}, craft.matchGround({ WoodLog = 2 }, "FireLighter"))
         end)
 
-        it("refuses Campfire if not holding FireLighter", function()
-            local ground = { WoodLog = 2 }
-            local matches = craft.matchGround(ground, "Hammer")
-            assert.are.equal(1, #matches)
-            assert.are.equal("SmallBox", matches[1].name) -- matches SmallBox instead!
+        it("needs the recipe's own tool", function()
+            assert.same({}, craft.matchGround({ WoodLog = 3 }, "Hammer"))
+            assert.same({}, craft.matchGround({ WoodLog = 4 }, "Hammer"))
         end)
 
-        it("matches Barricade when 3x WoodLog and Hammer held", function()
-            local ground = { WoodLog = 3 }
-            local matches = craft.matchGround(ground, "Hammer")
-            -- both SmallBox (needs 2) and Barricade (needs 3) are valid with 3 logs
-            local foundBarricade, foundSmallBox = false, false
-            for _, m in ipairs(matches) do
-                if m.name == "Barricade" then
-                    foundBarricade = true
-                end
-                if m.name == "SmallBox" then
-                    foundSmallBox = true
-                end
+        it("builds a Workbench from 2 Refined Metal and 4 logs with a Hammer", function()
+            local m = craft.matchGround({ RefinedMetal = 2, WoodLog = 4 }, "Hammer")
+            assert.are.equal("Workbench", m[1].name)
+            assert.are.equal(30000, m[1].buildTime)
+        end)
+
+        it("prefers the set that uses the most of what lies there (Table over Desk over Small Table)", function()
+            assert.same(
+                { "Table", "Desk", "SmallTable" },
+                names(craft.matchGround({ RefinedMetal = 1, WoodLog = 4 }, "Screwdriver"))
+            )
+            assert.same({ "Desk" }, names(craft.matchGround({ RefinedMetal = 1, WoodLog = 3 }, "Screwdriver")))
+            assert.same({ "SmallTable" }, names(craft.matchGround({ WoodLog = 4 }, "Screwdriver")))
+        end)
+
+        it(
+            "builds the machines with a Screwdriver; the Refine Machine shares the Scrap Machine's parts and loses",
+            function()
+                local machine = { Canister = 1, Motor = 1, Fluctuator = 1, PowerSupply = 1 }
+                assert.same({ "ScrapMachine", "RefineMachine" }, names(craft.matchGround(machine, "Screwdriver")))
+                local water = craft.matchGround({ Canister = 1, Motor = 1, Bucket = 1, PowerSupply = 1 }, "Screwdriver")
+                assert.are.equal("WaterMachine", water[1].name)
             end
-            assert.is_true(foundBarricade)
-            assert.is_true(foundSmallBox)
+        )
+
+        it("builds a Plot Pole from a Canister, Radio Pole, Fluctuator and Power Supply, not nudged", function()
+            local pole =
+                craft.matchGround({ Canister = 1, RadioPole = 1, Fluctuator = 1, PowerSupply = 1 }, "Screwdriver")
+            assert.are.equal("PlotPole", pole[1].name)
+            assert.are.equal(20000, pole[1].buildTime)
+            assert.is_false(pole[1].tweak)
         end)
 
-        it("matches Workbench with 2x WoodLog, 2x CorPanel, and Hammer", function()
-            local ground = { WoodLog = 2, CorPanel = 2 }
-            local matches = craft.matchGround(ground, "Hammer")
-            local foundWorkbench = false
-            for _, m in ipairs(matches) do
-                if m.name == "Workbench" then
-                    foundWorkbench = true
-                end
+        it("copies a key from two keys and a Motor, keeping one key", function()
+            local m = craft.matchGround({ Key = 2, Motor = 1 }, "Screwdriver")
+            assert.are.equal("Key", m[1].name)
+            assert.are.equal("Key", m[1].copyData)
+            assert.same({}, craft.matchGround({ Key = 1, Motor = 1 }, "Screwdriver"))
+            local kept = 0
+            for _, ing in ipairs(m[1].ingredients) do
+                kept = kept + (ing.keep and ing.count or 0)
             end
-            assert.is_true(foundWorkbench)
+            assert.are.equal(1, kept)
         end)
 
-        it("builds the machines with a Screwdriver and a Crowbar takes them down, every part back (#145)", function()
-            local names = {}
-            for _, m in ipairs(craft.matchGround({ Canister = 1, Motor = 1, Fluctuator = 1, PowerSupply = 1 }, "Screwdriver")) do
-                names[m.name] = true
-            end
-            assert.is_true(names.ScrapMachine and names.RefineMachine)
-            local water = craft.matchGround({ Canister = 1, Motor = 1, Bucket = 1, PowerSupply = 1 }, "Screwdriver")
-            assert.are.equal("WaterMachine", water[1].name)
-            local info = craft.getDeconstructInfo("ScrapMachine", "Crowbar")
-            assert.are.equal(25000, info.duration)
-            assert.are.equal(4, #info.ingredients)
-        end)
-
-        it("returns empty list if ingredients missing", function()
-            local ground = { WoodLog = 1 }
-            local matches = craft.matchGround(ground, "Hammer")
-            assert.are.equal(0, #matches)
+        it("builds a Large Frame from 4 Refined Metal with a Sledgehammer, as a defence lying flat", function()
+            local m = craft.matchGround({ RefinedMetal = 4 }, "Sledgehammer")
+            assert.are.equal("LargeFrame", m[1].name)
+            assert.are.equal("horizontal", m[1].defence)
+            assert.are.equal("Locker", craft.matchGround({ MetalFrame = 2, RefinedMetal = 1 }, "Sledgehammer")[1].name)
         end)
     end)
 
     describe("workbench crafting", function()
-        it("matches PowerSupply with Battery and Fusebox in container and Screwdriver held", function()
-            local container = { Battery = 1, Fusebox = 1 }
-            local matches = craft.matchWorkbench(container, "Screwdriver")
-            assert.are.equal(1, #matches)
-            assert.are.equal("PowerSupply", matches[1].name)
-            assert.are.equal(12000, matches[1].buildTime)
+        it("crafts a Power Supply from exactly a Battery and a Fusebox with a Screwdriver", function()
+            assert.same({ "PowerSupply" }, names(craft.matchWorkbench({ Battery = 1, Fusebox = 1 }, "Screwdriver")))
         end)
 
-        it("matches LocksmithKit with CorPanel, Screwdriver, Hammer in container and Wrench held", function()
-            local container = { CorPanel = 1, Screwdriver = 1, Hammer = 1 }
-            local matches = craft.matchWorkbench(container, "Wrench")
-            assert.are.equal(1, #matches)
-            assert.are.equal("LocksmithKit", matches[1].name)
+        it("needs the bench to hold exactly one set", function()
+            assert.same({}, craft.matchWorkbench({ Battery = 1, Fusebox = 1, Timer = 1 }, "Screwdriver"))
+            assert.same({}, craft.matchWorkbench({ Battery = 1 }, "Screwdriver"))
         end)
 
-        it("matches Keypad with Battery and CorPanel in container and Screwdriver held", function()
-            local container = { Battery = 1, CorPanel = 1 }
-            local matches = craft.matchWorkbench(container, "Screwdriver")
-            assert.are.equal(1, #matches)
-            assert.are.equal("Keypad", matches[1].name)
+        it("refuses the wrong tool", function()
+            assert.same({}, craft.matchWorkbench({ Battery = 1, Fusebox = 1 }, "Hammer"))
+            assert.same({ "MetalFrame" }, names(craft.matchWorkbench({ RefinedMetal = 4 }, "Hammer")))
         end)
 
-        it("matches Armour with 3x CorPanel and 2x Clothes with Hammer held", function()
-            local container = { CorPanel = 3, Clothes = 2 }
-            local matches = craft.matchWorkbench(container, "Hammer")
-            assert.are.equal(1, #matches)
-            assert.are.equal("Armour", matches[1].name)
+        it("crafts the Lock Breaker from its five parts", function()
+            local bench = { LocksmithKit = 1, FluxCap = 1, RefinedMetal = 2, PowerSupply = 1 }
+            assert.same({ "LockBreaker" }, names(craft.matchWorkbench(bench, "Screwdriver")))
         end)
 
-        it("refuses craft if tool is wrong", function()
-            local container = { Battery = 1, CorPanel = 1 }
-            local matches = craft.matchWorkbench(container, "Hammer")
-            assert.are.equal(0, #matches)
+        it("takes 3.6 s per item on the bench, as upstream workbench.pwn", function()
+            assert.are.equal(7200, craft.workbenchTime(craft.byName.PowerSupply))
+            assert.are.equal(18000, craft.workbenchTime(craft.byName.LockBreaker))
         end)
     end)
 
     describe("deconstruction", function()
-        it("returns deconstruct info for Workbench with Crowbar", function()
+        it("takes a Workbench down with a Crowbar in 25 s and gives back every part", function()
             local info = craft.getDeconstructInfo("Workbench", "Crowbar")
-            assert.is_not_nil(info)
             assert.are.equal("Crowbar", info.tool)
-            assert.are.equal(8000, info.duration)
-            assert.are.equal(2, #info.ingredients)
-            assert.are.equal("WoodLog", info.ingredients[1].uname)
-            assert.are.equal("CorPanel", info.ingredients[2].uname)
+            assert.are.equal(25000, info.duration)
+            local back = {}
+            for _, ing in ipairs(info.ingredients) do
+                back[ing.uname] = (back[ing.uname] or 0) + ing.count
+            end
+            assert.same({ RefinedMetal = 2, WoodLog = 4 }, back)
         end)
 
-        it("refuses deconstruction without Crowbar", function()
-            local info = craft.getDeconstructInfo("Workbench", "Hammer")
-            assert.is_nil(info)
-        end)
-
-        it("returns nil for items that cannot be deconstructed", function()
+        it("refuses other tools and the sets with no removal tool", function()
+            assert.is_nil(craft.getDeconstructInfo("Workbench", "Hammer"))
+            assert.is_nil(craft.getDeconstructInfo("Campfire", "Crowbar"))
+            assert.is_nil(craft.getDeconstructInfo("Key", "Crowbar"))
             assert.is_nil(craft.getDeconstructInfo("Bandage", "Crowbar"))
-            assert.is_nil(craft.getDeconstructInfo("Knife", "Crowbar"))
         end)
 
-        it("lists all constructed item types a Crowbar can deconstruct (#97)", function()
-            local expected = { "Campfire", "Barricade", "SmallBox", "Workbench", "LargeFrame", "Door", "MetalGate", "PlotPole" }
-            for _, u in ipairs({ "ScrapMachine", "RefineMachine", "WaterMachine" }) do
+        it("lists every constructed item type a Crowbar can take down", function()
+            local expected =
+                { "PlotPole", "ScrapMachine", "RefineMachine", "WaterMachine", "Workbench", "Locker", "Desk" }
+            for _, u in ipairs({ "Table", "Barstool", "SmallTable", "LargeFrame" }) do
                 expected[#expected + 1] = u
             end
             assert.same(expected, craft.deconstructables("Crowbar"))
@@ -184,10 +212,6 @@ end)
 
 describe("crafting logic: ground tools", function()
     it("lists the tools the ground recipes are built with", function()
-        local tools = craft.groundTools()
-        assert.is_true(tools.Hammer)
-        assert.is_true(tools.Screwdriver)
-        assert.is_true(tools.FireLighter)
-        assert.is_nil(tools.Knife) -- a combine and workbench tool only
+        assert.same({ FireLighter = true, Hammer = true, Screwdriver = true, Sledgehammer = true }, craft.groundTools())
     end)
 end)
