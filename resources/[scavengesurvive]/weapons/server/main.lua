@@ -106,7 +106,7 @@ local function nonFirearm(victim, attacker, weapon, loss)
         ctx.bleedMult = tonumber(settings["vehicles.damage_bleed_mult"])
         ctx.knockMult = tonumber(settings["vehicles.damage_knock_mult"])
         credit = veh and creditable(victim, getVehicleController(veh)) or nil
-    elseif weapon == 51 then
+    elseif wound.isExplosion(weapon) then
         credit = creditable(victim, attacker)
     end
     local w = wound.nonFirearm(weapon, loss, ctx)

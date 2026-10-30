@@ -77,6 +77,13 @@ describe("weapons wound", function()
             near(0.5, w.bleed); near(50, w.hp); near(230, w.knockMult); assert.equals(8, w.bodypart)
             assert.equals("explosion", w.cause)
         end)
+        it("an explosion MTA reports as a grenade or rocket wounds the same way", function()
+            for _, id in ipairs({ 16, 19 }) do
+                local w = wound.nonFirearm(id, 32, nil, seq(0.2))
+                near(0.2, w.bleed); near(182, w.knockMult); assert.equals("explosion", w.cause)
+            end
+            assert.equals("explosion", wound.killCause(19))
+        end)
         it("anything else takes the loss as hp, capped at 20", function()
             local w = wound.nonFirearm(22, 50, nil, seq())
             near(20, w.hp); near(0, w.bleed); assert.equals("killed", w.cause)

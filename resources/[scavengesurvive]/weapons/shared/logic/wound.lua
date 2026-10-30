@@ -29,6 +29,9 @@ end
 local KNOCK = { [3] = 1.0, [4] = 1.2, [5] = 0.9, [6] = 0.9, [7] = 0.8, [8] = 0.8, [9] = 9.9 }
 local CAUSES =
     { [54] = "fall", [53] = "drowned", [37] = "burned", [51] = "explosion", [49] = "vehicle", [50] = "vehicle" }
+-- the weapon ids an explosion reaches onClientPlayerDamage with: MTA passes 16 (grenade) or 19 (rocket) for a
+-- createExplosion with no creator, the explosives resource's case (live 2026-10-30), not SA-MP's 51
+local EXPLOSIONS = { [16] = true, [19] = true, [35] = true, [36] = true, [39] = true, [51] = true }
 
 function wound.range(weaponId)
     return wound.RANGE[weaponId] or wound.DEFAULT_RANGE
@@ -126,6 +129,7 @@ end
 
 function wound.nonFirearm(weaponId, loss, ctx, rnd)
     rnd = rnd or math.random
+    weaponId = wound.isExplosion(weaponId) and 51 or weaponId
     ctx = ctx or {}
     loss = math.max(0, tonumber(loss) or 0)
     if weaponId == 54 then
@@ -224,7 +228,7 @@ function wound.killCause(weaponId)
         return "chainsaw"
     elseif w >= 0 and w <= 15 then
         return "beaten"
-    elseif w == 16 or w == 35 or w == 36 or w == 39 or w == 51 then
+    elseif wound.isExplosion(w) then
         return "explosion"
     elseif w == 18 or w == 37 then
         return "burned"
@@ -238,6 +242,10 @@ function wound.killCause(weaponId)
         return "goggles"
     end
     return "killed"
+end
+
+function wound.isExplosion(weaponId)
+    return EXPLOSIONS[weaponId] == true
 end
 
 function wound.isEnvironmental(weaponId)
