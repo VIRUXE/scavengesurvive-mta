@@ -157,7 +157,7 @@ net.handler("weaponHitReported", function(victim, attacker, weapon, bodypart, lo
         bleed = bleed * 0.5
     end
     local hp = wound.hpLoss(bleed)
-    exports.character:applyWound(victim, bleed, hp, attacker, "killed")
+    exports.character:applyWound(victim, bleed, hp, attacker, wound.killCause(weapon)) -- the body's reason (#139)
     local st = exports.character:getStats(victim)
     if st and st.hp > 0 then
         local km = knockMult

@@ -375,17 +375,19 @@ return function(ctx)
         return nil
     end
 
-    -- The Sign lying within reach of the local player (the hud edits it on F), nil when none.
-    function M.nearbySign(reach)
+    -- A Sign or a body (Torso) lying within reach of the local player: the hud edits or investigates it on a tap
+    -- of F and picks it up on a hold. Returns id, uname; nil when none.
+    local INSPECTABLE = { Sign = true, Torso = true }
+    function M.nearbyInspectable(reach)
         local px, py, pz = getElementPosition(localPlayer)
         local dim, int = getElementDimension(localPlayer), getElementInterior(localPlayer)
         for id, e in pairs(objects) do
-            if e.uname == "Sign" then
+            if INSPECTABLE[e.uname] then
                 local r = e.row
                 local dx, dy, dz = e.x - px, e.y - py, e.z - pz
                 local same = (r.dimension or 0) == dim and (r.interior or 0) == int
                 if same and dx * dx + dy * dy <= reach * reach and math.abs(dz) < 3 then
-                    return id
+                    return id, e.uname
                 end
             end
         end

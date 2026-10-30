@@ -15,6 +15,7 @@ local drop = loadFile("shared/logic/drop.lua")
 local skills = loadFile("shared/logic/skills.lua")
 local medical = loadFile("shared/logic/medical.lua")
 local travel = loadFile("shared/logic/travel.lua")
+local bodies = loadFile("shared/logic/bodies.lua")
 
 -- Every spawned character, shared with the tick and death modules (they capture this table).
 local state = {
@@ -59,7 +60,8 @@ local function clearStatuses(player, restoreControls)
     end
 end
 state.clearStatuses = clearStatuses
-local death = loadFile("server/death.lua")({ db = db, net = net, util = util, drop = drop, state = state })
+local death =
+    loadFile("server/death.lua")({ db = db, net = net, util = util, drop = drop, state = state, bodies = bodies })
 local tickCtx = { db = db, util = util, survival = survival, skills = skills, medical = medical, state = state }
 tickCtx.die = death.die
 local tick = loadFile("server/tick.lua")(tickCtx)

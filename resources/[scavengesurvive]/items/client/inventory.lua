@@ -115,6 +115,8 @@ return function(ctx)
         STUNGUNOUTC = "Out of charge",
         MOLOPOURBOT = "Fuel poured in bottle",
         FUELNOTPETR = "Fuel can does not contain petrol",
+        BODYDECOMPD = "The body has decomposed too much to harvest",
+        BODYHARVEST = "The body has already been harvested of the edible (tasty) parts",
         ITEMTWKFINI = "Tweaking finished",
         ITEMTWKMOVE = "Cannot move item with players nearby",
         ITEMTWKTFAR = "Too far from original build position",

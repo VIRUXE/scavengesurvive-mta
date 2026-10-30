@@ -466,3 +466,17 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
     - d. With `Endurance` at Master (`/lua return exports.character:setSkill(getPlayerFromName("A"), "Endurance",
       0.95)`), a jump out of a sprint carries about twice as far as a standing jump; a standing jump is unchanged.
     - e. Relog: the counters start again at 0 (session only), the skill stays.
+40. **Bodies** (#139, upstream `item/torso.pwn`, `death.pwn` CreateGravestone). Two clients A and B; `/additem Knife`.
+    - a. B shoots A dead: next to A's dropped items a body (`Torso`, the dead-torso prop) lies where A fell. A relogs
+      and spawns elsewhere; the body stays (`rr items` too).
+    - b. Empty hands, tap **F** on the body: a message box titled `A` reading `They died of blood loss caused by what
+      looks like bullets.`; a drowning reads `They drowned.`, a fall `Most bones are broken, ...`, starving `They
+      starved to death.`, a fist kill `They were beaten to death.`.
+    - c. Hold the Knife, **F** on the body: `Harvesting` bar for 3 s with the planting loop, then one `Meat (Uncooked)`
+      lies on the body. **F** again: `The body has already been harvested of the edible (tasty) parts`. Walking off
+      during the hold takes nothing.
+    - d. `UPDATE items SET data = JSON_SET(data, '$.at', 0) WHERE type_uname = 'Torso'` then `rr items`, Knife + **F**:
+      `The body has decomposed too much to harvest`.
+    - e. Hold **F** 500 ms with empty hands: the body is picked up (carried two-handed) and can be dropped elsewhere;
+      a tap on the dropped body still investigates it.
+

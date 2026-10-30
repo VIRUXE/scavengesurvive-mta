@@ -100,11 +100,15 @@ return function(ctx)
         if exports.loot:tryOpenCrate() == true then
             return
         end
-        -- a ground bag opens on a tap and is picked up on a 500 ms hold; a sign lying there (empty hands) edits on
-        -- a tap and is picked up on the hold (upstream "Press F to edit, Hold F to pick up", #136)
+        -- a ground bag opens on a tap and is picked up on a 500 ms hold; a sign or a body lying there (empty hands)
+        -- edits or investigates on a tap and is picked up on the hold (upstream "Press F to edit / investigate,
+        -- Hold F to pick up", #136, #139)
         local bagId = exports.items:nearbyBag()
-        local signId = not bagId and not ctx.getHeld() and exports.items:nearbySign()
-        if bagId or signId then
+        local inspectId, inspectUname = false, false
+        if not bagId and not ctx.getHeld() then
+            inspectId, inspectUname = exports.items:nearbyInspectable()
+        end
+        if bagId or inspectId then
             if isTimer(interactHoldTimer) then
                 return
             end
@@ -117,8 +121,10 @@ return function(ctx)
                     if getTickCount() - startTick < 500 then
                         if bagId then
                             triggerServerEvent("itemBagOpenRequested", localPlayer, bagId)
+                        elseif inspectUname == "Sign" then
+                            triggerServerEvent("signEditRequested", localPlayer, inspectId)
                         else
-                            triggerServerEvent("signEditRequested", localPlayer, signId)
+                            triggerServerEvent("bodyInspectRequested", localPlayer, inspectId)
                         end
                     end
                 elseif getTickCount() - startTick >= 500 then

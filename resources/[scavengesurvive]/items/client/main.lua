@@ -43,9 +43,11 @@ function nearbyBag()
     return world.nearbyBag(2.0) or false
 end
 
--- client export for the hud: the id of a Sign lying within reach (F edits it, a held F picks it up), else false
-function nearbySign()
-    return world.nearbySign(2.0) or false
+-- client export for the hud: a Sign or a body lying within reach (a tap of F edits or investigates it, a held F
+-- picks it up): its id and uname, else false
+function nearbyInspectable()
+    local id, uname = world.nearbyInspectable(2.0)
+    return id or false, uname or false
 end
 
 function getAttachConfig(slot)

@@ -19,6 +19,7 @@
     <file src="shared/logic/skills.lua"/>
     <file src="shared/logic/medical.lua"/>
     <file src="shared/logic/travel.lua"/>
+    <file src="shared/logic/bodies.lua"/>
     <file src="server/travel.lua"/>
     <export function="getCharacterId" type="server"/>
     <export function="getPlayerByCharacterId" type="server"/>

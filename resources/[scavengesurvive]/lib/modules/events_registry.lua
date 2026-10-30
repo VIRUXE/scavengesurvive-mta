@@ -108,6 +108,8 @@ return {
     noteOpened = true,
     playerJumped = true,
     signEditOpened = true,
+    bodyInspectRequested = true,
+    bodyInspected = true,
     supplyDropStarted = true,
     supplyCrateLanded = true,
     weaponCacheDropped = false,

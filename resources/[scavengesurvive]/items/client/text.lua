@@ -1,6 +1,7 @@
 -- The Note and Sign dialogs (upstream item/note.pwn, item/sign.pwn, #136): the server opens them (noteOpened,
 -- signEditOpened) and the answer goes back with the item id it was opened for. A blank note takes a message
--- (Done / Cancel); a written note shows it (Close / Tear); a sign takes its text (Accept / Close).
+-- (Done / Cancel); a written note shows it (Close / Tear); a sign takes its text (Accept / Close). A body's
+-- name and reason (bodyInspected, #139) is a plain message box.
 return function()
     local NOTE_ID, SIGN_ID = "items:note", "items:sign"
     local SIGN_BODY = "Enter the text to display below\nTyping '\\' will start a new line."
@@ -18,6 +19,10 @@ return function()
     addEventHandler("signEditOpened", localPlayer, function(itemId)
         open = { kind = "sign", itemId = itemId }
         exports.ui:dialogOpen(SIGN_ID, "input", "Sign", SIGN_BODY, "Accept", "Close")
+    end)
+
+    addEventHandler("bodyInspected", localPlayer, function(name, reason)
+        exports.ui:dialogOpen("items:body", "msgbox", name, reason, "Close", "")
     end)
 
     addEventHandler("uiDialogResponded", root, function(id, accepted, text)

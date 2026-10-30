@@ -1,10 +1,27 @@
 -- Death and /dropall: the character_death_drop / character_drop_all procedures, the kill animation and the death
--- screen. ctx = { db, net, util, drop, state } built by server/main.lua; state.byPlayer / state.byId are shared
--- with it. Both drops put items on the ground and slope the player's client measured under each spot (drop.lua).
+-- screen. ctx = { db, net, util, drop, state, bodies } built by server/main.lua; state.byPlayer / state.byId are
+-- shared with it. Both drops put items on the ground and slope the player's client measured under each spot
+-- (drop.lua). The body itself is a Torso item (shared/logic/bodies.lua, #139) created after the drop.
 return function(ctx)
-    local db, net, util, drop, state = ctx.db, ctx.net, ctx.util, ctx.drop, ctx.state
+    local db, net, util, drop, state, bodies = ctx.db, ctx.net, ctx.util, ctx.drop, ctx.state, ctx.bodies
     local M = {}
     local GROUND_WAIT_MS = 1000
+    local BODY_HP, BODY_DROP = 6, 0.9 -- the Torso type's hitpoints; items lie this far below the ped's origin
+
+    -- upstream CreateGravestone: the Torso where the character died, named, with how they died
+    local function leaveBody(c, x, y, z, rz, int, dim)
+        local reason = bodies.reason(c.cause, isElement(c.killer))
+        local data = toJSON(bodies.data(c.name, reason, getRealTime().timestamp), true):sub(2, -2)
+        local params = { "Torso", BODY_HP, data, x, y, z - BODY_DROP, rz, int, dim }
+        params[10], params[11], params.n = nil, nil, 11
+        db.call("item_create", params, function(res)
+            if res and res.ok then
+                triggerEvent("itemCreated", resourceRoot, res.payload.item_id)
+            else
+                util.log("character", "warn", "no body for %d: %s", c.charId, res and res.code or "DB_ERROR")
+            end
+        end)
+    end
 
     -- Ground and slope under the drop spots: the client answers groundSurfaceReported, or after GROUND_WAIT_MS
     -- (or at once when measure is false) every spot takes the fallback height. One question per player at a time.
@@ -68,6 +85,8 @@ return function(ctx)
             measure = false
         end
         local c = { player = player, st = st, charId = st.id, cause = cause, killer = killer, silent = silent }
+        c.name = getPlayerName(player)
+        local _, _, rz = getElementRotation(player)
         groundSpots(player, x, y, z, measure, function(spots)
             local ring, clothes = drop.split(spots)
             local params = { c.charId, x, y, z, int, dim, toJSON(ring, true), toJSON(clothes, true) }
@@ -80,6 +99,9 @@ return function(ctx)
                     util.log("character", "error", "death_drop failed for %d", c.charId)
                 elseif not c.silent then
                     state.awaitingRespawn[c.player] = true
+                end
+                if res and res.ok then
+                    leaveBody(c, x, y, z, rz, int, dim)
                 end
                 triggerEvent("characterDied", c.player, c.charId, c.cause, c.killer)
                 if state.byId[c.charId] == c.player then

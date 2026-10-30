@@ -8,7 +8,9 @@
 --   Stun Gun: used with a Battery it charges, a fist hit with it (weapons resource) knocks the target out;
 --   Molotov: a Petrol Can used with an Empty Molotov pours 0.5 L and the bottle becomes a Molotov.
 --   Shield: used from the hand it is planted standing in front of the player (weapons stops the shots it covers);
---   HerpDerp: used, one of 25 random animations.
+--   HerpDerp: used, one of 25 random animations;
+--   Torso (the body a death leaves, #139): a tap of the interact key investigates it (bodyInspectRequested), a Knife
+--     used on it holds 3 s and takes one raw Meat, once, within a day.
 -- ctx = { db, net, state, type, charId, toast, destroy, destroyWorldItem, world, updateHeldData, decodeData,
 --         small, liquids, sendInventory, ownedSql, dropHeld } built by server/main.lua.
 return function(ctx)
@@ -275,10 +277,90 @@ return function(ctx)
         return true
     end
 
+    local BODY_ROW = "SELECT id, data, x, y, z, rz, interior, dimension FROM items WHERE id = ? "
+        .. "AND type_uname = 'Torso' AND x IS NOT NULL AND container_id IS NULL AND holder_char_id IS NULL"
+    local HARVEST_REACH = 3.0
+
+    local function bodyInReach(player, row)
+        if not row then
+            return false
+        end
+        local px, py, pz = getElementPosition(player)
+        return getDistanceBetweenPoints3D(px, py, pz, row.x, row.y, row.z) <= HARVEST_REACH
+            and getElementInterior(player) == (row.interior or 0)
+            and getElementDimension(player) == (row.dimension or 0)
+    end
+
+    local function finishHarvest(player, row)
+        local d = decodeData(row.data)
+        local ok, code = small.bodyCanHarvest(d, getRealTime().timestamp)
+        if not ok then
+            return toast(player, code)
+        end
+        d.harvest = 0
+        db.exec("UPDATE items SET data = ? WHERE id = ?", { encode(d), row.id }, function(wrote)
+            if wrote then
+                ctx.world.resendEverywhere(row.id)
+            end
+        end)
+        local params = { "Meat", 3, encode({ cooked = 0 }), row.x, row.y, row.z + small.MEAT_LIFT, row.rz }
+        params[8], params[9], params[10], params[11], params.n = row.interior, row.dimension, nil, nil, 11
+        db.call("item_create", params, function(res, c)
+            if res and res.ok then
+                triggerEvent("itemCreated", resourceRoot, res.payload.item_id)
+            end
+            if isElement(c.player) then
+                ctx.world.syncPlayer(c.player)
+            end
+        end, { player = player })
+    end
+
+    local function harvestBody(player, _, row)
+        local ok, code = small.bodyCanHarvest(decodeData(row.data), getRealTime().timestamp)
+        if not ok then
+            toast(player, code)
+            return true
+        end
+        triggerClientEvent(player, "vehicleHoldStarted", player, "Harvesting", small.HARVEST_MS)
+        setPedAnimation(player, "BOMBER", "BOM_Plant_Loop", small.HARVEST_MS, true, false, false, false)
+        setTimer(function(pl, bodyId)
+            if not isElement(pl) then
+                return
+            end
+            setPedAnimation(pl)
+            local cur = state.held[pl]
+            if not cur or cur.uname ~= "Knife" then
+                return
+            end
+            db.one(BODY_ROW, { bodyId }, function(cur2, c)
+                if isElement(c.player) and bodyInReach(c.player, cur2) then
+                    finishHarvest(c.player, cur2)
+                end
+            end, { player = pl })
+        end, small.HARVEST_MS, 1, player, row.id)
+        return true
+    end
+
+    net.handler("bodyInspectRequested", function(player, itemId)
+        itemId = tonumber(itemId)
+        if not charId(player) or not itemId then
+            return
+        end
+        db.one(BODY_ROW, { itemId }, function(row, c)
+            if not isElement(c.player) or not bodyInReach(c.player, row) then
+                return
+            end
+            local name, reason = small.bodyText(decodeData(row.data))
+            setPedAnimation(c.player, "BOMBER", "BOM_Plant_In", 450, false, false, true, false)
+            triggerClientEvent(c.player, "bodyInspected", c.player, name, reason)
+        end, { player = player })
+    end, { rate = 5 })
+
     local PAIRS = {
         Locator = { MobilePhone = syncLocator },
         StunGun = { Battery = chargeStunGun },
         GasCan = { [small.MOLOTOV_FROM] = pourMolotov },
+        Knife = { Torso = harvestBody },
     }
 
     -- the world item unames a held uname reaches for (hands.lua targetsFor)

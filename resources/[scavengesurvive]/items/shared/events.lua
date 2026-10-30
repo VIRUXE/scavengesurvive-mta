@@ -30,6 +30,7 @@ addEvent("noteWritten", true)
 addEvent("noteTearRequested", true)
 addEvent("signEditRequested", true)
 addEvent("signTextSubmitted", true)
+addEvent("bodyInspectRequested", true)
 
 -- server to client / client-local
 addEvent("inventorySynced", true)
@@ -43,6 +44,7 @@ addEvent("treatmentStarted", true)
 addEvent("treatmentStopped", true)
 addEvent("noteOpened", true)
 addEvent("signEditOpened", true)
+addEvent("bodyInspected", true)
 addEvent("sampModelsChanged", false) -- fired by the models resource on every client
 addEvent("uiListActionSelected", false)
 addEvent("uiListClosed", false)

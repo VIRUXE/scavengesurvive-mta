@@ -154,4 +154,28 @@ function M.herpAnim(randInt)
     return a[1], a[2]
 end
 
+-- The body (item/torso.pwn, character/shared/logic/bodies.lua writes its data): a knife takes one raw Meat from it
+-- once, within a day of the death.
+M.BODY_DECOMPOSE_S = 86400
+M.HARVEST_MS = 3000
+M.MEAT_LIFT = 0.3 -- the meat lies this far above the body's origin
+
+-- name and reason shown when the body is investigated
+function M.bodyText(data)
+    local d = unwrap(data)
+    return tostring(d.name or ""), tostring(d.reason or "")
+end
+
+-- true, or false and the toast code (BODYHARVEST: already taken; BODYDECOMPD: too old)
+function M.bodyCanHarvest(data, now)
+    local d = unwrap(data)
+    if tonumber(d.harvest) ~= 1 then
+        return false, "BODYHARVEST"
+    end
+    if (now or 0) - (tonumber(d.at) or 0) >= M.BODY_DECOMPOSE_S then
+        return false, "BODYDECOMPD"
+    end
+    return true
+end
+
 return M

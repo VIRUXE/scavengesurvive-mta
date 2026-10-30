@@ -144,6 +144,34 @@ function wound.shieldBlocks(where, bodypart, attackerDucking, facing, vx, vy, ax
     return false
 end
 
+-- What a body shows for a kill by a player with this weapon (upstream death.pwn's switch): the key of
+-- character/shared/logic/bodies.lua REASONS, "killed" for anything else.
+function wound.killCause(weaponId)
+    local w = tonumber(weaponId) or -1
+    if w == 4 then
+        return "knife"
+    elseif w == 8 then
+        return "sword"
+    elseif w == 9 then
+        return "chainsaw"
+    elseif w >= 0 and w <= 15 then
+        return "beaten"
+    elseif w == 16 or w == 35 or w == 36 or w == 39 or w == 51 then
+        return "explosion"
+    elseif w == 18 or w == 37 then
+        return "burned"
+    elseif (w >= 22 and w <= 34) or w == 38 then
+        return "shot"
+    elseif w == 41 or w == 42 then
+        return "sprayed"
+    elseif w == 43 then
+        return "camera"
+    elseif w == 44 or w == 45 then
+        return "goggles"
+    end
+    return "killed"
+end
+
 function wound.isEnvironmental(weaponId)
     return CAUSES[weaponId] ~= nil
 end
