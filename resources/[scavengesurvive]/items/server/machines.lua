@@ -96,7 +96,7 @@ return function(ctx)
                         res.data = res.data and encode(res.data) or "" -- a plain string for the procedure
                     end
                     local params = { row.id, raw(row), encode(machines.encode(decodeData(row.data), nextSt)), cRow.id }
-                    params[5] = #results > 0 and toJSON(results) or "[]"
+                    params[5] = #results > 0 and encode(results) or "[]" -- a bare array: the procedure reads $[*]
                     db.call("machine_finish", params, function(res)
                         if res and res.ok then
                             world.resendEverywhere(row.id)
