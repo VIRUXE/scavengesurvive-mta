@@ -1,10 +1,11 @@
 -- What others see of a bleeding character (upstream core/char/bleed.pwn): the blood spraying off them and the trail
--- of pools they leave. The bleed rate itself is survival.lua's.
+-- of pools they leave. The bleed rate itself is survival.lua's; server/blood.lua places the pools.
 local bleeding = {}
 bleeding.POOL_MODEL = 19836 -- SA-MP BloodPool1 (models resource)
 bleeding.POOLS = 15 -- per player, reused round-robin (MAX_BLOOD_OBJECTS)
-bleeding.POOL_DROP = 0.9 -- below the ped's position, on the ground
-bleeding.TICK_MS = 1000 -- upstream drops a pool every OnPlayerScriptUpdate
+bleeding.POOL_DROP = 0.9 -- below the ped's position: upstream's height, kept until the ground under it is found
+bleeding.POOL_LIFT = 0.02 -- off the ground found under the spot, along its normal
+bleeding.TICK_MS = 1000 -- the spray re-check; upstream ran it every OnPlayerScriptUpdate
 
 -- Whether the character shows as bleeding after this second. Upstream re-rolls every second: a showing bleed stops
 -- with chance 1 - rate / 0.1 and a hidden one starts with chance rate / 0.1, so a rate of 0.1 or more always shows.

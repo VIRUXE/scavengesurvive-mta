@@ -14,6 +14,7 @@ addEvent("sitRequested", true)
 addEvent("standRequested", true)
 addEvent("handsUpRequested", true)
 addEvent("aimShoutRequested", true)
+addEvent("bloodPoolsRequested", true)
 addEvent("inventoryOpenRequested", true) -- handled by items (the Skills list's Back)
 
 -- server to client / client-local
@@ -27,5 +28,8 @@ addEvent("skillGained", true)
 addEvent("characterNoticeShown", true)
 addEvent("drugSkyEnded", true)
 addEvent("poseChanged", true)
+addEvent("bloodPoolDropped", true)
+addEvent("bloodPoolsSynced", true)
+addEvent("bloodPoolsCleared", true)
 addEvent("uiListActionSelected", false)
 addEvent("sampModelsChanged", false) -- fired by the models resource on every client

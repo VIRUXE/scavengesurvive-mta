@@ -1,7 +1,7 @@
 -- Survival tick, stat sync to the owning client and the periodic DB flush of every spawned character.
--- ctx = { db, util, survival, bleeding, skills, medical, state, die, treatment, travel } built by server/main.lua;
--- die comes from server/death.lua, treatment (server/medical.lua) and travel (server/travel.lua) are set after
--- this loads.
+-- ctx = { db, util, survival, bleeding, blood, skills, medical, state, die, treatment, travel } built by
+-- server/main.lua; die comes from server/death.lua, treatment (server/medical.lua) and travel (server/travel.lua)
+-- are set after this loads.
 return function(ctx)
     local db, util, survival, skills, state = ctx.db, ctx.util, ctx.survival, ctx.skills, ctx.state
     local medical, bleeding = ctx.medical, ctx.bleeding
@@ -37,12 +37,15 @@ return function(ctx)
                 local bleedBefore = st.bleed
                 local s, events = survival.tick(st, mult, math.random)
                 st.hp, st.food, st.bleed, st.dirty = s.hp, s.food, s.bleed, true
-                -- the spray and the pool trail every client draws (client/blood.lua)
+                -- the spray every client draws (client/blood.lua) and the pool trail (server/blood.lua)
                 local blocked = inVehicle or exports.staff:isOnDuty(player)
                 local shown = bleeding.visible(st.bleedShown, st.bleed, blocked, math.random)
                 if shown ~= (st.bleedShown or false) then
                     st.bleedShown = shown
                     setElementData(player, "character.bleeding", shown, "broadcast", "deny")
+                end
+                if shown then
+                    ctx.blood.drop(player)
                 end
                 ctx.treatment.tick(player, st, 1000)
                 if ctx.travel then

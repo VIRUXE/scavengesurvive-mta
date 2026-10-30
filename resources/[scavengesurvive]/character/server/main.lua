@@ -70,6 +70,7 @@ local death =
     loadFile("server/death.lua")({ db = db, net = net, util = util, drop = drop, state = state, bodies = bodies })
 local tickCtx = { db = db, util = util, survival = survival, skills = skills, medical = medical, state = state }
 tickCtx.bleeding = bleeding
+tickCtx.blood = loadFile("server/blood.lua")({ bleeding = bleeding, net = net })
 tickCtx.die = death.die
 local tick = loadFile("server/tick.lua")(tickCtx)
 local medicalCtx = { medical = medical, state = state, sendStats = tick.sendStats }
