@@ -93,3 +93,50 @@ def test_map_models_are_read_from_object_rows_only(tmp_path):
 def test_port_hat_models_are_not_samp_models():
     assert all(m.is_samp_model(i) for i in (18631, 19999, 11682, 11753))
     assert not any(m.is_samp_model(i) for i in (20001, 18630, 11754))
+
+
+def _empty_col3(name, lo, hi):
+    """An empty COL3 chunk as SA-MP ships it: header with bounds, no sphere, box or face."""
+    head = bytearray(m.COL3_HEADER)
+    head[:4] = b"COL3"
+    struct.pack_into("<I", head, 4, m.COL3_HEADER - 8)
+    head[8 : 8 + len(name)] = name.encode()
+    struct.pack_into("<6f", head, 32, *lo, *hi)
+    return bytes(head)
+
+
+def test_an_empty_collision_gets_a_box_over_its_bounds():
+    out = m.fill_empty_col(_empty_col3("metalfork1", (-0.02, -0.17, -0.01), (0.02, 0.16, 0.01)), "metalfork1")
+    assert len(out) == m.COL3_HEADER + 28
+    assert struct.unpack_from("<I", out, 4)[0] == len(out) - 8
+    assert struct.unpack_from("<HHI", out, 72) == (0, 1, 0)
+    assert struct.unpack_from("<I", out, 80)[0] == 2
+    assert struct.unpack_from("<I", out, 88)[0] + 4 == m.COL3_HEADER
+    box = struct.unpack_from("<6f4B", out, m.COL3_HEADER)
+    assert [round(v, 3) for v in box[:6]] == [-0.02, -0.17, -0.01, 0.02, 0.16, 0.01]
+    assert box[6] == m.SURFACES["metal"]
+
+
+def test_a_round_prop_gets_a_sphere_and_a_flat_one_a_thin_box():
+    out = m.fill_empty_col(_empty_col3("apple1", (-0.04, -0.04, -0.04), (0.04, 0.04, 0.04)), "apple1")
+    assert struct.unpack_from("<HHI", out, 72) == (1, 0, 0)
+    sphere = struct.unpack_from("<4f4B", out, m.COL3_HEADER)
+    assert round(sphere[3], 3) == 0.04 and sphere[4] == m.SURFACES["default"]
+    flat = m.fill_empty_col(_empty_col3("plane003", (0, -1.4, -0.7), (0, 1.4, 0.7)), "plane003")
+    lo_x, _, _, hi_x = struct.unpack_from("<4f", flat, m.COL3_HEADER)
+    assert round(hi_x - lo_x, 3) == m.EMPTY_COL_MIN_THICKNESS
+
+
+def test_overridden_bounds_and_untouched_collisions():
+    out = m.fill_empty_col(_empty_col3("laserpointer1", (-0.06, -0.01, -0.01), (20.1, 0.01, 0.01)), "laserpointer1")
+    assert round(struct.unpack_from("<f", out, m.COL3_HEADER + 12)[0], 3) == 0.06
+    full = bytearray(_empty_col3("gymlockerclosed1", (0, 0, 0), (1, 1, 2)))
+    struct.pack_into("<H", full, 74, 1)
+    assert m.fill_empty_col(bytes(full), "gymlockerclosed1") == bytes(full)
+
+
+def test_every_listed_surface_and_sphere_is_known():
+    names = [n for group in m.EMPTY_COL_SURFACES.values() for n in group]
+    assert len(names) == len(set(names))
+    assert set(m.EMPTY_COL_SURFACES) <= set(m.SURFACES)
+    assert m.EMPTY_COL_SPHERES <= set(names)

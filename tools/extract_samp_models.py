@@ -55,6 +55,81 @@ def parse_col_library(data: bytes) -> dict[str, bytes]:
     return cols
 
 
+# SA-MP ships an empty collision (no sphere, box or face) for most hand-sized props. The pack gives each one the
+# primitive Rockstar gives props of its kind: a sphere for a round one, otherwise a box over its bounds, with the
+# surface of what it is made of (SA material ids, MTA wiki "Material IDs").
+SURFACES = {"default": 0, "wood": 44, "glass": 45, "metal": 51, "cardboard": 61, "cloth": 66, "rubber": 67,
+            "plastic": 68}
+EMPTY_COL_SURFACES = {
+    "metal": ["metalfork1", "metalknife1", "doorkey1", "gtasawrench1", "gtasacrowbar1", "gtasahammer1", "flashlight1",
+              "screwdriver1", "armyhelmet6", "keypadnondynamic", "handcuffs01", "marcosfryingpan1", "marcosknife1",
+              "marcossaucepan1", "marcosspatula1", "wooziessword1", "oilcan1", "case1", "wrench1", "sledgehammer1",
+              "padlock1", "bucket01"],
+    "wood": ["cross1", "rake1", "bassguitar01", "flyingv01", "warlock01", "cane01", "broom1", "guitaramp1"],
+    "cloth": ["policecap1", "mask7", "mask8", "mask9", "mask10", "hatboater3", "hatbowler1", "captrucker1",
+              "cowboyhat2", "maskzorro1", "santahat3", "pilothat01", "witcheshat1", "strawhat1", "beanie1", "pizzahat1",
+              "tophat01", "hikerbackpack1", "bandage1", "bandagepack1", "rope1", "plane003"],
+    "rubber": ["wboot1", "boxingglover", "sexymask1"],
+    "plastic": ["fishingrod", "taser1", "laserpointer1", "mobilephone1", "pager1", "hockeymask1", "policehelmet1",
+                "swathgrey", "swatagrey", "headphones02", "gasmask01", "whitephone", "microphone1", "cutsceneremote1",
+                "cutscenelighterfl", "carrooflight1", "police_lights01", "7_11_sign01", "7_11_sign04", "sampkeycard1",
+                "meattray1", "icecreamcontainer2"],
+    "cardboard": ["cerealbox1", "cerealbox2", "juicebox1", "juicebox2", "icecreambarsbox1", "fishfingersbox1",
+                  "milkcarton1", "pizzabox1", "pisshbox1", "briquettesbag1"],
+    "glass": ["milkbottle1"],
+    "default": ["easter_egg05", "hotdog01", "orange1", "apple1", "apple2", "tomato1", "banana1", "breadloaf1", "pizza1",
+                "marcossteak1", "marcossteak2", "fish1", "breadslice1", "theparrot1"],
+}
+EMPTY_COL_SPHERES = {"orange1", "apple1", "apple2", "tomato1", "easter_egg05", "bandage1"}
+# the laser pointer's bounds take in its 20 m beam; the collision covers the pointer only
+EMPTY_COL_BOUNDS = {"laserpointer1": ((-0.059, -0.01, -0.01), (0.06, 0.01, 0.01))}
+EMPTY_COL_MIN_THICKNESS = 0.02  # metres: flat props (the tent panel, a key card) get a box this thick
+COL3_HEADER = 120  # COL3 chunk header up to the first data block; data offsets count from byte 4 of the chunk
+
+
+def col_surface(dff: str) -> int | None:
+    for kind, names in EMPTY_COL_SURFACES.items():
+        if dff in names:
+            return SURFACES[kind]
+    return None
+
+
+def col_is_empty(chunk: bytes) -> bool:
+    spheres, boxes, faces = struct.unpack_from("<HHI", chunk, 72)
+    return spheres + boxes + faces == 0
+
+
+def fill_empty_col(chunk: bytes, dff: str) -> bytes:
+    """A COL3 chunk with no sphere, box or face gets one primitive from its bounds (see EMPTY_COL_SURFACES); any other
+    chunk comes back unchanged. Raises KeyError for an empty chunk whose model has no surface listed."""
+    if chunk[:4] != b"COL3" or len(chunk) != COL3_HEADER or not col_is_empty(chunk):
+        return chunk
+    surface = col_surface(dff)
+    if surface is None:
+        raise KeyError(f"{dff}: empty SA-MP collision with no surface in EMPTY_COL_SURFACES")
+    lo, hi = EMPTY_COL_BOUNDS.get(dff) or (struct.unpack_from("<3f", chunk, 32), struct.unpack_from("<3f", chunk, 44))
+    lo, hi = list(lo), list(hi)
+    for i in range(3):
+        if hi[i] - lo[i] < EMPTY_COL_MIN_THICKNESS:
+            mid = (lo[i] + hi[i]) / 2
+            lo[i], hi[i] = mid - EMPTY_COL_MIN_THICKNESS / 2, mid + EMPTY_COL_MIN_THICKNESS / 2
+    centre = [(lo[i] + hi[i]) / 2 for i in range(3)]
+    half = [(hi[i] - lo[i]) / 2 for i in range(3)]
+    header = bytearray(chunk)
+    struct.pack_into("<10f", header, 32, *lo, *hi, *centre, sum(h * h for h in half) ** 0.5)
+    struct.pack_into("<I", header, 80, 2)  # flags: not empty
+    if dff in EMPTY_COL_SPHERES:
+        body = struct.pack("<4f4B", *centre, sum(half) / 3, surface, 0, 0, 0)
+        struct.pack_into("<2H", header, 72, 1, 0)
+        struct.pack_into("<I", header, 84, COL3_HEADER - 4)
+    else:
+        body = struct.pack("<6f4B", *lo, *hi, surface, 0, 0, 0)
+        struct.pack_into("<2H", header, 72, 0, 1)
+        struct.pack_into("<I", header, 88, COL3_HEADER - 4)
+    struct.pack_into("<I", header, 4, len(header) + len(body) - 8)
+    return bytes(header) + body
+
+
 def read_img_index(path: Path) -> dict[str, tuple[int, int]]:
     """VER2 IMG directory: lowercase entry name -> (offset, size) in bytes."""
     with open(path, "rb") as f:
@@ -329,11 +404,10 @@ def main(argv=None) -> int:
     for e in entries.values():
         for archive, name in e["src"].values():
             target = out_files / name
-            if target.is_file():
-                continue
             if archive == "col":
-                target.write_bytes(samp_cols[e["dff"]])
-            else:
+                # always rewritten, so a change to the empty-collision tables reaches every file
+                target.write_bytes(fill_empty_col(samp_cols[e["dff"]], e["dff"]))
+            elif not target.is_file():
                 path, index = archives[archive]
                 target.write_bytes(read_img_entry(path, index[name]))
     (args.out / "manifest.lua").write_text(render_manifest(entries), encoding="ascii", newline="\n")
