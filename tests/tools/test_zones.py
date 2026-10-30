@@ -62,3 +62,20 @@ def test_parses_ladders_and_multi_line_ziplines():
     assert '{ 2159.08, -986.47, 70.59, 2063.3, -993.57, 59.38, "fc" },' in lua
     with pytest.raises(features.UnparsedLine):
         features.parse_features("CreateLadder(1.0, 2.0);", zone="fc")
+
+
+def test_parses_fixed_items():
+    from tools.convert import features
+    src = ("\tCreateItem(item_Workbench, 318.60028, 1145.81543, 7.54844, 0.0, 0.0, -181.56007);\n"
+           "\t// CreateItem(item_Medkit, 1.0, 2.0, 3.0);\n"
+           "\tCreateItem(item_Barbecue, -2701.1328, 845.7422, 70.3828, 171.0);\n"
+           "\tCreateItem(ItemType:2, 1.0, 2.0, 3.0, 66.0, 4.0, 0.0);\n")
+    rows = features.parse_fixtures(src, zone="sf", unames=["NULL", "Knuckles", "GolfClub"])
+    assert rows == [
+        {"uname": "Workbench", "x": 318.60028, "y": 1145.81543, "z": 7.54844, "rz": -181.56007, "zone": "sf"},
+        {"uname": "Barbecue", "x": -2701.1328, "y": 845.7422, "z": 70.3828, "rz": 171.0, "zone": "sf"},
+        {"uname": "GolfClub", "x": 1.0, "y": 2.0, "z": 3.0, "rz": 0.0, "zone": "sf"},
+    ]
+    assert '{ "Workbench", 318.60028, 1145.81543, 7.54844, -181.56007, "sf" },' in features.render_lua([], [], rows)
+    with pytest.raises(features.UnparsedLine):
+        features.parse_fixtures("CreateItem(item_Medkit);", zone="sf")

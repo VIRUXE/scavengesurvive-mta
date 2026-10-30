@@ -7,6 +7,7 @@
     <script src="client/features.lua" type="client"/>
     <file src="shared/logic/weather.lua"/>
     <file src="shared/logic/features.lua"/>
+    <file src="shared/logic/fixtures.lua"/>
     <file src="data/features.lua"/>
     <export function="getWeather" type="server"/>
     <export function="setGlobalWeather" type="server"/>

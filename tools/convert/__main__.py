@@ -36,8 +36,9 @@ def main(argv=None) -> int:
     if args.kind in ("all", "zones"):
         print(f"zones: {len(zones.convert(args.src, SEED))} loot spawns")
         print(f"house loot: {len(houseloot.convert(args.src, SEED))} loot points in half of the hollow houses")
-        nl, nz = features.convert(args.src, WORLD)
-        print(f"features: {nl} ladders, {nz} ziplines -> world/data/features.lua")
+        init = read_text(Path(args.src) / "gamemodes/sss/core/server/init.pwn")
+        nl, nz, nf = features.convert(args.src, WORLD, list(item_types.parse_item_types(init)))
+        print(f"features: {nl} ladders, {nz} ziplines, {nf} fixed items -> world/data/features.lua")
     if args.kind in ("all", "lang"):
         print("lang:", lang.convert(args.src, DATA))
     if args.kind in ("all", "vspawn"):
