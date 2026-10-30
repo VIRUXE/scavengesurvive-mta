@@ -36,7 +36,7 @@ files["resources/**/world/server/**"] = { std = "lua51+mta_shared+mta_server", g
 files["resources/**/world/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "tryInteract", "nearbyFeature", "buttonInteract", "buttonNear" }, read_globals = { "dxDrawLine3D", "getBoundKeys", "moveObject", "stopObject", "dxCreateShader", "dxSetShaderValue", "engineApplyShaderToWorldTexture" } }
 files["resources/**/world/data/**"] = { std = "lua51", max_line_length = false }
 -- removePedFromVehicle, dxDrawPrimitive3D and the clock/weather getters and setters postdate the generated lists
-files["resources/**/dev/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "rcon", "isItemSpawnAllowed" }, read_globals = { "removePedFromVehicle", "removeElementData" } }
+files["resources/**/dev/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "rcon", "isItemSpawnAllowed" }, read_globals = { "removePedFromVehicle", "removeElementData", "bindKey", "unbindKey" } }
 files["resources/**/discordchat/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "logItemSpawn", "sendStaffLog" } }
 files["resources/**/dev/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "isHeld" }, read_globals = { "executeCommandHandler", "dxDrawPrimitive3D", "getTime", "setTime", "getWeather", "setWeather", "getMinuteDuration", "setMinuteDuration", "createLight", "showChat", "isChatVisible" } }
 -- dxDrawModel3D, engineStreamingReleaseModel, getWorldFromScreenPosition, getElementMatrix and the shader functions postdate the generated lists

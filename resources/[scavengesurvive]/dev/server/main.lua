@@ -386,6 +386,13 @@ local studio = loadFile("server/studio.lua", "=dev/studio.lua")({
     command = command,
 })
 
+loadFile("server/houses.lua", "=dev/houses.lua")({
+    logic = loadFile("shared/logic/houses.lua", "=dev/houses_logic.lua"),
+    say = say,
+    command = command,
+    studio = studio,
+})
+
 -- HTTP "rcon" (MTA has no RCON): POST http://127.0.0.1:22005/dev/call/rcon with a JSON array holding one command
 -- line, HTTP Basic auth as the account named by *dev.http_user (created below from *dev.http_pass; run-local.ps1
 -- puts it in an ACL group that only grants general.http). Returns { ok, output = { lines } }.
