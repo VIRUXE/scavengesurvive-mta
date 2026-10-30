@@ -517,6 +517,11 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
     - a. `/additem Locker`, drop it: the closed locker (SA-MP 11729). A opens it with **F**: both clients see the
       open twin (11730); A closes the list, walks more than 4 m off or opens something else: closed again within
       half a second. A and B both open it; one leaves: still open until the other leaves too.
+      Port deviation: it opens only from the door side. From behind or from the side (more than 60 degrees off the
+      door's front), or in front but looking away (more than 60 degrees off the locker), **F** refuses with
+      `Open the locker from the front, facing its door` and it stays closed; from the front facing it, it opens.
+      Check at a few headings of the dropped locker (drop it facing different ways). A player who already has it
+      open keeps it open when pressing **F** again.
     - b. Find a looted Heart Shaped Box (a `HeartShapedBox` row with a `loot_spawn_id`, or `rr loot` near a
       spawn that rolls one): opened on the ground it holds a Dildo, Flowers, an Antiseptic Bandage and a Zorro
       Mask; an `/additem HeartShapedBox` box is empty.

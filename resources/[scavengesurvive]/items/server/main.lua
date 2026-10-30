@@ -136,6 +136,7 @@ hands = loadFile("server/hands.lua")({
 })
 
 local containers = loadFile("server/containers.lua")({
+    small = small,
     db = db,
     net = net,
     state = state,

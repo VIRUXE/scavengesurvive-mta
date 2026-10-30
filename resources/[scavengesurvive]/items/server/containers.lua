@@ -4,6 +4,7 @@ return function(ctx)
     local db, net, state, hands = ctx.db, ctx.net, ctx.state, ctx.hands
     local itemType, charId, toast = ctx.type, ctx.charId, ctx.toast
     local apparel = ctx.apparel
+    local small = ctx.small
     local world = ctx.world
     local refreshPlayer = ctx.refreshPlayer
     local isIncapacitated = ctx.isIncapacitated
@@ -451,6 +452,14 @@ return function(ctx)
         end
         local uname = itemRow.uname
         if uname == LOCKER and itemRow.x then
+            -- port deviation (#143): the door has to face the player; one already counted in keeps it open
+            if lockerBy[player] ~= itemRow.id then
+                local px, py = getElementPosition(player)
+                local _, _, prz = getElementRotation(player)
+                if not small.lockerFacing(itemRow.x, itemRow.y, itemRow.rz, px, py, prz) then
+                    return toast(player, "LOCKERFRONT")
+                end
+            end
             lockerEnter(player, itemRow.id)
         end
         local isTent = (uname == "TentPack")

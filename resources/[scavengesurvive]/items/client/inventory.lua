@@ -129,6 +129,7 @@ return function(ctx)
         POTINVASEED = "Invalid seed type.",
         POTNOACPLNT = "Pot doesn't contain an active plant.",
         POTNOTGROWN = "The plant has not fully grown yet.",
+        LOCKERFRONT = "Open the locker from the front, facing its door",
         BODYHARVEST = "The body has already been harvested of the edible (tasty) parts",
         ITEMTWKFINI = "Tweaking finished",
         ITEMTWKMOVE = "Cannot move item with players nearby",

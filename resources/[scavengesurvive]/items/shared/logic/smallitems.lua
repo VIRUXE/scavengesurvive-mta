@@ -161,6 +161,32 @@ function M.lockerModel(open)
     return open and M.LOCKER.open or M.LOCKER.closed
 end
 
+-- Port deviation (upstream opens it from any side): the Locker opens only for a player on its door side who faces it.
+-- The door is the model's local -Y side (measured: the open twin's box grows from y -0.27 to -0.64), so with the
+-- item heading rz (the type's rotz is 0) its normal is (sin rz, -cos rz). A ped at rotation r faces (-sin r, cos r).
+M.LOCKER_DOOR_ARC = 60 -- degrees either side of the door normal the player may stand
+M.LOCKER_FACING_ARC = 60 -- degrees either side of the locker the player's heading may point
+
+-- the angle in degrees (0..180) between two vectors
+local function angleBetween(ax, ay, bx, by)
+    local la, lb = math.sqrt(ax * ax + ay * ay), math.sqrt(bx * bx + by * by)
+    if la < 1e-6 or lb < 1e-6 then
+        return 0
+    end
+    local c = math.max(-1, math.min(1, (ax * bx + ay * by) / (la * lb)))
+    return math.deg(math.acos(c))
+end
+
+-- true when the player at (px, py) heading prz stands in front of the locker at (ix, iy) heading irz and faces it
+function M.lockerFacing(ix, iy, irz, px, py, prz)
+    local ir, pr = math.rad(irz or 0), math.rad(prz or 0)
+    local toPlayerX, toPlayerY = px - ix, py - iy
+    if angleBetween(math.sin(ir), -math.cos(ir), toPlayerX, toPlayerY) > M.LOCKER_DOOR_ARC then
+        return false
+    end
+    return angleBetween(-math.sin(pr), math.cos(pr), -toPlayerX, -toPlayerY) <= M.LOCKER_FACING_ARC
+end
+
 -- The body (item/torso.pwn, character/shared/logic/bodies.lua writes its data): a knife takes one raw Meat from it
 -- once, within a day of the death.
 M.BODY_DECOMPOSE_S = 86400
