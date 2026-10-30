@@ -29,6 +29,11 @@ return function(ctx)
     local sendInventory
     local clothesRef = ctx.clothes
 
+    local machinesRef, liquidsRef = nil, nil
+    function M.setMachines(m, l)
+        machinesRef, liquidsRef = m, l
+    end
+
     function M.setClothes(c)
         clothesRef = c
     end
@@ -58,8 +63,25 @@ return function(ctx)
         return cont.containerId
     end
 
+    -- a machine's container takes only what the machine works on (upstream OnItemAddToContainer, MACHITEMTYP):
+    -- true when the item may go into the side container the player has open
+    local function machineAccepts(player, containerId, uname, data)
+        local cont = activeContainer[player]
+        if not cont or not cont.machine or cont.containerId ~= containerId or not machinesRef then
+            return true
+        end
+        local ok, needs = machinesRef.accepts(cont.machine, itemType(uname), data, liquidsRef)
+        if not ok then
+            toast(player, string.format(machinesRef.TEXT.MACHITEMTYP, needs))
+        end
+        return ok
+    end
+
     local function put(player, cid, itemId, containerId, onFull)
         local held = state.held[player]
+        if held and held.id == itemId and not machineAccepts(player, containerId, held.uname, held.data) then
+            return
+        end
         if held and held.id == itemId then
             if held.data and hands.queueData then
                 hands.queueData(held)
@@ -441,7 +463,8 @@ return function(ctx)
         lockerLeave(source)
     end)
 
-    function M.openWorldContainer(player, itemRow)
+    -- opts (server/machines.lua): kind, size, title and machine (its kind) for a container the type does not describe
+    function M.openWorldContainer(player, itemRow, opts)
         if not isElement(player) or not itemRow then
             return
         end
@@ -456,9 +479,11 @@ return function(ctx)
         local isTent = (uname == "TentPack")
         local t = itemType(uname)
         local isBag = t and t.category == "bag"
-        local csize = isTent and 16 or (t and t.categoryData and (t.categoryData.bag_size or t.categoryData.size) or 8)
-        local ckind = isTent and "tent" or (isBag and "bag" or "safebox")
-        local title = (isTent and "Tent" or (t and t.name or uname))
+        opts = opts or {}
+        local csize = opts.size
+            or (isTent and 16 or (t and t.categoryData and (t.categoryData.bag_size or t.categoryData.size) or 8))
+        local ckind = opts.kind or (isTent and "tent" or (isBag and "bag" or "safebox"))
+        local title = opts.title or (isTent and "Tent" or (t and t.name or uname))
         local pos = itemRow.x and itemRow.y and itemRow.z and { x = itemRow.x, y = itemRow.y, z = itemRow.z }
 
         db.one(
@@ -477,6 +502,7 @@ return function(ctx)
                         worldItemId = c.pos and c.itemRow.id or nil,
                         heldItemId = not c.pos and c.itemRow.id or nil,
                         pos = c.pos,
+                        machine = c.machine,
                     }
                     sendInventory(c.player)
                 else
@@ -496,6 +522,7 @@ return function(ctx)
                                     worldItemId = c.pos and c.itemRow.id or nil,
                                     heldItemId = not c.pos and c.itemRow.id or nil,
                                     pos = c.pos,
+                                    machine = c.machine,
                                 }
                                 sendInventory(c.player)
                             end
@@ -503,7 +530,15 @@ return function(ctx)
                     )
                 end
             end,
-            { player = player, title = title, ckind = ckind, csize = csize, itemRow = itemRow, pos = pos }
+            {
+                player = player,
+                title = title,
+                ckind = ckind,
+                csize = csize,
+                itemRow = itemRow,
+                pos = pos,
+                machine = opts.machine,
+            }
         )
     end
 
@@ -838,6 +873,17 @@ return function(ctx)
         elseif target == "trunk" then
             if not sideContId then
                 return
+            end
+            local cont = activeContainer[player]
+            if cont and cont.machine then
+                return db.one("SELECT type_uname AS uname, data FROM items WHERE id = ?", { itemId }, function(r, c)
+                    if not isElement(c.player) or not r then
+                        return
+                    end
+                    if machineAccepts(c.player, sideContId, r.uname, hands.decodeData(r.data)) then
+                        executeMove(sideContId)
+                    end
+                end, { player = player })
             end
             executeMove(sideContId)
         elseif target == "inventory" then

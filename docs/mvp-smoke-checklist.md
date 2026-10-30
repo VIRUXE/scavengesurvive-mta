@@ -534,3 +534,20 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
     - d. A `/additem TntTimebomb`, plants it next to B and steps back: B is wounded (`torso` or a leg, bleeding)
       and, close to the blast, knocked out. A standing in a campfire loses a tenth of GTA's burn damage.
     - e. Give A duty (`/duty`): none of a to d touches A.
+46. **Machines** (#145, upstream `itemtype/machine.pwn`, `item/scrap-machine.pwn`, `refine-machine.pwn`,
+    `water-purifier.pwn`). One client; the `machine_finish` procedure must be in the database (`sqltool apply`).
+    - a. `/additem ScrapMachine` and drop it (or build one: Canister, Motor, Fluctuator, Power Supply and a
+      Screwdriver). The key list reads `F Access machine` and `F (Hold) Machine menu`. A tap of **F** opens an
+      empty 12-slot "Scrap Machine" container; put a Bucket and a Barbecue in. Hold **F** with empty hands: the
+      Start / Cancel box reads `Fuel amount: 0.0`; Start says there is not enough fuel (3.5 per item).
+    - b. `/additem GasCan`, hold **F** at the machine: `Refuelling...` with a bar; let go after a second, the
+      box now shows the fuel moved (1.1 per 100 ms) and the can's label has lost the same amount. Hold until the
+      bar ends: the tank reads 100.0.
+    - c. Start: `Cook time: 3 minutes N seconds`, smoke rises from the machine on every client, a tap of **F**
+      says how long is left, and the log reads `[MACHINE] ScrapMachine N started`. When it ends the smoke stops,
+      the log reads `2 items in, 8 out`, and the container holds 8 Scrap Metal; the fuel dropped by 7.0.
+      `rr items` mid-cook: the cook finishes on time after the restart.
+    - d. `/additem RefineMachine`: a Wrench put in is refused with `This machine only accepts Scrap Metal`; two
+      Scrap Metal cook into two Refined Metal. `/additem WaterMachine`: only a Bottle of sea water goes in (fill
+      one at the shore); it comes out as the same amount of Water.
+    - e. A Crowbar on a machine takes it down through the deconstruct hold as before (its parts drop).

@@ -2,10 +2,11 @@
 -- signEditOpened) and the answer goes back with the item id it was opened for. A blank note takes a message
 -- (Done / Cancel); a written note shows it (Close / Tear); a sign takes its text (Accept / Close). A body's
 -- name and reason (bodyInspected, #139) is a plain message box.
-return function()
-    local NOTE_ID, SIGN_ID = "items:note", "items:sign"
+return function(machines)
+    local NOTE_ID, SIGN_ID, MACHINE_ID = "items:note", "items:sign", "items:machine"
     local SIGN_BODY = "Enter the text to display below\nTyping '\\' will start a new line."
-    local open = nil -- { kind = "note" | "sign", itemId, written }
+    local open = nil -- { kind = "note" | "sign" | "machine", itemId, written }
+    local TITLES = { scrap = "Scrap Machine", refine = "Refining Machine", water = "Water Purifier" }
 
     addEventHandler("noteOpened", localPlayer, function(itemId, text)
         open = { kind = "note", itemId = itemId, written = text ~= "" }
@@ -29,6 +30,13 @@ return function()
         exports.ui:dialogOpen("items:pot", "msgbox", "Plant Pot", status, "Close", "")
     end)
 
+    -- a machine's menu (#145, upstream machine.pwn _mach_HoldInteract): Start cooks what is inside
+    addEventHandler("machineMenuShown", localPlayer, function(itemId, kind, fuel)
+        open = { kind = "machine", itemId = itemId }
+        local body = machines.menuBody(kind, tonumber(fuel) or 0)
+        exports.ui:dialogOpen(MACHINE_ID, "msgbox", TITLES[kind] or "Machine", body, "Start", "Cancel")
+    end)
+
     addEventHandler("uiDialogResponded", root, function(id, accepted, text)
         local o = open
         if not o then
@@ -47,6 +55,11 @@ return function()
             open = nil
             if accepted and tostring(text or "") ~= "" then
                 triggerServerEvent("signTextSubmitted", localPlayer, o.itemId, tostring(text))
+            end
+        elseif id == MACHINE_ID and o.kind == "machine" then
+            open = nil
+            if accepted then
+                triggerServerEvent("machineStartRequested", localPlayer, o.itemId)
             end
         end
     end)

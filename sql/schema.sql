@@ -1416,6 +1416,43 @@ BEGIN
   SELECT 1 AS ok, 'OK' AS code, JSON_OBJECT('created', CAST(v_n AS SIGNED)) AS payload;
 END//
 
+CREATE OR REPLACE PROCEDURE `machine_finish`(IN p_machine_id INT, IN p_old_data LONGTEXT, IN p_new_data LONGTEXT,
+  IN p_container_id INT, IN p_results JSON)
+BEGIN
+  -- #145: a machine's cook finished (items/server/machines.lua): the machine's next data (fuel burnt, cooking cleared)
+  -- only if nobody changed it since the read ('' for NULL), then its container emptied and refilled in slot order
+  -- with p_results, a JSON array of {"uname": ..., "data": "<json text>" | ""}
+  DECLARE v_rows INT DEFAULT 0;
+  DECLARE v_removed INT DEFAULT 0;
+  DECLARE v_owner INT DEFAULT NULL;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
+  SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+  START TRANSACTION;
+  SELECT owner_item_id INTO v_owner FROM containers WHERE id = p_container_id FOR UPDATE;
+  UPDATE items SET data = p_new_data
+    WHERE id = p_machine_id AND x IS NOT NULL AND IFNULL(data, '') = IFNULL(p_old_data, '');
+  SET v_rows = ROW_COUNT();
+  IF NOT (v_owner <=> p_machine_id) THEN
+    ROLLBACK;
+    SELECT 0 AS ok, 'NOT_OWNER' AS code, NULL AS payload;
+  ELSEIF v_rows = 0 THEN
+    ROLLBACK;
+    SELECT 0 AS ok, 'BUSY' AS code, NULL AS payload;
+  ELSE
+    DELETE FROM items WHERE container_id = p_container_id;
+    SET v_removed = ROW_COUNT();
+    INSERT INTO items (type_uname, hitpoints, data, container_id, slot)
+      SELECT t.uname, 5, NULLIF(j.data, ''), p_container_id, j.ord - 1
+      FROM JSON_TABLE(p_results, '$[*]' COLUMNS (ord FOR ORDINALITY, uname VARCHAR(32) PATH '$.uname',
+        data LONGTEXT PATH '$.data')) j
+      JOIN item_types t ON t.uname = j.uname;
+    SET v_rows = ROW_COUNT();
+    COMMIT;
+    SELECT 1 AS ok, 'OK' AS code,
+      JSON_OBJECT('removed', CAST(v_removed AS SIGNED), 'created', CAST(v_rows AS SIGNED)) AS payload;
+  END IF;
+END//
+
 CREATE OR REPLACE PROCEDURE `staff_ban`(IN p_name VARCHAR(24), IN p_account_id INT, IN p_ip VARCHAR(45), IN p_serial CHAR(32),
                                       IN p_reason VARCHAR(128), IN p_by_account_id INT, IN p_by_name VARCHAR(24), IN p_seconds INT)
 BEGIN

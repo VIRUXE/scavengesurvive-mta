@@ -26,6 +26,7 @@ M.CRATES = { supply = "Open supply crate", cache = "Open weapon cache" }
 --   nearFeature ("ladder" / "zipline" / "ladder_on" / "zipline_on"), nearCrate ("supply" / "cache"),
 --   held = false | { uname, category, isWeapon },
 --   nearCooker,                           -- uncooked food in hand next to a campfire or barbecue (#95): "Cook"
+--   nearMachine,                          -- a machine in reach (#145): "Access machine" / "(Hold) Machine menu"
 --   supports = { [capability] = true },   -- eat, drink, openbag, wearbag, special, holster, reload, unload, give,
 --                                         -- removebag, uncuff, trunk, repair, engine, lights, doors, radio
 -- }
@@ -62,6 +63,11 @@ function M.lines(ctx, keys)
     -- a landed supply crate or weapons cache (loot resource): upstream's button label next to the crate
     if M.CRATES[ctx.nearCrate] then
         add("interact", M.CRATES[ctx.nearCrate])
+    end
+    -- a machine (items, #145): upstream's button "Press F to access machine / Hold F to open menu"
+    if ctx.nearMachine then
+        add("interact", "Access machine")
+        add("interact", "(Hold) Machine menu")
     end
     if ctx.nearTrunk then
         add("interact", "Open Trunk", "trunk")

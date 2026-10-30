@@ -264,6 +264,7 @@ local function drawKeyActions(driver)
         nearFeature = nearFeature(),
         nearCrate = exports.loot:nearbyCrate() or nil,
         nearCooker = nearCooker(held),
+        nearMachine = exports.items:nearbyMachine() ~= false,
         cuffedNearby = not held and hasCuffedPlayerNearby() or false,
         hasHolster = getElementData(localPlayer, "items.holster") ~= false,
         supports = SUPPORTS,

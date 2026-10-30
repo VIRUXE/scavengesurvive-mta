@@ -55,6 +55,12 @@ describe("hud key actions", function()
         ctx.supports = { eat = true }
         assert.same("F Cook", texts(keyactions.lines(ctx, KEYS))[1])
     end)
+    it("a machine in reach: Access machine and the held menu, before the hand's own lines (#145)", function()
+        local l = texts(keyactions.lines({ spawned = true, held = false, nearMachine = true, supports = {} }, KEYS))
+        assert.same("F Access machine", l[1])
+        assert.same("F (Hold) Machine menu", l[2])
+        assert.same("H Open inventory", l[3])
+    end)
     it("weapons clear the list: Holster, Reload, Unload, Drop, Inventory", function()
         local held = { uname = "DesertEagle", category = "weapon", isWeapon = true }
         local l = keyactions.lines(

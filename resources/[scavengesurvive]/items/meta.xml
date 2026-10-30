@@ -26,6 +26,8 @@
     <file src="shared/logic/gardening.lua"/>
     <file src="server/gardening.lua"/>
     <file src="server/smallitems.lua"/>
+    <file src="shared/logic/machines.lua"/>
+    <file src="server/machines.lua"/>
     <file src="client/text.lua"/>
     <file src="client/models.lua"/>
     <file src="server/cooking.lua"/>
@@ -63,4 +65,5 @@
     <export function="nearbyCooker" type="client"/>
     <export function="nearbyBag" type="client"/>
     <export function="nearbyInspectable" type="client"/>
+    <export function="nearbyMachine" type="client"/>
 </meta>

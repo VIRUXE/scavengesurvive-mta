@@ -18,6 +18,8 @@ addEvent("potInspectRequested", true) -- handled by items (#142)
 addEvent("bodyInspectRequested", true) -- handled by items (#139)
 addEvent("fishCastRequested", true) -- handled by items (#141)
 addEvent("fishCancelRequested", true) -- handled by items (#141)
+addEvent("machineMenuRequested", true) -- handled by items (#145)
+addEvent("machineHoldReleased", true) -- handled by items (#145)
 
 -- server to client / client-local
 addEvent("characterStatsSynced", true)
