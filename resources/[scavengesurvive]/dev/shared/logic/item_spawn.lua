@@ -76,7 +76,7 @@ end
 
 -- Resolve item type from query: integer maps to 0-based upstream item type ID (order index - 1),
 -- otherwise case-insensitive substring match on unique name, then on display name.
-function logic.resolveItemType(query, itemsData)
+local function resolve(query, itemsData)
     if not query or query == "" then
         return nil, "Missing item query"
     end
@@ -228,6 +228,16 @@ function logic.encodeJsonArray(tbl)
         end
     end
     return "[[" .. table.concat(parts, ",") .. "]]"
+end
+
+-- upstream player/disallow-actions.pwn: OnItemCreate refuses item type 0, the NULL type at the head of the list
+function logic.resolveItemType(query, itemsData)
+    local uname, err = resolve(query, itemsData)
+    local order = itemsData and (itemsData.order or itemsData) or {}
+    if uname and uname == order[1] then
+        return nil, "Item type 0 cannot be created"
+    end
+    return uname, err
 end
 
 return logic

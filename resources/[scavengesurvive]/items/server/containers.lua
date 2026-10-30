@@ -8,6 +8,9 @@ return function(ctx)
     local world = ctx.world
     local refreshPlayer = ctx.refreshPlayer
     local isIncapacitated = ctx.isIncapacitated
+    local isBadInteract = ctx.isBadInteract or function()
+        return false
+    end
     local activeContainer = {} -- player -> { vehicle, containerId, title, size, worldItemId, pos = {x, y, z} }
     local lastHolster = {}
     state.lastHolster = lastHolster
@@ -410,6 +413,9 @@ return function(ctx)
     M.sendInventory = sendInventory
 
     function M.openTrunk(player, vehicle, containerId, trunkTitle, trunkSize)
+        if isBadInteract(player) then
+            return
+        end
         activeContainer[player] = {
             vehicle = vehicle,
             containerId = containerId,
@@ -466,7 +472,7 @@ return function(ctx)
 
     -- opts (server/machines.lua): kind, size, title and machine (its kind) for a container the type does not describe
     function M.openWorldContainer(player, itemRow, opts)
-        if not isElement(player) or not itemRow then
+        if not isElement(player) or not itemRow or isBadInteract(player) then
             return
         end
         local cid = charId(player)
@@ -813,13 +819,16 @@ return function(ctx)
     end)
 
     net.handler("inventoryOpenRequested", function(player)
+        if isBadInteract(player) then
+            return
+        end
         sendInventory(player)
     end, { rate = 3 })
 
     net.handler("itemTakeRequested", function(player, itemId)
         local cid = charId(player)
         itemId = tonumber(itemId)
-        if not cid or not itemId then
+        if not cid or not itemId or isBadInteract(player) then
             return
         end
         if state.held[player] then
@@ -853,6 +862,9 @@ return function(ctx)
         local cid = charId(player)
         itemId = tonumber(itemId)
         if not cid or not itemId or (target ~= "bag" and target ~= "trunk" and target ~= "inventory") then
+            return
+        end
+        if isBadInteract(player) then
             return
         end
         local sideContId = M.openContainerId(player)

@@ -53,6 +53,11 @@ return function(ctx)
         sitTimers[player] = nil
     end
 
+    -- upstream's animation index 1381 test (disallow-actions.pwn): items refuse to work for a player with hands up
+    function M.isHandsUp(player)
+        return posed[player] == "handsUp"
+    end
+
     -- the pose ends without an animation (death, knockout, a vehicle): forget it
     function M.clear(player)
         stopSitTimer(player)

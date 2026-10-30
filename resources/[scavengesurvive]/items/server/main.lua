@@ -118,6 +118,16 @@ local function isIncapacitated(player)
     return isKnockedOut(player) or isPlayerCuffed(player)
 end
 
+-- upstream player/disallow-actions.pwn IsBadInteract: cuffed, on staff duty, knocked out or hands up; such a player
+-- picks nothing up, opens no inventory or container, takes nothing out of one and uses nothing
+local function isBadInteract(player)
+    if isIncapacitated(player) or exports.character:isHandsUp(player) then
+        return true
+    end
+    local staffRes = getResourceFromName("staff")
+    return staffRes ~= false and getResourceState(staffRes) == "running" and exports.staff:isOnDuty(player) == true
+end
+
 hands = loadFile("server/hands.lua")({
     db = db,
     net = net,
@@ -132,6 +142,7 @@ hands = loadFile("server/hands.lua")({
     world = world,
     destroy = destroy,
     isIncapacitated = isIncapacitated,
+    isBadInteract = isBadInteract,
     isKnockedOut = isKnockedOut,
     isPlayerCuffed = isPlayerCuffed,
     setPlayerCuffed = setPlayerCuffed,
@@ -150,6 +161,7 @@ local containers = loadFile("server/containers.lua")({
     world = world,
     refreshPlayer = refreshPlayer,
     isIncapacitated = isIncapacitated,
+    isBadInteract = isBadInteract,
 })
 hands.setContainers(containers)
 local fixed = loadFile("server/fixed.lua")({ db = db, world = world, log = util.log })
@@ -261,6 +273,7 @@ local furnitureSrv = loadFile("server/furniture.lua")(furnitureCtx)
 hands.setFurniture(furnitureSrv)
 
 loadFile("server/use.lua")({
+    isBadInteract = isBadInteract,
     medical = medical,
     drinking = drinking,
     db = db,

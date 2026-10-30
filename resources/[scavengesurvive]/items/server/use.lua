@@ -91,7 +91,7 @@ return function(ctx)
     net.handler("itemUseRequested", function(player, itemId)
         local cid = charId(player)
         itemId = tonumber(itemId)
-        if not cid or not itemId then
+        if not cid or not itemId or ctx.isBadInteract(player) then
             return
         end
         local held = state.held[player]

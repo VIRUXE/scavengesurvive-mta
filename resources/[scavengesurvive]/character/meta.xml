@@ -52,4 +52,5 @@
     <export function="isKnockedOut" type="server"/>
     <export function="setPlayerCuffed" type="server"/>
     <export function="isPlayerCuffed" type="server"/>
+    <export function="isHandsUp" type="server"/>
 </meta>

@@ -555,3 +555,7 @@ end
 function isPlayerCuffed(player)
     return state.cuffed[player] == true
 end
+
+function isHandsUp(player)
+    return posesModule.isHandsUp(player)
+end

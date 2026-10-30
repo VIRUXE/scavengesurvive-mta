@@ -598,3 +598,8 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
     - b. Engine on, fire the cannon once: the bar jumps to half and drains over 2 s. Two shots close together:
       `Overheating!` over the bar. Three within about a second: the tank blows up and the bar starts empty.
     - c. Engine off: firing adds nothing.
+51. **No item actions while unable** (#152, upstream `player/disallow-actions.pwn`). One client.
+    - a. Put the hands up (#140). **F** at an item on the floor, the inventory key, a held item's use, a bag on the
+      ground, a vehicle's trunk: nothing happens. Stand up: all of them work again.
+    - b. The same while `/knockout 5000` lasts, while cuffed and while on staff duty (`/duty`).
+    - c. `/additem 0` and `/additem NULL` say `Item type 0 cannot be created`.

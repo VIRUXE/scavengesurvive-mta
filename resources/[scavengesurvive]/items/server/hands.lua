@@ -8,6 +8,9 @@ return function(ctx)
     local ammo = ctx.ammo
     local itemType, defaultAmmo, charId, toast = ctx.type, ctx.defaultAmmo, ctx.charId, ctx.toast
     local isIncapacitated = ctx.isIncapacitated
+    local isBadInteract = ctx.isBadInteract or function()
+        return false
+    end
     local isKnockedOut, isPlayerCuffed, setPlayerCuffed = ctx.isKnockedOut, ctx.isPlayerCuffed, ctx.setPlayerCuffed
     local VANILLA_MELEE_MAX = 15
     local RELOAD_COOLDOWN_MS = 1000
@@ -694,7 +697,7 @@ return function(ctx)
 
     net.handler("itemPickupRequested", function(player)
         local cid = charId(player)
-        if not cid or (isIncapacitated and isIncapacitated(player)) then
+        if not cid or isBadInteract(player) then
             return
         end
         if state.lastHolster and state.lastHolster[player] and (getTickCount() - state.lastHolster[player] < 1000) then
