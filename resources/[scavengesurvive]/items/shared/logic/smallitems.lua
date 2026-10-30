@@ -162,8 +162,9 @@ function M.lockerModel(open)
 end
 
 -- Port deviation (upstream opens it from any side): the Locker opens only for a player on its door side who faces it.
--- The door is the model's local -Y side (measured: the open twin's box grows from y -0.27 to -0.64), so with the
--- item heading rz (the type's rotz is 0) its normal is (sin rz, -cos rz). A ped at rotation r faces (-sin r, cos r).
+-- The door is the model's local +Y side (seen in game: the door and its vent face +Y, the open twin's door swings
+-- back over the body), so with the item heading rz (the type's rotz is 0) its normal is (-sin rz, cos rz), the same
+-- forward vector as a ped at rotation r, which faces (-sin r, cos r).
 M.LOCKER_DOOR_ARC = 60 -- degrees either side of the door normal the player may stand
 M.LOCKER_FACING_ARC = 60 -- degrees either side of the locker the player's heading may point
 
@@ -181,7 +182,7 @@ end
 function M.lockerFacing(ix, iy, irz, px, py, prz)
     local ir, pr = math.rad(irz or 0), math.rad(prz or 0)
     local toPlayerX, toPlayerY = px - ix, py - iy
-    if angleBetween(math.sin(ir), -math.cos(ir), toPlayerX, toPlayerY) > M.LOCKER_DOOR_ARC then
+    if angleBetween(-math.sin(ir), math.cos(ir), toPlayerX, toPlayerY) > M.LOCKER_DOOR_ARC then
         return false
     end
     return angleBetween(-math.sin(pr), math.cos(pr), -toPlayerX, -toPlayerY) <= M.LOCKER_FACING_ARC
