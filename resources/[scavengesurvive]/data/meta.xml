@@ -9,6 +9,7 @@
     <file src="generated/item_types.lua"/>
     <file src="generated/loot_tables.lua"/>
     <file src="generated/vehicle_types.lua"/>
+    <file src="generated/recipes.lua"/>
     <file src="generated/lang_en.lua"/>
     <file src="generated/lang_es.lua"/>
     <file src="generated/lang_fr.lua"/>
@@ -29,4 +30,5 @@
     <export function="vehicleTypes" type="shared"/>
     <export function="t" type="shared"/>
     <export function="languages" type="shared"/>
+    <export function="recipes" type="shared"/>
 </meta>

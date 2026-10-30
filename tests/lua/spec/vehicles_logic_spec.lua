@@ -81,6 +81,9 @@ describe("vehicles logic", function()
         assert.equals("LOCKALREADY", err2)
         -- can craft on valid vehicle
         assert.is_true(vlogic.canCraftKey(vlogic.LOCK_OPEN, "LocksmithKit", false, 0))
+        -- a Lock and Chain only once cut with a Locksmith Kit (crafting's WheelLock combine)
+        assert.are.same({ false, "LOCKCHNOKEY" }, { vlogic.canCraftKey(vlogic.LOCK_OPEN, "WheelLock", false, 0) })
+        assert.is_true(vlogic.canCraftKey(vlogic.LOCK_OPEN, "WheelLock", false, 0, { { cut = true } }))
 
         -- using key matching / mismatching
         assert.is_true(vlogic.canUseKey({ code = 12345 }, 12345))

@@ -17,6 +17,7 @@
     <export function="isInsideAnyPlotPole" type="server"/>
     <export function="interactDefence" type="server"/>
     <export function="buildDefence" type="server"/>
+    <export function="buildConstructedDefence" type="server"/>
     <export function="removeDefence" type="server"/>
     <export function="tweakItem" type="server"/>
     <export function="finishTweak" type="server"/>

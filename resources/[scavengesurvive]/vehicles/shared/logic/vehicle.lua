@@ -155,12 +155,21 @@ function M.canBreakLock(lockState, itemUname)
     return false, "NEED_TOOL"
 end
 
-function M.canCraftKey(lockState, itemUname, notLockable, currentKeyCode)
+-- itemData: the Lock and Chain's data; it locks a vehicle only once cut (combined with a Locksmith Kit). Upstream
+-- tests the cut flag the wrong way round (locksmith.pwn refuses the cut one with "has no key"): fixed, intentional
+-- deviation.
+function M.canCraftKey(lockState, itemUname, notLockable, currentKeyCode, itemData)
     if notLockable then
         return false, "LOCKNODOORS"
     end
     if itemUname ~= "LocksmithKit" and itemUname ~= "WheelLock" then
         return false, "NEED_TOOL"
+    end
+    if itemUname == "WheelLock" then
+        local d = type(itemData) == "table" and (type(itemData[1]) == "table" and itemData[1] or itemData) or {}
+        if not d.cut then
+            return false, "LOCKCHNOKEY"
+        end
     end
     if (currentKeyCode or 0) ~= 0 or lockState == M.LOCK_EXTERNAL then
         return false, "LOCKALREADY"

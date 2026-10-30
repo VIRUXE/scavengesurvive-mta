@@ -44,6 +44,7 @@
     <export function="openWorldContainer" type="server"/>
     <export function="openSupplyContainer" type="server"/>
     <export function="closeContainer" type="server"/>
+    <export function="openContainerId" type="server"/>
     <export function="updateHeldData" type="server"/>
     <export function="meleeHit" type="server"/>
     <export function="popHeadgear" type="server"/>

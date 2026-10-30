@@ -1,398 +1,176 @@
--- Pure recipe matching logic for in-hand combining, ground construction, and workbench crafting.
--- Ported from upstream Scavenge & Survive (core/server/init.pwn, core/world/craft-construct.pwn).
-local M = { RECIPES = {}, byName = {} }
+-- Recipe matching for upstream's craft sets (data/generated/recipes.lua, from init.pwn): combined in an inventory
+-- screen ("combine"), built from items on the ground with a tool ("construct", craft-construct.pwn) or built from a
+-- workbench's contents with a tool ("workbench", workbench.pwn). Upstream's craft library matches a selection only
+-- when it holds exactly a set's ingredients, as a multiset (_craft_FindCraftset: same count, same sorted types).
+-- Pure: no MTA calls; the server passes the recipe list in.
+local M = {}
 
-local function addRecipe(r)
-    M.RECIPES[#M.RECIPES + 1] = r
-    M.byName[r.name] = r
+M.WORKBENCH_MS_PER_ITEM = 3600 -- workbench.pwn: the hold is itemcount * 3600 ms, the set's build time is not used
+
+local function key(unames)
+    local sorted = {}
+    for i, u in ipairs(unames) do
+        sorted[i] = u
+    end
+    table.sort(sorted)
+    return table.concat(sorted, "+")
 end
 
--- 1. In-Hand Combine Recipes
-addRecipe({
-    name = "Bandage",
-    kind = "combine",
-    ingredients = {
-        { uname = "Knife", count = 1, keep = true },
-        { uname = "Clothes", count = 1, keep = false },
-    },
-    result = { uname = "Bandage", count = 1 },
-})
+local function ingredientUnames(r)
+    local out = {}
+    for i, ing in ipairs(r.ingredients) do
+        out[i] = ing.uname
+    end
+    return out
+end
 
-addRecipe({
-    name = "MolotovEmpty",
-    kind = "combine",
-    ingredients = {
-        { uname = "Bottle", count = 1, keep = false },
-        { uname = "Bandage", count = 1, keep = false },
-    },
-    result = { uname = "MolotovEmpty", count = 1 },
-})
+-- book = { list, byKey, byResult, constructTools }; upstream's first set wins a key, the last set defined for a
+-- result type is the one a removal tool takes apart (craft_ItemTypeResultFor is overwritten on each define)
+function M.book(recipes)
+    local book = { list = recipes, byKey = {}, byResult = {}, constructTools = {} }
+    for _, r in ipairs(recipes) do
+        local k = key(ingredientUnames(r))
+        book.byKey[k] = book.byKey[k] or r
+        book.byResult[r.result] = r
+        if r.kind == "construct" then
+            book.constructTools[r.tool] = true
+        end
+    end
+    return book
+end
 
-addRecipe({
-    name = "ParaBag",
-    kind = "combine",
-    ingredients = {
-        { uname = "Knife", count = 1, keep = true },
-        { uname = "Parachute", count = 1, keep = false },
-    },
-    result = { uname = "ParaBag", count = 1 },
-})
-
-addRecipe({
-    name = "PowerSupply",
-    kind = "combine",
-    ingredients = {
-        { uname = "Fusebox", count = 1, keep = false },
-        { uname = "Battery", count = 1, keep = false },
-    },
-    result = { uname = "PowerSupply", count = 1 },
-})
-
--- 2. Ground Construction Recipes
-addRecipe({
-    name = "Campfire",
-    kind = "ground",
-    tweak = false, -- upstream: the campfire and the plot pole are not nudged after building
-    tool = "FireLighter",
-    buildTime = 3000,
-    ingredients = {
-        { uname = "WoodLog", count = 2, keep = false },
-    },
-    result = { uname = "Campfire", count = 1 },
-    removalTool = "Crowbar",
-    removalTime = 3000,
-    deconstructIngredients = {
-        { uname = "WoodLog", count = 1 },
-    },
-})
-
-addRecipe({
-    name = "Barricade",
-    kind = "ground",
-    tool = "Hammer",
-    buildTime = 4000,
-    ingredients = {
-        { uname = "WoodLog", count = 3, keep = false },
-    },
-    result = { uname = "Barricade", count = 1 },
-    removalTool = "Crowbar",
-    removalTime = 5000,
-    deconstructIngredients = {
-        { uname = "WoodLog", count = 2 },
-    },
-})
-
-addRecipe({
-    name = "SmallBox",
-    kind = "ground",
-    tool = "Hammer",
-    buildTime = 4000,
-    ingredients = {
-        { uname = "WoodLog", count = 2, keep = false },
-    },
-    result = { uname = "SmallBox", count = 1 },
-    removalTool = "Crowbar",
-    removalTime = 5000,
-    deconstructIngredients = {
-        { uname = "WoodLog", count = 1 },
-    },
-})
-
-addRecipe({
-    name = "Workbench",
-    kind = "ground",
-    tool = "Hammer",
-    buildTime = 8000,
-    ingredients = {
-        { uname = "WoodLog", count = 2, keep = false },
-        { uname = "CorPanel", count = 2, keep = false },
-    },
-    result = { uname = "Workbench", count = 1 },
-    removalTool = "Crowbar",
-    removalTime = 8000,
-    deconstructIngredients = {
-        { uname = "WoodLog", count = 1 },
-        { uname = "CorPanel", count = 1 },
-    },
-})
-
-addRecipe({
-    name = "LargeFrame",
-    kind = "ground",
-    tool = "Hammer",
-    buildTime = 6000,
-    ingredients = {
-        { uname = "CorPanel", count = 4, keep = false },
-    },
-    result = { uname = "LargeFrame", count = 1 },
-    removalTool = "Crowbar",
-    removalTime = 10000,
-    deconstructIngredients = {
-        { uname = "CorPanel", count = 2 },
-    },
-})
-
-addRecipe({
-    name = "Door",
-    kind = "ground",
-    tool = "Screwdriver",
-    buildTime = 5000,
-    ingredients = {
-        { uname = "LargeFrame", count = 1, keep = false },
-        { uname = "CrateDoor", count = 1, keep = false },
-    },
-    result = { uname = "Door", count = 1 },
-    removalTool = "Crowbar",
-    removalTime = 8000,
-    deconstructIngredients = {
-        { uname = "LargeFrame", count = 1 },
-        { uname = "CrateDoor", count = 1 },
-    },
-})
-
-addRecipe({
-    name = "MetalGate",
-    kind = "ground",
-    tool = "Wrench",
-    buildTime = 6000,
-    ingredients = {
-        { uname = "LargeFrame", count = 1, keep = false },
-        { uname = "MetalFrame", count = 1, keep = false },
-    },
-    result = { uname = "MetalGate", count = 1 },
-    removalTool = "Crowbar",
-    removalTime = 10000,
-    deconstructIngredients = {
-        { uname = "LargeFrame", count = 1 },
-        { uname = "MetalFrame", count = 1 },
-    },
-})
-
-addRecipe({
-    name = "PlotPole",
-    kind = "ground",
-    tweak = false,
-    tool = "Screwdriver",
-    buildTime = 8000,
-    ingredients = {
-        { uname = "CorPanel", count = 2, keep = false },
-        { uname = "Battery", count = 1, keep = false },
-    },
-    result = { uname = "PlotPole", count = 1 },
-    removalTool = "Crowbar",
-    removalTime = 15000,
-    deconstructIngredients = {
-        { uname = "CorPanel", count = 1 },
-        { uname = "Battery", count = 1 },
-    },
-})
-
--- 3. Workbench Recipes (crafted in Workbench 16-slot container)
-addRecipe({
-    name = "PowerSupply",
-    kind = "workbench",
-    tool = "Screwdriver",
-    buildTime = 12000,
-    ingredients = {
-        { uname = "Battery", count = 1, keep = false },
-        { uname = "Fusebox", count = 1, keep = false },
-    },
-    result = { uname = "PowerSupply", count = 1 },
-})
-
-addRecipe({
-    name = "Keypad",
-    kind = "workbench",
-    tool = "Screwdriver",
-    buildTime = 5000,
-    ingredients = {
-        { uname = "Battery", count = 1, keep = false },
-        { uname = "CorPanel", count = 1, keep = false },
-    },
-    result = { uname = "Keypad", count = 1 },
-})
-
-addRecipe({
-    name = "AdvancedKeypad",
-    kind = "workbench",
-    tool = "Screwdriver",
-    buildTime = 5000,
-    ingredients = {
-        { uname = "Keypad", count = 1, keep = false },
-        { uname = "Battery", count = 1, keep = false },
-    },
-    result = { uname = "AdvancedKeypad", count = 1 },
-})
-
-addRecipe({
-    name = "LocksmithKit",
-    kind = "workbench",
-    tool = "Wrench",
-    buildTime = 6000,
-    ingredients = {
-        { uname = "CorPanel", count = 1, keep = false },
-        { uname = "Screwdriver", count = 1, keep = false },
-        { uname = "Hammer", count = 1, keep = false },
-    },
-    result = { uname = "LocksmithKit", count = 1 },
-})
-
-addRecipe({
-    name = "LockBreaker",
-    kind = "workbench",
-    tool = "Wrench",
-    buildTime = 6000,
-    ingredients = {
-        { uname = "Crowbar", count = 1, keep = false },
-        { uname = "Battery", count = 1, keep = false },
-    },
-    result = { uname = "LockBreaker", count = 1 },
-})
-
-addRecipe({
-    name = "HackDevice",
-    kind = "workbench",
-    tool = "Screwdriver",
-    buildTime = 8000,
-    ingredients = {
-        { uname = "Keypad", count = 1, keep = false },
-        { uname = "Battery", count = 1, keep = false },
-    },
-    result = { uname = "HackDevice", count = 1 },
-})
-
-addRecipe({
-    name = "Shield",
-    kind = "workbench",
-    tool = "Hammer",
-    buildTime = 6000,
-    ingredients = {
-        { uname = "CorPanel", count = 2, keep = false },
-        { uname = "WoodLog", count = 1, keep = false },
-    },
-    result = { uname = "Shield", count = 1 },
-})
-
-addRecipe({
-    name = "Armour",
-    kind = "workbench",
-    tool = "Hammer",
-    buildTime = 8000,
-    ingredients = {
-        { uname = "CorPanel", count = 3, keep = false },
-        { uname = "Clothes", count = 2, keep = false },
-    },
-    result = { uname = "Armour", count = 1 },
-})
-
-addRecipe({
-    name = "Backpack",
-    kind = "workbench",
-    tool = "Knife",
-    buildTime = 5000,
-    ingredients = {
-        { uname = "Clothes", count = 3, keep = false },
-    },
-    result = { uname = "Backpack", count = 1 },
-})
-
-addRecipe({
-    name = "Rucksack",
-    kind = "workbench",
-    tool = "Knife",
-    buildTime = 7000,
-    ingredients = {
-        { uname = "Clothes", count = 5, keep = false },
-    },
-    result = { uname = "Rucksack", count = 1 },
-})
-
-function M.matchCombine(unameA, unameB)
-    if not unameA or not unameB then
+-- the set whose ingredients are exactly these unames (any order), or nil
+function M.find(book, unames)
+    if #unames < 2 then
         return nil
     end
-    for _, r in ipairs(M.RECIPES) do
-        if r.kind == "combine" and #r.ingredients == 2 then
-            local i1, i2 = r.ingredients[1], r.ingredients[2]
-            if i1.uname == unameA and i2.uname == unameB then
-                return { recipe = r, consumeA = not i1.keep, consumeB = not i2.keep }
-            elseif i1.uname == unameB and i2.uname == unameA then
-                return { recipe = r, consumeA = not i2.keep, consumeB = not i1.keep }
-            end
-        end
-    end
-    return nil
+    return book.byKey[key(unames)]
 end
 
-local function hasIngredients(availableCounts, recipeIngredients)
-    for _, ing in ipairs(recipeIngredients) do
-        local have = availableCounts[ing.uname] or 0
-        if have < ing.count then
-            return false
+-- items: { { id, uname, ... } } matching the recipe; returns consumed, kept (lists of those items). Within one item
+-- type the kept ingredients take the first items given, so the caller orders items it would rather keep first
+-- (the cut key of a key copy).
+function M.split(recipe, items)
+    local wants = {}
+    for _, ing in ipairs(recipe.ingredients) do
+        local w = wants[ing.uname] or { keep = 0 }
+        wants[ing.uname] = w
+        if ing.keep then
+            w.keep = w.keep + 1
         end
     end
-    return true
-end
-
-function M.matchGround(availableCounts, toolUname)
-    local matches = {}
-    for _, r in ipairs(M.RECIPES) do
-        if r.kind == "ground" then
-            if (not r.tool or r.tool == toolUname) and hasIngredients(availableCounts, r.ingredients) then
-                matches[#matches + 1] = r
-            end
+    local consumed, kept = {}, {}
+    for _, it in ipairs(items) do
+        local w = wants[it.uname]
+        if w and w.keep > 0 then
+            w.keep = w.keep - 1
+            kept[#kept + 1] = it
+        else
+            consumed[#consumed + 1] = it
         end
     end
-    return matches
+    return consumed, kept
 end
 
-function M.matchWorkbench(containerCounts, toolUname)
-    local matches = {}
-    for _, r in ipairs(M.RECIPES) do
-        if r.kind == "workbench" then
-            if (not r.tool or r.tool == toolUname) and hasIngredients(containerCounts, r.ingredients) then
-                matches[#matches + 1] = r
-            end
+-- craft.inc _craft_CraftSelected: the units the result needs beyond what the consumed ingredients free
+function M.extraUnits(recipe, sizeOf)
+    local units = sizeOf(recipe.result)
+    for _, ing in ipairs(recipe.ingredients) do
+        if not ing.keep then
+            units = units - sizeOf(ing.uname)
         end
     end
-    return matches
+    return units
 end
 
--- The tools the ground recipes are built with, as a set: { Hammer = true, ... }.
-function M.groundTools()
+-- craft-construct.pwn: taking a built item apart gives back the ingredients that were used up (kept ones never left
+-- the builder)
+function M.returned(recipe)
     local out = {}
-    for _, r in ipairs(M.RECIPES) do
-        if r.kind == "ground" and r.tool then
-            out[r.tool] = true
+    for _, ing in ipairs(recipe.ingredients) do
+        if not ing.keep then
+            out[#out + 1] = ing.uname
         end
     end
     return out
 end
 
-function M.deconstructables(toolUname)
-    local out = {}
-    for _, r in ipairs(M.RECIPES) do
-        if r.removalTool and (not toolUname or r.removalTool == toolUname) then
-            out[#out + 1] = r.result.uname
+-- the construct set a removal tool takes this item type apart with, or nil
+function M.removal(book, uname, tool)
+    local r = book.byResult[uname]
+    if r and r.kind == "construct" and r.removalTool and (not tool or r.removalTool == tool) then
+        return r
+    end
+    return nil
+end
+
+-- every item type some removal tool takes apart (for the nearest-item query)
+function M.removable(book, tool)
+    local out, seen = {}, {}
+    for _, r in ipairs(book.list) do
+        local cur = M.removal(book, r.result, tool)
+        if cur == r and not seen[r.result] then
+            seen[r.result] = true
+            out[#out + 1] = r.result
         end
     end
+    table.sort(out)
     return out
 end
 
-function M.getDeconstructInfo(productUname, toolUname)
-    for _, r in ipairs(M.RECIPES) do
-        if r.result.uname == productUname and r.removalTool then
-            if not toolUname or r.removalTool == toolUname then
-                return {
-                    recipe = r,
-                    tool = r.removalTool,
-                    duration = r.removalTime or 5000,
-                    ingredients = r.deconstructIngredients or {},
-                }
-            end
+function M.workbenchTime(itemCount)
+    return itemCount * M.WORKBENCH_MS_PER_ITEM
+end
+
+-- craft-construct.pwn: the result stands at the average position of the ingredients (those at 0,0,0 are skipped
+-- from the sum but still count, as upstream divides by the ingredient count)
+function M.averagePos(items)
+    local x, y, z = 0, 0, 0
+    for _, it in ipairs(items) do
+        if it.x * it.y * it.z ~= 0 then
+            x, y, z = x + it.x, y + it.y, z + it.z
         end
     end
-    return nil
+    local n = math.max(1, #items)
+    return x / n, y / n, z / n
+end
+
+local function liquid(data)
+    local d = type(data) == "table" and (type(data[1]) == "table" and data[1] or data) or {}
+    local amount = tonumber(d.amount) or 0
+    return amount, amount > 0.001 and d.liquid or nil
+end
+
+-- Bottle + Bottle: the second bottle's liquid into the first, as far as it fits; one liquid per bottle. Returns
+-- the two bottles' new data, or nil and the reason.
+function M.pour(intoData, fromData, capacity)
+    local intoAmount, intoLiquid = liquid(intoData)
+    local fromAmount, fromLiquid = liquid(fromData)
+    if not fromLiquid then
+        return nil, nil, "LIQUID_EMPTY"
+    end
+    if intoLiquid and intoLiquid ~= fromLiquid then
+        return nil, nil, "LIQUID_MIX"
+    end
+    local moved = math.min(fromAmount, (tonumber(capacity) or 0) - intoAmount)
+    if moved <= 0.001 then
+        return nil, nil, "LIQUID_FULL"
+    end
+    local left = fromAmount - moved
+    return { amount = intoAmount + moved, liquid = fromLiquid }, {
+        amount = left,
+        liquid = left > 0.001 and fromLiquid or nil,
+    }
+end
+
+function M.byKind(book, kind)
+    local out = {}
+    for i, r in ipairs(book.list) do
+        if r.kind == kind then
+            out[#out + 1] = { id = i, recipe = r }
+        end
+    end
+    return out
 end
 
 return M

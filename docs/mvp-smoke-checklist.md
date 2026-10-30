@@ -117,12 +117,23 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
       - World safeboxes (`SmallBox`, `MediumBox`, `LargeBox`, `Locker`, `ToolBox`, `Capsule`, `Suitcase`, etc.): Press **F** near a world safebox to open its persistent container dialog; transfer items between hands and box. When empty, `[Pick up container]` option in dialog allows picking up the box into hands.
       - `TentPack`: Place on ground. Standing near it holding `Hammer`, press **F**: 3-second progress bar pitches the tent into a full 3D tent (model 3243) with a 16-slot container. Interacting with pitched tent opens tent container. Holding `Crowbar` near an empty tent and pressing **F** plays a 3-second packing progress bar, packing it back into portable `TentPack`.
     - **Crafting & Workbench**:
-      - In-hand combine: Hold `Knife` and click `Clothes` in inventory -> click `Combine`: instant craft produces `Bandage` in inventory while preserving the `Knife`. Combine `Bottle` + `Bandage` -> `MolotovEmpty`.
-      - Ground construction: Drop ingredients on ground (e.g. 2x `WoodLog`), hold `FireLighter`, press **F** (or `/craft`): 3-second construction progress bar consumes logs and spawns `Campfire`. Hold `Hammer` near 3x `WoodLog` -> builds `Barricade`. Hold `Hammer` near 2x `WoodLog` + 2x `CorPanel` -> builds `Workbench`.
-        With the ingredients within reach, **F** with the tool in hand builds (it no longer says `You are already
-        holding an item`, #116); a tool in hand next to items that match no recipe says `Cannot craft these items`.
-      - Deconstruction: Hold `Crowbar` and press **F** near constructed object (`Campfire`, `Workbench`, `Barricade`, `LargeFrame`), even with another item lying closer (#97): timed deconstruction progress bar dismantles the object and returns raw materials.
-      - Workbench crafting: Place materials in Workbench 16-slot container (e.g. `CorPanel` + `Battery` + tool `Screwdriver`), press **F** at Workbench: crafts `Keypad` inside container.
+      - Every upstream craft set (init.pwn's 5 combine, 13 construct and 28 workbench sets) comes from
+        `data/generated/recipes.lua` (`python -m tools.convert items`); `/recipes` lists them with tool and ingredients.
+        A set matches only exactly its ingredients (upstream craft.inc), so a stray item in the way blocks it.
+      - Combine: in the inventory, a bag or an open container choose `Combine...` on `Knife`, then `Combine with Combat
+        Knife` on `Clothes`: a `Bandage` replaces the clothes, the knife stays. `Bottle` + `Bandage` -> `MolotovEmpty`,
+        `Knife` + `Parachute` -> `ParaBag`, `WheelLock` + `LocksmithKit` -> `Lock and Chain (Cut)` (only a cut one locks a
+        vehicle). Two items that are no set say `That combination doesn't seem to work...`; closing the menu drops the
+        picks. With an item in hand, `Combine with <held>` on a row combines the two directly.
+      - Ground construction: 3x `WoodLog` on the ground, `FireLighter` in hand, **F**: 5 s `Constructing items...`
+        hold, a `Campfire` stands where the logs lay. 2x `RefinedMetal` + 4x `WoodLog` with a `Hammer` -> `Workbench`;
+        4x `RefinedMetal` with a `Sledgehammer` -> a `LargeFrame` built lying flat, then tweaked. `Key` (cut) + `Key` +
+        `Motor` with a `Screwdriver` -> a copy of the cut key, which stays. Workbench sets on the ground say `You need a
+        workbench to combine those`. Walking off cancels the hold.
+      - Deconstruction: `Crowbar` in hand, **F** near a `Workbench`, `Desk`, `PlotPole`, ... (#97): the removal hold
+        takes it apart and the used-up ingredients come back around it.
+      - Workbench crafting: put `Battery` + `Fusebox` in a Workbench, `Screwdriver` in hand, **F** at the workbench:
+        a 7.2 s hold (3.6 s per item) empties it and a `PowerSupply` appears on top (#119). The wrong tool opens it.
     - **Defences, Keypads and Plot Poles**:
       - Defences (`LargeFrame`, `Door`, `MetalGate`): Press **F** on an unlocked door/gate to swing it open (+90 deg rotation) with 5-second auto-latch closing.
       - Keypad security: Hold `Keypad` item and press **F** on defence: installs keypad and opens 12-key Keypad UI to set 4-digit code. Interacting with locked defence opens Keypad UI: enter 4-digit code with mouse/numpad, press `>` (Enter); correct code grants access and swings door open for 5 seconds; wrong code plays error sound.
@@ -398,8 +409,8 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
       and jump freely while holding it; dropping it plays the bend animation and places it on the ground.
     - d. **Weather cycle (#117).** Weather re-evaluates every minute once 10 minutes have passed since the last change
       (10% roll), and picks a different weather rather than repeating the same rain.
-    - e. **Crafting combine (#119).** Hold a `Fusebox` and open inventory with a `Battery`: the `Combine` action produces
-      a `PowerSupply` in hands and updates inventory slots.
+    - e. **Crafting (#119).** A `PowerSupply` is upstream's workbench set: `Battery` + `Fusebox` in a Workbench with a
+      `Screwdriver` (item 21's Crafting & Workbench steps cover every set).
     - f. **Holster (#123).** Holding a holsterable weapon (`M9Pistol`, `DesertEagle`, `AK47Rifle`), press **Y** to
       holster it with its holster animation (300 ms for thigh pistols, 800 ms for back rifles); hands become empty.
       With empty hands and a holstered weapon, HUD displays `Y Draw weapon` and pressing **Y** equips it.

@@ -762,6 +762,15 @@ return function(ctx)
                 return
             end
 
+            -- a tool in hand at a workbench builds from what it holds, or opens it when that is no set for the tool
+            -- (crafting, upstream workbench.pwn OnPlayerUseItemWithItem)
+            if row.uname == "Workbench" and curHeld then
+                local res = getResourceFromName("crafting")
+                if res and getResourceState(res) == "running" then
+                    return exports.crafting:workbenchCraft(c.player, row)
+                end
+            end
+
             -- Safebox world containers
             local t = itemType(row.uname)
             if t and t.category == "safebox" then

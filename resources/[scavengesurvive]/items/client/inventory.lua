@@ -91,6 +91,16 @@ return function(ctx)
         CRAFTED = "Crafted",
         DECONSTRUCTED = "Deconstructed",
         NO_RECIPE = "Cannot craft these items",
+        -- craft.inc's own message when the picked items are no set yet
+        COMBINE_NO_MATCH = "That combination doesn't seem to work...\n"
+            .. "Try adding more items or close the menu to cancel.",
+        CONSTRUCT_ON_GROUND = "Place those on the ground and use the recipe's tool on them",
+        NEEDWORKBE = "You need a workbench to combine those",
+        ITEMS_MOVED = "The items moved",
+        LOCKCHNOKEY = "That lock and chain has no key. Combine it with a Locksmith Kit.",
+        LIQUID_MIX = "Those hold different liquids",
+        LIQUID_FULL = "It is already full",
+        LIQUID_POURED = "Poured",
         NEED_TOOL = "Missing required tool",
         KEYPAD_ALREADY = "Keypad already installed",
         KEYPAD_HACKED = "Keypad hacked",
@@ -161,8 +171,10 @@ return function(ctx)
     addEventHandler("toastShown", root, function(code)
         local n = type(code) == "string" and code:match("^AMTRANS:(%d+)$")
         local dist = type(code) == "string" and code:match("^DISTANCE:([%d%.]+)$")
+        local crafted = type(code) == "string" and code:match("^CRAFTED:(.+)$")
         local msg = n and string.format("Transferred %d rounds", tonumber(n) or 0)
             or dist and string.format("Distance: %.3f", tonumber(dist) or 0) -- upstream DISTANCEVAL
+            or crafted and "Crafted " .. crafted -- craft.inc
             or MESSAGES[code]
             or tostring(code)
         exports.ui:actionTextShow(msg, 3000)
@@ -193,6 +205,10 @@ return function(ctx)
             name = small.stunLabel(name, it.data)
         elseif gardening and it.uname == gardening.BAG then
             name = gardening.seedLabel(name, gardening.seedsFor(it.id, it.data))
+        elseif it.uname == "WheelLock" then
+            -- locksmith.pwn OnItemNameRender: cut once combined with a Locksmith Kit
+            local d = type(it.data) == "table" and (type(it.data[1]) == "table" and it.data[1] or it.data) or {}
+            name = name .. (d.cut and " (Cut)" or " (Uncut)")
         elseif cooking and cooking.isFood(t) then
             name = cooking.label(t, name, it.data)
         elseif liquids and liquids.isContainer(t) then
@@ -202,6 +218,12 @@ return function(ctx)
             name = ammo.displayName(t, it.data, itemType, calibreName, defA)
         end
         return string.format("[%02d]%s", t and t.size or 1, name)
+    end
+
+    -- the items picked with "Combine...", in the order picked; cleared when the inventory closes or they craft
+    local combine = { ids = {}, names = {}, picked = {} }
+    local function clearCombine()
+        combine = { ids = {}, names = {}, picked = {} }
     end
 
     -- "[%02d]%s": the type size then the name, one "<Empty>" per free slot
@@ -222,8 +244,18 @@ return function(ctx)
                     end
                 end
             end
+            -- craft.inc: "Combine..." picks the item, "Combine with A+B" adds it to the picked ones; the item in hand
+            -- combines with a row directly
+            if #combine.ids == 0 then
+                actions[#actions + 1] = { id = "combine_pick", label = "Combine..." }
+            elseif not combine.picked[it.id] then
+                local label = "Combine with " .. table.concat(combine.names, "+")
+                actions[#actions + 1] = { id = "combine_pick", label = label }
+            end
             if last and last.held then
-                actions[#actions + 1] = { id = "combine", label = "Combine" }
+                local ht = itemType(last.held.uname)
+                local label = "Combine with " .. (ht and ht.name or last.held.uname)
+                actions[#actions + 1] = { id = "combine", label = label }
             end
             rows[#rows + 1] = {
                 id = it.id,
@@ -311,6 +343,19 @@ return function(ctx)
         exports.ui:listOpen("inventory", title, rows)
     end
 
+    -- the item behind an inventory, bag or trunk row of the last payload
+    local function rowItem(rowId)
+        local id = tonumber(rowId)
+        for _, key in ipairs({ "inventory", "bag", "trunk" }) do
+            for _, it in ipairs(last and last[key] or {}) do
+                if it.id == id then
+                    return it
+                end
+            end
+        end
+        return nil
+    end
+
     addEventHandler("inventoryOpened", root, function(p)
         if p.trunk and (not last or p.trunkContainerId ~= last.trunkContainerId) then
             view = "trunk"
@@ -366,7 +411,21 @@ return function(ctx)
         elseif actionId == "put_held:inventory" then
             triggerServerEvent("itemPutAwayRequested", localPlayer, "inventory")
         elseif actionId == "combine" then
-            triggerServerEvent("combineRequested", localPlayer, rowId)
+            triggerServerEvent("combineRequested", localPlayer, { rowId }, true)
+        elseif actionId == "combine_pick" then
+            local it = rowItem(rowId)
+            if it and not combine.picked[it.id] then
+                local t = itemType(it.uname)
+                combine.picked[it.id] = true
+                combine.ids[#combine.ids + 1] = it.id
+                combine.names[#combine.names + 1] = t and t.name ~= "" and t.name or it.uname
+                if #combine.ids >= 2 then
+                    triggerServerEvent("combineRequested", localPlayer, combine.ids, false)
+                end
+            end
+            if last then
+                open(last)
+            end
         end
     end)
 
@@ -623,8 +682,15 @@ return function(ctx)
         end
     end)
 
+    addEventHandler("combineFinished", root, function(crafted)
+        if crafted then
+            clearCombine()
+        end
+    end)
+
     addEventHandler("uiListClosed", root, function(listId)
         if listId == "inventory" then
+            clearCombine()
             if last and last.trunk then
                 triggerServerEvent("trunkCloseRequested", localPlayer)
             end

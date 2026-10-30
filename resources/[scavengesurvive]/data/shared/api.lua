@@ -27,6 +27,7 @@ local modelMap = loadModelMap()
 local items = assert(loadGenerated("item_types"), "data: generated/item_types.lua missing")
 local loot = assert(loadGenerated("loot_tables"), "data: generated/loot_tables.lua missing")
 local vehicles = assert(loadGenerated("vehicle_types"), "data: generated/vehicle_types.lua missing")
+local craftSets = assert(loadGenerated("recipes"), "data: generated/recipes.lua missing")
 local langs = {}
 for _, code in ipairs(LANGUAGES) do
     langs[code] = loadGenerated("lang_" .. code) or {}
@@ -77,6 +78,11 @@ end
 
 function Data.vehicleTypes()
     return vehicles.order
+end
+
+-- upstream's craft sets in definition order: { result, kind = combine|construct|workbench, ingredients, tool, ... }
+function Data.recipes()
+    return craftSets
 end
 
 function Data.languages()
@@ -140,6 +146,10 @@ end
 
 function languages()
     return Data.languages()
+end
+
+function recipes()
+    return Data.recipes()
 end
 
 return Data

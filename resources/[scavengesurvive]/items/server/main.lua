@@ -500,6 +500,14 @@ function openSupplyContainer(player, containerId, title, size, x, y, z)
     return containers.openSupplyContainer(player, containerId, title, size, x, y, z) == true
 end
 
+-- the container the player has open (trunk, box, workbench, tent, ...), as the inventory dialog shows it
+function openContainerId(player)
+    if not isElement(player) then
+        return false
+    end
+    return containers.openContainerId(player) or false
+end
+
 function closeContainer(player)
     if not isElement(player) then
         return false

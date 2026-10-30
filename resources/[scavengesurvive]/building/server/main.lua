@@ -392,6 +392,39 @@ function tweakItem(player, itemId)
     return true
 end
 
+-- crafting's construct sets with .defence = true (the Large Frame): upstream ConvertItemToDefenceItem(itemid, 0) lays
+-- the new item down built, then the builder nudges it like any built defence
+function buildConstructedDefence(player, itemId)
+    itemId = tonumber(itemId)
+    if not itemId then
+        return false
+    end
+    db.one(DEFENCE_ROW, { itemId }, function(row, c)
+        if not row then
+            return
+        end
+        local t = exports.data:itemType(row.type_uname)
+        if not (t and t.defence) or defences.state(decodeData(row.data)) then
+            return
+        end
+        local z, rz, st = defences.build(t.defence, "horizontal", row.z, row.rz, t.rotz)
+        local d = decodeData(row.data)
+        d.defence = st
+        db.exec(
+            "UPDATE items SET z = ?, rz = ?, data = ? WHERE id = ? AND x IS NOT NULL",
+            { z, rz, encodeData(d), row.id },
+            function()
+                exports.items:resendWorldItem(row.id)
+                if isElement(c.player) then
+                    row.z, row.rz, row.data = z, rz, d
+                    tweak.start(c.player, row, true)
+                end
+            end
+        )
+    end, { player = player })
+    return true
+end
+
 function finishTweak(player)
     return tweak.commit(player)
 end

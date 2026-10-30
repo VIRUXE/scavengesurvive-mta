@@ -873,6 +873,209 @@ BEGIN
   END IF;
 END//
 
+CREATE OR REPLACE PROCEDURE `craft_build`(
+  IN p_char_id INT, IN p_source_container INT, IN p_consume JSON, IN p_keep JSON,
+  IN p_result VARCHAR(32), IN p_data JSON,
+  IN p_x FLOAT, IN p_y FLOAT, IN p_z FLOAT, IN p_rz FLOAT, IN p_interior TINYINT, IN p_dimension INT)
+BEGIN
+  
+  
+  
+  DECLARE v_alive INT DEFAULT 0;
+  DECLARE v_want INT DEFAULT 0;
+  DECLARE v_have INT DEFAULT 0;
+  DECLARE v_total INT DEFAULT 0;
+  DECLARE v_cat VARCHAR(16) DEFAULT NULL;
+  DECLARE v_bag_size INT DEFAULT NULL;
+  DECLARE v_i INT DEFAULT 0;
+  DECLARE v_id INT;
+  DECLARE v_old_slot INT;
+  DECLARE v_item INT;
+  DECLARE v_new_cont INT DEFAULT NULL;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
+  SELECT uname, category, container_size INTO p_result, v_cat, v_bag_size FROM item_types WHERE uname = p_result;
+  IF v_cat IS NULL THEN
+    SELECT 0 AS ok, 'UNKNOWN_TYPE' AS code, NULL AS payload;
+  ELSE
+    SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+    START TRANSACTION;
+    SELECT COUNT(*) INTO v_alive FROM characters WHERE id = p_char_id AND alive = 1;
+    SET v_want = JSON_LENGTH(p_consume, '$[0]') + IFNULL(JSON_LENGTH(p_keep, '$[0]'), 0);
+    SELECT COUNT(*) INTO v_have FROM items i
+      WHERE (i.id IN (SELECT j.id FROM JSON_TABLE(p_consume, '$[0][*]' COLUMNS (id INT PATH '$')) j)
+          OR i.id IN (SELECT j.id FROM JSON_TABLE(IFNULL(p_keep, '[[]]'), '$[0][*]' COLUMNS (id INT PATH '$')) j))
+        AND ((p_source_container IS NULL AND i.x IS NOT NULL)
+          OR (p_source_container IS NOT NULL AND i.container_id <=> p_source_container))
+      FOR UPDATE;
+    IF p_source_container IS NOT NULL THEN
+      SELECT COUNT(*) INTO v_total FROM items WHERE container_id = p_source_container FOR UPDATE;
+    ELSE
+      SET v_total = v_want;
+    END IF;
+    IF v_alive = 0 THEN
+      ROLLBACK;
+      SELECT 0 AS ok, 'NO_CHARACTER' AS code, NULL AS payload;
+    ELSEIF v_have <> v_want OR v_total <> v_want THEN
+      ROLLBACK;
+      SELECT 0 AS ok, 'ITEMS_MOVED' AS code, NULL AS payload;
+    ELSE
+      WHILE v_i < JSON_LENGTH(p_consume, '$[0]') DO
+        SET v_id = JSON_VALUE(p_consume, CONCAT('$[0][', v_i, ']'));
+        SELECT slot INTO v_old_slot FROM items WHERE id = v_id;
+        DELETE FROM items WHERE id = v_id;
+        IF p_source_container IS NOT NULL THEN
+          UPDATE items SET slot = slot - 1 WHERE container_id = p_source_container AND slot > v_old_slot
+            ORDER BY slot ASC;
+        END IF;
+        SET v_i = v_i + 1;
+      END WHILE;
+      INSERT INTO items (type_uname, hitpoints, data, x, y, z, rz, interior, dimension)
+        VALUES (p_result, 5, p_data, p_x, p_y, p_z, p_rz, p_interior, p_dimension);
+      SET v_item = LAST_INSERT_ID();
+      IF v_cat IN ('bag', 'safebox') THEN
+        INSERT INTO containers (kind, size, owner_item_id) VALUES (v_cat, IFNULL(v_bag_size, 8), v_item);
+        SET v_new_cont = LAST_INSERT_ID();
+      END IF;
+      COMMIT;
+      SELECT 1 AS ok, 'OK' AS code,
+        JSON_OBJECT('item_id', CAST(v_item AS SIGNED), 'container_id', CAST(v_new_cont AS SIGNED)) AS payload;
+    END IF;
+  END IF;
+END//
+
+CREATE OR REPLACE PROCEDURE `craft_combine`(
+  IN p_char_id INT, IN p_open_container INT, IN p_consume JSON, IN p_keep JSON,
+  IN p_result VARCHAR(32), IN p_data JSON, IN p_into_container INT)
+BEGIN
+  
+  
+  
+  DECLARE v_alive INT DEFAULT 0;
+  DECLARE v_want INT DEFAULT 0;
+  DECLARE v_have INT DEFAULT 0;
+  DECLARE v_held INT DEFAULT 0;
+  DECLARE v_held_consumed INT DEFAULT 0;
+  DECLARE v_cat VARCHAR(16) DEFAULT NULL;
+  DECLARE v_item_size INT DEFAULT 1;
+  DECLARE v_bag_size INT DEFAULT NULL;
+  DECLARE v_size INT DEFAULT NULL;
+  DECLARE v_used INT DEFAULT 0;
+  DECLARE v_freed INT DEFAULT 0;
+  DECLARE v_slot INT DEFAULT 0;
+  DECLARE v_i INT DEFAULT 0;
+  DECLARE v_id INT;
+  DECLARE v_cont INT;
+  DECLARE v_old_slot INT;
+  DECLARE v_item INT;
+  DECLARE v_new_cont INT DEFAULT NULL;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
+  SELECT uname, category, size, container_size INTO p_result, v_cat, v_item_size, v_bag_size
+    FROM item_types WHERE uname = p_result; 
+  IF v_cat IS NULL THEN
+    SELECT 0 AS ok, 'UNKNOWN_TYPE' AS code, NULL AS payload;
+  ELSE
+    SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+    START TRANSACTION;
+    SELECT COUNT(*) INTO v_alive FROM characters WHERE id = p_char_id AND alive = 1 FOR UPDATE;
+    SET v_want = JSON_LENGTH(p_consume, '$[0]') + IFNULL(JSON_LENGTH(p_keep, '$[0]'), 0);
+    SELECT COUNT(*) INTO v_have FROM items i
+      LEFT JOIN containers c ON c.id = i.container_id
+      LEFT JOIN items owner ON owner.id = c.owner_item_id
+      WHERE (i.id IN (SELECT j.id FROM JSON_TABLE(p_consume, '$[0][*]' COLUMNS (id INT PATH '$')) j)
+          OR i.id IN (SELECT j.id FROM JSON_TABLE(IFNULL(p_keep, '[[]]'), '$[0][*]' COLUMNS (id INT PATH '$')) j))
+        AND ((i.holder_char_id <=> p_char_id AND i.holder_kind = 'held')
+          OR c.owner_char_id <=> p_char_id
+          OR (owner.holder_char_id <=> p_char_id AND owner.holder_kind = 'bag')
+          OR (p_open_container IS NOT NULL AND i.container_id <=> p_open_container))
+      FOR UPDATE;
+    SELECT COUNT(*) INTO v_held_consumed FROM items
+      WHERE holder_char_id <=> p_char_id AND holder_kind = 'held'
+        AND id IN (SELECT j.id FROM JSON_TABLE(p_consume, '$[0][*]' COLUMNS (id INT PATH '$')) j);
+    SELECT COUNT(*) INTO v_held FROM items WHERE holder_char_id <=> p_char_id AND holder_kind = 'held' FOR UPDATE;
+    IF p_into_container IS NOT NULL THEN
+      SELECT size INTO v_size FROM containers WHERE id = p_into_container FOR UPDATE;
+      SELECT IFNULL(SUM(t.size), 0) INTO v_used
+        FROM items i JOIN item_types t ON t.uname = i.type_uname WHERE i.container_id = p_into_container FOR UPDATE;
+      SELECT IFNULL(SUM(t.size), 0) INTO v_freed
+        FROM items i JOIN item_types t ON t.uname = i.type_uname
+        WHERE i.container_id = p_into_container
+          AND i.id IN (SELECT j.id FROM JSON_TABLE(p_consume, '$[0][*]' COLUMNS (id INT PATH '$')) j);
+    END IF;
+    IF v_alive = 0 THEN
+      ROLLBACK;
+      SELECT 0 AS ok, 'NO_CHARACTER' AS code, NULL AS payload;
+    ELSEIF v_have <> v_want THEN
+      ROLLBACK;
+      SELECT 0 AS ok, 'ITEMS_MOVED' AS code, NULL AS payload;
+    ELSEIF p_into_container IS NULL AND v_held - v_held_consumed > 0 THEN
+      ROLLBACK;
+      SELECT 0 AS ok, 'HANDS_FULL' AS code, NULL AS payload;
+    ELSEIF p_into_container IS NOT NULL AND v_size IS NULL THEN
+      ROLLBACK;
+      SELECT 0 AS ok, 'NO_CONTAINER' AS code, NULL AS payload;
+    ELSEIF p_into_container IS NOT NULL AND v_used - v_freed + v_item_size > v_size THEN
+      ROLLBACK;
+      SELECT 0 AS ok, 'CONTAINER_FULL' AS code, NULL AS payload;
+    ELSE
+      
+      WHILE v_i < JSON_LENGTH(p_consume, '$[0]') DO
+        SET v_id = JSON_VALUE(p_consume, CONCAT('$[0][', v_i, ']'));
+        SELECT container_id, slot INTO v_cont, v_old_slot FROM items WHERE id = v_id;
+        DELETE FROM items WHERE id = v_id;
+        IF v_cont IS NOT NULL THEN
+          UPDATE items SET slot = slot - 1 WHERE container_id = v_cont AND slot > v_old_slot ORDER BY slot ASC;
+        END IF;
+        SET v_i = v_i + 1;
+      END WHILE;
+      IF p_into_container IS NULL THEN
+        INSERT INTO items (type_uname, hitpoints, data, holder_char_id, holder_kind)
+          VALUES (p_result, 5, p_data, p_char_id, 'held');
+      ELSE
+        SELECT IFNULL(MAX(slot) + 1, 0) INTO v_slot FROM items WHERE container_id = p_into_container;
+        INSERT INTO items (type_uname, hitpoints, data, container_id, slot)
+          VALUES (p_result, 5, p_data, p_into_container, v_slot);
+      END IF;
+      SET v_item = LAST_INSERT_ID();
+      IF v_cat IN ('bag', 'safebox') THEN
+        INSERT INTO containers (kind, size, owner_item_id) VALUES (v_cat, IFNULL(v_bag_size, 8), v_item);
+        SET v_new_cont = LAST_INSERT_ID();
+      END IF;
+      COMMIT;
+      SELECT 1 AS ok, 'OK' AS code, JSON_OBJECT('item_id', CAST(v_item AS SIGNED),
+        'container_id', CAST(v_new_cont AS SIGNED), 'held', p_into_container IS NULL) AS payload;
+    END IF;
+  END IF;
+END//
+
+CREATE OR REPLACE PROCEDURE `craft_deconstruct`(
+  IN p_item_id INT, IN p_type_uname VARCHAR(32), IN p_returns JSON, IN p_interior TINYINT, IN p_dimension INT)
+BEGIN
+  
+  
+  DECLARE v_found INT DEFAULT 0;
+  DECLARE v_n INT DEFAULT 0;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
+  SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+  START TRANSACTION;
+  SELECT COUNT(*) INTO v_found FROM items WHERE id = p_item_id AND type_uname = p_type_uname AND x IS NOT NULL
+    FOR UPDATE;
+  IF v_found = 0 THEN
+    ROLLBACK;
+    SELECT 0 AS ok, 'ITEMS_MOVED' AS code, NULL AS payload;
+  ELSE
+    DELETE FROM items WHERE id = p_item_id;
+    INSERT INTO items (type_uname, hitpoints, x, y, z, rz, interior, dimension)
+      SELECT t.uname, 5, j.x, j.y, j.z, j.rz, p_interior, p_dimension
+      FROM JSON_TABLE(p_returns, '$[0][*]' COLUMNS (
+        uname VARCHAR(32) COLLATE utf8mb4_uca1400_ai_ci PATH '$.uname', x FLOAT PATH '$.x', y FLOAT PATH '$.y', z FLOAT PATH '$.z',
+        rz FLOAT PATH '$.rz')) j
+      JOIN item_types t ON t.uname = j.uname;
+    SET v_n = ROW_COUNT();
+    COMMIT;
+    SELECT 1 AS ok, 'OK' AS code, JSON_OBJECT('returned', CAST(v_n AS SIGNED)) AS payload;
+  END IF;
+END//
+
 CREATE OR REPLACE PROCEDURE `explosion_damage`(IN p_rows JSON)
 BEGIN
   DECLARE v_rows JSON;

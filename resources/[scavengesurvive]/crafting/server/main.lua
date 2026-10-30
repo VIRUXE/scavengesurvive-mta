@@ -1,5 +1,10 @@
--- Crafting system: in-hand combine, ground construction, deconstruction, and workbench crafting.
--- Ported from upstream Scavenge & Survive (core/world/craft-construct.pwn, core/item/workbench.pwn).
+-- Crafting: upstream's craft sets (data/generated/recipes.lua, init.pwn) used three ways.
+--   combine    craft.inc: items picked with "Combine..." in the inventory, bag or an open container (or with the
+--              item in hand) and crafted once they are exactly a set; the result takes their place
+--   construct  craft-construct.pwn: the interact key with the set's tool in hand next to exactly its ingredients
+--              on the ground; a hold, then the result stands where they lay. Its removal tool takes it apart again.
+--   workbench  workbench.pwn: the interact key with the set's tool at a workbench holding exactly its ingredients;
+--              a hold of 3.6 s per item, then the result sits on the workbench
 local db = assert(loadstring(exports.lib:getModule("db"), "=lib/db.lua"))()
 local net = assert(loadstring(exports.lib:getModule("net"), "=lib/net.lua"))()
 local util = assert(loadstring(exports.lib:getModule("util"), "=lib/util.lua"))()
@@ -13,7 +18,15 @@ local function loadModule(path)
 end
 
 local craft = loadModule("shared/logic/craft.lua")
-local activeHold = {} -- player -> { timer = timer, action = string }
+local book = craft.book(exports.data:recipes())
+local MAX_SELECTION = 8 -- CRAFT_MAX_CRAFT_SET_ITEMS
+local NEARBY_RADIUS = 2.5
+local activeHold = {} -- player -> { timer, anim }
+
+local function resourceRunning(name)
+    local res = getResourceFromName(name)
+    return res and getResourceState(res) == "running"
+end
 
 local function charId(player)
     return exports.character:getCharacterId(player)
@@ -23,6 +36,28 @@ local function toast(player, code)
     triggerClientEvent(player, "toastShown", player, code)
 end
 
+local function itemType(uname)
+    return exports.data:itemType(uname)
+end
+
+-- upstream's language line for this player (CONSTRUCTIN, DECONSTRUCT, ...)
+local function text(player, key)
+    local lang = resourceRunning("auth") and exports.auth:getLanguage(player) or "en"
+    return exports.data:t(lang or "en", key)
+end
+
+local function typeName(uname)
+    local t = itemType(uname)
+    return t and t.name ~= "" and t.name or uname
+end
+
+local function decode(data)
+    if type(data) == "string" and data ~= "" then
+        return fromJSON(data)
+    end
+    return type(data) == "table" and data or nil
+end
+
 local function cancelHold(player)
     local h = activeHold[player]
     if h then
@@ -30,9 +65,32 @@ local function cancelHold(player)
             killTimer(h.timer)
         end
         activeHold[player] = nil
-        triggerClientEvent(player, "craftHoldStopped", player)
+        if isElement(player) then
+            setPedAnimation(player, nil)
+            triggerClientEvent(player, "craftHoldStopped", player)
+        end
     end
 end
+
+-- label: the action text; fn(player) runs when the hold ends with the player still there
+local function startHold(player, label, ms, anim, fn)
+    cancelHold(player)
+    setPedAnimation(player, anim[1], anim[2], -1, true, false, false, false)
+    triggerClientEvent(player, "craftHoldStarted", player, label, ms)
+    local timer = setTimer(function(pl)
+        activeHold[pl] = nil
+        if isElement(pl) then
+            setPedAnimation(pl, nil)
+            fn(pl)
+        end
+    end, ms, 1, player)
+    activeHold[player] = { timer = timer }
+end
+
+-- the client walked off or died mid-hold (client/main.lua): upstream stops the hold when the key is let go
+net.handler("craftHoldCancelled", function(player)
+    cancelHold(player)
+end)
 
 addEventHandler("onPlayerQuit", root, function()
     cancelHold(source)
@@ -42,392 +100,452 @@ addEventHandler("characterDied", root, function()
     cancelHold(source)
 end)
 
--- 1. In-Hand Combine: Combine held item with an inventory item
-net.handler("combineRequested", function(player, invItemId)
-    local cid = charId(player)
-    invItemId = tonumber(invItemId)
-    if not cid or not invItemId then
-        return
-    end
+local function heldUname(player)
     local held = exports.items:getHeld(player)
-    if not held then
-        return toast(player, "NOT_HELD")
-    end
-    db.one(
-        "SELECT id, type_uname AS uname, container_id FROM items WHERE id = ? AND container_id IS NOT NULL",
-        { invItemId },
-        function(row, c)
-            if not isElement(c.player) or not row then
-                return
-            end
-            local match = craft.matchCombine(c.held.uname, row.uname)
-            if not match then
-                local heldType = exports.data:itemType(c.held.uname)
-                local invType = exports.data:itemType(row.uname)
-                local heldExp = heldType and heldType.explosive
-                local invExp = invType and invType.explosive
-                if
-                    (c.held.uname == "MobilePhone" and invExp and invExp.trigger == "RADIO")
-                    or (row.uname == "MobilePhone" and heldExp and heldExp.trigger == "RADIO")
-                then
-                    local expRes = getResourceFromName("explosives")
-                    if expRes and getResourceState(expRes) == "running" then
-                        return exports.explosives:linkPhoneBomb(c.player, c.held, row)
-                    end
-                end
-                return toast(c.player, "NO_RECIPE")
-            end
-            local r = match.recipe
-            -- Check consume logic
-            local invContId = row.container_id
-            if match.consumeB then
-                exports.items:destroyItem(row.id, c.player)
-            end
-            if match.consumeA then
-                exports.items:destroyItem(c.held.id, c.player, function(ok)
-                    if not ok or not isElement(c.player) then
-                        return
-                    end
-                    -- Created item becomes held once the previous held item has been removed from DB
-                    db.call("item_create_held", { r.result.uname, c.cid }, function(res, c2)
-                        if not isElement(c2.player) then
-                            return
-                        end
-                        if res and res.ok then
-                            local newId = res.payload and res.payload.item_id
-                            if newId then
-                                db.one(
-                                    "SELECT id, type_uname AS uname, hitpoints AS hp, data FROM items WHERE id = ?",
-                                    { newId },
-                                    function(nRow, c3)
-                                        if nRow and isElement(c3.player) then
-                                            exports.items:setHeld(c3.player, nRow)
-                                            exports.items:sendInventory(c3.player)
-                                            toast(c3.player, "CRAFTED")
-                                        end
-                                    end,
-                                    { player = c2.player }
-                                )
-                            end
-                        else
-                            toast(c2.player, res and res.code or "DB_ERROR")
-                        end
-                    end, { player = c.player })
-                end)
-            else
-                -- Held tool is kept, created item goes to inventory container
-                db.call("item_create_in_container", { r.result.uname, invContId }, function(res, c2)
-                    if not isElement(c2.player) then
-                        return
-                    end
-                    if res and res.ok then
-                        exports.items:sendInventory(c2.player)
-                        toast(c2.player, "CRAFTED")
-                    else
-                        toast(c2.player, res and res.code or "DB_ERROR")
-                    end
-                end, { player = c.player })
-            end
-        end,
-        { player = player, held = held, cid = cid }
-    )
-end, { rate = 3 })
-
--- 2. Ground Construction: Combine ground ingredients with held tool
-local function tryGroundCraft(player, _cid, held, px, py, pz, rz, int, dim, quiet)
-    local toolUname = held and held.uname
-    local query = "SELECT i.id, i.type_uname, i.x, i.y, i.z FROM world_items_pos p "
-        .. "JOIN items i ON i.id = p.item_id "
-        .. "WHERE ST_Distance(p.pos, POINT(?, ?)) <= 2.5 "
-        .. "AND i.container_id IS NULL AND i.holder_char_id IS NULL"
-    db.query(query, { px, py }, function(rows, c)
-        if not isElement(c.player) or not rows or #rows == 0 then
-            return
-        end
-        local counts = {}
-        local itemsByUname = {}
-        for _, r in ipairs(rows) do
-            counts[r.type_uname] = (counts[r.type_uname] or 0) + 1
-            itemsByUname[r.type_uname] = itemsByUname[r.type_uname] or {}
-            table.insert(itemsByUname[r.type_uname], r)
-        end
-        local matches = craft.matchGround(counts, c.toolUname)
-        if #matches == 0 then
-            if not c.quiet then
-                toast(c.player, "NO_RECIPE")
-            end
-            return
-        end
-        local recipe = matches[1]
-        cancelHold(c.player)
-        -- upstream craft-construct.pwn: the skill is the result's uniqueid, its value shortens the build time
-        local ms = exports.character:skillTimeModifier(c.player, recipe.buildTime, recipe.result.uname)
-        triggerClientEvent(c.player, "craftHoldStarted", c.player, "Constructing " .. recipe.name, ms)
-        local timer = setTimer(function(pl, rec, byUname, cpx, cpy, cpz, crz, cint, cdim)
-            activeHold[pl] = nil
-            if not isElement(pl) then
-                return
-            end
-            local curHeld = exports.items:getHeld(pl)
-            if rec.tool and (not curHeld or curHeld.uname ~= rec.tool) then
-                return toast(pl, "NEED_TOOL")
-            end
-            -- Destroy ingredients
-            for _, ing in ipairs(rec.ingredients) do
-                if not ing.keep then
-                    local list = byUname[ing.uname] or {}
-                    for i = 1, ing.count do
-                        local it = list[i]
-                        if it then
-                            exports.items:destroyWorldItem(it.id)
-                        end
-                    end
-                end
-            end
-            -- Spawn output object 1.2m ahead
-            local rad = math.rad(crz or 0)
-            local dropX = cpx + 1.2 * math.sin(-rad)
-            local dropY = cpy + 1.2 * math.cos(rad)
-            db.call(
-                "item_create",
-                { rec.result.uname, 5, nil, dropX, dropY, cpz - 0.8, crz, cint, cdim, nil, nil, n = 11 },
-                function(res, c2)
-                    if not isElement(c2.player) then
-                        return
-                    end
-                    if res and res.ok then
-                        exports.items:refreshPlayer(c2.player)
-                        exports.character:gainSkill(c2.player, c2.skill)
-                        toast(c2.player, "CRAFTED")
-                        -- upstream: the builder nudges the new item into place (building, #133)
-                        local newId = res.payload and tonumber(res.payload.item_id)
-                        local building = c2.tweak and newId and getResourceFromName("building")
-                        if building and getResourceState(building) == "running" then
-                            exports.building:tweakItem(c2.player, newId)
-                        end
-                    else
-                        toast(c2.player, res and res.code or "DB_ERROR")
-                    end
-                end,
-                { player = pl, skill = rec.result.uname, tweak = rec.tweak ~= false }
-            )
-        end, ms, 1, c.player, recipe, itemsByUname, px, py, pz, rz, int, dim)
-        activeHold[c.player] = { timer = timer, action = "construct" }
-    end, { player = player, toolUname = toolUname, quiet = quiet })
+    return held and held.uname or nil
 end
 
--- 3. Deconstruction: Dismantle world item with Crowbar
-local CROWBAR_TARGETS = "'" .. table.concat(craft.deconstructables("Crowbar"), "', '") .. "'"
+-- 1. Combine ----------------------------------------------------------------------------------------------------
 
-local function tryDeconstruct(player, _cid, held, px, py, _pz, rz, int, dim)
-    if not held or held.uname ~= "Crowbar" then
-        return
+-- upstream's Bottle + Bottle set keeps both bottles and creates a third, empty one (liquid-container.pwn left the
+-- pouring as a TODO): the port pours the second into the first instead and creates nothing (intentional deviation)
+local function pourBottles(player, items)
+    local into, from = items[1], items[2]
+    local t = itemType(into.uname)
+    local capacity = t and t.categoryData and t.categoryData.capacity
+    local a, b, code = craft.pour(decode(into.data), decode(from.data), capacity)
+    if not a then
+        return toast(player, code)
     end
-    local query = "SELECT i.id, i.type_uname, i.x, i.y, i.z FROM world_items_pos p "
-        .. "JOIN items i ON i.id = p.item_id "
-        .. "WHERE ST_Distance(p.pos, POINT(?, ?)) <= 2.5 "
-        .. "AND i.type_uname IN ("
-        .. CROWBAR_TARGETS
-        .. ") AND i.container_id IS NULL AND i.holder_char_id IS NULL "
-        .. "AND IFNULL(i.interior, 0) = ? AND IFNULL(i.dimension, 0) = ? "
-        .. "ORDER BY ST_Distance(p.pos, POINT(?, ?)) ASC LIMIT 1"
-    db.one(query, { px, py, int or 0, dim or 0, px, py }, function(target, c)
-        if not isElement(c.player) or not target then
-            return
+    local rows, held = {}, exports.items:getHeld(player)
+    for _, pair in ipairs({ { into, a }, { from, b } }) do
+        if held and held.id == pair[1].id then
+            exports.items:updateHeldData(player, pair[2])
+        else
+            rows[#rows + 1] = { id = pair[1].id, data = toJSON(pair[2], true) }
         end
-        local info = craft.getDeconstructInfo(target.type_uname, "Crowbar")
-        if not info then
-            return
+    end
+    if #rows == 0 then
+        return toast(player, "LIQUID_POURED")
+    end
+    db.call("item_data_flush", { toJSON(rows) }, function(res, c)
+        if isElement(c.player) then
+            exports.items:sendInventory(c.player)
+            toast(c.player, res and res.ok and "LIQUID_POURED" or "DB_ERROR")
         end
-        cancelHold(c.player)
-        -- upstream craft-construct.pwn: removal time shortened by the skill of the item being taken apart, no gain
-        local ms = exports.character:skillTimeModifier(c.player, info.duration, target.type_uname)
-        local label = "Deconstructing " .. target.type_uname
-        triggerClientEvent(c.player, "craftHoldStarted", c.player, label, ms)
-        local timer = setTimer(function(pl, tgt, dInfo, crz, cint, cdim)
-            activeHold[pl] = nil
-            if not isElement(pl) then
-                return
-            end
-            local curHeld = exports.items:getHeld(pl)
-            if not curHeld or curHeld.uname ~= "Crowbar" then
-                return toast(pl, "NEED_TOOL")
-            end
-            exports.items:destroyWorldItem(tgt.id)
-            for i, ing in ipairs(dInfo.ingredients or {}) do
-                local ox = (i % 2 == 0) and 0.3 or -0.3
-                local oy = (i > 2) and 0.3 or -0.3
-                db.call(
-                    "item_create",
-                    { ing.uname, 5, nil, tgt.x + ox, tgt.y + oy, tgt.z, crz, cint, cdim, nil, nil, n = 11 },
-                    function() end
-                )
-            end
-            exports.items:refreshPlayer(pl)
-            toast(pl, "DECONSTRUCTED")
-        end, ms, 1, c.player, target, info, rz, int, dim)
-        activeHold[c.player] = { timer = timer, action = "deconstruct" }
     end, { player = player })
 end
 
--- 4. Workbench Crafting: Craft inside Workbench's 16-slot container
-local function tryWorkbenchCraft(player, _cid, held, px, py)
-    local query = "SELECT i.id, c.id AS cont_id FROM world_items_pos p "
-        .. "JOIN items i ON i.id = p.item_id "
-        .. "JOIN containers c ON c.owner_item_id = i.id "
-        .. "WHERE i.type_uname = 'Workbench' AND ST_Distance(p.pos, POINT(?, ?)) <= 2.5 LIMIT 1"
-    db.one(query, { px, py }, function(wb, c)
-        if not isElement(c.player) or not wb then
-            return
-        end
-        local contId = wb.cont_id
-        db.query("SELECT id, type_uname FROM items WHERE container_id = ?", { contId }, function(cRows, c2)
-            if not isElement(c2.player) or not cRows or #cRows == 0 then
-                return
-            end
-            local counts = {}
-            local itemsByUname = {}
-            for _, r in ipairs(cRows) do
-                counts[r.type_uname] = (counts[r.type_uname] or 0) + 1
-                itemsByUname[r.type_uname] = itemsByUname[r.type_uname] or {}
-                table.insert(itemsByUname[r.type_uname], r)
-            end
-            local toolUname = c2.held and c2.held.uname
-            local matches = craft.matchWorkbench(counts, toolUname)
-            if #matches == 0 then
-                return toast(c2.player, "NO_RECIPE")
-            end
-            local recipe = matches[1]
-            cancelHold(c2.player)
-            -- upstream workbench.pwn: the skill is the result's uniqueid
-            local ms = exports.character:skillTimeModifier(c2.player, recipe.buildTime, recipe.result.uname)
-            triggerClientEvent(c2.player, "craftHoldStarted", c2.player, "Crafting " .. recipe.name, ms)
-            local timer = setTimer(function(pl, rec, byUname, wbContId)
-                activeHold[pl] = nil
-                if not isElement(pl) then
-                    return
-                end
-                -- Destroy consumed ingredients
-                for _, ing in ipairs(rec.ingredients) do
-                    if not ing.keep then
-                        local list = byUname[ing.uname] or {}
-                        for i = 1, ing.count do
-                            local it = list[i]
-                            if it then
-                                exports.items:destroyContainerItem(it.id)
-                            end
-                        end
-                    end
-                end
-                -- Spawn product inside Workbench container
-                db.call("item_create_in_container", { rec.result.uname, wbContId }, function(res, c3)
-                    if not isElement(c3.player) then
-                        return
-                    end
-                    if res and res.ok then
-                        exports.character:gainSkill(c3.player, c3.skill)
-                        toast(c3.player, "CRAFTED")
-                    else
-                        toast(c3.player, res and res.code or "DB_ERROR")
-                    end
-                end, { player = pl, skill = rec.result.uname })
-            end, ms, 1, c2.player, recipe, itemsByUname, contId)
-            activeHold[c2.player] = { timer = timer, action = "workbench" }
-        end, { player = c.player, held = c.held })
-    end, { player = player, held = held })
+local function combineResultData(recipe)
+    -- locksmith.pwn OnPlayerCrafted: a Lock and Chain combined with a Locksmith Kit is cut
+    if recipe.result == "WheelLock" then
+        return toJSON({ cut = true }, true)
+    end
+    return nil
 end
 
-net.handler("groundCraftRequested", function(player)
+local function finishCombine(player, recipe, items)
+    local consumed, kept = craft.split(recipe, items)
+    local consumeIds, keepIds = {}, {}
+    local held = exports.items:getHeld(player)
+    local heldConsumed, into = false, nil
+    for _, it in ipairs(consumed) do
+        consumeIds[#consumeIds + 1] = it.id
+        if held and it.id == held.id then
+            heldConsumed = true
+        else
+            into = into or it.container_id
+        end
+    end
+    for _, it in ipairs(kept) do
+        keepIds[#keepIds + 1] = it.id
+        into = into or it.container_id
+    end
+    if heldConsumed then
+        into = nil -- the result takes the hand the consumed item left
+    end
     local cid = charId(player)
-    if not cid then
+    db.call("craft_combine", {
+        cid,
+        exports.items:openContainerId(player) or nil,
+        toJSON(consumeIds),
+        #keepIds > 0 and toJSON(keepIds) or nil,
+        recipe.result,
+        combineResultData(recipe),
+        into,
+        n = 7,
+    }, function(res, c)
+        if not isElement(c.player) then
+            return
+        end
+        if not res or not res.ok then
+            triggerClientEvent(c.player, "combineFinished", c.player, false)
+            exports.items:sendInventory(c.player)
+            return toast(c.player, res and res.code or "DB_ERROR")
+        end
+        local newId = tonumber(res.payload and res.payload.item_id)
+        if res.payload.held == 1 or res.payload.held == true then
+            db.one(
+                "SELECT id, type_uname AS uname, hitpoints AS hp, data FROM items WHERE id = ?",
+                { newId },
+                function(row, c2)
+                    if row and isElement(c2.player) then
+                        row.data = decode(row.data)
+                        exports.items:setHeld(c2.player, row)
+                        exports.items:sendInventory(c2.player)
+                    end
+                end,
+                { player = c.player }
+            )
+        else
+            exports.items:sendInventory(c.player)
+        end
+        triggerEvent("itemCreated", resourceRoot, newId)
+        triggerClientEvent(c.player, "combineFinished", c.player, true)
+        toast(c.player, "CRAFTED:" .. typeName(c.result))
+    end, { player = player, result = recipe.result })
+end
+
+-- ids: the item ids picked with "Combine..." in the order picked; withHeld adds the item in hand
+net.handler("combineRequested", function(player, ids, withHeld)
+    if not charId(player) or type(ids) ~= "table" then
         return
     end
-    local held = exports.items:getHeld(player)
-    local px, py, pz = getElementPosition(player)
-    local _, _, rz = getElementRotation(player)
-    local int, dim = getElementInterior(player), getElementDimension(player)
-    tryGroundCraft(player, cid, held, px, py, pz, rz, int, dim)
+    local list, seen = {}, {}
+    for _, v in ipairs(ids) do
+        local id = tonumber(v)
+        if id and not seen[id] and #list < MAX_SELECTION then
+            seen[id] = true
+            list[#list + 1] = id
+        end
+    end
+    local held = withHeld and exports.items:getHeld(player)
+    if withHeld and not held then
+        return toast(player, "NOT_HELD")
+    end
+    if #list == 0 then
+        return
+    end
+    local marks = string.rep("?, ", #list):sub(1, -3)
+    db.query(
+        "SELECT id, type_uname AS uname, container_id, data FROM items WHERE container_id IS NOT NULL AND id IN ("
+            .. marks
+            .. ")",
+        list,
+        function(rows, c)
+            if not isElement(c.player) then
+                return
+            end
+            local byId = {}
+            for _, r in ipairs(rows or {}) do
+                byId[r.id] = r
+            end
+            local items, unames = {}, {}
+            if c.held and not seen[c.held.id] then
+                items[1] = { id = c.held.id, uname = c.held.uname, data = c.held.data }
+            end
+            for _, id in ipairs(c.list) do
+                if not byId[id] then
+                    exports.items:sendInventory(c.player)
+                    return toast(c.player, "NOT_IN_CONTAINER")
+                end
+                items[#items + 1] = byId[id]
+            end
+            for i, it in ipairs(items) do
+                unames[i] = it.uname
+            end
+            local recipe = craft.find(book, unames)
+            if not recipe then
+                triggerClientEvent(c.player, "combineFinished", c.player, false)
+                return toast(c.player, "COMBINE_NO_MATCH")
+            end
+            -- craft-construct.pwn OnPlayerCraft: the sets built with a tool cannot be combined by hand
+            if recipe.kind ~= "combine" then
+                triggerClientEvent(c.player, "combineFinished", c.player, false)
+                return toast(c.player, recipe.kind == "workbench" and "NEEDWORKBE" or "CONSTRUCT_ON_GROUND")
+            end
+            if recipe.result == "Bottle" then
+                triggerClientEvent(c.player, "combineFinished", c.player, true)
+                return pourBottles(c.player, items)
+            end
+            finishCombine(c.player, recipe, items)
+        end,
+        { player = player, list = list, held = held }
+    )
 end, { rate = 3 })
 
-net.handler("deconstructRequested", function(player)
-    local cid = charId(player)
-    if not cid then
-        return
-    end
-    local held = exports.items:getHeld(player)
-    local px, py, pz = getElementPosition(player)
-    local _, _, rz = getElementRotation(player)
-    local int, dim = getElementInterior(player), getElementDimension(player)
-    tryDeconstruct(player, cid, held, px, py, pz, rz, int, dim)
-end, { rate = 3 })
+-- 2. Construct ----------------------------------------------------------------------------------------------------
 
-net.handler("workbenchCraftRequested", function(player)
-    local cid = charId(player)
-    if not cid then
-        return
+local NEARBY_SQL = "SELECT i.id, i.type_uname AS uname, i.data, i.x, i.y, i.z FROM world_items_pos p "
+    .. "JOIN items i ON i.id = p.item_id "
+    .. "WHERE ST_Distance(p.pos, POINT(?, ?)) <= ? AND i.container_id IS NULL AND i.holder_char_id IS NULL "
+    .. "AND IFNULL(i.interior, 0) = ? AND IFNULL(i.dimension, 0) = ?"
+
+local function keyCode(it)
+    local d = decode(it.data)
+    d = type(d) == "table" and (type(d[1]) == "table" and d[1] or d) or nil
+    return d and tonumber(d.code) and tonumber(d.code) ~= 0 and d or nil
+end
+
+-- locksmith.pwn OnPlayerConstructed: the copy takes the cut key's code and vehicle; the cut key is the kept one
+local function keyCopy(items)
+    table.sort(items, function(a, b)
+        return (keyCode(a) and 1 or 0) > (keyCode(b) and 1 or 0)
+    end)
+    for _, it in ipairs(items) do
+        local code = it.uname == "Key" and keyCode(it)
+        if code then
+            return toJSON({ code = code.code, model = code.model }, true)
+        end
     end
-    local held = exports.items:getHeld(player)
+    return nil
+end
+
+local function finishBuild(player, recipe, items, sourceContainer, pos, after)
+    local resultData = nil
+    if recipe.result == "Key" then
+        resultData = keyCopy(items)
+    end
+    local consumed, kept = craft.split(recipe, items)
+    local consumeIds, keepIds = {}, {}
+    for _, it in ipairs(consumed) do
+        consumeIds[#consumeIds + 1] = it.id
+    end
+    for _, it in ipairs(kept) do
+        keepIds[#keepIds + 1] = it.id
+    end
+    db.call("craft_build", {
+        charId(player),
+        sourceContainer,
+        toJSON(consumeIds),
+        #keepIds > 0 and toJSON(keepIds) or nil,
+        recipe.result,
+        resultData,
+        pos.x,
+        pos.y,
+        pos.z,
+        pos.rz,
+        getElementInterior(player),
+        getElementDimension(player),
+        n = 12,
+    }, function(res, c)
+        if res and res.ok then
+            for _, id in ipairs(c.consumeIds) do
+                exports.items:forgetWorldItem(id)
+            end
+            triggerEvent("itemCreated", resourceRoot, tonumber(res.payload.item_id))
+        end
+        if not isElement(c.player) then
+            return
+        end
+        if not res or not res.ok then
+            return toast(c.player, res and res.code or "DB_ERROR")
+        end
+        exports.items:refreshPlayer(c.player)
+        exports.character:gainSkill(c.player, c.result)
+        toast(c.player, "CRAFTED:" .. typeName(c.result))
+        if after then
+            after(c.player, tonumber(res.payload.item_id))
+        end
+    end, { player = player, result = recipe.result, consumeIds = consumeIds })
+end
+
+local function constructed(recipe)
+    return function(player, itemId)
+        if not itemId or not resourceRunning("building") then
+            return
+        end
+        if recipe.defence then
+            -- craft-construct.pwn: ConvertItemToDefenceItem(itemid, 0) lays it down built, then the tweak follows
+            exports.building:buildConstructedDefence(player, itemId)
+        elseif recipe.tweak then
+            exports.building:tweakItem(player, itemId)
+        end
+    end
+end
+
+-- quiet: say nothing when the items around are no set (the interact key had other things to try)
+local function tryConstruct(player, quiet)
     local px, py = getElementPosition(player)
-    tryWorkbenchCraft(player, cid, held, px, py)
-end, { rate = 3 })
+    local tool = heldUname(player)
+    db.query(
+        NEARBY_SQL,
+        { px, py, NEARBY_RADIUS, getElementInterior(player), getElementDimension(player) },
+        function(rows, c)
+            if not isElement(c.player) then
+                return
+            end
+            rows = rows or {}
+            local unames = {}
+            for i, r in ipairs(rows) do
+                unames[i] = r.uname
+            end
+            local recipe = craft.find(book, unames)
+            if not recipe or recipe.kind == "combine" then
+                return not c.quiet and toast(c.player, "NO_RECIPE")
+            end
+            if recipe.kind == "workbench" then
+                return toast(c.player, "NEEDWORKBE") -- workbench.pwn OnPlayerConstruct
+            end
+            if recipe.tool ~= c.tool then
+                return not c.quiet and toast(c.player, "NEED_TOOL")
+            end
+            if recipe.result == "Key" and not keyCopy(rows) then
+                return toast(c.player, "LOCKKEYNCUT")
+            end
+            local ms = exports.character:skillTimeModifier(c.player, recipe.buildTime, recipe.result)
+            startHold(c.player, text(c.player, "CONSTRUCTIN"), ms, { "BOMBER", "BOM_Plant_Loop" }, function(pl)
+                if heldUname(pl) ~= recipe.tool then
+                    return toast(pl, "NEED_TOOL")
+                end
+                local x, y, z = craft.averagePos(rows)
+                local _, _, rz = getElementRotation(pl)
+                finishBuild(pl, recipe, rows, nil, { x = x, y = y, z = z, rz = rz }, constructed(recipe))
+            end)
+        end,
+        { player = player, tool = tool, quiet = quiet }
+    )
+end
 
-addCommandHandler("craft", function(player)
-    local cid = charId(player)
-    if not cid then
+-- 3. Deconstruct --------------------------------------------------------------------------------------------------
+
+local function tryDeconstruct(player)
+    local tool = heldUname(player)
+    local targets = tool and craft.removable(book, tool) or {}
+    if #targets == 0 then
         return
     end
-    local held = exports.items:getHeld(player)
-    local px, py, pz = getElementPosition(player)
-    local _, _, rz = getElementRotation(player)
-    local int, dim = getElementInterior(player), getElementDimension(player)
-    if held and held.uname == "Crowbar" then
-        return tryDeconstruct(player, cid, held, px, py, pz, rz, int, dim)
+    local px, py = getElementPosition(player)
+    local marks = string.rep("?, ", #targets):sub(1, -3)
+    local args = { px, py, NEARBY_RADIUS, getElementInterior(player), getElementDimension(player) }
+    for _, u in ipairs(targets) do
+        args[#args + 1] = u
     end
-    tryWorkbenchCraft(player, cid, held, px, py)
-    tryGroundCraft(player, cid, held, px, py, pz, rz, int, dim, true) -- the workbench path already said NO_RECIPE
-end)
+    args[#args + 1] = px
+    args[#args + 1] = py
+    db.one(
+        NEARBY_SQL .. " AND i.type_uname IN (" .. marks .. ") ORDER BY ST_Distance(p.pos, POINT(?, ?)) ASC LIMIT 1",
+        args,
+        function(target, c)
+            if not isElement(c.player) or not target then
+                return
+            end
+            local recipe = craft.removal(book, target.uname, c.tool)
+            if not recipe then
+                return
+            end
+            -- removal time shortened by the skill of the item being taken apart, no gain (craft-construct.pwn)
+            local ms = exports.character:skillTimeModifier(c.player, recipe.removalTime, recipe.result)
+            startHold(c.player, text(c.player, "DECONSTRUCT"), ms, { "BOMBER", "BOM_Plant_Loop" }, function(pl)
+                if heldUname(pl) ~= recipe.removalTool then
+                    return toast(pl, "NEED_TOOL")
+                end
+                local back = {}
+                for _, uname in ipairs(craft.returned(recipe)) do
+                    back[#back + 1] = {
+                        uname = uname,
+                        x = target.x + math.random() * 0.6,
+                        y = target.y + math.random() * 0.6,
+                        z = target.z,
+                        rz = math.random() * 360,
+                    }
+                end
+                db.call("craft_deconstruct", {
+                    target.id,
+                    target.uname,
+                    toJSON(back),
+                    getElementInterior(pl),
+                    getElementDimension(pl),
+                }, function(res, c2)
+                    if res and res.ok then
+                        exports.items:forgetWorldItem(c2.id)
+                        triggerEvent("itemDestroyed", resourceRoot, c2.id)
+                    end
+                    if isElement(c2.player) then
+                        exports.items:refreshPlayer(c2.player)
+                        toast(c2.player, res and res.ok and "DECONSTRUCTED" or (res and res.code or "DB_ERROR"))
+                    end
+                end, { player = pl, id = target.id })
+            end)
+        end,
+        { player = player, tool = tool }
+    )
+end
+
+-- 4. Workbench ----------------------------------------------------------------------------------------------------
+
+-- row: the workbench's world item row from items' interact key ({ id, uname, x, y, z, rz, ... }). Opens it when
+-- its contents are no set for the tool in hand, as upstream's OnPlayerUseItemWithItem does.
+local function tryWorkbench(player, row)
+    db.query(
+        "SELECT i.id, i.type_uname AS uname, i.container_id FROM containers c "
+            .. "JOIN items i ON i.container_id = c.id WHERE c.owner_item_id = ? ORDER BY i.slot",
+        { row.id },
+        function(rows, c)
+            if not isElement(c.player) then
+                return
+            end
+            rows = rows or {}
+            local unames = {}
+            for i, r in ipairs(rows) do
+                unames[i] = r.uname
+            end
+            local recipe = craft.find(book, unames)
+            local tool = heldUname(c.player)
+            if not recipe or recipe.kind ~= "workbench" or recipe.tool ~= tool then
+                return exports.items:openWorldContainer(c.player, c.row)
+            end
+            local ms = exports.character:skillTimeModifier(c.player, craft.workbenchTime(#rows), recipe.result)
+            exports.items:closeContainer(c.player)
+            local px, py = getElementPosition(c.player)
+            setElementRotation(c.player, 0, 0, (-math.deg(math.atan2(c.row.x - px, c.row.y - py))) % 360)
+            startHold(c.player, "Crafting " .. typeName(recipe.result), ms, { "INT_SHOP", "SHOP_CASHIER" }, function(pl)
+                if heldUname(pl) ~= recipe.tool then
+                    return toast(pl, "NEED_TOOL")
+                end
+                -- workbench.pwn _wb_CreateResult: on top of the bench, turned to face across it
+                local pos = {
+                    x = c.row.x,
+                    y = c.row.y,
+                    z = c.row.z + 0.95,
+                    rz = ((c.row.rz or 0) - 95 + math.random() * 10) % 360,
+                }
+                finishBuild(pl, recipe, rows, rows[1].container_id, pos)
+            end)
+        end,
+        { player = player, row = row }
+    )
+end
+
+-- Exports -------------------------------------------------------------------------------------------------------
 
 function groundCraft(player)
-    local cid = charId(player)
-    if not cid then
+    if not charId(player) then
         return false
     end
-    local held = exports.items:getHeld(player)
-    local px, py, pz = getElementPosition(player)
-    local _, _, rz = getElementRotation(player)
-    local int, dim = getElementInterior(player), getElementDimension(player)
-    tryGroundCraft(player, cid, held, px, py, pz, rz, int, dim)
+    tryConstruct(player)
     return true
 end
 
 function deconstruct(player)
-    local cid = charId(player)
-    if not cid then
+    if not charId(player) then
         return false
     end
-    local held = exports.items:getHeld(player)
-    local px, py, pz = getElementPosition(player)
-    local _, _, rz = getElementRotation(player)
-    local int, dim = getElementInterior(player), getElementDimension(player)
-    tryDeconstruct(player, cid, held, px, py, pz, rz, int, dim)
+    tryDeconstruct(player)
     return true
 end
 
-function workbenchCraft(player)
-    local cid = charId(player)
-    if not cid then
+function workbenchCraft(player, row)
+    if not charId(player) or type(row) ~= "table" or not tonumber(row.id) then
         return false
     end
-    local held = exports.items:getHeld(player)
-    local px, py = getElementPosition(player)
-    tryWorkbenchCraft(player, cid, held, px, py)
+    tryWorkbench(player, row)
     return true
 end
 
--- items' interact key: a tool of a ground recipe in hand builds from the items on the ground (#116)
-local GROUND_TOOLS = craft.groundTools()
+-- items' interact key: a tool of a construct set in hand builds from the items on the ground (#116)
 function isConstructionTool(uname)
-    return GROUND_TOOLS[tostring(uname)] == true
+    return book.constructTools[tostring(uname)] == true
 end
 
-util.log("crafting", "info", "crafting engine initialized with %d recipes", #craft.RECIPES)
+util.log("crafting", "info", "crafting engine initialized with %d craft sets", #book.list)

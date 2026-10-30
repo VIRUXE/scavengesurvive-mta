@@ -4,7 +4,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from . import features, houseloot, item_types, lang, loot_tables, maps, settings, vspawn, zones
+from . import features, houseloot, item_types, lang, loot_tables, maps, recipes, settings, vspawn, zones
 from .common import read_text
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -29,6 +29,10 @@ def main(argv=None) -> int:
         samp_only = sorted(u for u, t in real.items() if SAMP_ONLY(int(t["model"])))
         print(f"items: {len(real)} types, {len(samp_only)} with SA-MP-only models: {', '.join(samp_only)}")
         settings.write_settings_seed(SEED)
+        sets = recipes.convert(args.src, DATA)
+        kinds = {k: sum(1 for r in sets if r["kind"] == k) for k in ("combine", "construct", "workbench")}
+        print(f"recipes: {len(sets)} craft sets ({kinds['combine']} combine, {kinds['construct']} construct, "
+              f"{kinds['workbench']} workbench)")
     if args.kind in ("all", "loot"):
         init = read_text(Path(args.src) / "gamemodes/sss/core/server/init.pwn")
         unames = list(item_types.parse_item_types(init))
