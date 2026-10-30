@@ -113,4 +113,18 @@ describe("small items", function()
         assert.are.equal(42, small.locatorPhone({ phone = 42 }))
         assert.are.equal(42, small.locatorPhone({ { phone = "42" } }))
     end)
+
+    it("knows a planted shield and picks one of upstream's 25 HerpDerp animations", function()
+        assert.is_false(small.isPlaced(nil))
+        assert.is_true(small.isPlaced({ placed = 1 }))
+        assert.is_true(small.isPlaced({ { placed = "1" } }))
+        assert.are.equal(25, #small.HERP_ANIMS)
+        assert.same({ "TATTOOS", "TAT_ArmL_In_O" }, { small.herpAnim(function()
+            return 1
+        end) })
+        assert.same({ "GHANDS", "RHGsign5" }, { small.herpAnim(function()
+            return 25
+        end) })
+        assert.same({ 0.5, 0.2, 90 }, { small.SHIELD_AHEAD, small.SHIELD_DROP, small.SHIELD_RX })
+    end)
 end)

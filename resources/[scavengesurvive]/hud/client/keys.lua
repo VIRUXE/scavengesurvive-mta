@@ -167,6 +167,8 @@ return function(ctx)
                 or held.uname == "MobilePhone"
                 or held.uname == "Note"
                 or held.uname == "Locator"
+                or held.uname == "Shield"
+                or held.uname == "HerpDerp"
             )
         then
             return triggerServerEvent("itemUseRequested", localPlayer, held.id)

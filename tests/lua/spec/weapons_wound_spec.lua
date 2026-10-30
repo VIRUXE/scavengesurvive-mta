@@ -141,4 +141,26 @@ describe("weapons wound", function()
             assert.equals(exp.rounds, cd.rounds)
         end
     end)
+    describe("the shield (#137)", function()
+        -- victim at the origin facing north (0); attackers north (0, 10), south (0, -10), east (10, 0)
+        it("in hand stops shots from the front only", function()
+            assert.is_true(wound.shieldBlocks("held", 3, false, 0, 0, 0, 0, 10))
+            assert.is_true(wound.shieldBlocks("held", 3, false, 0, 0, 0, 5, 10)) -- 26 degrees off
+            assert.is_false(wound.shieldBlocks("held", 3, false, 0, 0, 0, 10, 0)) -- from the side
+            assert.is_false(wound.shieldBlocks("held", 3, false, 0, 0, 0, 0, -10)) -- from behind
+            assert.is_true(wound.shieldBlocks("held", 3, false, 90, 0, 0, -10, 0)) -- facing west, shot from the west
+        end)
+        it("on the back stops shots from behind only", function()
+            assert.is_true(wound.shieldBlocks("holster", 3, false, 0, 0, 0, 0, -10))
+            assert.is_false(wound.shieldBlocks("holster", 3, false, 0, 0, 0, 0, 10))
+            assert.is_false(wound.shieldBlocks("holster", 3, false, 0, 0, 0, 10, -5)) -- 63 degrees off behind
+        end)
+        it("never covers the head, and the legs only from a crouching shooter", function()
+            assert.is_false(wound.shieldBlocks("held", 9, false, 0, 0, 0, 0, 10))
+            assert.is_false(wound.shieldBlocks("held", 7, false, 0, 0, 0, 0, 10))
+            assert.is_true(wound.shieldBlocks("held", 7, true, 0, 0, 0, 0, 10))
+            assert.is_true(wound.shieldBlocks("held", 8, true, 0, 0, 0, 0, 10))
+            assert.is_false(wound.shieldBlocks(nil, 3, false, 0, 0, 0, 0, 10))
+        end)
+    end)
 end)

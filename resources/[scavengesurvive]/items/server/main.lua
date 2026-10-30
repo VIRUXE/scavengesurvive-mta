@@ -207,6 +207,9 @@ local smallItems = loadFile("server/smallitems.lua")({
     liquids = liquids,
     sendInventory = containers.sendInventory,
     ownedSql = OWNED_SQL,
+    dropHeld = function(player, opts)
+        return hands.dropHeld(player, opts)
+    end,
 })
 hands.setSmall(smallItems)
 
@@ -483,6 +486,20 @@ function closeContainer(player)
     end
     containers.closeContainer(player)
     return true
+end
+
+-- weapons: a headshot knocks the hat and mask off (hands.popGear, #137)
+function popHeadgear(player)
+    if not isElement(player) then
+        return false
+    end
+    local any = false
+    for _, slot in ipairs({ "hat", "mask" }) do
+        if hands.popGear(player, slot) then
+            any = true
+        end
+    end
+    return any
 end
 
 -- weapons: a fist hit while holding a stun gun (server/smallitems.lua); true when the stun gun took the hit

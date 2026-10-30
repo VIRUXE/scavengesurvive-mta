@@ -141,6 +141,16 @@ net.handler("weaponHitReported", function(victim, attacker, weapon, bodypart, lo
     if not bleed or bleed <= 0 then
         return
     end
+    -- a Shield in the victim's hand or on their back stops the shot (item/shield.pwn, #137)
+    local where = getElementData(victim, "items.held") == "Shield" and "held"
+        or getElementData(victim, "items.holster") == "Shield" and "holster"
+    if where then
+        local _, _, facing = getElementRotation(victim)
+        if wound.shieldBlocks(where, bodypart, isPedDucked(attacker), facing, vx, vy, ax, ay) then
+            pairs_[victim] = now
+            return
+        end
+    end
     pairs_[victim] = now
     bleed = wound.bodypartBleed(bleed, bodypart)
     if bodypart == 3 and getElementData(victim, "items.armour") then
@@ -163,6 +173,9 @@ net.handler("weaponHitReported", function(victim, attacker, weapon, bodypart, lo
         end
     end
     report(victim, bleed, hp, bodypart)
+    if bodypart == 9 then
+        exports.items:popHeadgear(victim) -- the hat and mask fall off (char/headgear-pop.pwn, #137)
+    end
     util.log(
         "weapons",
         "info",

@@ -42,6 +42,7 @@
     <export function="closeContainer" type="server"/>
     <export function="updateHeldData" type="server"/>
     <export function="meleeHit" type="server"/>
+    <export function="popHeadgear" type="server"/>
     <export function="createStartingItems" type="server"/>
     <export function="refreshPlayer" type="server"/>
     <export function="resendWorldItem" type="server"/>

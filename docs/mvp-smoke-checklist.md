@@ -441,4 +441,17 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
     - f. **Molotov.** Drop the Empty Molotov, hold a Petrol Can with petrol (fuel pump), **F** on the bottle: `Fuel
       poured in bottle`, the can loses 0.5 L and a Molotov lies there (`/additem GasCan`, empty: `Petrol can empty`;
       a Bottle of water in hand instead: nothing, it is not a can).
+38. **Headgear pop, the shield and HerpDerp** (#137, upstream `char/headgear-pop.pwn`, `item/shield.pwn`,
+    `item/herpderp.pwn`). Two clients A and B; `/additem Shield`, `/additem HerpDerp`, a hat (`/additem SheriffHat`),
+    a mask (`/additem ZorroMask`), any pistol.
+    - a. **Headgear pop.** A wears the hat and the mask; B shoots A in the head: both fall to the ground at A's feet
+      (the gear tiles empty, A's skin shows its hair again) and can be picked up; a body shot leaves them on.
+    - b. **Shield in hand.** A holds the Shield facing B; B shoots A's torso from the front: no wound, no bar; from
+      A's side or back: the wound lands; a headshot lands from any side; B crouching and shooting A's legs: blocked,
+      standing: lands.
+    - c. **Shield on the back.** A holsters it (**Y**, 800 ms); B shoots A from behind: blocked; from the front: lands.
+    - d. **Placing it.** A holds the Shield and presses **F** (hud: `F Place shield`): the planting bend, then the
+      shield stands on its edge half a metre ahead facing A, still standing after `rr items`; pick it up and drop it
+      with **N**: it lies flat as any item.
+    - e. **HerpDerp.** **F** with it in hand: a random tattoo-parlour or gang-sign animation each press.
 

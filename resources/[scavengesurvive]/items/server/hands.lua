@@ -785,7 +785,9 @@ return function(ctx)
         end, { player = player, charId = cid })
     end, { rate = 5 })
 
-    function M.dropHeld(player)
+    -- opts (placing an item, server/smallitems.lua's shield): { ahead, below, turn, data }; a plain drop lands
+    -- 1 m ahead at the feet with the player's heading, and clears a placed item's standing pose
+    function M.dropHeld(player, opts)
         local cid, item = charId(player), state.held[player]
         if not cid or (isIncapacitated and isIncapacitated(player)) then
             return false, "INCAPACITATED"
@@ -793,14 +795,21 @@ return function(ctx)
         if not item then
             return false, "NOT_HELD"
         end
+        opts = opts or {}
+        if opts.data then
+            item.data = opts.data
+        elseif type(item.data) == "table" and item.data.placed then
+            item.data.placed = nil
+        end
         if item.data then
             M.queueData(item)
         end
         M.flushData(item.id)
         local x, y, z = getElementPosition(player)
         local _, _, rz = getElementRotation(player)
-        local dx, dy = geometry.dropPosition(x, y, rz, 1.0)
-        local params = { item.id, cid, dx, dy, z - 0.9, rz, getElementInterior(player), getElementDimension(player) }
+        local dx, dy = geometry.dropPosition(x, y, rz, opts.ahead or 1.0)
+        local dz, drz = z - (opts.below or 0.9), (rz + (opts.turn or 0)) % 360
+        local params = { item.id, cid, dx, dy, dz, drz, getElementInterior(player), getElementDimension(player) }
         db.call("item_drop", params, function(res, c)
             if not isElement(c.player) then
                 return
@@ -815,7 +824,35 @@ return function(ctx)
             end
             world.syncPlayer(c.player) -- the dropped item appears without waiting for the next tick
             triggerEvent("itemMoved", c.player, c.itemId, "held", "world")
-        end, { player = player, itemId = item.id, uname = item.uname, x = dx, y = dy, z = z - 0.9, rz = rz })
+        end, { player = player, itemId = item.id, uname = item.uname, x = dx, y = dy, z = dz, rz = drz })
+        return true
+    end
+
+    -- A worn hat or mask knocked off (char/headgear-pop.pwn, weapons on a headshot): the one row it is moves to the
+    -- ground at the player's feet, the slot empties and the clients around see it lie there.
+    function M.popGear(player, slot)
+        local cid, item = charId(player), state[slot] and state[slot][player]
+        if not cid or not item then
+            return false
+        end
+        local x, y, z = getElementPosition(player)
+        local _, _, rz = getElementRotation(player)
+        db.exec(
+            "UPDATE items SET holder_char_id = NULL, holder_kind = NULL, x = ?, y = ?, z = ?, rz = ?, "
+                .. "interior = ?, dimension = ? WHERE id = ? AND holder_char_id = ? AND holder_kind = ?",
+            { x, y, z - 0.9, rz, getElementInterior(player), getElementDimension(player), item.id, cid, slot },
+            function(ok, c)
+                if not ok or not isElement(c.player) then
+                    return
+                end
+                if state[c.slot][c.player] and state[c.slot][c.player].id == c.item.id then
+                    M.setGear(c.player, c.slot, nil)
+                end
+                world.syncPlayer(c.player)
+                triggerEvent("itemMoved", c.player, c.item.id, c.slot, "world")
+            end,
+            { player = player, slot = slot, item = item }
+        )
         return true
     end
 

@@ -111,4 +111,47 @@ function M.locatorPhone(data)
     return tonumber(unwrap(data).phone)
 end
 
+-- Shield (item/shield.pwn): placed, it stands SHIELD_AHEAD metres in front of the player, SHIELD_DROP below their
+-- feet, turned to face them (rz + 180), on its edge (the client turns the object by SHIELD_RX)
+M.SHIELD_AHEAD, M.SHIELD_DROP, M.SHIELD_RX = 0.5, 0.2, 90
+M.SHIELD_PLANT_MS = 400 -- the planting animation runs this long before the shield is down
+
+function M.isPlaced(data)
+    return tonumber(unwrap(data).placed) == 1
+end
+
+-- HerpDerp (item/herpderp.pwn): one of these animations at random
+M.HERP_ANIMS = {
+    { "TATTOOS", "TAT_ArmL_In_O" },
+    { "TATTOOS", "TAT_ArmL_Out_O" },
+    { "TATTOOS", "TAT_ArmR_In_O" },
+    { "TATTOOS", "TAT_ArmR_Out_O" },
+    { "TATTOOS", "TAT_Back_In_O" },
+    { "TATTOOS", "TAT_Back_Out_O" },
+    { "TATTOOS", "TAT_Bel_In_O" },
+    { "TATTOOS", "TAT_Bel_Out_O" },
+    { "TATTOOS", "TAT_Che_In_O" },
+    { "TATTOOS", "TAT_Che_Out_O" },
+    { "TATTOOS", "TAT_Drop_O" },
+    { "TATTOOS", "TAT_Idle_Loop_O" },
+    { "TATTOOS", "TAT_Sit_In_O" },
+    { "TATTOOS", "TAT_Sit_Loop_O" },
+    { "TATTOOS", "TAT_Sit_Out_O" },
+    { "GHANDS", "LHGsign1" },
+    { "GHANDS", "LHGsign2" },
+    { "GHANDS", "LHGsign3" },
+    { "GHANDS", "LHGsign4" },
+    { "GHANDS", "LHGsign5" },
+    { "GHANDS", "RHGsign1" },
+    { "GHANDS", "RHGsign2" },
+    { "GHANDS", "RHGsign3" },
+    { "GHANDS", "RHGsign4" },
+    { "GHANDS", "RHGsign5" },
+}
+
+function M.herpAnim(randInt)
+    local a = M.HERP_ANIMS[(randInt or math.random)(1, #M.HERP_ANIMS)]
+    return a[1], a[2]
+end
+
 return M

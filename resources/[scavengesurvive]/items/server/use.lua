@@ -50,6 +50,12 @@ return function(ctx)
         if uname == "Locator" then
             return ctx.small.useLocator(player, itemId, data)
         end
+        if uname == "Shield" and fromHand then
+            return ctx.small.useShield(player, itemId)
+        end
+        if uname == "HerpDerp" then
+            return ctx.small.useHerpDerp(player)
+        end
         if fromHand and ctx.medical.isTreatment(uname) then
             return ctx.medical.start(player, state.held[player])
         end

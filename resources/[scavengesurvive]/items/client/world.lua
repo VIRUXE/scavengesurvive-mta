@@ -156,6 +156,8 @@ return function(ctx)
         if face then -- thrown dice lie on the face they rolled
             local rx, ry = small.diceRotation(face)
             setElementRotation(obj, rx, ry, r.rz or 0)
+        elseif r.uname == "Shield" and small.isPlaced(r.data) then -- a planted shield stands facing its owner
+            setElementRotation(obj, small.SHIELD_RX, 0, r.rz or 0)
         end
         local nx, ny = tonumber(r.ground_nx) or 0, tonumber(r.ground_ny) or 0
         if nx ~= 0 or ny ~= 0 then

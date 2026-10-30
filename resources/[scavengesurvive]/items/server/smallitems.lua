@@ -7,8 +7,10 @@
 --   Locator: used with a Mobile Phone lying there it syncs to it, used alone it says how far that phone is;
 --   Stun Gun: used with a Battery it charges, a fist hit with it (weapons resource) knocks the target out;
 --   Molotov: a Petrol Can used with an Empty Molotov pours 0.5 L and the bottle becomes a Molotov.
+--   Shield: used from the hand it is planted standing in front of the player (weapons stops the shots it covers);
+--   HerpDerp: used, one of 25 random animations.
 -- ctx = { db, net, state, type, charId, toast, destroy, destroyWorldItem, world, updateHeldData, decodeData,
---         small, liquids, sendInventory, ownedSql } built by server/main.lua.
+--         small, liquids, sendInventory, ownedSql, dropHeld } built by server/main.lua.
 return function(ctx)
     local db, net, state = ctx.db, ctx.net, ctx.state
     local itemType, charId, toast = ctx.type, ctx.charId, ctx.toast
@@ -209,6 +211,30 @@ return function(ctx)
             local px, py, pz = getElementPosition(c.player)
             toast(c.player, string.format("DISTANCE:%.3f", getDistanceBetweenPoints3D(px, py, pz, x, y, z)))
         end, { player = player })
+    end
+
+    -- Shield and HerpDerp (use from the hand) ------------------------------------------------------------------
+
+    function M.useShield(player, itemId)
+        local held = state.held[player]
+        if not held or held.id ~= itemId then
+            return
+        end
+        setPedAnimation(player, "BOMBER", "BOM_Plant_In", small.SHIELD_PLANT_MS, false, false, true, false)
+        setTimer(function(pl, id)
+            local cur = isElement(pl) and state.held[pl]
+            if cur and cur.id == id then
+                ctx.dropHeld(
+                    pl,
+                    { ahead = small.SHIELD_AHEAD, below = small.SHIELD_DROP, turn = 180, data = { placed = 1 } }
+                )
+            end
+        end, small.SHIELD_PLANT_MS, 1, player, itemId)
+    end
+
+    function M.useHerpDerp(player)
+        local block, anim = small.herpAnim()
+        setPedAnimation(player, block, anim, -1, false, true, true, false)
     end
 
     -- Held item used with a world item (hands.lua itemPickupRequested): true when a pair here took it ---------

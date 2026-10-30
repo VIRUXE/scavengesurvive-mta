@@ -121,6 +121,29 @@ function wound.environmental(weaponId, loss)
 end
 
 -- damage types that no held item can justify (fall, drown, fire, explosion, vehicle)
+-- The shield (upstream item/shield.pwn _HandleShieldHit): a Shield in the victim's hand stops shots coming from
+-- their front (within SHIELD_FRONT degrees of where they face), one on their back (holstered) stops shots from
+-- behind (within SHIELD_BACK of straight behind). The head is never covered, and the legs only when the shooter
+-- crouches behind it. where = "held" | "holster"; facing = the victim's heading; (vx, vy) victim, (ax, ay) attacker.
+wound.SHIELD_FRONT, wound.SHIELD_BACK = 45, 25
+
+function wound.shieldBlocks(where, bodypart, attackerDucking, facing, vx, vy, ax, ay)
+    if bodypart == 9 then
+        return false
+    end
+    if (bodypart == 7 or bodypart == 8) and not attackerDucking then
+        return false
+    end
+    local toAttacker = (-math.deg(math.atan2(ax - vx, ay - vy))) % 360
+    local off = math.abs((((facing or 0) - toAttacker) + 180) % 360 - 180)
+    if where == "held" then
+        return off <= wound.SHIELD_FRONT
+    elseif where == "holster" then
+        return off >= 180 - wound.SHIELD_BACK
+    end
+    return false
+end
+
 function wound.isEnvironmental(weaponId)
     return CAUSES[weaponId] ~= nil
 end
