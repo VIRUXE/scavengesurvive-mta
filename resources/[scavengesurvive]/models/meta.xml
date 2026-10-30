@@ -57,6 +57,8 @@
     <file src="files/beanie1.dff"/>
     <file src="files/beerkeg1.col"/>
     <file src="files/beerkeg1.dff"/>
+    <file src="files/bloodpool1.col"/>
+    <file src="files/bloodpool1.dff"/>
     <file src="files/boxingglover.col"/>
     <file src="files/boxingglover.dff"/>
     <file src="files/breadloaf1.col"/>
@@ -322,6 +324,7 @@
     <file src="files/pager1.col"/>
     <file src="files/pager1.dff"/>
     <file src="files/pager1.txd"/>
+    <file src="files/particle.txd"/>
     <file src="files/pd_jail_door02.col"/>
     <file src="files/pd_jail_door02.dff"/>
     <file src="files/pd_jail_door02.txd"/>

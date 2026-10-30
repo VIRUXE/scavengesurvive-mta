@@ -17,6 +17,7 @@ local medical = loadFile("shared/logic/medical.lua")
 local travel = loadFile("shared/logic/travel.lua")
 local bodies = loadFile("shared/logic/bodies.lua")
 local poses = loadFile("shared/logic/poses.lua")
+local bleeding = loadFile("shared/logic/bleeding.lua")
 
 -- Every spawned character, shared with the tick and death modules (they capture this table).
 local state = {
@@ -49,9 +50,13 @@ local function clearStatuses(player, restoreControls)
     end
     state.knockout[player] = nil
     state.cuffed[player] = nil
+    if state.byPlayer[player] then
+        state.byPlayer[player].bleedShown = false
+    end
     if isElement(player) then
         setElementData(player, "character.knockedOut", false, "broadcast", "deny")
         setElementData(player, "character.cuffed", false, "broadcast", "deny")
+        setElementData(player, "character.bleeding", false, "broadcast", "deny")
         if restoreControls then
             toggleAllControls(player, true, true, false)
             if ko then
@@ -64,6 +69,7 @@ state.clearStatuses = clearStatuses
 local death =
     loadFile("server/death.lua")({ db = db, net = net, util = util, drop = drop, state = state, bodies = bodies })
 local tickCtx = { db = db, util = util, survival = survival, skills = skills, medical = medical, state = state }
+tickCtx.bleeding = bleeding
 tickCtx.die = death.die
 local tick = loadFile("server/tick.lua")(tickCtx)
 local medicalCtx = { medical = medical, state = state, sendStats = tick.sendStats }

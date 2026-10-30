@@ -28,3 +28,4 @@ addEvent("characterNoticeShown", true)
 addEvent("drugSkyEnded", true)
 addEvent("poseChanged", true)
 addEvent("uiListActionSelected", false)
+addEvent("sampModelsChanged", false) -- fired by the models resource on every client

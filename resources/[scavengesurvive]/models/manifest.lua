@@ -194,6 +194,7 @@ return {
     [19823] = { dff = "alcoholbottle4", txdModel = 14811, dist = 50 },
     [19824] = { dff = "alcoholbottle5", txdModel = 14811, dist = 50 },
     [19831] = { dff = "barbeque1", txd = "csbarbq", dist = 50 },
+    [19836] = { dff = "bloodpool1", txd = "particle", dist = 50 },
     [19843] = { dff = "metalpanel1", txd = "metalpanels", dist = 100 },
     [19847] = { dff = "legham1", txd = "legham1", dist = 50 },
     [19866] = { dff = "mifenceblocks1", txdModel = 3449, dist = 100 },

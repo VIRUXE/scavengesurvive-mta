@@ -86,10 +86,35 @@ def test_map_models_are_read_from_object_rows_only(tmp_path):
     maps.mkdir()
     (maps / "LS.lua").write_text(lua, encoding="utf-8")
     (maps / "index.lua").write_text("return { LS = { objects = 2, removals = 1 } }\n", encoding="utf-8")
-    assert m.all_models_used(items, maps) == [3168, 11730, 16203, 18633, 19087, 19312, 19477]
-    assert m.all_models_used(items, tmp_path / "missing") == [11730, 18633, 19087, 19477]
+    assert m.all_models_used(items, maps) == [3168, 11730, 16203, 18633, 19087, 19312, 19477, 19836]
+    assert m.all_models_used(items, tmp_path / "missing") == [11730, 18633, 19087, 19477, 19836]
 
 
 def test_port_hat_models_are_not_samp_models():
     assert all(m.is_samp_model(i) for i in (18631, 19999, 11682, 11753))
     assert not any(m.is_samp_model(i) for i in (20001, 18630, 11754))
+
+
+def _rw(kind: int, body: bytes) -> bytes:
+    return struct.pack("<III", kind, len(body), 0x1803FFFF) + body
+
+
+def _native(name: str) -> bytes:
+    return _rw(0x15, _rw(0x01, struct.pack("<II", 8, 0) + name.encode().ljust(32, b"\0") + b"\0" * 40) + _rw(0x03, b""))
+
+
+def test_trim_txd_keeps_only_the_textures_the_model_names():
+    txd = _rw(0x16, _rw(0x01, struct.pack("<HH", 2, 9)) + _native("bloodpool_64") + _native("smoke") + _rw(0x03, b""))
+    dff = b"\0\0BloodPool1\0bloodpool_64\0"
+    out = m.trim_txd(txd, m.dff_strings(dff))
+    assert b"bloodpool_64" in out and b"smoke" not in out
+    assert struct.unpack_from("<III", out, 0)[1] == len(out) - 12
+    assert struct.unpack_from("<HH", out, 24) == (1, 9)
+
+
+def test_plan_takes_a_loose_vanilla_txd():
+    ide = {19836: ("BloodPool1", "particle", 50)}
+    entries, problems = m.plan(ide, [19836], {"bloodpool1.dff": (0, 1)}, {}, {}, samp_cols={"bloodpool1": b"c"},
+                               loose_txds={"particle": None})
+    assert problems == [] and entries[19836]["txd"] == "particle"
+    assert entries[19836]["src"]["txd"] == ("loose", "particle.txd")

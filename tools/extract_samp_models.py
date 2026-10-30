@@ -128,8 +128,9 @@ def map_models_used(lua_text: str) -> list[int]:
 
 # SA-MP models that clients build structures from rather than item types or maps: the pitched tent's camo
 # panels and poles (items/shared/logic/tent.lua, upstream core/item/tent.pwn) and the open Locker the closed one
-# swaps to (items/shared/logic/smallitems.lua, upstream core/item/locker.pwn)
-STRUCTURE_MODELS = [19477, 19087, 11730]
+# swaps to (items/shared/logic/smallitems.lua, upstream core/item/locker.pwn), and the blood pool a bleeding
+# player leaves behind (character/client/blood.lua, upstream core/char/bleed.pwn)
+STRUCTURE_MODELS = [19477, 19087, 11730, 19836]
 
 
 def all_models_used(items_path: Path, maps_dir: Path | None) -> list[int]:
@@ -142,8 +143,37 @@ def all_models_used(items_path: Path, maps_dir: Path | None) -> list[int]:
     return sorted(used)
 
 
-def plan(ide, used, samp_index, owners, vanilla_indexes, samp_cols=None):
-    """Per SA-MP model: how the client gets its dff, col and txd. Returns (entries, problems)."""
+def trim_txd(data: bytes, keep: set[str]) -> bytes:
+    """A texture dictionary with only the textures named in `keep` (lowercase), for the loose vanilla TXDs SA-MP
+    models borrow a texture or two from (particle.txd is 650 KB for one 64x64 blood pool)."""
+    _kind, _size, version = struct.unpack_from("<III", data, 0)
+    pos, end, natives, ext = 12, 12 + struct.unpack_from("<I", data, 4)[0], [], b""
+    device = 0
+    while pos < end:
+        kind, size, _v = struct.unpack_from("<III", data, pos)
+        chunk = data[pos : pos + 12 + size]
+        if kind == 0x01:
+            device = struct.unpack_from("<H", chunk, 14)[0]
+        elif kind == 0x15:
+            name = chunk[12 + 12 + 8 : 12 + 12 + 40].split(b"\0", 1)[0].decode("latin1").lower()
+            if name in keep:
+                natives.append(chunk)
+        elif kind == 0x03:
+            ext = chunk
+        pos += 12 + size
+    body = struct.pack("<IIIHH", 0x01, 4, version, len(natives), device) + b"".join(natives) + ext
+    return struct.pack("<III", 0x16, len(body), version) + body
+
+
+def dff_strings(data: bytes) -> set[str]:
+    """Lowercase NUL-terminated names in a DFF, a superset of the texture names its materials use."""
+    return {m.decode("latin1").lower() for m in re.findall(rb"([\w-]{1,31})\0", data)}
+
+
+def plan(ide, used, samp_index, owners, vanilla_indexes, samp_cols=None, loose_txds=()):
+    """Per SA-MP model: how the client gets its dff, col and txd. Returns (entries, problems). `loose_txds` are the
+    vanilla TXDs that sit loose in models/ rather than in an archive (particle.txd), copied trimmed to the textures
+    the model uses."""
     entries, problems = {}, []
     for model in used:
         if not is_samp_model(model):
@@ -172,8 +202,11 @@ def plan(ide, used, samp_index, owners, vanilla_indexes, samp_cols=None):
                     e["src"]["txd"] = (name, txd_l + ".txd")
                     break
             else:
-                problems.append(f"{model}: texture dictionary {txd} not found anywhere")
-                continue
+                if txd_l not in loose_txds:
+                    problems.append(f"{model}: texture dictionary {txd} not found anywhere")
+                    continue
+                e["txd"] = txd_l
+                e["src"]["txd"] = ("loose", txd_l + ".txd")
         entries[model] = e
     return entries, problems
 
@@ -315,8 +348,9 @@ def main(argv=None) -> int:
     sampcol_index = read_img_index(sampcol_img)
     samp_cols = parse_col_library(read_img_entry(sampcol_img, sampcol_index["allsampcols.col"]))
     vanilla_indexes = {n: read_img_index(p) for n, p in vanilla.items()}
-    entries, problems = plan(ide, used, samp_index, owners=vanilla_txd_owners(gta), vanilla_indexes=vanilla_indexes,
-                             samp_cols=samp_cols)
+    loose = {p.stem.lower(): p for p in (gta / "models").glob("*.txd")}
+    owners = vanilla_txd_owners(gta)
+    entries, problems = plan(ide, used, samp_index, owners=owners, vanilla_indexes=vanilla_indexes, samp_cols=samp_cols, loose_txds=loose)
     for p in problems:
         print("warning:", p, file=sys.stderr)
     files = files_needed(entries)
@@ -333,6 +367,9 @@ def main(argv=None) -> int:
                 continue
             if archive == "col":
                 target.write_bytes(samp_cols[e["dff"]])
+            elif archive == "loose":
+                dff = read_img_entry(samp_img, samp_index[e["dff"] + ".dff"])
+                target.write_bytes(trim_txd(loose[name[:-4]].read_bytes(), dff_strings(dff)))
             else:
                 path, index = archives[archive]
                 target.write_bytes(read_img_entry(path, index[name]))

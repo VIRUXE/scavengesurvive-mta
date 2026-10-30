@@ -5,6 +5,7 @@
     <include resource="auth"/>
     <include resource="ui"/>
     <include resource="data"/>
+    <include resource="models"/>
     <script src="shared/events.lua" type="shared"/>
     <script src="server/main.lua" type="server"/>
     <script src="client/deathscreen.lua" type="client"/>
@@ -13,6 +14,7 @@
     <script src="client/medical.lua" type="client"/>
     <script src="client/travel.lua" type="client"/>
     <script src="client/poses.lua" type="client"/>
+    <script src="client/blood.lua" type="client"/>
     <file src="shared/logic/survival.lua"/>
     <file src="shared/logic/spawnpoints.lua"/>
     <file src="shared/logic/combatlog.lua"/>
@@ -24,6 +26,7 @@
     <file src="server/travel.lua"/>
     <file src="shared/logic/poses.lua"/>
     <file src="server/poses.lua"/>
+    <file src="shared/logic/bleeding.lua"/>
     <export function="getCharacterId" type="server"/>
     <export function="getPlayerByCharacterId" type="server"/>
     <export function="getInventoryContainerId" type="server"/>
