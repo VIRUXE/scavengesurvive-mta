@@ -76,3 +76,23 @@ describe("vehicle spawn roll", function()
         assert.is_false(spawn.locked(TYPES.byUname.Sabre, nil, rng({ 0.2 })))
     end)
 end)
+
+describe("Area 69 aircraft spawns", function()
+    local data = dofile("resources/[scavengesurvive]/data/generated/vehicle_types.lua")
+    local list = {}
+    for _, uname in ipairs(data.order) do
+        list[#list + 1] = data.byUname[uname]
+    end
+    local real = spawn.index(list)
+
+    it("rolls the Hunter and the Hydra from explicit spawn rows", function()
+        local hunterRow = row({ type_name = "Hunter", group_name = false })
+        local hydraRow = row({ type_name = "Hydra", group_name = false })
+        local hunter = spawn.roll(hunterRow, real, 100.0, rng({ 0.5, 0.6, 0.005 }))
+        local hydra = spawn.roll(hydraRow, real, 100.0, rng({ 0.5, 0.6, 0.005 }))
+        assert.equals(425, hunter.type.model)
+        assert.equals("helicopter", hunter.type.category)
+        assert.equals(520, hydra.type.model)
+        assert.equals("plane", hydra.type.category)
+    end)
+end)
