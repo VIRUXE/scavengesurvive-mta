@@ -16,6 +16,7 @@ local skills = loadFile("shared/logic/skills.lua")
 local medical = loadFile("shared/logic/medical.lua")
 local travel = loadFile("shared/logic/travel.lua")
 local bodies = loadFile("shared/logic/bodies.lua")
+local poses = loadFile("shared/logic/poses.lua")
 
 -- Every spawned character, shared with the tick and death modules (they capture this table).
 local state = {
@@ -74,6 +75,22 @@ medicalCtx.isKnockedOut = function(p)
 end
 local treatment = loadFile("server/medical.lua")(medicalCtx)
 tickCtx.treatment = treatment
+-- sitting, hands up and the aim shout (#140)
+local posesModule = loadFile("server/poses.lua")({
+    net = net,
+    state = state,
+    poses = poses,
+    isKnockedOut = function(p)
+        return isKnockedOut(p)
+    end,
+    isPlayerCuffed = function(p)
+        return isPlayerCuffed(p)
+    end,
+    lang = function(p, key, ...)
+        return exports.data:t(exports.auth:getLanguage(p) or "en", key, ...)
+    end,
+})
+state.clearPose = posesModule.clear
 -- travel stats and the Endurance skill (#138)
 tickCtx.travel = loadFile("server/travel.lua")({
     net = net,
@@ -473,6 +490,9 @@ function knockOutPlayer(player, durationMs)
     local st = state.byPlayer[player]
     if not st or st.dead then
         return false
+    end
+    if state.clearPose then
+        state.clearPose(player) -- a sit or raised hands end with the knockout (#140)
     end
     local now = getTickCount()
     local cur = state.knockout[player]

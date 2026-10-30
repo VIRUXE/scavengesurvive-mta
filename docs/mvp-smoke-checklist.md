@@ -479,4 +479,14 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
       `The body has decomposed too much to harvest`.
     - e. Hold **F** 500 ms with empty hands: the body is picked up (carried two-handed) and can be dropped elsewhere;
       a tap on the dropped body still investigates it.
+41. **Sitting, hands up and the aim shout** (#140, upstream `char/animations.pwn`, `char/aim-shout.pwn`). Two clients.
+    - a. Standing still, hold crouch: after 0.8 s A sits down (PARKSIT_M_IN, then the loop); crouch, sprint or
+      jump gets A up (PARKSIT_M_OUT). A quick tap of crouch only crouches. Walking or in a vehicle: no sit.
+    - b. Sprint and crouch together while standing: hands up and frozen; the same again lowers them. Knocked out
+      or cuffed: nothing.
+    - c. `/aimshout` alone: the usage line; `/aimshout Hands up!`: `AimShout set to 'Hands up!'`. Aim at B and
+      press look-behind: `A: Hands up!` in local chat for both, not more than once every 750 ms however fast the
+      keys are hit; in a car, look-behind with the horn does the same. Relog: the line is forgotten (session only).
+    - d. A sits, B knocks A out (charged Stun Gun): the sit ends with the knockout; after `rr character` nobody
+      is left sitting.
 
