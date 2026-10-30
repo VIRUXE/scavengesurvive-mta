@@ -400,6 +400,47 @@ return function(ctx)
         activeContainer[player] = nil
     end
 
+    -- The Locker shows its open twin while anyone has it open (item/locker.pwn, #143): every client gets
+    -- lockerToggled when the first player opens it and when the last one leaves it (the side container closed,
+    -- walked off, another one opened), watched twice a second.
+    local LOCKER = "Locker"
+    local lockerBy = {} -- player -> locker item id they have open
+    local lockerOpenBy = {} -- locker item id -> number of players
+    local function lockerLeave(player)
+        local id = lockerBy[player]
+        if not id then
+            return
+        end
+        lockerBy[player] = nil
+        lockerOpenBy[id] = (lockerOpenBy[id] or 1) - 1
+        if lockerOpenBy[id] <= 0 then
+            lockerOpenBy[id] = nil
+            triggerClientEvent(root, "lockerToggled", resourceRoot, id, false)
+        end
+    end
+    local function lockerEnter(player, id)
+        if lockerBy[player] == id then
+            return
+        end
+        lockerLeave(player)
+        lockerBy[player] = id
+        lockerOpenBy[id] = (lockerOpenBy[id] or 0) + 1
+        if lockerOpenBy[id] == 1 then
+            triggerClientEvent(root, "lockerToggled", resourceRoot, id, true)
+        end
+    end
+    setTimer(function()
+        for player, id in pairs(lockerBy) do
+            local cont = isElement(player) and activeContainer[player]
+            if not cont or cont.worldItemId ~= id or M.openContainerId(player) == nil then
+                lockerLeave(player)
+            end
+        end
+    end, 500, 0)
+    addEventHandler("onPlayerQuit", root, function()
+        lockerLeave(source)
+    end)
+
     function M.openWorldContainer(player, itemRow)
         if not isElement(player) or not itemRow then
             return
@@ -409,6 +450,9 @@ return function(ctx)
             return
         end
         local uname = itemRow.uname
+        if uname == LOCKER and itemRow.x then
+            lockerEnter(player, itemRow.id)
+        end
         local isTent = (uname == "TentPack")
         local t = itemType(uname)
         local isBag = t and t.category == "bag"

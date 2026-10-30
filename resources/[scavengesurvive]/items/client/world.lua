@@ -13,7 +13,8 @@ return function(ctx)
     local small = ctx.small
     local gardening = ctx.gardening
     local SIGN_RANGE = 25 -- metres a sign's text can be read from
-    local objects = {} -- id -> { obj | parts, pitched, row, uname, hp, x, y, z, name, fires }
+    local objects = {} -- id -> { obj | parts, pitched, row, uname, hp, x, y, z, name, fires, plant }
+    local lockersOpen = {} -- locker item id -> true while someone has it open (lockerToggled, #143)
     local labelVisibility = {} -- id -> { visible, checkedAt }
     local shaders = {} -- tent material key -> shader, or false when its texture could not be read
     local typeCache = {}
@@ -216,8 +217,16 @@ return function(ctx)
         end
     end
 
+    -- a locker draws its open twin while someone has it open
+    local function modelFor(r, t)
+        if r.uname == small.LOCKER.uname then
+            return models.forSamp(small.lockerModel(lockersOpen[r.id])) or models.forType(t)
+        end
+        return models.forType(t)
+    end
+
     local function createItemObject(r, t)
-        local obj = createObject(models.forType(t), r.x, r.y, r.z) or createObject(models.FALLBACK, r.x, r.y, r.z)
+        local obj = createObject(modelFor(r, t), r.x, r.y, r.z) or createObject(models.FALLBACK, r.x, r.y, r.z)
         if obj then
             place(obj, r)
             orient(obj, r, t)
@@ -281,7 +290,7 @@ return function(ctx)
                 e.parts = createTentParts(e.row)
             elseif isElement(e.obj) then
                 local t = itemType(e.uname)
-                setElementModel(e.obj, models.forType(t))
+                setElementModel(e.obj, modelFor(e.row, t))
                 models.applyTint(e.obj, t)
             end
         end
@@ -377,6 +386,14 @@ return function(ctx)
                     end
                 end
             end
+        end
+    end)
+
+    addEventHandler("lockerToggled", resourceRoot, function(id, open)
+        lockersOpen[id] = open and true or nil
+        local e = objects[id]
+        if e and isElement(e.obj) and e.uname == small.LOCKER.uname then
+            setElementModel(e.obj, modelFor(e.row, itemType(e.uname)))
         end
     end)
 

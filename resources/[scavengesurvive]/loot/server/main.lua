@@ -147,6 +147,43 @@ end
 
 -- Rolls due spawns inside a box around (x, y): spawns are due when next_roll_at has passed and no item from the
 -- previous roll remains in the world; the zone must still have allowance and no player may be within
+-- A Heart Shaped Box that loot spawns comes with these inside (upstream item/heartshapedbox.pwn, #143): after a
+-- roll, every box of the batch whose container is still empty gets them, one item_create_in_container each.
+local LOVE_BOX, LOVE_BOX_CONTENTS = "HeartShapedBox", { "Dildo1", "Flowers", "AntiSepBandage", "ZorroMask" }
+local function fillLoveBoxes(done)
+    local ids = {}
+    for _, r in ipairs(done) do
+        ids[#ids + 1] = string.format("%d", tonumber(r.s) or 0)
+    end
+    if #ids == 0 then
+        return
+    end
+    local sql = "SELECT c.id AS cid FROM items i JOIN containers c ON c.owner_item_id = i.id "
+        .. "WHERE i.type_uname = '"
+        .. LOVE_BOX
+        .. "' AND i.loot_spawn_id IN ("
+        .. table.concat(ids, ",")
+        .. ") AND NOT EXISTS (SELECT 1 FROM items x WHERE x.container_id = c.id)"
+    db.query(sql, {}, function(rows)
+        for _, row in ipairs(rows or {}) do
+            for _, uname in ipairs(LOVE_BOX_CONTENTS) do
+                db.call("item_create_in_container", { uname, row.cid }, function(res)
+                    if not res or not res.ok then
+                        util.log(
+                            "loot",
+                            "warn",
+                            "love box %d: %s not added (%s)",
+                            row.cid,
+                            uname,
+                            res and res.code or "db"
+                        )
+                    end
+                end)
+            end
+        end
+    end)
+end
+
 -- world.min_player_distance of the point. Every roll of the batch goes to the DB in one loot_roll call.
 function rollNear(x, y, radius)
     local batch = setting("loot.roll_batch", 300)
@@ -196,6 +233,7 @@ function rollNear(x, y, radius)
             for _, r in ipairs(done) do
                 triggerEvent("lootSpawned", resourceRoot, r.s, #r.items)
             end
+            fillLoveBoxes(done)
         end, rolls)
     end)
     return true

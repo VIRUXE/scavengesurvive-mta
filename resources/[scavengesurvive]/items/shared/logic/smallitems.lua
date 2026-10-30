@@ -154,6 +154,13 @@ function M.herpAnim(randInt)
     return a[1], a[2]
 end
 
+-- The Locker (item/locker.pwn, #143): SA-MP models, closed and open while someone has it open
+M.LOCKER = { uname = "Locker", closed = 11729, open = 11730 }
+
+function M.lockerModel(open)
+    return open and M.LOCKER.open or M.LOCKER.closed
+end
+
 -- The body (item/torso.pwn, character/shared/logic/bodies.lua writes its data): a knife takes one raw Meat from it
 -- once, within a day of the death.
 M.BODY_DECOMPOSE_S = 86400

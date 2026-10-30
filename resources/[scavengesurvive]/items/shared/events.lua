@@ -51,6 +51,7 @@ addEvent("bodyInspected", true)
 addEvent("fishingStarted", true)
 addEvent("fishingStopped", true)
 addEvent("potInspected", true)
+addEvent("lockerToggled", true)
 addEvent("sampModelsChanged", false) -- fired by the models resource on every client
 addEvent("uiListActionSelected", false)
 addEvent("uiListClosed", false)

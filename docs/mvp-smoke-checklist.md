@@ -513,4 +513,11 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
     - e. Knife, **F** on the grown pot: `Plant harvested`, a Tomato on the pot, the pot empty; on a young plant:
       `The plant has not fully grown yet`; on an empty pot: `Pot doesn't contain an active plant`.
     - f. Hold **F** 500 ms with empty hands: the pot is picked up; the plant is gone with it and back when dropped.
+44. **The Locker's door and the Love Box** (#143, upstream `item/locker.pwn`, `heartshapedbox.pwn`). Two clients.
+    - a. `/additem Locker`, drop it: the closed locker (SA-MP 11729). A opens it with **F**: both clients see the
+      open twin (11730); A closes the list, walks more than 4 m off or opens something else: closed again within
+      half a second. A and B both open it; one leaves: still open until the other leaves too.
+    - b. Find a looted Heart Shaped Box (a `HeartShapedBox` row with a `loot_spawn_id`, or `rr loot` near a
+      spawn that rolls one): opened on the ground it holds a Dildo, Flowers, an Antiseptic Bandage and a Zorro
+      Mask; an `/additem HeartShapedBox` box is empty.
 

@@ -121,6 +121,7 @@ return {
     fishingStopped = true,
     potInspectRequested = true,
     potInspected = true,
+    lockerToggled = true,
     supplyDropStarted = true,
     supplyCrateLanded = true,
     weaponCacheDropped = false,
