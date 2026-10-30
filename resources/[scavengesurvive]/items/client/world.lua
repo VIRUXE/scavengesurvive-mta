@@ -11,6 +11,7 @@ return function(ctx)
     local geometry = ctx.geometry
     local cooking = ctx.cooking
     local small = ctx.small
+    local gardening = ctx.gardening
     local SIGN_RANGE = 25 -- metres a sign's text can be read from
     local objects = {} -- id -> { obj | parts, pitched, row, uname, hp, x, y, z, name, fires }
     local labelVisibility = {} -- id -> { visible, checkedAt }
@@ -62,6 +63,9 @@ return function(ctx)
         if r.uname == "StunGun" then
             return small.stunLabel(t and t.name or r.uname, r.data)
         end
+        if r.uname == gardening.BAG then
+            return gardening.seedLabel(t and t.name or r.uname, gardening.seedsFor(r.id, r.data))
+        end
         if ammo and t then
             local defA = t.categoryData and defaultAmmo(t.categoryData.calibre) or nil
             return ammo.displayName(t, r.data, itemType, calibreName, defA)
@@ -84,6 +88,9 @@ return function(ctx)
                 if isElement(fx) then
                     destroyElement(fx)
                 end
+            end
+            if isElement(e.plant) then
+                destroyElement(e.plant)
             end
             objects[id] = nil
         end
@@ -189,6 +196,26 @@ return function(ctx)
         end
     end
 
+    -- the plant a pot grows (#142): a sprout rising with the growth, then the kind's plant
+    local function updatePlant(e, r)
+        if isElement(e.plant) then
+            destroyElement(e.plant)
+        end
+        e.plant = nil
+        if r.uname ~= gardening.POT then
+            return
+        end
+        local model, lift = gardening.plantObject(gardening.pot(r.data))
+        if not model then
+            return
+        end
+        local obj = createObject(model, r.x, r.y, r.z + lift, 0, 0, r.rz or 0)
+        if obj then
+            place(obj, r)
+            e.plant = obj
+        end
+    end
+
     local function createItemObject(r, t)
         local obj = createObject(models.forType(t), r.x, r.y, r.z) or createObject(models.FALLBACK, r.x, r.y, r.z)
         if obj then
@@ -218,6 +245,7 @@ return function(ctx)
                 end
                 e.row = r
                 updateFires(e, r)
+                updatePlant(e, r)
             else
                 e = {
                     pitched = isPitched,
@@ -235,6 +263,7 @@ return function(ctx)
                     e.obj = createItemObject(r, t)
                 end
                 updateFires(e, r)
+                updatePlant(e, r)
                 objects[r.id] = e
             end
         end
@@ -377,7 +406,7 @@ return function(ctx)
 
     -- A Sign or a body (Torso) lying within reach of the local player: the hud edits or investigates it on a tap
     -- of F and picks it up on a hold. Returns id, uname; nil when none.
-    local INSPECTABLE = { Sign = true, Torso = true }
+    local INSPECTABLE = { Sign = true, Torso = true, PlantPot = true }
     function M.nearbyInspectable(reach)
         local px, py, pz = getElementPosition(localPlayer)
         local dim, int = getElementDimension(localPlayer), getElementInterior(localPlayer)

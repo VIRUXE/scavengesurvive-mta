@@ -18,6 +18,7 @@ local cooking = loadFile("shared/logic/cooking.lua")
 local liquids = loadFile("shared/logic/liquids.lua")
 local small = loadFile("shared/logic/smallitems.lua")
 local fishing = loadFile("shared/logic/fishing.lua")
+local gardening = loadFile("shared/logic/gardening.lua")
 
 -- export: whether a ped model is a woman (staff picks the duty skin from it)
 function isFemaleSkin(skin)
@@ -187,6 +188,21 @@ local clothesInstance = loadFile("server/clothes.lua")({
     openContainerId = containers.openContainerId,
 })
 containers.setClothes(clothesInstance)
+-- seed bags and plant pots (#142)
+local garden = loadFile("server/gardening.lua")({
+    db = db,
+    net = net,
+    state = state,
+    type = itemType,
+    toast = toast,
+    world = world,
+    gardening = gardening,
+    liquids = liquids,
+    decodeData = hands.decodeData,
+    updateHeldData = function(player, data)
+        return updateHeldData(player, data)
+    end,
+})
 -- notes, signs, dice, the locator, the stun gun and the molotov (#136)
 local smallItems = loadFile("server/smallitems.lua")({
     db = db,
@@ -211,6 +227,7 @@ local smallItems = loadFile("server/smallitems.lua")({
     dropHeld = function(player, opts)
         return hands.dropHeld(player, opts)
     end,
+    garden = garden,
 })
 hands.setSmall(smallItems)
 -- the Fishing Rod (#141)

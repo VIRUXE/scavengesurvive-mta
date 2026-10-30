@@ -8,6 +8,7 @@ return function(ctx)
     local preview = ctx and ctx.preview -- client/preview.lua: live dxDrawModel3D previews inside the gear tiles
     local cooking = ctx and ctx.cooking -- shared/logic/cooking.lua: "(Cooked)" / "(Uncooked)" on food
     local small = ctx and ctx.small -- shared/logic/smallitems.lua: the Note's message and the Stun Gun's charge
+    local gardening = ctx and ctx.gardening -- shared/logic/gardening.lua: what a bag of Seeds holds
     local liquids = ctx and ctx.liquids -- shared/logic/liquids.lua: "(Water 0.4/0.50)" on liquid containers
     local MESSAGES = {
         HANDS_FULL = "You are already holding an item",
@@ -120,6 +121,14 @@ return function(ctx)
         FISHLINETUG = "The line is tugging...",
         FISHNCLOSER = "You need to be closer to the water",
         FISHUNLUCKY = "Unlucky!",
+        POTADDSEEDS = "Added seeds to plant pot",
+        POTADDWATER = "Added 1 water to plant pot",
+        POTBOTEMPTY = "Bottle is empty",
+        POTBOTNOWAT = "Bottle does not contain water",
+        POTHARVESTE = "Plant harvested",
+        POTINVASEED = "Invalid seed type.",
+        POTNOACPLNT = "Pot doesn't contain an active plant.",
+        POTNOTGROWN = "The plant has not fully grown yet.",
         BODYHARVEST = "The body has already been harvested of the edible (tasty) parts",
         ITEMTWKFINI = "Tweaking finished",
         ITEMTWKMOVE = "Cannot move item with players nearby",
@@ -182,6 +191,8 @@ return function(ctx)
             name = small.noteLabel(name, it.data)
         elseif small and it.uname == "StunGun" then
             name = small.stunLabel(name, it.data)
+        elseif gardening and it.uname == gardening.BAG then
+            name = gardening.seedLabel(name, gardening.seedsFor(it.id, it.data))
         elseif cooking and cooking.isFood(t) then
             name = cooking.label(t, name, it.data)
         elseif liquids and liquids.isContainer(t) then

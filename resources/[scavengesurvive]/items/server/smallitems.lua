@@ -12,7 +12,8 @@
 --   Torso (the body a death leaves, #139): a tap of the interact key investigates it (bodyInspectRequested), a Knife
 --     used on it holds 3 s and takes one raw Meat, once, within a day.
 -- ctx = { db, net, state, type, charId, toast, destroy, destroyWorldItem, world, updateHeldData, decodeData,
---         small, liquids, sendInventory, ownedSql, dropHeld } built by server/main.lua.
+--         small, liquids, sendInventory, ownedSql, dropHeld, garden } built by server/main.lua; garden
+--         (server/gardening.lua, #142) takes the Plant Pot pairs first.
 return function(ctx)
     local db, net, state = ctx.db, ctx.net, ctx.state
     local itemType, charId, toast = ctx.type, ctx.charId, ctx.toast
@@ -365,11 +366,12 @@ return function(ctx)
 
     -- the world item unames a held uname reaches for (hands.lua targetsFor)
     function M.targets(uname)
+        local list = ctx.garden and ctx.garden.targets(uname) or nil
         local byWorld = PAIRS[uname]
         if not byWorld then
-            return nil
+            return list
         end
-        local list = {}
+        list = list or {}
         for worldUname in pairs(byWorld) do
             list[#list + 1] = worldUname
         end
@@ -377,6 +379,9 @@ return function(ctx)
     end
 
     function M.interact(player, held, row)
+        if ctx.garden and ctx.garden.interact(player, held, row) then
+            return true
+        end
         local fn = held and PAIRS[held.uname] and PAIRS[held.uname][row.uname]
         if not fn then
             return false

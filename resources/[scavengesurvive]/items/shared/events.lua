@@ -33,6 +33,7 @@ addEvent("signTextSubmitted", true)
 addEvent("bodyInspectRequested", true)
 addEvent("fishCastRequested", true)
 addEvent("fishCancelRequested", true)
+addEvent("potInspectRequested", true)
 
 -- server to client / client-local
 addEvent("inventorySynced", true)
@@ -49,6 +50,7 @@ addEvent("signEditOpened", true)
 addEvent("bodyInspected", true)
 addEvent("fishingStarted", true)
 addEvent("fishingStopped", true)
+addEvent("potInspected", true)
 addEvent("sampModelsChanged", false) -- fired by the models resource on every client
 addEvent("uiListActionSelected", false)
 addEvent("uiListClosed", false)

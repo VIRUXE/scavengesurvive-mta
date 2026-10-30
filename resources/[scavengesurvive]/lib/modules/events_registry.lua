@@ -119,6 +119,8 @@ return {
     fishCancelRequested = true,
     fishingStarted = true,
     fishingStopped = true,
+    potInspectRequested = true,
+    potInspected = true,
     supplyDropStarted = true,
     supplyCrateLanded = true,
     weaponCacheDropped = false,

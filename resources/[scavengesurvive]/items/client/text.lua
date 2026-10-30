@@ -25,6 +25,10 @@ return function()
         exports.ui:dialogOpen("items:body", "msgbox", name, reason, "Close", "")
     end)
 
+    addEventHandler("potInspected", localPlayer, function(status)
+        exports.ui:dialogOpen("items:pot", "msgbox", "Plant Pot", status, "Close", "")
+    end)
+
     addEventHandler("uiDialogResponded", root, function(id, accepted, text)
         local o = open
         if not o then

@@ -499,4 +499,18 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
     - c. With the line out, **F** cancels; dropping the rod (**N**) cancels too; no second cast while one is out.
     - d. `/lua return exports.character:setSkill(getPlayerFromName("A"), "Fishing", 0.95)`: the waits are about
       half as long and the catches about twice as frequent.
+43. **Gardening** (#142, upstream `item/plantpot.pwn`, `seedbag.pwn`). One client; `/additem PlantPot`, `/additem
+    SeedBag`, `/additem Knife`, a Bottle filled with water.
+    - a. A looted or `/additem` bag reads `Seeds (n, Kind)` with n from 0 to 4 (`Seeds (Empty)` at 0; `/additem`
+      a few until one has seeds), the same after a relog.
+    - b. Drop the pot; hold the Seeds, **F** on the pot: `Added seeds to plant pot`, the bag one seed down. Tap
+      **F** on the pot with empty hands: `Plant Pot` box `Active: yes / Seed type: Tomato / Water: 0 / Growth: 0/4`.
+    - c. Hold the water bottle, **F** on the pot: `Added 1 water to plant pot`, the bottle 0.1 L down; an empty
+      bottle: `Bottle is empty`; a bottle of milk: `Bottle does not contain water`.
+    - d. Growth: `UPDATE items SET data = JSON_SET(data, '$.pot.growth', 2) WHERE type_uname = 'PlantPot'` then
+      `rr items`: a sprout stands on the pot; at `growth` 4 (Tomato) the tomato plant. Or wait: every 10 minutes a
+      watered pot grows one and drinks one water; dry, it withers one and empties at 0.
+    - e. Knife, **F** on the grown pot: `Plant harvested`, a Tomato on the pot, the pot empty; on a young plant:
+      `The plant has not fully grown yet`; on an empty pot: `Pot doesn't contain an active plant`.
+    - f. Hold **F** 500 ms with empty hands: the pot is picked up; the plant is gone with it and back when dropped.
 

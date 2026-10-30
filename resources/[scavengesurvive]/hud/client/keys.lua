@@ -132,6 +132,8 @@ return function(ctx)
                             triggerServerEvent("itemBagOpenRequested", localPlayer, bagId)
                         elseif inspectUname == "Sign" then
                             triggerServerEvent("signEditRequested", localPlayer, inspectId)
+                        elseif inspectUname == "PlantPot" then
+                            triggerServerEvent("potInspectRequested", localPlayer, inspectId)
                         else
                             triggerServerEvent("bodyInspectRequested", localPlayer, inspectId)
                         end
