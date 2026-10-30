@@ -232,7 +232,11 @@ describe("items server sql builders", function()
         _G.client, _G.source = "p1", "p1"
         state.held["p1"] = { id = 1, uname = "GasCan", hp = 3, data = { amount = 20 } }
         mock.fire("itemPickupRequested")
-        assert.matches("i%.type_uname IN %('Barbecue'%)", mock.queries[#mock.queries].sql)
+        -- the Petrol Can reaches a barbecue and the three machines it fuels (#145)
+        assert.matches(
+            "i%.type_uname IN %('Barbecue', 'ScrapMachine', 'RefineMachine', 'WaterMachine'%)",
+            mock.queries[#mock.queries].sql
+        )
 
         mock.tick = 1000
         state.held["p1"] = { id = 2, uname = "FireLighter", hp = 1, data = {} }
