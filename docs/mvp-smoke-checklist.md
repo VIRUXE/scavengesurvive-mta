@@ -520,4 +520,8 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
     - b. Find a looted Heart Shaped Box (a `HeartShapedBox` row with a `loot_spawn_id`, or `rr loot` near a
       spawn that rolls one): opened on the ground it holds a Dildo, Flowers, an Antiseptic Bandage and a Zorro
       Mask; an `/additem HeartShapedBox` box is empty.
+    - c. The fixed box (upstream `CreateItem(item_HeartShapedBox, 2912.3301, 2910.2800, 29.7780)`): after a start
+      the log has `fixed HeartShapedBox at 2912.33, 2910.28, 29.778: created` (first start) and a `HeartShapedBox`
+      row lies there with no loot spawn; opened it is empty. Restart `items`: no second box is added. Carry it off,
+      restart `items`: a new one stands there. The spot is open sea in the stock map, so fly there to look.
 

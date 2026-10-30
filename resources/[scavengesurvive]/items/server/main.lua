@@ -149,6 +149,7 @@ local containers = loadFile("server/containers.lua")({
     isIncapacitated = isIncapacitated,
 })
 hands.setContainers(containers)
+local fixed = loadFile("server/fixed.lua")({ db = db, world = world, log = util.log })
 local cookingCtx = { db = db, state = state, type = itemType, toast = toast, world = world, hands = hands }
 cookingCtx.cooking = cooking
 local cookers = loadFile("server/cooking.lua")(cookingCtx)
@@ -261,6 +262,7 @@ addEventHandler("onResourceStart", resourceRoot, function()
     db.settings(function(map)
         state.settings = map
     end)
+    fixed.start()
     -- restart: every spawned character gets its held item and worn bag back and a fresh world projection
     for _, p in ipairs(getElementsByType("player")) do
         if charId(p) then

@@ -29,6 +29,7 @@
     <file src="client/text.lua"/>
     <file src="client/models.lua"/>
     <file src="server/cooking.lua"/>
+    <file src="server/fixed.lua"/>
     <file src="server/drinking.lua"/>
     <file src="client/preview.lua"/>
     <file src="client/world.lua"/>
