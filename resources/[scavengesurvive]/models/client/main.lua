@@ -10,6 +10,7 @@ local keep = {} -- col/dff/txd elements stay alive while the models are in use
 -- shared dictionary.
 local HOUSE_SHELL = "^%a%ahouse%d$"
 local windowTextureAdded = {} -- vanilla TXD id -> true
+local shells = {} -- allocated model id -> true, for the house shell exteriors
 
 addEvent("sampModelsChanged", false)
 
@@ -58,6 +59,9 @@ local function loadModel(e, txds)
         local txdId = engineGetModelTXDID(e.txdModel)
         if not txdId or not engineSetModelTXDID(id, txdId) then
             return nil, "txd of model " .. e.txdModel
+        end
+        if e.dff:match(HOUSE_SHELL) then
+            shells[id] = true
         end
         if e.dff:match(HOUSE_SHELL) and not windowTextureAdded[txdId] then
             windowTextureAdded[txdId] = true
@@ -156,7 +160,46 @@ addEventHandler("onClientResourceStart", resourceRoot, function()
     triggerEvent("sampModelsChanged", root)
 end)
 
+-- GTA only keeps rain out of a place through map cull zones or interior ids, neither of which a custom object can
+-- carry, so rain would fall through the shells' roofs. While the camera is inside a streamed shell's bounding box
+-- the rain level is forced to zero, and handed back to the weather when it leaves.
+local RAIN_CHECK_MS = 250
+local rainOff = false
+
+local function insideShell(cx, cy, cz)
+    for _, obj in ipairs(getElementsByType("object", root, true)) do
+        if shells[getElementModel(obj)] then
+            local right, fwd, up, pos = getElementMatrix(obj)
+            local dx, dy, dz = cx - pos[1], cy - pos[2], cz - pos[3]
+            local lx = dx * right[1] + dy * right[2] + dz * right[3]
+            local ly = dx * fwd[1] + dy * fwd[2] + dz * fwd[3]
+            local lz = dx * up[1] + dy * up[2] + dz * up[3]
+            local x0, y0, z0, x1, y1, z1 = getElementBoundingBox(obj)
+            if x0 and lx > x0 and lx < x1 and ly > y0 and ly < y1 and lz > z0 and lz < z1 then
+                return true
+            end
+        end
+    end
+    return false
+end
+
+setTimer(function()
+    local inside = next(shells) ~= nil and insideShell(getCameraMatrix())
+    if inside and not rainOff then
+        setRainLevel(0)
+        rainOff = true
+    elseif not inside and rainOff then
+        resetRainLevel()
+        rainOff = false
+    end
+end, RAIN_CHECK_MS, 0)
+
 addEventHandler("onClientResourceStop", resourceRoot, function()
+    if rainOff then
+        resetRainLevel()
+        rainOff = false
+    end
+    shells = {}
     ids, hatless, bare = {}, {}, {}
     triggerEvent("sampModelsChanged", root) -- users fall back to stand-ins before the ids go away
     for _, id in ipairs(allocated) do

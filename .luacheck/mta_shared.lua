@@ -1,4 +1,5 @@
 return { read_globals = {
+    "getElementMatrix", "getElementBoundingBox",
     -- vehicles
     "setVehicleColor", "setVehicleEngineState", "setVehicleLocked", "isVehicleLocked", "setVehiclePanelState",
     "setVehicleDoorState", "setVehicleLightState", "setVehicleWheelStates", "getVehicleOccupant", "getElementHealth",
