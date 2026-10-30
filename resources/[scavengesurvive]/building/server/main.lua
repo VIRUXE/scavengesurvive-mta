@@ -85,6 +85,18 @@ local function encodeData(t)
     return toJSON(t, true)
 end
 
+-- nudging a built defence or a constructed item (server/tweak.lua, #133)
+local tweak = loadModule("server/tweak.lua")({
+    db = db,
+    net = net,
+    util = util,
+    defences = defences,
+    tweak = loadModule("shared/logic/tweak.lua"),
+    decodeData = decodeData,
+    toast = toast,
+    DEFENCE_ROW = DEFENCE_ROW,
+})
+
 local function isPasscodeUnset(passcode)
     if not passcode or passcode == "" then
         return true
@@ -352,11 +364,36 @@ function buildDefence(player, itemId)
                     if isElement(pl) then
                         exports.character:gainSkill(pl, "Construction")
                         toast(pl, "DEFENCE_BUILT")
+                        -- upstream: the builder then nudges it into place, the arrow showing its front
+                        cur.z, cur.rz, cur.data = z, rz, d
+                        tweak.start(pl, cur, true)
                     end
                 end
             )
         end)
     end, { player = player, tool = tool, pose = pose })
+end
+
+-- crafting's ground construction (upstream SetCraftSetConstructible tweak = true): the finished item is tweaked
+-- where it was built; a built defence also gets the arrow
+function tweakItem(player, itemId)
+    itemId = tonumber(itemId)
+    if not charId(player) or not itemId then
+        return false
+    end
+    db.one(DEFENCE_ROW, { itemId }, function(row, c)
+        if not row or not isElement(c.player) then
+            return
+        end
+        local t = exports.data:itemType(row.type_uname)
+        local built = t and t.defence and defences.state(decodeData(row.data)) ~= nil
+        tweak.start(c.player, row, built == true)
+    end, { player = player })
+    return true
+end
+
+function finishTweak(player)
+    return tweak.commit(player)
 end
 
 function removeDefence(player, itemId)

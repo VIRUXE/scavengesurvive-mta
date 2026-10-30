@@ -60,6 +60,18 @@ return function(ctx)
         return nearVeh, nearDist
     end
 
+    -- the tweak pad (building): while an item is being nudged into place the interact key does nothing, and
+    -- dropping, putting away or opening the inventory finishes the tweak first (upstream item-tweak.pwn's hooks)
+    local function tweaking()
+        local building = getResourceFromName("building")
+        return building and getResourceState(building) == "running" and exports.building:tweakIsOpen() == true
+    end
+    local function finishTweak()
+        if tweaking() then
+            exports.building:tweakFinish()
+        end
+    end
+
     -- ladders and ziplines (world) take the key before anything else
     local function worldInteract()
         return exports.world:tryInteract() == true
@@ -79,7 +91,7 @@ return function(ctx)
         if not guard() or listIsOpen() then
             return
         end
-        if getPedOccupiedVehicle(localPlayer) then
+        if getPedOccupiedVehicle(localPlayer) or tweaking() then
             return
         end
         if worldInteract() then
@@ -173,6 +185,7 @@ return function(ctx)
         if isTimer(holdTimer) then
             return
         end
+        finishTweak()
         local held = ctx.getHeld()
         if not held and getElementData(localPlayer, "items.bag") then
             return triggerServerEvent("itemUnwearRequested", localPlayer, "bag")
@@ -203,6 +216,7 @@ return function(ctx)
         if getPedOccupiedVehicle(localPlayer) then
             return triggerServerEvent("engineToggleRequested", localPlayer)
         end
+        finishTweak()
         triggerServerEvent("itemPutAwayRequested", localPlayer)
     end)
     local function requestOnFoot(eventName)
@@ -222,6 +236,7 @@ return function(ctx)
         if listIsOpen() then
             return exports.ui:listClose()
         end
+        finishTweak()
         triggerServerEvent("inventoryOpenRequested", localPlayer)
     end)
 

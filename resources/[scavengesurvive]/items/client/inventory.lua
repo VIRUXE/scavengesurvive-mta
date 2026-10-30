@@ -108,6 +108,10 @@ return function(ctx)
         DEFMOVINGIT = "Moving defence, please stand back.",
         DEFCODEZERO = "Leaving the code at 0 will allow the code to be set again.",
         PLOTPOLEENT = "Entering claimed territory",
+        ITEMTWKFINI = "Tweaking finished",
+        ITEMTWKMOVE = "Cannot move item with players nearby",
+        ITEMTWKTFAR = "Too far from original build position",
+        ITEMTWKBLOC = "You are blocking an item from being built, please stand back",
         PLOTPOLEEXT = "Leaving claimed territory",
     }
     local view = "inventory" -- which dialog is up: "inventory", "bag" or "trunk"

@@ -10,9 +10,16 @@
     <script src="server/main.lua" type="server"/>
     <script src="client/main.lua" type="client"/>
     <file src="shared/logic/defences.lua"/>
+    <file src="shared/logic/tweak.lua"/>
     <file src="client/keypad.lua"/>
+    <file src="client/tweak.lua"/>
+    <file src="server/tweak.lua"/>
     <export function="isInsideAnyPlotPole" type="server"/>
     <export function="interactDefence" type="server"/>
     <export function="buildDefence" type="server"/>
     <export function="removeDefence" type="server"/>
+    <export function="tweakItem" type="server"/>
+    <export function="finishTweak" type="server"/>
+    <export function="tweakIsOpen" type="client"/>
+    <export function="tweakFinish" type="client"/>
 </meta>

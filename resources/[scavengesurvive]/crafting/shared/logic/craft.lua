@@ -52,6 +52,7 @@ addRecipe({
 addRecipe({
     name = "Campfire",
     kind = "ground",
+    tweak = false, -- upstream: the campfire and the plot pole are not nudged after building
     tool = "FireLighter",
     buildTime = 3000,
     ingredients = {
@@ -170,6 +171,7 @@ addRecipe({
 addRecipe({
     name = "PlotPole",
     kind = "ground",
+    tweak = false,
     tool = "Screwdriver",
     buildTime = 8000,
     ingredients = {

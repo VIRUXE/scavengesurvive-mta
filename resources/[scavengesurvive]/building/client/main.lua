@@ -7,3 +7,4 @@ local function loadModule(path)
 end
 
 loadModule("client/keypad.lua")
+loadModule("client/tweak.lua")

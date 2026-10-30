@@ -128,6 +128,7 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
       - Keypad security: Hold `Keypad` item and press **F** on defence: installs keypad and opens 12-key Keypad UI to set 4-digit code. Interacting with locked defence opens Keypad UI: enter 4-digit code with mouse/numpad, press `>` (Enter); correct code grants access and swings door open for 5 seconds; wrong code plays error sound.
       - `LockBreaker` & `HackDevice`: Hold `LockBreaker` on locked door -> 10s break action removes lock. Hold `HackDevice` on keypad -> 8s bypass timer swings door open.
       - `PlotPole`: Placing `PlotPole` creates 20m claimed territory colshape: entering displays `PLOTPOLEENT` action text; leaving displays `PLOTPOLEEXT`.
+      - Tweaking (#133, step 36): building a defence or constructing an item on the ground opens the tweak pad.
 22. **Staff & Ops** (#41, #42, #43, #44). Give A level 4 (`UPDATE accounts SET admin_level = 4 WHERE name = 'A'`,
     relog) and leave B at level 0. One-client run of 2026-10-23: `docs/reviews/2026-10-23-m7-live.md` (a, c, d, e, g, h
     and the self-only parts of b and f pass; the kick/ban/mute of B, the whitelist and warning kicks, spectate, duty
@@ -402,3 +403,21 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
     - f. **Holster (#123).** Holding a holsterable weapon (`M9Pistol`, `DesertEagle`, `AK47Rifle`), press **Y** to
       holster it with its holster animation (300 ms for thigh pistols, 800 ms for back rifles); hands become empty.
       With empty hands and a holstered weapon, HUD displays `Y Draw weapon` and pressing **Y** equips it.
+36. **Tweaking a built item** (#133, upstream `item-tweak.pwn`). One client; `/additem CrateDoor`, `/additem Screwdriver`,
+    `/additem Hammer`, two `/additem WoodLog`.
+    - a. Drop the Crate Door, hold the Screwdriver and press **F** on it: after the build hold, `Defence built` and a pad
+      of eight buttons appears at the right of the screen (`L`, `R`, `^`, `<`, `>`, `v`, `Edit: [LALT]`, `Done`), a
+      yellow arrow lies on the door pointing at its front (the side a Crowbar cannot take it down from), and the help
+      tip says to move away from the item and press LALT for the mouse (if `/tooltips` is on).
+    - b. Press LALT: the mouse appears and the long button reads `Move`. Click `^` while standing next to the door:
+      `Cannot move item with players nearby`. Click `Move` (mouse gone), walk 3 m away, LALT, click `^` a few times
+      and hold it: the door steps 5 cm forward per click and keeps stepping while the button is held; `<` and `>`
+      step sideways, `L` and `R` turn it 2 degrees and the arrow turns with it.
+    - c. Keep stepping one way: after about 1.5 m, `Too far from original build position` and the door stays.
+    - d. Walk to within 2 m of the door and click: `Cannot move item with players nearby`. A second player standing
+      next to it is told `You are blocking an item from being built, please stand back`.
+    - e. Click `Done` (or press Enter with the mouse up): `Tweaking finished`, pad and arrow gone, the door stays
+      where it was nudged (`rr items` keeps it there). **F** did nothing while the pad was up; **I**, **N** and
+      **Y** end the tweak before doing their own thing.
+    - f. Drop the two Wood Logs, hold the Hammer and press **F**: the `Barricade` is built and the pad opens without
+      an arrow; a Campfire (Fire Lighter on the logs) or a Plot Pole opens no pad, as upstream.

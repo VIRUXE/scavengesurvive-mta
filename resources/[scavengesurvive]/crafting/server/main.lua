@@ -199,11 +199,17 @@ local function tryGroundCraft(player, _cid, held, px, py, pz, rz, int, dim, quie
                         exports.items:refreshPlayer(c2.player)
                         exports.character:gainSkill(c2.player, c2.skill)
                         toast(c2.player, "CRAFTED")
+                        -- upstream: the builder nudges the new item into place (building, #133)
+                        local newId = res.payload and tonumber(res.payload.item_id)
+                        local building = c2.tweak and newId and getResourceFromName("building")
+                        if building and getResourceState(building) == "running" then
+                            exports.building:tweakItem(c2.player, newId)
+                        end
                     else
                         toast(c2.player, res and res.code or "DB_ERROR")
                     end
                 end,
-                { player = pl, skill = rec.result.uname }
+                { player = pl, skill = rec.result.uname, tweak = rec.tweak ~= false }
             )
         end, ms, 1, c.player, recipe, itemsByUname, px, py, pz, rz, int, dim)
         activeHold[c.player] = { timer = timer, action = "construct" }

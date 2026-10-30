@@ -50,7 +50,7 @@ Legend: **Port** = reimplement behaviour in Lua · **Replace** = MTA-native mech
 | Item framework libs (item, inventory, container, craft) | Port | rewritten as Lua modules backed by MariaDB rows (item graph in DB) |
 | inventory-dialog / container-dialog / y_dialog | Replace | client-side UI (dx or CEGUI); SA-MP dialogs do not exist |
 | `core/ui/*` textdraws (status, radio, watch, tool-tip, hold-action, keypad, body-preview, key-actions) | Replace | dx HUD, `bindKey`; progress2 → dx bars |
-| `core/world/loot.pwn`, `supply-crate.pwn`, `weapons-cache.pwn`, `fuel.pwn`, `explosive.pwn`, `tree.pwn`, `item-tweak.pwn`, `craft-construct.pwn` | Port | native objects/colshapes; streamer plugin not needed |
+| `core/world/loot.pwn`, `supply-crate.pwn`, `weapons-cache.pwn`, `fuel.pwn`, `explosive.pwn`, `tree.pwn`, `item-tweak.pwn`, `craft-construct.pwn` | Port | native objects/colshapes; streamer plugin not needed. `item-tweak.pwn` as built (2026-10-30, #133): `building/server/tweak.lua` + `building/client/tweak.lua`; the pad is dx buttons on the right edge, the mouse comes with the walk key (LALT), the arrow is `dxDrawLine3D`, every click is one `UPDATE items SET x, y, rz` re-read from the row, and the hud's drop, put-away and inventory keys end the tweak where upstream hooked those actions |
 | `core/vehicle/*` (vehicle, type, player-vehicle, spawn, trunk, repair, lock, lock-break, locksmith, carmour, interact) | Port | |
 | `core/vehicle/trailer.pwn` | Replace | `attachTrailerToVehicle` |
 | `core/vehicle/anti-ninja.pwn`, `bike-collision.pwn` | Drop | SA-MP sync bug workarounds: MTA has native server-authoritative vehicle entry (`onVehicleStartEnter` cancel) and native bike physics, rendering ninja-jacking and dummy collision shields obsolete (#33) |

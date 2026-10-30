@@ -42,8 +42,8 @@ files["resources/**/items/client/**"] = { std = "lua51+mta_shared+mta_client", g
 files["resources/**/attachedit/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "rcon" }, read_globals = { "fileSetPos" } }
 -- getVehicleWheelStates and getVehicleLightState postdate the generated .luacheck/mta_server.lua list
 files["resources/**/vehicles/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "getVehicleDbId", "countVehicles", "respawnAll", "getVehicleFuel", "setVehicleFuel", "getVehicleLockState", "setVehicleLockState", "getVehicleKeyCode", "setVehicleKeyCode", "getVehicleContainerId" }, read_globals = { "attachTrailerToVehicle", "detachTrailerFromVehicle", "getVehicleEngineState", "getVehicleController", "setVehicleDoorOpenRatio", "getVehicleOverrideLights", "setVehicleOverrideLights", "getVehicleTowedByVehicle", "getVehicleTowingVehicle", "getVehicleWheelStates", "getVehicleLightState" } }
-files["resources/**/building/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "isInsideAnyPlotPole", "interactDefence", "buildDefence", "removeDefence", "submitPasscode", "installKeypad" } }
-files["resources/**/building/client/**"] = { std = "lua51+mta_shared+mta_client", read_globals = { "playSoundFrontEnd" } }
+files["resources/**/building/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "isInsideAnyPlotPole", "interactDefence", "buildDefence", "removeDefence", "submitPasscode", "installKeypad", "tweakItem", "finishTweak" } }
+files["resources/**/building/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "tweakIsOpen", "tweakFinish" }, read_globals = { "playSoundFrontEnd" } }
 files["resources/**/crafting/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "groundCraft", "deconstruct", "workbenchCraft", "isConstructionTool" } }
 -- clearChatBox postdates the generated .luacheck/mta_server.lua list
 files["resources/**/staff/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "getLevel", "getMotd", "isOnDuty", "isMuted", "logAction", "mutePlayer", "getLevelColour", "runCommand" }, read_globals = { "clearChatBox" } }
