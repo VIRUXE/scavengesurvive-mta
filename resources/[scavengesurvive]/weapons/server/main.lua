@@ -1,5 +1,6 @@
 local net = loadstring(exports.lib:getModule("net"), "=lib/net.lua")()
 local util = loadstring(exports.lib:getModule("util"), "=lib/util.lua")()
+local db = loadstring(exports.lib:getModule("db"), "=lib/db.lua")()
 local wound
 do
     local f = fileOpen("shared/logic/wound.lua", true)
@@ -11,6 +12,15 @@ end
 local MAX_LOSS = 200
 local typeCache = {}
 local lastHit = {} -- lastHit[attacker][victim] = tick of the last accepted hit
+local settings = {} -- gamemode settings map (db.settings): vehicles.damage_bleed_mult, vehicles.damage_knock_mult
+
+addEventHandler("onResourceStart", resourceRoot, function()
+    if db.connect("weapons") then
+        db.settings(function(map)
+            settings = map
+        end)
+    end
+end)
 
 local function itemType(uname)
     if typeCache[uname] == nil then
@@ -27,13 +37,104 @@ local function report(victim, bleed, hp, bodypart)
     triggerClientEvent(victim, "woundInflicted", victim, bleed, hp, bodypart)
 end
 
-local function environmental(victim, weapon, bodypart, loss)
-    local hp, bleed = wound.environmental(weapon, loss)
-    if hp <= 0 and bleed <= 0 then
+-- the wound's knockout roll (upstream damage.pwn:130-153) from the stats after the wound: the body part scales
+-- knockMult, a hat softens a headshot's chance, duration and chance grow with the wound count and the total bleed
+local function rollKnockout(victim, knockMult, bodypart)
+    knockMult = tonumber(knockMult) or 0
+    if knockMult <= 0 then
         return
     end
-    exports.character:applyWound(victim, bleed, hp, false, wound.cause(weapon))
-    report(victim, bleed, hp, bodypart)
+    local st = exports.character:getStats(victim)
+    if not st or st.hp <= 0 then
+        return
+    end
+    local km = knockMult
+    if bodypart == 9 and getElementData(victim, "items.hat") then
+        km = km * 0.4
+    end
+    local chance = wound.knockoutChance(km, bodypart, st.wounds, st.bleed)
+    if math.random() * 100 < chance then
+        local koMs = wound.knockoutDuration(knockMult, bodypart, st.wounds, st.bleed, st.hp)
+        if koMs > 0 then
+            exports.character:knockOutPlayer(victim, koMs)
+        end
+    end
+end
+
+-- the vehicle behind a ram or run-over report: MTA names the vehicle as the attacker, a player when it is the driver
+local function rammingVehicle(attacker)
+    if not isElement(attacker) then
+        return nil
+    end
+    local kind = getElementType(attacker)
+    if kind == "vehicle" then
+        return attacker
+    elseif kind == "player" then
+        return getPedOccupiedVehicle(attacker)
+    end
+    return nil
+end
+
+-- a player the wound is credited to (kill, combat window): alive, in the game, not the victim, not staff on duty,
+-- not knocked out (upstream PlayerInflictWound drops a knocked-out issuer)
+local function creditable(victim, player)
+    if not isPlayer(player) or player == victim then
+        return nil
+    end
+    if not exports.character:getCharacterId(player) or isPedDead(player) then
+        return nil
+    end
+    if getElementData(player, "staff.duty") == true or exports.character:isKnockedOut(player) then
+        return nil
+    end
+    return player
+end
+
+-- Damage no held item is behind (upstream damage-world.pwn, damage-vehicle.pwn, damage-explosive.pwn): a fall,
+-- drowning, fire, a vehicle ram and an explosion. The ram is the driver's wound (its speed, their kill), an
+-- explosion its creator's when MTA names a player; everything else only hurts the reporter.
+local function nonFirearm(victim, attacker, weapon, loss)
+    -- staff on duty are out of the game (upstream IsPlayerOnAdminDuty returns before any of these)
+    if getElementData(victim, "staff.duty") == true then
+        return
+    end
+    local ctx = {}
+    local credit
+    if weapon == 49 or weapon == 50 then
+        local veh = rammingVehicle(attacker)
+        ctx.velocity = wound.velocity(getElementVelocity(veh or victim))
+        ctx.bleedMult = tonumber(settings["vehicles.damage_bleed_mult"])
+        ctx.knockMult = tonumber(settings["vehicles.damage_knock_mult"])
+        credit = veh and creditable(victim, getVehicleController(veh)) or nil
+    elseif weapon == 51 then
+        credit = creditable(victim, attacker)
+    end
+    local w = wound.nonFirearm(weapon, loss, ctx)
+    if not w then
+        return
+    end
+    if w.knockoutMs and w.knockoutMs > 0 then
+        exports.character:knockOutPlayer(victim, w.knockoutMs)
+    end
+    if w.hp <= 0 and w.bleed <= 0 then
+        return
+    end
+    exports.character:applyWound(victim, w.bleed, w.hp, credit or false, w.cause)
+    rollKnockout(victim, w.knockMult, w.bodypart)
+    report(victim, w.bleed, w.hp, w.bodypart)
+    if credit then
+        util.log(
+            "weapons",
+            "info",
+            "%s %s %s at %.0f km/h bleed %.4f hp %.1f",
+            getPlayerName(credit),
+            w.cause == "vehicle" and "rammed" or "blew up",
+            getPlayerName(victim),
+            ctx.velocity or 0,
+            w.bleed,
+            w.hp
+        )
+    end
 end
 
 -- bleed for a player hit, or nil when the attacker's held item does not justify the reported weapon.
@@ -82,10 +183,10 @@ net.handler("weaponHitReported", function(victim, attacker, weapon, bodypart, lo
     if not exports.character:getCharacterId(victim) or isPedDead(victim) then
         return
     end
-    -- vehicle rams / explosions / fire can name a player attacker, but no held item can justify them:
-    -- treat them as environmental (only hurts the reporter, no kill credit)
+    -- a fall, drowning, fire, a ram or an explosion: no held item justifies them, so they take their own path
+    -- (nonFirearm), where only a ram's driver or an explosion's creator gets the kill
     if not isPlayer(attacker) or attacker == victim or wound.isEnvironmental(weapon) then
-        return environmental(victim, weapon, bodypart, loss)
+        return nonFirearm(victim, attacker, weapon, loss)
     end
     if
         not exports.character:getCharacterId(attacker)
@@ -158,20 +259,7 @@ net.handler("weaponHitReported", function(victim, attacker, weapon, bodypart, lo
     end
     local hp = wound.hpLoss(bleed)
     exports.character:applyWound(victim, bleed, hp, attacker, wound.killCause(weapon)) -- the body's reason (#139)
-    local st = exports.character:getStats(victim)
-    if st and st.hp > 0 then
-        local km = knockMult
-        if bodypart == 9 and getElementData(victim, "items.hat") then
-            km = km * 0.4
-        end
-        local chance = wound.knockoutChance(km, bodypart, st.wounds, st.bleed)
-        if math.random() * 100 < chance then
-            local koMs = wound.knockoutDuration(knockMult, bodypart, st.wounds, st.bleed, st.hp)
-            if koMs > 0 then
-                exports.character:knockOutPlayer(victim, koMs)
-            end
-        end
-    end
+    rollKnockout(victim, knockMult, bodypart)
     report(victim, bleed, hp, bodypart)
     if bodypart == 9 then
         exports.items:popHeadgear(victim) -- the hat and mask fall off (char/headgear-pop.pwn, #137)

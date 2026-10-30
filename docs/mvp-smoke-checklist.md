@@ -520,4 +520,17 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
     - b. Find a looted Heart Shaped Box (a `HeartShapedBox` row with a `loot_spawn_id`, or `rr loot` near a
       spawn that rolls one): opened on the ground it holds a Dildo, Flowers, an Antiseptic Bandage and a Zorro
       Mask; an `/additem HeartShapedBox` box is empty.
-
+45. **Falls, drowning, rams and explosions** (#144, upstream `weapon/damage-world.pwn`, `damage-vehicle.pwn`,
+    `damage-explosive.pwn`). Two clients A and B.
+    - a. A jumps off a roof two storeys up: most landings print nothing (GTA's fall damage is cancelled, the wound
+      is a roll); a hard one shows `Wounded: left leg` or `right leg` with a small hp loss and bleeding, sometimes
+      a knockout. A step off a kerb never wounds.
+    - b. A swims under water until out of breath: each drowning tick knocks A out for 1.5 to 3 s (`KO_shot_stom`,
+      the countdown bar) and takes up to 10 hp; surfacing ends it.
+    - c. A drives into B at speed: B reads `Wounded: torso` (or a leg) with bleed growing with A's speed; past
+      55 km/h B is often knocked out for `1 + speed / 20` seconds on top. B's combat window opens (watch red) and
+      a death gives A the kill (`[KILL]` in the log, the body reads "They bled to death."). At walking pace no
+      wound at all; the server log reads `A rammed B at N km/h`.
+    - d. A `/additem TntTimebomb`, plants it next to B and steps back: B is wounded (`torso` or a leg, bleeding)
+      and, close to the blast, knocked out. A standing in a campfire loses a tenth of GTA's burn damage.
+    - e. Give A duty (`/duty`): none of a to d touches A.

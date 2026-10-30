@@ -98,26 +98,94 @@ function wound.hpLoss(bleed)
     return bleed * 100
 end
 
--- returns hpLoss, bleedAdd for damage without a player attacker
-function wound.environmental(weaponId, loss)
+-- Damage no held item is behind: upstream damage-world.pwn (a fall 54, drowning 53, fire 37),
+-- damage-vehicle.pwn (a ram 49, run over 50) and damage-explosive.pwn (51), each an OnPlayerTakeDamage hook.
+-- Upstream wrote its own hp counter back over the player's health every update (player.pwn:403), so GTA's own
+-- damage never counted there: these wounds were the whole effect. loss is GTA's health loss (upstream's amount),
+-- ctx.velocity the ramming vehicle's speed from wound.velocity, ctx.bleedMult / ctx.knockMult the
+-- vehicles.damage_* settings (upstream vehicle.damage/bleed-mult and knock-mult, 1.0), rnd draws in [0, 1).
+-- Returns nil when nothing happens, else { hp, bleed, knockMult, knockoutMs, bodypart, cause }: hp and bleed make
+-- the wound, knockMult feeds the wound's knockout roll, knockoutMs is a knockout of its own (drowning, a fast ram).
+wound.FALL_MIN_LOSS = 10 -- damage-world.pwn:38: amount > 10.0
+wound.RAM_KNOCK_VELOCITY = 55 -- damage-vehicle.pwn:57
+wound.DROWN_MAX_HP = 10 -- port: GTA's drowning tick, capped (upstream's resync made drowning cost no hp)
+wound.VELOCITY_SCALE = 150 -- player.pwn:383: |velocity| * 150, the km/h the speed readout shows
+
+function wound.velocity(vx, vy, vz)
+    vx, vy, vz = tonumber(vx) or 0, tonumber(vy) or 0, tonumber(vz) or 0
+    return math.sqrt(vx * vx + vy * vy + vz * vz) * wound.VELOCITY_SCALE
+end
+
+-- random(2) ? BODY_PART_TORSO : (random(2) ? BODY_PART_RIGHT_LEG : BODY_PART_LEFT_LEG)
+function wound.torsoOrLeg(rnd)
+    if rnd() < 0.5 then
+        return 3
+    end
+    return rnd() < 0.5 and 8 or 7
+end
+
+function wound.nonFirearm(weaponId, loss, ctx, rnd)
+    rnd = rnd or math.random
+    ctx = ctx or {}
+    loss = math.max(0, tonumber(loss) or 0)
     if weaponId == 54 then
-        return math.min(loss, 30) * 0.5, loss * 2.5 * 0.00024
+        -- damage-world.pwn _DoFallDamage: a leg wound with chance multiplier % (multiplier = amount * 2.5)
+        if loss <= wound.FALL_MIN_LOSS then
+            return nil
+        end
+        local mult = loss * 2.5
+        if rnd() * 100 >= mult then
+            return nil
+        end
+        local bleed = mult > 1.0 and mult * 0.00024 or 0
+        return {
+            hp = wound.hpLoss(bleed),
+            bleed = bleed,
+            knockMult = mult * 0.9,
+            bodypart = rnd() < 0.5 and 7 or 8,
+            cause = "fall",
+        }
+    elseif weaponId == 53 then
+        -- damage-world.pwn: KnockOutPlayer(1500 + random(1500)) and no wound; the port keeps GTA's drowning hp loss
+        return {
+            hp = math.min(loss, wound.DROWN_MAX_HP),
+            bleed = 0,
+            knockoutMs = 1500 + math.floor(rnd() * 1500),
+            bodypart = 3,
+            cause = "drowned",
+        }
+    elseif weaponId == 37 then
+        -- damage-world.pwn: GivePlayerHP(-(amount * 0.1))
+        return { hp = loss * 0.1, bleed = 0, bodypart = 3, cause = "burned" }
+    elseif weaponId == 49 or weaponId == 50 then
+        -- damage-vehicle.pwn _DoVehicleCollisionDamage: bleed from the driver's speed, a knockout past 55 km/h
+        local v = math.max(0, tonumber(ctx.velocity) or 0)
+        local bleed = (0.04 * (v * 0.02)) * (tonumber(ctx.bleedMult) or 1.0)
+        local koMs = 0
+        if v > wound.RAM_KNOCK_VELOCITY and rnd() * v > wound.RAM_KNOCK_VELOCITY then
+            koMs = math.floor((1000 + ((v * 0.05) * 1000)) * (tonumber(ctx.knockMult) or 1.0) + 0.5)
+        end
+        return {
+            hp = wound.hpLoss(bleed),
+            bleed = bleed,
+            knockMult = 1.0,
+            knockoutMs = koMs,
+            bodypart = wound.torsoOrLeg(rnd),
+            cause = "vehicle",
+        }
+    elseif weaponId == 51 then
+        -- damage-explosive.pwn _DoExplosiveDamage: a burn wound, knockmult 150 + amount
+        local bleed = 0.5 * (loss / 80.0)
+        return {
+            hp = wound.hpLoss(bleed),
+            bleed = bleed,
+            knockMult = 150.0 + loss,
+            bodypart = wound.torsoOrLeg(rnd),
+            cause = "explosion",
+        }
     end
-    if weaponId == 53 then
-        return math.min(loss, 10), 0
-    end
-    if weaponId == 37 then
-        return loss * 0.1, 0
-    end
-    if weaponId == 51 then
-        local bleed = 0.5 * (loss / 80)
-        return wound.hpLoss(bleed), bleed
-    end
-    if weaponId == 49 or weaponId == 50 then
-        local bleed = 0.04 * (loss * 0.02)
-        return wound.hpLoss(bleed), bleed
-    end
-    return math.min(loss, 20), 0
+    -- anything else without a player behind it (upstream let GTA's damage vanish; the port takes it, capped)
+    return { hp = math.min(loss, 20), bleed = 0, bodypart = 3, cause = "killed" }
 end
 
 -- damage types that no held item can justify (fall, drown, fire, explosion, vehicle)
