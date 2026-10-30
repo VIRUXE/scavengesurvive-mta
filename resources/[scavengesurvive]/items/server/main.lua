@@ -282,6 +282,7 @@ addEventHandler("onResourceStart", resourceRoot, function()
         state.settings = map
     end)
     fixed.start()
+    machinesSrv.start()
     -- restart: every spawned character gets its held item and worn bag back and a fresh world projection
     for _, p in ipairs(getElementsByType("player")) do
         if charId(p) then

@@ -118,8 +118,9 @@ return function(ctx)
         end)
     end
 
-    -- machines that were cooking when the resource stopped pick their timers back up
-    addEventHandler("onResourceStart", resourceRoot, function()
+    -- machines that were cooking when the resource stopped pick their timers back up; server/main.lua calls it
+    -- once the database is connected
+    function M.start()
         db.query(COOKING, {}, function(rows)
             local t = now()
             for _, r in ipairs(rows or {}) do
@@ -129,7 +130,7 @@ return function(ctx)
                 end
             end
         end)
-    end)
+    end
 
     -- The interact key -----------------------------------------------------------------------------------------
 
