@@ -1,6 +1,7 @@
--- Buttons, doors and the puzzles on the client (shared/logic/buttons.lua, doors.lua, puzzles.lua). Every client builds
--- the same registry, places the doors and the puzzles' objects, and moves its own copies when the server's state
--- (buttonsStateChanged) says so. hud's interact key reaches buttonInteract() through features.lua's tryInteract().
+-- Buttons, doors, the puzzles and Area 69 on the client (shared/logic/buttons.lua, doors.lua, puzzles.lua,
+-- area69.lua). Every client builds the same registry, places the doors and the puzzles' objects, and moves its own
+-- copies when the server's state (buttonsStateChanged) says so. hud's interact key reaches buttonInteract() through
+-- features.lua's tryInteract().
 local function loadFile(path, chunkName)
     local f = fileOpen(path, true)
     local src = fileRead(f, fileGetSize(f))
@@ -10,11 +11,13 @@ end
 local buttons = loadFile("shared/logic/buttons.lua", "=world/buttons.lua")
 local doors = loadFile("shared/logic/doors.lua", "=world/doors.lua")
 local puzzles = loadFile("shared/logic/puzzles.lua", "=world/puzzles.lua")
+local area69 = loadFile("shared/logic/area69.lua", "=world/area69.lua")
 local data = loadFile("data/puzzles.lua", "=world/puzzles_data.lua")
 
 local reg = buttons.new()
 doors.register(reg, buttons)
 puzzles.register(reg, buttons)
+area69.register(reg, buttons)
 local pstate = puzzles.newState()
 local shown = nil -- door id -> state the object is drawn at; nil until the server's first state arrives
 local doorObjects, keypad, screen = {}, nil, nil
@@ -121,6 +124,14 @@ addEventHandler("puzzleKeypadSparked", resourceRoot, function()
     end, puzzles.KEYPAD_FALL_DELAY_MS, 1)
 end)
 
+-- a hack that failed at an Area 69 keypad (upstream kp_HackFailParticle: the spark at the player's feet for 2 s)
+addEventHandler("puzzleSparkShown", resourceRoot, function(x, y, z)
+    local spark = place(puzzles.SPARK.model, { x, y, z, 0, 0, 0 }, getElementDimension(localPlayer))
+    if spark then
+        setTimer(destroyElement, puzzles.SPARK_MS, 1, spark)
+    end
+end)
+
 addEventHandler("buttonMessageShown", localPlayer, function(title, body)
     exports.ui:dialogOpen("world:button", "msgbox", title, body, "Close", "")
 end)
@@ -138,7 +149,11 @@ addEventHandler("buttonViewToggled", localPlayer, function()
     end
 end)
 
+-- a puzzle's button that is gone, and an Area 69 door button whose doors are all open (nothing left to do there)
 local function hidden(b)
+    if b.owner == "area69" then
+        return area69.allOpen(reg, b.keypad)
+    end
     return b.owner == "puzzles" and puzzles.hidden(pstate, b)
 end
 

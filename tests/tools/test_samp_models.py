@@ -86,8 +86,8 @@ def test_map_models_are_read_from_object_rows_only(tmp_path):
     maps.mkdir()
     (maps / "LS.lua").write_text(lua, encoding="utf-8")
     (maps / "index.lua").write_text("return { LS = { objects = 2, removals = 1 } }\n", encoding="utf-8")
-    assert m.all_models_used(items, maps) == [3168, 11730, 16203, 18633, 18724, 19087, 19312, 19475, 19477, 19836]
-    assert m.all_models_used(items, tmp_path / "missing") == [11730, 18633, 18724, 19087, 19475, 19477, 19836]
+    assert m.all_models_used(items, maps) == [3168, 11730, 16203, 18633, 18724, 19087, 19312, 19313, 19475, 19477, 19836]
+    assert m.all_models_used(items, tmp_path / "missing") == [11730, 18633, 18724, 19087, 19313, 19475, 19477, 19836]
 
 
 def test_port_hat_models_are_not_samp_models():

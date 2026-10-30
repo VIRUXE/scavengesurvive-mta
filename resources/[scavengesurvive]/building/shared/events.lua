@@ -10,6 +10,8 @@ addEvent("itemTweakRequested", true)
 -- server to client / client-local
 addEvent("keypadOpened", true)
 addEvent("keypadClosed", true)
+addEvent("keypadHackStarted", true)
+addEvent("keypadHackEnded", true)
 addEvent("doorStateChanged", true)
 addEvent("toastShown", true)
 addEvent("vehicleHoldStarted", true)

@@ -7,6 +7,16 @@ local isOpen = false
 local currentDefenceId = nil
 local isSetupMode = false
 local enteredCode = ""
+-- a Hack Device at work (world's Area 69, upstream HackKeypadUpdate): the display runs random codes, then shows the
+-- one the hack puts in; typing waits until it is done
+local hackValue, hackTimer = nil, nil
+
+local function stopHack()
+    if isTimer(hackTimer) then
+        killTimer(hackTimer)
+    end
+    hackValue, hackTimer = nil, nil
+end
 
 local function playClickSound()
     playSoundFrontEnd(1)
@@ -28,6 +38,7 @@ local function close()
     currentDefenceId = nil
     isSetupMode = false
     enteredCode = ""
+    stopHack()
     showCursor(false)
 end
 
@@ -49,7 +60,7 @@ local function submit()
 end
 
 local function inputChar(ch)
-    if not isOpen then
+    if not isOpen or hackTimer then
         return
     end
     if string.len(enteredCode) < 4 then
@@ -115,7 +126,8 @@ local function draw()
     dxDrawLine(lcdX, lcdY, lcdX, lcdY + lcdH, tocolor(50, 70, 30, 255))
     dxDrawLine(lcdX + lcdW, lcdY, lcdX + lcdW, lcdY + lcdH, tocolor(50, 70, 30, 255))
 
-    local displayStr = defences.formatKeypadDisplay(enteredCode)
+    local displayStr = hackValue and hackValue:gsub("(%d)", "%1 "):sub(1, -2)
+        or defences.formatKeypadDisplay(enteredCode)
     dxDrawText(
         displayStr,
         lcdX,
@@ -260,6 +272,21 @@ end)
 
 addEventHandler("keypadClosed", root, function()
     close()
+end)
+
+addEventHandler("keypadHackStarted", root, function(ms, tickMs)
+    stopHack()
+    hackValue = tostring(math.random(1000, 9998))
+    hackTimer = setTimer(function()
+        hackValue = tostring(math.random(1000, 9998))
+    end, tickMs, math.max(1, math.floor(ms / tickMs)))
+end)
+
+addEventHandler("keypadHackEnded", root, function(value)
+    if isTimer(hackTimer) then
+        killTimer(hackTimer)
+    end
+    hackTimer, hackValue = nil, tostring(value)
 end)
 
 return {

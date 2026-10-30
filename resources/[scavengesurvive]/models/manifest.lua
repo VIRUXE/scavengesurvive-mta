@@ -60,6 +60,7 @@ return {
     [19280] = { dff = "carrooflight1", txd = "matlights", dist = 120 },
     [19303] = { dff = "pd_jail_door02", txd = "pd_jail_door02", dist = 299 },
     [19312] = { dff = "a51fencing", txd = "a51fencing", dist = 200 },
+    [19313] = { dff = "a51fensin", txd = "a51fencing", dist = 200 },
     [19317] = { dff = "bassguitar01", txd = "bassguitar01", dist = 100 },
     [19318] = { dff = "flyingv01", txd = "flyingv01", dist = 100 },
     [19319] = { dff = "warlock01", txd = "warlock01", dist = 100 },

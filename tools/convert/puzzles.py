@@ -1,5 +1,6 @@
-"""The puzzles' static objects (upstream gamemodes/sss/world/puzzles/{ranch,mtchill,codehunt}.pwn CreateDynamicObject,
-with RANCH_STUFF_VIRTUALW as world 1) -> resources/[scavengesurvive]/world/data/puzzles.lua.
+"""The puzzles' static objects (upstream gamemodes/sss/world/puzzles/{ranch,mtchill,codehunt,area69}.pwn
+CreateDynamicObject and CreateObject, with RANCH_STUFF_VIRTUALW as world 1) -> resources/[scavengesurvive]/world/data/
+puzzles.lua.
 
 Most of Mt Chiliad's radio station and the SF lockup also stand in scriptfiles/maps (ChilRadio.map, SfLockup.map),
 which the maps resource already builds: an object found there (same model and position) is left out. The objects the
@@ -15,13 +16,13 @@ from pathlib import Path
 from .common import HEADER, NUM, UnparsedLine, read_text, write_text
 from .maps import DEFAULT_RANGE, map_files, parse_map
 
-PUZZLES = ["ranch", "mtchill", "codehunt"]
+PUZZLES = ["ranch", "mtchill", "codehunt", "area69"]
 WORLDS = {"RANCH_STUFF_VIRTUALW": 1}
 STATEFUL = {"CaveLift", "RanchPcObj", "ch_keypad", "ch_keypadprt"}
 BLOCK_COMMENT_RE = re.compile(r"/\*.*?\*/", re.S)
 LINE_COMMENT_RE = re.compile(r"//[^\n]*")
-OBJECT_RE = re.compile(r"(?:(\w+)\s*=\s*)?CreateDynamicObject\s*\(([^()]*)\)")
-ANY_RE = re.compile(r"CreateDynamicObject\s*\(")
+OBJECT_RE = re.compile(r"(?:(\w+)\s*=\s*)?Create(?:Dynamic)?Object\s*\(([^()]*)\)")
+ANY_RE = re.compile(r"Create(?:Dynamic)?Object\s*\(")
 NUM_RE = re.compile(r"^\s*" + NUM + r"\s*$")
 ITEM_RE = re.compile(r"(\w+)\s*=\s*CreateItem\s*\(\s*item_(\w+)\s*,([^()]*)\)")
 

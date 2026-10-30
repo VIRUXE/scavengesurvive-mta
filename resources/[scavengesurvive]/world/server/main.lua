@@ -24,6 +24,7 @@ local buttonsSrv = loadFile("server/buttons.lua", "=world/server/buttons.lua")({
     buttons = loadFile("shared/logic/buttons.lua", "=world/buttons.lua"),
     doors = loadFile("shared/logic/doors.lua", "=world/doors.lua"),
     puzzles = puzzles,
+    area69 = loadFile("shared/logic/area69.lua", "=world/area69.lua"),
 })
 
 -- upstream creates the zone files' fixed items and the puzzle items on every start; here the ones gone from the

@@ -242,9 +242,12 @@ describe("world puzzles", function()
     end)
 
     describe("data", function()
-        it("has the 179 objects not in scriptfiles/maps", function()
-            assert.are.equal(179, #data.objects)
-        end)
+        it(
+            "has the 332 objects not in scriptfiles/maps (179 for the ranch and radio station, Area 69's 153)",
+            function()
+                assert.are.equal(332, #data.objects)
+            end
+        )
 
         it("has the 4 tagged puzzle items, each tag one the logic asks for", function()
             local byTag = {}
