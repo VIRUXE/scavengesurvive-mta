@@ -101,16 +101,21 @@ addEventHandler("onPlayerTriggerEventThreshold", root, function(eventName)
     kick(source, "event flood" .. (eventName and (": " .. tostring(eventName)) or ""))
 end)
 
+-- Only a server-only event (added, not remote) is proof of a forged trigger. An event that is not added at all is
+-- also what a legitimate client sends while a resource restarts (its client half still running), so that one is
+-- logged instead of kicked.
 addEventHandler("onPlayerTriggerInvalidEvent", root, function(eventName, isAdded, isRemote)
-    kick(
-        source,
-        string.format(
-            "invalid server event %s (added=%s remote=%s)",
-            tostring(eventName),
-            tostring(isAdded),
-            tostring(isRemote)
-        )
+    local detail = string.format(
+        "invalid server event %s (added=%s remote=%s)",
+        tostring(eventName),
+        tostring(isAdded),
+        tostring(isRemote)
     )
+    if isAdded then
+        kick(source, detail)
+    else
+        log(source, "event", detail)
+    end
 end)
 
 -- Preserve the upstream ping policy while tolerating transient spikes. Staff on duty are exempt.

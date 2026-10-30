@@ -14,7 +14,7 @@ detection-field parity.
 | Ammo and magazine | `items` owns held weapon ammo and decrements the server state for every accepted shot. |
 | Ping | Every second, kick after 10 consecutive samples above `player.ping_limit` (default 400 ms; +100 ms with 10 or fewer players). New connections receive a 10-second grace period. Staff on duty are exempt. |
 | Client event flood | MTA's `onPlayerTriggerEventThreshold` kicks the client that exceeds the server's configured event trigger threshold. |
-| Invalid client event | MTA's `onPlayerTriggerInvalidEvent` kicks the client that attempts an event that is missing or not remote-enabled. |
+| Invalid client event | MTA's `onPlayerTriggerInvalidEvent` kicks the client that triggers a server-only event (added but not remote-enabled). An event that is not added at all is only logged: a legitimate client sends those while a resource restarts and its client half is still running. |
 | Alt-tab / Idle | Client MTA-focus loss is reported to the server. A player is kicked after `player.max_tab_out_time` seconds (default 60); staff on duty are exempt. Can be toggled on/off or configured via `/idlekick [on|off|<seconds>]` (staff command) and setting `player.idle_kick`. |
 | Detection fields | Four-point XY polygons with a Z band log each player's entry once (`anticheat/server/fields.lua`, pure logic in `shared/logic/fields.lua`). They never punish players. Staff manage them with `/field` in the `staff` resource, see below. |
 

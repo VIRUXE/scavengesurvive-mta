@@ -383,6 +383,8 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
     - e. **Native movement and event guards.** Confirm the deployed server build supports `onPlayerTeleport`,
       `onPlayerTriggerEventThreshold`, and `onPlayerTriggerInvalidEvent`; inspect server logs for a safe test event
       threshold breach in a private test server. No production cheat tools are needed for this smoke step.
+      With a client connected and moving items, `rr items` must not kick it: a `not added` event during the restart
+      shows up as an `[anticheat] ... (event): invalid server event ... (added=false ...)` log line only.
 
 35. **Discord reports of 2026-10-26** (#116, #117, #118, #119, #120, #121, #122, #123). One client.
     - a. **Drinking (#122, #118).** `/additem Bottle` and `/additem GasCan` give empty containers (`Bottle (Empty)`
