@@ -185,6 +185,7 @@ def render_meta(zones: list[str]) -> str:
              '    <file src="shared/logic/placement.lua"/>',
              '    <file src="shared/logic/zones.lua"/>',
              '    <file src="shared/glazed_windows.lua"/>',  # tools/glaze_house_windows.py
+             '    <file src="shared/shell_doors.lua"/>',  # tools/fit_house_doors.py
              '    <file src="data/zones.lua"/>',
              '    <file src="data/index.lua"/>']
     lines += [f'    <file src="data/{z}.lua"/>' for z in zones]

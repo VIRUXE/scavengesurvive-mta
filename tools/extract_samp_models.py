@@ -255,6 +255,12 @@ def hat_files(out_dir: Path) -> list[str]:
     return listed_dffs(out_dir / "hats.lua")
 
 
+def door_files(out_dir: Path) -> list[str]:
+    """DFF and COL files of the house shells' fitted doors listed in <out_dir>/doors.lua (tools/fit_house_doors.py)."""
+    dffs = listed_dffs(out_dir / "doors.lua")
+    return sorted(dffs + [name[:-4] + ".col" for name in dffs])
+
+
 def prop_files(out_dir: Path) -> list[str]:
     """DFF, COL and TXD files of the props the port adds to the world, listed in <out_dir>/props.lua
     (tools/make_ls_hatch.py)."""
@@ -267,7 +273,7 @@ def listed_dffs(manifest: Path) -> list[str]:
     return sorted(f"{name}.dff" for name in re.findall(r'dff = "([^"]+)"', manifest.read_text(encoding="ascii")))
 
 
-def render_meta(entries, peds: list[str] = (), hats: list[str] = (), props: list[str] = ()) -> str:
+def render_meta(entries, peds: list[str] = (), hats: list[str] = (), doors: list[str] = (), props: list[str] = ()) -> str:
     lines = [
         "<meta>",
         '    <info author="scavengesurvive-mta" type="script" name="models" '
@@ -284,6 +290,9 @@ def render_meta(entries, peds: list[str] = (), hats: list[str] = (), props: list
     if hats:
         lines.append('    <file src="hats.lua"/>')
         lines += [f'    <file src="files/{name}"/>' for name in hats]
+    if doors:
+        lines.append('    <file src="doors.lua"/>')
+        lines += [f'    <file src="files/{name}"/>' for name in doors]
     if props:
         lines.append('    <file src="props.lua"/>')
         lines += [f'    <file src="files/{name}"/>' for name in props]
@@ -294,7 +303,7 @@ def render_meta(entries, peds: list[str] = (), hats: list[str] = (), props: list
 
 def write_meta(out_dir: Path) -> None:
     """Regenerates meta.xml from the manifests on disk (manifest.lua for objects, peds.lua for hatless peds, hats.lua
-    for the hats cut off them)."""
+    for the hats cut off them, doors.lua for the house shells' fitted doors)."""
     entries = {}
     manifest = out_dir / "manifest.lua"
     if manifest.is_file():
@@ -307,7 +316,7 @@ def write_meta(out_dir: Path) -> None:
             if txd_model:
                 e["txdModel"] = int(txd_model)
             entries[dff] = e
-    meta = render_meta(entries, ped_files(out_dir), hat_files(out_dir), props=prop_files(out_dir))
+    meta = render_meta(entries, ped_files(out_dir), hat_files(out_dir), door_files(out_dir), props=prop_files(out_dir))
     (out_dir / "meta.xml").write_text(meta, encoding="ascii", newline="\n")
 
 
@@ -385,7 +394,7 @@ def main(argv=None) -> int:
                 path, index = archives[archive]
                 target.write_bytes(read_img_entry(path, index[name]))
     (args.out / "manifest.lua").write_text(render_manifest(entries), encoding="ascii", newline="\n")
-    meta = render_meta(entries, ped_files(args.out), hat_files(args.out), props=prop_files(args.out))
+    meta = render_meta(entries, ped_files(args.out), hat_files(args.out), door_files(args.out), props=prop_files(args.out))
     (args.out / "meta.xml").write_text(meta, encoding="ascii", newline="\n")
     return 1 if problems else 0
 

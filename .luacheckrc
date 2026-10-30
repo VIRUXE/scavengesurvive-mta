@@ -22,7 +22,7 @@ files["resources/**/character/server/**"] = { std = "lua51+mta_shared+mta_server
 files["resources/**/character/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "skillsOpen", "medicalLabel" }, read_globals = { "setCameraDrunkLevel", "setTime", "setWeather", "getPedMoveState", "fxAddBlood" } }
 files["resources/**/items/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "getHeld", "setHeld", "clearHeld", "openTrunkContainer", "closeTrunk", "openWorldContainer", "openSupplyContainer", "closeContainer", "updateHeldData", "createStartingItems", "refreshPlayer", "destroyItem", "destroyWorldItem", "destroyContainerItem", "forgetWorldItem", "dropHeld", "resendWorldItem", "placeOnFurniture", "sendInventory", "isFemaleSkin", "rollSpawnSkin", "meleeHit", "popHeadgear" }, read_globals = { "getWaterLevel" } }
 files["resources/**/explosives/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "detonateItem", "checkTripMine", "linkPhoneBomb" }, read_globals = { "blowVehicle", "createExplosion" } }
-files["resources/**/models/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "resolve", "hatlessSkin", "bareSkin" } }
+files["resources/**/models/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "resolve", "hatlessSkin", "bareSkin" }, read_globals = { "engineSetModelPhysicalPropertiesGroup", "engineGetModelPhysicalPropertiesGroup" } }
 -- restoreWorldModel postdates the generated .luacheck/mta_client.lua list
 files["resources/**/maps/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "getZoneAt", "getPlayerZone" } }
 files["resources/**/maps/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "getMapStats" }, read_globals = { "restoreWorldModel" } }

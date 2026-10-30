@@ -11,7 +11,17 @@ do
 end
 
 local state = {
-    stats = { buildings = 0, objects = 0, skipped = 0, glazed = 0, removals = 0, pending = 0, failed = 0, ms = 0 },
+    stats = {
+        buildings = 0,
+        objects = 0,
+        skipped = 0,
+        glazed = 0,
+        doors = 0,
+        removals = 0,
+        pending = 0,
+        failed = 0,
+        ms = 0,
+    },
     elements = {}, -- every created element, for the stop path
     sampObjects = {}, -- { element = e, model = sampModel } to swap models when the pack (re)loads
     skippedRows = {}, -- SA-MP rows placed nowhere yet; re-queued when the pack loads
@@ -63,7 +73,7 @@ local function place(o)
             if placement.isBreakable(model) then
                 setObjectBreakable(e, true)
             end
-            if not placement.isSwingDoor(model) then
+            if not placement.isSwingDoor(o[1]) then
                 setElementFrozen(e, true)
             end
         end
@@ -149,6 +159,10 @@ addEventHandler("onClientResourceStart", resourceRoot, function()
     local dropped
     queue, dropped = placement.dropGlazedPanes(queue, readLua("shared/glazed_windows.lua") or {})
     state.stats.glazed = dropped
+    -- and hang doors cut to their entrances, in place of upstream's oversized ones and where it left none
+    local swapped, added
+    queue, swapped, added = placement.fitShellDoors(queue, readLua("shared/shell_doors.lua") or {})
+    state.stats.doors = swapped + added
     if #state.removed > 0 then
         setOcclusionsEnabled(false) -- removed world models leave their occluders behind otherwise
     end

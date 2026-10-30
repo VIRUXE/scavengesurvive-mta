@@ -10,6 +10,7 @@
     <file src="shared/logic/placement.lua"/>
     <file src="shared/logic/zones.lua"/>
     <file src="shared/glazed_windows.lua"/>
+    <file src="shared/shell_doors.lua"/>
     <file src="data/zones.lua"/>
     <file src="data/index.lua"/>
     <file src="data/BC.lua"/>

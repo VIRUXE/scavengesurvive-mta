@@ -46,33 +46,43 @@ function placement.inGlazedOpening(p, s, openings)
     return false
 end
 
--- rows without the panes the shells glaze themselves, and how many were dropped; glazed = glazed_windows.lua
-function placement.dropGlazedPanes(rows, glazed)
+-- shell rows of `rows` whose model has an entry in data (glazed_windows.lua, shell_doors.lua), by SHELL_REACH cell
+local function shellGrid(rows, data)
     local cell = placement.SHELL_REACH
     local grid = {}
     for _, o in ipairs(rows) do
-        if glazed[o[1]] then
+        if data[o[1]] then
             local key = math.floor(o[2] / cell) .. ":" .. math.floor(o[3] / cell)
             grid[key] = grid[key] or {}
             table.insert(grid[key], o)
         end
     end
-    local function glazedBy(p)
+    return function(p, fn)
         local cx, cy = math.floor(p[2] / cell), math.floor(p[3] / cell)
         for gx = cx - 1, cx + 1 do
             for gy = cy - 1, cy + 1 do
                 for _, s in ipairs(grid[gx .. ":" .. gy] or {}) do
-                    if placement.inGlazedOpening(p, s, glazed[s[1]]) then
-                        return true
+                    local found = fn(s)
+                    if found then
+                        return found
                     end
                 end
             end
         end
-        return false
+        return nil
     end
+end
+
+-- rows without the panes the shells glaze themselves, and how many were dropped; glazed = glazed_windows.lua
+function placement.dropGlazedPanes(rows, glazed)
+    local near = shellGrid(rows, glazed)
     local kept, dropped = {}, 0
     for _, o in ipairs(rows) do
-        if placement.PANES[o[1]] and glazedBy(o) then
+        local glazedBy = placement.PANES[o[1]]
+            and near(o, function(s)
+                return placement.inGlazedOpening(o, s, glazed[s[1]])
+            end)
+        if glazedBy then
             dropped = dropped + 1
         else
             kept[#kept + 1] = o
@@ -81,12 +91,76 @@ function placement.dropGlazedPanes(rows, glazed)
     return kept, dropped
 end
 
+-- Gen_doorINT01..05: what upstream hangs in the shells' entrances, 1.5 m by 2.5 m and off their openings; the shells'
+-- fitted doors (shell_doors.lua, tools/fit_house_doors.py) take their place.
+placement.UPSTREAM_DOORS = {
+    [1491] = true,
+    [1492] = true,
+    [1494] = true,
+    [1499] = true,
+    [1502] = true,
+}
+placement.FITTED_DOOR_MIN, placement.FITTED_DOOR_MAX = 20101, 20199 -- their port model ids (models/doors.lua)
+
+-- door row d of shell row s (shell_doors.lua) hung in that copy of the shell; src gives world, interior, range
+function placement.hangDoor(s, d, src)
+    local c, si = math.cos(math.rad(s[7])), math.sin(math.rad(s[7]))
+    local wx, wy = s[2] + d[6] * c - d[7] * si, s[3] + d[6] * si + d[7] * c
+    return { d[5], wx, wy, s[4] + d[8], 0, 0, (s[7] + d[9]) % 360, src[8], src[9], src[10] }
+end
+
+-- which of doors (shell_doors.lua[s[1]]) upstream's door row p is, in shell row s's copy, or nil
+function placement.fittedDoor(p, s, doors)
+    local a = math.rad(-s[7])
+    local dx, dy = p[2] - s[2], p[3] - s[3]
+    local x, y, z = dx * math.cos(a) - dy * math.sin(a), dx * math.sin(a) + dy * math.cos(a), p[4] - s[4]
+    local rz = (p[7] - s[7]) % 360
+    for k, d in ipairs(doors) do
+        local turn = math.abs((rz - d[4] + 180) % 360 - 180)
+        if math.abs(x - d[1]) < 0.3 and math.abs(y - d[2]) < 0.3 and math.abs(z - d[3]) < 0.3 and turn < 5 then
+            return k
+        end
+    end
+    return nil
+end
+
+-- rows with upstream's doors in the shells' entrances swapped for the fitted ones, and a fitted door hung in every
+-- entrance upstream left empty in its copy of the shell; returns the rows, how many were swapped and how many added
+function placement.fitShellDoors(rows, doors)
+    local near = shellGrid(rows, doors)
+    local out, swapped, hung = {}, 0, {}
+    for i, o in ipairs(rows) do
+        local fit = placement.UPSTREAM_DOORS[o[1]]
+            and near(o, function(s)
+                local k = placement.fittedDoor(o, s, doors[s[1]])
+                if k then
+                    hung[s] = hung[s] or {}
+                    hung[s][k] = true
+                    return placement.hangDoor(s, doors[s[1]][k], o)
+                end
+            end)
+        out[i] = fit or o
+        swapped = swapped + (fit and 1 or 0)
+    end
+    local added = 0
+    for _, s in ipairs(rows) do
+        for k, d in ipairs(doors[s[1]] or {}) do
+            if not (hung[s] and hung[s][k]) then
+                out[#out + 1] = placement.hangDoor(s, d, s)
+                added = added + 1
+            end
+        end
+    end
+    return out, swapped, added
+end
+
 function placement.isSampModel(model)
     return model >= 18631 or (model >= 11682 and model <= 11753)
 end
 
 function placement.isSwingDoor(model)
     return placement.SWING_DOORS[model] == true
+        or (model >= placement.FITTED_DOOR_MIN and model <= placement.FITTED_DOOR_MAX)
 end
 
 function placement.isBreakable(model)

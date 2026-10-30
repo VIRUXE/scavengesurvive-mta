@@ -35,15 +35,20 @@ local function loadTxd(name, cache)
     return cache[name]
 end
 
--- e = { dff, txd | txdModel, dist, col }: own texture dictionary file, or the TXD of a vanilla model (or skin) that
--- already uses it; the collision file is the dff's own unless `col` names another one (the cut hats share the
--- beanie's). MTA requires COL -> TXD -> DFF order when replacing a model's assets.
+-- e = { dff, txd | txdModel, dist, col, parent }: own texture dictionary file, or the TXD of a vanilla model (or skin)
+-- that already uses it; the collision file is the dff's own unless `col` names another one (the cut hats share the
+-- beanie's); a `parent` lends the model its object.dat physical properties group, which a requested id does not
+-- inherit (the shells' fitted doors swing like the vanilla door they were cut from). MTA requires COL -> TXD -> DFF
+-- order when replacing a model's assets.
 local function loadModel(e, txds)
     local id = engineRequestModel("object")
     if not id then
         return nil, "no free model id"
     end
     allocated[#allocated + 1] = id
+    if e.parent and not engineSetModelPhysicalPropertiesGroup(id, engineGetModelPhysicalPropertiesGroup(e.parent)) then
+        return nil, "physical properties of model " .. e.parent
+    end
     local colName = e.col or e.dff
     local col = engineLoadCOL("files/" .. colName .. ".col")
     if not col or not engineReplaceCOL(col, id) then
@@ -130,10 +135,12 @@ end
 -- Hats cut off the skins above (hats.lua, written by tools/extract_ped_models.py --hats): static objects under the
 -- port's own model ids (tools/port_hats.py), resolved like the SA-MP ones, textured from the base skin's TXD (#77).
 -- The props the port adds to the world (props.lua, tools/make_ls_hatch.py) bring their own TXD and collision.
+-- The house shells' fitted doors (doors.lua, tools/fit_house_doors.py) are port models too.
 
 addEventHandler("onClientResourceStart", resourceRoot, function()
     local txds, count, failed = {}, 0, {}
-    for _, manifest in ipairs({ readManifest(), readLuaFile("hats.lua"), readLuaFile("props.lua") }) do
+    local manifests = { readManifest(), readLuaFile("hats.lua"), readLuaFile("doors.lua"), readLuaFile("props.lua") }
+    for _, manifest in ipairs(manifests) do
         for sampModel, e in pairs(manifest) do
             local id, err = loadModel(e, txds)
             if id then
