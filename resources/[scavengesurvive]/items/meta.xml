@@ -21,6 +21,8 @@
     <file src="shared/logic/cooking.lua"/>
     <file src="shared/logic/liquids.lua"/>
     <file src="shared/logic/smallitems.lua"/>
+    <file src="shared/logic/fishing.lua"/>
+    <file src="server/fishing.lua"/>
     <file src="server/smallitems.lua"/>
     <file src="client/text.lua"/>
     <file src="client/models.lua"/>

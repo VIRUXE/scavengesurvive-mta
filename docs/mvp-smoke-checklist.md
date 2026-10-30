@@ -489,4 +489,14 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
       keys are hit; in a car, look-behind with the horn does the same. Relog: the line is forgotten (session only).
     - d. A sits, B knocks A out (charged Stun Gun): the sit ends with the knockout; after `rr character` nobody
       is left sitting.
+42. **Fishing** (#141, upstream `item/fishingrod.pwn`). One client at a shore (the Santa Maria pier, Palomino Creek
+    lake); `/additem FishRod`.
+    - a. Hold the rod on dry land, hold **F**: a `Casting` bar fills (10 s = 100 m), let go: `You need to be closer
+      to the water`. At the water's edge, hold **F** for 2 s and let go: `Fishing...` / `Press [F] to cancel`.
+    - b. Wait: within 30 to 120 s either `Unlucky!` (about 7 in 10 without the skill) or `The line is tugging...`
+      with the sword-block animation, and 2 s later (100 ms per metre of line) a `Raw Fish (Uncooked)` at the feet;
+      `Fishing` appears in the Skills list after the first catch.
+    - c. With the line out, **F** cancels; dropping the rod (**N**) cancels too; no second cast while one is out.
+    - d. `/lua return exports.character:setSkill(getPlayerFromName("A"), "Fishing", 0.95)`: the waits are about
+      half as long and the catches about twice as frequent.
 

@@ -15,6 +15,7 @@ M.SPECIAL = {
     HerpDerp = "Herp-a-derp",
     Note = "Read note", -- not upstream lines: the port's note and locator use the interact key (#136)
     Locator = "Locate phone",
+    FishRod = "Cast line", -- #141
 }
 
 -- The interact verb next to a landed crate, by the loot resource's crate kind.

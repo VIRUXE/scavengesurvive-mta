@@ -46,6 +46,15 @@ return function(ctx)
     local TREATMENTS = { Bandage = true, AntiSepBandage = true, Medkit = true, DoctorBag = true, Pills = true }
     TREATMENTS.AutoInjec = true
     local isKeyHeld
+    -- fishing (items, #141): the server says when the line is out; F then cancels instead of casting again
+    local fishing = false
+    local MAX_CAST_MS = 10000
+    addEventHandler("fishingStarted", localPlayer, function()
+        fishing = true
+    end)
+    addEventHandler("fishingStopped", localPlayer, function()
+        fishing = false
+    end)
 
     local function getNearbyVehicle()
         local px, py, pz = getElementPosition(localPlayer)
@@ -155,6 +164,28 @@ return function(ctx)
         end
         if uname == "GasCan" then
             return triggerServerEvent("fuelPumpInteractRequested", localPlayer)
+        end
+        -- a Fishing Rod casts as far as the key was held (a bar fills over 10 s); with the line out F reels it in
+        if uname == "FishRod" then
+            if fishing then
+                return triggerServerEvent("fishCancelRequested", localPlayer)
+            end
+            if isTimer(interactHoldTimer) then
+                return
+            end
+            local key = string.lower(getKeyBoundToCommand("interact") or "f")
+            local startTick = getTickCount()
+            exports.ui:progressStart("Casting", MAX_CAST_MS)
+            interactHoldTimer = setTimer(function()
+                local heldMs = getTickCount() - startTick
+                if not isKeyHeld(key, "interact") or heldMs >= MAX_CAST_MS then
+                    killTimer(interactHoldTimer)
+                    interactHoldTimer = nil
+                    exports.ui:progressCancel()
+                    triggerServerEvent("fishCastRequested", localPlayer, heldMs)
+                end
+            end, 50, 0)
+            return
         end
         -- food is eaten; a held treatment starts its hold, and letting go of the key cancels it (items, #94);
         -- held Clothes start the clothes change (#110); a liquid container is drunk from, sip per hold (#122);
