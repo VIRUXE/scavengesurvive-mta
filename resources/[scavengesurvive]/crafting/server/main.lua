@@ -32,6 +32,17 @@ local function keyCode(data)
     return type(t) == "table" and tonumber(t.code) or nil
 end
 
+-- upstream craft-construct.pwn plays BOMBER/BOM_Plant_Loop while a construction or removal holds and clears it after
+local function playHoldAnim(player)
+    setPedAnimation(player, "BOMBER", "BOM_Plant_Loop", -1, true, false, false, false)
+end
+
+local function clearHoldAnim(player)
+    if isElement(player) then
+        setPedAnimation(player)
+    end
+end
+
 local function cancelHold(player)
     local h = activeHold[player]
     if h then
@@ -39,6 +50,9 @@ local function cancelHold(player)
             killTimer(h.timer)
         end
         activeHold[player] = nil
+        if h.anim then
+            clearHoldAnim(player)
+        end
         triggerClientEvent(player, "craftHoldStopped", player)
     end
 end
@@ -191,11 +205,13 @@ local function tryGroundCraft(player, _cid, held, px, py, pz, rz, int, dim, quie
         -- upstream craft-construct.pwn: the skill is the result's uniqueid, its value shortens the build time
         local ms = exports.character:skillTimeModifier(c.player, recipe.buildTime, recipe.result.uname)
         triggerClientEvent(c.player, "craftHoldStarted", c.player, "Constructing " .. recipe.name, ms)
+        playHoldAnim(c.player)
         local timer = setTimer(function(pl, rec, byUname, cpx, cpy, cpz, crz, cint, cdim, src)
             activeHold[pl] = nil
             if not isElement(pl) then
                 return
             end
+            clearHoldAnim(pl)
             local curHeld = exports.items:getHeld(pl)
             if rec.tool and (not curHeld or curHeld.uname ~= rec.tool) then
                 return toast(pl, "NEED_TOOL")
@@ -243,7 +259,7 @@ local function tryGroundCraft(player, _cid, held, px, py, pz, rz, int, dim, quie
             end
             db.call("item_create", args, onCreated, ctx)
         end, ms, 1, c.player, recipe, itemsByUname, px, py, pz, rz, int, dim, source)
-        activeHold[c.player] = { timer = timer, action = "construct" }
+        activeHold[c.player] = { timer = timer, action = "construct", anim = true }
     end, { player = player, toolUname = toolUname, quiet = quiet, furnitureId = furnitureId })
 end
 
@@ -275,11 +291,13 @@ local function tryDeconstruct(player, _cid, held, px, py, _pz, _rz, int, dim)
         local ms = exports.character:skillTimeModifier(c.player, info.duration, target.type_uname)
         local label = "Deconstructing " .. target.type_uname
         triggerClientEvent(c.player, "craftHoldStarted", c.player, label, ms)
+        playHoldAnim(c.player)
         local timer = setTimer(function(pl, tgt, dInfo, cint, cdim)
             activeHold[pl] = nil
             if not isElement(pl) then
                 return
             end
+            clearHoldAnim(pl)
             local curHeld = exports.items:getHeld(pl)
             if not curHeld or curHeld.uname ~= "Crowbar" then
                 return toast(pl, "NEED_TOOL")
@@ -294,7 +312,7 @@ local function tryDeconstruct(player, _cid, held, px, py, _pz, _rz, int, dim)
             exports.items:refreshPlayer(pl)
             toast(pl, "DECONSTRUCTED")
         end, ms, 1, c.player, target, info, int, dim)
-        activeHold[c.player] = { timer = timer, action = "deconstruct" }
+        activeHold[c.player] = { timer = timer, action = "deconstruct", anim = true }
     end, { player = player })
 end
 

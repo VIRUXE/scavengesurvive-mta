@@ -34,9 +34,14 @@ local function heldUname(player)
     return held and held.uname
 end
 
+-- upstream defences.pwn plays COP_AMBIENT/COPBROWSE_LOOP while a defence is built, modified or removed, and clears
+-- it when the hold stops
 local function cancelBreak(player)
     if activeBreaks[player] and isTimer(activeBreaks[player]) then
         killTimer(activeBreaks[player])
+        if isElement(player) then
+            setPedAnimation(player)
+        end
     end
     activeBreaks[player] = nil
 end
@@ -125,9 +130,14 @@ end
 local function holdDefenceAction(player, row, tool, label, ms, finish)
     cancelBreak(player)
     triggerClientEvent(player, "vehicleHoldStarted", player, label, ms)
+    setPedAnimation(player, "COP_AMBIENT", "COPBROWSE_LOOP", -1, true, false, false, false)
     activeBreaks[player] = setTimer(function(pl, itemId, x, y, z)
         activeBreaks[pl] = nil
-        if not isElement(pl) or heldUname(pl) ~= tool then
+        if not isElement(pl) then
+            return
+        end
+        setPedAnimation(pl)
+        if heldUname(pl) ~= tool then
             return
         end
         local px, py, pz = getElementPosition(pl)
