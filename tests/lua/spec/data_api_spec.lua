@@ -29,7 +29,7 @@ describe("Data api", function()
         assert.same({}, Data.ammoTypesForCalibre("nope"))
     end)
     it("exposes vehicle types by uname and by display name", function()
-        assert.equals(66, #Data.vehicleTypes())
+        assert.equals(68, #Data.vehicleTypes())
         assert.equals(422, Data.vehicleType("Bobcat").model)
         assert.equals("small", Data.vehicleType("Bobcat").trailerHitch)
         assert.equals("Police1", Data.vehicleType("police car").uname) -- first definition wins
