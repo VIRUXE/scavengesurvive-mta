@@ -44,14 +44,17 @@ end
 
 -- 2. Items created by using a tool on them in the world (SetCraftSetConstructible): { result, tool, build ms,
 -- consumed, kept, remove = Crowbar ms, tweak, defence }. Every removal tool upstream is the Crowbar; a set without
--- one cannot be taken down. RefineMachine has the ScrapMachine's parts, so as upstream the ScrapMachine wins.
+-- one cannot be taken down. Upstream gives the RefineMachine the ScrapMachine's very parts, so the ScrapMachine always
+-- won and no RefineMachine could be built; here it takes a Metal Panel as well (2026-10-30), a fifth item, which also
+-- tells the two apart under upstream's exact-count match.
 local MACHINE = { Canister = 1, Motor = 1, Fluctuator = 1, PowerSupply = 1 }
+local REFINER = { Canister = 1, Motor = 1, Fluctuator = 1, PowerSupply = 1, MetPanel = 1 }
 local POLE = { Canister = 1, RadioPole = 1, Fluctuator = 1, PowerSupply = 1 }
 local GROUND = {
     { "Campfire", "FireLighter", 5000, { WoodLog = 3 }, tweak = false },
     { "PlotPole", "Screwdriver", 20000, POLE, remove = 30000, tweak = false },
     { "ScrapMachine", "Screwdriver", 30000, MACHINE, remove = 25000 },
-    { "RefineMachine", "Screwdriver", 30000, MACHINE, remove = 25000 },
+    { "RefineMachine", "Screwdriver", 30000, REFINER, remove = 25000 },
     { "WaterMachine", "Screwdriver", 30000, { Canister = 1, Motor = 1, Bucket = 1, PowerSupply = 1 }, remove = 25000 },
     { "Workbench", "Hammer", 30000, { RefinedMetal = 2, WoodLog = 4 }, remove = 25000 },
     { "Locker", "Sledgehammer", 30000, { MetalFrame = 2, RefinedMetal = 1 }, remove = 25000 },

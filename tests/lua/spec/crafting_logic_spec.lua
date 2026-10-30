@@ -108,23 +108,21 @@ describe("crafting logic", function()
         end)
 
         it("prefers the set that uses the most of what lies there (Table over Desk over Small Table)", function()
-            assert.same(
-                { "Table", "Desk", "SmallTable" },
-                names(craft.matchGround({ RefinedMetal = 1, WoodLog = 4 }, "Screwdriver"))
-            )
+            local tables = names(craft.matchGround({ RefinedMetal = 1, WoodLog = 4 }, "Screwdriver"))
+            assert.same({ "Table", "Desk", "SmallTable" }, tables)
             assert.same({ "Desk" }, names(craft.matchGround({ RefinedMetal = 1, WoodLog = 3 }, "Screwdriver")))
             assert.same({ "SmallTable" }, names(craft.matchGround({ WoodLog = 4 }, "Screwdriver")))
         end)
 
-        it(
-            "builds the machines with a Screwdriver; the Refine Machine shares the Scrap Machine's parts and loses",
-            function()
-                local machine = { Canister = 1, Motor = 1, Fluctuator = 1, PowerSupply = 1 }
-                assert.same({ "ScrapMachine", "RefineMachine" }, names(craft.matchGround(machine, "Screwdriver")))
-                local water = craft.matchGround({ Canister = 1, Motor = 1, Bucket = 1, PowerSupply = 1 }, "Screwdriver")
-                assert.are.equal("WaterMachine", water[1].name)
-            end
-        )
+        it("builds the machines with a Screwdriver; a Metal Panel more makes the Refine Machine", function()
+            local machine = { Canister = 1, Motor = 1, Fluctuator = 1, PowerSupply = 1 }
+            assert.same({ "ScrapMachine" }, names(craft.matchGround(machine, "Screwdriver")))
+            machine.MetPanel = 1
+            assert.are.equal("RefineMachine", craft.matchGround(machine, "Screwdriver")[1].name)
+            assert.are.equal(5, #craft.getDeconstructInfo("RefineMachine", "Crowbar").ingredients)
+            local water = craft.matchGround({ Canister = 1, Motor = 1, Bucket = 1, PowerSupply = 1 }, "Screwdriver")
+            assert.are.equal("WaterMachine", water[1].name)
+        end)
 
         it("builds a Plot Pole from a Canister, Radio Pole, Fluctuator and Power Supply, not nudged", function()
             local pole =

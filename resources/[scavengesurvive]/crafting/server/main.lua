@@ -216,39 +216,32 @@ local function tryGroundCraft(player, _cid, held, px, py, pz, rz, int, dim, quie
             local rad = math.rad(crz or 0)
             local dropX = cpx + 1.2 * math.sin(-rad)
             local dropY = cpy + 1.2 * math.cos(rad)
-            db.call(
-                "item_create",
-                { rec.result.uname, 5, nil, dropX, dropY, cpz - 0.8, crz, cint, cdim, nil, nil, n = 11 },
-                function(res, c2)
-                    if not isElement(c2.player) then
-                        return
+            local args = { rec.result.uname, 5, nil, dropX, dropY, cpz - 0.8, crz, cint, cdim, nil, nil, n = 11 }
+            local ctx = { player = pl, skill = rec.result.uname, tweak = rec.tweak ~= false, defence = rec.defence }
+            ctx.source = src
+            local function onCreated(res, c2)
+                if not isElement(c2.player) then
+                    return
+                end
+                if res and res.ok then
+                    local newId = res.payload and tonumber(res.payload.item_id)
+                    if c2.source and newId then
+                        db.exec("UPDATE items SET data = ? WHERE id = ?", { c2.source, newId })
                     end
-                    if res and res.ok then
-                        local newId = res.payload and tonumber(res.payload.item_id)
-                        if c2.source and newId then
-                            db.exec("UPDATE items SET data = ? WHERE id = ?", { c2.source, newId })
-                        end
-                        exports.items:refreshPlayer(c2.player)
-                        exports.character:gainSkill(c2.player, c2.skill)
-                        toast(c2.player, "CRAFTED")
-                        -- upstream: the builder nudges the new item into place (building, #133), a set marked
-                        -- .defence = true becoming a defence lying flat first (ConvertItemToDefenceItem, pose 0)
-                        local building = c2.tweak and newId and getResourceFromName("building")
-                        if building and getResourceState(building) == "running" then
-                            exports.building:tweakItem(c2.player, newId, c2.defence)
-                        end
-                    else
-                        toast(c2.player, res and res.code or "DB_ERROR")
+                    exports.items:refreshPlayer(c2.player)
+                    exports.character:gainSkill(c2.player, c2.skill)
+                    toast(c2.player, "CRAFTED")
+                    -- upstream: the builder nudges the new item into place (building, #133), a set marked
+                    -- .defence = true becoming a defence lying flat first (ConvertItemToDefenceItem, pose 0)
+                    local building = c2.tweak and newId and getResourceFromName("building")
+                    if building and getResourceState(building) == "running" then
+                        exports.building:tweakItem(c2.player, newId, c2.defence)
                     end
-                end,
-                {
-                    player = pl,
-                    skill = rec.result.uname,
-                    tweak = rec.tweak ~= false,
-                    defence = rec.defence,
-                    source = src,
-                }
-            )
+                else
+                    toast(c2.player, res and res.code or "DB_ERROR")
+                end
+            end
+            db.call("item_create", args, onCreated, ctx)
         end, ms, 1, c.player, recipe, itemsByUname, px, py, pz, rz, int, dim, source)
         activeHold[c.player] = { timer = timer, action = "construct" }
     end, { player = player, toolUname = toolUname, quiet = quiet, furnitureId = furnitureId })
