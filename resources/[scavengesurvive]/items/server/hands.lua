@@ -12,7 +12,7 @@ return function(ctx)
     local VANILLA_MELEE_MAX = 15
     local RELOAD_COOLDOWN_MS = 1000
     local lastReload = {}
-    local containers, cooking, small, machinesSrv = nil, nil, nil, nil
+    local containers, cooking, small, machinesSrv, furnitureSrv = nil, nil, nil, nil, nil
     local M = {}
 
     function M.setContainers(c)
@@ -30,6 +30,11 @@ return function(ctx)
 
     function M.setSmall(s)
         small = s
+    end
+
+    -- server/furniture.lua (#148): items put on desks and tables or shown in a gun case, the furniture never picked up
+    function M.setFurniture(f)
+        furnitureSrv = f
     end
 
     local function baseWeapon(t)
@@ -665,6 +670,9 @@ return function(ctx)
 
     -- row = { id, uname, hp, data (JSON text) } of a world item: into the empty hand
     function M.pickup(player, cid, row)
+        if furnitureSrv and furnitureSrv.blocksPickup(row.uname) then
+            return -- upstream OnPlayerPickUpItem breaks for furniture; a Crowbar takes it down
+        end
         db.call("item_pickup", { row.id, cid }, function(res, c)
             if res and res.ok then
                 world.forgetEverywhere(c.row.id)
@@ -708,6 +716,8 @@ return function(ctx)
                     runCrafting("deconstruct", c.player)
                 elseif curUname == "FireLighter" then
                     runCrafting("groundCraft", c.player)
+                elseif curHeld and furnitureSrv then -- none of the item's own targets near: a table may take it
+                    furnitureSrv.interactNear(c.player, c.charId, curHeld, c.radius, true)
                 end
                 return
             end
@@ -765,6 +775,11 @@ return function(ctx)
                 return
             end
 
+            -- desks, tables and the gun case (server/furniture.lua)
+            if furnitureSrv and furnitureSrv.interact(c.player, c.charId, curHeld, row) then
+                return
+            end
+
             -- campfires and barbecues (server/cooking.lua), and the food they are cooking
             if cooking and cooking.interact(c.player, c.charId, curHeld, row) then
                 return
@@ -788,6 +803,9 @@ return function(ctx)
 
             local curType = curHeld and itemType(curHeld.uname) or nil
             if curHeld and (not ammo or (not ammo.isCalibreWeapon(curType) and not ammo.isAmmoItem(curType))) then
+                if furnitureSrv then -- the nearest item may lie on a table: the table takes this one too
+                    return furnitureSrv.interactNear(c.player, c.charId, curHeld, c.radius)
+                end
                 return toast(c.player, "HANDS_FULL")
             end
 
@@ -795,11 +813,12 @@ return function(ctx)
                 return tryTransferFromWorld(c.player, c.charId, curHeld, curType, row)
             end
             M.pickup(c.player, c.charId, row)
-        end, { player = player, charId = cid })
+        end, { player = player, charId = cid, radius = r })
     end, { rate = 5 })
 
-    -- opts (placing an item, server/smallitems.lua's shield): { ahead, below, turn, data }; a plain drop lands
-    -- 1 m ahead at the feet with the player's heading, and clears a placed item's standing pose
+    -- opts (placing an item, server/smallitems.lua's shield): { ahead, below, turn, data }, or at = { x, y, z, rz }
+    -- for a spot of the server's (on a table, server/furniture.lua); a plain drop lands 1 m ahead at the feet with
+    -- the player's heading, and clears a placed item's standing pose
     function M.dropHeld(player, opts)
         local cid, item = charId(player), state.held[player]
         if not cid or (isIncapacitated and isIncapacitated(player)) then
@@ -822,6 +841,9 @@ return function(ctx)
         local _, _, rz = getElementRotation(player)
         local dx, dy = geometry.dropPosition(x, y, rz, opts.ahead or 1.0)
         local dz, drz = z - (opts.below or 0.9), (rz + (opts.turn or 0)) % 360
+        if opts.at then
+            dx, dy, dz, drz = opts.at.x, opts.at.y, opts.at.z, opts.at.rz % 360
+        end
         local params = { item.id, cid, dx, dy, dz, drz, getElementInterior(player), getElementDimension(player) }
         db.call("item_drop", params, function(res, c)
             if not isElement(c.player) then

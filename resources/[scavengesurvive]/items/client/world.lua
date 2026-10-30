@@ -13,6 +13,7 @@ return function(ctx)
     local small = ctx.small
     local gardening = ctx.gardening
     local machines = ctx.machines
+    local furniture = ctx.furniture
     local SIGN_RANGE = 25 -- metres a sign's text can be read from
     local objects = {} -- id -> { obj | parts, pitched, row, uname, hp, x, y, z, name, fires, plant }
     local lockersOpen = {} -- locker item id -> true while someone has it open (lockerToggled, #143)
@@ -97,6 +98,9 @@ return function(ctx)
             if isElement(e.smoke) then
                 destroyElement(e.smoke)
             end
+            if isElement(e.shown) then
+                destroyElement(e.shown)
+            end
             objects[id] = nil
         end
         labelVisibility[id] = nil
@@ -153,10 +157,10 @@ return function(ctx)
     -- The type's rest rotation added to the row's heading (upstream CreateItemInWorld with applyrotoffsets), then
     -- turned onto the slope it lies on (ground_nx / ground_ny, set by the death drop and /dropall; false when flat).
     local function orient(obj, r, t)
-        -- loose items are walked through; a built defence is a wall (upstream's defence objects collide), and so is a
-        -- Locker, which stands as tall as a player
+        -- loose items are walked through; a built defence is a wall (upstream's defence objects collide), and so are a
+        -- Locker, which stands as tall as a player, and the furniture (#148)
         local def = builtDefence(r)
-        setElementCollisionsEnabled(obj, def ~= nil or r.uname == small.LOCKER.uname)
+        setElementCollisionsEnabled(obj, def ~= nil or r.uname == small.LOCKER.uname or furniture.is(r.uname))
         if def then
             -- its row already holds the raised z and full heading, data the pose
             setElementPosition(obj, r.x, r.y, r.z)
@@ -239,6 +243,26 @@ return function(ctx)
         end
     end
 
+    -- the item a gun case or cupboard shows (#148): data.display, lying in the case
+    local function updateShown(e, r)
+        if isElement(e.shown) then
+            destroyElement(e.shown)
+        end
+        e.shown = nil
+        local shown = furniture.isDisplay(r.uname) and furniture.display(r.data)
+        local st = shown and itemType(shown)
+        if not st then
+            return
+        end
+        local x, y, z, rx, ry, rz = furniture.displayPose(r, itemType(r.uname), st)
+        local obj = createObject(models.forType(st), x, y, z, rx, ry, rz)
+        if obj then
+            place(obj, r)
+            models.applyTint(obj, st)
+            e.shown = obj
+        end
+    end
+
     -- a locker draws its open twin while someone has it open
     local function modelFor(r, t)
         if r.uname == small.LOCKER.uname then
@@ -278,6 +302,7 @@ return function(ctx)
                 updateFires(e, r)
                 updatePlant(e, r)
                 updateSmoke(e, r)
+                updateShown(e, r)
             else
                 e = {
                     pitched = isPitched,
@@ -297,6 +322,7 @@ return function(ctx)
                 updateFires(e, r)
                 updatePlant(e, r)
                 updateSmoke(e, r)
+                updateShown(e, r)
                 objects[r.id] = e
             end
         end

@@ -566,3 +566,12 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
       one at the shore); it comes out as the same amount of Water.
     - e. With a Crowbar in hand the key list reads only `F Deconstruct`; a 25 s hold takes the machine down and its
       four parts drop (whatever was inside goes with it). A Screwdriver over the four parts builds one in 30 s.
+47. **Furniture** (#148, upstream `itemtype/furniture.pwn`). One client; the `furniture_display_put` and
+    `furniture_display_take` procedures must be in the database (`sqltool apply`).
+    - a. `/additem Desk` and drop it (or build one, #147). Walking into it stops the player. Hold **F** at it with
+      empty hands: it stays on the floor.
+    - b. `/additem Knife`, **F** at the desk: the knife lies on top (0.8 m up, the desk's heading). **F** with empty
+      hands takes the knife back, not the desk. The same on a Table, Barstool (0.48 m) and Small Table (0.45 m).
+    - c. `/additem GunCase` and drop it; **F** with the knife: the case shows it lying on its rack. **F** with a
+      second item does nothing; a Desk in hand says `Extra 9 slots required`. `rr items`: the knife still shows.
+      **F** with empty hands gives the knife back and the rack is empty. A Cupboard behaves the same.

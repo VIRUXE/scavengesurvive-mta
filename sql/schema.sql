@@ -944,6 +944,93 @@ BEGIN
   ) AS payload;
 END//
 
+CREATE OR REPLACE PROCEDURE `furniture_display_put`(IN p_char_id INT, IN p_item_id INT, IN p_case_id INT, IN p_size INT)
+BEGIN
+  DECLARE v_case_uname VARCHAR(32) DEFAULT NULL;
+  DECLARE v_shown VARCHAR(32) DEFAULT NULL;
+  DECLARE v_uname VARCHAR(32) DEFAULT NULL;
+  DECLARE v_item_size INT DEFAULT 1;
+  DECLARE v_cont INT DEFAULT NULL;
+  DECLARE v_used INT DEFAULT 0;
+  DECLARE v_slot INT DEFAULT 0;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
+  SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+  START TRANSACTION;
+  SELECT type_uname, JSON_VALUE(data, '$.display') INTO v_case_uname, v_shown
+    FROM items WHERE id = p_case_id AND x IS NOT NULL FOR UPDATE;
+  SELECT i.type_uname, t.size INTO v_uname, v_item_size
+    FROM items i JOIN item_types t ON t.uname = i.type_uname
+    WHERE i.id = p_item_id AND i.holder_char_id = p_char_id AND i.holder_kind = 'held' FOR UPDATE;
+  IF v_case_uname IS NULL OR v_case_uname NOT IN ('GunCase', 'Cupboard') THEN
+    ROLLBACK;
+    SELECT 0 AS ok, 'NOT_FOUND' AS code, NULL AS payload;
+  ELSEIF v_uname IS NULL THEN
+    ROLLBACK;
+    SELECT 0 AS ok, 'NOT_HELD' AS code, NULL AS payload;
+  ELSEIF v_shown IS NOT NULL THEN
+    ROLLBACK;
+    SELECT 0 AS ok, 'OCCUPIED' AS code, NULL AS payload;
+  ELSE
+    SELECT id INTO v_cont FROM containers WHERE owner_item_id = p_case_id FOR UPDATE;
+    IF v_cont IS NULL THEN
+      INSERT INTO containers (kind, size, owner_item_id) VALUES ('safebox', p_size, p_case_id);
+      SET v_cont = LAST_INSERT_ID();
+    END IF;
+    SELECT IFNULL(SUM(t.size), 0), IFNULL(MAX(i.slot) + 1, 0) INTO v_used, v_slot
+      FROM items i JOIN item_types t ON t.uname = i.type_uname WHERE i.container_id = v_cont FOR UPDATE;
+    IF v_used + v_item_size > p_size THEN
+      ROLLBACK;
+      SELECT 0 AS ok, 'CONTAINER_FULL' AS code, JSON_OBJECT('required', CAST(v_used + v_item_size - p_size AS SIGNED)) AS payload;
+    ELSE
+      UPDATE items SET holder_char_id = NULL, holder_kind = NULL, container_id = v_cont, slot = v_slot WHERE id = p_item_id;
+      UPDATE items SET data = JSON_SET(IFNULL(data, '{}'), '$.display', v_uname) WHERE id = p_case_id;
+      COMMIT;
+      SELECT 1 AS ok, 'OK' AS code, JSON_OBJECT('display', v_uname) AS payload;
+    END IF;
+  END IF;
+END//
+
+CREATE OR REPLACE PROCEDURE `furniture_display_take`(IN p_char_id INT, IN p_case_id INT)
+BEGIN
+  DECLARE v_shown VARCHAR(32) DEFAULT NULL;
+  DECLARE v_cont INT DEFAULT NULL;
+  DECLARE v_item INT DEFAULT NULL;
+  DECLARE v_slot INT DEFAULT NULL;
+  DECLARE v_held INT DEFAULT 0;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
+  SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+  START TRANSACTION;
+  SELECT JSON_VALUE(data, '$.display') INTO v_shown FROM items
+    WHERE id = p_case_id AND x IS NOT NULL AND type_uname IN ('GunCase', 'Cupboard') FOR UPDATE;
+  SELECT COUNT(*) INTO v_held FROM items WHERE holder_char_id = p_char_id AND holder_kind = 'held' FOR UPDATE;
+  SELECT id INTO v_cont FROM containers WHERE owner_item_id = p_case_id FOR UPDATE;
+  IF v_cont IS NOT NULL THEN
+    SELECT id, slot INTO v_item, v_slot FROM items WHERE container_id = v_cont ORDER BY slot ASC LIMIT 1 FOR UPDATE;
+  END IF;
+  IF v_shown IS NULL THEN
+    ROLLBACK;
+    SELECT 0 AS ok, 'EMPTY' AS code, NULL AS payload;
+  ELSEIF v_held > 0 THEN
+    ROLLBACK;
+    SELECT 0 AS ok, 'HANDS_FULL' AS code, NULL AS payload;
+  ELSEIF v_item IS NULL THEN
+    UPDATE items SET data = JSON_REMOVE(data, '$.display') WHERE id = p_case_id;
+    COMMIT;
+    SELECT 0 AS ok, 'EMPTY' AS code, NULL AS payload;
+  ELSE
+    UPDATE items SET container_id = NULL, slot = NULL, holder_char_id = p_char_id, holder_kind = 'held' WHERE id = v_item;
+    UPDATE items SET slot = slot - 1 WHERE container_id = v_cont AND slot > v_slot ORDER BY slot ASC;
+    SET v_shown = (SELECT type_uname FROM items WHERE container_id = v_cont ORDER BY slot ASC LIMIT 1);
+    IF v_shown IS NULL THEN
+      UPDATE items SET data = JSON_REMOVE(data, '$.display') WHERE id = p_case_id;
+    ELSE
+      UPDATE items SET data = JSON_SET(data, '$.display', v_shown) WHERE id = p_case_id;
+    END IF;
+    COMMIT;
+    SELECT 1 AS ok, 'OK' AS code, JSON_OBJECT('item_id', CAST(v_item AS SIGNED)) AS payload;
+  END IF;
+END//
+
 CREATE OR REPLACE PROCEDURE `item_create`(
   IN p_type_uname VARCHAR(32), IN p_hitpoints SMALLINT, IN p_data JSON,
   IN p_x FLOAT, IN p_y FLOAT, IN p_z FLOAT, IN p_rz FLOAT, IN p_interior TINYINT, IN p_dimension INT,

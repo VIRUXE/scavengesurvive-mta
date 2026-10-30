@@ -28,6 +28,8 @@
     <file src="server/smallitems.lua"/>
     <file src="shared/logic/machines.lua"/>
     <file src="server/machines.lua"/>
+    <file src="shared/logic/furniture.lua"/>
+    <file src="server/furniture.lua"/>
     <file src="client/text.lua"/>
     <file src="client/models.lua"/>
     <file src="server/cooking.lua"/>
