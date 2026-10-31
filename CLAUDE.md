@@ -58,6 +58,11 @@ Scavenge & Survive ported to MTA:SA 1.6 (Lua 5.1) with MariaDB 13.0 (12.2 also v
 - A twin's bare head is rebuilt from its reference image (`docs/images/hatless-refs`, `tools/hatless_refs.py`) by
   `python -m tools.hatless_rebuild prep|build <skin>` (cut plane per skin in `PLANES`, studio calibration in
   `tools/data`); the twin then brings a hair-only TXD of its own, listed as `txd` in `skin_models/peds.lua`.
+- GTA's own boxes, crates and bags are items: `tools/world_boxes.py` lists the source models and names each cut part;
+  `python -m tools.extract_world_boxes [--survey]` (Blender + DragonFF, needs the game) cuts them into `box_models`
+  (port ids 20401+, remnants 20481+) and writes `tools/data/world_box_parts.json`; `python -m tools.convert maps` turns
+  every placement into item spots (`world/data/boxes.lua`, kept filled by `world/server/boxes.lua`) and removals plus
+  remnants (`maps/data/BOXES.lua`). Never place those source models as map objects.
 
 ## Commands
 

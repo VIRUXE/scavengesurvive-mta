@@ -36,6 +36,9 @@ SETTINGS = {
     "vehicles.refill_rate": "0.10", "vehicles.refill_floor": "0.02", "vehicles.cooldown_hours": "6",
     "vehicles.cooldown_jitter": "0.33", "vehicles.abandon_days": "3", "vehicles.leave_radius": "100",
     "world.min_player_distance": "150", "world.refill_interval_s": "300",
+    # GTA's boxes, crates and bags as items (world/server/boxes.lua): an empty spot is filled every boxes_respawn_s
+    # unless a player is within boxes_player_distance
+    "world.boxes_respawn_s": "900", "world.boxes_player_distance": "60",
 }
 
 

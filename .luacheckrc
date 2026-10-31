@@ -28,6 +28,7 @@ files["resources/**/hat_models/client/**"] = { std = "lua51+mta_shared+mta_clien
 files["resources/**/skin_models/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "hatlessSkin", "bareSkin" } }
 files["resources/**/door_models/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "resolve" } }
 files["resources/**/prop_models/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "resolve" } }
+files["resources/**/box_models/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "resolve" } }
 -- restoreWorldModel postdates the generated .luacheck/mta_client.lua list
 files["resources/**/maps/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "getZoneAt", "getPlayerZone" } }
 files["resources/**/maps/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "getMapStats" }, read_globals = { "restoreWorldModel" } }

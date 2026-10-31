@@ -1159,6 +1159,26 @@ BEGIN
   END IF;
 END//
 
+CREATE OR REPLACE PROCEDURE `item_create_many`(IN p_items JSON)
+BEGIN
+  -- world/server/boxes.lua: GTA's boxes, crates and bags back on their spots. p_items: MTA's toJSON of
+  -- [{u = type, x, y, z, rz, i = interior}] wrapped in an outer array; one transaction places every item at its type's
+  -- full hitpoints, in dimension 0, with no despawn time. Generic types only: no container is made.
+  DECLARE v_n INT DEFAULT 0;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
+  SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+  START TRANSACTION;
+  INSERT INTO items (type_uname, hitpoints, data, x, y, z, rz, interior, dimension, loot_spawn_id, loot_zone, despawn_at)
+    SELECT t.uname, t.max_hitpoints, NULL, j.x, j.y, j.z, j.rz, j.i, 0, NULL, NULL, NULL
+    FROM JSON_TABLE(p_items, '$[0][*]' COLUMNS (
+      u VARCHAR(32) COLLATE utf8mb4_uca1400_ai_ci PATH '$.u', x FLOAT PATH '$.x', y FLOAT PATH '$.y', z FLOAT PATH '$.z',
+      rz FLOAT PATH '$.rz', i INT PATH '$.i')) j
+    JOIN item_types t ON t.uname = j.u AND t.category = 'generic';
+  SET v_n = ROW_COUNT();
+  COMMIT;
+  SELECT 1 AS ok, 'OK' AS code, JSON_OBJECT('created', CAST(v_n AS SIGNED)) AS payload;
+END//
+
 CREATE OR REPLACE PROCEDURE `item_data_flush`(IN p_rows JSON)
 BEGIN
   -- p_rows: MTA's toJSON of [{id, data = JSON text}] (wrapped in an outer array): the held items whose data changed

@@ -6,30 +6,31 @@ Columns: `samp` = SA-MP-only model present in `tools/data/samp.ide`; `samp_unkno
 
 | zone | files | objects | vanilla | samp | samp_unknown | unknown | removals | materials | dropped_tail | eight_arg | legacy_header | ignored_calls |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| BC | 19 | 510 | 468 | 42 | 0 | 0 | 6 | 0 | 0 | 0 | 8 | 4 |
+| BC | 19 | 510 | 461 | 42 | 0 | 0 | 6 | 0 | 0 | 0 | 8 | 4 |
+| BOXES | 0 | 193 | 0 | 0 | 193 | 0 | 548 | 0 | 0 | 0 | 0 | 0 |
 | COLFIX | 81 | 287 | 266 | 21 | 0 | 0 | 0 | 0 | 0 | 2 | 1 | 110 |
-| FC | 12 | 824 | 718 | 106 | 0 | 0 | 6 | 0 | 0 | 0 | 6 | 1 |
+| FC | 12 | 824 | 640 | 106 | 0 | 0 | 6 | 0 | 0 | 0 | 6 | 1 |
 | GEN | 1 | 10 | 10 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 1 | 0 |
-| LS | 19 | 1362 | 567 | 795 | 0 | 0 | 50 | 2 | 0 | 0 | 6 | 0 |
-| LV | 11 | 1447 | 733 | 714 | 0 | 0 | 12 | 0 | 0 | 0 | 4 | 0 |
-| OCEAN | 27 | 11593 | 7273 | 4320 | 0 | 0 | 0 | 0 | 0 | 0 | 27 | 0 |
-| RC | 17 | 4925 | 4901 | 24 | 0 | 0 | 13 | 0 | 0 | 0 | 9 | 0 |
-| SF | 24 | 1740 | 778 | 962 | 0 | 0 | 30 | 1 | 0 | 0 | 11 | 0 |
-| TR | 9 | 308 | 308 | 0 | 0 | 0 | 10 | 0 | 0 | 0 | 5 | 0 |
-| **all** | 220 | 23006 | 16022 | 6984 | 0 | 0 | 127 | 3 | 0 | 2 | 78 | 115 |
+| LS | 19 | 1362 | 561 | 795 | 0 | 0 | 50 | 2 | 0 | 0 | 6 | 0 |
+| LV | 11 | 1447 | 716 | 714 | 0 | 0 | 12 | 0 | 0 | 0 | 4 | 0 |
+| OCEAN | 27 | 11593 | 7071 | 4320 | 0 | 0 | 0 | 0 | 0 | 0 | 27 | 0 |
+| RC | 17 | 4925 | 4853 | 24 | 0 | 0 | 13 | 0 | 0 | 0 | 9 | 0 |
+| SF | 24 | 1740 | 768 | 962 | 0 | 0 | 30 | 1 | 0 | 0 | 11 | 0 |
+| TR | 9 | 308 | 303 | 0 | 0 | 0 | 10 | 0 | 0 | 0 | 5 | 0 |
+| **all** | 220 | 23199 | 15649 | 6984 | 193 | 0 | 675 | 3 | 0 | 2 | 78 | 115 |
 
-Objects beyond MTA's createBuilding limit (|x| or |y| > 3000, must be createObject): 11687
+Objects beyond MTA's createBuilding limit (|x| or |y| > 3000, must be createObject): 11550
 
 ## (world, interior) combinations
 
 | world | interior | objects |
 | ---: | ---: | ---: |
-| -1 | -1 | 22559 |
-| -1 | 0 | 273 |
-| -1 | 1 | 10 |
-| 0 | 0 | 164 |
+| -1 | -1 | 22297 |
+| -1 | 0 | 352 |
+| -1 | 1 | 16 |
+| 0 | 0 | 161 |
 
-## SA-MP-only models used by maps (86 distinct, 6984 placements)
+## SA-MP-only models used by maps (92 distinct, 7177 placements)
 
 | model | placements | in samp.ide |
 | ---: | ---: | --- |
@@ -119,3 +120,9 @@ Objects beyond MTA's createBuilding limit (|x| or |y| > 3000, must be createObje
 | 19905 | 3 | yes |
 | 19907 | 2 | yes |
 | 19909 | 2 | yes |
+| 20481 | 21 | no |
+| 20482 | 31 | no |
+| 20483 | 43 | no |
+| 20485 | 40 | no |
+| 20486 | 48 | no |
+| 20487 | 10 | no |

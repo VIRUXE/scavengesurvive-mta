@@ -1,0 +1,81 @@
+<meta>
+    <info author="scavengesurvive-mta" type="script" name="box_models" description="GTA boxes, crates and bags cut into item models" version="0.1.0"/>
+    <min_mta_version server="1.6.0" client="1.6.0-9.21695"/>
+    <download_priority_group>90</download_priority_group>
+    <include resource="lib"/>
+    <script src="client/main.lua" type="client"/>
+    <file src="boxes.lua"/>
+    <file src="files/wbox_bigcrate.col"/>
+    <file src="files/wbox_bigcrate.dff"/>
+    <file src="files/wbox_bigcrate.txd"/>
+    <file src="files/wbox_binbag.col"/>
+    <file src="files/wbox_binbag.dff"/>
+    <file src="files/wbox_binbag.txd"/>
+    <file src="files/wbox_cardboardbox.col"/>
+    <file src="files/wbox_cardboardbox.dff"/>
+    <file src="files/wbox_cardboardbox.txd"/>
+    <file src="files/wbox_carton.col"/>
+    <file src="files/wbox_carton.dff"/>
+    <file src="files/wbox_carton.txd"/>
+    <file src="files/wbox_cj_cardbrd_pickup_rest.col"/>
+    <file src="files/wbox_cj_cardbrd_pickup_rest.dff"/>
+    <file src="files/wbox_cj_cardbrd_pickup_rest.txd"/>
+    <file src="files/wbox_dockcrates1_la_rest.col"/>
+    <file src="files/wbox_dockcrates1_la_rest.dff"/>
+    <file src="files/wbox_dockcrates1_la_rest.txd"/>
+    <file src="files/wbox_dyn_box_pile_4_rest.col"/>
+    <file src="files/wbox_dyn_box_pile_4_rest.dff"/>
+    <file src="files/wbox_dyn_box_pile_4_rest.txd"/>
+    <file src="files/wbox_dyn_crate_3_rest.col"/>
+    <file src="files/wbox_dyn_crate_3_rest.dff"/>
+    <file src="files/wbox_dyn_crate_3_rest.txd"/>
+    <file src="files/wbox_fruitcrate.col"/>
+    <file src="files/wbox_fruitcrate.dff"/>
+    <file src="files/wbox_fruitcrate.txd"/>
+    <file src="files/wbox_largecarton.col"/>
+    <file src="files/wbox_largecarton.dff"/>
+    <file src="files/wbox_largecarton.txd"/>
+    <file src="files/wbox_longcrate.col"/>
+    <file src="files/wbox_longcrate.dff"/>
+    <file src="files/wbox_longcrate.txd"/>
+    <file src="files/wbox_opencardboardbox.col"/>
+    <file src="files/wbox_opencardboardbox.dff"/>
+    <file src="files/wbox_opencardboardbox.txd"/>
+    <file src="files/wbox_opencarton.col"/>
+    <file src="files/wbox_opencarton.dff"/>
+    <file src="files/wbox_opencarton.txd"/>
+    <file src="files/wbox_packing_carates04_rest.col"/>
+    <file src="files/wbox_packing_carates04_rest.dff"/>
+    <file src="files/wbox_packing_carates04_rest.txd"/>
+    <file src="files/wbox_packing_carates2_rest.col"/>
+    <file src="files/wbox_packing_carates2_rest.dff"/>
+    <file src="files/wbox_packing_carates2_rest.txd"/>
+    <file src="files/wbox_packingbox.col"/>
+    <file src="files/wbox_packingbox.dff"/>
+    <file src="files/wbox_packingbox.txd"/>
+    <file src="files/wbox_rubbishbag.col"/>
+    <file src="files/wbox_rubbishbag.dff"/>
+    <file src="files/wbox_rubbishbag.txd"/>
+    <file src="files/wbox_shippingbox.col"/>
+    <file src="files/wbox_shippingbox.dff"/>
+    <file src="files/wbox_shippingbox.txd"/>
+    <file src="files/wbox_shippingcrate.col"/>
+    <file src="files/wbox_shippingcrate.dff"/>
+    <file src="files/wbox_shippingcrate.txd"/>
+    <file src="files/wbox_smallcrate.col"/>
+    <file src="files/wbox_smallcrate.dff"/>
+    <file src="files/wbox_smallcrate.txd"/>
+    <file src="files/wbox_trashbag.col"/>
+    <file src="files/wbox_trashbag.dff"/>
+    <file src="files/wbox_trashbag.txd"/>
+    <file src="files/wbox_weaponcrate.col"/>
+    <file src="files/wbox_weaponcrate.dff"/>
+    <file src="files/wbox_weaponcrate.txd"/>
+    <file src="files/wbox_woodencrate.col"/>
+    <file src="files/wbox_woodencrate.dff"/>
+    <file src="files/wbox_woodencrate.txd"/>
+    <file src="files/wbox_wrappedcrate.col"/>
+    <file src="files/wbox_wrappedcrate.dff"/>
+    <file src="files/wbox_wrappedcrate.txd"/>
+    <export function="resolve" type="client"/>
+</meta>

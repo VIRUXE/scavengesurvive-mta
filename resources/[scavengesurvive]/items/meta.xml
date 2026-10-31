@@ -6,6 +6,7 @@
     <include resource="data"/>
     <include resource="samp_models"/>
     <include resource="hat_models"/>
+    <include resource="box_models"/>
     <include resource="skin_models"/>
     <include resource="ui"/>
     <include resource="character"/>

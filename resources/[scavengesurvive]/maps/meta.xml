@@ -6,6 +6,7 @@
     <include resource="samp_models"/>
     <include resource="door_models"/>
     <include resource="prop_models"/>
+    <include resource="box_models"/>
     <script src="shared/events.lua" type="shared"/>
     <script src="server/main.lua" type="server"/>
     <script src="client/main.lua" type="client"/>
@@ -16,6 +17,7 @@
     <file src="data/zones.lua"/>
     <file src="data/index.lua"/>
     <file src="data/BC.lua"/>
+    <file src="data/BOXES.lua"/>
     <file src="data/COLFIX.lua"/>
     <file src="data/FC.lua"/>
     <file src="data/GEN.lua"/>

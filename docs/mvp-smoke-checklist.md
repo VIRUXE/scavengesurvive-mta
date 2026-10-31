@@ -615,3 +615,10 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
       files without the dialog.
     - b. `/issues`: both reports, oldest first, the long one cut with `[...]`. Open one: reporter, reason and date.
       At level 2+ Delete removes it and the list comes back without it; at level 0 or 1 only Back.
+53. **World boxes are items** (`tools/world_boxes.py`). One client.
+    - a. Interior 1 warehouse (about -825, 500, 1358): the box piles and pallet stacks look as before, the pallets
+      stay. **F** at a carton picks it up with the carry animation; it does not go into the inventory; drop it
+      elsewhere.
+    - b. An outdoor pile (lae_stream2, about 2125, -1350): the same; nothing of the vanilla pile is left behind.
+    - c. With `world.boxes_respawn_s` lowered and nobody within `world.boxes_player_distance`, the empty spot has
+      its box again after the interval (`world` log `boxes: N spots, M made`).

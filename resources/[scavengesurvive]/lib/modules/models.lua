@@ -1,9 +1,10 @@
--- Resolves custom model ids across the model resources (samp_models, hat_models, door_models, prop_models).
+-- Resolves custom model ids across the model resources (samp_models, hat_models, door_models, prop_models,
+-- box_models).
 -- Tries the owning resource by id range first, or the running model resources in turn.
 -- Guards with getResourceState == "running" and pcall so a stopped resource makes resolve return false.
 local models = {}
 
-local ORDERED_RESOURCES = { "samp_models", "hat_models", "door_models", "prop_models" }
+local ORDERED_RESOURCES = { "samp_models", "hat_models", "door_models", "prop_models", "box_models" }
 
 local function resourceForId(id)
     if id >= 20001 and id <= 20100 then
@@ -12,6 +13,8 @@ local function resourceForId(id)
         return "door_models"
     elseif id >= 20201 and id <= 20299 then
         return "prop_models"
+    elseif id >= 20401 and id <= 20499 then
+        return "box_models"
     elseif (id >= 11682 and id <= 11753) or (id >= 18631 and id <= 19999) then
         return "samp_models"
     end

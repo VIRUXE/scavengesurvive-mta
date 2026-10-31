@@ -43,3 +43,35 @@ def native_instances(gta: Path) -> list[tuple[int, tuple[float, float, float], l
             x, y, z, qx, qy, qz, qw, model = struct.unpack_from("<7fi", blob, at + k * 40)
             found.append((model, (x, y, z), quat_matrix(qx, qy, qz, qw)))
     return found
+
+
+def native_placements(gta: Path, models: set[int]) -> list[tuple[int, tuple[float, float, float], list[list[float]], int]]:
+    """(model, position, rotation matrix, interior) of every vanilla placement of `models`, interiors included: the
+    text IPLs' interior column and the binary stream IPLs' interior field (its low byte; the high bits are flags)."""
+    found = []
+    for ipl in sorted((gta / "data" / "maps").rglob("*.ipl")):
+        section = None
+        for line in ipl.read_text(errors="ignore").splitlines():
+            line = line.split("#")[0].strip()
+            low = line.lower()
+            if low in ("inst", "cull", "grge", "enex", "pick", "jump", "tcyc", "auzo", "mult", "cars", "occl", "zone", "path"):
+                section = low
+            elif low == "end":
+                section = None
+            elif section == "inst" and line:
+                p = [s.strip() for s in line.split(",")]
+                if len(p) >= 10 and int(p[0]) in models:
+                    pos = (float(p[3]), float(p[4]), float(p[5]))
+                    found.append((int(p[0]), pos, quat_matrix(*(float(v) for v in p[6:10])), int(p[2]) & 0xFF))
+    img = gta / "models" / "gta3.img"
+    index = read_img_index(img)
+    for name in sorted(index):
+        blob = read_img_entry(img, index[name])
+        if not name.endswith(".ipl") or blob[:4] != b"bnry":
+            continue
+        count, at = struct.unpack_from("<I", blob, 4)[0], struct.unpack_from("<I", blob, 0x1C)[0]
+        for k in range(count):
+            x, y, z, qx, qy, qz, qw, model, interior = struct.unpack_from("<7f2i", blob, at + k * 40)
+            if model in models:
+                found.append((model, (x, y, z), quat_matrix(qx, qy, qz, qw), interior & 0xFF))
+    return found

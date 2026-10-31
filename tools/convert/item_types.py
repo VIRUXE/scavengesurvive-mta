@@ -6,6 +6,7 @@ import re
 
 from tools.port_defences import DEFENCES
 from tools.port_hats import HATS
+from tools.world_boxes import PARTS as WORLD_BOXES
 
 from .common import HEADER, NUM, SEED_HEADER, lua_index, lua_value, sql_str
 
@@ -247,6 +248,27 @@ def add_port_hats(types: dict[str, dict]) -> None:
         types[h["uname"]] = fields
 
 
+def add_world_boxes(types: dict[str, dict]) -> None:
+    """GTA's boxes, crates and bags cut out of the map (tools/world_boxes.py): carried like upstream's LargeBox, in the
+    same hold. Their models stand on their base (tools/extract_world_boxes.py), so modelz stays 0 and the hold moves
+    by half the box's height, turned the way items/client/attach.lua turns the object, to keep its middle in the
+    hands where the Large Box's middle is."""
+    from pathlib import Path
+
+    sizes = json.loads((Path(__file__).resolve().parents[1] / "data" / "world_box_parts.json").read_text())["parts"]
+    hold = types["LargeBox"]
+    rot = _attach_rotation(hold["attrx"], hold["attry"], hold["attrz"])
+    index = max(t["_index"] for k, t in types.items() if not k.startswith("_")) + 1
+    for i, b in enumerate(WORLD_BOXES):
+        lift = (0.0, 0.0, -sizes[b["uname"]]["height"] / 2)
+        moved = [sum(lift[k] * rot[k][j] for k in range(3)) for j in range(3)]
+        att = {k: round(hold[k] + m, 6) for k, m in zip(("attx", "atty", "attz"), moved)}
+        fields = dict(DEFAULTS, name=b["name"], uname=b["uname"], model=b["model"], size=b["size"], maxhitpoints=b["hp"])
+        fields.update(att, attrx=hold["attrx"], attry=hold["attry"], attrz=hold["attrz"], usecarryanim=True, longpickup=True)
+        fields.update(_symbol="port_" + b["uname"], _index=index + i, category="generic", categoryData=None)
+        types[b["uname"]] = fields
+
+
 def apply_port_defences(types: dict[str, dict]) -> None:
     """The hinged defence doors (tools/port_defences.py, #149) use their re-pivoted copies; the pivot goes with the
     defence, so building/shared/logic/defences.lua can put a built door where upstream's stood."""
@@ -322,6 +344,7 @@ def convert(src_root, out_data, out_seed) -> dict:
     apply_categories(types, init, apparel)
     apply_wear_offsets(types, init, apparel, armour)
     add_port_hats(types)
+    add_world_boxes(types)
     apply_port_defences(types)
     write_text(Path(out_data) / "item_types.lua", render_lua(types))
     write_text(Path(out_seed) / "0001_item_types.sql", render_sql(types))

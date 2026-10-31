@@ -17,6 +17,7 @@ import re
 from collections import Counter
 from pathlib import Path
 
+from . import world_boxes
 from .common import NUM, UnparsedLine, lua_value, read_text, write_text
 from .. import gen_vanilla_objects
 
@@ -183,6 +184,7 @@ def render_meta(zones: list[str]) -> str:
              '    <include resource="samp_models"/>',
              '    <include resource="door_models"/>',
              '    <include resource="prop_models"/>',
+             '    <include resource="box_models"/>',
              '    <script src="shared/events.lua" type="shared"/>',
              '    <script src="server/main.lua" type="server"/>',
              '    <script src="client/main.lua" type="client"/>',
@@ -279,7 +281,22 @@ def convert(src_root, out_resource, out_report=None) -> dict:
         z["removals"] += parsed["removals"]
         z["materials"] += [{**m, "object": m["object"] + offset} for m in parsed["materials"]]
         z["counts"].update(parsed["counts"])
+    # GTA's boxes, crates and bags become items (tools/convert/world_boxes.py): upstream's are handed over, and the
+    # BOXES zone takes the Rockstar ones out of the world and puts back what is left of each (its pallets)
+    boxed, upstream_boxes = world_boxes.source_models(), []
+    for z in zones.values():
+        upstream_boxes += [o for o in z["objects"] if o[0] in boxed]
+        moved = {}  # materials name objects by index: those of the kept ones move with them
+        for i, o in enumerate(z["objects"]):
+            if o[0] not in boxed:
+                moved[i] = len(moved)
+        z["materials"] = [{**m, "object": moved[m["object"]]} for m in z["materials"] if m["object"] in moved]
+        z["objects"] = [o for o in z["objects"] if o[0] not in boxed]
     out_resource = Path(out_resource)
+    boxes = world_boxes.convert(upstream_boxes, out_resource.parent / "world", out_resource)
+    print(f"world boxes: {boxes['spots']} item spots, {len(boxes['removals'])} Rockstar placements removed, "
+          f"{len(boxes['objects'])} remnants, {boxes['tilted']} tilted ones left alone")
+    zones["BOXES"] = {"files": [], "objects": boxes["objects"], "removals": boxes["removals"], "materials": [], "counts": Counter()}
     for zone in sorted(zones):
         z = zones[zone]
         write_text(out_resource / "data" / f"{zone}.lua",

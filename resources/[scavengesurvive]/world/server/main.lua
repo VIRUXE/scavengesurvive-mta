@@ -27,6 +27,17 @@ local buttonsSrv = loadFile("server/buttons.lua", "=world/server/buttons.lua")({
     area69 = loadFile("shared/logic/area69.lua", "=world/area69.lua"),
 })
 
+local settings = {}
+local boxesSrv = loadFile("server/boxes.lua", "=world/server/boxes.lua")({
+    db = db,
+    util = util,
+    logic = loadFile("shared/logic/boxes.lua", "=world/boxes.lua"),
+    spots = loadFile("data/boxes.lua", "=world/boxes_data.lua").spots,
+    setting = function(key, default)
+        return tonumber(settings[key]) or default
+    end,
+})
+
 -- upstream creates the zone files' fixed items and the puzzle items on every start; here the ones gone from the
 -- world are made again, with no despawn time, a puzzle item carrying its tag (shared/logic/fixtures.lua)
 local function placeFixtures()
@@ -76,6 +87,10 @@ end
 addEventHandler("onResourceStart", resourceRoot, function()
     placeFixtures()
     buttonsSrv.start()
+    db.settings(function(map)
+        settings = map
+        boxesSrv.start()
+    end)
     setMinuteDuration(weather.MINUTE_MS)
     syncClock()
     apply(weather.initial(math.random), "at start")

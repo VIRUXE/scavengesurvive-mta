@@ -9,9 +9,11 @@
     <script src="client/buttons.lua" type="client"/>
     <file src="client/screen.fx"/>
     <file src="server/buttons.lua"/>
+    <file src="server/boxes.lua"/>
     <file src="shared/logic/weather.lua"/>
     <file src="shared/logic/features.lua"/>
     <file src="shared/logic/fixtures.lua"/>
+    <file src="shared/logic/boxes.lua"/>
     <file src="shared/logic/buttons.lua"/>
     <file src="shared/logic/doors.lua"/>
     <file src="shared/logic/puzzles.lua"/>
