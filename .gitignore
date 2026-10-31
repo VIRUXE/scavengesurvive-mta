@@ -16,3 +16,4 @@ tools/blender/*
 !tools/blender/*.blend
 
 .cache/
+tools/trailer_shells/build/
