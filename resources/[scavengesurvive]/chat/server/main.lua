@@ -452,7 +452,7 @@ function setChatMode(player, mode)
     return setMode(player, tonumber(mode) or MODE.LOCAL, false)
 end
 
--- Other resources (staff /msg could use it) send a line in a mode on a player's behalf.
+-- Other resources (staff /announce could use it) send a line in a mode on a player's behalf.
 function sendAs(player, text, mode)
     if not isElement(player) then
         return false

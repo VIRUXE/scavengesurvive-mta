@@ -481,7 +481,7 @@ function rcon(line)
             put("%s ran /%s %s -> %s (reply in that player's chat: rcon chat %s)", who, cmd, args, tostring(ok), who)
         end
     elseif verb == "say" then
-        outputChatBox(" >  #33CCFF" .. rest, root, 255, 255, 255, true) -- same look as staff /msg: a server message
+        outputChatBox(" >  #33CCFF" .. rest, root, 255, 255, 255, true) -- the look of staff /announce
         put("sent")
     elseif verb == "tell" then
         local who, text = rest:match("^(%S+)%s+(.+)$")

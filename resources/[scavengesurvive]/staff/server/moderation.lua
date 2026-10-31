@@ -247,15 +247,15 @@ return function(ctx)
     })
 
     ctx.command({
-        name = "msg",
+        name = "announce",
         level = 1,
-        usage = "/msg <message>",
+        usage = "/announce <message>",
         help = "Server message to everyone",
         needsDb = false,
         fn = function(p, args)
             local text = logic.tail(args, 1)
             if not text then
-                return ctx.say(p, " >  Usage: /msg <message>")
+                return ctx.say(p, " >  Usage: /announce <message>")
             end
             ctx.msgAll(" >  #33CCFF%s", text)
             ctx.log(p, "msg", nil, nil, text:sub(1, 255))
