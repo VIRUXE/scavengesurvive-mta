@@ -21,6 +21,7 @@ return {
     itemUseAttempted = false,
     itemPickupRequested = true,
     itemBagOpenRequested = true,
+    itemLongPickupRequested = true,
     itemDropRequested = true,
     itemPutAwayRequested = true,
     itemTakeRequested = true,

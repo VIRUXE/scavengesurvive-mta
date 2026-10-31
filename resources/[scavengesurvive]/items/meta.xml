@@ -72,7 +72,7 @@
     <export function="setAttachPreview" type="client"/>
     <export function="getAttachConfig" type="client"/>
     <export function="nearbyCooker" type="client"/>
-    <export function="nearbyBag" type="client"/>
+    <export function="nearbyContainerItem" type="client"/>
     <export function="nearbyInspectable" type="client"/>
     <export function="nearbyMachine" type="client"/>
     <export function="nearestItemDistance" type="client"/>

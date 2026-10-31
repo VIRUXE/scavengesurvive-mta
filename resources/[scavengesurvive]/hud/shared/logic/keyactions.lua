@@ -111,6 +111,8 @@ function M.lines(ctx, keys)
     elseif h.category == "bag" then
         add("interact", "Open satchel", "openbag")
         add("putaway", "Wear", "wearbag")
+    elseif h.category == "safebox" then
+        add("interact", "Open", "openbag")
     elseif h.category == "liquid" then
         add("interact", "Drink", "drink")
     end

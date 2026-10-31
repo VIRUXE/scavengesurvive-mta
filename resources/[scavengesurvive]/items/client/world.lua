@@ -687,23 +687,24 @@ return function(ctx)
         return nil
     end
 
-    function M.nearbyBag(reach)
+    -- the nearest bag or safebox lying within reach (upstream: a tap opens it, a hold picks it up): id, category
+    function M.nearbyContainerItem(reach)
         local px, py, pz = getElementPosition(localPlayer)
         local dim, int = getElementDimension(localPlayer), getElementInterior(localPlayer)
-        local nearest, nearestDist = nil, reach * reach
+        local nearest, nearestDist, nearestCategory = nil, reach * reach, nil
         for id, e in pairs(objects) do
             local t = itemType(e.uname)
-            if t and t.category == "bag" then
+            if t and (t.category == "bag" or t.category == "safebox") then
                 local r = e.row
                 local dx, dy, dz = e.x - px, e.y - py, e.z - pz
                 local dist = dx * dx + dy * dy + dz * dz
                 local same = (r.dimension or 0) == dim and (r.interior or 0) == int
                 if same and math.abs(dz) < 3 and dist < nearestDist then
-                    nearest, nearestDist = id, dist
+                    nearest, nearestDist, nearestCategory = id, dist, t.category
                 end
             end
         end
-        return nearest
+        return nearest, nearestCategory
     end
 
     -- the distance to the nearest world item in the player's world, or false: world's buttons give way to an item

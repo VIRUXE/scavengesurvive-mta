@@ -46,8 +46,9 @@ function nearbyCooker()
     return world.nearbyCooker(2.0) or false
 end
 
-function nearbyBag()
-    return world.nearbyBag(2.0) or false
+function nearbyContainerItem()
+    local id, category = world.nearbyContainerItem(2.0)
+    return id or false, category or false
 end
 
 -- client export for the hud: a Sign or a body lying within reach (a tap of F edits or investigates it, a held F

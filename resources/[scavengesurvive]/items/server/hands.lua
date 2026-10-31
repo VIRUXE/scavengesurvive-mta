@@ -854,6 +854,45 @@ return function(ctx)
         end, { player = player, charId = cid, radius = r })
     end, { rate = 5 })
 
+    -- a hold of the interact key on a bag or a box lying there (upstream "Hold F to pick up / Press F to open"): the
+    -- item goes to the empty hand with whatever lies inside it
+    net.handler("itemLongPickupRequested", function(player, worldItemId)
+        worldItemId = tonumber(worldItemId)
+        local cid = charId(player)
+        if not cid or not worldItemId or isBadInteract(player) then
+            return
+        end
+        if state.lastHolster and state.lastHolster[player] and (getTickCount() - state.lastHolster[player] < 1000) then
+            return
+        end
+        if state.held[player] then
+            return toast(player, "HANDS_FULL")
+        end
+        local radius = tonumber(state.settings["items.pickup_radius"]) or 2.0
+        local sql = "SELECT i.id, i.type_uname AS uname, i.hitpoints AS hp, i.data, i.x, i.y, i.interior, i.dimension "
+            .. "FROM items i WHERE i.id = ? AND i.container_id IS NULL AND i.holder_char_id IS NULL "
+            .. "AND i.holder_kind IS NULL AND i.x IS NOT NULL"
+        db.one(sql, { worldItemId }, function(row, c)
+            if not isElement(c.player) or not row then
+                return
+            end
+            local t = itemType(row.uname)
+            if not t or (t.category ~= "bag" and t.category ~= "safebox") then
+                return
+            end
+            local sameInt = (row.interior or 0) == getElementInterior(c.player)
+            local sameDim = (row.dimension or 0) == getElementDimension(c.player)
+            if not (sameInt and sameDim) then
+                return
+            end
+            local px, py = getElementPosition(c.player)
+            if getDistanceBetweenPoints2D(px, py, row.x, row.y) > c.radius then
+                return
+            end
+            M.pickup(c.player, c.charId, row)
+        end, { player = player, charId = cid, radius = radius })
+    end, { rate = 5 })
+
     -- opts (placing an item, server/smallitems.lua's shield): { ahead, below, turn, data }, or at = { x, y, z, rz }
     -- for a spot of the server's (on a table, server/furniture.lua); a plain drop lands 1 m ahead at the feet with
     -- the player's heading, and clears a placed item's standing pose

@@ -590,7 +590,7 @@ return function(ctx)
                         return
                     end
                     local t = itemType(row.uname)
-                    if not t or t.category ~= "bag" then
+                    if not t or (t.category ~= "bag" and t.category ~= "safebox") then
                         return
                     end
                     if
@@ -611,7 +611,7 @@ return function(ctx)
         end
         local bag = state.held[player]
         local t = bag and itemType(bag.uname)
-        if t and t.category == "bag" then
+        if t and (t.category == "bag" or t.category == "safebox") then
             M.openWorldContainer(player, bag)
         end
     end, { rate = 5 })

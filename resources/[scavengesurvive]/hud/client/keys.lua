@@ -118,7 +118,7 @@ return function(ctx)
         -- Hold F to pick up", #136, #139)
         -- a machine (#145, upstream "Press F to access machine / Hold F to open menu"): the tap opens its
         -- container, the hold its menu, or a refuel that lasts as long as the key stays down
-        local bagId = exports.items:nearbyBag()
+        local bagId, bagCategory = exports.items:nearbyContainerItem()
         local inspectId, inspectUname = false, false
         if not bagId and not ctx.getHeld() then
             inspectId, inspectUname = exports.items:nearbyInspectable()
@@ -141,9 +141,9 @@ return function(ctx)
                     if menuSent then
                         triggerServerEvent("machineHoldReleased", localPlayer)
                     elseif getTickCount() - startTick < 500 then
-                        if bagId then
+                        if bagId and bagCategory == "bag" then
                             triggerServerEvent("itemBagOpenRequested", localPlayer, bagId)
-                        elseif machineId then
+                        elseif bagId or machineId then
                             triggerServerEvent("itemPickupRequested", localPlayer)
                         elseif inspectUname == "Sign" then
                             triggerServerEvent("signEditRequested", localPlayer, inspectId)
@@ -160,7 +160,11 @@ return function(ctx)
                     else
                         killTimer(interactHoldTimer)
                         interactHoldTimer = nil
-                        triggerServerEvent("itemPickupRequested", localPlayer)
+                        if bagId then
+                            triggerServerEvent("itemLongPickupRequested", localPlayer, bagId)
+                        else
+                            triggerServerEvent("itemPickupRequested", localPlayer)
+                        end
                     end
                 end
             end, 50, 0)
@@ -240,7 +244,7 @@ return function(ctx)
         then
             return triggerServerEvent("itemUseRequested", localPlayer, held.id)
         end
-        if held and held.category == "bag" then
+        if held and (held.category == "bag" or held.category == "safebox") then
             return triggerServerEvent("itemBagOpenRequested", localPlayer)
         end
         -- a walk-in vehicle door (the towable Airstream's) only takes the key nothing above wanted, and gives way to a

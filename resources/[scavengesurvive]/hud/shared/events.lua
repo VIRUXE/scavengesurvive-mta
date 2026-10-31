@@ -2,6 +2,7 @@
 addEvent("hudStateRequested", true)
 addEvent("itemPickupRequested", true)
 addEvent("itemBagOpenRequested", true)
+addEvent("itemLongPickupRequested", true)
 addEvent("itemDropRequested", true)
 addEvent("itemUnwearRequested", true)
 addEvent("itemPutAwayRequested", true)
