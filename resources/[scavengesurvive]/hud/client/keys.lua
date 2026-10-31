@@ -89,6 +89,7 @@ return function(ctx)
     -- F is both interact and GTA's enter_exit: a press that opens a trunk (or is pressed while the trunk/inventory
     -- list is open) must not also start the enter task (#113). The server's onVehicleStartEnter only sees it too late.
     local TRUNK_ENTER_BLOCK_MS = 1000
+    local PICKUP_REACH = 2.0
     local blockEnterUntil = 0
     addEventHandler("onClientVehicleStartEnter", root, function(player)
         if player == localPlayer and (getTickCount() < blockEnterUntil or listIsOpen()) then
@@ -123,6 +124,7 @@ return function(ctx)
         local crowbar = (ctx.getHeld() or {}).uname == "Crowbar"
         local machineId = not bagId and not inspectId and not crowbar and exports.items:nearbyMachine() or false
         if bagId or inspectId or machineId then
+            blockEnterUntil = getTickCount() + TRUNK_ENTER_BLOCK_MS
             if isTimer(interactHoldTimer) then
                 return
             end
@@ -234,6 +236,11 @@ return function(ctx)
         -- world item lying nearer (vehicles nearbyTrailerDoor)
         if exports.vehicles:tryTrailerDoor() == true then
             return
+        end
+        -- a world item within reach takes the press (pickup), so it must not also board a vehicle beside it
+        local itemDist = exports.items:nearestItemDistance()
+        if itemDist and itemDist <= PICKUP_REACH then
+            blockEnterUntil = getTickCount() + TRUNK_ENTER_BLOCK_MS
         end
         triggerServerEvent("itemPickupRequested", localPlayer)
     end)
