@@ -711,7 +711,7 @@ return function(ctx)
         end, { player = player, row = row })
     end
 
-    net.handler("itemPickupRequested", function(player)
+    net.handler("itemPickupRequested", function(player, blocked)
         local cid = charId(player)
         if not cid or isBadInteract(player) then
             return
@@ -726,7 +726,8 @@ return function(ctx)
         local x, y = getElementPosition(player)
         local r = tonumber(state.settings["items.pickup_radius"]) or 2.0
         local unames = held and targetsFor(held.uname)
-        local sql = world.findNearestSql(x, y, r, getElementInterior(player), getElementDimension(player), unames)
+        local int, dim = getElementInterior(player), getElementDimension(player)
+        local sql = world.findNearestSql(x, y, r, int, dim, unames, world.cleanIds(blocked))
         db.one(sql, {}, function(row, c)
             if not isElement(c.player) then
                 return

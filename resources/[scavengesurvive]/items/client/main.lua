@@ -69,6 +69,11 @@ function nearbyMachine()
 end
 
 function getAttachConfig(slot)
+-- the ids of the world items within reach that a wall hides: the hud sends them with a pickup so the server skips them
+function blockedItemsNear()
+    return world.blockedNear(2.0)
+end
+
     return attach.getConfig(slot)
 end
 

@@ -144,7 +144,7 @@ return function(ctx)
                         if bagId and bagCategory == "bag" then
                             triggerServerEvent("itemBagOpenRequested", localPlayer, bagId)
                         elseif bagId or machineId then
-                            triggerServerEvent("itemPickupRequested", localPlayer)
+                            triggerServerEvent("itemPickupRequested", localPlayer, exports.items:blockedItemsNear())
                         elseif inspectUname == "Sign" then
                             triggerServerEvent("signEditRequested", localPlayer, inspectId)
                         elseif inspectUname == "PlantPot" then
@@ -163,7 +163,7 @@ return function(ctx)
                         if bagId then
                             triggerServerEvent("itemLongPickupRequested", localPlayer, bagId)
                         else
-                            triggerServerEvent("itemPickupRequested", localPlayer)
+                            triggerServerEvent("itemPickupRequested", localPlayer, exports.items:blockedItemsNear())
                         end
                     end
                 end
@@ -257,7 +257,7 @@ return function(ctx)
         if itemDist and itemDist <= PICKUP_REACH then
             blockEnterUntil = getTickCount() + TRUNK_ENTER_BLOCK_MS
         end
-        triggerServerEvent("itemPickupRequested", localPlayer)
+        triggerServerEvent("itemPickupRequested", localPlayer, exports.items:blockedItemsNear())
     end)
 
     isKeyHeld = function(key, cmd)

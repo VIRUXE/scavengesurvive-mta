@@ -19,8 +19,9 @@ return function(ctx)
             .. "'), p.pos)"
     end
 
-    -- unames: optional list of type unames (server constants) the nearest item must be one of
-    function M.findNearestSql(x, y, r, interior, dimension, unames)
+    -- unames: optional list of type unames (server constants) the nearest item must be one of; exclude: optional list
+    -- of item ids to leave out (the client's walled-off items, already cleaned to integers by M.cleanIds)
+    function M.findNearestSql(x, y, r, interior, dimension, unames, exclude)
         local point = string.format("POINT(%g, %g)", x, y)
         local where = "ST_Distance(p.pos, " .. point .. ") <= " .. string.format("%g", r)
         if unames then
@@ -30,7 +31,25 @@ return function(ctx)
             where = where
                 .. string.format(" AND IFNULL(i.interior, 0) = %d AND IFNULL(i.dimension, 0) = %d", interior, dimension)
         end
+        if exclude and #exclude > 0 then
+            where = where .. " AND i.id NOT IN (" .. table.concat(exclude, ", ") .. ")"
+        end
         return "SELECT " .. COLS .. FROM .. where .. " ORDER BY ST_Distance(p.pos, " .. point .. ") ASC LIMIT 1"
+    end
+
+    -- a client's list of item ids as at most 32 positive integers (anything else is dropped)
+    function M.cleanIds(list)
+        local ids = {}
+        if type(list) ~= "table" then
+            return ids
+        end
+        for _, v in ipairs(list) do
+            local n = math.floor(tonumber(v) or 0)
+            if n > 0 and #ids < 32 then
+                ids[#ids + 1] = n
+            end
+        end
+        return ids
     end
 
     -- Strip sensitive server-only fields (e.g. defence passcodes) before sending world item data to clients.

@@ -20,6 +20,8 @@ return function(ctx)
     local objects = {} -- id -> { obj | parts, pitched, row, uname, hp, x, y, z, name, fires, plant }
     local lockersOpen = {} -- locker item id -> true while someone has it open (lockerToggled, #143)
     local labelVisibility = {} -- id -> { visible, checkedAt }
+    local reachCache = {} -- id -> { ok, at }: no wall between the player and the item
+    local itemElements = setmetatable({}, { __mode = "k" }) -- elements world items draw: never a wall
     local shaders = {} -- tent material key -> shader, or false when its texture could not be read
     local typeCache = {}
     -- Items riding in a towed walk-in trailer (the vehicles resource lists them in the trailer's "vehicles.cargo"
@@ -263,6 +265,60 @@ return function(ctx)
             objects[id] = nil
         end
         labelVisibility[id] = nil
+        reachCache[id] = nil
+    end
+
+    local REACH_CACHE_MS = 250
+    local REACH_RAY_STEPS = 6 -- items and held objects a ray may pass through before it counts as blocked
+    local F = false
+
+    -- a ray from the chest to a point; items and carried objects are passed through, anything else blocks it
+    local function rayClear(sx, sy, sz, tx, ty, tz, ign)
+        for _ = 1, REACH_RAY_STEPS do
+            local left = getDistanceBetweenPoints3D(sx, sy, sz, tx, ty, tz)
+            if left < 0.1 then
+                return true
+            end
+            local hit, hx, hy, hz, el = processLineOfSight(sx, sy, sz, tx, ty, tz, true, F, F, true, F, F, F, F, ign)
+            if not hit then
+                return true
+            end
+            if not (el and (itemElements[el] or getElementAttachedTo(el))) then
+                return false
+            end
+            local k = 0.05 / math.max(left, 0.05)
+            sx, sy, sz = hx + (tx - sx) * k, hy + (ty - sy) * k, hz + (tz - sz) * k
+            ign = el
+        end
+        return false
+    end
+
+    -- true when no wall or map object lies between the player and the world item (a carton in a pile, a table or a
+    -- low kerb does not count): the server picks by distance alone and cannot test this
+    local function reachable(id, e)
+        local now = getTickCount()
+        local cached = reachCache[id]
+        if cached and now - cached.at < REACH_CACHE_MS then
+            return cached.ok
+        end
+        local sx, sy, sz = getElementPosition(localPlayer)
+        sz = sz + 0.5
+        local own = isElement(e.obj) and e.obj or nil
+        local ok = rayClear(sx, sy, sz, e.x, e.y, e.z + 0.15, own) or rayClear(sx, sy, sz, e.x, e.y, e.z + 0.6, own)
+        reachCache[id] = { ok = ok, at = now }
+        return ok
+    end
+
+    -- every element the item draws, so that a ray passes through it
+    local function markItemElements(e)
+        for _, el in ipairs({ e.obj or false, e.plant or false, e.shown or false, e.covering or false }) do
+            if el then
+                itemElements[el] = true
+            end
+        end
+        for _, part in ipairs(e.parts or {}) do
+            itemElements[part] = true
+        end
     end
 
     -- Upstream retextures the tent parts with stock GTA textures (SetDynamicObjectMaterial); here a replace
@@ -479,6 +535,7 @@ return function(ctx)
                 updateSmoke(e, r)
                 updateShown(e, r)
                 updateCovering(e, r)
+                markItemElements(e)
             else
                 e = {
                     pitched = isPitched,
@@ -501,6 +558,7 @@ return function(ctx)
                 updateSmoke(e, r)
                 updateShown(e, r)
                 updateCovering(e, r)
+                markItemElements(e)
                 objects[r.id] = e
             end
             attachRider(r.id)
@@ -662,7 +720,7 @@ return function(ctx)
                 local r = e.row
                 local dx, dy, dz = e.x - px, e.y - py, e.z - pz
                 local same = (r.dimension or 0) == dim and (r.interior or 0) == int
-                if same and dx * dx + dy * dy <= reach * reach and math.abs(dz) < 3 then
+                if same and dx * dx + dy * dy <= reach * reach and math.abs(dz) < 3 and reachable(id, e) then
                     return id, e.uname
                 end
             end
@@ -679,7 +737,7 @@ return function(ctx)
                 local r = e.row
                 local dx, dy, dz = e.x - px, e.y - py, e.z - pz
                 local same = (r.dimension or 0) == dim and (r.interior or 0) == int
-                if same and dx * dx + dy * dy <= reach * reach and math.abs(dz) < 3 then
+                if same and dx * dx + dy * dy <= reach * reach and math.abs(dz) < 3 and reachable(id, e) then
                     return id
                 end
             end
@@ -699,7 +757,7 @@ return function(ctx)
                 local dx, dy, dz = e.x - px, e.y - py, e.z - pz
                 local dist = dx * dx + dy * dy + dz * dz
                 local same = (r.dimension or 0) == dim and (r.interior or 0) == int
-                if same and math.abs(dz) < 3 and dist < nearestDist then
+                if same and math.abs(dz) < 3 and dist < nearestDist and reachable(id, e) then
                     nearest, nearestDist, nearestCategory = id, dist, t.category
                 end
             end
@@ -713,17 +771,36 @@ return function(ctx)
         local px, py, pz = getElementPosition(localPlayer)
         local dim, int = getElementDimension(localPlayer), getElementInterior(localPlayer)
         local best = nil
-        for _, e in pairs(objects) do
+        for id, e in pairs(objects) do
             local r = e.row
             if (r.dimension or 0) == dim and (r.interior or 0) == int then
                 local dx, dy, dz = e.x - px, e.y - py, e.z - pz
                 local dist = dx * dx + dy * dy + dz * dz
-                if not best or dist < best then
+                if (not best or dist < best) and (dist > 9 or reachable(id, e)) then
                     best = dist
                 end
             end
         end
         return best and math.sqrt(best) or false
+    end
+
+    -- the ids of the world items within reach that a wall hides (at most 32): the server leaves them out of a pickup
+    function M.blockedNear(reach)
+        local px, py, pz = getElementPosition(localPlayer)
+        local dim, int = getElementDimension(localPlayer), getElementInterior(localPlayer)
+        local blocked = {}
+        for id, e in pairs(objects) do
+            local r = e.row
+            local dx, dy, dz = e.x - px, e.y - py, e.z - pz
+            local same = (r.dimension or 0) == dim and (r.interior or 0) == int
+            if same and dx * dx + dy * dy <= reach * reach and math.abs(dz) < 3 and not reachable(id, e) then
+                blocked[#blocked + 1] = id
+                if #blocked >= 32 then
+                    break
+                end
+            end
+        end
+        return blocked
     end
     for _, vehicle in ipairs(getElementsByType("vehicle")) do
         if getElementData(vehicle, "vehicles.cargo") then

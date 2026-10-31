@@ -77,3 +77,4 @@
     <export function="nearbyMachine" type="client"/>
     <export function="nearestItemDistance" type="client"/>
 </meta>
+    <export function="blockedItemsNear" type="client"/>
