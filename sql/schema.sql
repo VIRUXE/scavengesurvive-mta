@@ -1473,6 +1473,22 @@ BEGIN
   END IF;
 END//
 
+CREATE OR REPLACE PROCEDURE `item_world_move`(IN p_rows JSON)
+BEGIN
+  DECLARE v_n INT DEFAULT 0;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
+  SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+  START TRANSACTION;
+  UPDATE items i
+    JOIN JSON_TABLE(p_rows, '$[0][*]' COLUMNS (
+      id INT PATH '$.id', x FLOAT PATH '$.x', y FLOAT PATH '$.y', z FLOAT PATH '$.z', rz FLOAT PATH '$.rz')) j ON j.id = i.id
+    SET i.x = j.x, i.y = j.y, i.z = j.z, i.rz = j.rz
+    WHERE i.x IS NOT NULL AND i.container_id IS NULL AND i.holder_char_id IS NULL;
+  SET v_n = ROW_COUNT();
+  COMMIT;
+  SELECT 1 AS ok, 'OK' AS code, JSON_OBJECT('moved', CAST(v_n AS SIGNED)) AS payload;
+END//
+
 CREATE OR REPLACE PROCEDURE `loot_roll`(IN p_rolls JSON, IN p_despawn_minutes INT)
 BEGIN
   -- p_rolls: MTA's toJSON of [{s = spawn id, cd = cooldown seconds, items = [{u, data (JSON text or nil), x, y, z, rz}]}],

@@ -227,6 +227,17 @@ M.WALK_IN_DOOR = 2
 M.DOOR_REACH = 1.8
 M.DOOR_SERVER_REACH = 6.0
 
+-- What a walk-in trailer carries while hitched: the world items inside its room, in the vehicle's frame (the towable
+-- Airstream: walls at x ±1.06, the end sections reach y -2.6 and 3.95, the floor is z -0.45 and the ceiling 1.8;
+-- a little margin for things lying against the walls), looked for within CARGO_RADIUS of its centre.
+M.CARGO_BOX = { x = 1.15, y0 = -2.7, y1 = 4.05, z0 = -0.6, z1 = 1.9 }
+M.CARGO_RADIUS = 5.5
+
+function M.inCargoBox(lx, ly, lz)
+    local b = M.CARGO_BOX
+    return math.abs(lx) <= b.x and ly >= b.y0 and ly <= b.y1 and lz >= b.z0 and lz <= b.z1
+end
+
 -- Upstream trailer.pwn: a trailer is in reach while the two centres are closer than both lengths and a metre.
 function M.towReach(truckModel, trailerModel)
     return (M.MODEL_LENGTH[truckModel] or 5.0) + (M.MODEL_LENGTH[trailerModel] or 5.0) + 1.0
