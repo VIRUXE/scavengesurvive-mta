@@ -1,5 +1,7 @@
 import math
 
+from pytest import approx
+
 from tools import fort_walkways as w
 from tools import make_fort_kit as kit
 
@@ -49,3 +51,13 @@ def test_placements_stand_each_span_at_its_start_with_its_model_id():
     assert len(rows) == len(w.SPANS) and all(len(r) == 10 for r in rows)
     assert {r[0] for r in rows} == {ids[n] for n in w.SPANS}
     assert [r[1:4] for r in rows][0] == list(w.SPANS["fort_walk_n_stairs"][1])
+
+
+def test_a_bridge_is_lifted_over_a_roof_that_would_reach_it(monkeypatch):
+    spec_a, spec_b = (0.0, 0.0, 17.0), (0.0, 4.0, 17.0)
+    samples = [{"s": float(s), "top": [None, 16.0, 17.5 if s == 2 else 16.0, 16.0, None], "floor": [12.5] * 5} for s in range(5)]
+    monkeypatch.setattr(w, "surfaces", lambda: {"fort_walk_n_bridge": samples})
+    nodes = w.fitted_nodes("fort_walk_n_bridge", spec_a, 0.0, 4.0)
+    assert max(z for _s, z in nodes) == approx(17.5 + w.CLEAR - 17.0)
+    assert nodes[0][0] == 0.0 and nodes[-1][0] == 4.0
+    assert spec_b[2] == spec_a[2]

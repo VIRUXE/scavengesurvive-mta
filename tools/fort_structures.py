@@ -14,7 +14,9 @@ the place it stands, at the position and rotation upstream gave it, and everythi
 """
 from __future__ import annotations
 
+import json
 import math
+from pathlib import Path
 
 DECK, TIMBER, SHEET, STEEL = "planks01", "was_scrpyd_rustmetal", "ws_corrugated1", "rustybolts"  # make_fort_kit's textures
 
@@ -24,19 +26,55 @@ PLACED = {
     "fort_shelter": (2484.079, -1664.151, 12.31, 0.0),
     "fort_leanto": (2459.3, -1666.6, 12.48, 0.0),
 }
+SURFACES = Path(__file__).resolve().parent / "data" / "fort_surfaces.json"
+LAB_CLEAR = 0.15  # a roof within this of the deck's top is a roof the deck gives way to
+AREAS = {"fort_labdeck": (4.7, 4.7), "fort_shelter": (7.3, 3.35)}  # half extents tools/fort_scene.py samples under each
 LAB_FLOOR = 13.1  # the ground under the lab deck, read off Ariane (docs/reviews/2026-10-31-fort-defiance-spans.md)
 
 
+def surface_grid(name: str) -> list[dict]:
+    """The scenery under a structure's footprint as tools/fort_scene.py sampled it: [{u, v, top, floor}] in model space."""
+    data = json.loads(SURFACES.read_text(encoding="utf-8")) if SURFACES.exists() else {}
+    return data.get(name, [])
+
+
 def labdeck() -> tuple[list[tuple], list[tuple]]:
-    """A 9.4 m plank deck whose top is the origin, on a 3 x 3 grid of posts to the ground."""
-    drop = LAB_FLOOR - PLACED["fort_labdeck"][2]  # local z of the ground, negative
-    parts = [(0.0, 0.0, -0.07, 9.4, 9.4, 0.14, DECK)]
-    parts += [(0.0, y, -0.28, 9.4, 0.14, 0.4, TIMBER) for y in (-4.65, 4.65)]
-    parts += [(x, 0.0, -0.28, 0.14, 9.4, 0.4, TIMBER) for x in (-4.65, 4.65)]
-    parts += [(0.0, y, -0.4, 9.2, 0.25, 0.24, TIMBER) for y in (-3.0, 0.0, 3.0)]
-    posts = [(x, y, (drop + -0.14) / 2, 0.3, 0.3, -0.14 - drop) for x in (-4.0, 0.0, 4.0) for y in (-4.0, 0.0, 4.0)]
-    parts += [p + (TIMBER,) for p in posts]
-    cols = [(0.0, 0.0, -0.07, 9.4, 9.4, 0.14)] + posts
+    """A plank deck whose top is the origin, over the alley between two houses: it is laid only where the scenery leaves
+    room under it (a roof or ridge that reaches the deck takes its place), on posts that stand on the ground or the roof
+    below, in one slab per row of the 1 m sampling grid."""
+    grid = surface_grid("fort_labdeck")
+    top_z = PLACED["fort_labdeck"][2]
+    cell = 9.4 / 9
+    rows: dict[float, list[dict]] = {}
+    low = {(round((g["u"] + 4.7) / cell), round((g["v"] + 4.7) / cell)): g["top"] is None or g["top"] < top_z - LAB_CLEAR for g in grid}
+    for g in grid:
+        at = (round((g["u"] + 4.7) / cell), round((g["v"] + 4.7) / cell))
+        if all(low.get((at[0] + du, at[1] + dv), True) for du in (-1, 0, 1) for dv in (-1, 0, 1)):  # and every neighbour: a slab is a cell wide
+            rows.setdefault(g["v"], []).append(g)
+    parts, cols = [], []
+    for v, cells in sorted(rows.items()):
+        cells.sort(key=lambda g: g["u"])
+        run = [cells[0]]
+        for g in cells[1:] + [None]:
+            if g is not None and g["u"] - run[-1]["u"] < cell * 1.5:
+                run.append(g)
+                continue
+            u0, u1 = run[0]["u"] - cell / 2, run[-1]["u"] + cell / 2
+            parts.append(((u0 + u1) / 2, v, -0.07, u1 - u0, cell, 0.14, DECK))
+            parts.append(((u0 + u1) / 2, v, -0.28, u1 - u0, 0.2, 0.28, TIMBER))
+            cols.append(((u0 + u1) / 2, v, -0.07, u1 - u0, cell, 0.14))
+            run = [g] if g is not None else []
+    for tu in (-4.0, 0.0, 4.0):
+        for tv in (-4.0, 0.0, 4.0):
+            g = min(grid, key=lambda c: math.hypot(c["u"] - tu, c["v"] - tv))
+            if g["top"] is not None and g["top"] >= top_z - LAB_CLEAR:
+                continue
+            ground = g["floor"] if g["floor"] is not None else LAB_FLOOR
+            low = ground - top_z
+            if -0.14 - low > 0.35:
+                post = (g["u"], g["v"], (low - 0.14) / 2, 0.3, 0.3, -0.14 - low)
+                parts.append(post + (TIMBER,))
+                cols.append(post)
     return parts, cols
 
 

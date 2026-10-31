@@ -7,8 +7,9 @@ def test_the_lab_deck_has_its_top_at_the_origin_and_posts_to_the_ground():
     parts, cols = st.piece("fort_labdeck")
     assert all(p[6] in kit.TEXTURES for p in parts)
     posts = [c for c in cols if c[3] < 1.0]
-    ground = st.LAB_FLOOR - st.PLACED["fort_labdeck"][2]
-    assert len(posts) == 9 and all(abs((p[2] - p[5] / 2) - ground) < 0.01 for p in posts)  # every post starts at the ground
+    assert len(posts) >= 3 and all(p[2] + p[5] / 2 < -0.1 for p in posts)  # posts hang from under the deck
+    deck = [c for c in cols if c[3] >= 1.0]
+    assert deck and all(abs(c[2] + 0.07) < 0.001 for c in deck)  # every slab is a plank deck topped at the origin
     assert max(c[2] + c[5] / 2 for c in cols) <= 0.001  # nothing stands above the deck's top
 
 

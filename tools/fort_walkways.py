@@ -11,9 +11,13 @@ end point. `piece(name)` returns (parts, collision boxes) in tools/make_fort_kit
 """
 from __future__ import annotations
 
+import json
 import math
+from pathlib import Path
 
 GROUND = 12.5
+CLEAR = 0.12  # the deck's underside clears a native roof or ridge by this much
+SURFACES = Path(__file__).resolve().parent / "data" / "fort_surfaces.json"
 WIDTH, THICK, RAIL = 1.8, 0.12, 1.0
 STEP_RISE, RAMP_SEG, FLAT_SEG = 0.22, 0.5, 1.0
 DECK, TIMBER, STEEL = "planks01", "was_scrpyd_rustmetal", "rustybolts"  # tools/make_fort_kit.py's texture names
@@ -32,16 +36,57 @@ SPANS = {
 }
 
 
+def surfaces() -> dict:
+    """What stands under each span, sampled from the scenery's own meshes by tools/fort_scene.py (empty when not sampled)."""
+    return json.loads(SURFACES.read_text(encoding="utf-8")) if SURFACES.exists() else {}
+
+
+def median(values: list) -> float | None:
+    found = sorted(v for v in values if v is not None)
+    return found[len(found) // 2] if found else None
+
+
+def fitted_nodes(name: str, a: tuple, dz: float, length: float) -> list[tuple[float, float]]:
+    """(s, deck z relative to the start) along a bridge or ramp: the designed line, lifted wherever a native roof, wall or
+    ridge under its middle three lanes would reach it, then thinned to the nodes where the line actually bends."""
+    samples = surfaces().get(name)
+    if not samples:
+        return []
+    pts = []
+    for sample in samples:
+        s = sample["s"]
+        want = dz * s / length
+        tops = [t for t in sample["top"][1:4] if t is not None]
+        pts.append((s, round(max([want] + [max(tops) + CLEAR - a[2]] if tops else [want]), 2)))
+    keep = [pts[0]]
+    for k in range(1, len(pts) - 1):
+        (s0, z0), (s1, z1), (s2, z2) = keep[-1], pts[k], pts[k + 1]
+        if abs(z0 + (z2 - z0) * (s1 - s0) / (s2 - s0) - z1) > 0.04:
+            keep.append(pts[k])
+    return keep + [pts[-1]]
+
+
 def layout(name: str) -> dict:
     kind, a, b, floors = SPANS[name]
     length = math.hypot(b[0] - a[0], b[1] - a[1])
     dz = b[2] - a[2]
-    return {"kind": kind, "a": a, "b": b, "length": length, "dz": dz, "angle": math.degrees(math.atan2(dz, length)),
-            "heading": math.degrees(math.atan2(-(b[0] - a[0]), b[1] - a[1])) % 360, "floors": floors}
+    nodes = [] if kind == "stairs" else fitted_nodes(name, a, dz, length)
+    return {"name": name, "kind": kind, "a": a, "b": b, "length": length, "dz": dz, "angle": math.degrees(math.atan2(dz, length)),
+            "heading": math.degrees(math.atan2(-(b[0] - a[0]), b[1] - a[1])) % 360, "floors": floors, "nodes": nodes}
 
 
 def floor_at(spec: dict, s: float, start_z: float) -> float:
-    """The z (local, relative to the deck's start) of whatever the span stands on at distance s."""
+    """The z (local, relative to the deck's start) of whatever the span stands on at distance s: the roof or ground the
+    scenery has there, else the measured floor segments, else the street."""
+    samples = surfaces().get(spec["name"])
+    if samples:
+        near = min(samples, key=lambda sample: abs(sample["s"] - s))
+        top = median(near["top"][1:4])
+        if top is not None:
+            return top - start_z
+        ground = median(near["floor"][1:4])
+        if ground is not None:
+            return ground - start_z
     for lo, hi, z in spec["floors"]:
         if lo <= s <= hi:
             return z - start_z
@@ -49,7 +94,13 @@ def floor_at(spec: dict, s: float, start_z: float) -> float:
 
 
 def deck_z(spec: dict, s: float) -> float:
-    return spec["dz"] * s / spec["length"]
+    nodes = spec["nodes"]
+    if not nodes:
+        return spec["dz"] * s / spec["length"]
+    for (s0, z0), (s1, z1) in zip(nodes, nodes[1:]):
+        if s <= s1:
+            return z0 + (z1 - z0) * (s - s0) / (s1 - s0) if s1 > s0 else z1
+    return nodes[-1][1]
 
 
 def sloped(cx, cy, cz, sx, length, sz, tex, angle):
@@ -57,13 +108,21 @@ def sloped(cx, cy, cz, sx, length, sz, tex, angle):
     return (cx, cy, cz, sx, length / math.cos(math.radians(angle)), sz, tex, angle)
 
 
+def legs(spec: dict) -> list[tuple[float, float, float, float]]:
+    """(s0, z0, s1, z1) pieces of the deck line: the fitted nodes, or the one designed slope."""
+    nodes = spec["nodes"] or [(0.0, 0.0), (spec["length"], spec["dz"])]
+    return [(s0, z0, s1, z1) for (s0, z0), (s1, z1) in zip(nodes, nodes[1:]) if s1 > s0]
+
+
 def rails(spec: dict) -> list[tuple]:
-    length, dz, angle = spec["length"], spec["dz"], spec["angle"]
+    length = spec["length"]
     parts = []
     for side in (-1, 1):
         x = side * (WIDTH / 2 - 0.05)
-        for h in (RAIL, RAIL / 2):
-            parts.append(sloped(x, length / 2, dz / 2 + h, 0.05, length, 0.05, STEEL, angle))
+        for s0, z0, s1, z1 in legs(spec):
+            angle = math.degrees(math.atan2(z1 - z0, s1 - s0))
+            for h in (RAIL, RAIL / 2):
+                parts.append(sloped(x, (s0 + s1) / 2, (z0 + z1) / 2 + h, 0.05, s1 - s0, 0.05, STEEL, angle))
         n = max(2, round(length / 2.0))
         for i in range(n + 1):
             s = length * i / n
@@ -88,18 +147,19 @@ def supports(spec: dict) -> list[tuple]:
 
 
 def bridge_parts(spec: dict) -> tuple[list[tuple], list[tuple]]:
-    length, dz, angle = spec["length"], spec["dz"], spec["angle"]
-    parts = [sloped(0.0, length / 2, dz / 2 - THICK / 2, WIDTH, length, THICK, DECK, angle)] + rails(spec) + supports(spec)
-    seg = RAMP_SEG if abs(dz) / length > 0.2 else FLAT_SEG
-    n = max(1, math.ceil(length / seg))
-    cols = []
-    for i in range(n):
-        lo, hi = length * i / n, length * (i + 1) / n
-        z = deck_z(spec, (lo + hi) / 2)
-        cols.append((0.0, (lo + hi) / 2, z - THICK / 2, WIDTH, hi - lo + 0.02, THICK))
-        for side in (-1, 1):
-            cols.append((side * (WIDTH / 2 - 0.05), (lo + hi) / 2, z + RAIL / 2, 0.08, hi - lo + 0.02, RAIL))
-    return parts, cols
+    parts, cols = [], []
+    for s0, z0, s1, z1 in legs(spec):
+        angle = math.degrees(math.atan2(z1 - z0, s1 - s0))
+        parts.append(sloped(0.0, (s0 + s1) / 2, (z0 + z1) / 2 - THICK / 2, WIDTH, s1 - s0 + 0.02, THICK, DECK, angle))
+        seg = RAMP_SEG if abs(z1 - z0) / (s1 - s0) > 0.2 else FLAT_SEG
+        n = max(1, math.ceil((s1 - s0) / seg))
+        for i in range(n):
+            lo, hi = s0 + (s1 - s0) * i / n, s0 + (s1 - s0) * (i + 1) / n
+            z = deck_z(spec, (lo + hi) / 2)
+            cols.append((0.0, (lo + hi) / 2, z - THICK / 2, WIDTH, hi - lo + 0.02, THICK))
+            for side in (-1, 1):
+                cols.append((side * (WIDTH / 2 - 0.05), (lo + hi) / 2, z + RAIL / 2, 0.08, hi - lo + 0.02, RAIL))
+    return parts + rails(spec) + supports(spec), cols
 
 
 def stairs_parts(spec: dict) -> tuple[list[tuple], list[tuple]]:
