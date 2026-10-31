@@ -137,3 +137,13 @@ def test_replaced_models_are_dropped_from_their_file_and_the_port_rows_added(tmp
     assert zones["LS"]["counts"]["replaced"] == 2 and zones["LS"]["counts"]["added"] == 1
     text = report.read_text(encoding="utf-8")
     assert "| replaced | added |" in text
+
+
+def test_a_disabled_map_file_is_not_loaded(tmp_path, monkeypatch):
+    src = tmp_path / "upstream" / "scriptfiles" / "maps"
+    (src / "LS").mkdir(parents=True)
+    (src / "LS" / "A.map").write_text("CreateObject(1234, 1, 2, 3, 0, 0, 90);\n", encoding="utf-8")
+    (src / "LS" / "B.map").write_text("CreateObject(1235, 4, 5, 6, 0, 0, 0);\n", encoding="utf-8")
+    monkeypatch.setattr(maps, "DISABLED_MAPS", {"LS/B.map"})
+    zones = maps.convert(tmp_path / "upstream", tmp_path / "maps", tmp_path / "census.md")
+    assert zones["LS"]["files"] == ["LS/A.map"] and [o[0] for o in zones["LS"]["objects"]] == [1234]

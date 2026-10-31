@@ -32,6 +32,8 @@ DEFAULT_RANGE = 350.0
 # upstream props the port rebuilds as custom models: rows of these models in these files are dropped (counted as
 # `replaced`), and the rows of the replacements are added in their place (counted as `added`); tools/fort_walkways.py
 REPLACED_MODELS = {"LS/Fort Defiance.map": {3406, 16502, 11496, 3361, 974, 1245, 1503, 11327, 3095, 17010, 16405, 3260}}
+# upstream map files the port does not load at all (the rest of the file's zone is unaffected)
+DISABLED_MAPS = {"LS/Fort Defiance.map"}
 BUILDING_LIMIT = 3000.0  # MTA createBuilding rejects |x| or |y| beyond this
 
 
@@ -287,6 +289,8 @@ def convert(src_root, out_resource, out_report=None) -> dict:
     root = Path(src_root) / "scriptfiles" / "maps"
     zones: dict[str, dict] = {}
     for path in map_files(src_root):
+        if path.relative_to(root).as_posix() in DISABLED_MAPS:
+            continue
         zone = zone_of(path, root)
         z = zones.setdefault(zone, {"files": [], "objects": [], "removals": [], "materials": [], "counts": Counter()})
         rel = path.relative_to(root).as_posix()
