@@ -17,6 +17,20 @@ return function(ctx)
         return t
     end
 
+    local RIDE_RANGE = 4.5 -- metres from a vehicle's centre: close enough to be standing in or on it
+
+    local function nearestVehicle(x, y, z)
+        local best, bestDist = nil, RIDE_RANGE
+        for _, v in ipairs(getElementsWithinRange(x, y, z, RIDE_RANGE, "vehicle")) do
+            local vx, vy, vz = getElementPosition(v)
+            local d = getDistanceBetweenPoints3D(x, y, z, vx, vy, vz)
+            if d < bestDist then
+                best, bestDist = v, d
+            end
+        end
+        return best
+    end
+
     function M.reset(player)
         byPlayer[player] = travel.new()
     end
@@ -25,11 +39,24 @@ return function(ctx)
     function M.tick(player, ms)
         local t = of(player)
         local x, y, z = getElementPosition(player)
+        -- standing on a vehicle (a towed Airstream): only the movement relative to it counts, not the ride
+        local ride = not getPedOccupiedVehicle(player) and nearestVehicle(x, y, z) or nil
+        local rx, ry, rz = 0, 0, 0
+        if ride then
+            rx, ry, rz = getElementPosition(ride)
+        end
         local dist = 0
         if t.lastX then
-            dist = getDistanceBetweenPoints3D(t.lastX, t.lastY, t.lastZ, x, y, z)
+            local sameRide = ride and t.ride == ride
+            local dx, dy, dz =
+                sameRide and rx - t.rideX or 0, sameRide and ry - t.rideY or 0, sameRide and rz - t.rideZ or 0
+            dist = getDistanceBetweenPoints3D(t.lastX + dx, t.lastY + dy, t.lastZ + dz, x, y, z)
+            if ride and not sameRide then
+                dist = 0
+            end
         end
         t.lastX, t.lastY, t.lastZ = x, y, z
+        t.ride, t.rideX, t.rideY, t.rideZ = ride, rx, ry, rz
         if ctx.isKnockedOut(player) then
             t.knockedOutMs = t.knockedOutMs + ms
             return
