@@ -27,7 +27,7 @@ FLAGS = {"VEHICLE_FLAG_NOT_LOCKABLE": 1, "VEHICLE_FLAG_NO_ENGINE": 2, "VEHICLE_F
          "VEHICLE_FLAG_CAN_SURF": 8}
 FLAG_KEYS = {1: "notLockable", 2: "noEngine", 4: "trailer", 8: "canSurf"}
 
-# Port-only vehicle types, after upstream's. The towable Airstream (house_shell, tools/trailer_shells/towable.py) is
+# Port-only vehicle types, after upstream's. The towable Airstream (airstream_models, tools/trailer_shells/towable.py) is
 # the medium Airstream shell on model 610: a small trailer any small hitch takes, rolled rarely at civilian truck
 # points, with no trunk (it is lived in); `handling` is what the vehicles resource sets on the model, `door` marks
 # a walk-in door (its front-left vehicle door) the interact key opens and shuts.

@@ -1,13 +1,13 @@
 """The towable Airstream: the medium Airstream shell (sm_airstrm_med_.py's output) as a trailer vehicle replacing the
 unused farm trailer, model 610. The utility trailer (utiltr1, model 611, extracted by prep.py) gives the frame
 hierarchy the game wants of a trailer (chassis, four wheel dummies, hookup, misc_a); the shell is the body, its door
-leaf the vehicle's front-left door, its step a frame of its own (the vehicles client hides it while towed), a
+leaf the vehicle's front-left door, its step a frame of its own (the airstream_models client hides it while towed), a
 jockey leg the game lowers by itself when unhitched, and its collision boxes (for peds inside) plus underbody spheres
 the collision.
 
     blender -b --python tools/trailer_shells/towable.py
 
-Run it after the shell's own script whenever the shell changes. Writes into the vehicles resource: files/airstream_tow.dff,
+Run it after the shell's own script whenever the shell changes. Writes into the airstream_models resource: files/airstream_tow.dff,
 its textures (files/airstream_tow.txd, the ones it uses out of house_shell's trailers.txd), its door leaf as an object
 of its own (files/airstream_tow_door.dff/.col, the shell's leaf: a vehicle's door has no collision, so the client hangs
 this one, unseen, in the doorway while the door is shut) and towable.lua (model, files, wheel size and the door's
@@ -46,7 +46,7 @@ Z0 = 0.90  # shell z that becomes the vehicle origin's height
 HITCH_REACH = -0.35  # hookup this far past the tow bar's tip (behind it): the bar reaches the towing car's bumper
 WHEEL_X = 0.98  # wheel centres: inboard of the painted hubs, so the game's 10 % wider wheel stays behind the skin
 WHEEL_WIDTH, WHEEL_SIDES = 0.24, 16
-VEHICLES = os.path.join(ROOT, "resources", "[scavengesurvive]", "vehicles")
+VEHICLES = os.path.join(ROOT, "resources", "[scavengesurvive]", "airstream_models")
 FILES = os.path.join(VEHICLES, "files")
 LUA = os.path.join(VEHICLES, "towable.lua")
 
