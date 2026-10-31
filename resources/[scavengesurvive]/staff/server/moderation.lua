@@ -263,6 +263,27 @@ return function(ctx)
     })
 
     ctx.command({
+        name = "tell",
+        level = 1,
+        usage = "/tell <player> <message>",
+        help = "Server message to one player (partial names work)",
+        needsDb = false,
+        fn = function(p, args)
+            local text = logic.tail(args, 2)
+            if not args[1] or not text then
+                return ctx.say(p, " >  Usage: /tell <player> <message>")
+            end
+            local target = ctx.findPlayer(p, args[1])
+            if not target then
+                return
+            end
+            ctx.say(target, " >  #33CCFF%s", text)
+            ctx.say(p, " >  Sent to %s.", getPlayerName(target))
+            ctx.log(p, "tell", getPlayerName(target), ctx.accountId(target), text:sub(1, 255))
+        end,
+    })
+
+    ctx.command({
         name = "clearchat",
         level = 1,
         usage = "/clearchat",
