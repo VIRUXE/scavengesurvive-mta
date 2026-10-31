@@ -1,5 +1,5 @@
 -- Zone polygon geometry and point-in-polygon lookup (upstream pyss/pyss/utility/regions.py).
--- Pure logic: no MTA calls at file scope so busted can load it directly.
+-- Pure logic: no MTA calls at file scope.
 local zones = {}
 
 zones.ORDER = { "ls", "sf", "lv", "rc", "fc", "bc", "tr" }

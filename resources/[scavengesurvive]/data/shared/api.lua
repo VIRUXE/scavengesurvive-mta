@@ -1,6 +1,6 @@
 -- Static gamemode data: item types, loot tables, vehicle types and translations from data/generated.
 -- Everything lives in this local table; the exports at the bottom are the only globals, and the file
--- returns the table so busted can load it (tests/lua/spec/data_api_spec.lua).
+-- returns the table.
 local Data = {}
 
 local function readSource(path)

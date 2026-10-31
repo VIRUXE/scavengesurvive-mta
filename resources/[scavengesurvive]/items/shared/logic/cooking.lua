@@ -1,7 +1,7 @@
 -- Cooking (#95; upstream core/item/campfire.pwn, core/item/barbecue.pwn, core/item/food.pwn). A cooker's state is
 -- its item data, so a restart keeps it: a Campfire holds { burnsAt, food, doneAt }, a Barbecue { fuel, grill, doneAt }
 -- (grill = two food item ids, 0 for a free spot). Times are unix seconds. Food cooked on either carries
--- data.cooked = 1 (upstream food_cooked). Pure: busted dofiles it; items/server/cooking.lua does the I/O.
+-- data.cooked = 1 (upstream food_cooked). Pure; items/server/cooking.lua does the I/O.
 local M = {}
 
 M.CAMPFIRE_COOK_S = 60 -- cmp_FinishCooking[60000]

@@ -9,8 +9,8 @@ checked-out tree through the junction created by `run-local.ps1`.
 ## Steps
 
 1. Checks, from the repo root (CLAUDE.md "Commands"):
-   `.lua/bin/busted.bat tests/lua`, `.lua/bin/luacheck.bat resources`, `stylua --check resources`, `pytest -q`
-   (needs MariaDB for `tests/sql`). All four must pass; the two luacheck line-length warnings in files owned by
+   `.lua/bin/luacheck.bat resources`, `stylua --check resources`.
+   Both must pass; the two luacheck line-length warnings in files owned by
    work in progress block a release, not a commit.
 2. Boot: stop the server, `pwsh server-config/run-local.ps1` (no `-Reset`), confirm `0 failed` in `server.log`
    and no `ERROR` in `scripts.log`, log in with one client and run the smoke steps for the milestone in

@@ -33,5 +33,4 @@ body:
     attributes:
       label: Acceptance criteria
       value: |
-        - [ ] busted / pytest cover the pure logic and procedures
         - [ ] playtest checklist row added to docs

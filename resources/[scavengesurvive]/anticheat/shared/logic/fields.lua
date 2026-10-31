@@ -1,6 +1,5 @@
 -- Pure detection-field logic (upstream admin/detfield*.pwn): a field is a polygon of {x, y} points with a Z band,
--- and a player's first step into it is reported once until they leave. No MTA calls at file scope (busted loads
--- it with tests/lua/helpers/mta_mock.lua).
+-- and a player's first step into it is reported once until they leave. No MTA calls at file scope.
 local fields = {}
 
 -- Even-odd rule: a horizontal ray from (x, y) crosses an odd number of edges when the point is inside.

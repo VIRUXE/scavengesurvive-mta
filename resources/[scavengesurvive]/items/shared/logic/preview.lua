@@ -1,6 +1,6 @@
 -- Live model previews in the six gear tiles (upstream core/char/inventory.pwn:CreatePlayerTile, SA-MP font-5
 -- previews). The client draws each slot's model with dxDrawModel3D in world space DEPTH metres in front of the
--- camera, at the world point under the tile centre; this module holds the framing maths so busted can check it.
+-- camera, at the world point under the tile centre; this module holds the framing maths.
 local M = {}
 
 M.ROTATION = { x = -45, y = 0, z = -45 } -- upstream preview rotation, zoom 1

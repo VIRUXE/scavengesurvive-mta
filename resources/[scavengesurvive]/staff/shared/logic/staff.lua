@@ -1,5 +1,5 @@
 -- Pure staff logic: levels, the command registry, duration parsing, player lookup and list rows.
--- No MTA calls at file scope (busted loads it with tests/lua/helpers/mta_mock.lua).
+-- No MTA calls at file scope.
 -- Upstream: gamemodes/sss/core/admin/admin.pwn (levels, names, colours, RegisterAdminCommand/acmds).
 local staff = {}
 
