@@ -63,6 +63,7 @@ return function(ctx)
         LOCKBREAKNO = "This lock is reinforced, a crowbar will not work",
         LOCKNODOORS = "This vehicle does not have doors to lock",
         LOCKALREADY = "This vehicle already has a lock",
+        LOCKCHNDOOR = "A lock and chain only fits a vehicle without doors, use a Locksmith Kit",
         LOCKVNOLOCK = "This vehicle does not have a lock",
         LOCKKEYNCUT = "This key is not cut for any lock",
         LOCKKEYNFIT = "This key does not fit this lock",

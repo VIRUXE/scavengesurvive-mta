@@ -155,11 +155,64 @@ function M.canBreakLock(lockState, itemUname)
     return false, "NEED_TOOL"
 end
 
-function M.canCraftKey(lockState, itemUname, notLockable, currentKeyCode)
-    if notLockable then
-        return false, "LOCKNODOORS"
-    end
-    if itemUname ~= "LocksmithKit" and itemUname ~= "WheelLock" then
+-- GTA SA models with no doors (RC toys left out): bicycles, motorbikes, the quad, boats, the hovercraft and the open
+-- cars and utility vehicles. A Lock and Chain locks these, a Locksmith Kit everything else.
+M.DOORLESS_MODELS = {
+    [481] = true, -- BMX
+    [509] = true, -- Bike
+    [510] = true, -- Mountain Bike
+    [448] = true, -- Pizzaboy
+    [461] = true, -- PCJ-600
+    [462] = true, -- Faggio
+    [463] = true, -- Freeway
+    [468] = true, -- Sanchez
+    [521] = true, -- FCR-900
+    [522] = true, -- NRG-500
+    [523] = true, -- HPV1000
+    [581] = true, -- BF-400
+    [586] = true, -- Wayfarer
+    [471] = true, -- Quad
+    [430] = true, -- Predator
+    [446] = true, -- Squalo
+    [452] = true, -- Speeder
+    [453] = true, -- Reefer
+    [454] = true, -- Tropic
+    [472] = true, -- Coastguard
+    [473] = true, -- Dinghy
+    [484] = true, -- Marquis
+    [493] = true, -- Jetmax
+    [595] = true, -- Launch
+    [539] = true, -- Vortex
+    [424] = true, -- BF Injection
+    [457] = true, -- Caddy
+    [485] = true, -- Baggage
+    [486] = true, -- Dozer
+    [530] = true, -- Forklift
+    [531] = true, -- Tractor
+    [532] = true, -- Combine Harvester
+    [568] = true, -- Bandito
+    [571] = true, -- Kart
+    [572] = true, -- Mower
+    [583] = true, -- Tug
+}
+
+-- a vehicle type flagged not lockable upstream, or a doorless model
+function M.isDoorless(model, notLockable)
+    return notLockable == true or M.DOORLESS_MODELS[model] == true
+end
+
+-- upstream locksmith.pwn: the Locksmith Kit refuses doorless vehicles; the Lock and Chain (WheelLock) is the lock
+-- for them, and the port keeps it to them (upstream let it lock cars too)
+function M.canCraftKey(lockState, itemUname, doorless, currentKeyCode)
+    if itemUname == "LocksmithKit" then
+        if doorless then
+            return false, "LOCKNODOORS"
+        end
+    elseif itemUname == "WheelLock" then
+        if not doorless then
+            return false, "LOCKCHNDOOR"
+        end
+    else
         return false, "NEED_TOOL"
     end
     if (currentKeyCode or 0) ~= 0 or lockState == M.LOCK_EXTERNAL then

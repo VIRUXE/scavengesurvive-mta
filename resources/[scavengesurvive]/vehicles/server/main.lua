@@ -1306,7 +1306,8 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
         end
 
         if uname == "LocksmithKit" or uname == "WheelLock" then
-            local ok, err = vlogic.canCraftKey(inf.locked, uname, vt and vt.notLockable, inf.keyCode)
+            local doorless = vlogic.isDoorless(getElementModel(vehicle), vt and vt.notLockable)
+            local ok, err = vlogic.canCraftKey(inf.locked, uname, doorless, inf.keyCode)
             if not ok then
                 return toast(player, err)
             end
