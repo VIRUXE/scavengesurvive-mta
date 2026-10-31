@@ -19,9 +19,9 @@ addEventHandler("onClientResourceStart", resourceRoot, function()
             failed[#failed + 1] = doorModel .. " (" .. err .. ")"
         end
     end
-    local suffix = #failed > 0 and (", failed: " .. table.concat(failed, ", ")) or ""
-    local msg = ("door_models: %d fitted house doors loaded%s"):format(count, suffix)
-    outputDebugString(msg, #failed > 0 and 2 or 3)
+    if #failed > 0 then
+        outputDebugString(("door_models: %d loaded, failed: %s"):format(count, table.concat(failed, ", ")), 2)
+    end
     triggerEvent("sampModelsChanged", root)
 end)
 

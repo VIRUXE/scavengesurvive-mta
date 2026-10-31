@@ -23,9 +23,9 @@ addEventHandler("onClientResourceStart", resourceRoot, function()
             failed[#failed + 1] = "skin " .. base .. " (" .. err .. ")"
         end
     end
-    local suffix = #failed > 0 and (", failed: " .. table.concat(failed, ", ")) or ""
-    local msg = ("skin_models: %d hatless skins loaded%s"):format(count, suffix)
-    outputDebugString(msg, #failed > 0 and 2 or 3)
+    if #failed > 0 then
+        outputDebugString(("skin_models: %d loaded, failed: %s"):format(count, table.concat(failed, ", ")), 2)
+    end
     triggerEvent("sampModelsChanged", root)
 end)
 

@@ -47,9 +47,9 @@ addEventHandler("onClientResourceStart", resourceRoot, function()
             end
         end
     end
-    local suffix = #failed > 0 and (", failed: " .. table.concat(failed, ", ")) or ""
-    local msg = ("samp_models: %d SA-MP models loaded%s"):format(count, suffix)
-    outputDebugString(msg, #failed > 0 and 2 or 3)
+    if #failed > 0 then
+        outputDebugString(("samp_models: %d loaded, failed: %s"):format(count, table.concat(failed, ", ")), 2)
+    end
     triggerEvent("sampModelsChanged", root)
 end)
 
