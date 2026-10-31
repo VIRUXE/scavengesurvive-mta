@@ -49,7 +49,7 @@ function M.lines(ctx, keys)
         add("engine", "Toggle engine", "engine")
         add("lights", "Toggle lights", "lights")
         add("doors", "Toggle locks", "doors")
-        add("radio", "Open radio", "radio")
+        add("radio", ctx.held and ctx.held.isWeapon and "(Hold) Open radio" or "Open radio", "radio")
         -- not an upstream line: its trailer key (KEY_ACTION, vehicle/trailer.pwn) went unlisted
         if ctx.hitch then
             add("hitch", ctx.hitch == "unhitch" and "Unhitch trailer" or "Hitch trailer")

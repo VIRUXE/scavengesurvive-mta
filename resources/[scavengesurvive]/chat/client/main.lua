@@ -202,15 +202,42 @@ addEventHandler("onClientKey", root, function(key, press)
     end
 end)
 
--- R opens the radio in a vehicle (hud shows "R Open radio" there); on foot R stays the reload key.
-local function radioKey()
+-- R opens the radio in a vehicle; on foot it stays the reload key. With a reloadable firearm in hand a tap reloads,
+-- so there R must be held (hud shows "R (Hold) Open radio").
+local RADIO_HOLD_MS = 600
+local radioHoldTimer = false
+
+local function stopRadioHold()
+    if radioHoldTimer and isTimer(radioHoldTimer) then
+        killTimer(radioHoldTimer)
+    end
+    radioHoldTimer = false
+end
+
+local function openRadioFromHold()
+    radioHoldTimer = false
+    if not state.open and getPedOccupiedVehicle(localPlayer) then
+        open()
+    end
+end
+
+local function radioKey(_, keyState)
+    if keyState == "up" then
+        return stopRadioHold()
+    end
     if isChatBoxInputActive() or isConsoleActive() or isMainMenuActive() or uiListIsOpen() then
         return
     end
     if state.open then
         return close()
     end
-    if getPedOccupiedVehicle(localPlayer) then
+    if not getPedOccupiedVehicle(localPlayer) then
+        return
+    end
+    stopRadioHold()
+    if exports.hud:holdingReloadable() then
+        radioHoldTimer = setTimer(openRadioFromHold, RADIO_HOLD_MS, 1)
+    else
         open()
     end
 end
@@ -223,7 +250,7 @@ local function disableGameRadio()
 end
 
 addEventHandler("onClientResourceStart", resourceRoot, function()
-    bindKey("r", "down", radioKey)
+    bindKey("r", "both", radioKey)
     for _, control in ipairs(RADIO_CONTROLS) do
         radioControlsWereEnabled[control] = isControlEnabled(control)
         toggleControl(control, false)
@@ -239,7 +266,7 @@ addEventHandler("onClientVehicleEnter", root, function(player)
 end)
 
 addEventHandler("onClientResourceStop", resourceRoot, function()
-    unbindKey("r", "down", radioKey)
+    unbindKey("r", "both", radioKey)
     for _, control in ipairs(RADIO_CONTROLS) do
         toggleControl(control, radioControlsWereEnabled[control] ~= false)
     end

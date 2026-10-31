@@ -404,6 +404,12 @@ addEventHandler("onClientRender", root, function()
     end
 end)
 
+-- export: a reloadable firearm is in hand (chat holds R to open the radio then, a tap reloads)
+function holdingReloadable()
+    local held = state.held
+    return held and held.category == "weapon" and held.calibre ~= nil and not held.liquid and true or false
+end
+
 -- export: hide everything this resource draws, stock components included; false brings the usual set back
 function setHidden(hidden)
     state.hidden = hidden == true

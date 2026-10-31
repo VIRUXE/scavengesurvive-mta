@@ -222,7 +222,7 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
     - b. **Radio.** A: `/freq 101.3`, B: `/freq 101.3`, both `/r`: messages show as `[101.30] A: …` in orange for both;
       B `/freq 101.4` still hears (0.05 window), `/freq 101.5` no longer does. The watch bottom-left shows each
       player's own frequency live.
-    - c. **Panel.** In a vehicle press **R** (the key list shows `R Open radio`), or `/radio` anywhere: the RADIO
+    - c. **Panel.** In a vehicle press **R** (the key list shows `R Open radio`; with a reloadable firearm in hand it reads `R (Hold) Open radio` and R must be held), or `/radio` anywhere: the RADIO
       panel at 320,200 with the dial strip, two red knobs (±0.5 MHz, clamped to 87.5-108.0), `global`/`freq`
       toggle, `Frequency: x` (mouse wheel over it: ±0.01), red `on`/`off` power (off = local chat, on returns to the
       last transmitting mode) and Close; hovering highlights; Escape closes. Changes show on the watch at once.

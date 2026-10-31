@@ -19,4 +19,5 @@
     <file src="shared/logic/watch.lua"/>
     <file src="shared/logic/vehiclepanel.lua"/>
     <export function="setHidden" type="client"/>
+    <export function="holdingReloadable" type="client"/>
 </meta>
