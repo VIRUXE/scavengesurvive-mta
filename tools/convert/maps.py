@@ -130,6 +130,15 @@ def zone_of(path: Path, root: Path) -> str:
     return path.relative_to(root).parts[0]
 
 
+def settled(rel: str, objects: list) -> list:
+    """`objects` with the z of every prop tools/fort_scene.py found floating or sunk set to rest on the surface under it."""
+    path = Path(__file__).resolve().parents[1] / "data" / "fort_settle.json"
+    if rel not in REPLACED_MODELS or not path.exists():
+        return objects
+    moves = {(m[0], m[1], m[2], m[3]): m[4] for m in json.loads(path.read_text(encoding="utf-8"))}
+    return [[*o[:3], moves.get((o[0], o[1], o[2], o[3]), o[3]), *o[4:]] for o in objects]
+
+
 def port_rows(rel: str) -> list[list]:
     """The rows of the port's own models that stand where `rel`'s replaced props were."""
     if rel not in REPLACED_MODELS:
@@ -284,7 +293,7 @@ def convert(src_root, out_resource, out_report=None) -> dict:
         parsed = parse_map(read_text(path), rel)
         if rel in REPLACED_MODELS:
             gone = [o for o in parsed["objects"] if o[0] in REPLACED_MODELS[rel]]
-            parsed["objects"] = [o for o in parsed["objects"] if o[0] not in REPLACED_MODELS[rel]] + port_rows(rel)
+            parsed["objects"] = settled(rel, [o for o in parsed["objects"] if o[0] not in REPLACED_MODELS[rel]]) + port_rows(rel)
             parsed["counts"]["replaced"] += len(gone)
             parsed["counts"]["added"] += len(port_rows(rel))
         offset = len(z["objects"])

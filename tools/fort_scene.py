@@ -57,24 +57,43 @@ def scene_spec(gta: Path, radius: float, out_dir: Path) -> dict:
     for name in fort_walkways.SPANS:
         spec = fort_walkways.layout(name)
         spans[name] = {"a": spec["a"], "b": spec["b"], "length": spec["length"], "width": fort_walkways.WIDTH}
+    from tools.convert.maps import REPLACED_MODELS, parse_map
+    from tools.fort_survey import UPSTREAM
+
+    samp_img = gta / "SAMP" / "SAMP.img"
+    samp_index = read_img_index(samp_img) if samp_img.exists() else {}
+    props = []
+    for row in parse_map((UPSTREAM / "LS" / "Fort Defiance.map").read_text(encoding="utf-8", errors="ignore"), "LS/Fort Defiance.map")["objects"]:
+        if row[0] in REPLACED_MODELS["LS/Fort Defiance.map"] or row[0] not in names:
+            continue
+        dff = names[row[0]][0]
+        if dff not in used:
+            if f"{dff}.dff" in index:
+                (out_dir / f"{dff}.dff").write_bytes(read_img_entry(img, index[f"{dff}.dff"]))
+            elif f"{dff}.dff" in samp_index:
+                (out_dir / f"{dff}.dff").write_bytes(read_img_entry(samp_img, samp_index[f"{dff}.dff"]))
+            else:
+                continue
+            used.add(dff)
+        props.append({"dff": dff, "row": row[:7], "m": matrix(row[4], row[5], row[6])})
     from tools import fort_structures
 
     areas = {name: {"at": list(fort_structures.PLACED[name]), "half": half} for name, half in fort_structures.AREAS.items()}
-    return {"natives": natives, "custom": custom, "spans": spans, "areas": areas, "dir": str(out_dir)}
+    return {"natives": natives, "custom": custom, "spans": spans, "areas": areas, "props": props, "dir": str(out_dir)}
 
 
-def run_in_blender(spec: dict, blend: Path, report: Path, surfaces: Path, blender: Path) -> None:
+def run_in_blender(spec: dict, blend: Path, report: Path, surfaces: Path, settle: Path, blender: Path) -> None:
     with tempfile.TemporaryDirectory() as tmp:
         spec_path = Path(tmp) / "spec.json"
         spec_path.write_text(json.dumps(spec), encoding="utf-8")
-        cmd = [str(blender), "-b", "--python", __file__, "--", str(spec_path), str(blend), str(report), str(surfaces)]
+        cmd = [str(blender), "-b", "--python", __file__, "--", str(spec_path), str(blend), str(report), str(surfaces), str(settle)]
         res = subprocess.run(cmd, capture_output=True, text=True)
         if res.returncode:
             print(res.stdout[-2000:], res.stderr[-2000:], file=sys.stderr)
             raise SystemExit("fort_scene: Blender failed")
 
 
-def build_in_blender(spec_path: str, blend: str, report: str, surfaces: str) -> None:
+def build_in_blender(spec_path: str, blend: str, report: str, surfaces: str, settle_path: str) -> None:
     import bmesh
     import bpy
     from mathutils import Matrix, Vector
@@ -125,6 +144,17 @@ def build_in_blender(spec_path: str, blend: str, report: str, surfaces: str) -> 
         ob.matrix_world = world(c["p"], c["m"])
         cus_col.objects.link(ob)
         custom.append(ob)
+    prop_col = bpy.data.collections.new("props")
+    scene.collection.children.link(prop_col)
+    props = []
+    for pr in spec["props"]:
+        if pr["dff"] not in meshes:
+            meshes[pr["dff"]] = load(f"{spec['dir']}/{pr['dff']}.dff")
+        ob = bpy.data.objects.new(pr["dff"], meshes[pr["dff"]])
+        ob.matrix_world = world(pr["row"][1:4], pr["m"])
+        prop_col.objects.link(ob)
+        ob["row"] = pr["row"][:4]
+        props.append(ob)
     bpy.context.view_layer.update()
 
     def tree(ob):
@@ -133,6 +163,15 @@ def build_in_blender(spec_path: str, blend: str, report: str, surfaces: str) -> 
         bm.transform(ob.matrix_world)
         bm.faces.ensure_lookup_table()
         return BVHTree.FromBMesh(bm), bm
+
+    def merge_bmesh(obs):
+        bm = bmesh.new()
+        for ob in obs:
+            tmp = ob.data.copy()
+            tmp.transform(ob.matrix_world)
+            bm.from_mesh(tmp)
+            bpy.data.meshes.remove(tmp)
+        return bm
 
     native_trees = [(ob, *tree(ob)) for ob in natives]
     lines = ["# Fort Defiance: custom models against the Rockstar scenery", "",
@@ -162,6 +201,51 @@ def build_in_blender(spec_path: str, blend: str, report: str, surfaces: str) -> 
             lines.append(f"| {count} | {name} | {lo[0]:.1f}, {lo[1]:.1f}, {lo[2]:.1f} | {hi[0]:.1f}, {hi[1]:.1f}, {hi[2]:.1f} |")
         lines.append("")
     lines.insert(3, f"{total} model/native pairs intersect.")
+    def clip_counts(obs, against):
+        found = {}
+        for ob in obs:
+            mine, _bm = tree(ob)
+            n = sum(len(mine.overlap(t)) for other, t, _b in against if other is not ob)
+            if n:
+                found[ob] = n
+        return found
+
+    solid_against = [(ob, *tree(ob)) for ob in natives + custom if not THIN.search(ob.name)]
+    solid_against = [(ob, t, b) for ob, t, b in solid_against]
+    clipping = clip_counts(props, solid_against)
+    surface_tree = BVHTree.FromBMesh(merge_bmesh([ob for ob, _t, _b in solid_against]))
+    settle = []
+    for ob in props:
+        pts = [ob.matrix_world @ v.co for v in ob.data.vertices]
+        if not pts:
+            continue
+        bottom = min(p.z for p in pts)
+        xs, ys = [p.x for p in pts], [p.y for p in pts]
+        cx, cy = (min(xs) + max(xs)) / 2, (min(ys) + max(ys)) / 2
+        tops = []
+        for fx, fy in ((0, 0), (0.3, 0.3), (-0.3, 0.3), (0.3, -0.3), (-0.3, -0.3)):
+            x, y = cx + fx * (max(xs) - min(xs)), cy + fy * (max(ys) - min(ys))
+            hit = surface_tree.ray_cast(Vector((x, y, bottom + 0.6)), Vector((0, 0, -1)), 2.0)
+            if hit[0] is not None:
+                tops.append(hit[0].z)
+        if not tops:
+            continue
+        dz = max(tops) - bottom
+        if 0.03 < abs(dz) <= 1.0 and ob in clipping or 0.15 < abs(dz) <= 1.0:
+            ob.location.z += dz
+            row = ob["row"]
+            settle.append([row[0], row[1], row[2], row[3], round(row[3] + dz, 3)])
+    bpy.context.view_layer.update()
+    after = clip_counts(props, [(ob, *tree(ob)) for ob in natives + custom if not THIN.search(ob.name)])
+    Path(settle_path).write_text(json.dumps(settle), encoding="utf-8", newline="\n")
+    props_lines = ["", "## Upstream props that stay", "", f"{len(props)} props: {len(clipping)} intersected a native or custom mesh, {len(settle)} moved to rest on the "
+                   f"surface below them, {len(after)} still intersect.", ""]
+    if after:
+        props_lines += ["| tris | prop | at (x, y, z) |", "| ---: | --- | --- |"]
+        for ob, n in sorted(after.items(), key=lambda kv: -kv[1])[:40]:
+            props_lines.append(f"| {n} | {ob.name} | {ob.location.x:.1f}, {ob.location.y:.1f}, {ob.location.z:.1f} |")
+    lines += props_lines
+
     ground = re.compile(r"road|grnd|landhub|grass|hub_|bush|tree|palm|veg|^sm_|plant", re.I)
     solid = [ob for ob in natives if not ground.search(ob.name)]
     floor = [ob for ob in natives if ground.search(ob.name) and not re.search(r"bush|tree|palm|veg|^sm_|plant", ob.name, re.I)]
@@ -225,6 +309,7 @@ def main(argv=None) -> int:
     ap.add_argument("--blend", type=Path, default=ROOT / ".cache" / "fort_scene.blend")
     ap.add_argument("--report", type=Path, default=ROOT / "docs" / "reviews" / "2026-10-31-fort-defiance-scene.md")
     ap.add_argument("--surfaces", type=Path, default=ROOT / "tools" / "data" / "fort_surfaces.json")
+    ap.add_argument("--settle", type=Path, default=ROOT / "tools" / "data" / "fort_settle.json")
     ap.add_argument("--blender")
     args = ap.parse_args(argv)
     blender = find_blender(args.blender)
@@ -234,13 +319,13 @@ def main(argv=None) -> int:
     args.blend.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory() as tmp:
         spec = scene_spec(args.gta, args.radius, Path(tmp))
-        run_in_blender(spec, args.blend, args.report, args.surfaces, blender)
+        run_in_blender(spec, args.blend, args.report, args.surfaces, args.settle, blender)
     print(f"fort_scene: {len(spec['natives'])} natives, {len(spec['custom'])} custom -> {args.report}")
     return 0
 
 
 if __name__ == "__main__":
     if "bpy" in sys.modules or "--" in sys.argv:
-        build_in_blender(*sys.argv[sys.argv.index("--") + 1 :][:4])
+        build_in_blender(*sys.argv[sys.argv.index("--") + 1 :][:5])
     else:
         sys.exit(main())
