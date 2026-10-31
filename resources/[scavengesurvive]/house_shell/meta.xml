@@ -30,8 +30,20 @@
     <file src="files/trailer5_01.dff"/>
     <file src="files/trailer5_01_door.col"/>
     <file src="files/trailer5_01_door.dff"/>
+    <file src="files/trailer6_01.col"/>
+    <file src="files/trailer6_01.dff"/>
+    <file src="files/trailer6_01_door.col"/>
+    <file src="files/trailer6_01_door.dff"/>
     <file src="files/trailer_large4_01.col"/>
     <file src="files/trailer_large4_01.dff"/>
     <file src="files/trailer_large4_01_door.col"/>
     <file src="files/trailer_large4_01_door.dff"/>
+    <file src="files/sm_airstrm_sml_.col"/>
+    <file src="files/sm_airstrm_sml_.dff"/>
+    <file src="files/sm_airstrm_sml__door.col"/>
+    <file src="files/sm_airstrm_sml__door.dff"/>
+    <file src="files/sm_airstrm_med_.col"/>
+    <file src="files/sm_airstrm_med_.dff"/>
+    <file src="files/sm_airstrm_med__door.col"/>
+    <file src="files/sm_airstrm_med__door.dff"/>
 </meta>
