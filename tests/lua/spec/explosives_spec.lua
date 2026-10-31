@@ -68,36 +68,46 @@ describe("explosives pure logic", function()
             assert.are.equal("Door", destroyed[1].uname)
         end)
 
-        it("carries what a broken defence did not need on to the next nearest", function()
-            local items = {
-                { id = 3, def = true, hitpoints = 5, x = 3, y = 0, z = 0 },
-                { id = 1, def = true, hitpoints = 1, x = 1, y = 0, z = 0 },
-                { id = 2, def = true, hitpoints = 1, x = 2, y = 0, z = 0 },
-                { id = 9, def = false, hitpoints = 4, x = 5, y = 0, z = 0 },
-            }
-            local isDefence = function(it)
-                return it.def
-            end
-            local batch = explosives.spreadDamage(items, 3, 0, 0, 0, isDefence)
+        local isDefence = function(it)
+            return it.def
+        end
+        local function damageById(batch)
             local dmg = {}
             for _, b in ipairs(batch) do
                 dmg[b.id] = b.dmg
             end
+            return dmg
+        end
+
+        it("carries what a broken defence had left over on to the one behind it", function()
+            local items = {
+                { id = 3, def = true, hitpoints = 5, x = 3, y = 0.5, z = 0 },
+                { id = 1, def = true, hitpoints = 1, x = 1, y = 0, z = 0 },
+                { id = 2, def = true, hitpoints = 1, x = 2, y = 0, z = 0 },
+                { id = 9, def = false, hitpoints = 4, x = 5, y = 0, z = 0 },
+            }
+            local dmg = damageById(explosives.spreadDamage(items, 3, 0, 0, 0, isDefence))
             assert.are.same({ [9] = 3, [1] = 1, [2] = 1, [3] = 1 }, dmg)
-            batch = explosives.spreadDamage(items, 0, 0, 0, 0, isDefence)
-            assert.are.equal(0, #batch)
+            assert.are.equal(0, #explosives.spreadDamage(items, 0, 0, 0, 0, isDefence))
         end)
 
-        it("stops once the pool is spent", function()
+        it("passes nothing through a defence that holds", function()
             local items = {
-                { id = 1, hitpoints = 6, x = 1, y = 0, z = 0 },
-                { id = 2, hitpoints = 6, x = 2, y = 0, z = 0 },
+                { id = 1, def = true, hitpoints = 6, x = 1, y = 0, z = 0 },
+                { id = 2, def = true, hitpoints = 6, x = 2, y = 0, z = 0 },
             }
-            local always = function()
-                return true
-            end
-            local batch = explosives.spreadDamage(items, 2, 0, 0, 0, always)
-            assert.are.same({ { id = 1, dmg = 2 } }, batch)
+            assert.are.same({ { id = 1, dmg = 2 } }, explosives.spreadDamage(items, 2, 0, 0, 0, isDefence))
+        end)
+
+        it("gives defences beside the stack the full damage", function()
+            local items = {
+                { id = 1, def = true, hitpoints = 6, x = 1, y = 0, z = 0 },
+                { id = 2, def = true, hitpoints = 6, x = 2, y = 0, z = 0 },
+                { id = 3, def = true, hitpoints = 6, x = 0, y = 5, z = 0 },
+                { id = 4, def = true, hitpoints = 6, x = 2, y = 2, z = 0 },
+            }
+            local dmg = damageById(explosives.spreadDamage(items, 3, 0, 0, 0, isDefence))
+            assert.are.same({ [1] = 3, [3] = 3, [4] = 3 }, dmg)
         end)
 
         it("handles zero or negative damage safely", function()

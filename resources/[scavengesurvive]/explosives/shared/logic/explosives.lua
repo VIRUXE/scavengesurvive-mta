@@ -107,10 +107,27 @@ function M.filterItemsInRange(items, ex, ey, ez, range, interior, dimension)
     return out
 end
 
+-- metres a defence's origin may sit off the line from the blast through a nearer one and still count as behind it
+M.STACK_RADIUS = 1.0
+
+-- whether b lies behind a seen from the blast: farther along the line blast -> a, within STACK_RADIUS of it
+local function behind(a, b)
+    local aa = a.dx * a.dx + a.dy * a.dy + a.dz * a.dz
+    if aa < 0.0001 then
+        return false
+    end
+    local t = (b.dx * a.dx + b.dy * a.dy + b.dz * a.dz) / aa
+    if t <= 1 then
+        return false
+    end
+    local px, py, pz = b.dx - t * a.dx, b.dy - t * a.dy, b.dz - t * a.dz
+    return px * px + py * py + pz * pz <= M.STACK_RADIUS * M.STACK_RADIUS
+end
+
 -- The damage batch for explosion_damage, { id, dmg } per item. Port change: upstream takes the preset's full itemDmg
--- off every item in range (explosive.pwn:599). Here built defences (isDefence(it)) share itemDmg as one pool, nearest
--- to the blast first: each takes what it has left, the rest carries on to the next, so a 3-point charge against a
--- 1-hitpoint wall breaks it and takes 2 off the one behind. Loose items still take the full itemDmg each.
+-- off every item in range (explosive.pwn:599), and so it does here except for a built defence (isDefence(it)) behind
+-- another one: that takes only what the one in front had left over after breaking, so a 3-point charge against a
+-- 1-hitpoint wall breaks it and takes 2 off the wall behind, while walls beside it take the full 3.
 function M.spreadDamage(items, itemDmg, ex, ey, ez, isDefence)
     local batch, defences = {}, {}
     itemDmg = tonumber(itemDmg) or 0
@@ -120,7 +137,7 @@ function M.spreadDamage(items, itemDmg, ex, ey, ez, isDefence)
     for _, it in ipairs(items) do
         if isDefence(it) then
             local dx, dy, dz = it.x - ex, it.y - ey, it.z - ez
-            defences[#defences + 1] = { it = it, d2 = dx * dx + dy * dy + dz * dz }
+            defences[#defences + 1] = { it = it, dx = dx, dy = dy, dz = dz, d2 = dx * dx + dy * dy + dz * dz }
         else
             batch[#batch + 1] = { id = it.id, dmg = itemDmg }
         end
@@ -128,14 +145,19 @@ function M.spreadDamage(items, itemDmg, ex, ey, ez, isDefence)
     table.sort(defences, function(a, b)
         return a.d2 < b.d2
     end)
-    local pool = itemDmg
-    for _, e in ipairs(defences) do
-        if pool <= 0 then
-            break
+    for i, e in ipairs(defences) do
+        local incoming = itemDmg
+        for j = i - 1, 1, -1 do -- the nearest defence in front of this one, i.e. the farthest of the nearer ones
+            if behind(defences[j], e) then
+                incoming = defences[j].left
+                break
+            end
         end
-        local dmg = math.min(pool, math.max(1, tonumber(e.it.hitpoints or e.it.hp) or 1))
-        batch[#batch + 1] = { id = e.it.id, dmg = dmg }
-        pool = pool - dmg
+        local dmg = math.min(incoming, math.max(1, tonumber(e.it.hitpoints or e.it.hp) or 1))
+        e.left = incoming - dmg
+        if dmg > 0 then
+            batch[#batch + 1] = { id = e.it.id, dmg = dmg }
+        end
     end
     return batch
 end
