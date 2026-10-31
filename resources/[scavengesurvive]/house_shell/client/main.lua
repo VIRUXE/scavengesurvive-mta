@@ -3,6 +3,8 @@
 -- * des_westrn9_ (model 3250): an open front doorway and a plastered interior with floor and ceiling. Built from the
 --   original gta3.img DFF in Blender with DragonFF; the COL (wall slabs, roof and ceiling surfaces) is rebuilt from
 --   it and the TXD is the original cxref_oldwest cut down to the 12 textures the model uses (#131).
+-- * the log cabin row (model 17067, cabins.lua, tools/cabin_shells): six one-room cabins with a swinging door, glazed
+--   windows and furniture, behind the Flint County road.
 -- * the trailers (models 3167-3175, trailers.lua, tools/trailer_shells): panelled rooms, glazed windows and the
 --   vanilla door cut out as a leaf of its own that swings, hung in every trailer of the world (the upright vanilla
 --   placements listed in trailers.lua, and the ones the maps resource builds, found once it has built them).
@@ -14,6 +16,7 @@ local function readLua(path)
 end
 
 local trailers = readLua("trailers.lua")
+local cabins = readLua("cabins.lua")
 local DOOR_PHYSICS = 1491 -- Gen_doorINT01: its object.dat group makes a requested door model swing
 local UPRIGHT = 0.999
 
@@ -64,6 +67,20 @@ local function requestDoor(name, txd)
     keep[#keep + 1], keep[#keep + 2] = c, d
     engineSetModelLODDistance(id, 100)
     return id
+end
+
+-- The cabins' doors: one leaf model, hung in each of the six cabins of every placement of the row (hinges are in the
+-- model's frame).
+local function hangCabinDoors(id, x, y, z, rz)
+    local a = math.rad(rz)
+    local c, s = math.cos(a), math.sin(a)
+    for _, h in ipairs(cabins.hinges) do
+        local obj =
+            createObject(id, x + h[1] * c - h[2] * s, y + h[1] * s + h[2] * c, z + h[3], 0, 0, rz + cabins.door.rz)
+        if obj then
+            doors[#doors + 1] = obj
+        end
+    end
 end
 
 -- A door in the trailer at x, y, z turned rz degrees about Z: the leaf's hinge moved into the world.
@@ -122,6 +139,19 @@ addEventHandler("onClientResourceStart", resourceRoot, function()
             hung[i] = true
             hangDoor(p[1], p[2], p[3], p[4], p[5])
         end
+    end
+    local cabinTxd = engineLoadTXD("files/" .. cabins.dff .. ".txd", true)
+    if cabinTxd and replaceModel(cabins.model, cabins.dff, cabinTxd, cabins.dff) then
+        keep[#keep + 1] = cabinTxd
+        engineSetModelFlag(cabins.model, "draw_last", true)
+        local id = requestDoor(cabins.door.dff, cabinTxd)
+        for _, p in ipairs(cabins.placements) do
+            if id then
+                hangCabinDoors(id, p[1], p[2], p[3], p[4])
+            end
+        end
+    else
+        outputDebugString("house_shell: failed to load the log cabins", 1)
     end
     local fromMaps = hangMapDoors()
     local fmt = "house_shell: %d trailers enterable, %d doors hung (%d in map trailers)"
