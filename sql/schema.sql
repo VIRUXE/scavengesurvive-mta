@@ -420,8 +420,8 @@ BEGIN
     ROLLBACK;
     SELECT 0 AS ok, 'NOT_IN_WORLD' AS code, NULL AS payload;
   ELSE
-    INSERT INTO items (type_uname, x, y, z, rz, interior, dimension)
-      SELECT p_log_uname, j.x, j.y, j.z, j.rz, v_int, v_dim
+    INSERT INTO items (type_uname, hitpoints, x, y, z, rz, interior, dimension)
+      SELECT p_log_uname, (SELECT max_hitpoints FROM item_types WHERE uname = p_log_uname), j.x, j.y, j.z, j.rz, v_int, v_dim
       FROM JSON_TABLE(p_spots, '$[*]' COLUMNS (x FLOAT PATH '$.x', y FLOAT PATH '$.y', z FLOAT PATH '$.z',
         rz FLOAT PATH '$.rz')) j;
     SET v_rows = ROW_COUNT();
@@ -469,8 +469,8 @@ BEGIN
   -- upstream death.pwn: the body leaves a Clothes item holding its skin, 1 m along sin/cos(90); p_clothes is that
   -- spot as one ring entry (MTA toJSON of [x, y, z, nx, ny]), at a random heading like the rest
   IF v_skin IS NOT NULL THEN
-    INSERT INTO items (type_uname, data, x, y, z, rz, ground_nx, ground_ny, interior, dimension, despawn_at)
-      VALUES ('Clothes', JSON_OBJECT('skin', CAST(v_skin AS SIGNED)), JSON_VALUE(p_clothes, '$[0][0]'),
+    INSERT INTO items (type_uname, hitpoints, data, x, y, z, rz, ground_nx, ground_ny, interior, dimension, despawn_at)
+      VALUES ('Clothes', (SELECT max_hitpoints FROM item_types WHERE uname = 'Clothes'), JSON_OBJECT('skin', CAST(v_skin AS SIGNED)), JSON_VALUE(p_clothes, '$[0][0]'),
         JSON_VALUE(p_clothes, '$[0][1]'), JSON_VALUE(p_clothes, '$[0][2]'), RAND() * 360,
         JSON_VALUE(p_clothes, '$[0][3]'), JSON_VALUE(p_clothes, '$[0][4]'), p_interior, p_dimension, v_despawn);
     SET v_clothes = LAST_INSERT_ID();
@@ -1050,11 +1050,12 @@ BEGIN
   DECLARE v_cont INT DEFAULT NULL;
   DECLARE v_cat VARCHAR(16) DEFAULT NULL;
   DECLARE v_size INT DEFAULT NULL;
+  DECLARE v_hp SMALLINT DEFAULT 5;
   DECLARE v_zone VARCHAR(8) DEFAULT NULL;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
   -- item_types' collation ignores case, so take the stored spelling: the Lua side looks types up exactly and
   -- shows an unknown one as the fallback crate (/additem backpack)
-  SELECT uname, category, container_size INTO p_type_uname, v_cat, v_size FROM item_types WHERE uname = p_type_uname;
+  SELECT uname, category, container_size, max_hitpoints INTO p_type_uname, v_cat, v_size, v_hp FROM item_types WHERE uname = p_type_uname;
   IF v_cat IS NULL THEN
     SELECT 0 AS ok, 'UNKNOWN_TYPE' AS code, NULL AS payload;
   ELSE
@@ -1064,7 +1065,7 @@ BEGIN
       SELECT zone INTO v_zone FROM loot_spawns WHERE id = p_loot_spawn_id;
     END IF;
     INSERT INTO items (type_uname, hitpoints, data, x, y, z, rz, interior, dimension, loot_spawn_id, loot_zone, despawn_at)
-      VALUES (p_type_uname, IFNULL(p_hitpoints, 5), p_data, p_x, p_y, p_z, p_rz, p_interior, p_dimension, p_loot_spawn_id, v_zone, p_despawn_at);
+      VALUES (p_type_uname, IFNULL(p_hitpoints, v_hp), p_data, p_x, p_y, p_z, p_rz, p_interior, p_dimension, p_loot_spawn_id, v_zone, p_despawn_at);
     SET v_item = LAST_INSERT_ID();
     IF v_cat IN ('bag', 'safebox') THEN
       INSERT INTO containers (kind, size, owner_item_id) VALUES (v_cat, IFNULL(v_size, 8), v_item);
@@ -1103,7 +1104,7 @@ BEGIN
       SELECT 0 AS ok, 'HANDS_FULL' AS code, NULL AS payload;
     ELSE
       INSERT INTO items (type_uname, hitpoints, holder_char_id, holder_kind)
-        VALUES (p_type_uname, 5, p_char_id, 'held');
+        VALUES (p_type_uname, (SELECT max_hitpoints FROM item_types WHERE uname = p_type_uname), p_char_id, 'held');
       SET v_item = LAST_INSERT_ID();
       -- a bag or safebox gets its container, as in item_create (a crafted ParaBag had none)
       IF v_cat IN ('bag', 'safebox') THEN
@@ -1145,7 +1146,7 @@ BEGIN
         ROLLBACK;
         SELECT 0 AS ok, 'CONTAINER_FULL' AS code, NULL AS payload;
       ELSE
-        INSERT INTO items (type_uname, hitpoints, container_id, slot) VALUES (p_type_uname, 5, p_container_id, v_slot);
+        INSERT INTO items (type_uname, hitpoints, container_id, slot) VALUES (p_type_uname, (SELECT max_hitpoints FROM item_types WHERE uname = p_type_uname), p_container_id, v_slot);
         SET v_item = LAST_INSERT_ID();
         IF v_cat IN ('bag', 'safebox') THEN
           INSERT INTO containers (kind, size, owner_item_id) VALUES (v_cat, IFNULL(v_bag_size, 8), v_item);
@@ -1483,7 +1484,7 @@ BEGIN
   SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
   START TRANSACTION;
   INSERT INTO items (type_uname, hitpoints, data, x, y, z, rz, interior, dimension, loot_spawn_id, loot_zone, despawn_at)
-    SELECT j.u, 5, j.data, j.x, j.y, j.z, j.rz, s.interior, s.dimension, s.id, s.zone, NOW() + INTERVAL p_despawn_minutes MINUTE
+    SELECT j.u, (SELECT max_hitpoints FROM item_types WHERE uname = j.u), j.data, j.x, j.y, j.z, j.rz, s.interior, s.dimension, s.id, s.zone, NOW() + INTERVAL p_despawn_minutes MINUTE
     FROM JSON_TABLE(p_rolls, '$[0][*]' COLUMNS (sid INT PATH '$.s', NESTED PATH '$.items[*]' COLUMNS (
       u VARCHAR(32) COLLATE utf8mb4_uca1400_ai_ci PATH '$.u', data LONGTEXT PATH '$.data', x FLOAT PATH '$.x', y FLOAT PATH '$.y', z FLOAT PATH '$.z',
       rz FLOAT PATH '$.rz'))) j
@@ -1539,7 +1540,7 @@ BEGIN
     DELETE FROM items WHERE container_id = p_container_id;
     SET v_removed = ROW_COUNT();
     INSERT INTO items (type_uname, hitpoints, data, container_id, slot)
-      SELECT t.uname, 5, NULLIF(j.data, ''), p_container_id, j.ord - 1
+      SELECT t.uname, t.max_hitpoints, NULLIF(j.data, ''), p_container_id, j.ord - 1
       FROM JSON_TABLE(p_results, '$[*]' COLUMNS (ord FOR ORDINALITY, uname VARCHAR(32) PATH '$.uname',
         data LONGTEXT PATH '$.data')) j
       JOIN item_types t ON t.uname = j.uname;
@@ -1672,7 +1673,7 @@ BEGIN
     ELSE
       UPDATE items SET data = p_weapon_data WHERE id = p_weapon_id;
       INSERT INTO items (type_uname, hitpoints, data, x, y, z, rz, interior, dimension)
-        VALUES (p_ammo_uname, 5, p_ammo_data, p_x, p_y, p_z, p_rz, p_interior, p_dimension);
+        VALUES (p_ammo_uname, (SELECT max_hitpoints FROM item_types WHERE uname = p_ammo_uname), p_ammo_data, p_x, p_y, p_z, p_rz, p_interior, p_dimension);
       SET v_ammo_id = LAST_INSERT_ID();
       COMMIT;
       SELECT 1 AS ok, 'OK' AS code, JSON_OBJECT(

@@ -65,7 +65,7 @@ return function(ctx)
         end
         writePot(row, nextPot)
         if crop then
-            local params = { crop, 5, nil, row.x, row.y, row.z + 0.5, row.rz, row.interior, row.dimension }
+            local params = { crop, nil, nil, row.x, row.y, row.z + 0.5, row.rz, row.interior, row.dimension }
             params[10], params[11], params.n = nil, nil, 11
             db.call("item_create", params, function(res, c)
                 if res and res.ok then

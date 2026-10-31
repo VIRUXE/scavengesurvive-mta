@@ -244,7 +244,7 @@ return function(ctx)
             end
             for _, p in ipairs(parts) do
                 local data = string.format('{"puzzle":"%s","digit":%d}', puzzles.CODE_TAG, p.digit)
-                local args = { "CodePart", 5, data, p.spot[1], p.spot[2], p.spot[3], 0, 0, 0, nil, nil, n = 11 }
+                local args = { "CodePart", nil, data, p.spot[1], p.spot[2], p.spot[3], 0, 0, 0, nil, nil, n = 11 }
                 db.call("item_create", args, function(res)
                     if not (res and res.ok) then
                         util.log("world", "warn", "code hunt: a code part: %s", res and res.code or "DB_ERROR")

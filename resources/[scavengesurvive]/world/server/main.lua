@@ -42,7 +42,7 @@ local function placeFixtures()
         end
         local missing = fixtures.missing(fixtureList, rows)
         for _, f in ipairs(missing) do
-            local args = { f[1], 5, buttonsSrv.fixtureData(f[7]), f[2], f[3], f[4], f[5], 0, 0, nil, nil, n = 11 }
+            local args = { f[1], nil, buttonsSrv.fixtureData(f[7]), f[2], f[3], f[4], f[5], 0, 0, nil, nil, n = 11 }
             db.call("item_create", args, function(res)
                 if not (res and res.ok) then
                     local why = res and res.code or "DB_ERROR"

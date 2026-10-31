@@ -232,7 +232,7 @@ local function tryGroundCraft(player, _cid, held, px, py, pz, rz, int, dim, quie
             local rad = math.rad(crz or 0)
             local dropX = cpx + 1.2 * math.sin(-rad)
             local dropY = cpy + 1.2 * math.cos(rad)
-            local args = { rec.result.uname, 5, nil, dropX, dropY, cpz - 0.8, crz, cint, cdim, nil, nil, n = 11 }
+            local args = { rec.result.uname, nil, nil, dropX, dropY, cpz - 0.8, crz, cint, cdim, nil, nil, n = 11 }
             local ctx = { player = pl, skill = rec.result.uname, tweak = rec.tweak ~= false, defence = rec.defence }
             ctx.source = src
             local function onCreated(res, c2)
@@ -306,7 +306,7 @@ local function tryDeconstruct(player, _cid, held, px, py, _pz, _rz, int, dim)
             -- upstream: each part at x + frandom(0.6), y + frandom(0.6), a random heading
             for _, ing in ipairs(dInfo.ingredients) do
                 local x, y, prz = tgt.x + math.random() * 0.6, tgt.y + math.random() * 0.6, math.random() * 360
-                local args = { ing.uname, 5, nil, x, y, tgt.z, prz, cint, cdim, nil, nil, n = 11 }
+                local args = { ing.uname, nil, nil, x, y, tgt.z, prz, cint, cdim, nil, nil, n = 11 }
                 db.call("item_create", args, function() end)
             end
             exports.items:refreshPlayer(pl)
