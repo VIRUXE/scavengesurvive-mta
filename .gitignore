@@ -1,7 +1,6 @@
 .lua/
 __pycache__/
 *.pyc
-.pytest_cache/
 .venv/
 *.egg-info/
 server-config/local.settings.xml
@@ -10,7 +9,6 @@ server-config/run/
 resources/\[scavengesurvive\]/dev/screenshots/
 resources/\[scavengesurvive\]/attachedit/attachedit-out.lua
 *.zip
-luacov.*
 .luacheckcache
 tools/blender/*
 !tools/blender/*.blend
