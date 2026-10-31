@@ -54,6 +54,28 @@ function M.codeLabel(name, data)
     return digit and (name .. " (" .. digit .. ")") or name
 end
 
+-- A vehicle key: "Car Key", "Truck Key", "Trailer Key"... from the model it was cut for (data.model);
+-- a key without one (a world puzzle's) keeps its name. typeByModel(model) returns the vehicle type or nil.
+M.KEY_KINDS = {
+    car = "Car",
+    truck = "Truck",
+    motorbike = "Bike",
+    pushbike = "Bike",
+    boat = "Boat",
+    helicopter = "Helicopter",
+    plane = "Plane",
+}
+
+function M.keyLabel(name, data, typeByModel)
+    local model = tonumber(unwrap(data).model)
+    local vt = model and typeByModel(model)
+    if not vt then
+        return name
+    end
+    local kind = vt.trailer and "Trailer" or M.KEY_KINDS[vt.category]
+    return kind and (kind .. " " .. name) or name
+end
+
 -- A sign's text as lines: upstream turned every "\" into a line break
 function M.signLines(text)
     local lines = {}

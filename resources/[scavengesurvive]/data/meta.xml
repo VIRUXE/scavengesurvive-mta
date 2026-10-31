@@ -27,6 +27,7 @@
     <export function="ammoTypesForCalibre" type="shared"/>
     <export function="vehicleType" type="shared"/>
     <export function="vehicleTypes" type="shared"/>
+    <export function="vehicleTypeByModel" type="shared"/>
     <export function="t" type="shared"/>
     <export function="languages" type="shared"/>
 </meta>

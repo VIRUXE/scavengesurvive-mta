@@ -172,6 +172,10 @@ return function(ctx)
         return exports.data:itemType(uname)
     end
 
+    local function vehicleTypeByModel(model)
+        return exports.data:vehicleTypeByModel(model)
+    end
+
     local function calibreName(cal)
         return exports.data:calibreName(cal)
     end
@@ -193,6 +197,8 @@ return function(ctx)
             name = small.codeLabel(name, it.data)
         elseif small and it.uname == "StunGun" then
             name = small.stunLabel(name, it.data)
+        elseif small and it.uname == "Key" then
+            name = small.keyLabel(name, it.data, vehicleTypeByModel)
         elseif gardening and it.uname == gardening.BAG then
             name = gardening.seedLabel(name, gardening.seedsFor(it.id, it.data))
         elseif cooking and cooking.isFood(t) then

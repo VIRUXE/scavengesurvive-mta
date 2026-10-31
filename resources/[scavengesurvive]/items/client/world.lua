@@ -34,6 +34,10 @@ return function(ctx)
         return typeCache[uname] or nil
     end
 
+    local function vehicleTypeByModel(model)
+        return exports.data:vehicleTypeByModel(model)
+    end
+
     local function calibreName(cal)
         return exports.data:calibreName(cal)
     end
@@ -86,6 +90,9 @@ return function(ctx)
         end
         if r.uname == "StunGun" then
             return small.stunLabel(t and t.name or r.uname, r.data)
+        end
+        if r.uname == "Key" then
+            return small.keyLabel(t and t.name or r.uname, r.data, vehicleTypeByModel)
         end
         if r.uname == gardening.BAG then
             return gardening.seedLabel(t and t.name or r.uname, gardening.seedsFor(r.id, r.data))

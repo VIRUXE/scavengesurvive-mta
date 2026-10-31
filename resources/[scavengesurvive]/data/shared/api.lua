@@ -79,6 +79,21 @@ function Data.vehicleTypes()
     return vehicles.order
 end
 
+-- the vehicle type for a model id (first type listed wins when several share one), nil when unknown
+local byModel
+function Data.vehicleTypeByModel(model)
+    if not byModel then
+        byModel = {}
+        for _, uname in ipairs(vehicles.order) do
+            local vt = vehicles.byUname[uname]
+            if vt and vt.model and not byModel[vt.model] then
+                byModel[vt.model] = vt
+            end
+        end
+    end
+    return byModel[tonumber(model) or false]
+end
+
 function Data.languages()
     return LANGUAGES
 end
@@ -132,6 +147,10 @@ end
 
 function vehicleTypes()
     return Data.vehicleTypes()
+end
+
+function vehicleTypeByModel(model)
+    return Data.vehicleTypeByModel(model)
 end
 
 function t(lang, key, ...)
