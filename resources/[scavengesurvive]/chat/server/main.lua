@@ -463,11 +463,8 @@ end
 
 -- A global line from outside the game (discordchat: Discord messages), shown to everyone not /quiet.
 function sendGlobalExternal(tag, name, text)
-    send(
-        string.format("[%s] %s#FFFFFF: %s", tostring(tag), tostring(name), tostring(text)),
-        audience(nil, MODE.GLOBAL),
-        logic.COLOURS[MODE.GLOBAL]
-    )
+    local line = string.format("#5865F2[%s] #FFFFFF%s#FFFFFF: %s", tostring(tag), tostring(name), tostring(text))
+    send(line, audience(nil, MODE.GLOBAL), logic.COLOURS[MODE.GLOBAL])
     outputServerLog(string.format("[CHAT] [%s] %s: %s", tostring(tag), tostring(name), tostring(text)))
     return true
 end
