@@ -240,7 +240,7 @@ return {
     IoUnit_T = "Used for crafting",
     KICKMESSAGE = " >  Kicked, reason: #33CCFF%s",
     Ketchup_T = "##ITEM TIP NOT SET##",
-    Key_T = "Can be combined with a Motor to make a locksmith kit for locking vehicles",
+    Key_T = "Put it in a workbench with a Motor and use a Screwdriver on the workbench to make a locksmith kit for locking vehicles",
     Keycard_T = "##ITEM TIP NOT SET##",
     Keypad_T = "Hold [F] with this while at a constructed defence to turn it into a key-code protected door",
     Knife2_T = "Stab someone with this today!",
