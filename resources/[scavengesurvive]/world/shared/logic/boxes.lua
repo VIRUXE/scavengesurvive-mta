@@ -66,46 +66,88 @@ function M.unwatched(spots, players, distance)
     return out
 end
 
--- What a bin bag holds (the trash bag types are containers): mostly empties (a liquid item with no data spawns
--- empty), then worn-out odds and ends, now and then something still worth eating. { uname, weight }.
-M.TRASH = {
-    { "CanDrink", 20 },
-    { "Bottle", 14 },
-    { "MilkCarton", 10 },
-    { "MilkBottle", 5 },
-    { "Ketchup", 6 },
-    { "Mustard", 6 },
-    { "Detergent", 4 },
-    { "OrangeJuice", 4 },
-    { "AppleJuice", 4 },
-    { "Wine1", 3 },
-    { "Whisky", 2 },
-    { "Champagne", 1 },
-    { "Bandage", 6 },
-    { "Note", 4 },
-    { "Boot", 4 },
-    { "Clothes", 2 },
-    { "ScrapMetal", 3 },
-    { "Briquettes", 2 },
-    { "Battery", 2 },
-    { "Doormat", 1 },
-    { "PizzaBox", 2 },
-    { "BurgerBox", 2 },
-    { "Banana", 2 },
-    { "BreadLoaf", 1 },
+-- What the container boxes spawn with, by the `fill` of their type (tools/world_boxes.py `holds`): { min, max,
+-- { uname, weight }... }. A bin bag holds rubbish: mostly empties (a liquid item with no data spawns empty), then
+-- worn-out odds and ends, now and then something still worth eating. A carton holds what a warehouse keeps: clothes,
+-- spare parts, tools, cereal, now and then something useful.
+M.FILLS = {
+    trash = {
+        min = 1,
+        max = 3,
+        { "CanDrink", 20 },
+        { "Bottle", 14 },
+        { "MilkCarton", 10 },
+        { "MilkBottle", 5 },
+        { "Ketchup", 6 },
+        { "Mustard", 6 },
+        { "Detergent", 4 },
+        { "OrangeJuice", 4 },
+        { "AppleJuice", 4 },
+        { "Wine1", 3 },
+        { "Whisky", 2 },
+        { "Champagne", 1 },
+        { "Bandage", 6 },
+        { "Note", 4 },
+        { "Boot", 4 },
+        { "Clothes", 2 },
+        { "ScrapMetal", 3 },
+        { "Briquettes", 2 },
+        { "Battery", 2 },
+        { "Doormat", 1 },
+        { "PizzaBox", 2 },
+        { "BurgerBox", 2 },
+        { "Banana", 2 },
+        { "BreadLoaf", 1 },
+    },
+    junk = {
+        min = 1,
+        max = 4,
+        { "Clothes", 10 },
+        { "ScrapMetal", 10 },
+        { "Boot", 5 },
+        { "Note", 4 },
+        { "Battery", 6 },
+        { "Briquettes", 5 },
+        { "Cereal1", 5 },
+        { "Cereal2", 5 },
+        { "Bottle", 4 },
+        { "Detergent", 3 },
+        { "Doormat", 3 },
+        { "Bucket", 3 },
+        { "PlantPot", 2 },
+        { "SeedBag", 2 },
+        { "Spanner", 3 },
+        { "Flashlight", 3 },
+        { "Padlock", 3 },
+        { "WheelLock", 2 },
+        { "Fusebox", 2 },
+        { "Headlight", 2 },
+        { "Radio", 2 },
+        { "Microphone", 1 },
+        { "Motor", 1 },
+        { "StarterMotor", 1 },
+        { "PowerSupply", 1 },
+        { "Bandage", 2 },
+        { "AntiSepBandage", 1 },
+        { "Pills", 1 },
+    },
 }
-M.TRASH_MIN, M.TRASH_MAX = 1, 3
 
--- 1-3 rolls of M.TRASH that fit `capacity` together; sizeOf(uname) is the item size, rng(a, b) an integer in [a, b]
-function M.trash(capacity, sizeOf, rng)
+-- min-max rolls of FILLS[fill] that fit `capacity` together, or {} for an unknown fill; sizeOf(uname) is the item
+-- size, rng(a, b) an integer in [a, b]
+function M.fill(fill, capacity, sizeOf, rng)
+    local list = M.FILLS[fill]
+    if not list then
+        return {}
+    end
     local total = 0
-    for _, t in ipairs(M.TRASH) do
+    for _, t in ipairs(list) do
         total = total + t[2]
     end
     local out, used = {}, 0
-    for _ = 1, rng(M.TRASH_MIN, M.TRASH_MAX) do
+    for _ = 1, rng(list.min, list.max) do
         local r, pick = rng(1, total), nil
-        for _, t in ipairs(M.TRASH) do
+        for _, t in ipairs(list) do
             r = r - t[2]
             if r <= 0 then
                 pick = t[1]

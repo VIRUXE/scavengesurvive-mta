@@ -34,25 +34,25 @@ SOURCES = [
 
 # one row per item: the signatures of its parts as tools/extract_world_boxes.py --survey prints them (the first one's
 # mesh is the model, near twins of it share the item), the port model id (20401+), item size (upstream SmallBox 4,
-# LargeBox 6) and hitpoints; `trash`: the bag is a container of that size, world/server/boxes.lua fills it with
-# rubbish when it spawns
+# LargeBox 6) and hitpoints; `holds`: [size, fill], the item is a container of that size and world/server/boxes.lua
+# fills it from that table of world/shared/logic/boxes.lua FILLS when it spawns
 PARTS = [
-    {"uname": "Carton", "name": "Carton", "model": 20401, "sigs": ["7c0b4b8fae"], "size": 4, "hp": 4},
-    {"uname": "CardboardBox", "name": "Cardboard Box", "model": 20402, "sigs": ["3c786449f7"], "size": 4, "hp": 4},
-    {"uname": "LargeCarton", "name": "Large Carton", "model": 20403, "sigs": ["4ac36bd06d", "0a550d6d5f"], "size": 6, "hp": 5},
-    {"uname": "OpenCardboardBox", "name": "Open Cardboard Box", "model": 20404, "sigs": ["79756885be"], "size": 4, "hp": 4},
-    {"uname": "OpenCarton", "name": "Open Carton", "model": 20405, "sigs": ["4c4151fdb1"], "size": 4, "hp": 4},
+    {"uname": "Carton", "name": "Carton", "model": 20401, "sigs": ["7c0b4b8fae"], "size": 4, "hp": 4, "holds": [8, "junk"]},
+    {"uname": "CardboardBox", "name": "Cardboard Box", "model": 20402, "sigs": ["3c786449f7"], "size": 4, "hp": 4, "holds": [8, "junk"]},
+    {"uname": "LargeCarton", "name": "Large Carton", "model": 20403, "sigs": ["4ac36bd06d", "0a550d6d5f"], "size": 6, "hp": 5, "holds": [10, "junk"]},
+    {"uname": "OpenCardboardBox", "name": "Open Cardboard Box", "model": 20404, "sigs": ["79756885be"], "size": 4, "hp": 4, "holds": [8, "junk"]},
+    {"uname": "OpenCarton", "name": "Open Carton", "model": 20405, "sigs": ["4c4151fdb1"], "size": 4, "hp": 4, "holds": [6, "junk"]},
     {"uname": "WoodenCrate", "name": "Wooden Crate", "model": 20406, "sigs": ["897a546e84"], "size": 6, "hp": 6},
     {"uname": "FruitCrate", "name": "Fruit Crate", "model": 20407, "sigs": ["4d36b5e399"], "size": 4, "hp": 5},
     {"uname": "SmallCrate", "name": "Small Crate", "model": 20408, "sigs": ["cc6422a514"], "size": 4, "hp": 5},
     {"uname": "LongCrate", "name": "Long Crate", "model": 20409, "sigs": ["091f4c05b1"], "size": 6, "hp": 6},
     {"uname": "BigCrate", "name": "Big Crate", "model": 20410, "sigs": ["1ef612862e"], "size": 6, "hp": 6},
-    {"uname": "PackingBox", "name": "Packing Box", "model": 20411, "sigs": ["f254c60b24"], "size": 4, "hp": 4},
+    {"uname": "PackingBox", "name": "Packing Box", "model": 20411, "sigs": ["f254c60b24"], "size": 4, "hp": 4, "holds": [10, "junk"]},
     {"uname": "ShippingCrate", "name": "Shipping Crate", "model": 20412, "sigs": ["138faca3a1"], "size": 6, "hp": 6},
     {"uname": "WrappedCrate", "name": "Wrapped Crate", "model": 20413, "sigs": ["86c280e4e8"], "size": 6, "hp": 6},
     {"uname": "ShippingBox", "name": "Shipping Box", "model": 20414, "sigs": ["bdea89146d"], "size": 4, "hp": 5},
-    {"uname": "BinBag", "name": "Bin Bag", "model": 20415, "sigs": ["3b3260b1e7"], "size": 3, "hp": 3, "trash": 6},
-    {"uname": "RubbishBag", "name": "Rubbish Bag", "model": 20416, "sigs": ["df480744aa"], "size": 3, "hp": 3, "trash": 6},
-    {"uname": "TrashBag", "name": "Trash Bag", "model": 20417, "sigs": ["eb0b748e79", "c022ac26cd", "3383f52803"], "size": 3, "hp": 3, "trash": 6},
+    {"uname": "BinBag", "name": "Bin Bag", "model": 20415, "sigs": ["3b3260b1e7"], "size": 3, "hp": 3, "holds": [6, "trash"]},
+    {"uname": "RubbishBag", "name": "Rubbish Bag", "model": 20416, "sigs": ["df480744aa"], "size": 3, "hp": 3, "holds": [6, "trash"]},
+    {"uname": "TrashBag", "name": "Trash Bag", "model": 20417, "sigs": ["eb0b748e79", "c022ac26cd", "3383f52803"], "size": 3, "hp": 3, "holds": [6, "trash"]},
     {"uname": "WeaponCrate", "name": "Weapon Crate", "model": 20418, "sigs": ["d373c14cec"], "size": 6, "hp": 6},
 ]

@@ -1,6 +1,6 @@
 -- GTA's boxes, crates and bags as items (data/boxes.lua): on start and every world.boxes_respawn_s each spot left
 -- without its item and with no player within world.boxes_player_distance gets one again, every new item in one
--- item_create_many call, a bin bag with its rubbish (shared/logic/boxes.lua M.trash) inside.
+-- item_create_many call, a bin bag or a carton with its contents (shared/logic/boxes.lua FILLS) inside.
 -- ctx = { db, util, logic = shared/logic/boxes.lua, spots, setting }.
 return function(ctx)
     local db, util, logic, spots = ctx.db, ctx.util, ctx.logic, ctx.spots
@@ -38,8 +38,9 @@ return function(ctx)
             for _, s in ipairs(due) do
                 local e = { u = s[1], x = s[2], y = s[3], z = s[4], rz = s[5], i = s[6] }
                 local t = exports.data:itemType(s[1])
-                if t and t.category == "safebox" then -- a bin bag comes with its rubbish
-                    e.c = logic.trash(t.categoryData.size, sizeOf, math.random)
+                local holds = t and t.category == "safebox" and t.categoryData
+                if holds then -- a bin bag comes with its rubbish, a carton with junk
+                    e.c = logic.fill(holds.fill, holds.size, sizeOf, math.random)
                 end
                 list[#list + 1] = e
             end

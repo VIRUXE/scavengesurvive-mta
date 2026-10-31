@@ -265,9 +265,10 @@ def add_world_boxes(types: dict[str, dict]) -> None:
         att = {k: round(hold[k] + m, 6) for k, m in zip(("attx", "atty", "attz"), moved)}
         fields = dict(DEFAULTS, name=b["name"], uname=b["uname"], model=b["model"], size=b["size"], maxhitpoints=b["hp"])
         fields.update(att, attrx=hold["attrx"], attry=hold["attry"], attrz=hold["attrz"], usecarryanim=True, longpickup=True)
-        trash = {"size": b["trash"]} if b.get("trash") else None  # a bin bag opens like upstream's safeboxes
-        cat = "safebox" if trash else "generic"
-        fields.update(_symbol="port_" + b["uname"], _index=index + i, category=cat, categoryData=trash)
+        # a bin bag or a carton opens like upstream's safeboxes; fill names what it spawns with
+        holds = {"size": b["holds"][0], "fill": b["holds"][1]} if b.get("holds") else None
+        cat = "safebox" if holds else "generic"
+        fields.update(_symbol="port_" + b["uname"], _index=index + i, category=cat, categoryData=holds)
         types[b["uname"]] = fields
 
 
