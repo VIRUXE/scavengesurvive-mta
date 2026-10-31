@@ -76,6 +76,7 @@ for dx, dy, dz in cabins:
     s.room_cols(room, wall=0.2, roof=2.5)
 
 if "--no-render" not in args():
+    s.openings.sort(key=lambda o: not (o.door and abs(o.door["hinge"][0] - 0.478) < 0.01 and abs(o.door["hinge"][1] + 1.84) < 0.01))  # the renders hang the first door: cabin 0's
     lamp2 = bpy.data.objects.new("lamp2", bpy.data.lights.new("lamp2", "POINT"))
     lamp2.data.energy = 150
     lamp2.location = (0.0, 0.0, CEIL - 0.3)
