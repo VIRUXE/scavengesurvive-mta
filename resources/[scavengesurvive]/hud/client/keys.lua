@@ -290,16 +290,8 @@ return function(ctx)
         finishTweak()
         triggerServerEvent("itemPutAwayRequested", localPlayer)
     end)
-    local function requestOnFoot(eventName)
-        return function()
-            if getPedOccupiedVehicle(localPlayer) then
-                return
-            end
-            request(eventName)()
-        end
-    end
-    addCommandHandler("reloadweapon", requestOnFoot("itemReloadRequested"))
-    addCommandHandler("unloadweapon", requestOnFoot("itemUnloadRequested"))
+    addCommandHandler("reloadweapon", request("itemReloadRequested"))
+    addCommandHandler("unloadweapon", request("itemUnloadRequested"))
     addCommandHandler("inventory", function()
         if not guard() then
             return
