@@ -109,6 +109,19 @@ return function(ctx)
         teleport(who, tx, ty, z + 0.5, getElementInterior(target), getElementDimension(target))
     end
 
+    -- First empty seat of a vehicle (the driver's seat counts only when nobody is in it), or nil.
+    local function freeSeat(veh)
+        if not veh then
+            return nil
+        end
+        for seat = 0, getVehicleMaxPassengers(veh) do
+            if not getVehicleOccupant(veh, seat) then
+                return seat
+            end
+        end
+        return nil
+    end
+
     ctx.command({
         name = "goto",
         level = 2,
@@ -125,7 +138,16 @@ return function(ctx)
                 return args[1] == nil and ctx.say(p, " >  Usage: /goto <player>")
             end
             remember(p, p)
-            teleportToPlayer(p, target)
+            local seat = freeSeat(getPedOccupiedVehicle(target))
+            if seat then
+                local veh = getPedOccupiedVehicle(target)
+                removePedFromVehicle(p)
+                setElementInterior(p, getElementInterior(target))
+                setElementDimension(p, getElementDimension(target))
+                warpPedIntoVehicle(p, veh, seat)
+            else
+                teleportToPlayer(p, target)
+            end
             ctx.say(p, " >  You have teleported to %s", getPlayerName(target))
             ctx.sayLang(target, "TELEPORTEDT", getPlayerName(p))
             ctx.log(p, "goto", getPlayerName(target), ctx.accountId(target))
