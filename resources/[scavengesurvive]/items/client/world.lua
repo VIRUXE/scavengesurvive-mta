@@ -22,6 +22,10 @@ return function(ctx)
     local labelVisibility = {} -- id -> { visible, checkedAt }
     local shaders = {} -- tent material key -> shader, or false when its texture could not be read
     local typeCache = {}
+    -- Items riding in a towed walk-in trailer (the vehicles resource lists them in the trailer's "vehicles.cargo"
+    -- element data as { id, lx, ly, lz, lrz }: their stored spot in the trailer's frame): id -> { vehicle, lx, ly, lz,
+    -- lrz, attached, dz }. Their objects hang on the trailer until the list drops them and their row comes again.
+    local riding = {}
 
     local function itemType(uname)
         if typeCache[uname] == nil then
@@ -92,6 +96,131 @@ return function(ctx)
         end
         return t and t.name or r.uname
     end
+
+    -- every element an item draws with: the object or tent parts, and its fires, plant, smoke, shown item, cover
+    local function elementsOf(e)
+        local list = {}
+        if isElement(e.obj) then
+            list[#list + 1] = e.obj
+        end
+        for _, part in ipairs(e.parts or {}) do
+            list[#list + 1] = part
+        end
+        for _, fx in ipairs(e.fires or {}) do
+            list[#list + 1] = fx
+        end
+        for _, key in ipairs({ "plant", "smoke", "shown", "covering" }) do
+            if isElement(e[key]) then
+                list[#list + 1] = e[key]
+            end
+        end
+        return list
+    end
+
+    -- hangs an item's elements on its trailer: each keeps its offset from the item's stored spot, turned into the
+    -- trailer's frame, so an item drawn mid-trip (it came into range then) lands where it rides
+    local function attachRider(id)
+        local e, c = objects[id], riding[id]
+        if not e or not c or c.attached or not isElement(c.vehicle) then
+            return
+        end
+        local r = e.row
+        local a = math.rad(r.rz or 0)
+        local ca, sa = math.cos(a), math.sin(a)
+        local b = math.rad(c.lrz)
+        local cb, sb = math.cos(b), math.sin(b)
+        for _, el in ipairs(elementsOf(e)) do
+            local ex, ey, ez = getElementPosition(el)
+            local rx, ry, rz = getElementRotation(el)
+            local dx, dy = ex - r.x, ey - r.y
+            local ux, uy = dx * ca + dy * sa, -dx * sa + dy * ca -- the offset in the item's own frame
+            local ox, oy = c.lx + ux * cb - uy * sb, c.ly + ux * sb + uy * cb
+            if getElementType(el) == "object" then
+                setElementCollidableWith(el, c.vehicle, false)
+            end
+            attachElements(el, c.vehicle, ox, oy, c.lz + ez - r.z, rx, ry, rz - (r.rz or 0) + c.lrz)
+        end
+        if isElement(e.obj) then
+            local _, _, oz = getElementPosition(e.obj)
+            c.dz = oz - r.z
+        end
+        c.attached = true
+    end
+
+    -- lets an item's elements go where they are; its row comes again and puts them on its stored spot
+    local function detachRider(id)
+        local e, c = objects[id], riding[id]
+        if not c or not c.attached then
+            return
+        end
+        c.attached = false
+        for _, el in ipairs(e and elementsOf(e) or {}) do
+            detachElements(el)
+            if getElementType(el) == "object" and isElement(c.vehicle) then
+                setElementCollidableWith(el, c.vehicle, true)
+            end
+        end
+    end
+
+    -- a trailer's cargo list changed: its riders attach, the ones it dropped let go
+    local function applyCargo(vehicle)
+        local list = getElementData(vehicle, "vehicles.cargo")
+        local now = {}
+        for _, row in ipairs(type(list) == "table" and list or {}) do
+            local id = tonumber(row[1])
+            if id then
+                now[id] = true
+                local c = riding[id]
+                if not c or c.vehicle ~= vehicle then
+                    detachRider(id)
+                    riding[id] = {
+                        vehicle = vehicle,
+                        lx = row[2],
+                        ly = row[3],
+                        lz = row[4],
+                        lrz = row[5],
+                        attached = false,
+                    }
+                end
+                attachRider(id)
+            end
+        end
+        for id, c in pairs(riding) do
+            if c.vehicle == vehicle and not now[id] then
+                detachRider(id)
+                riding[id] = nil
+            end
+        end
+    end
+
+    addEventHandler("onClientElementDataChange", root, function(key)
+        if key == "vehicles.cargo" and getElementType(source) == "vehicle" then
+            applyCargo(source)
+        end
+    end)
+
+    addEventHandler("onClientElementDestroy", root, function()
+        if getElementType(source) ~= "vehicle" then
+            return
+        end
+        for id, c in pairs(riding) do
+            if c.vehicle == source then
+                detachRider(id)
+                riding[id] = nil
+            end
+        end
+    end)
+
+    -- a rider's label and reach checks follow it: its spot is where its object is now (less the model's lift)
+    addEventHandler("onClientPreRender", root, function()
+        for id, c in pairs(riding) do
+            local e = objects[id]
+            if c.attached and e and isElement(e.obj) then
+                local x, y, z = getElementPosition(e.obj)
+                e.x, e.y, e.z = x, y, z - (c.dz or 0)
+            end
+        end
+    end)
 
     local function forget(id)
         local e = objects[id]
@@ -327,6 +456,7 @@ return function(ctx)
                 e = nil
             end
             if e then
+                detachRider(r.id) -- the row came again: drawn on its stored spot, then hung on its trailer again
                 e.name = formatName(t, r)
                 e.defence = builtDefence(r) ~= nil
                 e.x, e.y, e.z = r.x or e.x, r.y or e.y, r.z or e.z -- a built defence stands higher than it lay
@@ -363,6 +493,7 @@ return function(ctx)
                 updateCovering(e, r)
                 objects[r.id] = e
             end
+            attachRider(r.id)
         end
     end)
 
@@ -583,5 +714,11 @@ return function(ctx)
         end
         return best and math.sqrt(best) or false
     end
+    for _, vehicle in ipairs(getElementsByType("vehicle")) do
+        if getElementData(vehicle, "vehicles.cargo") then
+            applyCargo(vehicle)
+        end
+    end
+
     return M
 end
