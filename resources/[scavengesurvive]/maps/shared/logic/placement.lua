@@ -28,7 +28,6 @@ placement.BREAKABLE = {
     [995] = true,
     [996] = true,
     [1228] = true,
-    [1237] = true,
     [1411] = true,
     [1412] = true,
     [1413] = true,
@@ -194,6 +193,20 @@ function placement.isSwingDoor(model)
         or (model >= placement.FITTED_DOOR_MIN and model <= placement.FITTED_DOOR_MAX)
 end
 
+-- Barrels and cones: unfrozen objects, so players and vehicles push them (local to each client, like the swing doors).
+placement.MOVABLE = {
+    [1217] = true,
+    [1218] = true,
+    [1225] = true,
+    [1237] = true,
+    [1238] = true,
+    [3046] = true,
+}
+
+function placement.isMovable(model)
+    return placement.MOVABLE[model] == true
+end
+
 function placement.isBreakable(model)
     return placement.BREAKABLE[model] == true
 end
@@ -222,7 +235,12 @@ function placement.kind(o, sampId)
     if dim ~= 0 or int ~= 0 then
         return "object"
     end
-    if model <= placement.OBJECT_MODEL_MAX or placement.isSwingDoor(model) or placement.isBreakable(model) then
+    if
+        model <= placement.OBJECT_MODEL_MAX
+        or placement.isSwingDoor(model)
+        or placement.isBreakable(model)
+        or placement.isMovable(model)
+    then
         return "object"
     end
     return "building"

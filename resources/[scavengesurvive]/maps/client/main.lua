@@ -67,7 +67,7 @@ local function place(o)
             if placement.isBreakable(model) then
                 setObjectBreakable(e, true)
             end
-            if not placement.isSwingDoor(o[1]) then
+            if not (placement.isSwingDoor(o[1]) or placement.isMovable(model)) then
                 setElementFrozen(e, true)
             end
         end
