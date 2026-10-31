@@ -197,7 +197,7 @@ addEventHandler("onPlayerChat", root, function(message, messageType)
     deliver(source, text, get(source).mode)
 end)
 
--- /g /l /r: alone they switch the mode, with text they send one message in that mode (upstream CMD:g/l/r)
+-- /g /l /r (+ /global, /local): alone they switch the mode, with text they send one message in it (upstream CMD:g/l/r)
 local function modeCommand(name, mode)
     addCommandHandler(name, function(p, _, ...)
         if getElementType(p) ~= "player" then
@@ -214,7 +214,9 @@ local function modeCommand(name, mode)
     end)
 end
 modeCommand("g", MODE.GLOBAL)
+modeCommand("global", MODE.GLOBAL)
 modeCommand("l", MODE.LOCAL)
+modeCommand("local", MODE.LOCAL)
 modeCommand("r", MODE.RADIO)
 
 addCommandHandler("me", function(p, _, ...)
