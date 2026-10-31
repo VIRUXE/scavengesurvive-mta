@@ -15,9 +15,40 @@ placement.SWING_DOORS = {
     [1523] = true,
 }
 
--- Wire fence panels of the roadblocks: createBuilding cannot break, so they are objects with setObjectBreakable.
+-- Fences and barriers of the imported maps (wire fence panels of the roadblocks, mesh/chainlink/wooden fences, road
+-- and metal barriers): createBuilding cannot break, so they are objects with setObjectBreakable.
 placement.BREAKABLE = {
     [1651] = true,
+    [968] = true,
+    [974] = true,
+    [981] = true,
+    [984] = true,
+    [987] = true,
+    [994] = true,
+    [995] = true,
+    [996] = true,
+    [1228] = true,
+    [1237] = true,
+    [1411] = true,
+    [1412] = true,
+    [1413] = true,
+    [1422] = true,
+    [1423] = true,
+    [1434] = true,
+    [1435] = true,
+    [1447] = true,
+    [1459] = true,
+    [1949] = true,
+    [3091] = true,
+    [3276] = true,
+    [3578] = true,
+    [4100] = true,
+    [8673] = true,
+    [11374] = true,
+    [16094] = true,
+    [18220] = true,
+    [19312] = true,
+    [19866] = true,
 }
 
 -- SA-MP window001 and lsmall_window01: upstream glazes the house shells with them, but the shells now carry their own
