@@ -119,7 +119,10 @@ return function(ctx)
         if not (veh and getVehicleOccupant(veh) == who) then
             return fn(true)
         end
-        local body = string.format("%s is driving. Teleport the vehicle along?", getPlayerName(who))
+        local body = "You are driving. Take your vehicle along?"
+        if who ~= p then
+            body = string.format("%s is driving. Teleport the vehicle along?", getPlayerName(who))
+        end
         ctx.openDialog(p, "tp_vehicle", "msgbox", "Teleport", body, { "Vehicle", "On foot" }, function(ok)
             fn(ok)
         end)
