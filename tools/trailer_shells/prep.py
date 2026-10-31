@@ -2,8 +2,8 @@
 3167-3175, DFF from gta3.img, COL from counxref.col / cuntysouth.col) into tools/trailer_shells/build/vanilla/, and
 writes the one texture dictionary they all share, house_shell/files/trailers.txd: the vanilla `trailers` dictionary
 plus the trailer interior's panelling, ceiling, carpet, lino, trim and curtain (gta_int.img trailerkb.txd) and the
-house shells' see-through house_window pane. Every texture also goes to build/tex/<name>.png for Blender, decoded with
-gta-scout's TXDReader (node).
+house shells' see-through house_window pane and the curtains of the trailers' windows (common.CURTAINS). Every
+texture also goes to build/tex/<name>.png for Blender, decoded with gta-scout's TXDReader (node).
 
     python -m tools.trailer_shells.prep [--gta DIR]
 """
@@ -35,6 +35,7 @@ TRAILERS = {
 }
 COL_ARCHIVES = ("counxref.col", "cuntysouth.col")
 INTERIOR = {"tr_wall2", "tr_wall3", "carp19s", "tr_floor2", "tr_wood1", "curtain_sink2"}  # out of trailerkb.txd
+HOUSE_WINDOW = {"house_window", "ah_curtains1", "ah_pinkcurtain", "ah_blucurtain", "curtain_sinkb", "cj_h_curtain1"}  # out of house_window.txd
 
 
 def main(argv=None) -> int:
@@ -58,7 +59,7 @@ def main(argv=None) -> int:
                 (vanilla / f"{name.lower()}.col").write_bytes(data)
     trailers = read_img_entry(gta3, index["trailers.txd"])
     kb = read_img_entry(gta_int, read_img_index(gta_int)["trailerkb.txd"])
-    glass = trim_txd(HOUSE_WINDOW_TXD.read_bytes(), {"house_window"})
+    glass = trim_txd(HOUSE_WINDOW_TXD.read_bytes(), HOUSE_WINDOW)
     merged = merge_txd([trailers, trim_txd(kb, INTERIOR), glass])
     SHELL_FILES.mkdir(parents=True, exist_ok=True)
     (SHELL_FILES / "trailers.txd").write_bytes(merged)

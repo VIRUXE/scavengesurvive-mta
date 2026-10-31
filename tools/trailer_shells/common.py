@@ -42,6 +42,15 @@ SCALE = {WALL: 1.2, CEILING: 1.0, CARPET: 1.0, LINO: 0.8, TRIM: 0.6, CURTAIN: 1.
 IN_DAY, IN_NIGHT = (0.60, 0.56, 0.50, 1.0), (0.20, 0.18, 0.16, 1.0)  # inside: warm, dim at night
 OUT_DAY, OUT_NIGHT = (0.46, 0.46, 0.47, 1.0), (0.14, 0.14, 0.17, 1.0)  # new faces seen from outside (reveals, frames)
 GLASS_DAY, GLASS_NIGHT = (0.42, 0.44, 0.46, 1.0), (0.14, 0.14, 0.17, 1.0)  # at 1.0 the pane washed out milky white
+# each trailer's curtains: the vanilla curtain panels in trailers.txd (prep.py), one fabric per model
+CURTAINS = {"trailer_large1_01": "ah_curtains1", "trailer_large2_01": "ah_pinkcurtain", "trailer_large3_01": CURTAIN, "trailer_large4_01": "ah_blucurtain", "trailer2_01": "curtain_sinkb", "trailer5_01": "cj_h_curtain1"}
+# how each window's curtains are drawn, window by window: a pair 'tied' back at the waist or left 'hanging' straight,
+# and the share of the glass the left and right panel cover at the top (a narrow window gets the larger one alone)
+DRAPES = (("tied", 0.26, 0.26), ("hanging", 0.12, 0.34), ("tied", 0.32, 0.18), ("hanging", 0.2, 0.2), ("hanging", 0.38, 0.1), ("tied", 0.18, 0.3))
+PLEAT_NEAR, PLEAT_FAR = 0.08, 0.13  # the folds' depth off the wall face (the sill stands 0.06 proud of it)
+PLEAT = 0.07  # gathered width of one fold
+STACK = 0.08  # how far a panel stacks onto the wall past the window's edge
+FABRIC = 0.5  # metres of flat fabric per texture repeat across; the texture's height spans the curtain's
 DOOR_GAP = 0.01  # clearance at the jambs and head, so the leaf swings free
 DOOR_THICK = 0.04
 EPS = 1e-4
@@ -110,6 +119,7 @@ class Shell:
         self.leaf = None
         self._glass_faces = []
         self._finished = False
+        self.curtain = CURTAINS.get(name, CURTAIN)
 
     # ---- materials -------------------------------------------------------------------------------------------
     @staticmethod
@@ -331,6 +341,77 @@ class Shell:
         hi = _point(o.axis, max(d_in, d_room), o.u1 + 0.04, o.z0)
         self.box([min(lo[i], hi[i]) for i in range(3)], [max(lo[i], hi[i]) for i in range(3)], self.mat(TRIM))
 
+    def _room_of(self, o):
+        """The room whose wall holds opening `o`, or None."""
+        n, a = _axes(o.axis)
+        for r in self.rooms:
+            walls, span = (r[0:2], r[2:4]) if o.axis == "x" else (r[2:4], r[0:2])
+            if any(abs(w - o.inner) < 0.02 for w in walls) and o.u0 < span[1] and o.u1 > span[0]:
+                return r
+        return None
+
+    def _curtains(self):
+        """Curtains on the room side of every window: a rod over it on two brackets and a pleated panel at each side,
+        drawn back by a share of the glass that changes window by window (DRAPES), hanging from the rod to just under
+        the sill. Every fold is two triangles per side, one wound to face each way: the game culls back faces."""
+        windows = [o for o in self.openings if o.kind == "window"]
+        if not windows:
+            return
+        cloth, rod = self.mat(self.curtain), self.mat(rgb=FRAME_RGB)
+        for k, o in enumerate(windows):
+            r = self._room_of(o)
+            if r is None:
+                raise RuntimeError(f"{self.name}: no room behind the window at u={o.u0:.2f}..{o.u1:.2f}")
+            span = r[2:4] if o.axis == "x" else r[0:2]
+            ceil = r[5]
+            style, left, right = DRAPES[k % len(DRAPES)]
+            w = o.u1 - o.u0
+            if w < 0.9:  # one panel, on alternate sides
+                left, right = (max(left, right), 0.0) if k % 2 == 0 else (0.0, max(left, right))
+            ua, ub = max(o.u0 - STACK, span[0] + 0.03), min(o.u1 + STACK, span[1] - 0.03)
+            top = min(o.z1 + 0.07, ceil - 0.04)
+            bottom = o.z0 - 0.06
+            if left > 0:
+                self._drape(o, cloth, ua, o.u0 + left * w, bottom, top, style)
+            if right > 0:
+                self._drape(o, cloth, ub, o.u1 - right * w, bottom, top, style)
+            mid = (PLEAT_NEAR + PLEAT_FAR) / 2
+            self._wall_box(o, ua - 0.02, ub + 0.02, top - 0.012, top + 0.012, mid - 0.012, mid + 0.012, rod)
+            for u in (ua + 0.02, ub - 0.02):
+                self._wall_box(o, u - 0.008, u + 0.008, top - 0.008, top + 0.008, 0.0, mid - 0.012, rod)
+
+    def _wall_box(self, o, u0, u1, z0, z1, d0, d1, material):
+        """A box against the room side of opening `o`'s wall: u0..u1 along it, z0..z1 up, d0..d1 out into the room."""
+        lo = _point(o.axis, o.inner - o.side * d0, u0, z0)
+        hi = _point(o.axis, o.inner - o.side * d1, u1, z1)
+        self.box([min(lo[i], hi[i]) for i in range(3)], [max(lo[i], hi[i]) for i in range(3)], material)
+
+    def _drape(self, o, material, outer, inner, bottom, top, style):
+        """One curtain panel from `outer` (its stacked edge, on the wall past the window) to `inner` (its leading edge
+        at the rod), pleated in folds alternating between PLEAT_NEAR and PLEAT_FAR off the wall. 'tied' pulls the
+        leading edge back towards the outer one at the waist, the cloth flaring out again below it."""
+        tied = ((0.0, 0.66), (0.2, 0.5), (0.4, 0.38), (0.7, 0.68), (1.0, 1.0))  # (height share, width share)
+        rows = [(bottom + h * (top - bottom), share) for h, share in (((0.0, 1.0), (1.0, 1.0)) if style == "hanging" else tied)]
+        width = abs(inner - outer)
+        folds = max(3, round(width / PLEAT))
+        cloth = math.hypot(width / folds, PLEAT_FAR - PLEAT_NEAR)  # flat fabric in one fold, at the rod
+        grid = []
+        for z, share in rows:
+            row = []
+            for i in range(folds + 1):
+                u = outer + (inner - outer) * share * i / folds
+                d = PLEAT_NEAR if i % 2 == 0 else PLEAT_FAR
+                uv = (i * cloth / FABRIC, (z - bottom) / (top - bottom))
+                row.append((_point(o.axis, o.inner - o.side * d, u, z), uv))
+            grid.append(row)
+        for j in range(len(grid) - 1):
+            for i in range(folds):
+                a, b, c, d = grid[j][i], grid[j][i + 1], grid[j + 1][i + 1], grid[j + 1][i]
+                for tri in ((a, b, c), (a, c, d)):
+                    pts, uvs = [p for p, _uv in tri], [uv for _p, uv in tri]
+                    self.face(pts, material, uvs=uvs)
+                    self.face(list(reversed(pts)), material, uvs=list(reversed(uvs)))
+
     def _door(self, o, hinge):
         """The opening's leaf, as its own model: origin at the hinge foot, leaf along local +X, thickness on Y."""
         # the door's own texture: the one covering the most UV area among the faces cut away (thin slivers of wall
@@ -432,6 +513,7 @@ class Shell:
         if self._finished:
             return
         self._finished = True
+        self._curtains()
         # GTA draws a geometry's materials in order: the glass material is created here, last, so it is drawn after
         # everything it should show through to
         glass = self.mat(GLASS)
