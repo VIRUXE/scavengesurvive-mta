@@ -2,7 +2,14 @@
 -- asks to sit (a short tap stays a crouch), crouch, sprint or jump while sitting asks to stand, sprint with
 -- crouch asks for hands up or down, and aim with look-behind (on foot) or look-behind with the horn (driving)
 -- shouts the /aimshout line. The server decides and plays the animation.
-local poses = assert(loadstring(fileRead(fileOpen("shared/logic/poses.lua", true), 20000), "=character/poses.lua"))()
+-- read and closed again: a handle left open locks the client's cached copy, so a changed file fails to download
+local poses
+do
+    local f = fileOpen("shared/logic/poses.lua", true)
+    local src = fileRead(f, fileGetSize(f))
+    fileClose(f)
+    poses = assert(loadstring(src, "=character/poses.lua"))()
+end
 local pose = false -- what the server last confirmed: false, "sitting" or "handsUp"
 local crouchDownAt = nil
 local sitTimer = nil

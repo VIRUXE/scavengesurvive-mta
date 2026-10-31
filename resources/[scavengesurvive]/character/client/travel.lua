@@ -1,7 +1,14 @@
 -- The jump boost and the jump count (upstream char/travel-stats.pwn JumpBoost, #138): a jump started while running
 -- or sprinting is pushed on by 1 + 1.3 x Endurance (the skill rows the server sends), and every jump on foot is
 -- reported so the server counts it towards the skill.
-local travel = assert(loadstring(fileRead(fileOpen("shared/logic/travel.lua", true), 20000), "=character/travel.lua"))()
+-- read and closed again: a handle left open locks the client's cached copy, so a changed file fails to download
+local travel
+do
+    local f = fileOpen("shared/logic/travel.lua", true)
+    local src = fileRead(f, fileGetSize(f))
+    fileClose(f)
+    travel = assert(loadstring(src, "=character/travel.lua"))()
+end
 local endurance = 0
 local lastReport = 0
 local REPORT_GAP_MS = 400 -- the server rate-limits at 3 a second

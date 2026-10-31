@@ -1,7 +1,13 @@
 -- 12-key dx Keypad UI (core/ui/keypad.pwn): 3x4 button matrix + yellow bankgothic LCD display.
-local defences = assert(
-    loadstring(fileRead(fileOpen("shared/logic/defences.lua", true), 10000), "=building/shared/logic/defences.lua")
-)()
+-- read and closed again: a handle left open keeps the client's cached copy locked, so the next download of a
+-- changed defences.lua fails ("Unable to delete old file") and the resource never starts on that client
+local defences
+do
+    local f = fileOpen("shared/logic/defences.lua", true)
+    local src = fileRead(f, fileGetSize(f))
+    fileClose(f)
+    defences = assert(loadstring(src, "=building/shared/logic/defences.lua"))()
+end
 
 local isOpen = false
 local currentDefenceId = nil
