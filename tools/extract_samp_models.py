@@ -267,21 +267,13 @@ def prop_files(out_dir: Path) -> list[str]:
     dffs = listed_dffs(out_dir / "props.lua")
     return sorted(dffs + [name[:-4] + ext for name in dffs for ext in (".col", ".txd")])
 
-def fort_files(out_dir: Path) -> list[str]:
-    """DFF and COL files of the fort kit's pieces listed in <out_dir>/fort.lua, plus the TXD they share
-    (tools/make_fort_kit.py)."""
-    dffs = listed_dffs(out_dir / "fort.lua")
-    txds = sorted({f"{n}.txd" for n in re.findall(r'txd = "([^"]+)"', (out_dir / "fort.lua").read_text(encoding="ascii"))}) if dffs else []
-    return sorted(dffs + [name[:-4] + ".col" for name in dffs]) + txds
-
-
 def listed_dffs(manifest: Path) -> list[str]:
     if not manifest.is_file():
         return []
     return sorted(f"{name}.dff" for name in re.findall(r'dff = "([^"]+)"', manifest.read_text(encoding="ascii")))
 
 
-def render_meta(entries, peds: list[str] = (), hats: list[str] = (), doors: list[str] = (), props: list[str] = (), fort: list[str] = ()) -> str:
+def render_meta(entries, peds: list[str] = (), hats: list[str] = (), doors: list[str] = (), props: list[str] = ()) -> str:
     lines = [
         "<meta>",
         '    <info author="scavengesurvive-mta" type="script" name="models" '
@@ -304,9 +296,6 @@ def render_meta(entries, peds: list[str] = (), hats: list[str] = (), doors: list
     if props:
         lines.append('    <file src="props.lua"/>')
         lines += [f'    <file src="files/{name}"/>' for name in props]
-    if fort:
-        lines.append('    <file src="fort.lua"/>')
-        lines += [f'    <file src="files/{name}"/>' for name in fort]
     lines += ['    <export function="resolve" type="client"/>', '    <export function="hatlessSkin" type="client"/>', '    <export function="bareSkin" type="client"/>']
     lines.append("</meta>")
     return "\n".join(lines) + "\n"
@@ -327,7 +316,7 @@ def write_meta(out_dir: Path) -> None:
             if txd_model:
                 e["txdModel"] = int(txd_model)
             entries[dff] = e
-    meta = render_meta(entries, ped_files(out_dir), hat_files(out_dir), door_files(out_dir), props=prop_files(out_dir), fort=fort_files(out_dir))
+    meta = render_meta(entries, ped_files(out_dir), hat_files(out_dir), door_files(out_dir), props=prop_files(out_dir))
     (out_dir / "meta.xml").write_text(meta, encoding="ascii", newline="\n")
 
 
@@ -351,6 +340,31 @@ def detect_gta() -> Path | None:
         if (p / "SAMP" / "SAMP.img").is_file():
             return p
     return None
+
+
+def txd_natives(data: bytes) -> tuple[int, int, list[bytes]]:
+    """(version, device, texture native chunks) of a TXD."""
+    _kind, size, version = struct.unpack_from("<III", data, 0)
+    pos, end, natives, device = 12, 12 + size, [], 0
+    while pos < end:
+        kind, csize, _v = struct.unpack_from("<III", data, pos)
+        if kind == 0x01:
+            device = struct.unpack_from("<H", data, pos + 14)[0]
+        elif kind == 0x15:
+            natives.append(data[pos : pos + 12 + csize])
+        pos += 12 + csize
+    return version, device, natives
+
+
+def merge_txd(parts: list[bytes]) -> bytes:
+    """One texture dictionary holding every texture of `parts` (already trimmed dictionaries)."""
+    version, device, natives = 0, 0, []
+    for data in parts:
+        version, device, chunks = txd_natives(data)
+        natives += chunks
+    body = struct.pack("<IIIHH", 0x01, 4, version, len(natives), device) + b"".join(natives)
+    body += struct.pack("<III", 0x03, 0, version)
+    return struct.pack("<III", 0x16, len(body), version) + body
 
 
 def main(argv=None) -> int:
@@ -405,7 +419,7 @@ def main(argv=None) -> int:
                 path, index = archives[archive]
                 target.write_bytes(read_img_entry(path, index[name]))
     (args.out / "manifest.lua").write_text(render_manifest(entries), encoding="ascii", newline="\n")
-    meta = render_meta(entries, ped_files(args.out), hat_files(args.out), door_files(args.out), props=prop_files(args.out), fort=fort_files(args.out))
+    meta = render_meta(entries, ped_files(args.out), hat_files(args.out), door_files(args.out), props=prop_files(args.out))
     (args.out / "meta.xml").write_text(meta, encoding="ascii", newline="\n")
     return 1 if problems else 0
 

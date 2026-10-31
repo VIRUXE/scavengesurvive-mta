@@ -135,8 +135,7 @@ end
 -- Hats cut off the skins above (hats.lua, written by tools/extract_ped_models.py --hats): static objects under the
 -- port's own model ids (tools/port_hats.py), resolved like the SA-MP ones, textured from the base skin's TXD (#77).
 -- The props the port adds to the world (props.lua, tools/make_ls_hatch.py) bring their own TXD and collision.
--- The house shells' fitted doors (doors.lua, tools/fit_house_doors.py) are port models too, and so are the fort kit's
--- pieces (fort.lua, tools/make_fort_kit.py).
+-- The house shells' fitted doors (doors.lua, tools/fit_house_doors.py) are port models too.
 
 addEventHandler("onClientResourceStart", resourceRoot, function()
     local txds, count, failed = {}, 0, {}
@@ -145,7 +144,6 @@ addEventHandler("onClientResourceStart", resourceRoot, function()
         readLuaFile("hats.lua"),
         readLuaFile("doors.lua"),
         readLuaFile("props.lua"),
-        readLuaFile("fort.lua"),
     }
     for _, manifest in ipairs(manifests) do
         for sampModel, e in pairs(manifest) do

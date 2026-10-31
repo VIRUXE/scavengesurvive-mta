@@ -15,7 +15,7 @@ import sys
 from pathlib import Path
 
 from tools.extract_samp_models import detect_gta, parse_col_library, read_img_entry, read_img_index, trim_txd
-from tools.make_fort_kit import merge_txd
+from tools.extract_samp_models import merge_txd
 
 ROOT = Path(__file__).resolve().parents[2]
 HERE = Path(__file__).resolve().parent

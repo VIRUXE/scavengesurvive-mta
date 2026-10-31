@@ -136,31 +136,9 @@ def test_the_ls_hatch_is_port_model_20201_with_its_own_txd():
     assert '[20201] = { dff = "ls_hatch", txd = "ls_hatch", dist = 150 },' in h.render_props()
 
 
-def test_fort_pieces_are_listed_with_their_dff_col_and_the_shared_txd(tmp_path):
-    (tmp_path / "fort.lua").write_text('return {\n    [20301] = { dff = "fort_wall4", txd = "fort_kit", dist = 150 },\n'
-                                       '    [20302] = { dff = "fort_wall2", txd = "fort_kit", dist = 150 },\n}\n', encoding="ascii")
-    assert m.fort_files(tmp_path) == ["fort_wall2.col", "fort_wall2.dff", "fort_wall4.col", "fort_wall4.dff", "fort_kit.txd"]
-    assert m.fort_files(tmp_path / "missing") == []
-    meta = m.render_meta({}, fort=m.fort_files(tmp_path))
-    assert '    <file src="fort.lua"/>' in meta and '    <file src="files/fort_kit.txd"/>' in meta
-    assert '<file src="fort.lua"/>' not in m.render_meta({})
-
-
-def test_the_fort_kit_ids_start_at_20301_and_render_without_blender():
-    from tools import make_fort_kit as k
-    ids = k.model_ids()
-    assert min(ids.values()) == k.FORT_MODEL_MIN == 20301 and len(set(ids.values())) == len(ids)
-    text = k.render_fort()
-    assert text.count("txd = \"fort_kit\"") == len(ids) and "[20306] = { dff = \"fort_tower\"" in text
-    for name, make in k.PIECES.items():
-        parts, cols = make()
-        assert parts and cols and {p[6] for p in parts} <= set(k.TEXTURES), name
-
-
 def test_merge_txd_concatenates_the_textures_of_trimmed_dictionaries():
-    from tools import make_fort_kit as k
     one = _rw(0x16, _rw(0x01, struct.pack("<HH", 1, 9)) + _native("sheet") + _rw(0x03, b""))
     two = _rw(0x16, _rw(0x01, struct.pack("<HH", 1, 9)) + _native("planks") + _rw(0x03, b""))
-    out = k.merge_txd([one, two])
+    out = m.merge_txd([one, two])
     assert b"sheet" in out and b"planks" in out and struct.unpack_from("<HH", out, 24) == (2, 9)
     assert struct.unpack_from("<III", out, 0)[1] == len(out) - 12

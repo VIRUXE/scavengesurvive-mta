@@ -16,7 +16,7 @@ import sys
 from pathlib import Path
 
 from tools.extract_samp_models import detect_gta
-from tools.fort_survey import native_instances
+from tools.ipl_natives import native_instances
 from tools.trailer_shells.prep import BUILD, ROOT, TRAILERS
 
 RES = ROOT / "resources" / "[scavengesurvive]"
