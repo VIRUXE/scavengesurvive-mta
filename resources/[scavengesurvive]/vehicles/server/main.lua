@@ -637,10 +637,10 @@ net.handler("lightsToggleRequested", function(player)
     setVehicleOverrideLights(v, curr == 2 and 1 or 2)
 end, { rate = 3 })
 
--- Lock toggle from inside the vehicle (/lock or bind)
+-- Lock toggle from inside the vehicle (/lock or the submission key, any occupant as upstream vehicle/lock.pwn)
 net.handler("lockToggleRequested", function(player)
     local v = getPedOccupiedVehicle(player)
-    if not v or getVehicleController(v) ~= player then
+    if not v then
         return
     end
     local inf = info[v]

@@ -109,6 +109,12 @@ function tryTrailerDoor()
     return true
 end
 
-addCommandHandler("lock", function()
-    triggerServerEvent("lockToggleRequested", localPlayer)
-end)
+-- upstream's KEY_SUBMISSION ("2" / Num+) toggles the lock from inside a vehicle; /lock does the same
+local function requestLockToggle()
+    if getPedOccupiedVehicle(localPlayer) then
+        triggerServerEvent("lockToggleRequested", localPlayer)
+    end
+end
+
+addCommandHandler("lock", requestLockToggle)
+bindKey("sub_mission", "down", requestLockToggle)

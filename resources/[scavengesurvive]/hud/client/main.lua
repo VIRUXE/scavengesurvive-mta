@@ -113,7 +113,7 @@ local function refreshKeys()
         reload = keyName("reloadweapon", "r"),
         engine = "Y",
         lights = "N",
-        doors = "2",
+        doors = string.upper(next(getBoundKeys("sub_mission") or {}) or "2"),
         radio = "R",
         hitch = string.upper(next(getBoundKeys("vehicle_secondary_fire") or {}) or "lctrl"),
     }
