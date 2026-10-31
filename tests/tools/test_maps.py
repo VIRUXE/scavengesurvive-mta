@@ -121,3 +121,18 @@ def test_convert_writes_zone_files_meta_and_census(tmp_path):
     assert '<file src="data/LS.lua"/>' in meta and '<export function="getZoneAt" type="server"/>' in meta
     text = report.read_text(encoding="utf-8")
     assert "| LS | 2 | 7 |" in text and "| 11692 |" in text
+
+
+def test_a_replaced_map_file_is_listed_and_counted_but_not_placed(tmp_path, monkeypatch):
+    src = tmp_path / "upstream" / "scriptfiles" / "maps"
+    (src / "LS").mkdir(parents=True)
+    (src / "LS" / "A.map").write_text("CreateObject(1234, 1, 2, 3, 0, 0, 90);\n", encoding="utf-8")
+    (src / "LS" / "B.map").write_text("CreateObject(1235, 4, 5, 6, 0, 0, 0);\nCreateObject(1236, 7, 8, 9, 0, 0, 0);\n", encoding="utf-8")
+    monkeypatch.setattr(maps, "REPLACED", {"LS/B.map": "shared/forts.lua"})
+    out, report = tmp_path / "maps", tmp_path / "census.md"
+    zones = maps.convert(tmp_path / "upstream", out, report)
+    assert zones["LS"]["files"] == ["LS/A.map", "LS/B.map"] and zones["LS"]["replaced"] == ["LS/B.map"]
+    assert [o[0] for o in zones["LS"]["objects"]] == [1234]
+    lua = (out / "data" / "LS.lua").read_text(encoding="utf-8")
+    assert 'replaced = { "LS/B.map" }' in lua and "1235" not in lua
+    assert "| LS | 2 | 1 |" in report.read_text(encoding="utf-8") and (out / "meta.xml").read_text().count("shared/forts.lua") == 1

@@ -53,6 +53,11 @@ Scavenge & Survive ported to MTA:SA 1.6 (Lua 5.1) with MariaDB 13.0 (12.2 also v
   20001+ in `models/hats.lua` + `files/<ped>_hat.dff`, built by `python -m tools.extract_ped_models --hats` (Blender,
   the remodel script's `--only hats`); the converters add the item type and its loot rows from the same table, and
   `apparel.lua` `CUT_HATS` wears them at zero offset on the head bone. Never list them in `extract_samp_models`.
+- Forts are rebuilt from the fort kit, not from stock props: pieces are port models 20301–20399 (`models/fort.lua`, built by
+  `python -m tools.make_fort_kit`, `--ariane DIR` packs them for the editor). A fort's layout lives in
+  `maps/shared/forts.lua` (written by `python -m tools.fort_layout`, which samples the ground from a running Ariane), its
+  upstream `.map` is listed in `REPLACED` in `tools/convert/maps.py` so `LS.lua` no longer places it, and
+  `tools/fort_survey.py` measures an upstream fort against the Rockstar buildings before one is rebuilt.
 - A twin's bare head is rebuilt from its reference image (`docs/images/hatless-refs`, `tools/hatless_refs.py`) by
   `python -m tools.hatless_rebuild prep|build <skin>` (cut plane per skin in `PLANES`, studio calibration in
   `tools/data`); the twin then brings a hair-only TXD of its own, listed as `txd` in `models/peds.lua`.
