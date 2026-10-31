@@ -58,6 +58,7 @@ local state = {
     held = false, -- { id, uname, category }
     brightness = 0,
     combatUntil = 0, -- getTickCount() until which the watch is red (combatWindowChanged from character)
+    hitch = false, -- "hitch" / "unhitch": the trailer line while driving (trailerHitchHintChanged from vehicles)
     frequency = watch.DEFAULT_FREQUENCY,
     keys = {},
     hidden = false, -- setHidden(true): the dev studio wants clean screenshots
@@ -114,6 +115,7 @@ local function refreshKeys()
         lights = "N",
         doors = "2",
         radio = "R",
+        hitch = string.upper(next(getBoundKeys("vehicle_secondary_fire") or {}) or "lctrl"),
     }
 end
 
@@ -128,6 +130,10 @@ end)
 addEventHandler("combatWindowChanged", root, function(ms)
     ms = tonumber(ms) or 0
     state.combatUntil = ms > 0 and getTickCount() + ms or 0
+end)
+
+addEventHandler("trailerHitchHintChanged", localPlayer, function(hint)
+    state.hitch = hint or false
 end)
 
 addEventHandler("chatRadioChanged", root, function(freq)
@@ -259,6 +265,7 @@ local function drawKeyActions(driver)
         uiOpen = uiListIsOpen(),
         knockedOut = getElementData(localPlayer, "character.knockedOut") == true,
         driver = driver,
+        hitch = driver and state.hitch or false,
         held = held and { uname = held.uname, category = held.category, isWeapon = isCalibreWep },
         nearPlayer = false,
         nearFeature = nearFeature(),

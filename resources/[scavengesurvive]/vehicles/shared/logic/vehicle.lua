@@ -201,4 +201,27 @@ function M.canAttachTrailer(truckType, trailerType, distance, maxDist)
     return true
 end
 
+-- Model lengths (bounding box along Y, metres) of the hitch vehicles and trailers: the server has no model sizes,
+-- upstream read them from GetVehicleModelInfo(VEHICLE_MODEL_INFO_SIZE).
+M.MODEL_LENGTH = {
+    [403] = 9.00,
+    [405] = 5.65,
+    [422] = 5.25,
+    [470] = 5.18,
+    [479] = 5.69,
+    [496] = 4.67,
+    [500] = 4.67,
+    [542] = 6.04,
+    [549] = 5.49,
+    [554] = 5.85,
+    [579] = 5.71,
+    [591] = 10.65,
+    [611] = 2.58,
+}
+
+-- Upstream trailer.pwn: a trailer is in reach while the two centres are closer than both lengths and a metre.
+function M.towReach(truckModel, trailerModel)
+    return (M.MODEL_LENGTH[truckModel] or 5.0) + (M.MODEL_LENGTH[trailerModel] or 5.0) + 1.0
+end
+
 return M

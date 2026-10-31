@@ -22,7 +22,8 @@ M.SPECIAL = {
 M.CRATES = { supply = "Open supply crate", cache = "Open weapon cache" }
 
 -- ctx = {
---   spawned, uiOpen, knockedOut, hudOff, driver, nearTrunk, nearBonnet, nearPlayer, cuffedNearby, hasBag,
+--   spawned, uiOpen, knockedOut, hudOff, driver, hitch ("hitch" / "unhitch"), nearTrunk, nearBonnet, nearPlayer,
+--   cuffedNearby, hasBag,
 --   nearFeature ("ladder" / "zipline" / "ladder_on" / "zipline_on" / "button:<label>"), nearCrate ("supply" / "cache"),
 --   held = false | { uname, category, isWeapon },
 --   nearCooker,                           -- uncooked food in hand next to a campfire or barbecue (#95): "Cook"
@@ -30,7 +31,7 @@ M.CRATES = { supply = "Open supply crate", cache = "Open weapon cache" }
 --   supports = { [capability] = true },   -- eat, drink, openbag, wearbag, special, holster, reload, unload, give,
 --                                         -- removebag, uncuff, trunk, repair, engine, lights, doors, radio
 -- }
--- keys = { interact, putaway, drop, inventory, reload, engine, lights, doors, radio } (display names)
+-- keys = { interact, putaway, drop, inventory, reload, engine, lights, doors, radio, hitch } (display names)
 -- Returns { { key = "F", text = "Open Trunk" }, ... } in upstream order.
 function M.lines(ctx, keys)
     local out = {}
@@ -48,6 +49,10 @@ function M.lines(ctx, keys)
         add("lights", "Toggle lights", "lights")
         add("doors", "Toggle locks", "doors")
         add("radio", "Open radio", "radio")
+        -- not an upstream line: its trailer key (KEY_ACTION, vehicle/trailer.pwn) went unlisted
+        if ctx.hitch then
+            add("hitch", ctx.hitch == "unhitch" and "Unhitch trailer" or "Hitch trailer")
+        end
         return out
     end
     -- ladders and ziplines (world resource): the F line replaces everything else while climbing or riding

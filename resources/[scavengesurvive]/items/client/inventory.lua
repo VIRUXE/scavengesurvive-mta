@@ -79,8 +79,6 @@ return function(ctx)
         NO_FUEL = "Out of fuel",
         ENGINE_BROKEN = "Engine is broken",
         ENGINE_STALL = "Engine stalled",
-        NO_HITCH = "This vehicle has no trailer hitch",
-        NO_TRAILER_NEAR = "No trailer in range",
         TRAILER_ATTACHED = "Trailer attached",
         TRAILER_DETACHED = "Trailer detached",
         VEH_FULL_REPAIR = "Vehicle is already fully repaired",

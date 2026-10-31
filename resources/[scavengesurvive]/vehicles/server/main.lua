@@ -659,49 +659,159 @@ net.handler("lockToggleRequested", function(player)
     db.exec("UPDATE vehicles SET locked = ? WHERE id = ?", { inf.locked, inf.id })
 end, { rate = 3 })
 
--- Trailers attach/detach (/tow)
-net.handler("towRequested", function(player)
-    local v = getPedOccupiedVehicle(player)
-    if not v or getVehicleController(v) ~= player then
-        return
-    end
-    local inf = info[v]
-    if not inf then
-        return
-    end
+-- Trailers (upstream vehicle/trailer.pwn): the driver of a vehicle with a hitch toggles it with upstream's KEY_ACTION
+-- in a vehicle, LCtrl / Num0, which MTA calls vehicle_secondary_fire. The server picks the trailer and the driver's
+-- client hitches or drops it (trailerHitchOrdered), so the driver's own sync carries the change; the record
+-- (info.trailerId, vehicles.trailer_id) and the toast follow what the clients report through onTrailerAttach /
+-- onTrailerDetach.
+local TOW_KEY = "vehicle_secondary_fire"
+local TOW_COOLDOWN_MS = 500
+local HINT_MS = 500
+local lastTow = {} -- player -> tick of the last toggle
+local hitchDrivers = {} -- player driving a vehicle with a hitch -> the HUD line sent ("hitch", "unhitch" or false)
+
+local function setTrailerRecord(truck, trailerId)
+    local inf = info[truck]
+    inf.trailerId = trailerId
+    db.exec("UPDATE vehicles SET trailer_id = ? WHERE id = ?", { trailerId, inf.id, n = 2 })
+end
+
+-- The closest free trailer the truck can take within reach (upstream: both lengths and a metre), or nil.
+local function trailerInReach(v, inf)
     local vt = exports.data:vehicleType(inf.uname)
-    if not vt or not vt.trailerHitch then
-        return toast(player, "NO_HITCH")
-    end
-    local currTrailer = getVehicleTowedByVehicle(v)
-    if currTrailer then
-        detachTrailerFromVehicle(v)
-        inf.trailerId = nil
-        db.exec("UPDATE vehicles SET trailer_id = NULL WHERE id = ?", { inf.id })
-        return toast(player, "TRAILER_DETACHED")
-    end
     local px, py, pz = getElementPosition(v)
-    local best, bestDist = nil, 6.5
+    local best, bestDist = nil, math.huge
     for otherV, otherInf in pairs(info) do
-        if otherV ~= v and isElement(otherV) then
-            local otherVt = exports.data:vehicleType(otherInf.uname)
-            if vlogic.canAttachTrailer(vt, otherVt, 0, 0) then
-                local tx, ty, tz = getElementPosition(otherV)
-                local dist = getDistanceBetweenPoints3D(px, py, pz, tx, ty, tz)
-                if dist < bestDist then
-                    best, bestDist = otherV, dist
-                end
+        local free = otherV ~= v and isElement(otherV) and not getVehicleTowingVehicle(otherV)
+        if free and vlogic.canAttachTrailer(vt, exports.data:vehicleType(otherInf.uname)) then
+            local tx, ty, tz = getElementPosition(otherV)
+            local dist = getDistanceBetweenPoints3D(px, py, pz, tx, ty, tz)
+            local reach = vlogic.towReach(getElementModel(v), getElementModel(otherV))
+            if dist < reach and dist < bestDist then
+                best, bestDist = otherV, dist
             end
         end
     end
-    if not best then
-        return toast(player, "NO_TRAILER_NEAR")
+    return best
+end
+
+local function toggleTrailer(player)
+    local v = getPedOccupiedVehicle(player)
+    local inf = v and info[v]
+    if not inf or getVehicleController(v) ~= player then
+        return
     end
-    attachTrailerToVehicle(v, best)
-    inf.trailerId = info[best].id
-    db.exec("UPDATE vehicles SET trailer_id = ? WHERE id = ?", { info[best].id, inf.id })
-    toast(player, "TRAILER_ATTACHED")
-end, { rate = 3 })
+    local now = getTickCount()
+    if now - (lastTow[player] or 0) < TOW_COOLDOWN_MS then
+        return
+    end
+    lastTow[player] = now
+    if getVehicleTowedByVehicle(v) then
+        return triggerClientEvent(player, "trailerHitchOrdered", player, v, false)
+    end
+    local best = trailerInReach(v, inf)
+    if best then
+        triggerClientEvent(player, "trailerHitchOrdered", player, v, best)
+    end
+end
+
+-- The hitch line of a driver's key actions (hud): "unhitch" while towing, "hitch" with a trailer in reach; sent on
+-- change.
+local function updateHitchHint(player)
+    local v = getPedOccupiedVehicle(player)
+    local inf = v and info[v]
+    local hint = false
+    if inf and getVehicleController(v) == player then
+        hint = getVehicleTowedByVehicle(v) and "unhitch" or (trailerInReach(v, inf) and "hitch") or false
+    end
+    if hitchDrivers[player] ~= hint then
+        hitchDrivers[player] = hint
+        triggerClientEvent(player, "trailerHitchHintChanged", player, hint)
+    end
+end
+
+local function bindTow(player, v)
+    local inf = info[v]
+    local vt = inf and exports.data:vehicleType(inf.uname)
+    if not (vt and vt.trailerHitch) then
+        return
+    end
+    if not isKeyBound(player, TOW_KEY, "down", toggleTrailer) then
+        bindKey(player, TOW_KEY, "down", toggleTrailer)
+    end
+    hitchDrivers[player] = false
+    updateHitchHint(player)
+end
+
+local function unbindTow(player)
+    if isKeyBound(player, TOW_KEY, "down", toggleTrailer) then
+        unbindKey(player, TOW_KEY, "down", toggleTrailer)
+    end
+    if hitchDrivers[player] then
+        triggerClientEvent(player, "trailerHitchHintChanged", player, false)
+    end
+    hitchDrivers[player] = nil
+end
+
+addEventHandler("onVehicleEnter", resourceRoot, function(player, seat)
+    if seat == 0 then
+        bindTow(player, source)
+    end
+end)
+
+addEventHandler("onVehicleExit", resourceRoot, function(player, seat)
+    if seat == 0 then
+        unbindTow(player)
+    end
+end)
+
+addEventHandler("onPlayerQuit", root, function()
+    lastTow[source] = nil
+    hitchDrivers[source] = nil
+end)
+
+setTimer(function()
+    for player in pairs(hitchDrivers) do
+        if isElement(player) then
+            updateHitchHint(player)
+        end
+    end
+end, HINT_MS, 0)
+
+-- A trailer went on, by the hitch key or a truck backed into one: keep it when the pair fits, as upstream's sync task.
+addEventHandler("onTrailerAttach", root, function(truck)
+    local inf, tinf = info[truck], info[source]
+    if not inf or not tinf or inf.trailerId == tinf.id then
+        return
+    end
+    if vlogic.canAttachTrailer(exports.data:vehicleType(inf.uname), exports.data:vehicleType(tinf.uname)) then
+        setTrailerRecord(truck, tinf.id)
+        local driver = getVehicleController(truck)
+        if driver then
+            toast(driver, "TRAILER_ATTACHED")
+        end
+    end
+end)
+
+-- A trailer came off on a client (the hitch key, a jackknife, a crash): with a driver the record goes, as upstream;
+-- an unoccupied truck gets its trailer back (someone dragging it away, or desync).
+addEventHandler("onTrailerDetach", root, function(truck)
+    local inf, tinf = info[truck], info[source]
+    if not inf or not tinf or inf.trailerId ~= tinf.id then
+        return
+    end
+    local driver = getVehicleController(truck)
+    if driver then
+        setTrailerRecord(truck, nil)
+        return toast(driver, "TRAILER_DETACHED")
+    end
+    local trailer = source
+    setTimer(function()
+        if isElement(truck) and isElement(trailer) and info[truck] and info[truck].trailerId == info[trailer].id then
+            attachTrailerToVehicle(truck, trailer)
+        end
+    end, 50, 1)
+end)
 
 -- getVehicleWheelStates order (front-left, rear-left, front-right, rear-right) -> upstream tyre repair message
 local TIRE_REPAIRED = { "TIREREPFL", "TIREREPBL", "TIREREPFR", "TIREREPBR" }

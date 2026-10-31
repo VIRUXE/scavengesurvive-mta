@@ -28,3 +28,4 @@ addEvent("heldItemChanged", true)
 addEvent("chatRadioChanged", true)
 addEvent("combatWindowChanged", true)
 addEvent("skillGained", true)
+addEvent("trailerHitchHintChanged", true) -- sent by vehicles

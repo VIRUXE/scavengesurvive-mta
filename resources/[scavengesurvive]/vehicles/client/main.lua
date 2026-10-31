@@ -1,4 +1,4 @@
--- Client-side vehicles: hold-action progress bars, cancel checks, and commands (/tow, /lock).
+-- Client-side vehicles: hold-action progress bars, cancel checks, the trailer hitch, and the /lock command.
 local activeAction = nil
 local lastPos = nil
 
@@ -40,8 +40,17 @@ addEventHandler("onClientRender", root, function()
     end
 end)
 
-addCommandHandler("tow", function()
-    triggerServerEvent("towRequested", localPlayer)
+-- The hitch key's outcome, carried out by the driver's own client (trailer false: drop the one towed), so the driver's
+-- sync reports the change instead of overwriting one made on the server.
+addEventHandler("trailerHitchOrdered", localPlayer, function(truck, trailer)
+    if not isElement(truck) or getVehicleController(truck) ~= localPlayer then
+        return
+    end
+    if trailer == false then
+        detachTrailerFromVehicle(truck)
+    elseif isElement(trailer) then
+        attachTrailerToVehicle(truck, trailer)
+    end
 end)
 
 addCommandHandler("lock", function()

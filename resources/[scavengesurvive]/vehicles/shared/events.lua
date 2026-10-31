@@ -9,7 +9,6 @@ addEvent("vehicleInteractRequested", true)
 addEvent("fuelPumpInteractRequested", true)
 addEvent("holdActionCancelRequested", true)
 addEvent("trunkCloseRequested", true)
-addEvent("towRequested", true)
 
 -- server to client / client-local
 addEvent("vehicleHoldStarted", true)
@@ -17,3 +16,5 @@ addEvent("vehicleHoldStopped", true)
 addEvent("toastShown", true)
 addEvent("overheatChanged", true)
 addEvent("overheatEnded", true)
+addEvent("trailerHitchOrdered", true)
+addEvent("trailerHitchHintChanged", true)
