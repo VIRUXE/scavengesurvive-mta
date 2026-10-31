@@ -1162,21 +1162,51 @@ END//
 CREATE OR REPLACE PROCEDURE `item_create_many`(IN p_items JSON)
 BEGIN
   -- world/server/boxes.lua: GTA's boxes, crates and bags back on their spots. p_items: MTA's toJSON of
-  -- [{u = type, x, y, z, rz, i = interior}] wrapped in an outer array; one transaction places every item at its type's
-  -- full hitpoints, in dimension 0, with no despawn time. Generic types only: no container is made.
+  -- [{u = type, x, y, z, rz, i = interior, c = [content types]}] wrapped in an outer array; one transaction places
+  -- every item at its type's full hitpoints, in dimension 0, with no despawn time. A safebox type (a bin bag) gets its
+  -- container and c inside it in slot order; c is not checked against the container's size, the caller fits it.
   DECLARE v_n INT DEFAULT 0;
+  DECLARE v_k INT DEFAULT 0;
+  DECLARE v_made INT DEFAULT 0;
+  DECLARE v_inside INT DEFAULT 0;
+  DECLARE v_at VARCHAR(32);
+  DECLARE v_u VARCHAR(32);
+  DECLARE v_cat VARCHAR(16);
+  DECLARE v_size INT;
+  DECLARE v_hp SMALLINT;
+  DECLARE v_item INT;
+  DECLARE v_cont INT;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
+  SET v_n = IFNULL(JSON_LENGTH(p_items, '$[0]'), 0);
   SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
   START TRANSACTION;
-  INSERT INTO items (type_uname, hitpoints, data, x, y, z, rz, interior, dimension, loot_spawn_id, loot_zone, despawn_at)
-    SELECT t.uname, t.max_hitpoints, NULL, j.x, j.y, j.z, j.rz, j.i, 0, NULL, NULL, NULL
-    FROM JSON_TABLE(p_items, '$[0][*]' COLUMNS (
-      u VARCHAR(32) COLLATE utf8mb4_uca1400_ai_ci PATH '$.u', x FLOAT PATH '$.x', y FLOAT PATH '$.y', z FLOAT PATH '$.z',
-      rz FLOAT PATH '$.rz', i INT PATH '$.i')) j
-    JOIN item_types t ON t.uname = j.u AND t.category = 'generic';
-  SET v_n = ROW_COUNT();
+  WHILE v_k < v_n DO
+    SET v_at = CONCAT('$[0][', v_k, ']');
+    SET v_cat = NULL;
+    SELECT uname, category, container_size, max_hitpoints INTO v_u, v_cat, v_size, v_hp
+      FROM item_types WHERE uname = JSON_VALUE(p_items, CONCAT(v_at, '.u'));
+    IF v_cat IN ('generic', 'safebox') THEN
+      INSERT INTO items (type_uname, hitpoints, data, x, y, z, rz, interior, dimension, loot_spawn_id, loot_zone, despawn_at)
+        VALUES (v_u, v_hp, NULL, JSON_VALUE(p_items, CONCAT(v_at, '.x')), JSON_VALUE(p_items, CONCAT(v_at, '.y')),
+          JSON_VALUE(p_items, CONCAT(v_at, '.z')), JSON_VALUE(p_items, CONCAT(v_at, '.rz')),
+          JSON_VALUE(p_items, CONCAT(v_at, '.i')), 0, NULL, NULL, NULL);
+      SET v_item = LAST_INSERT_ID();
+      SET v_made = v_made + 1;
+      IF v_cat = 'safebox' THEN
+        INSERT INTO containers (kind, size, owner_item_id) VALUES ('safebox', IFNULL(v_size, 8), v_item);
+        SET v_cont = LAST_INSERT_ID();
+        INSERT INTO items (type_uname, hitpoints, container_id, slot)
+          SELECT t.uname, t.max_hitpoints, v_cont, j.n - 1
+          FROM JSON_TABLE(IFNULL(JSON_EXTRACT(p_items, CONCAT(v_at, '.c')), '[]'), '$[*]' COLUMNS (
+            n FOR ORDINALITY, u VARCHAR(32) COLLATE utf8mb4_uca1400_ai_ci PATH '$')) j
+          JOIN item_types t ON t.uname = j.u;
+        SET v_inside = v_inside + ROW_COUNT();
+      END IF;
+    END IF;
+    SET v_k = v_k + 1;
+  END WHILE;
   COMMIT;
-  SELECT 1 AS ok, 'OK' AS code, JSON_OBJECT('created', CAST(v_n AS SIGNED)) AS payload;
+  SELECT 1 AS ok, 'OK' AS code, JSON_OBJECT('created', CAST(v_made AS SIGNED), 'inside', CAST(v_inside AS SIGNED)) AS payload;
 END//
 
 CREATE OR REPLACE PROCEDURE `item_data_flush`(IN p_rows JSON)

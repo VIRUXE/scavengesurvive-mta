@@ -1,6 +1,7 @@
 -- GTA's boxes, crates and bags as items (data/boxes.lua): on start and every world.boxes_respawn_s each spot left
 -- without its item and with no player within world.boxes_player_distance gets one again, every new item in one
--- item_create_many call. ctx = { db, util, logic = shared/logic/boxes.lua, spots, setting }.
+-- item_create_many call, a bin bag with its rubbish (shared/logic/boxes.lua M.trash) inside.
+-- ctx = { db, util, logic = shared/logic/boxes.lua, spots, setting }.
 return function(ctx)
     local db, util, logic, spots = ctx.db, ctx.util, ctx.logic, ctx.spots
     local types = logic.types(spots)
@@ -8,6 +9,11 @@ return function(ctx)
         .. string.rep("?, ", #types - 1)
         .. "?)"
     local M = {}
+
+    local function sizeOf(uname)
+        local t = exports.data:itemType(uname)
+        return t and t.size
+    end
 
     local function playerPositions()
         local out = {}
@@ -30,7 +36,12 @@ return function(ctx)
             end
             local list = {}
             for _, s in ipairs(due) do
-                list[#list + 1] = { u = s[1], x = s[2], y = s[3], z = s[4], rz = s[5], i = s[6] }
+                local e = { u = s[1], x = s[2], y = s[3], z = s[4], rz = s[5], i = s[6] }
+                local t = exports.data:itemType(s[1])
+                if t and t.category == "safebox" then -- a bin bag comes with its rubbish
+                    e.c = logic.trash(t.categoryData.size, sizeOf, math.random)
+                end
+                list[#list + 1] = e
             end
             db.call("item_create_many", { toJSON(list) }, function(res)
                 local made = res and res.ok and res.payload and res.payload.created or 0

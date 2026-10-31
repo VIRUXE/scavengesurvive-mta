@@ -66,6 +66,61 @@ function M.unwatched(spots, players, distance)
     return out
 end
 
+-- What a bin bag holds (the trash bag types are containers): mostly empties (a liquid item with no data spawns
+-- empty), then worn-out odds and ends, now and then something still worth eating. { uname, weight }.
+M.TRASH = {
+    { "CanDrink", 20 },
+    { "Bottle", 14 },
+    { "MilkCarton", 10 },
+    { "MilkBottle", 5 },
+    { "Ketchup", 6 },
+    { "Mustard", 6 },
+    { "Detergent", 4 },
+    { "OrangeJuice", 4 },
+    { "AppleJuice", 4 },
+    { "Wine1", 3 },
+    { "Whisky", 2 },
+    { "Champagne", 1 },
+    { "Bandage", 6 },
+    { "Note", 4 },
+    { "Boot", 4 },
+    { "Clothes", 2 },
+    { "ScrapMetal", 3 },
+    { "Briquettes", 2 },
+    { "Battery", 2 },
+    { "Doormat", 1 },
+    { "PizzaBox", 2 },
+    { "BurgerBox", 2 },
+    { "Banana", 2 },
+    { "BreadLoaf", 1 },
+}
+M.TRASH_MIN, M.TRASH_MAX = 1, 3
+
+-- 1-3 rolls of M.TRASH that fit `capacity` together; sizeOf(uname) is the item size, rng(a, b) an integer in [a, b]
+function M.trash(capacity, sizeOf, rng)
+    local total = 0
+    for _, t in ipairs(M.TRASH) do
+        total = total + t[2]
+    end
+    local out, used = {}, 0
+    for _ = 1, rng(M.TRASH_MIN, M.TRASH_MAX) do
+        local r, pick = rng(1, total), nil
+        for _, t in ipairs(M.TRASH) do
+            r = r - t[2]
+            if r <= 0 then
+                pick = t[1]
+                break
+            end
+        end
+        local size = sizeOf(pick) or 1
+        if used + size <= capacity then
+            out[#out + 1] = pick
+            used = used + size
+        end
+    end
+    return out
+end
+
 -- the distinct item types of the spots, sorted, for the one query that reads them
 function M.types(spots)
     local seen, out = {}, {}

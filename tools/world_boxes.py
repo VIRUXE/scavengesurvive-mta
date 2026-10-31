@@ -34,7 +34,8 @@ SOURCES = [
 
 # one row per item: the signatures of its parts as tools/extract_world_boxes.py --survey prints them (the first one's
 # mesh is the model, near twins of it share the item), the port model id (20401+), item size (upstream SmallBox 4,
-# LargeBox 6) and hitpoints
+# LargeBox 6) and hitpoints; `trash`: the bag is a container of that size, world/server/boxes.lua fills it with
+# rubbish when it spawns
 PARTS = [
     {"uname": "Carton", "name": "Carton", "model": 20401, "sigs": ["7c0b4b8fae"], "size": 4, "hp": 4},
     {"uname": "CardboardBox", "name": "Cardboard Box", "model": 20402, "sigs": ["3c786449f7"], "size": 4, "hp": 4},
@@ -50,8 +51,8 @@ PARTS = [
     {"uname": "ShippingCrate", "name": "Shipping Crate", "model": 20412, "sigs": ["138faca3a1"], "size": 6, "hp": 6},
     {"uname": "WrappedCrate", "name": "Wrapped Crate", "model": 20413, "sigs": ["86c280e4e8"], "size": 6, "hp": 6},
     {"uname": "ShippingBox", "name": "Shipping Box", "model": 20414, "sigs": ["bdea89146d"], "size": 4, "hp": 5},
-    {"uname": "BinBag", "name": "Bin Bag", "model": 20415, "sigs": ["3b3260b1e7"], "size": 3, "hp": 3},
-    {"uname": "RubbishBag", "name": "Rubbish Bag", "model": 20416, "sigs": ["df480744aa"], "size": 3, "hp": 3},
-    {"uname": "TrashBag", "name": "Trash Bag", "model": 20417, "sigs": ["eb0b748e79", "c022ac26cd", "3383f52803"], "size": 3, "hp": 3},
+    {"uname": "BinBag", "name": "Bin Bag", "model": 20415, "sigs": ["3b3260b1e7"], "size": 3, "hp": 3, "trash": 6},
+    {"uname": "RubbishBag", "name": "Rubbish Bag", "model": 20416, "sigs": ["df480744aa"], "size": 3, "hp": 3, "trash": 6},
+    {"uname": "TrashBag", "name": "Trash Bag", "model": 20417, "sigs": ["eb0b748e79", "c022ac26cd", "3383f52803"], "size": 3, "hp": 3, "trash": 6},
     {"uname": "WeaponCrate", "name": "Weapon Crate", "model": 20418, "sigs": ["d373c14cec"], "size": 6, "hp": 6},
 ]
