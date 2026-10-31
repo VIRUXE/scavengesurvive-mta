@@ -2,10 +2,11 @@
 
 Upstream's Fort Defiance (LS/Fort Defiance.map) is a pile of stock GTA props that poke through the Rockstar houses
 around Grove Street (tools/fort_survey.py measures it). The kit replaces them with walls, a gate, a watchtower, a lean-to
-and a barricade that are built to fit: boxes of corrugated sheet, rust plate and planks, one shared texture dictionary,
+and a barricade that are built to fit: boxes of corrugated sheet, dark steel and planks, one shared texture dictionary,
 dim day/night prelight and a collision box per solid part.
 
     python -m tools.make_fort_kit [--gta DIR] [--blender EXE]
+    python -m tools.make_fort_kit --ariane <the Ariane game copy>   # pack the built kit for the editor
 
 Outside Blender it writes models/files/fort_kit.txd (the five textures cut out of the vanilla dictionaries and merged)
 and models/fort.lua, then runs itself in Blender (DragonFF) for one <piece>.dff and <piece>.col per piece, checks that
@@ -25,19 +26,20 @@ FORT_MODEL_MIN = 20301  # 200xx hats, 201xx doors, 202xx props, 203xx forts
 TXD_NAME, PARENT, DIST = "fort_kit", 3406, 150  # PARENT: a static vanilla prop whose object.dat group the kit borrows
 DAY, NIGHT = 0.5, (0.14, 0.14, 0.17, 1.0)
 
-# kit texture -> (vanilla TXD in gta3.img, texture metres per repeat)
+# kit texture -> (archive in the game's models folder, vanilla TXD in it, texture metres per repeat)
 TEXTURES = {
-    "ws_corrugated1": ("des_ranch", 2.0),  # sheet metal: walls, roofs
-    "was_scrpyd_rustmetal": ("cw_junkyarddigcs_t", 2.0),  # rust plate: posts, rails, base
-    "planks01": ("woodpanels", 1.5),  # planks: caps, leaf, back walls
-    "rustybolts": ("station", 1.0),  # bolted steel: gate leaf, platform
-    "ws_tarp2": ("hashmarket_sfsx", 1.0),  # canvas: sandbags
+    "ws_corrugated1": ("gta3.img", "des_ranch", 2.0),  # sheet metal: walls, roofs
+    "was_scrpyd_rustmetal": ("gta3.img", "cw_junkyarddigcs_t", 2.0),  # steel: posts, rails, base
+    "planks01": ("gta3.img", "woodpanels", 1.5),  # planks: caps, back walls
+    "rustybolts": ("gta3.img", "station", 1.0),  # bolted steel: gate leaves, platform
+    "cj_canvas2": ("gta_int.img", "cj_ammo", 1.0),  # canvas: sandbags
 }
-SHEET, RUST, PLANK, BOLT, CANVAS = list(TEXTURES)
+SHEET, STEEL, PLANK, BOLT, CANVAS = list(TEXTURES)
+DARKEN = {STEEL: 0.55}  # the rust plate is bright orange as painted; scrap steel reads darker
 
 # a part is (cx, cy, cz, sx, sy, sz, texture[, pitch degrees about the x axis, + raises the +y side])
 
-def posts(xs, ys, z0, z1, size, tex=RUST) -> list[tuple]:
+def posts(xs, ys, z0, z1, size, tex=STEEL) -> list[tuple]:
     return [(x, y, (z0 + z1) / 2, size, size, z1 - z0, tex) for x in xs for y in ys]
 
 
@@ -46,12 +48,12 @@ def wall(length: float) -> tuple[list[tuple], list[tuple]]:
     seam = length / 4
     sheets = [(-seam, 0.0, 1.45, half, 0.05, 2.9, SHEET), (seam, 0.04, 1.3, half, 0.05, 2.6, SHEET)]
     parts = sheets + posts([-half + 0.1, half - 0.1] + ([0.0] if length > 3 else []), [-0.1], 0.0, 3.05, 0.14)
-    parts += [(0.0, 0.0, 0.1, length, 0.3, 0.2, RUST), (0.0, -0.08, 3.0, length, 0.2, 0.08, PLANK)]
+    parts += [(0.0, 0.0, 0.1, length, 0.3, 0.2, STEEL), (0.0, -0.08, 3.0, length, 0.2, 0.08, PLANK)]
     return parts, [(0.0, 0.0, 1.5, length, 0.3, 3.0)]
 
 
 def corner() -> tuple[list[tuple], list[tuple]]:
-    parts = [(0.0, 0.0, 1.6, 0.4, 0.4, 3.2, RUST), (0.0, 0.0, 3.25, 0.5, 0.5, 0.1, PLANK)]
+    parts = [(0.0, 0.0, 1.6, 0.4, 0.4, 3.2, STEEL), (0.0, 0.0, 3.25, 0.5, 0.5, 0.1, PLANK)]
     parts += [(0.5, 0.0, 1.4, 0.6, 0.05, 2.8, SHEET), (0.0, -0.5, 1.4, 0.05, 0.6, 2.8, SHEET)]
     return parts, [(0.0, 0.0, 1.6, 0.4, 0.4, 3.2), (0.5, 0.0, 1.4, 0.6, 0.12, 2.8), (0.0, -0.5, 1.4, 0.12, 0.6, 2.8)]
 
@@ -61,10 +63,10 @@ def gate(closed: bool) -> tuple[list[tuple], list[tuple]]:
     parts += [(-2.1, 0.0, 3.7, 0.5, 0.5, 0.1, PLANK), (2.1, 0.0, 3.7, 0.5, 0.5, 0.1, PLANK)]
     cols = [(-2.1, 0.0, 1.8, 0.4, 0.4, 3.6), (2.1, 0.0, 1.8, 0.4, 0.4, 3.6), (0.0, 0.0, 3.5, 4.6, 0.3, 0.3)]
     if closed:  # a bolted leaf across the opening, a brace and its rail
-        parts += [(0.0, 0.2, 1.4, 3.8, 0.1, 2.6, BOLT), (0.0, 0.28, 1.4, 3.8, 0.06, 0.2, RUST), (0.0, 0.2, 0.1, 4.0, 0.12, 0.2, RUST)]
+        parts += [(0.0, 0.2, 1.4, 3.8, 0.1, 2.6, BOLT), (0.0, 0.28, 1.4, 3.8, 0.06, 0.2, STEEL), (0.0, 0.2, 0.1, 4.0, 0.12, 0.2, STEEL)]
         cols.append((0.0, 0.2, 1.4, 3.8, 0.12, 2.6))
     else:  # the leaf slid back and folded against the left post
-        parts += [(-1.4, 0.3, 1.4, 1.2, 0.1, 2.6, BOLT), (-1.4, 0.38, 1.4, 1.2, 0.06, 0.2, RUST), (0.0, 0.2, 0.05, 4.0, 0.12, 0.1, RUST)]
+        parts += [(-1.4, 0.3, 1.4, 1.2, 0.1, 2.6, BOLT), (-1.4, 0.38, 1.4, 1.2, 0.06, 0.2, STEEL), (0.0, 0.2, 0.05, 4.0, 0.12, 0.1, STEEL)]
         cols.append((-1.4, 0.3, 1.4, 1.2, 0.12, 2.6))
     return parts, cols
 
@@ -74,8 +76,8 @@ def tower() -> tuple[list[tuple], list[tuple]]:
     parts += [(0.0, 0.0, 4.075, 3.1, 3.1, 0.15, PLANK), (0.0, 0.0, 6.3, 3.5, 3.5, 0.08, SHEET, 6.0)]
     parts += [(0.0, 1.5, 4.65, 3.0, 0.05, 1.0, SHEET), (-1.5, 0.0, 4.65, 0.05, 3.0, 1.0, SHEET), (1.5, 0.0, 4.65, 0.05, 3.0, 1.0, SHEET)]
     parts += [(-0.95, -1.5, 4.65, 1.1, 0.05, 1.0, SHEET), (0.95, -1.5, 4.65, 1.1, 0.05, 1.0, SHEET)]
-    parts += [(-0.25, -1.55, 2.2, 0.06, 0.06, 4.4, RUST), (0.25, -1.55, 2.2, 0.06, 0.06, 4.4, RUST)]
-    parts += [(0.0, -1.55, 0.3 + 0.3 * i, 0.5, 0.05, 0.05, RUST) for i in range(14)]
+    parts += [(-0.25, -1.55, 2.2, 0.06, 0.06, 4.4, STEEL), (0.25, -1.55, 2.2, 0.06, 0.06, 4.4, STEEL)]
+    parts += [(0.0, -1.55, 0.3 + 0.3 * i, 0.5, 0.05, 0.05, STEEL) for i in range(14)]
     cols = [(x, y, 3.1, 0.25, 0.25, 6.2) for x in (-1.4, 1.4) for y in (-1.4, 1.4)]
     cols += [(0.0, 0.0, 4.075, 3.1, 3.1, 0.15), (0.0, 0.0, 6.3, 3.5, 3.5, 0.08)]
     cols += [(0.0, 1.5, 4.65, 3.0, 0.1, 1.0), (-1.5, 0.0, 4.65, 0.1, 3.0, 1.0), (1.5, 0.0, 4.65, 0.1, 3.0, 1.0)]
@@ -86,7 +88,7 @@ def tower() -> tuple[list[tuple], list[tuple]]:
 def leanto() -> tuple[list[tuple], list[tuple]]:
     parts = posts([-2.9, 0.0, 2.9], [1.9], 0.0, 3.2, 0.2) + posts([-2.9, 0.0, 2.9], [-1.9], 0.0, 2.6, 0.2)
     parts += [(0.0, 0.0, 2.9, 6.4, 4.4, 0.08, SHEET, 8.5), (0.0, 1.95, 1.3, 6.0, 0.1, 2.6, PLANK)]
-    parts += [(0.0, 0.0, 0.08, 6.0, 3.6, 0.16, RUST)]
+    parts += [(0.0, 0.0, 0.08, 6.0, 3.6, 0.16, STEEL)]
     cols = [(x, 1.9, 1.6, 0.2, 0.2, 3.2) for x in (-2.9, 0.0, 2.9)] + [(x, -1.9, 1.3, 0.2, 0.2, 2.6) for x in (-2.9, 0.0, 2.9)]
     cols += [(0.0, 0.0, 2.9, 6.4, 4.4, 0.1), (0.0, 1.95, 1.3, 6.0, 0.15, 2.6)]
     return parts, cols
@@ -156,11 +158,14 @@ def merge_txd(parts: list[bytes]) -> bytes:
 def build_txd(img: Path) -> bytes:
     from tools.extract_samp_models import read_img_entry, read_img_index, trim_txd
 
-    index = read_img_index(img)
-    by_txd: dict[str, set[str]] = {}
-    for texture, (txd, _scale) in TEXTURES.items():
-        by_txd.setdefault(txd, set()).add(texture)
-    return merge_txd([trim_txd(read_img_entry(img, index[txd + ".txd"]), keep) for txd, keep in by_txd.items()])
+    by_txd: dict[tuple[str, str], set[str]] = {}
+    for texture, (archive, txd, _scale) in TEXTURES.items():
+        by_txd.setdefault((archive, txd), set()).add(texture)
+    parts = []
+    for (archive, txd), keep in by_txd.items():
+        path = img.parent / archive
+        parts.append(trim_txd(read_img_entry(path, read_img_index(path)[txd + ".txd"]), keep))
+    return merge_txd(parts)
 
 
 def build_in_blender(out_dir: Path) -> None:
@@ -204,7 +209,7 @@ def build_in_blender(out_dir: Path) -> None:
         mesh = bpy.data.meshes.new(name)
         bm = bmesh.new()
         layers = (bm.loops.layers.uv.new("UVMap"), bm.loops.layers.color.new("Day"), bm.loops.layers.color.new("Night"))
-        for texture, (_txd, _scale) in TEXTURES.items():
+        for texture in TEXTURES:
             image = bpy.data.images.new(texture + ".png", 8, 8)  # DragonFF writes the name; the pixels are the TXD's
             material = bpy.data.materials.new(texture)
             material.use_nodes = True
@@ -215,7 +220,7 @@ def build_in_blender(out_dir: Path) -> None:
             mesh.materials.append(material)
         order = list(TEXTURES)
         for n, part in enumerate(parts):
-            add_box(bm, layers, order.index(part[6]), TEXTURES[part[6]][1], part, 0.9 + 0.1 * ((n * 7) % 3))
+            add_box(bm, layers, order.index(part[6]), TEXTURES[part[6]][2], part, DARKEN.get(part[6], 1.0) * (0.9 + 0.1 * ((n * 7) % 3)))
         bm.normal_update()
         bm.to_mesh(mesh)
         bm.free()
@@ -254,6 +259,22 @@ def check_cols(out_dir: Path) -> list[str]:
     return problems
 
 
+IMG_TOOL = Path("C:/dev/gta/sa/samp-house-shells/tools/img.py")
+
+
+def pack_ariane(game: Path) -> None:
+    """Puts the kit into the Ariane game copy: SAMP/custom.img (DFF, COL and the TXD) and SAMP/CUSTOM.ide, the empty
+    slots gta.dat already loads, so the editor and tools/make_ipl.py know the ids."""
+    import subprocess
+
+    files = [str(FILES / f"{n}.{ext}") for n in PIECES for ext in ("dff", "col")] + [str(FILES / f"{TXD_NAME}.txd")]
+    subprocess.run([sys.executable, "-I", str(IMG_TOOL), "build", str(game / "SAMP" / "custom.img"), *files], check=True)
+    lines = ["objs"] + [f"{i}, {n}, {TXD_NAME}, {DIST}, 0" for n, i in model_ids().items()] + ["end", ""]
+    text = "\r\n".join(lines)
+    (game / "SAMP" / "CUSTOM.ide").write_text(text, encoding="ascii", newline="")
+    print(f"make_fort_kit: packed {len(PIECES)} pieces into {game / 'SAMP'} (restart Ariane)")
+
+
 def main(argv=None) -> int:
     import argparse
     import subprocess
@@ -264,7 +285,11 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--gta", type=Path, help="GTA:SA folder (default: from the registry)")
     ap.add_argument("--blender", help="blender.exe (default: BLENDER or the newest install)")
+    ap.add_argument("--ariane", type=Path, help="Ariane game copy to pack the built kit into (skips the build)")
     args = ap.parse_args(argv)
+    if args.ariane:
+        pack_ariane(args.ariane)
+        return 0
     gta = args.gta or detect_gta()
     img = gta / "models" / "gta3.img" if gta else None
     if not img or not img.is_file():
