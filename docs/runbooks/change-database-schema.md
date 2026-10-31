@@ -38,7 +38,7 @@ against the database and `sql/schema.sql` is regenerated from it.
    `scavengesurvive` database, e.g. from a scratch file with `mariadb -u root scavengesurvive < scratch.sql` (wrap the
    body in `DELIMITER //` … `//`). Keep the scratch file out of the repository. Dropping one is `DROP … IF EXISTS`.
 2. `python -m tools.sqltool --db scavengesurvive dump`; `git diff sql/schema.sql` must show only that routine.
-3. Test with `python -m pytest -q tests/sql` and commit the regenerated `sql/schema.sql`. No resource restart is
+3. Commit the regenerated `sql/schema.sql`. No resource restart is
    needed: the next `CALL` uses the new body.
 
 One-off data fixes (remapping values, repairing rows) run directly with `mariadb`, after a backup, with no file.
