@@ -8,7 +8,7 @@ details); bans and warnings write theirs inside the `staff_ban` / `staff_warn` p
 | Level | Upstream name | Commands |
 | --- | --- | --- |
 | 1 | Game Master | `/a`, `/mute`, `/unmute`, `/warn`, `/kick`, `/idlekick`, `/msg`, `/clearchat`, `/aliases`, `/serial`, `/history`, `/reports`, `/acmds` |
-| 2 | Moderator | `/duty`, `/goto`, `/get`, `/gotopos`, `/freeze`, `/unfreeze`, `/ban`, `/unban`, `/banlist`, `/banned`, `/spec`, `/free`, `/nametags`, `/profile`, `/setmotd`, `/deletereports`, `/field`, `/gender` |
+| 2 | Moderator | `/duty`, `/goto`, `/get`, `/gotopos`, `/takeback`, `/freeze`, `/unfreeze`, `/ban`, `/unban`, `/banlist`, `/banned`, `/spec`, `/free`, `/nametags`, `/profile`, `/setmotd`, `/deletereports`, `/field`, `/gender` |
 | 3 | Administrator | `/whitelist`, `/ip`, `/setactive`, `/resetpassword`, `/adminlist`, `/heal [player]` (port-only: full hp, bleeding stopped) |
 | 4 | Lead | `/players`, `/setadmin`, `/restart`, `/sc [type]` (supply crate here), `/wc` (weapons cache here) |
 | 5 | Developer | everything above, `/setskill <skill> <0-1> [player]`, `/knockout <ms> [player]` (0 wakes up); the debug toggles live in the `dev` resource (`/sethp`, `/setfood`, `/setbleed`, `/weather`, `/additem`, `/rr`, `/move`, `/fly`) |
@@ -35,6 +35,7 @@ and Escape for the two buttons. Players (level 0) get nothing from the key, as t
 - A staff member may act only on players of a **lower** level, or on themselves (`level1.pwn` "return 3").
 - `/kick` by someone who is not the highest level online becomes a **request** sent to the highest staff online.
 - `staff.max_warnings` (5) warnings = a `staff.warn_ban_hours` (24 h) ban; the counter restarts afterwards.
+- `/takeback [player]` undoes your last `/goto`, `/get` or `/gotopos` (or the last one for that player), up to 20 kept per staff member until they leave.
 - `/goto`, `/get`, `/gotopos`, `/spec` need **duty** unless the actor is level 5. `/tp` is an alias of `/gotopos`
   (a port addition).
 - Bans record name, IP **and serial** (upstream had no serial field; ADR 0007). `auth` refuses a joining player whose

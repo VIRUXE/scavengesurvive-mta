@@ -84,6 +84,23 @@ return function(ctx)
         end
     end
 
+    -- Where each teleport (/goto, /get, /gotopos) took someone from, newest last, per staff member.
+    local history = {}
+    local HISTORY_MAX = 20
+
+    local function remember(staff, who)
+        local veh = getPedOccupiedVehicle(who)
+        local at = (veh and getVehicleOccupant(veh) == who) and veh or who
+        local x, y, z = getElementPosition(at)
+        local list = history[staff] or {}
+        history[staff] = list
+        local interior, dimension = getElementInterior(who), getElementDimension(who)
+        list[#list + 1] = { who = who, x = x, y = y, z = z, interior = interior, dimension = dimension }
+        if #list > HISTORY_MAX then
+            table.remove(list, 1)
+        end
+    end
+
     local function teleportToPlayer(who, target)
         local x, y, z = getElementPosition(target)
         local _, _, rz = getElementRotation(target)
@@ -107,6 +124,7 @@ return function(ctx)
             if not target then
                 return args[1] == nil and ctx.say(p, " >  Usage: /goto <player>")
             end
+            remember(p, p)
             teleportToPlayer(p, target)
             ctx.say(p, " >  You have teleported to %s", getPlayerName(target))
             ctx.sayLang(target, "TELEPORTEDT", getPlayerName(p))
@@ -129,10 +147,48 @@ return function(ctx)
             if not target then
                 return args[1] == nil and ctx.say(p, " >  Usage: /get <player>")
             end
+            remember(p, target)
             teleportToPlayer(target, p)
             ctx.say(p, " >  You have teleported %s", getPlayerName(target))
             ctx.sayLang(target, "TELEPORTEDY", getPlayerName(p))
             ctx.log(p, "get", getPlayerName(target), ctx.accountId(target))
+        end,
+    })
+
+    ctx.command({
+        name = "takeback",
+        level = 2,
+        playerOnly = true,
+        usage = "/takeback [player]",
+        help = "Undo your last /goto, /get or /gotopos (or the last one for that player): back to where they were",
+        needsDb = false,
+        fn = function(p, args, lvl)
+            if needsDuty(p, lvl) then
+                return
+            end
+            local list = history[p] or {}
+            local want = args[1] and ctx.findPlayer(p, args[1])
+            if args[1] and not want then
+                return
+            end
+            local idx
+            for i = #list, 1, -1 do
+                if isElement(list[i].who) and (not want or list[i].who == want) then
+                    idx = i
+                    break
+                end
+            end
+            if not idx then
+                return ctx.say(p, " >  Nothing to take back.")
+            end
+            local e = table.remove(list, idx)
+            teleport(e.who, e.x, e.y, e.z, e.interior, e.dimension)
+            local fmt = e.who == p and " >  You are back where you were." or " >  %s is back where they were."
+            ctx.say(p, fmt, getPlayerName(e.who))
+            if e.who ~= p then
+                ctx.say(e.who, " >  %s took you back.", ctx.name(p))
+            end
+            ctx.log(p, "takeback", getPlayerName(e.who), ctx.accountId(e.who))
         end,
     })
 
@@ -157,6 +213,7 @@ return function(ctx)
             if #nums < 3 then
                 return ctx.say(p, " >  Usage: /gotopos <x> <y> <z>")
             end
+            remember(p, p)
             teleport(p, nums[1], nums[2], nums[3], getElementInterior(p), getElementDimension(p))
             ctx.say(p, " >  Teleported to %.1f, %.1f, %.1f", nums[1], nums[2], nums[3])
             ctx.log(p, "gotopos", nil, nil, string.format("%.1f, %.1f, %.1f", nums[1], nums[2], nums[3]))
@@ -598,6 +655,7 @@ return function(ctx)
     })
 
     function M.forget(p)
+        history[p] = nil
         if state.spectating[p] then
             stopSpectating(p, true)
         end
