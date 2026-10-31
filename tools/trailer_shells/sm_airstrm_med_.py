@@ -26,7 +26,7 @@ import bpy
 from mathutils import Matrix, Vector
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from common import CARPET, CEILING, DOOR_THICK, IN_DAY, IN_NIGHT, LINO, OUT_DAY, OUT_NIGHT, SCALE, TRIM, WALL, Shell, args  # noqa: E402
+from common import CARPET, CEILING, DOOR_THICK, FRAME_RGB, IN_DAY, IN_NIGHT, LINO, OUT_DAY, OUT_NIGHT, SCALE, TRIM, WALL, Shell, args  # noqa: E402
 
 
 class AirstreamShell(Shell):
@@ -198,6 +198,15 @@ s.box((-X, PLINTH_Y, FLOOR), (X, A1, FF), carpet, skip=("+y", "-z", "-x", "+x"))
 HUMP = (0.86, -0.43, 0.46, 0.95)
 s.box((HUMP[0], HUMP[1], FLOOR), (X, HUMP[2], HUMP[3]), trim, skip=("+x", "-z"))
 s.box((-X, HUMP[1], FLOOR), (-HUMP[0], HUMP[2], HUMP[3]), trim, skip=("-x", "-z"))
+# the air conditioner's vent on the front wall inside, between the two panes (the unit hangs outside at x +-0.32, z 1.66..2.12)
+alu, dark = s.mat(rgb=FRAME_RGB), s.mat(rgb=(30, 30, 34))
+VX, VZ0, VZ1, VD = 0.26, 1.72, 2.06, 0.03
+s.box((-VX, YF - 0.02, VZ0), (VX, YF, VZ1), dark, skip=("+y",))
+for lo, hi in (((-VX, YF - VD, VZ0), (VX, YF - 0.02, VZ0 + 0.025)), ((-VX, YF - VD, VZ1 - 0.025), (VX, YF - 0.02, VZ1)), ((-VX, YF - VD, VZ0), (-VX + 0.025, YF - 0.02, VZ1)), ((VX - 0.025, YF - VD, VZ0), (VX, YF - 0.02, VZ1))):
+    s.box(lo, hi, alu, skip=("+y",))
+for i in range(1, 7):
+    z = VZ0 + (VZ1 - VZ0) * i / 7
+    s.box((-VX + 0.025, YF - VD, z - 0.008), (VX - 0.025, YF - 0.015, z + 0.008), alu, skip=("+y",))
 room_faces = [f for f in s.bm.faces if f not in before_rooms]
 # metal step under the door: the floor is 0.33 m over the wheels' feet (z 0.12)
 STEP = ((-1.58, DOOR_Y0 + 0.04, 0.0), (-1.215, DOOR_Y1 - 0.04, 0.29))
