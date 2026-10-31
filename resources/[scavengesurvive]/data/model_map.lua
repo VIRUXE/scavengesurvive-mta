@@ -23,6 +23,10 @@ M.byModel = {
     [19468] = 1271,
     [19471] = 1271,
     [19515] = 1242,
+    -- the re-pivoted defence doors (models/defences.lua, tools/port_defences.py) fall back to their hinged originals
+    [20301] = 1965,
+    [20302] = 3062,
+    [20303] = 2944,
 }
 function M.isSampOnly(model)
     return model >= 18631 or (model >= 11682 and model <= 11753)

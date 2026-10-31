@@ -631,6 +631,13 @@
     <file src="files/ls_hatch.col"/>
     <file src="files/ls_hatch.dff"/>
     <file src="files/ls_hatch.txd"/>
+    <file src="defences.lua"/>
+    <file src="files/container_door_def.col"/>
+    <file src="files/container_door_def.dff"/>
+    <file src="files/freight_sfw_door_def.col"/>
+    <file src="files/freight_sfw_door_def.dff"/>
+    <file src="files/imcmptrkdrl_las_def.col"/>
+    <file src="files/imcmptrkdrl_las_def.dff"/>
     <export function="resolve" type="client"/>
     <export function="hatlessSkin" type="client"/>
     <export function="bareSkin" type="client"/>

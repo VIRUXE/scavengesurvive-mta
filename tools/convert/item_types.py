@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import json
+import math
 import re
 
+from tools.port_defences import DEFENCES
 from tools.port_hats import HATS
 
 from .common import HEADER, NUM, SEED_HEADER, lua_index, lua_value, sql_str
@@ -245,6 +247,36 @@ def add_port_hats(types: dict[str, dict]) -> None:
         types[h["uname"]] = fields
 
 
+def apply_port_defences(types: dict[str, dict]) -> None:
+    """The hinged defence doors (tools/port_defences.py, #149) use their re-pivoted copies; the pivot goes with the
+    defence, so building/shared/logic/defences.lua can put a built door where upstream's stood."""
+    for d in DEFENCES:
+        t = types[d["uname"]]
+        assert int(t["model"]) == d["vanilla"], f"{d['uname']}: upstream model {t['model']}, table says {d['vanilla']}"
+        t["model"] = d["model"]
+        t["defence"]["pivot"] = list(d["pivot"])
+        # held: the copy's origin moved by the pivot, so the bone offset moves by it, turned the way items/client/attach.lua
+        # turns the object (row vectors, R = Z * Y * X): the door stays in the hand where upstream's was
+        rot = _attach_rotation(t["attrx"], t["attry"], t["attrz"])
+        moved = [sum(d["pivot"][i] * rot[i][j] for i in range(3)) for j in range(3)]
+        t["attx"], t["atty"], t["attz"] = (round(t[k] + m, 6) for k, m in zip(("attx", "atty", "attz"), moved))
+
+
+def _attach_rotation(rx: float, ry: float, rz: float) -> list[list[float]]:
+    """items/client/attach.lua rotationMatrix: SA-MP's bone attachment rotation, row-vector form, Z * Y * X."""
+    cx, sx = math.cos(math.radians(rx)), math.sin(math.radians(rx))
+    cy, sy = math.cos(math.radians(ry)), math.sin(math.radians(ry))
+    cz, sz = math.cos(math.radians(rz)), math.sin(math.radians(rz))
+    x = [[1, 0, 0], [0, cx, sx], [0, -sx, cx]]
+    y = [[cy, 0, -sy], [0, 1, 0], [sy, 0, cy]]
+    z = [[cz, sz, 0], [-sz, cz, 0], [0, 0, 1]]
+
+    def mul(a, b):
+        return [[sum(a[i][k] * b[k][j] for k in range(3)) for j in range(3)] for i in range(3)]
+
+    return mul(mul(z, y), x)
+
+
 def _public(t: dict) -> dict:
     return {LUA_KEY.get(k, k): v for k, v in t.items() if not k.startswith("_")}
 
@@ -290,6 +322,7 @@ def convert(src_root, out_data, out_seed) -> dict:
     apply_categories(types, init, apparel)
     apply_wear_offsets(types, init, apparel, armour)
     add_port_hats(types)
+    apply_port_defences(types)
     write_text(Path(out_data) / "item_types.lua", render_lua(types))
     write_text(Path(out_seed) / "0001_item_types.sql", render_sql(types))
     return types

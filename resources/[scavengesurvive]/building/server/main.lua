@@ -187,11 +187,11 @@ local function moveDefence(itemId, player)
             end
 
             -- otherwise toggle pose vertical<->horizontal
-            local newZ, newRz, newSt = defences.toggle(t.defence, st, row.z, row.rz)
+            local newX, newY, newZ, newRz, newSt = defences.toggle(t.defence, st, row.x, row.y, row.z, row.rz)
             d.defence = newSt
             db.exec(
-                "UPDATE items SET z = ?, rz = ?, data = ? WHERE id = ? AND x IS NOT NULL",
-                { newZ, newRz, encodeData(d), row.id },
+                "UPDATE items SET x = ?, y = ?, z = ?, rz = ?, data = ? WHERE id = ? AND x IS NOT NULL",
+                { newX, newY, newZ, newRz, encodeData(d), row.id },
                 function()
                     exports.items:resendWorldItem(row.id)
                     local poseLabel = (newSt.pose == "vertical") and "CLOSED" or "OPEN"
@@ -204,8 +204,8 @@ local function moveDefence(itemId, player)
                         row.id,
                         row.type_uname,
                         poseLabel,
-                        row.x,
-                        row.y,
+                        newX,
+                        newY,
                         newZ
                     )
                 end
@@ -342,18 +342,18 @@ local function handleDefenceInteract(player, row)
 end
 
 -- Makes a lying item a built defence (upstream ConvertItemToDefenceItem): the pose's rotation and height, no despawn
--- timer, no longer a loot spawn's item; done(z, rz, data) once the row is written
+-- timer, no longer a loot spawn's item; done(x, y, z, rz, data) once the row is written
 local function activateDefence(row, t, pose, done)
-    local z, rz, st = defences.build(t.defence, pose, row.z, row.rz, t.rotz)
+    local x, y, z, rz, st = defences.build(t.defence, pose, row.x, row.y, row.z, row.rz, t.rotz)
     local d = decodeData(row.data)
     d.defence = st
-    local sql = "UPDATE items SET z = ?, rz = ?, data = ?, despawn_at = NULL, loot_spawn_id = NULL "
+    local sql = "UPDATE items SET x = ?, y = ?, z = ?, rz = ?, data = ?, despawn_at = NULL, loot_spawn_id = NULL "
         .. "WHERE id = ? AND x IS NOT NULL"
-    db.exec(sql, { z, rz, encodeData(d), row.id }, function()
+    db.exec(sql, { x, y, z, rz, encodeData(d), row.id }, function()
         exports.items:resendWorldItem(row.id)
-        local where = string.format("%f, %f, %f rz %f", row.x, row.y, z, rz)
+        local where = string.format("%f, %f, %f rz %f", x, y, z, rz)
         util.log("building", "info", "built defence %d (%s, %s) at %s", row.id, row.type_uname, st.pose, where)
-        done(z, rz, d)
+        done(x, y, z, rz, d)
     end)
 end
 
@@ -384,12 +384,12 @@ function buildDefence(player, itemId)
             if defences.state(decodeData(cur.data)) then
                 return
             end
-            activateDefence(cur, t, c.pose, function(z, rz, d)
+            activateDefence(cur, t, c.pose, function(x, y, z, rz, d)
                 if isElement(pl) then
                     exports.character:gainSkill(pl, "Construction")
                     toast(pl, "DEFENCE_BUILT")
                     -- upstream: the builder then nudges it into place, the arrow showing its front
-                    cur.z, cur.rz, cur.data = z, rz, d
+                    cur.x, cur.y, cur.z, cur.rz, cur.data = x, y, z, rz, d
                     tweak.start(pl, cur, true)
                 end
             end)
@@ -412,9 +412,9 @@ function tweakItem(player, itemId, pose)
         local t = exports.data:itemType(row.type_uname)
         local built = t and t.defence and defences.state(decodeData(row.data)) ~= nil
         if c.pose and t and t.defence and not built then
-            return activateDefence(row, t, c.pose, function(z, rz, d)
+            return activateDefence(row, t, c.pose, function(x, y, z, rz, d)
                 if isElement(c.player) then
-                    row.z, row.rz, row.data = z, rz, d
+                    row.x, row.y, row.z, row.rz, row.data = x, y, z, rz, d
                     tweak.start(c.player, row, true)
                 end
             end)
@@ -461,13 +461,13 @@ function removeDefence(player, itemId)
                 killTimer(movingDefences[cur.id])
                 movingDefences[cur.id] = nil
             end
-            local z, rz = defences.unbuild(t.defence, curSt, cur.z, cur.rz, t.rotz)
+            local x, y, z, rz = defences.unbuild(t.defence, curSt, cur.x, cur.y, cur.z, cur.rz, t.rotz)
             curData.defence = nil
             curData.keypad = nil
             curData.passcode = nil
             db.exec(
-                "UPDATE items SET z = ?, rz = ?, data = ? WHERE id = ? AND x IS NOT NULL",
-                { z, rz, encodeData(curData), cur.id },
+                "UPDATE items SET x = ?, y = ?, z = ?, rz = ?, data = ? WHERE id = ? AND x IS NOT NULL",
+                { x, y, z, rz, encodeData(curData), cur.id },
                 function()
                     exports.items:resendWorldItem(cur.id)
                     if isElement(pl) then
