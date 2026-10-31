@@ -17,8 +17,6 @@ against the database and `sql/schema.sql` is regenerated from it.
   table is never altered; replaces every routine, trigger and event), then the seeds (idempotent). `--reset` drops
   the database first. `mariadb NAME < sql/schema.sql` does the same as the first half, since it honours `DELIMITER`.
   `run-local.ps1` runs `apply` on every start.
-- `pytest -q tests/sql` rebuilds `scavengesurvive_test` from scratch (`apply --reset`), so the test database follows
-  `schema.sql` without being altered by hand.
 
 ## Steps (table change)
 
@@ -29,7 +27,7 @@ against the database and `sql/schema.sql` is regenerated from it.
    `mariadb -u root scavengesurvive -e "SET SESSION system_versioning_alter_history = KEEP; ALTER TABLE …"`.
 3. Regenerate the schema: `python -m tools.sqltool --db scavengesurvive dump`, then `git diff sql/schema.sql` must
    show only the change you made.
-4. Test: `python -m pytest -q tests/sql` (recreates `scavengesurvive_test` from the new `schema.sql`).
+4. Verify on the live server (no automated tests).
 5. Restart the resources that read the changed tables (`rr items`, `rr staff`, …) or do a full start.
 6. Commit the regenerated `sql/schema.sql` with the code that uses it; put the DDL in the commit body, because
    `apply` will not add a column to a table that already exists on another database.
