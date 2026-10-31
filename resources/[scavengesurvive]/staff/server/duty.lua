@@ -71,11 +71,11 @@ return function(ctx)
         end,
     })
 
-    local function teleport(who, toX, toY, toZ, interior, dimension)
+    local function teleport(who, toX, toY, toZ, interior, dimension, onFoot)
         local veh = getPedOccupiedVehicle(who)
         setElementInterior(who, interior or 0)
         setElementDimension(who, dimension or 0)
-        if veh and getVehicleOccupant(veh) == who then
+        if veh and getVehicleOccupant(veh) == who and not onFoot then
             setElementInterior(veh, interior or 0)
             setElementDimension(veh, dimension or 0)
             setElementPosition(veh, toX, toY, toZ)
@@ -113,12 +113,24 @@ return function(ctx)
         end
     end
 
-    local function teleportToPlayer(who, target)
+    -- Asks `p` whether the vehicle goes along when `who` is driving; fn(withVehicle) runs at once for anyone else.
+    local function askVehicle(p, who, fn)
+        local veh = getPedOccupiedVehicle(who)
+        if not (veh and getVehicleOccupant(veh) == who) then
+            return fn(true)
+        end
+        local body = string.format("%s is driving. Teleport the vehicle along?", getPlayerName(who))
+        ctx.openDialog(p, "tp_vehicle", "msgbox", "Teleport", body, { "Vehicle", "On foot" }, function(ok)
+            fn(ok)
+        end)
+    end
+
+    local function teleportToPlayer(who, target, withVehicle)
         local x, y, z = getElementPosition(target)
         local _, _, rz = getElementRotation(target)
         local rad = math.rad(rz)
         local tx, ty = x - math.sin(rad) * 1.5, y + math.cos(rad) * 1.5
-        teleport(who, tx, ty, z + 0.5, getElementInterior(target), getElementDimension(target))
+        teleport(who, tx, ty, z + 0.5, getElementInterior(target), getElementDimension(target), not withVehicle)
     end
 
     -- First empty seat of a vehicle (the driver's seat counts only when nobody is in it), or nil.
@@ -149,17 +161,22 @@ return function(ctx)
             if not target then
                 return args[1] == nil and ctx.say(p, " >  Usage: /goto <player>")
             end
-            remember(p, p)
-            local veh = getPedOccupiedVehicle(target)
-            local seat = freeSeat(veh)
-            if seat then
-                seatInto(p, veh, seat)
-            else
-                teleportToPlayer(p, target)
-            end
-            ctx.say(p, " >  You have teleported to %s", getPlayerName(target))
-            ctx.sayLang(target, "TELEPORTEDT", getPlayerName(p))
-            ctx.log(p, "goto", getPlayerName(target), ctx.accountId(target))
+            askVehicle(p, p, function(withVehicle)
+                if not isElement(p) or not isElement(target) then
+                    return
+                end
+                remember(p, p)
+                local veh = getPedOccupiedVehicle(target)
+                local seat = freeSeat(veh)
+                if seat and not withVehicle then
+                    seatInto(p, veh, seat)
+                else
+                    teleportToPlayer(p, target, withVehicle)
+                end
+                ctx.say(p, " >  You have teleported to %s", getPlayerName(target))
+                ctx.sayLang(target, "TELEPORTEDT", getPlayerName(p))
+                ctx.log(p, "goto", getPlayerName(target), ctx.accountId(target))
+            end)
         end,
     })
 
@@ -178,17 +195,22 @@ return function(ctx)
             if not target then
                 return args[1] == nil and ctx.say(p, " >  Usage: /get <player>")
             end
-            remember(p, target)
-            local veh = getPedOccupiedVehicle(p)
-            local seat = freeSeat(veh)
-            if seat then
-                seatInto(target, veh, seat)
-            else
-                teleportToPlayer(target, p)
-            end
-            ctx.say(p, " >  You have teleported %s", getPlayerName(target))
-            ctx.sayLang(target, "TELEPORTEDY", getPlayerName(p))
-            ctx.log(p, "get", getPlayerName(target), ctx.accountId(target))
+            askVehicle(p, target, function(withVehicle)
+                if not isElement(p) or not isElement(target) then
+                    return
+                end
+                remember(p, target)
+                local veh = getPedOccupiedVehicle(p)
+                local seat = freeSeat(veh)
+                if seat and not withVehicle then
+                    seatInto(target, veh, seat)
+                else
+                    teleportToPlayer(target, p, withVehicle)
+                end
+                ctx.say(p, " >  You have teleported %s", getPlayerName(target))
+                ctx.sayLang(target, "TELEPORTEDY", getPlayerName(p))
+                ctx.log(p, "get", getPlayerName(target), ctx.accountId(target))
+            end)
         end,
     })
 
@@ -254,10 +276,15 @@ return function(ctx)
             if #nums < 3 then
                 return ctx.say(p, " >  Usage: /gotopos <x> <y> <z>")
             end
-            remember(p, p)
-            teleport(p, nums[1], nums[2], nums[3], getElementInterior(p), getElementDimension(p))
-            ctx.say(p, " >  Teleported to %.1f, %.1f, %.1f", nums[1], nums[2], nums[3])
-            ctx.log(p, "gotopos", nil, nil, string.format("%.1f, %.1f, %.1f", nums[1], nums[2], nums[3]))
+            askVehicle(p, p, function(withVehicle)
+                if not isElement(p) then
+                    return
+                end
+                remember(p, p)
+                teleport(p, nums[1], nums[2], nums[3], getElementInterior(p), getElementDimension(p), not withVehicle)
+                ctx.say(p, " >  Teleported to %.1f, %.1f, %.1f", nums[1], nums[2], nums[3])
+                ctx.log(p, "gotopos", nil, nil, string.format("%.1f, %.1f, %.1f", nums[1], nums[2], nums[3]))
+            end)
         end,
     })
 
