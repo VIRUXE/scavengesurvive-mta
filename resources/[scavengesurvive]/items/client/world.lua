@@ -94,6 +94,9 @@ return function(ctx)
         if r.uname == "Key" then
             return small.keyLabel(t and t.name or r.uname, r.data, vehicleTypeByModel)
         end
+        if r.uname == "WheelLock" then
+            return small.lockLabel(t and t.name or r.uname, r.data)
+        end
         if r.uname == gardening.BAG then
             return gardening.seedLabel(t and t.name or r.uname, gardening.seedsFor(r.id, r.data))
         end

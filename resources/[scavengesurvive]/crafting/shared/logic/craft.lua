@@ -31,14 +31,14 @@ local COMBINE = {
     { "ParaBag", { Parachute = 1 }, { Knife = 1 } },
     { "MolotovEmpty", { Bottle = 1, Bandage = 1 } },
     { "Bandage", { Clothes = 1 }, { Knife = 1 } },
-    -- upstream also cuts the lock (array data cell 0 = 1); the port's WheelLock carries no cut state yet
-    { "WheelLock", { WheelLock = 1, LocksmithKit = 1 } },
+    -- upstream locksmith.pwn OnPlayerCrafted: the kit cuts the lock (array data cell 0 = 1), here data.cut
+    { "WheelLock", { WheelLock = 1, LocksmithKit = 1 }, data = { cut = 1 } },
     -- upstream's Bottle + Bottle keeps both and makes a third: the liquid merge it stood for is commented out in
     -- liquid-container.pwn, so all it does there is duplicate bottles; not ported
 }
 for _, c in ipairs(COMBINE) do
     local r = { name = c[1], kind = "combine", ingredients = ingredientRows(c[2], c[3]) }
-    r.result = { uname = c[1], count = 1 }
+    r.result = { uname = c[1], count = 1, data = c.data }
     addRecipe(r)
 end
 

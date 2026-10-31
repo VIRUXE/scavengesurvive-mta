@@ -201,9 +201,17 @@ function M.isDoorless(model, notLockable)
     return notLockable == true or M.DOORLESS_MODELS[model] == true
 end
 
+-- a Lock and Chain's data (either JSON shape): cut once combined with a Locksmith Kit
+function M.isCutLock(data)
+    local t = type(data) == "table" and (type(data[1]) == "table" and data[1] or data) or {}
+    return tonumber(t.cut) == 1
+end
+
 -- upstream locksmith.pwn: the Locksmith Kit refuses doorless vehicles; the Lock and Chain (WheelLock) is the lock
--- for them, and the port keeps it to them (upstream let it lock cars too)
-function M.canCraftKey(lockState, itemUname, doorless, currentKeyCode)
+-- for them, and the port keeps it to them (upstream let it lock cars too). A Lock and Chain locks once cut: upstream
+-- tests the cell the other way round (an uncut one locked, a cut one got LOCKCHNOKEY, "combine it with a Locksmith
+-- Kit", which is what cut it), so the port follows the message.
+function M.canCraftKey(lockState, itemUname, doorless, currentKeyCode, lockCut)
     if itemUname == "LocksmithKit" then
         if doorless then
             return false, "LOCKNODOORS"
@@ -211,6 +219,9 @@ function M.canCraftKey(lockState, itemUname, doorless, currentKeyCode)
     elseif itemUname == "WheelLock" then
         if not doorless then
             return false, "LOCKCHNDOOR"
+        end
+        if not lockCut then
+            return false, "LOCKCHNOKEY"
         end
     else
         return false, "NEED_TOOL"

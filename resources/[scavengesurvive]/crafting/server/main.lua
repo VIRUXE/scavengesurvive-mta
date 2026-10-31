@@ -32,6 +32,35 @@ local function keyCode(data)
     return type(t) == "table" and tonumber(t.code) or nil
 end
 
+-- an item's data as a table (a row's JSON string or the held item's table, either JSON shape)
+local function dataTable(data)
+    local t = type(data) == "string" and fromJSON(data) or data
+    if type(t) == "table" and type(t[1]) == "table" then
+        t = t[1]
+    end
+    return type(t) == "table" and t or {}
+end
+
+-- a recipe whose result has data (the Lock and Chain's cut) refuses an ingredient of the result's type that already
+-- has it: cutting a cut lock would only burn the kit
+local function alreadyDone(r, a, b)
+    local want = r.result.data
+    if not want then
+        return false
+    end
+    for _, it in ipairs({ a, b }) do
+        if it.uname == r.result.uname then
+            local d = dataTable(it.data)
+            for k, v in pairs(want) do
+                if d[k] == v then
+                    return true
+                end
+            end
+        end
+    end
+    return false
+end
+
 -- upstream craft-construct.pwn plays BOMBER/BOM_Plant_Loop while a construction or removal holds and clears it after
 local function playHoldAnim(player)
     setPedAnimation(player, "BOMBER", "BOM_Plant_Loop", -1, true, false, false, false)
@@ -77,7 +106,7 @@ net.handler("combineRequested", function(player, invItemId)
         return toast(player, "NOT_HELD")
     end
     db.one(
-        "SELECT id, type_uname AS uname, container_id FROM items WHERE id = ? AND container_id IS NOT NULL",
+        "SELECT id, type_uname AS uname, container_id, data FROM items WHERE id = ? AND container_id IS NOT NULL",
         { invItemId },
         function(row, c)
             if not isElement(c.player) or not row then
@@ -101,6 +130,10 @@ net.handler("combineRequested", function(player, invItemId)
                 return toast(c.player, "NO_RECIPE")
             end
             local r = match.recipe
+            if alreadyDone(r, c.held, row) then
+                return toast(c.player, r.result.uname == "WheelLock" and "LOCKCHCUT" or "NO_RECIPE")
+            end
+            local resultJson = r.result.data and toJSON(r.result.data)
             -- Check consume logic
             local invContId = row.container_id
             if match.consumeB then
@@ -118,12 +151,18 @@ net.handler("combineRequested", function(player, invItemId)
                         end
                         if res and res.ok then
                             local newId = res.payload and res.payload.item_id
+                            if newId and resultJson then
+                                db.exec("UPDATE items SET data = ? WHERE id = ?", { resultJson, newId })
+                            end
                             if newId then
                                 db.one(
                                     "SELECT id, type_uname AS uname, hitpoints AS hp, data FROM items WHERE id = ?",
                                     { newId },
                                     function(nRow, c3)
                                         if nRow and isElement(c3.player) then
+                                            if r.result.data then
+                                                nRow.data = r.result.data
+                                            end
                                             exports.items:setHeld(c3.player, nRow)
                                             exports.items:sendInventory(c3.player)
                                             toast(c3.player, "CRAFTED")
@@ -144,8 +183,18 @@ net.handler("combineRequested", function(player, invItemId)
                         return
                     end
                     if res and res.ok then
-                        exports.items:sendInventory(c2.player)
-                        toast(c2.player, "CRAFTED")
+                        local newId = res.payload and res.payload.item_id
+                        if not (newId and resultJson) then
+                            exports.items:sendInventory(c2.player)
+                            return toast(c2.player, "CRAFTED")
+                        end
+                        -- the inventory is sent once the result's data is written, so it shows the new state
+                        db.exec("UPDATE items SET data = ? WHERE id = ?", { resultJson, newId }, function(_, c3)
+                            if isElement(c3.player) then
+                                exports.items:sendInventory(c3.player)
+                                toast(c3.player, "CRAFTED")
+                            end
+                        end, { player = c2.player })
                     else
                         toast(c2.player, res and res.code or "DB_ERROR")
                     end

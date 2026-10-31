@@ -54,6 +54,12 @@ function M.codeLabel(name, data)
     return digit and (name .. " (" .. digit .. ")") or name
 end
 
+-- A Lock and Chain (upstream locksmith.pwn SetItemNameExtra): "(Cut)" once combined with a Locksmith Kit, else
+-- "(Uncut)"
+function M.lockLabel(name, data)
+    return name .. (tonumber(unwrap(data).cut) == 1 and " (Cut)" or " (Uncut)")
+end
+
 -- A vehicle key: "Car Key", "Truck Key", "Trailer Key"... from the model it was cut for (data.model);
 -- a key without one (a world puzzle's) keeps its name. typeByModel(model) returns the vehicle type or nil.
 M.KEY_KINDS = {

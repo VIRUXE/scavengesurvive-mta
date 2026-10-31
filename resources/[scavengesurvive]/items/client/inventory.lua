@@ -64,6 +64,8 @@ return function(ctx)
         LOCKNODOORS = "This vehicle does not have doors to lock",
         LOCKALREADY = "This vehicle already has a lock",
         LOCKCHNDOOR = "A lock and chain only fits a vehicle without doors, use a Locksmith Kit",
+        LOCKCHNOKEY = "That lock and chain has no key. Combine it with a Locksmith Kit.",
+        LOCKCHCUT = "That lock and chain is already cut",
         LOCKVNOLOCK = "This vehicle does not have a lock",
         LOCKKEYNCUT = "This key is not cut for any lock",
         LOCKKEYNFIT = "This key does not fit this lock",
@@ -200,6 +202,8 @@ return function(ctx)
             name = small.stunLabel(name, it.data)
         elseif small and it.uname == "Key" then
             name = small.keyLabel(name, it.data, vehicleTypeByModel)
+        elseif small and it.uname == "WheelLock" then
+            name = small.lockLabel(name, it.data)
         elseif gardening and it.uname == gardening.BAG then
             name = gardening.seedLabel(name, gardening.seedsFor(it.id, it.data))
         elseif cooking and cooking.isFood(t) then
