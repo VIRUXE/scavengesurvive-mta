@@ -631,6 +631,24 @@
     <file src="files/ls_hatch.col"/>
     <file src="files/ls_hatch.dff"/>
     <file src="files/ls_hatch.txd"/>
+    <file src="fort.lua"/>
+    <file src="files/fort_barricade.col"/>
+    <file src="files/fort_barricade.dff"/>
+    <file src="files/fort_corner.col"/>
+    <file src="files/fort_corner.dff"/>
+    <file src="files/fort_gate.col"/>
+    <file src="files/fort_gate.dff"/>
+    <file src="files/fort_gate_closed.col"/>
+    <file src="files/fort_gate_closed.dff"/>
+    <file src="files/fort_leanto.col"/>
+    <file src="files/fort_leanto.dff"/>
+    <file src="files/fort_tower.col"/>
+    <file src="files/fort_tower.dff"/>
+    <file src="files/fort_wall2.col"/>
+    <file src="files/fort_wall2.dff"/>
+    <file src="files/fort_wall4.col"/>
+    <file src="files/fort_wall4.dff"/>
+    <file src="files/fort_kit.txd"/>
     <export function="resolve" type="client"/>
     <export function="hatlessSkin" type="client"/>
     <export function="bareSkin" type="client"/>
