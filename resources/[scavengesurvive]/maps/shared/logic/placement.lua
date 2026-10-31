@@ -154,29 +154,6 @@ function placement.fitShellDoors(rows, doors)
     return out, swapped, added
 end
 
--- the forts rebuilt from the fort kit (forts.lua, tools/fort_layout.py; their upstream map files are REPLACED in
--- tools/convert/maps.py) appended to the rows, and how many were added; fort kit models are 20301..20399
-placement.FORT_MODEL_MIN, placement.FORT_MODEL_MAX = 20301, 20399
-
-function placement.appendForts(rows, forts)
-    local names = {}
-    for name in pairs(forts) do
-        names[#names + 1] = name
-    end
-    table.sort(names)
-    local out, added = {}, 0
-    for i, o in ipairs(rows) do
-        out[i] = o
-    end
-    for _, name in ipairs(names) do
-        for _, o in ipairs(forts[name]) do
-            out[#out + 1] = o
-            added = added + 1
-        end
-    end
-    return out, added
-end
-
 function placement.isSampModel(model)
     return model >= 18631 or (model >= 11682 and model <= 11753)
 end

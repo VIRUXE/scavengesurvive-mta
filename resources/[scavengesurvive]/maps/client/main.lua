@@ -163,8 +163,6 @@ addEventHandler("onClientResourceStart", resourceRoot, function()
     local swapped, added
     queue, swapped, added = placement.fitShellDoors(queue, readLua("shared/shell_doors.lua") or {})
     state.stats.doors = swapped + added
-    -- and the forts the port builds from its own kit, in place of upstream's stock props
-    queue, state.stats.forts = placement.appendForts(queue, readLua("shared/forts.lua") or {})
     if #state.removed > 0 then
         setOcclusionsEnabled(false) -- removed world models leave their occluders behind otherwise
     end
