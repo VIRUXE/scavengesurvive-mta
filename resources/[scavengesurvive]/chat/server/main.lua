@@ -197,7 +197,7 @@ addEventHandler("onPlayerChat", root, function(message, messageType)
     deliver(source, text, get(source).mode)
 end)
 
--- /g /l /r (+ /global, /local): alone they switch the mode, with text they send one message in it (upstream CMD:g/l/r)
+-- /g /l (+ /global, /local): alone they switch the mode, with text they send one message in it (upstream CMD:g/l/r)
 local function modeCommand(name, mode)
     addCommandHandler(name, function(p, _, ...)
         if getElementType(p) ~= "player" then
@@ -217,7 +217,6 @@ modeCommand("g", MODE.GLOBAL)
 modeCommand("global", MODE.GLOBAL)
 modeCommand("l", MODE.LOCAL)
 modeCommand("local", MODE.LOCAL)
-modeCommand("r", MODE.RADIO)
 
 addCommandHandler("me", function(p, _, ...)
     if getElementType(p) ~= "player" then
@@ -251,12 +250,14 @@ addCommandHandler("freq", function(p, _, value)
     outputChatBox(string.format(" >  Radio tuned to %.2f", f), p, 255, 255, 0)
 end)
 
-addCommandHandler("radio", function(p)
+local function openRadio(p)
     if getElementType(p) == "player" then
         sync(p)
         triggerClientEvent(p, "chatRadioOpened", p)
     end
-end)
+end
+addCommandHandler("radio", openRadio)
+addCommandHandler("r", openRadio)
 
 net.handler("radioTuneRequested", function(p, delta)
     delta = tonumber(delta)
