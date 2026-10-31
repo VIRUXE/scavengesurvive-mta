@@ -43,6 +43,7 @@ Legend: **Port** = reimplement behaviour in Lua · **Replace** = MTA-native mech
 | `core/player/whitelist.pwn`, `aliases.pwn`, `ipv4-log.pwn`, `host-log.pwn`, `country.pwn` | Port (reduced) | serial via `getPlayerSerial`; country via `fetchRemote` |
 | `core/player/gpci-log.pwn`, gpci whitelist | Replace | GPCI is SA-MP-only → MTA serial |
 | `core/player/afk-check.pwn`, `alt-tab-check.pwn` | Replace | `getPlayerIdleTime`, `onClientMinimize`/`onClientRestore` |
+| `core/player/cmd-process.pwn` | Drop | user decision 2026-10-31: MTA dispatches `addCommandHandler` itself and stays silent on unknown commands, `staff` `dispatch` already answers `CMDERROR4` below a command's level, and `staff_actions` records every privileged command, so neither the `CMDERROR0` reply nor the `[COMMAND]` log is ported; `OnRconLoginAttempt` has no MTA counterpart (no RCON) |
 | `core/player/widescreen.pwn` | Drop | textdraw aspect workaround; dx uses real screen size |
 | `core/player/brightness.pwn` | Port (trivial) | dx overlay |
 | `core/player/disallow-actions.pwn` | Port | As built 2026-10-30 (#152): `items/server/main.lua` `isBadInteract` (knocked out, cuffed, hands up via `exports.character:isHandsUp`, staff duty) guards pickup, the inventory, taking from and moving between containers, opening any container or trunk and use; the trunk / bonnet refusal is the hud routing F at a vehicle's rear to the vehicle first; type 0 is refused by `/additem` (`dev/shared/logic/item_spawn.lua`) |
