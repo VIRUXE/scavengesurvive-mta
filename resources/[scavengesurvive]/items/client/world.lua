@@ -15,6 +15,8 @@ return function(ctx)
     local machines = ctx.machines
     local furniture = ctx.furniture
     local SIGN_RANGE = 25 -- metres a sign's text can be read from
+    local LABEL_RANGE = 4 -- metres an item's name shows from
+    local DEFENCE_LABEL_RANGE = 10 -- a built defence's hitpoints, which other walls do not hide
     local objects = {} -- id -> { obj | parts, pitched, row, uname, hp, x, y, z, name, fires, plant }
     local lockersOpen = {} -- locker item id -> true while someone has it open (lockerToggled, #143)
     local labelVisibility = {} -- id -> { visible, checkedAt }
@@ -325,6 +327,8 @@ return function(ctx)
             end
             if e then
                 e.name = formatName(t, r)
+                e.defence = builtDefence(r) ~= nil
+                e.x, e.y, e.z = r.x or e.x, r.y or e.y, r.z or e.z -- a built defence stands higher than it lay
                 if isElement(e.obj) then -- the row came again because it moved or turned (a door swung)
                     orient(e.obj, r, t)
                 end
@@ -344,6 +348,7 @@ return function(ctx)
                     y = r.y,
                     z = r.z,
                     name = formatName(t, r),
+                    defence = builtDefence(r) ~= nil,
                 }
                 if isPitched then
                     e.parts = createTentParts(r)
@@ -412,7 +417,8 @@ return function(ctx)
                     end
                 end
             end
-            if d2 < 4 * 4 then
+            local range = e.defence and DEFENCE_LABEL_RANGE or LABEL_RANGE
+            if d2 < range * range then
                 local visibility = labelVisibility[e.row.id]
                 if not visibility or now - visibility.checkedAt >= 300 then
                     local obj = isElement(e.obj) and e.obj or nil
@@ -427,7 +433,7 @@ return function(ctx)
                             true,
                             true,
                             false,
-                            true,
+                            not e.defence, -- a wall in a stack would hide the labels of the walls behind it
                             true,
                             false,
                             false,
