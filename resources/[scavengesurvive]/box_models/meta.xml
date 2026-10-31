@@ -23,6 +23,9 @@
     <file src="files/wbox_dockcrates1_la_rest.col"/>
     <file src="files/wbox_dockcrates1_la_rest.dff"/>
     <file src="files/wbox_dockcrates1_la_rest.txd"/>
+    <file src="files/wbox_dockcrates2_la_rest.col"/>
+    <file src="files/wbox_dockcrates2_la_rest.dff"/>
+    <file src="files/wbox_dockcrates2_la_rest.txd"/>
     <file src="files/wbox_dyn_box_pile_4_rest.col"/>
     <file src="files/wbox_dyn_box_pile_4_rest.dff"/>
     <file src="files/wbox_dyn_box_pile_4_rest.txd"/>
@@ -59,9 +62,6 @@
     <file src="files/wbox_shippingbox.col"/>
     <file src="files/wbox_shippingbox.dff"/>
     <file src="files/wbox_shippingbox.txd"/>
-    <file src="files/wbox_shippingcrate.col"/>
-    <file src="files/wbox_shippingcrate.dff"/>
-    <file src="files/wbox_shippingcrate.txd"/>
     <file src="files/wbox_smallcrate.col"/>
     <file src="files/wbox_smallcrate.dff"/>
     <file src="files/wbox_smallcrate.txd"/>
@@ -74,8 +74,5 @@
     <file src="files/wbox_woodencrate.col"/>
     <file src="files/wbox_woodencrate.dff"/>
     <file src="files/wbox_woodencrate.txd"/>
-    <file src="files/wbox_wrappedcrate.col"/>
-    <file src="files/wbox_wrappedcrate.dff"/>
-    <file src="files/wbox_wrappedcrate.txd"/>
     <export function="resolve" type="client"/>
 </meta>

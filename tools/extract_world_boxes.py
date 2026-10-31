@@ -28,7 +28,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from tools.world_boxes import PARTS, SOURCES  # noqa: E402
+from tools.world_boxes import PARTS, SOURCES, STATIC  # noqa: E402
 
 BOX_MODELS = ROOT / "resources" / "[scavengesurvive]" / "box_models"
 FILES = BOX_MODELS / "files"
@@ -236,6 +236,9 @@ def build_in_blender(gta: Path, survey: bool) -> None:
                 rest.append(o)
                 continue
             forms = canonical(o, yaw, centre, base)
+            if any(signature(f) in STATIC for f in forms):  # a box by shape that stays in the remnant
+                rest.append(o)
+                continue
             sig, turn = None, 0
             for s, p in parts.items():
                 if forms[0] in p["forms"]:

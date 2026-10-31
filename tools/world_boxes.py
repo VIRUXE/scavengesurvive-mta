@@ -26,7 +26,7 @@ SOURCES = [
     {"model": 1299, "dff": "smashboxpile", "txd": "boxes"},
     {"model": 923, "dff": "Packing_carates2", "txd": "crates_n_stuffext", "remnant": 20482},
     {"model": 944, "dff": "Packing_carates04", "txd": "crates_n_stuffext", "remnant": 20483},
-    {"model": 3576, "dff": "DockCrates2_LA", "txd": "sjmla_las"},
+    {"model": 3576, "dff": "DockCrates2_LA", "txd": "sjmla_las", "remnant": 20484},
     {"model": 3577, "dff": "DockCrates1_LA", "txd": "sjmla_las", "remnant": 20485},
     {"model": 1558, "dff": "CJ_CARDBRD_PICKUP", "txd": "CJ_BOX1", "remnant": 20486},
     {"model": 1450, "dff": "DYN_CRATE_3", "txd": "BREAK_Pallet", "remnant": 20487},
@@ -48,11 +48,12 @@ PARTS = [
     {"uname": "LongCrate", "name": "Long Crate", "model": 20409, "sigs": ["091f4c05b1"], "size": 6, "hp": 6},
     {"uname": "BigCrate", "name": "Big Crate", "model": 20410, "sigs": ["1ef612862e"], "size": 6, "hp": 6},
     {"uname": "PackingBox", "name": "Packing Box", "model": 20411, "sigs": ["f254c60b24"], "size": 4, "hp": 4, "holds": [10, "junk"]},
-    {"uname": "ShippingCrate", "name": "Shipping Crate", "model": 20412, "sigs": ["138faca3a1"], "size": 6, "hp": 6},
-    {"uname": "WrappedCrate", "name": "Wrapped Crate", "model": 20413, "sigs": ["86c280e4e8"], "size": 6, "hp": 6},
     {"uname": "ShippingBox", "name": "Shipping Box", "model": 20414, "sigs": ["bdea89146d"], "size": 4, "hp": 5},
     {"uname": "BinBag", "name": "Bin Bag", "model": 20415, "sigs": ["3b3260b1e7"], "size": 3, "hp": 3, "holds": [6, "trash"]},
     {"uname": "RubbishBag", "name": "Rubbish Bag", "model": 20416, "sigs": ["df480744aa"], "size": 3, "hp": 3, "holds": [6, "trash"]},
     {"uname": "TrashBag", "name": "Trash Bag", "model": 20417, "sigs": ["eb0b748e79", "c022ac26cd", "3383f52803"], "size": 3, "hp": 3, "holds": [6, "trash"]},
     {"uname": "WeaponCrate", "name": "Weapon Crate", "model": 20418, "sigs": ["d373c14cec"], "size": 6, "hp": 6},
 ]
+
+# parts that are boxes by shape but stay where GTA put them, in their source's remnant: the 1.5 m dock crates
+STATIC = ["138faca3a1", "86c280e4e8"]

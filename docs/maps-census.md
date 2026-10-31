@@ -7,7 +7,7 @@ Columns: `samp` = SA-MP-only model present in `tools/data/samp.ide`; `samp_unkno
 | zone | files | objects | vanilla | samp | samp_unknown | unknown | removals | materials | dropped_tail | eight_arg | legacy_header | ignored_calls |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | BC | 19 | 510 | 461 | 42 | 0 | 0 | 6 | 0 | 0 | 0 | 8 | 4 |
-| BOXES | 0 | 193 | 0 | 0 | 193 | 0 | 548 | 0 | 0 | 0 | 0 | 0 |
+| BOXES | 0 | 217 | 0 | 0 | 217 | 0 | 548 | 0 | 0 | 0 | 0 | 0 |
 | COLFIX | 81 | 287 | 266 | 21 | 0 | 0 | 0 | 0 | 0 | 2 | 1 | 110 |
 | FC | 12 | 824 | 640 | 106 | 0 | 0 | 6 | 0 | 0 | 0 | 6 | 1 |
 | GEN | 1 | 10 | 10 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 1 | 0 |
@@ -17,20 +17,20 @@ Columns: `samp` = SA-MP-only model present in `tools/data/samp.ide`; `samp_unkno
 | RC | 17 | 4925 | 4853 | 24 | 0 | 0 | 13 | 0 | 0 | 0 | 9 | 0 |
 | SF | 24 | 1740 | 768 | 962 | 0 | 0 | 30 | 1 | 0 | 0 | 11 | 0 |
 | TR | 9 | 308 | 303 | 0 | 0 | 0 | 10 | 0 | 0 | 0 | 5 | 0 |
-| **all** | 220 | 23199 | 15649 | 6984 | 193 | 0 | 675 | 3 | 0 | 2 | 78 | 115 |
+| **all** | 220 | 23223 | 15649 | 6984 | 217 | 0 | 675 | 3 | 0 | 2 | 78 | 115 |
 
-Objects beyond MTA's createBuilding limit (|x| or |y| > 3000, must be createObject): 11550
+Objects beyond MTA's createBuilding limit (|x| or |y| > 3000, must be createObject): 11571
 
 ## (world, interior) combinations
 
 | world | interior | objects |
 | ---: | ---: | ---: |
-| -1 | -1 | 22297 |
-| -1 | 0 | 352 |
+| -1 | -1 | 22320 |
+| -1 | 0 | 353 |
 | -1 | 1 | 16 |
 | 0 | 0 | 161 |
 
-## SA-MP-only models used by maps (92 distinct, 7177 placements)
+## SA-MP-only models used by maps (93 distinct, 7201 placements)
 
 | model | placements | in samp.ide |
 | ---: | ---: | --- |
@@ -123,6 +123,7 @@ Objects beyond MTA's createBuilding limit (|x| or |y| > 3000, must be createObje
 | 20481 | 21 | no |
 | 20482 | 31 | no |
 | 20483 | 43 | no |
+| 20484 | 24 | no |
 | 20485 | 40 | no |
 | 20486 | 48 | no |
 | 20487 | 10 | no |

@@ -9174,13 +9174,6 @@
     0.704
    ]
   },
-  "ShippingCrate": {
-   "height": 1.491,
-   "sides": [
-    1.494,
-    1.494
-   ]
-  },
   "SmallCrate": {
    "height": 0.544,
    "sides": [
@@ -9207,13 +9200,6 @@
    "sides": [
     1.375,
     1.338
-   ]
-  },
-  "WrappedCrate": {
-   "height": 1.491,
-   "sides": [
-    1.494,
-    1.494
    ]
   }
  },
@@ -9569,54 +9555,12 @@
      "y": 0.5772,
      "yaw": 89.25,
      "z": -1.4927
-    },
-    {
-     "uname": "ShippingCrate",
-     "x": -0.3402,
-     "y": -0.7657,
-     "yaw": 89.75,
-     "z": -1.4927
-    },
-    {
-     "uname": "ShippingCrate",
-     "x": -0.3402,
-     "y": 0.7727,
-     "yaw": 89.75,
-     "z": -1.4927
-    },
-    {
-     "uname": "ShippingCrate",
-     "x": -0.327,
-     "y": 0.0006,
-     "yaw": 89.75,
-     "z": 0.0095
-    },
-    {
-     "uname": "WrappedCrate",
-     "x": 1.2963,
-     "y": -0.77,
-     "yaw": 89.75,
-     "z": -1.4927
-    },
-    {
-     "uname": "WrappedCrate",
-     "x": 1.2963,
-     "y": 0.7684,
-     "yaw": 89.75,
-     "z": -1.4927
     }
    ],
-   "remnant": null
+   "remnant": 20484
   },
   "3577": {
    "boxes": [
-    {
-     "uname": "WrappedCrate",
-     "x": -0.8238,
-     "y": -0.8756,
-     "yaw": 89.75,
-     "z": -0.7534
-    },
     {
      "uname": "ShippingBox",
      "x": -0.5743,
@@ -9630,13 +9574,6 @@
      "y": 1.3124,
      "yaw": 89.25,
      "z": -0.7825
-    },
-    {
-     "uname": "WrappedCrate",
-     "x": 0.8392,
-     "y": -0.8944,
-     "yaw": 89.75,
-     "z": -0.7308
     },
     {
      "uname": "ShippingBox",
