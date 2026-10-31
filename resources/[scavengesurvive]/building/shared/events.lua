@@ -6,10 +6,13 @@ addEvent("holdActionCancelRequested", true)
 addEvent("lockBreakRequested", true)
 addEvent("deviceHackRequested", true)
 addEvent("itemTweakRequested", true)
+addEvent("vehicleKeypadSetupSubmitted", true)
+addEvent("vehicleKeypadSubmitted", true)
 
 -- server to client / client-local
 addEvent("keypadOpened", true)
 addEvent("keypadClosed", true)
+addEvent("vehicleKeypadOpened", true)
 addEvent("keypadHackStarted", true)
 addEvent("keypadHackEnded", true)
 addEvent("doorStateChanged", true)

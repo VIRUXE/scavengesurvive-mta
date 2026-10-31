@@ -43,6 +43,9 @@ return function(ctx)
         Wheel = true,
     }
 
+    local LOCK_TOOLS = { Key = true, LocksmithKit = true, WheelLock = true, Crowbar = true, LockBreaker = true }
+    LOCK_TOOLS.Keypad, LOCK_TOOLS.AdvancedKeypad = true, true
+
     local TREATMENTS = { Bandage = true, AntiSepBandage = true, Medkit = true, DoctorBag = true, Pills = true }
     TREATMENTS.AutoInjec = true
     local isKeyHeld
@@ -166,6 +169,14 @@ return function(ctx)
         local nearVeh, nearDist = getNearbyVehicle()
         local held = ctx.getHeld()
         local uname = held and held.uname
+        -- a lock tool or key at a walk-in door (the towable Airstream's) is for that trailer, not a truck beside it
+        if uname and LOCK_TOOLS[uname] then
+            local doorVeh = exports.vehicles:nearbyTrailerDoor()
+            if doorVeh then
+                blockEnterUntil = getTickCount() + TRUNK_ENTER_BLOCK_MS
+                return triggerServerEvent("vehicleInteractRequested", localPlayer, doorVeh)
+            end
+        end
         if nearVeh and nearDist <= 5.5 then
             local px, py = getElementPosition(localPlayer)
             local vx, vy = getElementPosition(nearVeh)

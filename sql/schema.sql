@@ -311,6 +311,7 @@ CREATE TABLE IF NOT EXISTS `vehicles` (
   `fuel` float NOT NULL DEFAULT 0,
   `locked` tinyint(1) NOT NULL DEFAULT 0,
   `key_code` int(11) DEFAULT NULL,
+  `keypad_code` char(4) DEFAULT NULL,
   `trailer_id` int(11) DEFAULT NULL,
   `damage` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`damage`)),
   `left_spawn` tinyint(1) NOT NULL DEFAULT 0,

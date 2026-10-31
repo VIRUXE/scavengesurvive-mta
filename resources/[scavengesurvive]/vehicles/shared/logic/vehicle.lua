@@ -227,6 +227,17 @@ M.WALK_IN_DOOR = 2
 M.DOOR_REACH = 1.8
 M.DOOR_SERVER_REACH = 6.0
 
+-- The door's hinge in the vehicle's frame (airstream_trailer/towable.lua `door`; the server has no component
+-- positions): a lock tool or key works within DOOR_LOCK_REACH of it, in the XY plane, inside or outside.
+M.WALK_IN_HINGE = { x = -1.149, y = 1.460 }
+M.DOOR_LOCK_REACH = 2.5
+
+function M.nearWalkInDoor(lx, ly)
+    local h = M.WALK_IN_HINGE
+    local dx, dy = lx - h.x, ly - h.y
+    return dx * dx + dy * dy <= M.DOOR_LOCK_REACH * M.DOOR_LOCK_REACH
+end
+
 -- What a walk-in trailer carries while hitched: the world items inside its room, in the vehicle's frame (the towable
 -- Airstream: walls at x ±1.06, the end sections reach y -2.6 and 3.95, the floor is z -0.45 and the ceiling 1.8;
 -- a little margin for things lying against the walls), looked for within CARGO_RADIUS of its centre.

@@ -11,6 +11,7 @@ end
 
 local isOpen = false
 local currentDefenceId = nil
+local currentVehicle = nil -- a walk-in vehicle door's keypad (vehicles resource) instead of a defence's
 local isSetupMode = false
 local enteredCode = ""
 -- a Hack Device at work (world's Area 69, upstream HackKeypadUpdate): the display runs random codes, then shows the
@@ -42,6 +43,7 @@ local function close()
     end
     isOpen = false
     currentDefenceId = nil
+    currentVehicle = nil
     isSetupMode = false
     enteredCode = ""
     stopHack()
@@ -49,11 +51,20 @@ local function close()
 end
 
 local function submit()
-    if not isOpen or not currentDefenceId then
+    if not isOpen or not (currentDefenceId or currentVehicle) then
         return
     end
     if string.len(enteredCode) == 0 then
         playErrorSound()
+        return
+    end
+    if currentVehicle then
+        local event = isSetupMode and "vehicleKeypadSetupSubmitted" or "vehicleKeypadSubmitted"
+        triggerServerEvent(event, localPlayer, currentVehicle, enteredCode)
+        if isSetupMode then
+            playSuccessSound()
+            close()
+        end
         return
     end
     if isSetupMode then
@@ -270,6 +281,15 @@ end)
 
 addEventHandler("keypadOpened", root, function(defenceId, isSetup)
     currentDefenceId = defenceId
+    isSetupMode = (isSetup == true)
+    enteredCode = ""
+    isOpen = true
+    showCursor(true)
+end)
+
+addEventHandler("vehicleKeypadOpened", root, function(vehicle, isSetup)
+    currentDefenceId = nil
+    currentVehicle = vehicle
     isSetupMode = (isSetup == true)
     enteredCode = ""
     isOpen = true

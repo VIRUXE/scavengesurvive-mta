@@ -37,7 +37,8 @@ local SIM_TICK_MS = 1000
 local USED_TICK_MS = 300000
 
 local SELECT_VEHICLES = "SELECT v.id, v.spawn_id, v.type_uname, v.model, v.x, v.y, v.z, v.rz, "
-    .. "v.health, v.fuel, v.locked, v.damage, v.key_code, v.trailer_id, v.left_spawn, c.id AS container_id, "
+    .. "v.health, v.fuel, v.locked, v.damage, v.key_code, v.keypad_code, v.trailer_id, v.left_spawn, "
+    .. "c.id AS container_id, "
     .. "s.x AS spawn_x, s.y AS spawn_y FROM vehicles v LEFT JOIN containers c ON c.owner_vehicle_id = v.id "
     .. "LEFT JOIN vehicle_spawns s ON s.id = v.spawn_id"
 
@@ -185,6 +186,7 @@ local function create(row)
         fuel = tonumber(row.fuel) or 0,
         locked = lockState,
         keyCode = row.key_code and tonumber(row.key_code) or nil,
+        keypad = row.keypad_code or nil, -- a walk-in door's keypad: "" installed, no code yet; "1234" its code
         trailerId = row.trailer_id and tonumber(row.trailer_id) or nil,
         containerId = cid,
         spawnId = row.spawn_id and tonumber(row.spawn_id) or nil,
@@ -1049,6 +1051,87 @@ addEventHandler("onTrailerDetach", root, function(truck)
     end, 50, 1)
 end)
 
+-- Locking a walk-in vehicle (a Key turn, a finished Locksmith Kit hold) shuts its door; any other vehicle has none.
+local function shutWalkInDoor(vehicle)
+    local inf = info[vehicle]
+    local vt = inf and exports.data:vehicleType(inf.uname)
+    if vt and vt.door and getVehicleDoorOpenRatio(vehicle, vlogic.WALK_IN_DOOR) > 0 then
+        setVehicleDoorOpenRatio(vehicle, vlogic.WALK_IN_DOOR, 0, 600)
+        markUsed(vehicle)
+    end
+end
+
+-- A Keypad on a walk-in door (the towable Airstream): installed by a hold at the door, the owner then sets a 4 digit
+-- code on the same keypad UI as a defence's (building client). The door stays locked; the right code opens it (it
+-- locks again once it is shut), anyone inside opens it freely. A Lock Breaker takes the keypad out with the lock.
+local BREAK_LOCK_SQL = "UPDATE vehicles SET locked = 0, key_code = NULL, keypad_code = NULL WHERE id = ?"
+local KEYPAD_HOLD_MS = 6000
+local KEYPAD_COOLDOWN_MS = 2000
+local pendingKeypad = {} -- player -> the vehicle whose keypad prompt is open (setup or entry)
+local lastKeypadTry = {} -- player -> tick of the last wrong code
+
+local function nearDoorOf(player, vehicle)
+    if not isElement(vehicle) or not info[vehicle] or getPedOccupiedVehicle(player) then
+        return false
+    end
+    local px, py, pz = getElementPosition(player)
+    local vx, vy, vz = getElementPosition(vehicle)
+    return getDistanceBetweenPoints3D(px, py, pz, vx, vy, vz) <= vlogic.DOOR_SERVER_REACH
+end
+
+net.handler("vehicleKeypadSetupSubmitted", function(player, vehicle, code)
+    if pendingKeypad[player] ~= vehicle or not nearDoorOf(player, vehicle) then
+        return
+    end
+    pendingKeypad[player] = nil
+    local inf = info[vehicle]
+    if inf.keypad ~= "" then
+        return
+    end
+    local digits = tostring(code or ""):match("^%d%d?%d?%d?$")
+    if not digits or digits == "" then
+        return
+    end
+    inf.keypad = string.format("%04d", tonumber(digits))
+    inf.locked = vlogic.LOCK_EXTERNAL
+    setVehicleLocked(vehicle, true)
+    shutWalkInDoor(vehicle)
+    setElementData(vehicle, "vehicles.locked", inf.locked, "broadcast", "deny")
+    db.exec("UPDATE vehicles SET locked = 1, keypad_code = ? WHERE id = ?", { inf.keypad, inf.id })
+    toast(player, "KEYPAD_INSTALLED")
+end, { rate = 3 })
+
+net.handler("vehicleKeypadSubmitted", function(player, vehicle, code)
+    if pendingKeypad[player] ~= vehicle or not nearDoorOf(player, vehicle) then
+        return
+    end
+    local inf = info[vehicle]
+    if not inf.keypad or inf.keypad == "" then
+        pendingKeypad[player] = nil
+        return
+    end
+    local now = getTickCount()
+    if now - (lastKeypadTry[player] or 0) < KEYPAD_COOLDOWN_MS then
+        return
+    end
+    local digits = tostring(code or ""):match("^%d%d?%d?%d?$")
+    if digits and string.format("%04d", tonumber(digits)) == inf.keypad then
+        pendingKeypad[player] = nil
+        lastKeypadTry[player] = nil
+        triggerClientEvent(player, "keypadClosed", player)
+        setVehicleDoorOpenRatio(vehicle, vlogic.WALK_IN_DOOR, 1, 600)
+        markUsed(vehicle)
+        return
+    end
+    lastKeypadTry[player] = now
+    toast(player, "WRONG_PASSCODE")
+end, { rate = 3 })
+
+addEventHandler("onPlayerQuit", root, function()
+    pendingKeypad[source] = nil
+    lastKeypadTry[source] = nil
+end)
+
 -- A walk-in door (vehicle types with door = true, the towable Airstream): the interact key next to it opens or shuts
 -- it (vehicles client tryTrailerDoor).
 net.handler("trailerDoorToggleRequested", function(player, vehicle)
@@ -1063,6 +1146,17 @@ net.handler("trailerDoorToggleRequested", function(player, vehicle)
         return
     end
     local open = getVehicleDoorOpenRatio(vehicle, vlogic.WALK_IN_DOOR) < 0.5
+    if open and inf.locked > 0 then
+        -- a locked door opens from inside only: nobody is trapped in the room
+        local lx, ly, lz = toLocal(getElementMatrix(vehicle), px, py, pz)
+        if not vlogic.inCargoBox(lx, ly, lz) then
+            if inf.keypad and inf.keypad ~= "" then
+                pendingKeypad[player] = vehicle
+                return triggerClientEvent(player, "vehicleKeypadOpened", player, vehicle, false)
+            end
+            return toast(player, inf.locked == vlogic.LOCK_EXTERNAL and "LOCKCUSTOML" or "LOCKUSECROW")
+        end
+    end
     setVehicleDoorOpenRatio(vehicle, vlogic.WALK_IN_DOOR, open and 1 or 0, 600)
     markUsed(vehicle)
 end, { rate = 3 })
@@ -1096,6 +1190,13 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
 
     local _, _, vrz = getElementRotation(vehicle)
     local angle = vlogic.angleToVehicle(px, py, vx, vy, vrz)
+    -- a walk-in vehicle (the towable Airstream) has its lock at the door, not on a driver side, and no trunk
+    local walkIn = vt and vt.door == true
+    local atDoor = false
+    if walkIn then
+        local dlx, dly = toLocal(getElementMatrix(vehicle), px, py, pz)
+        atDoor = vlogic.nearWalkInDoor(dlx, dly)
+    end
     local held = exports.items:getHeld(player)
     local uname = held and held.uname
     local hp = getElementHealth(vehicle)
@@ -1183,7 +1284,7 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
     end
 
     -- Case 2: Driver-side interactions (Key, LocksmithKit, LockBreaker, Crowbar)
-    if vlogic.isDriverSide(angle) then
+    if (walkIn and atDoor) or (not walkIn and vlogic.isDriverSide(angle)) then
         if uname == "Key" then
             local ok, err = vlogic.canUseKey(held.data, inf.keyCode)
             if not ok then
@@ -1196,6 +1297,7 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
             else
                 inf.locked = vlogic.LOCK_EXTERNAL
                 setVehicleLocked(vehicle, true)
+                shutWalkInDoor(vehicle)
                 toast(player, "LOCKED")
             end
             setElementData(vehicle, "vehicles.locked", inf.locked, "broadcast", "deny")
@@ -1227,6 +1329,7 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
                     vinf.locked = vlogic.LOCK_EXTERNAL
                     vinf.keyCode = code
                     setVehicleLocked(veh, true)
+                    shutWalkInDoor(veh)
                     setElementData(veh, "vehicles.locked", 1, "broadcast", "deny")
                     db.exec("UPDATE vehicles SET locked = 1, key_code = ? WHERE id = ?", { code, vinf.id })
                 end
@@ -1242,6 +1345,36 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
                 end, { p = p })
             end, 3000, 1, player, vehicle, held.id)
             activeActions[player] = { actionType = "locksmith", vehicle = vehicle, timer = timer }
+            return
+        end
+
+        if walkIn and (uname == "Keypad" or uname == "AdvancedKeypad") then
+            if inf.keypad then
+                return toast(player, "KEYPAD_ALREADY")
+            end
+            cancelHoldAction(player)
+            setPedAnimation(player, "COP_AMBIENT", "COPBROWSE_LOOP", -1, true, false, false, false)
+            local ms = exports.character:skillTimeModifier(player, KEYPAD_HOLD_MS, "Construction")
+            triggerClientEvent(player, "vehicleHoldStarted", player, "Installing keypad", ms)
+            local timer = setTimer(function(p, veh, kitId)
+                activeActions[p] = nil
+                if not isElement(p) or not isElement(veh) then
+                    return
+                end
+                setPedAnimation(p, nil)
+                local vinf = info[veh]
+                local cur = exports.items:getHeld(p)
+                if not vinf or vinf.keypad or not cur or cur.id ~= kitId or not nearDoorOf(p, veh) then
+                    return
+                end
+                vinf.keypad = ""
+                db.exec("UPDATE vehicles SET keypad_code = '' WHERE id = ?", { vinf.id })
+                exports.items:destroyItem(kitId, p)
+                exports.character:gainSkill(p, "Construction")
+                pendingKeypad[p] = veh
+                triggerClientEvent(p, "vehicleKeypadOpened", p, veh, true)
+            end, ms, 1, player, vehicle, held.id)
+            activeActions[player] = { actionType = "keypad", vehicle = vehicle, timer = timer }
             return
         end
 
@@ -1265,7 +1398,8 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
                     vinf.keyCode = nil
                     setVehicleLocked(veh, false)
                     setElementData(veh, "vehicles.locked", 0, "broadcast", "deny")
-                    db.exec("UPDATE vehicles SET locked = 0, key_code = NULL WHERE id = ?", { vinf.id })
+                    vinf.keypad = nil
+                    db.exec(BREAK_LOCK_SQL, { vinf.id })
                     toast(p, "LOCKBROKEN")
                 end
             end, 3000, 1, player, vehicle)
@@ -1275,7 +1409,7 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
     end
 
     -- Case 3: Rear (Trunk)
-    if vlogic.isRear(angle) then
+    if vlogic.isRear(angle) and not walkIn then
         if (uname == "Crowbar" or uname == "LockBreaker") and inf.locked > 0 then
             local ok, err = vlogic.canBreakLock(inf.locked, uname)
             if not ok then
@@ -1296,7 +1430,8 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
                     vinf.keyCode = nil
                     setVehicleLocked(veh, false)
                     setElementData(veh, "vehicles.locked", 0, "broadcast", "deny")
-                    db.exec("UPDATE vehicles SET locked = 0, key_code = NULL WHERE id = ?", { vinf.id })
+                    vinf.keypad = nil
+                    db.exec(BREAK_LOCK_SQL, { vinf.id })
                     toast(p, "LOCKBROKEN")
                 end
             end, 3000, 1, player, vehicle)

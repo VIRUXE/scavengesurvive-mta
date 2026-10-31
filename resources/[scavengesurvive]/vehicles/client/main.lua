@@ -92,7 +92,16 @@ function nearbyTrailerDoor()
                 if itemD ~= false and itemD < d then
                     return false
                 end
-                return v, getVehicleDoorOpenRatio(v, vlogic.WALK_IN_DOOR) > 0.5
+                local locked = (tonumber(getElementData(v, "vehicles.locked")) or 0) > 0
+                if locked then
+                    local m = getElementMatrix(v)
+                    local dx, dy, dz = px - m[4][1], py - m[4][2], pz - m[4][3]
+                    local lx = dx * m[1][1] + dy * m[1][2] + dz * m[1][3]
+                    local ly = dx * m[2][1] + dy * m[2][2] + dz * m[2][3]
+                    local lz = dx * m[3][1] + dy * m[3][2] + dz * m[3][3]
+                    locked = not vlogic.inCargoBox(lx, ly, lz)
+                end
+                return v, getVehicleDoorOpenRatio(v, vlogic.WALK_IN_DOOR) > 0.5, locked
             end
         end
     end
