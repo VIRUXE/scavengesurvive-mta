@@ -45,7 +45,7 @@ Apparel is checked in the green-screen studio (`docs/dev-studio.md`): one ped, a
 
 ## How it is built
 
-- **One MTA resource per domain**, no prefix: `lib`, `data`, `models`, `maps`, `ui`, `auth`, `character`, `items`,
+- **One MTA resource per domain**, no prefix: `lib`, `data`, the `*_models` resources, `maps`, `ui`, `auth`, `character`, `items`,
   `loot`, `vehicles`, `crafting`, `building`, `world`, `weapons`, `chat`, `hud`, `staff`, `dev`, `attachedit`. They
   share state only through MariaDB, so any resource can restart alone and rebuild from the database.
 - **MariaDB does the heavy lifting.** Every item-graph move (pickup, drop, container put/take, death drop) is a
@@ -59,7 +59,7 @@ Apparel is checked in the green-screen studio (`docs/dev-studio.md`): one ped, a
   export; `/studio` puts a ped alone on a chroma-green set and
   `attachedit` tunes attachment offsets in game.
 - **Static world on the client.** The 221 upstream map files become `createBuilding` calls spread over frames
-  (about 1.3 s on join), with the 209 SA-MP-only object models shipped in the `models` resource.
+  (about 1.3 s on join), with the 209 SA-MP-only object models shipped in the `samp_models` resource.
 - **Damage is server-authoritative.** The victim's client reports a hit; the server checks the shooter's held weapon,
   range and rate, computes the wound and applies it.
 - **Pure logic is separate.** Formulas live in `shared/logic/*.lua` with no MTA calls.

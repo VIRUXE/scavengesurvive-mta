@@ -1,0 +1,19 @@
+<meta>
+    <info author="scavengesurvive-mta" type="script" name="hat_models" description="Port hat models cut from headgear skins" version="0.1.0"/>
+    <min_mta_version server="1.6.0" client="1.6.0-9.21695"/>
+    <download_priority_group>90</download_priority_group>
+    <include resource="lib"/>
+    <script src="client/main.lua" type="client"/>
+    <file src="hats.lua"/>
+    <file src="files/beanie1.col"/>
+    <file src="files/bikera_hat.dff"/>
+    <file src="files/csher_hat.dff"/>
+    <file src="files/cwmyfr_hat.dff"/>
+    <file src="files/hmogar_hat.dff"/>
+    <file src="files/lafd1_hat.dff"/>
+    <file src="files/maccer_hat.dff"/>
+    <file src="files/wfyburg_hat.dff"/>
+    <file src="files/wmygol1_hat.dff"/>
+    <file src="files/wmyplt_hat.dff"/>
+    <export function="resolve" type="client"/>
+</meta>

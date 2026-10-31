@@ -4,6 +4,7 @@
 -- The server only publishes what is carried: element data "items.held" / "items.bag" = type uname or false.
 -- ctx = { models } from client/main.lua (client/models.lua).
 return function(ctx)
+    local libModels = loadstring(exports.lib:getModule("models"), "=lib/models.lua")()
     local models, apparel = ctx.models, ctx.apparel
     local SLOTS = {
         ["items.held"] = "held",
@@ -153,8 +154,8 @@ return function(ctx)
         return attachment(uname, t and t.boneid or 6, o)
     end
 
-    -- Skins whose mesh carries its own hat, cap or helmet have a hatless twin in the models pack (peds.lua, #75).
-    -- A twin whose head was rebuilt bare (#89, exports.models:bareSkin) is how that skin always looks: the hat is
+    -- Skins whose mesh carries its own hat, cap or helmet have a hatless twin in skin_models (peds.lua, #75).
+    -- A twin whose head was rebuilt bare (#89, exports.skin_models:bareSkin) is how that skin always looks: the hat is
     -- an item of its own (#77). The other twins are only shown while a hat covers them. This client swaps
     -- locally: setElementModel on this side is never synced, so the server and every other client keep the real
     -- skin. swapped[player] holds the real skin meanwhile, and every per-skin row is looked up by it.
@@ -174,7 +175,7 @@ return function(ctx)
 
     local function applyHatSwap(player, uname)
         local base = baseSkin(player)
-        local twin = exports.models:bareSkin(base) or (uname and exports.models:hatlessSkin(base))
+        local twin = libModels.bareSkin(base) or (uname and libModels.hatlessSkin(base))
         if twin then
             swapped[player] = base
             if getElementModel(player) ~= twin then

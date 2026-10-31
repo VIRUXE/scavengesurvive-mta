@@ -180,7 +180,9 @@ def render_meta(zones: list[str]) -> str:
              '    <min_mta_version server="1.6.0" client="1.6.0-9.22410"/>',  # createBuilding
              '    <download_priority_group>85</download_priority_group>',
              '    <include resource="lib"/>',
-             '    <include resource="models"/>',
+             '    <include resource="samp_models"/>',
+             '    <include resource="door_models"/>',
+             '    <include resource="prop_models"/>',
              '    <script src="shared/events.lua" type="shared"/>',
              '    <script src="server/main.lua" type="server"/>',
              '    <script src="client/main.lua" type="client"/>',

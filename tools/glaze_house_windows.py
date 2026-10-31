@@ -8,7 +8,7 @@ HANGINGS, decoded from the game's TXDs (gta-scout's TXDReader). Each opening is
 a planar rectangular boundary loop in the wall, under 1.85 m tall, or up to 2.6 m when the maps put a window001 or
 lsmall_window01 pane in it (a bay, a floor-to-ceiling window; other tall ones are doors and entrances); it gets a recessed translucent pane textured house_window in a modelled frame, and the house's curtains or blind. The shells' triangles all say material 0 and the real
 split lives in the BinMesh chunk, which DragonFF ignores, so it is copied into the triangle records first.
-models/client/main.lua imports files/house_window.txd into the shells' vanilla dictionaries.
+samp_models/client/main.lua imports files/house_window.txd into the shells' vanilla dictionaries.
 """
 import os
 import struct
@@ -77,7 +77,7 @@ PANES = (19466, 19325)  # SA-MP window001 and the wide lsmall_window01: what the
 GLAZED_LUA = os.path.join(RES,'maps','shared','glazed_windows.lua')
 def shell_id(name):
     import re
-    return int(re.search(r'\[(\d+)\] = \{ dff = "%s",' % name, open(os.path.join(RES,'models','manifest.lua')).read()).group(1))
+    return int(re.search(r'\[(\d+)\] = \{ dff = "%s",' % name, open(os.path.join(RES,'samp_models','manifest.lua')).read()).group(1))
 def write_glazed(openings):
     """maps/shared/glazed_windows.lua: the openings each shell now glazes itself, so the maps drop the panes in them.
     Shells not in this run keep their line."""

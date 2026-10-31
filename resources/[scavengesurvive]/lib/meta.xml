@@ -10,6 +10,8 @@
     <file src="modules/budget.lua"/>
     <file src="modules/events_registry.lua"/>
     <file src="modules/surface.lua"/>
+    <file src="modules/model_loader.lua"/>
+    <file src="modules/models.lua"/>
     <export function="getModule" type="server"/>
     <export function="getModule" type="client"/>
     <settings>

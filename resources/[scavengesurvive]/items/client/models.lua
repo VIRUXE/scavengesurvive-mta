@@ -1,8 +1,9 @@
--- Which MTA model an item type's object uses on this client: the SA-MP model loaded by the `models` resource
+-- Which MTA model an item type's object uses on this client: the SA-MP model loaded by the `samp_models` resource
 -- while it is running, otherwise the vanilla stand-in chosen by data/model_map.lua (type.mtaModel). Also owns the
 -- per-colour tint shaders for item types whose DefineItemType colour is not -1 (#96).
 -- Returns { FALLBACK, forType, forSamp, colourRgba, hasTint, applyTint, onChanged }.
 return function()
+    local models = loadstring(exports.lib:getModule("models"), "=lib/models.lua")()
     local M = { FALLBACK = 1271 }
     local cache = {}
     local tintShaders = {} -- colour key -> shader, or false when the shader could not be created
@@ -52,14 +53,7 @@ return function()
     end
 
     local function sampModel(model)
-        local res = getResourceFromName("models")
-        if not res or getResourceState(res) ~= "running" then
-            return false
-        end
-        local ok, id = pcall(function()
-            return exports.models:resolve(model)
-        end)
-        return ok and id or false
+        return models.resolve(model)
     end
 
     -- A SA-MP-only model id as this client can create it (the pitched tent's parts, shared/logic/tent.lua), or
@@ -87,7 +81,7 @@ return function()
         refreshers[#refreshers + 1] = refresh
     end
 
-    -- the models resource (re)started or is stopping: every live object picks its model again
+    -- a model resource (re)started or is stopping: every live object picks its model again
     addEventHandler("sampModelsChanged", root, function()
         cache = {}
         for _, refresh in ipairs(refreshers) do

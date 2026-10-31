@@ -4,7 +4,9 @@
     <min_mta_version server="1.6.0" client="1.6.0-9.22862"/>
     <include resource="lib"/>
     <include resource="data"/>
-    <include resource="models"/>
+    <include resource="samp_models"/>
+    <include resource="hat_models"/>
+    <include resource="skin_models"/>
     <include resource="ui"/>
     <include resource="character"/>
     <script src="shared/events.lua" type="shared"/>

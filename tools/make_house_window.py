@@ -1,5 +1,5 @@
 """Writes the window pane texture of the SA-MP house shells: see-through glass, lighter at the head where it reflects the
-sky and darker toward the sill, with one soft reflection band (the opaque border is no longer sampled). Output: models/files/house_window.txd (what the client imports) and, for Blender, house_window.PNG
+sky and darker toward the sill, with one soft reflection band (the opaque border is no longer sampled). Output: samp_models/files/house_window.txd (what the client imports) and, for Blender, house_window.PNG
 (tools/glaze_house_windows.py reads it from its texture directory).
 
     python tools/make_house_window.py GTA_DIR OUT_TXD OUT_PNG

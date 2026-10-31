@@ -22,7 +22,7 @@ ROOT = Path(__file__).resolve().parents[2]
 HERE = Path(__file__).resolve().parent
 BUILD = HERE / "build"
 SHELL_FILES = ROOT / "resources" / "[scavengesurvive]" / "house_shell" / "files"
-HOUSE_WINDOW_TXD = ROOT / "resources" / "[scavengesurvive]" / "models" / "files" / "house_window.txd"
+HOUSE_WINDOW_TXD = ROOT / "resources" / "[scavengesurvive]" / "samp_models" / "files" / "house_window.txd"
 TRAILERS = {
     3167: "trailer_large1_01",
     3168: "trailer2_01",

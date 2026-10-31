@@ -1,9 +1,9 @@
 """Hat items cut from the GTA:SA skins that carry their own headgear (#77).
 
 Each row names one headgear mesh that tools/blender/remodel_head.py deletes from a skin (its HEADS rules) and
-exports on its own as `models/files/<dff>.dff`: a static object in the skin's own texture, with the Head bone at its
+exports on its own as `hat_models/files/<dff>.dff`: a static object in the skin's own texture, with the Head bone at its
 origin, that `items` attaches on SA-MP bone 2 at zero offset (items/shared/logic/apparel.lua CUT_HATS). The model
-ids are the port's own, above SA-MP's range (PORT_MODEL_MIN); `models/hats.lua` maps them to the files and the
+ids are the port's own, above SA-MP's range (PORT_MODEL_MIN); `hat_models/hats.lua` maps them to the files and the
 converters add one item type per row (tools/convert/item_types.py) and its loot rows (tools/convert/loot_tables.py).
 Skins whose headgear a SA-MP object already covers (police caps, SWAT and army helmets, the pizza cap, the beanie)
 are left out, as are the cuts that are mostly hair (bikerb's bandana).

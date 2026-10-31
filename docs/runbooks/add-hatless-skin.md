@@ -10,9 +10,9 @@ see the twin.
 
 - `tools/extract_ped_models.py`: `HEADGEAR` lists the skins. For each it pulls `<name>.dff` from `gta3.img`,
   runs Blender headless with DragonFF (`tools/blender/cut_headgear.py`) and writes
-  `resources/[scavengesurvive]/models/files/<name>_nohat.dff`, `models/peds.lua` (base skin -> twin) and
-  `models/meta.xml` (both manifests). The twin shares the base skin's TXD, so nothing else is extracted.
-- `models/client/main.lua`: loads every twin with `engineRequestModel("ped", base)` on the client, so the ids
+  `resources/[scavengesurvive]/skin_models/files/<name>_nohat.dff`, `skin_models/peds.lua` (base skin -> twin) and
+  `skin_models/meta.xml`. The twin shares the base skin's TXD, so nothing else is extracted.
+- `skin_models/client/main.lua`: loads every twin with `engineRequestModel("ped", base)` on the client, so the ids
   differ per client like the object ids, and exports `hatlessSkin(base)`. It also exports `bareSkin(base)`, which
   is the twin only when its head was rebuilt bare (it has a hair TXD, #89).
 - `items/client/attach.lua`: a skin with a bare twin always shows that twin, since its hat is an item of its own
@@ -37,7 +37,7 @@ see the twin.
 3. `python -m tools.extract_ped_models <skin>` (needs the GTA:SA install from the registry or `--gta`, and
    Blender with the DragonFF add-on, found under Program Files or given with `--blender`). Commit the DFF,
    `peds.lua` and `meta.xml`.
-4. `rcon.ps1 rr models`, then `rr items`, and screenshot the skin with a hat on and off. Bare, the twin shows the
+4. `rcon.ps1 rr skin_models`, then `rr items`, and screenshot the skin with a hat on and off. Bare, the twin shows the
    hole GTA leaves under the headgear; that is expected, since it is only ever shown under a hat.
 
 ## Bare heads (remodelled skulls)
@@ -49,7 +49,7 @@ thin band that continues the face skin and rings of hair textured from the darke
 all weighted to the Head bone. Run it in Blender (`blender --python tools/blender/remodel_head.py -- <ped dir>
 <out dir> [skin ...]`, the ped dir holding `<name>.dff` and `<name>.txd` from `gta3.img`) and judge the result in
 the viewport and the studio (force the twin bare with `clua <p> setElementModel(localPlayer,
-exports.models:hatlessSkin(<skin>))`). All 22 headgear skins have a remodelled bare head: police and sheriffs (4, 119, 284, 283, 288), military and SWAT
+exports.skin_models:hatlessSkin(<skin>))`). All 22 headgear skins have a remodelled bare head: police and sheriffs (4, 119, 284, 283, 288), military and SWAT
 (287, 285), firefighters (277-279), services and civilian (61, 35, 155, 205, 161, 36, 37, 2, 311), and bikers
 (247, 248, 254). Most of those domes still read as a dark helmet rather than hair (#75). Tenpenny (265, bald) and
 dwayne (268, a blond ponytail) wear no headgear and have no twin (#87).
@@ -110,9 +110,9 @@ that shows it:
      kept face, neck or body, plus the ones `port_hats.py` and `HEADGEAR` list.
    - It carves a skull out of the reference's silhouettes in the four views.
    - It bakes a 256x256 hair texture from the reference.
-   - It writes `<name>_nohat.dff` and `<name>_nohat.txd`. That TXD holds only the hair; `models` imports it into the
+   - It writes `<name>_nohat.dff` and `<name>_nohat.txd`. That TXD holds only the hair; `skin_models` imports it into the
      base skin's shared dictionary, and `peds.lua` lists it.
-4. Restart `models` and look at the twin bare in the studio. `tools/blender/render_head.py` shows it without the
+4. Restart `skin_models` and look at the twin bare in the studio. `tools/blender/render_head.py` shows it without the
    game.
 
 Rebuilt: every headgear skin except the helmeted cops with sunglasses (4, 119, 284), whose cut still takes the glasses.
@@ -143,7 +143,7 @@ the grid drawn. Ped meshes are wound every which way, and MTA culls a worn objec
 free-standing one. So the exporter recalculates normals and writes every face twice with reversed winding, a
 double-sided shell, which is solid worn and alone. Then run `python -m tools.convert items loot` for the item types
 (generic, size 1, `roty` 270 so the X-up mesh stands on the ground) and the loot rows. Apply the seed and restart
-`models`, `data` and `items`. `items/shared/logic/apparel.lua` lists the unames in `CUT_HATS`, worn on SA-MP bone 2.
+`hat_models`, `data` and `items`. `items/shared/logic/apparel.lua` lists the unames in `CUT_HATS`, worn on SA-MP bone 2.
 Per-skin fit lives in `CUT_HAT_FIT`, borrowed along the `skins.lua` chain: skin 283 is the zero row, skin 93 is
 scale 1.1 at zero offset. Add a `CUT_HAT_FIT` row for a skin that needs one, not an `OVERRIDES` row. Judge each
 hat from six angles, worn and alone, and from the side camera (`studio <p> 270 1.4 0.75 0.65`), not the face
@@ -158,7 +158,7 @@ beanie) and cuts that are mostly hair (dwayne's mullet, bikerb's bandana).
 
 ## Caveats
 
-- Never restart `models` while a client is still downloading (docs/runbooks/start-stop-restart.md).
+- Never restart a `*_models` resource while a client is still downloading (docs/runbooks/start-stop-restart.md).
 - A twin cut with `"auto"` can take some hair with it: harmless under a hat, but check the brow line and the
   ears, which a small hat (beanie, cap) does not cover.
 - Skins whose headgear is the whole head (the chicken suit 167) cannot be fixed this way; leave them out.

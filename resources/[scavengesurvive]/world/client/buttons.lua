@@ -13,6 +13,7 @@ local doors = loadFile("shared/logic/doors.lua", "=world/doors.lua")
 local puzzles = loadFile("shared/logic/puzzles.lua", "=world/puzzles.lua")
 local area69 = loadFile("shared/logic/area69.lua", "=world/area69.lua")
 local data = loadFile("data/puzzles.lua", "=world/puzzles_data.lua")
+local models = loadstring(exports.lib:getModule("models"), "=lib/models.lua")()
 
 local reg = buttons.new()
 doors.register(reg, buttons)
@@ -23,10 +24,10 @@ local shown = nil -- door id -> state the object is drawn at; nil until the serv
 local doorObjects, keypad, screen = {}, nil, nil
 local viewing = false
 
--- a SA-MP model through the models pack (keypad, screen, spark), a stock one as it is
+-- a SA-MP model through samp_models (keypad, screen, spark), a stock one as it is
 local function model(id)
     if id >= 18631 or (id >= 11682 and id <= 11753) then
-        return exports.models:resolve(id) or false
+        return models.resolve(id) or false
     end
     return id
 end

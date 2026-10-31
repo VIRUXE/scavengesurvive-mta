@@ -32,7 +32,7 @@ Python with the repo's requirements; the MTA server installed at `$MTA`.
   start (items, vehicles, zones), so a single restart is safe for players online. Restarting `auth` re-prompts
   every connected player for their password (sessions live in that VM); restarting `character` writes and
   re-reads every character (stats survive, a knocked-out player stands up).
-- Never restart `models` while a client is loading (it re-requests every custom model); never call
+- Never restart a `*_models` resource while a client is loading (it re-requests every custom model); never call
   `engineSetPoolCapacity("building", …)` (CLAUDE.md).
 - A new resource needs its name in `server-config/resources.xml` **and** a `run-local.ps1` run (stopped server)
   so the ACL group grants it `function.loadstring`; `start <name>` on a running server fails with

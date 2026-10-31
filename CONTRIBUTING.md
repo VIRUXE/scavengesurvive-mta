@@ -15,5 +15,5 @@
 
 New code is released under the Unlicense. Converted upstream data stays MPL-2.0 and the map placements CC BY-SA 4.0
 (`THIRD_PARTY_NOTICES.md`). Never commit passwords (`server-config/local.settings.xml`). Generated files
-(`data/generated/`, `maps/data/`, `sql/seed/`, `docs/maps-census.md`, the `models` pack) are committed on purpose;
+(`data/generated/`, `maps/data/`, `sql/seed/`, `docs/maps-census.md`, the `*_models` packs) are committed on purpose;
 regenerate them with `python -m tools.convert all` and `python -m tools.extract_samp_models` rather than editing.

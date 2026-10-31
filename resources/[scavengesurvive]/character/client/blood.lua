@@ -7,6 +7,7 @@ local f = fileOpen("shared/logic/bleeding.lua", true)
 local bleeding = assert(loadstring(fileRead(f, fileGetSize(f)), "=character/bleeding.lua"))()
 fileClose(f)
 local surface = loadstring(exports.lib:getModule("surface"), "=lib/surface.lua")()
+local models = loadstring(exports.lib:getModule("models"), "=lib/models.lua")()
 local SPRAY_BONE = 3 -- spine, upstream attached the spray to bone 1 (spine) with a few centimetres of offset
 local SPRAY_MS = 100
 local trails = {} -- trail id -> { [slot] = { x, y, z, rz, interior, dimension } } as the server sent them
@@ -15,11 +16,7 @@ local spots = {} -- pool object -> its trail entry, to ground it again when it s
 local sprays = {} -- player -> true while their chest sprays
 
 local function poolModel()
-    local res = getResourceFromName("models")
-    if not res or getResourceState(res) ~= "running" then
-        return false
-    end
-    return exports.models:resolve(bleeding.POOL_MODEL)
+    return models.resolve(bleeding.POOL_MODEL)
 end
 
 -- onto whatever is under the spot (buildings and objects, not peds or cars) and along its slope; left flat at the

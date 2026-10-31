@@ -40,22 +40,24 @@ Scavenge & Survive ported to MTA:SA 1.6 (Lua 5.1) with MariaDB 13.0 (12.2 also v
 - Git: commit straight to `main`; never create a branch unless asked. On prod the resources are a symlink into this
   clone, so switching branches there swaps the files the live server runs.
 - Never commit `server-config/local.settings.xml` (holds the DB password).
-- SA-MP-only object models (ids 11682–11753, 18631+) live in the `models` resource (`manifest.lua` + `files/`, both
-  committed). When an item type starts using one that is not in the pack, run `python -m tools.extract_samp_models`
+- SA-MP-only object models (ids 11682–11753, 18631+) live in the `samp_models` resource (`manifest.lua` + `files/`, both
+  committed). Imported SA-MP models go only there; every port-made set has a resource of its own (`hat_models`,
+  `skin_models`, `door_models`, `prop_models`), and resolving an id on a client goes through the `lib` module `models`
+  (`loadstring(exports.lib:getModule("models"), ...)().resolve(id)`) instead of calling one of them. When an item type starts using one that is not in the pack, run `python -m tools.extract_samp_models`
   on a box with a SA-MP client and commit the result. Clients create item objects with `ItemModels.forType(t)`;
   SA-MP models that clients build structures from (the pitched tent's panels and poles) are listed in
   `STRUCTURE_MODELS` in that tool and resolved with `ItemModels.forSamp(id)`.
-- Skins whose mesh carries its own hat or helmet have a hatless twin in `models` (`peds.lua` + `files/<name>_nohat.dff`,
+- Skins whose mesh carries its own hat or helmet have a hatless twin in `skin_models` (`peds.lua` + `files/<name>_nohat.dff`,
   built by `python -m tools.extract_ped_models` from `gta3.img` with Blender + DragonFF, see
   `docs/runbooks/add-hatless-skin.md`); `items` shows the twin on each client while a hat is worn, the server never
   changes the skin.
 - Hat items cut off those skins (`SheriffHat`, `FireHelmet`, ...) are rows of `tools/port_hats.py`: port-only model ids
-  20001+ in `models/hats.lua` + `files/<ped>_hat.dff`, built by `python -m tools.extract_ped_models --hats` (Blender,
+  20001+ in `hat_models/hats.lua` + `files/<ped>_hat.dff`, built by `python -m tools.extract_ped_models --hats` (Blender,
   the remodel script's `--only hats`); the converters add the item type and its loot rows from the same table, and
   `apparel.lua` `CUT_HATS` wears them at zero offset on the head bone. Never list them in `extract_samp_models`.
 - A twin's bare head is rebuilt from its reference image (`docs/images/hatless-refs`, `tools/hatless_refs.py`) by
   `python -m tools.hatless_rebuild prep|build <skin>` (cut plane per skin in `PLANES`, studio calibration in
-  `tools/data`); the twin then brings a hair-only TXD of its own, listed as `txd` in `models/peds.lua`.
+  `tools/data`); the twin then brings a hair-only TXD of its own, listed as `txd` in `skin_models/peds.lua`.
 
 ## Commands
 

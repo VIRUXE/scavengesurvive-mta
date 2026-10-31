@@ -3,7 +3,7 @@
     python -m tools.hatless_rebuild calibrate [--player VIRUXE]   # Head bone matrices in the studio -> tools/data
     python -m tools.hatless_rebuild prep [skin ...]               # registration + lighting -> tools/data
     python -m tools.hatless_rebuild skull [skin ...]              # ellipsoid cranium fitted to the reference
-    python -m tools.hatless_rebuild build [skin ...]              # Blender -> models/files, peds.lua, meta.xml
+    python -m tools.hatless_rebuild build [skin ...]              # Blender -> skin_models/files, peds.lua, meta.xml
 
 A twin's head is rebuilt from `docs/images/hatless-refs/<skin>.jpg` (tools/hatless_refs.py): the studio's camera is
 known (tools/hatless_proj.py), so once the Head bone's place in the studio is measured, every point of the head maps
@@ -16,7 +16,7 @@ silhouettes and paints the hair from it.
 for the head's idle pose; the studio grid against the reference below the brow, a scale and shift for the image
 model's re-framing; and the studio's lighting factor, studio pixel over atlas texel on the face. That goes to
 `tools/data/hatless_prep.json`. `build` runs the Blender script per skin and installs `<name>_nohat.dff` and its hair
-TXD; restart `models` to see them.
+TXD; restart `skin_models` to see them.
 """
 import argparse
 import json
@@ -30,8 +30,8 @@ from pathlib import Path
 import numpy as np
 
 from tools import hatless_proj as hp
-from tools.extract_ped_models import HEADGEAR, MODELS, find_blender, read_peds, render_peds
-from tools.extract_samp_models import detect_gta, read_img_entry, read_img_index, write_meta
+from tools.extract_ped_models import HEADGEAR, SKIN_MODELS, find_blender, read_peds, render_peds, write_meta_peds
+from tools.extract_samp_models import detect_gta, read_img_entry, read_img_index
 from tools.port_hats import HATS
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -336,7 +336,7 @@ def skull(skins: list[int]) -> None:
 
 def build(skins: list[int]) -> None:
     calib, preps = json.loads(CALIB.read_text()), json.loads(PREP.read_text())
-    files = MODELS / "files"
+    files = SKIN_MODELS / "files"
     with tempfile.TemporaryDirectory() as tmp:
         work = Path(tmp)
         for skin in skins:
@@ -349,10 +349,10 @@ def build(skins: list[int]) -> None:
             print(next(line for line in blender("build", str(work / "job.json")).splitlines() if line.startswith("REBUILT")))
             for ext in ("dff", "txd"):
                 shutil.copy(work / f"{name}_nohat.{ext}", files / f"{name}_nohat.{ext}")
-    peds = read_peds(MODELS / "peds.lua")
+    peds = read_peds(SKIN_MODELS / "peds.lua")
     txds = {d for d in peds.values() if (files / f"{d}.txd").is_file()}
-    (MODELS / "peds.lua").write_text(render_peds(peds, txds), encoding="ascii", newline="\n")
-    write_meta(MODELS)
+    (SKIN_MODELS / "peds.lua").write_text(render_peds(peds, txds), encoding="ascii", newline="\n")
+    write_meta_peds(SKIN_MODELS)
 
 
 def main(argv=None) -> int:

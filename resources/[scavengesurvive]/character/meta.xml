@@ -5,7 +5,7 @@
     <include resource="auth"/>
     <include resource="ui"/>
     <include resource="data"/>
-    <include resource="models"/>
+    <include resource="samp_models"/>
     <script src="shared/events.lua" type="shared"/>
     <script src="server/main.lua" type="server"/>
     <script src="client/deathscreen.lua" type="client"/>

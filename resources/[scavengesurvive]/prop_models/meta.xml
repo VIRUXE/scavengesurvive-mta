@@ -1,0 +1,12 @@
+<meta>
+    <info author="scavengesurvive-mta" type="script" name="prop_models" description="Port prop models added to the world" version="0.1.0"/>
+    <min_mta_version server="1.6.0" client="1.6.0-9.21695"/>
+    <download_priority_group>90</download_priority_group>
+    <include resource="lib"/>
+    <script src="client/main.lua" type="client"/>
+    <file src="props.lua"/>
+    <file src="files/ls_hatch.col"/>
+    <file src="files/ls_hatch.dff"/>
+    <file src="files/ls_hatch.txd"/>
+    <export function="resolve" type="client"/>
+</meta>

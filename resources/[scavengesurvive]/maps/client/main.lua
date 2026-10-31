@@ -1,7 +1,8 @@
 -- Builds upstream's static maps on this client from data/<ZONE>.lua (tools/convert/maps.py): vanilla models in
 -- the main world become buildings, everything else an object (see shared/logic/placement.lua), and the
 -- RemoveBuildingForPlayer lines become removeWorldModel. Work is spread over frames with a time budget so the
--- join is not frozen. SA-MP-only models come from the `models` resource when it has them loaded.
+-- join is not frozen. SA-MP-only models come from samp_models when it has them loaded.
+local models = loadstring(exports.lib:getModule("models"), "=lib/models.lua")()
 local placement
 do
     local f = fileOpen("shared/logic/placement.lua", true)
@@ -42,14 +43,7 @@ local function readLua(path)
 end
 
 local function sampModel(model)
-    local res = getResourceFromName("models")
-    if not res or getResourceState(res) ~= "running" then
-        return false
-    end
-    local ok, id = pcall(function()
-        return exports.models:resolve(model)
-    end)
-    return ok and id or false
+    return models.resolve(model)
 end
 
 local function place(o)

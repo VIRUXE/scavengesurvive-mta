@@ -1,5 +1,5 @@
--- SA-MP-only object ids (18631+ and 11682-11753) have no model in MTA. The `models` resource loads the real ones on
--- each client (tools/extract_samp_models.py); these vanilla stand-ins are what clients show while it is not running.
+-- SA-MP-only object ids (18631+ and 11682-11753) have no model in MTA. The `samp_models` resource loads the real ones
+-- on each client (tools/extract_samp_models.py); these vanilla stand-ins are what clients show while it is not running.
 -- Keys: SA-MP model -> MTA vanilla model.
 local M = { DEFAULT = 1271 }
 M.byModel = {
