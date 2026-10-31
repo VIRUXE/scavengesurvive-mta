@@ -155,8 +155,9 @@ function M.canBreakLock(lockState, itemUname)
     return false, "NEED_TOOL"
 end
 
--- GTA SA models with no doors (RC toys left out): bicycles, motorbikes, the quad, boats, the hovercraft and the open
--- cars and utility vehicles. A Lock and Chain locks these, a Locksmith Kit everything else.
+-- GTA SA models with no doors (RC toys left out), checked against gta3.img (no door_*_ok atomic in the dff): bicycles,
+-- motorbikes, the quad, boats, the hovercraft and the open cars and utility vehicles. A Lock and Chain locks these,
+-- a Locksmith Kit everything else.
 M.DOORLESS_MODELS = {
     [481] = true, -- BMX
     [509] = true, -- Bike
@@ -189,11 +190,9 @@ M.DOORLESS_MODELS = {
     [486] = true, -- Dozer
     [530] = true, -- Forklift
     [531] = true, -- Tractor
-    [532] = true, -- Combine Harvester
     [568] = true, -- Bandito
     [571] = true, -- Kart
     [572] = true, -- Mower
-    [583] = true, -- Tug
 }
 
 -- a vehicle type flagged not lockable upstream, or a doorless model
