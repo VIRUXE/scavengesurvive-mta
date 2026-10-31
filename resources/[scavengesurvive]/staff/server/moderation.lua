@@ -529,6 +529,33 @@ return function(ctx)
         end,
     })
 
+    -- Not upstream (its level5.pwn /health only set the caller's own hp); restores hp to full and stops the bleeding
+    -- on the caller or a named player. Food is left alone.
+    ctx.command({
+        name = "heal",
+        level = 3,
+        usage = "/heal [player]",
+        help = "Restore a player's health and stop their bleeding",
+        needsDb = false,
+        fn = function(p, args)
+            local target = args[1] and ctx.target(p, args[1], true) or (not args[1] and p)
+            if not target or not isElement(target) then
+                return
+            end
+            local st = exports.character:getStats(target)
+            if not st then
+                return ctx.say(p, " >  %s has no living character.", getPlayerName(target))
+            end
+            exports.character:modifyStat(target, "bleed", -st.bleed)
+            exports.character:modifyStat(target, "hp", 100 - st.hp)
+            ctx.say(p, " >  Healed %s", getPlayerName(target))
+            if target ~= p then
+                ctx.say(target, " >  You were healed by staff.")
+            end
+            ctx.log(p, "heal", getPlayerName(target), ctx.accountId(target))
+        end,
+    })
+
     -- After every login (upstream CheckForExtraAccounts): other names from this IP or serial, their highest staff
     -- level and whether any is banned. Catches a name banned while offline, whose bans row has no IP or serial yet.
     local ALIAS_LOGIN_SQL = "SELECT c.name, MAX(COALESCE(a.admin_level, 0)) AS lvl, MAX(EXISTS(SELECT 1 FROM bans b"

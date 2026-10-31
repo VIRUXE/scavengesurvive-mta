@@ -317,19 +317,30 @@ local function tryDeconstruct(player, _cid, held, px, py, _pz, _rz, int, dim)
 end
 
 -- 4. Workbench Crafting: Craft inside Workbench's 16-slot container
-local function tryWorkbenchCraft(player, _cid, held, px, py)
+-- onMiss(player, why) runs when there is nothing to build (no bench, an empty one, or why == "recipe": contents no
+-- recipe takes); the default tells `items` through workbenchRecipeMissed, which opens the container as upstream does
+local function tryWorkbenchCraft(player, _cid, held, px, py, onMiss)
+    onMiss = onMiss or function(pl)
+        triggerEvent("workbenchRecipeMissed", pl)
+    end
     local query = "SELECT i.id, c.id AS cont_id FROM world_items_pos p "
         .. "JOIN items i ON i.id = p.item_id "
         .. "JOIN containers c ON c.owner_item_id = i.id "
         .. "WHERE i.type_uname = 'Workbench' AND ST_Distance(p.pos, POINT(?, ?)) <= 2.5 LIMIT 1"
     db.one(query, { px, py }, function(wb, c)
-        if not isElement(c.player) or not wb then
+        if not isElement(c.player) then
             return
+        end
+        if not wb then
+            return onMiss(c.player)
         end
         local contId = wb.cont_id
         db.query("SELECT id, type_uname FROM items WHERE container_id = ?", { contId }, function(cRows, c2)
-            if not isElement(c2.player) or not cRows or #cRows == 0 then
+            if not isElement(c2.player) then
                 return
+            end
+            if not cRows or #cRows == 0 then
+                return onMiss(c2.player)
             end
             local counts = {}
             local itemsByUname = {}
@@ -341,7 +352,7 @@ local function tryWorkbenchCraft(player, _cid, held, px, py)
             local toolUname = c2.held and c2.held.uname
             local matches = craft.matchWorkbench(counts, toolUname)
             if #matches == 0 then
-                return toast(c2.player, "NO_RECIPE")
+                return onMiss(c2.player, "recipe")
             end
             local recipe = matches[1]
             cancelHold(c2.player)
@@ -429,7 +440,11 @@ addCommandHandler("craft", function(player)
     if held and held.uname == "Crowbar" then
         return tryDeconstruct(player, cid, held, px, py, pz, rz, int, dim)
     end
-    tryWorkbenchCraft(player, cid, held, px, py)
+    tryWorkbenchCraft(player, cid, held, px, py, function(pl, why)
+        if why == "recipe" then
+            toast(pl, "NO_RECIPE")
+        end
+    end)
     tryGroundCraft(player, cid, held, px, py, pz, rz, int, dim, true) -- the workbench path already said NO_RECIPE
 end)
 

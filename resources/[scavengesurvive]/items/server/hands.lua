@@ -676,6 +676,19 @@ return function(ctx)
         return true
     end
 
+    -- the Workbench each player used a tool on, until crafting answers (built, or workbenchRecipeMissed)
+    local workbenchAsked = {}
+    addEventHandler("workbenchRecipeMissed", root, function()
+        local row = workbenchAsked[source]
+        workbenchAsked[source] = nil
+        if row and containers and isElement(source) then
+            containers.openWorldContainer(source, row)
+        end
+    end)
+    addEventHandler("onPlayerQuit", root, function()
+        workbenchAsked[source] = nil
+    end)
+
     -- row = { id, uname, hp, data (JSON text) } of a world item: into the empty hand
     function M.pickup(player, cid, row)
         if furnitureSrv and furnitureSrv.blocksPickup(row.uname) then
@@ -806,10 +819,13 @@ return function(ctx)
             end
 
             -- a tool in hand on a Workbench builds what lies inside it (upstream workbench.pwn OnPlayerUseItemWithItem)
+            -- (when no recipe takes what lies inside, workbenchRecipeMissed opens the container instead)
             if row.uname == "Workbench" and curHeld and isConstructionTool(curUname) then
+                workbenchAsked[c.player] = row
                 if runCrafting("workbenchCraft", c.player) then
                     return
                 end
+                workbenchAsked[c.player] = nil
             end
 
             -- Safebox world containers

@@ -11,3 +11,4 @@ addEvent("toastShown", true)
 
 -- server-local
 addEvent("characterDied", false)
+addEvent("workbenchRecipeMissed", false)

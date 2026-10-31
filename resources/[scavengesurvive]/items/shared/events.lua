@@ -6,6 +6,7 @@ addEvent("itemUseAttempted", false)
 addEvent("characterSpawned", false)
 addEvent("characterDied", false)
 addEvent("characterItemsDropped", false)
+addEvent("workbenchRecipeMissed", false)
 
 -- client to server (handlers registered with net.handler)
 addEvent("itemPickupRequested", true)
