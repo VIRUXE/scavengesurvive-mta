@@ -49,6 +49,7 @@ local SUPPORTS = {
     special = true,
     wearbag = true,
     drink = true,
+    give = true,
 }
 
 local state = {
@@ -219,6 +220,22 @@ local function drawAmmo()
     })
 end
 
+-- another player within the server's hand-over reach (items/server/hands.lua GIVE_REACH): the drop key gives instead
+local GIVE_REACH = 1.5
+local function hasPlayerNearby()
+    local px, py, pz = getElementPosition(localPlayer)
+    local int, dim = getElementInterior(localPlayer), getElementDimension(localPlayer)
+    for _, p in ipairs(getElementsByType("player", root, true)) do
+        if p ~= localPlayer and getElementInterior(p) == int and getElementDimension(p) == dim then
+            local tx, ty, tz = getElementPosition(p)
+            if getDistanceBetweenPoints3D(px, py, pz, tx, ty, tz) <= GIVE_REACH then
+                return true
+            end
+        end
+    end
+    return false
+end
+
 local function hasCuffedPlayerNearby()
     local px, py, pz = getElementPosition(localPlayer)
     local int, dim = getElementInterior(localPlayer), getElementDimension(localPlayer)
@@ -276,7 +293,7 @@ local function drawKeyActions(driver)
         driver = driver,
         hitch = driver and state.hitch or false,
         held = held and { uname = held.uname, category = held.category, isWeapon = isCalibreWep },
-        nearPlayer = false,
+        nearPlayer = held and hasPlayerNearby() or false,
         nearFeature = nearFeature(),
         nearCrate = exports.loot:nearbyCrate() or nil,
         nearDoor = walkInDoor(),
@@ -440,4 +457,5 @@ loadFile("client/keys.lua", "=hud/keys.lua")({
     getHeld = function()
         return state.held
     end,
+    hasPlayerNearby = hasPlayerNearby,
 })

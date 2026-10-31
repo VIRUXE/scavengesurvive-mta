@@ -285,15 +285,16 @@ return function(ctx)
         end
         local isCalibreWep = held and held.category == "weapon" and held.calibre ~= nil and not held.liquid
         local key = string.lower(getKeyBoundToCommand("dropitem") or "n")
+        local dropEvent = held and ctx.hasPlayerNearby() and "itemGiveRequested" or "itemDropRequested"
         if not isCalibreWep or not isKeyHeld(key, "dropitem") then
-            return triggerServerEvent("itemDropRequested", localPlayer)
+            return triggerServerEvent(dropEvent, localPlayer)
         end
         local startTick = getTickCount()
         holdTimer = setTimer(function()
             if not isKeyHeld(key, "dropitem") then
                 killTimer(holdTimer)
                 holdTimer = nil
-                triggerServerEvent("itemDropRequested", localPlayer)
+                triggerServerEvent(dropEvent, localPlayer)
             elseif getTickCount() - startTick >= 300 then
                 killTimer(holdTimer)
                 holdTimer = nil

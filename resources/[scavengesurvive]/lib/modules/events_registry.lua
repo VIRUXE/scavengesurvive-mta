@@ -23,6 +23,7 @@ return {
     itemBagOpenRequested = true,
     itemLongPickupRequested = true,
     itemDropRequested = true,
+    itemGiveRequested = true,
     itemPutAwayRequested = true,
     itemTakeRequested = true,
     inventoryOpenRequested = true,

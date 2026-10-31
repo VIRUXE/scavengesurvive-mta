@@ -14,6 +14,7 @@ return function(ctx)
     local isKnockedOut, isPlayerCuffed, setPlayerCuffed = ctx.isKnockedOut, ctx.isPlayerCuffed, ctx.setPlayerCuffed
     local VANILLA_MELEE_MAX = 15
     local RELOAD_COOLDOWN_MS = 1000
+    local GIVE_REACH = 1.5 -- metres to the player an item can be handed to
     local lastReload = {}
     local containers, cooking, small, machinesSrv, furnitureSrv = nil, nil, nil, nil, nil
     local M = {}
@@ -940,6 +941,72 @@ return function(ctx)
         return true
     end
 
+    -- The nearest other player within hand-over reach, in the same interior and dimension (upstream's player area)
+    local function nearestOther(player)
+        local px, py, pz = getElementPosition(player)
+        local int, dim = getElementInterior(player), getElementDimension(player)
+        local best, bestDist = nil, GIVE_REACH
+        for _, p in ipairs(getElementsByType("player")) do
+            if p ~= player and getElementInterior(p) == int and getElementDimension(p) == dim then
+                local tx, ty, tz = getElementPosition(p)
+                local d = getDistanceBetweenPoints3D(px, py, pz, tx, ty, tz)
+                if d <= bestDist then
+                    best, bestDist = p, d
+                end
+            end
+        end
+        return best
+    end
+
+    -- Hand the held item to the player next to you (upstream OnPlayerGiveItem / OnPlayerGivenItem): their hands must be
+    -- empty and neither of you cuffed, knocked out or mid-holster. The one row changes holder, nothing is dropped.
+    function M.giveHeld(player)
+        local cid, item = charId(player), state.held[player]
+        if not cid or (isIncapacitated and isIncapacitated(player)) or isBadInteract(player) then
+            return false, "INCAPACITATED"
+        end
+        if not item then
+            return false, "NOT_HELD"
+        end
+        local target = nearestOther(player)
+        local tcid = target and charId(target)
+        if not tcid then
+            return false, "NOBODY_NEAR"
+        end
+        if isBadInteract(target) or (isIncapacitated and isIncapacitated(target)) then
+            return false, "TARGET_BUSY"
+        end
+        local now = getTickCount()
+        local lh = state.lastHolster
+        if lh and ((lh[player] and now - lh[player] < 1000) or (lh[target] and now - lh[target] < 1000)) then
+            return false, "TARGET_BUSY"
+        end
+        if state.held[target] then
+            return false, "TARGET_HANDS_FULL"
+        end
+        if item.data then
+            M.queueData(item)
+        end
+        M.flushData(item.id)
+        db.call("item_give", { item.id, cid, tcid }, function(res, c)
+            if not res or not res.ok then
+                return isElement(c.player) and toast(c.player, res and res.code or "DB_ERROR")
+            end
+            if isElement(c.player) and state.held[c.player] and state.held[c.player].id == c.item.id then
+                M.setHeld(c.player, nil)
+                anim(c.player, "KISSING", "gift_give", 1800, false, false, false, false)
+                toast(c.player, "GAVE_ITEM")
+            end
+            if isElement(c.target) and not state.held[c.target] then
+                M.setHeld(c.target, { id = c.item.id, uname = c.item.uname, hp = c.item.hp, data = c.item.data })
+                anim(c.target, "KISSING", "gift_get", 1800, false, false, false, false)
+                toast(c.target, "GOT_ITEM")
+            end
+            triggerEvent("itemMoved", c.player, c.item.id, "held", "held")
+        end, { player = player, target = target, item = item })
+        return true
+    end
+
     -- A worn hat or mask knocked off (char/headgear-pop.pwn, weapons on a headshot): the one row it is moves to the
     -- ground at the player's feet, the slot empties and the clients around see it lie there.
     function M.popGear(player, slot)
@@ -970,6 +1037,13 @@ return function(ctx)
 
     net.handler("itemDropRequested", function(player)
         local ok, err = M.dropHeld(player)
+        if not ok and err and isElement(player) then
+            toast(player, err)
+        end
+    end, { rate = 5 })
+
+    net.handler("itemGiveRequested", function(player)
+        local ok, err = M.giveHeld(player)
         if not ok and err and isElement(player) then
             toast(player, err)
         end
