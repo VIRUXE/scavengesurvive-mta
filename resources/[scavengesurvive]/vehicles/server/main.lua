@@ -974,6 +974,26 @@ local function unbindTow(player)
     hitchDrivers[player] = nil
 end
 
+-- Who got in or out of which vehicle, for staff questions like "which Huntley did he use".
+local function logSeat(vehicle, player, seat, action)
+    local i = info[vehicle]
+    if not i then
+        return
+    end
+    local x, y, z = getElementPosition(vehicle)
+    local cols = "vehicle_id, character_id, name, seat, action, x, y, z"
+    local sql = "INSERT INTO vehicle_events (" .. cols .. ") VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+    db.exec(sql, { i.id, charId(player) or nil, getPlayerName(player), seat, action, x, y, z })
+end
+
+addEventHandler("onVehicleEnter", resourceRoot, function(player, seat)
+    logSeat(source, player, seat, "enter")
+end)
+
+addEventHandler("onVehicleExit", resourceRoot, function(player, seat)
+    logSeat(source, player, seat, "exit")
+end)
+
 addEventHandler("onVehicleEnter", resourceRoot, function(player, seat)
     if seat ~= 0 then
         return

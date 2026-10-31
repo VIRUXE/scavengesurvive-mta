@@ -271,6 +271,22 @@ CREATE TABLE IF NOT EXISTS `supply_drop_points` (
   KEY `ix_supply_drop_points_used` (`used_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
+CREATE TABLE IF NOT EXISTS `vehicle_events` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `vehicle_id` int(11) NOT NULL,
+  `character_id` int(11) DEFAULT NULL,
+  `name` varchar(24) NOT NULL,
+  `seat` tinyint(4) NOT NULL,
+  `action` enum('enter','exit') NOT NULL,
+  `x` float NOT NULL,
+  `y` float NOT NULL,
+  `z` float NOT NULL,
+  `at` datetime NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `ix_vehicle_events_vehicle` (`vehicle_id`,`at`),
+  KEY `ix_vehicle_events_character` (`character_id`,`at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+
 CREATE TABLE IF NOT EXISTS `vehicle_spawn_state` (
   `spawn_id` int(11) NOT NULL,
   `next_roll_at` datetime NOT NULL,
