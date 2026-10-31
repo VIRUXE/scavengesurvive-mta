@@ -81,6 +81,13 @@ return function(ctx)
         return ok
     end
 
+    -- carried two-handed items (Wheel, boxes, panels) never go in the inventory or a bag (upstream backpack.pwn
+    -- OnPlayerAddToInventory, IsItemTypeCarry); trunks and other containers still take them
+    local function isCarry(uname)
+        local t = itemType(uname)
+        return t and t.useCarryAnim or false
+    end
+
     local function put(player, cid, itemId, containerId, onFull)
         local held = state.held[player]
         if held and held.id == itemId and not machineAccepts(player, containerId, held.uname, held.data) then
@@ -181,6 +188,9 @@ return function(ctx)
             return
         end
 
+        if (target == "bag" or target == "inventory") and isCarry(item.uname) then
+            return toast(player, "TOO_BIG")
+        end
         if target == "bag" then
             return wornBag(cid, function(bag, c)
                 if not isElement(c.player) then
@@ -283,6 +293,9 @@ return function(ctx)
             return
         end
 
+        if isCarry(item.uname) then
+            return toast(player, "TOO_BIG")
+        end
         local inv = exports.character:getInventoryContainerId(player)
         if not inv then
             return
@@ -884,14 +897,27 @@ return function(ctx)
             end, { player = player })
         end
 
-        if target == "bag" then
-            wornBag(cid, function(bag, c)
-                if not isElement(c.player) or not bag then
+        if target == "bag" or target == "inventory" then
+            return db.one("SELECT type_uname AS uname FROM items WHERE id = ?", { itemId }, function(r, c)
+                if not isElement(c.player) or not r then
                     return
                 end
-                executeMove(bag.id)
+                if isCarry(r.uname) then
+                    return toast(c.player, "TOO_BIG")
+                end
+                if target == "inventory" then
+                    local inv = exports.character:getInventoryContainerId(c.player)
+                    return inv and executeMove(inv)
+                end
+                wornBag(cid, function(bag, c2)
+                    if not isElement(c2.player) or not bag then
+                        return
+                    end
+                    executeMove(bag.id)
+                end, { player = c.player })
             end, { player = player })
-        elseif target == "trunk" then
+        end
+        if target == "trunk" then
             if not sideContId then
                 return
             end
@@ -907,12 +933,6 @@ return function(ctx)
                 end, { player = player })
             end
             executeMove(sideContId)
-        elseif target == "inventory" then
-            local inv = exports.character:getInventoryContainerId(player)
-            if not inv then
-                return
-            end
-            executeMove(inv)
         end
     end, { rate = 5 })
 

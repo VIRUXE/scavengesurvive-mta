@@ -31,7 +31,17 @@ describe("items server sql builders", function()
     before_each(function()
         mock.install()
         mock.settings = {}
-        state = { settings = {}, sent = {}, held = {}, worn = {}, holster = {}, hat = {}, mask = {}, armour = {}, typeCache = {} }
+        state = {
+            settings = {},
+            sent = {},
+            held = {},
+            worn = {},
+            holster = {},
+            hat = {},
+            mask = {},
+            armour = {},
+            typeCache = {},
+        }
         geometry = dofile(ITEMS .. "shared/logic/geometry.lua")
         diff = dofile(ITEMS .. "shared/logic/diff.lua")
         db = load("db")
@@ -189,86 +199,89 @@ describe("items server sql builders", function()
         assert.is_nil(state.sent.p2[5])
     end)
     -- #97: GasCan and FireLighter look for a Barbecue in reach; Crowbar looks for a TentPack then deconstructs
-    it("filters itemPickupRequested to Barbecue for GasCan/FireLighter and tents/defences/deconstruct for Crowbar", function()
-        db.connect("items")
-        _G.getElementPosition = function()
-            return 10, 20, 3
-        end
-        _G.getElementInterior, _G.getElementDimension =
-            function()
-                return 0
-            end, function()
-                return 0
+    it(
+        "filters itemPickupRequested to Barbecue for GasCan/FireLighter and tents/defences/deconstruct for Crowbar",
+        function()
+            db.connect("items")
+            _G.getElementPosition = function()
+                return 10, 20, 3
             end
-        local crafted = {}
-        _G.getResourceFromName = function(name)
-            return name == "crafting" and "res_crafting" or nil
-        end
-        _G.getResourceState = function()
-            return "running"
-        end
-        _G.exports = {
-            crafting = {
-                deconstruct = function(_, p)
-                    crafted[#crafted + 1] = { "deconstruct", p }
-                end,
-                groundCraft = function(_, p)
-                    crafted[#crafted + 1] = { "groundCraft", p }
-                end,
-            },
-            data = {
-                itemTypes = function()
-                    return { "TentPack", "CorPanel", "Knife" }
-                end,
-            },
-        }
-        newHands(function(uname)
-            if uname == "CorPanel" then
-                return { category = "generic", defence = { vertical = { 0, 90, 0 }, horizontal = { 90, 90, 0 } } }
+            _G.getElementInterior, _G.getElementDimension =
+                function()
+                    return 0
+                end, function()
+                    return 0
+                end
+            local crafted = {}
+            _G.getResourceFromName = function(name)
+                return name == "crafting" and "res_crafting" or nil
             end
-            return { category = "generic" }
-        end)
-        mock.addElement("p1")
-        _G.client, _G.source = "p1", "p1"
-        state.held["p1"] = { id = 1, uname = "GasCan", hp = 3, data = { amount = 20 } }
-        mock.fire("itemPickupRequested")
-        -- the Petrol Can reaches a barbecue and the three machines it fuels (#145)
-        assert.matches(
-            "i%.type_uname IN %('Barbecue', 'ScrapMachine', 'RefineMachine', 'WaterMachine'%)",
-            mock.queries[#mock.queries].sql
-        )
+            _G.getResourceState = function()
+                return "running"
+            end
+            _G.exports = {
+                crafting = {
+                    deconstruct = function(_, p)
+                        crafted[#crafted + 1] = { "deconstruct", p }
+                    end,
+                    groundCraft = function(_, p)
+                        crafted[#crafted + 1] = { "groundCraft", p }
+                    end,
+                },
+                data = {
+                    itemTypes = function()
+                        return { "TentPack", "CorPanel", "Knife" }
+                    end,
+                },
+            }
+            newHands(function(uname)
+                if uname == "CorPanel" then
+                    return { category = "generic", defence = { vertical = { 0, 90, 0 }, horizontal = { 90, 90, 0 } } }
+                end
+                return { category = "generic" }
+            end)
+            mock.addElement("p1")
+            _G.client, _G.source = "p1", "p1"
+            state.held["p1"] = { id = 1, uname = "GasCan", hp = 3, data = { amount = 20 } }
+            mock.fire("itemPickupRequested")
+            -- the Petrol Can reaches a barbecue and the three machines it fuels (#145)
+            assert.matches(
+                "i%.type_uname IN %('Barbecue', 'ScrapMachine', 'RefineMachine', 'WaterMachine'%)",
+                mock.queries[#mock.queries].sql
+            )
 
-        mock.tick = 1000
-        state.held["p1"] = { id = 2, uname = "FireLighter", hp = 1, data = {} }
-        mock.fire("itemPickupRequested")
-        assert.matches("i%.type_uname IN %('Barbecue'%)", mock.queries[#mock.queries].sql)
-        mock.answer(#mock.queries, {}) -- no barbecue in reach -> ground craft (e.g. 2 WoodLogs -> Campfire)
-        assert.same({ { "groundCraft", "p1" } }, crafted)
+            mock.tick = 1000
+            state.held["p1"] = { id = 2, uname = "FireLighter", hp = 1, data = {} }
+            mock.fire("itemPickupRequested")
+            assert.matches("i%.type_uname IN %('Barbecue'%)", mock.queries[#mock.queries].sql)
+            mock.answer(#mock.queries, {}) -- no barbecue in reach -> ground craft (e.g. 2 WoodLogs -> Campfire)
+            assert.same({ { "groundCraft", "p1" } }, crafted)
 
-        mock.tick = 2000
-        state.held["p1"] = { id = 3, uname = "Crowbar", hp = 2, data = {} }
-        mock.fire("itemPickupRequested")
-        -- a crowbar also reaches defences, to take a built one down (building resource)
-        assert.matches("i%.type_uname IN %('TentPack', 'CorPanel'%)", mock.queries[#mock.queries].sql)
-        mock.answer(#mock.queries, {}) -- no tent or defence in reach -> deconstruct
-        assert.same({ { "groundCraft", "p1" }, { "deconstruct", "p1" } }, crafted)
+            mock.tick = 2000
+            state.held["p1"] = { id = 3, uname = "Crowbar", hp = 2, data = {} }
+            mock.fire("itemPickupRequested")
+            -- a crowbar also reaches defences, to take a built one down (building resource)
+            assert.matches("i%.type_uname IN %('TentPack', 'CorPanel'%)", mock.queries[#mock.queries].sql)
+            mock.answer(#mock.queries, {}) -- no tent or defence in reach -> deconstruct
+            assert.same({ { "groundCraft", "p1" }, { "deconstruct", "p1" } }, crafted)
 
-        -- Motor, Keypad, AdvancedKeypad target defence types
-        mock.tick = 3000
-        state.held["p1"] = { id = 4, uname = "Motor", hp = 1, data = {} }
-        mock.fire("itemPickupRequested")
-        assert.matches("i%.type_uname IN %('CorPanel'%)", mock.queries[#mock.queries].sql)
+            -- Motor, Keypad, AdvancedKeypad target defence types
+            mock.tick = 3000
+            state.held["p1"] = { id = 4, uname = "Motor", hp = 1, data = {} }
+            mock.fire("itemPickupRequested")
+            assert.matches("i%.type_uname IN %('CorPanel'%)", mock.queries[#mock.queries].sql)
 
-        mock.tick = 4000
-        state.held["p1"] = { id = 5, uname = "Keypad", hp = 1, data = {} }
-        mock.fire("itemPickupRequested")
-        assert.matches("i%.type_uname IN %('CorPanel'%)", mock.queries[#mock.queries].sql)
+            mock.tick = 4000
+            state.held["p1"] = { id = 5, uname = "Keypad", hp = 1, data = {} }
+            mock.fire("itemPickupRequested")
+            assert.matches("i%.type_uname IN %('CorPanel'%)", mock.queries[#mock.queries].sql)
 
-        mock.tick = 5000
-        state.held["p1"] = { id = 6, uname = "AdvancedKeypad", hp = 1, data = {} }
-        mock.fire("itemPickupRequested")
-        assert.matches("i%.type_uname IN %('CorPanel'%)", mock.queries[#mock.queries].sql)
-    end)
+            mock.tick = 5000
+            state.held["p1"] = { id = 6, uname = "AdvancedKeypad", hp = 1, data = {} }
+            mock.fire("itemPickupRequested")
+            assert.matches("i%.type_uname IN %('CorPanel'%)", mock.queries[#mock.queries].sql)
+        end
+    )
 
     it("holstering and unholstering with itemPutAwayRequested does not open inventory", function()
         db.connect("items")
@@ -366,7 +379,9 @@ describe("items server sql builders", function()
             end,
         }
         _G.setPedAnimation = function() end
-        _G.getPedOccupiedVehicle = function() return false end
+        _G.getPedOccupiedVehicle = function()
+            return false
+        end
         _G.giveWeapon = function() end
         _G.takeWeapon = function() end
 
@@ -376,7 +391,9 @@ describe("items server sql builders", function()
             state = state,
             geometry = geometry,
             world = newWorld(),
-            type = function(u) return types[u] end,
+            type = function(u)
+                return types[u]
+            end,
             charId = charId,
             toast = function() end,
             ammo = dofile(ITEMS .. "shared/logic/ammo.lua"),
@@ -386,7 +403,9 @@ describe("items server sql builders", function()
             db = db,
             net = load("net"),
             state = state,
-            type = function(u) return types[u] end,
+            type = function(u)
+                return types[u]
+            end,
             apparel = apparel,
             charId = charId,
             toast = function(p, code)
@@ -398,7 +417,10 @@ describe("items server sql builders", function()
 
         mock.addElement("p1")
         _G.client, _G.source = "p1", "p1"
-        realHands.setHeld("p1", { id = 10, uname = "PumpShotgun", hp = 5, data = { mag = 2, reserve = 0, ammoItem = "AmmoHomeBuck" } })
+        realHands.setHeld(
+            "p1",
+            { id = 10, uname = "PumpShotgun", hp = 5, data = { mag = 2, reserve = 0, ammoItem = "AmmoHomeBuck" } }
+        )
         assert.equals(2, state.held["p1"].data.mag)
 
         -- 1. Holster held weapon
@@ -445,7 +467,9 @@ describe("items server sql builders", function()
             end,
         }
         _G.setPedAnimation = function() end
-        _G.getPedOccupiedVehicle = function() return false end
+        _G.getPedOccupiedVehicle = function()
+            return false
+        end
         _G.giveWeapon = function() end
         _G.takeWeapon = function() end
 
@@ -455,7 +479,9 @@ describe("items server sql builders", function()
             state = state,
             geometry = geometry,
             world = newWorld(),
-            type = function(u) return types[u] end,
+            type = function(u)
+                return types[u]
+            end,
             charId = charId,
             toast = function() end,
             ammo = dofile(ITEMS .. "shared/logic/ammo.lua"),
@@ -465,7 +491,9 @@ describe("items server sql builders", function()
             db = db,
             net = load("net"),
             state = state,
-            type = function(u) return types[u] end,
+            type = function(u)
+                return types[u]
+            end,
             apparel = apparel,
             charId = charId,
             toast = function(p, code)
@@ -477,7 +505,10 @@ describe("items server sql builders", function()
 
         mock.addElement("p1")
         _G.client, _G.source = "p1", "p1"
-        realHands.setHeld("p1", { id = 20, uname = "Mac10", hp = 5, data = { mag = 14, reserve = 0, ammoItem = "Ammo9mm" } })
+        realHands.setHeld(
+            "p1",
+            { id = 20, uname = "Mac10", hp = 5, data = { mag = 14, reserve = 0, ammoItem = "Ammo9mm" } }
+        )
         assert.equals(14, state.held["p1"].data.mag)
 
         -- Holster
@@ -511,7 +542,9 @@ describe("items server sql builders", function()
                 return { uname = uname, category = "weapon" }
             end,
             apparel = {
-                slotFor = function() return nil end,
+                slotFor = function()
+                    return nil
+                end,
             },
             charId = charId,
             toast = function() end,
@@ -523,14 +556,17 @@ describe("items server sql builders", function()
                 flushData = function(id)
                     flushedId = id
                 end,
-                decodeData = function(d) return d end,
+                decodeData = function(d)
+                    return d
+                end,
             },
             world = newWorld(),
         })
 
         mock.addElement("p1")
         _G.client, _G.source = "p1", "p1"
-        state.held["p1"] = { id = 44, uname = "PumpShotgun", hp = 5, data = { mag = 1, reserve = 0, ammoItem = "AmmoBuck" } }
+        state.held["p1"] =
+            { id = 44, uname = "PumpShotgun", hp = 5, data = { mag = 1, reserve = 0, ammoItem = "AmmoBuck" } }
 
         mock.fire("itemPutAwayRequested", "bag")
         -- wornBag query
@@ -616,8 +652,53 @@ describe("items server sql builders", function()
         _G.client, _G.source = "p1", "p1"
 
         mock.fire("itemContainerMoveRequested", 99, "inventory")
+        assert.matches("SELECT type_uname", mock.queries[#mock.queries].sql)
+        mock.answer(#mock.queries, { { uname = "Burger" } })
         assert.matches("CALL container_move", mock.queries[#mock.queries].sql)
         assert.same({ 99, 7, 55, nil }, mock.queries[#mock.queries].params)
+    end)
+
+    it("carried items (useCarryAnim) never go in the inventory or a bag", function()
+        db.connect("items")
+        _G.exports = {
+            character = {
+                getInventoryContainerId = function()
+                    return 55
+                end,
+            },
+        }
+
+        dofile(ITEMS .. "server/containers.lua")({
+            db = db,
+            net = load("net"),
+            state = state,
+            type = function(uname)
+                return { uname = uname, category = "generic", useCarryAnim = uname == "Wheel" }
+            end,
+            charId = charId,
+            toast = function(p, code)
+                mock.calls[#mock.calls + 1] = { "toast", p, code }
+            end,
+            hands = {},
+            world = newWorld(),
+        })
+
+        mock.addElement("p1")
+        _G.client, _G.source = "p1", "p1"
+
+        mock.fire("itemContainerMoveRequested", 99, "inventory")
+        local n = #mock.queries
+        mock.answer(n, { { uname = "Wheel" } })
+        assert.equals(n, #mock.queries)
+        assert.same({ "toast", "p1", "TOO_BIG" }, mock.calls[#mock.calls])
+
+        state.held["p1"] = { id = 42, uname = "Wheel", hp = 5, data = {} }
+        mock.fire("itemPutAwayRequested")
+        assert.equals(n, #mock.queries)
+        assert.same({ "toast", "p1", "TOO_BIG" }, mock.calls[#mock.calls])
+        mock.fire("itemPutAwayRequested", "bag")
+        assert.equals(n, #mock.queries)
+        state.held["p1"] = nil
     end)
 
     it("itemPutAwayRequested with held Clothes wears them instead of putting into inventory", function()

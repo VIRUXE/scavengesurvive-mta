@@ -726,8 +726,9 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
     local uname = held and held.uname
     local hp = getElementHealth(vehicle)
 
-    -- Case 0: a held Wheel replaces the nearest burst or missing tyre (upstream core/item/wheel.pwn)
-    if uname == "Wheel" then
+    -- Case 0: a held Wheel replaces the nearest burst or missing tyre (upstream core/item/wheel.pwn); upstream acts
+    -- only within 1 m of a wheel, so at the trunk it falls through and the Wheel can go in the trunk
+    if uname == "Wheel" and not vlogic.isRear(angle) then
         local rad = math.rad(vrz or 0)
         local dx, dy = px - vx, py - vy
         local localX = dx * math.cos(rad) + dy * math.sin(rad)

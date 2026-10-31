@@ -39,6 +39,7 @@ return function(ctx)
         NOT_WEARABLE = "This item cannot be worn",
         NOT_WORN = "Nothing equipped in that slot",
         INVENTORY_FULL = "Inventory is full",
+        TOO_BIG = "Too big to put away, it goes in a vehicle or a box",
         CLOTHESWRGE = "Wrong gender for clothes",
         CLOTHES_ON_DUTY = "Go off duty before changing clothes",
         -- Cooking (#95): upstream's texts where it had one
