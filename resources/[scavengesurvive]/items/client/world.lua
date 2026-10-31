@@ -291,6 +291,7 @@ return function(ctx)
         local obj = createObject(model, r.x, r.y, r.z + 2.6, 0, 90, r.rz or 0)
         if obj then
             place(obj, r)
+            setElementCollisionsEnabled(obj, true)
             e.covering = obj
         end
     end
