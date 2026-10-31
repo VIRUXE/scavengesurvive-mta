@@ -481,8 +481,18 @@ function rcon(line)
             put("%s ran /%s %s -> %s (reply in that player's chat: rcon chat %s)", who, cmd, args, tostring(ok), who)
         end
     elseif verb == "say" then
-        outputChatBox("[rcon] " .. rest, root, 255, 200, 80)
+        outputChatBox(" >  #33CCFF" .. rest, root, 255, 255, 255, true) -- same look as staff /msg: a server message
         put("sent")
+    elseif verb == "tell" then
+        local who, text = rest:match("^(%S+)%s+(.+)$")
+        local p = who and getPlayerFromName(who)
+        if not p then
+            ok = false
+            put("no player '%s' (usage: tell <player> <text>)", tostring(who))
+        else
+            outputChatBox(" >  #33CCFF" .. text, p, 255, 255, 255, true)
+            put("sent to %s", who)
+        end
     elseif verb == "lua" then
         local chunk, err = loadstring(rest, "=rcon")
         if not chunk then
