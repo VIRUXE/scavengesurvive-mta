@@ -331,7 +331,13 @@ class Shell:
 
     def _door(self, o, hinge):
         """The opening's leaf, as its own model: origin at the hinge foot, leaf along local +X, thickness on Y."""
-        tex = next((t for t, _a, _b in o.removed if t and t not in (WALL,)), None)
+        # the door's own texture: the one covering the most UV area among the faces cut away (thin slivers of wall
+        # split off at the jambs would otherwise win)
+        area = {}
+        for t, lo, hi in o.removed:
+            if t:
+                area[t] = area.get(t, 0.0) + (hi[0] - lo[0]) * (hi[1] - lo[1])
+        tex = max(area, key=lambda t: ("door" in t, area[t])) if area else None
         uv_lo = [min(lo[i] for t, lo, _hi in o.removed if t == tex) for i in (0, 1)] if tex else [0.0, 0.0]
         uv_hi = [max(hi[i] for t, _lo, hi in o.removed if t == tex) for i in (0, 1)] if tex else [1.0, 1.0]
         outer = sum(o.outer.values()) / 4
