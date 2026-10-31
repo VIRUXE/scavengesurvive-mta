@@ -117,7 +117,7 @@ return function(ctx)
             return showMenu(p)
         end
         local function picked(name)
-            local entry = logic.findPlayer(name, ctx.onlinePlayers())
+            local entry = ctx.findEntry(p, name)
             if not entry then
                 return askReason(p, nameTarget(name))
             end
@@ -168,7 +168,7 @@ return function(ctx)
             elseif who:lower() == "killer" then
                 target = killerTarget(p)
             else
-                local entry = logic.findPlayer(who, ctx.onlinePlayers())
+                local entry = ctx.findEntry(p, who)
                 if entry and entry.player == p then
                     return ctx.say(p, " >  You cannot report yourself.")
                 end

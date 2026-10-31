@@ -496,7 +496,7 @@ return function(ctx)
             if not args[1] or not newLevel then
                 return ctx.say(p, " >  Usage: /setadmin <player|name> <level 0-5>")
             end
-            local entry = logic.findPlayer(args[1], ctx.onlinePlayers())
+            local entry = ctx.findEntry(p, args[1])
             local function apply(name, accountId, targetLevel, online)
                 local ok, code =
                     logic.canSetLevel(lvl, newLevel, targetLevel, online == p or name:lower() == ctx.name(p):lower())

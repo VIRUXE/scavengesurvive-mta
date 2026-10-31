@@ -16,7 +16,7 @@ details); bans and warnings write theirs inside the `staff_ban` / `staff_warn` p
 
 Durations (`/mute`, `/ban`): a bare number is seconds; `10m`, `2h`, `3d`, `2w`, `1mo` and the full words work;
 `forever`, `perm`, `0` or `-1` mean no expiry. Player arguments accept a unique prefix or substring of the name
-(case-insensitive); exact names win.
+(case-insensitive); exact names win. The word `me` (any case) is accepted as a player argument and means the caller; commands that refuse self-targeting still refuse it.
 
 ## Staff panel and dialogs (CEGUI)
 

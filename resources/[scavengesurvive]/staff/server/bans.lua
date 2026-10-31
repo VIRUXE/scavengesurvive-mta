@@ -32,7 +32,7 @@ return function(ctx)
 
     -- An online player or an offline account the actor outranks: go(actor, { name, account, ip, serial, online }).
     local function resolveTarget(p, lvl, query, go)
-        local entry = logic.findPlayer(query, ctx.onlinePlayers())
+        local entry = ctx.findEntry(p, query)
         if entry then
             local target = entry.player
             if target == p then
@@ -320,7 +320,7 @@ return function(ctx)
             if not args[1] then
                 return ctx.say(p, " >  Usage: /ip <player|name>")
             end
-            local entry = logic.findPlayer(args[1], ctx.onlinePlayers())
+            local entry = ctx.findEntry(p, args[1])
             if entry then
                 ctx.log(p, "ip", entry.name, ctx.accountId(entry.player))
                 local ip, serial = getPlayerIP(entry.player), getPlayerSerial(entry.player)
@@ -358,7 +358,7 @@ return function(ctx)
                 ctx.say(actor, " >  %s is now %s.", args[1], flag == 1 and "active" or "inactive")
                 ctx.log(actor, flag == 1 and "activate" or "deactivate", args[1])
                 if flag == 0 then
-                    local entry = logic.findPlayer(args[1], ctx.onlinePlayers())
+                    local entry = ctx.findEntry(actor, args[1])
                     if entry and entry.name:lower() == args[1]:lower() then
                         ctx.kick(entry.player, actor, "Account deactivated")
                     end

@@ -119,9 +119,17 @@ function ctx.highestLevelOnline()
     return best
 end
 
--- Resolves a player by (partial) name for the actor, explaining failures in chat.
+-- Finds an online player by (partial) name; the word "me" (any case) is the actor. Returns entry | nil, code.
+function ctx.findEntry(actor, query)
+    if type(query) == "string" and query:lower() == "me" and isElement(actor) and getElementType(actor) == "player" then
+        return { name = getPlayerName(actor), player = actor }, "OK"
+    end
+    return logic.findPlayer(query, ctx.onlinePlayers())
+end
+
+-- Resolves a player by (partial) name for the actor ("me" is the actor), explaining failures in chat.
 function ctx.findPlayer(actor, query)
-    local entry, code = logic.findPlayer(query, ctx.onlinePlayers())
+    local entry, code = ctx.findEntry(actor, query)
     if entry then
         return entry.player
     end
