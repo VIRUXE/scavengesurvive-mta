@@ -557,6 +557,46 @@ return function(ctx)
         end,
     })
 
+    -- Swaps a character's gender: a fresh random skin of the other (or same) gender, stored on the character row.
+    ctx.command({
+        name = "gender",
+        level = 2,
+        usage = "/gender <m|f> [player]",
+        help = "Change a player's gender (yourself without a name) to a random skin of it",
+        fn = function(p, args)
+            local word = (args[1] or ""):lower()
+            local female = word == "f" or word == "female"
+            if not (female or word == "m" or word == "male") then
+                return ctx.say(p, " >  Usage: /gender <m|f> [player]")
+            end
+            local target = args[2] and ctx.target(p, args[2], true) or (not args[2] and p)
+            if not target then
+                return
+            end
+            local charId = exports.character:getCharacterId(target)
+            if not charId then
+                return ctx.say(p, " >  %s has no character in the world.", getPlayerName(target))
+            end
+            local skin = exports.items:rollSpawnSkin(female)
+            db.exec("UPDATE characters SET skin = ? WHERE id = ?", { skin, charId }, function(ok, actor)
+                if not ok then
+                    return ctx.say(actor, " >  An error occurred.")
+                end
+                if state.duty[target] then
+                    state.duty[target].skin = skin
+                else
+                    setElementModel(target, skin)
+                end
+                local label = female and "female" or "male"
+                ctx.say(actor, " >  %s is now %s (skin %d).", getPlayerName(target), label, skin)
+                if target ~= actor then
+                    ctx.say(target, " >  %s changed your gender to %s.", ctx.name(actor), label)
+                end
+                ctx.log(actor, "gender", getPlayerName(target), ctx.accountId(target), label .. " " .. skin)
+            end, p)
+        end,
+    })
+
     function M.forget(p)
         if state.spectating[p] then
             stopSpectating(p, true)
