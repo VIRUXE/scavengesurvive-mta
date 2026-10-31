@@ -121,3 +121,19 @@ def test_convert_writes_zone_files_meta_and_census(tmp_path):
     assert '<file src="data/LS.lua"/>' in meta and '<export function="getZoneAt" type="server"/>' in meta
     text = report.read_text(encoding="utf-8")
     assert "| LS | 2 | 7 |" in text and "| 11692 |" in text
+
+
+def test_replaced_models_are_dropped_from_their_file_and_the_port_rows_added(tmp_path, monkeypatch):
+    src = tmp_path / "upstream" / "scriptfiles" / "maps"
+    (src / "LS").mkdir(parents=True)
+    (src / "LS" / "A.map").write_text("CreateObject(1234, 1, 2, 3, 0, 0, 90);\n", encoding="utf-8")
+    (src / "LS" / "B.map").write_text("CreateObject(1235, 4, 5, 6, 0, 0, 0);\nCreateObject(1236, 7, 8, 9, 0, 0, 0);\n"
+                                      "CreateObject(1235, 1, 1, 1, 0, 0, 0);\n", encoding="utf-8")
+    monkeypatch.setattr(maps, "REPLACED_MODELS", {"LS/B.map": {1235}})
+    monkeypatch.setattr(maps, "port_rows", lambda rel: [[20301, 4, 5, 6, 0, 0, 0, -1, -1, 350.0]] if rel == "LS/B.map" else [])
+    out, report = tmp_path / "maps", tmp_path / "census.md"
+    zones = maps.convert(tmp_path / "upstream", out, report)
+    assert [o[0] for o in zones["LS"]["objects"]] == [1234, 1236, 20301]
+    assert zones["LS"]["counts"]["replaced"] == 2 and zones["LS"]["counts"]["added"] == 1
+    text = report.read_text(encoding="utf-8")
+    assert "| replaced | added |" in text

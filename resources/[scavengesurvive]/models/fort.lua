@@ -9,4 +9,12 @@ return {
     [20306] = { dff = "fort_tower", txd = "fort_kit", dist = 150, parent = 3406 },
     [20307] = { dff = "fort_leanto", txd = "fort_kit", dist = 150, parent = 3406 },
     [20308] = { dff = "fort_barricade", txd = "fort_kit", dist = 150, parent = 3406 },
+    [20309] = { dff = "fort_walk_n_stairs", txd = "fort_kit", dist = 150, parent = 3406 },
+    [20310] = { dff = "fort_walk_n_ramp", txd = "fort_kit", dist = 150, parent = 3406 },
+    [20311] = { dff = "fort_walk_n_bridge", txd = "fort_kit", dist = 150, parent = 3406 },
+    [20312] = { dff = "fort_walk_s_ridge", txd = "fort_kit", dist = 150, parent = 3406 },
+    [20313] = { dff = "fort_walk_s_rise", txd = "fort_kit", dist = 150, parent = 3406 },
+    [20314] = { dff = "fort_walk_s_bridge", txd = "fort_kit", dist = 150, parent = 3406 },
+    [20315] = { dff = "fort_walk_e_stairs", txd = "fort_kit", dist = 150, parent = 3406 },
+    [20316] = { dff = "fort_walk_e_bridge", txd = "fort_kit", dist = 150, parent = 3406 },
 }
