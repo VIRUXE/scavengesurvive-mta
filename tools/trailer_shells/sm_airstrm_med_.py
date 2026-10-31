@@ -17,14 +17,16 @@ Windows: three painted on each side (two of them on +X recessed in vanilla rings
 two small panes either side of the front end's air conditioner; the roof's two trail_win3 skylights are raised boxes
 on the roof, kept as they are. The wheels rise into the body to z 0.89 beside the main room: a hump covers each.
 """
+import math
 import os
 import sys
 
 import bmesh
-from mathutils import Vector
+import bpy
+from mathutils import Matrix, Vector
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from common import CARPET, CEILING, LINO, SCALE, TRIM, WALL, Shell, args  # noqa: E402
+from common import CARPET, CEILING, DOOR_THICK, IN_DAY, IN_NIGHT, LINO, OUT_DAY, OUT_NIGHT, SCALE, TRIM, WALL, Shell, args  # noqa: E402
 
 
 class AirstreamShell(Shell):
@@ -63,6 +65,79 @@ class AirstreamShell(Shell):
         a, b = self.ray((0, y, z), (1, 0, 0)), self.ray((0, y, z), (-1, 0, 0))
         return min(a or 0.0, b or 0.0)
 
+    def opening(self, kind, axis, side, u0, u1, z0, z1, inner, **kw):
+        """A door's jambs follow the skin, upright to 1.3 and curving in above: the straight reveal from sill to head
+        left the skin's cut edge standing proud of it."""
+        before = set(self.bm.faces)
+        o = super().opening(kind, axis, side, u0, u1, z0, z1, inner, **kw)
+        if kind != "door":
+            return o
+        trim = self.mat(TRIM)
+        jambs = [f for f in self.bm.faces if f not in before and f.material_index == trim and abs(f.normal.y) > 0.9]
+        bmesh.ops.delete(self.bm, geom=jambs, context="FACES")
+        zs = [z0 + (z1 - z0) * i / 20 for i in range(21)]
+        for u, toward in ((u0, 1), (u1, -1)):
+            skin = [(inner + side * self.ray((inner, u - 0.01 * toward, z), (side, 0, 0))) for z in zs]
+            for i in range(20):
+                quad = [(inner, u, zs[i]), (skin[i], u, zs[i]), (skin[i + 1], u, zs[i + 1]), (inner, u, zs[i + 1])]
+                self.poly(quad, trim, (0, toward, 0), light="out")
+        return o
+
+    def build_leaf(self):
+        """The leaf is the skin cut from the doorway (its curve, its painted door), backed by a wall panel DOOR_THICK
+        inside it and edged in trim, so it closes flush with the skin around it."""
+        o = next((o for o in self.openings if o.door), None)
+        if not o:
+            return None
+        d = o.door
+        to_leaf = Matrix.Rotation(-math.radians(d["rz"]), 4, "Z") @ Matrix.Translation(-Vector(d["hinge"]))
+        inward = -o.normal * DOOR_THICK
+        textures = sorted({t for _v, _uv, t in o.patch})
+        mesh = bpy.data.meshes.new(self.name + "_door")
+        for t in textures + [WALL, TRIM]:
+            m = bpy.data.materials.new(t)
+            m.use_nodes = True
+            bsdf = next(n for n in m.node_tree.nodes if n.type == "BSDF_PRINCIPLED")
+            node = m.node_tree.nodes.new("ShaderNodeTexImage")
+            node.image = self._image(t) or bpy.data.images.new(t + ".png", 8, 8)
+            m.node_tree.links.new(node.outputs["Color"], bsdf.inputs["Base Color"])
+            mesh.materials.append(m)
+        bm = bmesh.new()
+        uv = bm.loops.layers.uv.new("UVMap")
+        day, night = bm.loops.layers.color.new("Col"), bm.loops.layers.color.new("Col.001")
+
+        def quad(vs, mi, uvs, light):
+            f = bm.faces.new([bm.verts.new(to_leaf @ Vector(v)) for v in vs])
+            f.material_index = mi
+            for loop, c in zip(f.loops, uvs):
+                loop[uv].uv = c
+                loop[day], loop[night] = light
+
+        wall, trim = len(textures), len(textures) + 1
+        edges = {}
+        for vs, uvs, t in o.patch:
+            quad(vs, textures.index(t), uvs, (OUT_DAY, OUT_NIGHT))
+            back = [v + inward for v in reversed(vs)]
+            quad(back, wall, [(v.y / SCALE[WALL], v.z / SCALE[WALL]) for v in back], (IN_DAY, IN_NIGHT))
+            for a, b in zip(vs, vs[1:] + vs[:1]):
+                key = frozenset((a.to_tuple(4), b.to_tuple(4)))
+                edges[key] = None if key in edges else (a, b)
+        centre = sum((v for vs, _uv, _t in o.patch for v in vs), Vector()) / sum(len(vs) for vs, _uv, _t in o.patch)
+        for a, b in (e for e in edges.values() if e):
+            vs = [a, b, b + inward, a + inward]
+            if (vs[1] - vs[0]).cross(vs[2] - vs[1]).dot((a + b) / 2 - centre) < 0:
+                vs.reverse()
+            quad(vs, trim, [(0, 0), (1, 0), (1, 0.1), (0, 0.1)], (OUT_DAY, OUT_NIGHT))
+        bm.normal_update()
+        bm.to_mesh(mesh)
+        bm.free()
+        lo = [min(v.co[i] for v in mesh.vertices) for i in range(3)]
+        hi = [max(v.co[i] for v in mesh.vertices) for i in range(3)]
+        self.leaf_box = lo + hi
+        self.leaf = bpy.data.objects.new(self.name + "_door", mesh)
+        bpy.context.scene.collection.objects.link(self.leaf)
+        return self.leaf
+
 
 s = AirstreamShell("sm_airstrm_med_")
 s.curtain = "ah_blucurtain"
@@ -76,9 +151,9 @@ DOOR_Y0, DOOR_Y1, DT = 0.52, 1.47, 2.50  # the painted door's width; DT: its hea
 JALOUSIE = [("v", 1 / 3), ("v", 2 / 3)]  # the painted side windows' three lights
 
 door = s.opening("door", "x", -1, DOOR_Y0, DOOR_Y1, FLOOR, DT, -X, hinge="right")
-# the skin curves in over the doorway (x -1.215 at the sill, -1.073 at the head): the leaf hangs where it clears the
-# head, recessed at the foot
-door.door["hinge"][0] = -1.05
+# the skin curves in over the doorway (x -1.215 at the sill, -1.073 at the head): the leaf is that skin, hinged on a
+# vertical axis halfway between the two
+door.door["hinge"][0] = sum(door.outer.values()) / 4
 # sides: painted windows flush on the skin, and on +X two recessed in vanilla rings (the pane, ~1.09, is the outer face)
 s.opening("window", "x", 1, -1.55, -0.47, 1.68, 2.21, X, frame=JALOUSIE)
 s.opening("window", "x", 1, 0.40, 1.52, 1.64, 2.22, X, frame=JALOUSIE, glass_inset=0.02)

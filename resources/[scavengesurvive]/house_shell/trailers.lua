@@ -37,7 +37,7 @@ return {
         },
         [3175] = {
             dff = "sm_airstrm_med_",
-            door = { dff = "sm_airstrm_med__door", x = -1.050, y = 1.460, z = 0.455, rz = 270.0 },
+            door = { dff = "sm_airstrm_med__door", x = -1.149, y = 1.460, z = 0.455, rz = 270.0 },
         },
     },
     placements = {

@@ -74,6 +74,7 @@ class Opening:
         self.u0, self.u1, self.z0, self.z1, self.inner = u0, u1, z0, z1, inner
         self.outer = {}  # corner (u, z) -> depth of the outer skin there
         self.removed = []  # (texture, uv min, uv max) of the vanilla faces cut away
+        self.patch = []  # (vertex coords, uvs, texture) of the outward vanilla faces cut away: a leaf cut from the skin
         self.door = None
 
     @property
@@ -117,6 +118,7 @@ class Shell:
         self.cols = self._vanilla_cols()
         self.mats = {}
         self.leaf = None
+        self.leaf_box = None  # the leaf's collision box in its own frame, when it is not the flat slab
         self._glass_faces = []
         self._finished = False
         self.curtain = CURTAINS.get(name, CURTAIN)
@@ -254,6 +256,8 @@ class Shell:
         for f in dead:
             uvs = [l[self.uv].uv.copy() for l in f.loops]
             o.removed.append((self.texture_of(f.material_index), (min(u.x for u in uvs), min(u.y for u in uvs)), (max(u.x for u in uvs), max(u.y for u in uvs))))
+            if f.normal.dot(o.normal) > 0:
+                o.patch.append(([v.co.copy() for v in f.verts], uvs, self.texture_of(f.material_index)))
         bmesh.ops.delete(bm, geom=dead, context="FACES")
         return len(dead)
 
@@ -653,7 +657,7 @@ class Shell:
         if self.leaf and d:
             self.leaf.location, self.leaf.rotation_euler = (0, 0, 0), (0, 0, 0)
             w, h, t = d["width"], d["height"], DOOR_THICK
-            self._export_one(self.name + "_door", self.leaf, [[0, -t / 2, 0, w, t / 2, h]])
+            self._export_one(self.name + "_door", self.leaf, [self.leaf_box or [0, -t / 2, 0, w, t / 2, h]])
         meta = {
             "model": self.name,
             "rooms": [[round(v, 4) for v in r] for r in self.rooms],
