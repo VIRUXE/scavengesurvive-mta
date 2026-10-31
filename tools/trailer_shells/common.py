@@ -38,9 +38,10 @@ OUT = os.path.join(ROOT, "resources", "[scavengesurvive]", "house_shell", "files
 WALL, CEILING, CARPET, LINO, TRIM, CURTAIN, GLASS = "tr_wall2", "tr_wall3", "carp19s", "tr_floor2", "tr_wood1", "curtain_sink2", "house_window"
 FRAME_RGB = (212, 214, 218)  # aluminium window frames: untextured, material colour only
 SCALE = {WALL: 1.2, CEILING: 1.0, CARPET: 1.0, LINO: 0.8, TRIM: 0.6, CURTAIN: 1.0}  # metres per texture repeat
-IN_DAY, IN_NIGHT = (0.60, 0.56, 0.50, 1.0), (0.20, 0.18, 0.16, 1.0)  # prelight inside: warm, dim at night
-OUT_DAY, OUT_NIGHT = (0.70, 0.70, 0.70, 1.0), (0.16, 0.16, 0.19, 1.0)  # new faces seen from outside (reveals, frames)
-GLASS_DAY, GLASS_NIGHT = (1.0, 1.0, 1.0, 1.0), (0.35, 0.35, 0.40, 1.0)
+# prelight; the game shows a building's prelight about doubled (frames lit 0.58 came out pure white on prod)
+IN_DAY, IN_NIGHT = (0.60, 0.56, 0.50, 1.0), (0.20, 0.18, 0.16, 1.0)  # inside: warm, dim at night
+OUT_DAY, OUT_NIGHT = (0.46, 0.46, 0.47, 1.0), (0.14, 0.14, 0.17, 1.0)  # new faces seen from outside (reveals, frames)
+GLASS_DAY, GLASS_NIGHT = (0.42, 0.44, 0.46, 1.0), (0.14, 0.14, 0.17, 1.0)  # at 1.0 the pane washed out milky white
 DOOR_GAP = 0.01  # clearance at the jambs and head, so the leaf swings free
 DOOR_THICK = 0.04
 EPS = 1e-4
@@ -267,15 +268,16 @@ class Shell:
             o.outer[(u, z)] = inner + side * d
         self.cut(o)
         trim = self.mat(reveal)
-        # reveal: four faces lining the hole, facing its centre line
+        # reveal: four faces lining the hole, facing its centre line (the game culls back faces, so a reveal wound
+        # the other way is invisible and the sky shows through the cut edge of the skin)
         ring_in = [_point(axis, inner, u, z) for u, z in corners]
         ring_out = [_point(axis, o.outer[(u, z)], u, z) for u, z in corners]
+        centre = sum(ring_in + ring_out, Vector()) / 8
         for i in range(4):
             j = (i + 1) % 4
             quad = [ring_in[i], ring_in[j], ring_out[j], ring_out[i]]
-            if side < 0:
-                quad.reverse()
-            if axis == "y":
+            mid = sum(quad, Vector()) / 4
+            if (quad[1] - quad[0]).cross(quad[2] - quad[1]).dot(centre - mid) < 0:
                 quad.reverse()
             self.face(quad, trim, light="out", scale=SCALE[TRIM])
         if kind == "window":
