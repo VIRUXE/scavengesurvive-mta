@@ -216,8 +216,16 @@ M.MODEL_LENGTH = {
     [554] = 5.85,
     [579] = 5.71,
     [591] = 10.65,
+    [610] = 7.56, -- the towable Airstream (house_shell)
     [611] = 2.58,
 }
+
+-- A walk-in door (vehicle types with door = true, the towable Airstream): the vehicle's front-left door, which the
+-- interact key opens within DOOR_REACH of its hinge (client) and the server accepts within DOOR_SERVER_REACH of the
+-- vehicle's centre (it has no component positions).
+M.WALK_IN_DOOR = 2
+M.DOOR_REACH = 1.8
+M.DOOR_SERVER_REACH = 6.0
 
 -- Upstream trailer.pwn: a trailer is in reach while the two centres are closer than both lengths and a metre.
 function M.towReach(truckModel, trailerModel)

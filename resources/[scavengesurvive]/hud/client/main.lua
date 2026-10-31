@@ -243,6 +243,12 @@ local function nearFeature()
     return exports.world:nearbyFeature() or nil
 end
 
+-- "open" / "closed": a walk-in vehicle door in reach (vehicles, the towable Airstream's), nil when none is
+local function walkInDoor()
+    local v, open = exports.vehicles:nearbyTrailerDoor()
+    return v and (open and "open" or "closed") or nil
+end
+
 -- uncooked food that can be cooked, with a campfire or barbecue in reach: F puts it on (items/server/use.lua)
 local function nearCooker(held)
     if not held or held.category ~= "food" then
@@ -270,6 +276,7 @@ local function drawKeyActions(driver)
         nearPlayer = false,
         nearFeature = nearFeature(),
         nearCrate = exports.loot:nearbyCrate() or nil,
+        nearDoor = walkInDoor(),
         nearCooker = nearCooker(held),
         nearMachine = exports.items:nearbyMachine() ~= false,
         cuffedNearby = not held and hasCuffedPlayerNearby() or false,

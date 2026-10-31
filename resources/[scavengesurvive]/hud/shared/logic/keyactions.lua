@@ -25,6 +25,7 @@ M.CRATES = { supply = "Open supply crate", cache = "Open weapon cache" }
 --   spawned, uiOpen, knockedOut, hudOff, driver, hitch ("hitch" / "unhitch"), nearTrunk, nearBonnet, nearPlayer,
 --   cuffedNearby, hasBag,
 --   nearFeature ("ladder" / "zipline" / "ladder_on" / "zipline_on" / "button:<label>"), nearCrate ("supply" / "cache"),
+--   nearDoor ("open" / "closed": a walk-in vehicle door in reach, the towable Airstream's),
 --   held = false | { uname, category, isWeapon },
 --   nearCooker,                           -- uncooked food in hand next to a campfire or barbecue (#95): "Cook"
 --   nearMachine,                          -- a machine in reach (#145): "Access machine" / "(Hold) Machine menu"
@@ -71,6 +72,10 @@ function M.lines(ctx, keys)
     -- a landed supply crate or weapons cache (loot resource): upstream's button label next to the crate
     if M.CRATES[ctx.nearCrate] then
         add("interact", M.CRATES[ctx.nearCrate])
+    end
+    -- the towable Airstream's door (vehicles, not an upstream line)
+    if ctx.nearDoor then
+        add("interact", ctx.nearDoor == "open" and "Close door" or "Open door")
     end
     -- a machine (items, #145): upstream's button "Press F to access machine / Hold F to open menu"; a Crowbar in
     -- hand takes it down instead (Deconstruct, a port deviation: upstream left it a TODO)

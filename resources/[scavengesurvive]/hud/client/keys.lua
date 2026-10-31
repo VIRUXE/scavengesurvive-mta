@@ -109,6 +109,9 @@ return function(ctx)
         if exports.loot:tryOpenCrate() == true then
             return
         end
+        if exports.vehicles:tryTrailerDoor() == true then
+            return
+        end
         -- a ground bag opens on a tap and is picked up on a 500 ms hold; a sign or a body lying there (empty hands)
         -- edits or investigates on a tap and is picked up on the hold (upstream "Press F to edit / investigate,
         -- Hold F to pick up", #136, #139)

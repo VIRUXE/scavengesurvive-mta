@@ -76,6 +76,7 @@ return {
     vehicleHoldStarted = true,
     trailerHitchOrdered = true,
     trailerHitchHintChanged = true,
+    trailerDoorToggleRequested = true,
     devFlyActiveChanged = true,
     devKeyPressed = true,
     devFlyStateChanged = true,

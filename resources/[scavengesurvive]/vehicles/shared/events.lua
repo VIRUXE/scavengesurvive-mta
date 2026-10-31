@@ -9,6 +9,7 @@ addEvent("vehicleInteractRequested", true)
 addEvent("fuelPumpInteractRequested", true)
 addEvent("holdActionCancelRequested", true)
 addEvent("trunkCloseRequested", true)
+addEvent("trailerDoorToggleRequested", true)
 
 -- server to client / client-local
 addEvent("vehicleHoldStarted", true)

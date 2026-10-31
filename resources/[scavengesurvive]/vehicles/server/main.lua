@@ -105,8 +105,9 @@ local function playerPositions()
     return out
 end
 
--- Entering a vehicle or opening its trunk stamps last_used_at (at most once per USED_TICK_MS); the abandon rule
--- only removes vehicles nobody has touched that way for vehicles.abandon_days.
+-- Entering a vehicle, opening its trunk, hitching it as a trailer, using its walk-in door or standing in or on it
+-- stamps last_used_at (at most once per USED_TICK_MS); the abandon rule only removes vehicles nobody has touched that
+-- way for vehicles.abandon_days. A trailer is never entered, so an Airstream lived in would otherwise look abandoned.
 local function markUsed(v)
     local i = info[v]
     if not i then
@@ -667,8 +668,20 @@ end, { rate = 3 })
 local TOW_KEY = "vehicle_secondary_fire"
 local TOW_COOLDOWN_MS = 500
 local HINT_MS = 500
+-- A new driver's client may not have the hitch the server restored (a load, a desync) and its first sync drops it:
+-- a detach this soon after a driver got in is that, and the driver's client is told to hitch it again.
+local ENTER_GRACE_MS = 3000
+local driverSince = {} -- vehicle -> tick its current driver got in
 local lastTow = {} -- player -> tick of the last toggle
 local hitchDrivers = {} -- player driving a vehicle with a hitch -> the HUD line sent ("hitch", "unhitch" or false)
+
+local function vehicleById(id)
+    for v, i in pairs(info) do
+        if i.id == id and isElement(v) then
+            return v
+        end
+    end
+end
 
 local function setTrailerRecord(truck, trailerId)
     local inf = info[truck]
@@ -754,14 +767,23 @@ local function unbindTow(player)
 end
 
 addEventHandler("onVehicleEnter", resourceRoot, function(player, seat)
-    if seat == 0 then
-        bindTow(player, source)
+    if seat ~= 0 then
+        return
+    end
+    bindTow(player, source)
+    driverSince[source] = getTickCount()
+    -- the recorded trailer goes on in the driver's client too, so its sync carries the hitch from the start
+    local inf = info[source]
+    local trailer = inf and inf.trailerId and vehicleById(inf.trailerId)
+    if trailer then
+        triggerClientEvent(player, "trailerHitchOrdered", player, source, trailer)
     end
 end)
 
 addEventHandler("onVehicleExit", resourceRoot, function(player, seat)
     if seat == 0 then
         unbindTow(player)
+        driverSince[source] = nil
     end
 end)
 
@@ -786,6 +808,7 @@ addEventHandler("onTrailerAttach", root, function(truck)
     end
     if vlogic.canAttachTrailer(exports.data:vehicleType(inf.uname), exports.data:vehicleType(tinf.uname)) then
         setTrailerRecord(truck, tinf.id)
+        markUsed(source)
         local driver = getVehicleController(truck)
         if driver then
             toast(driver, "TRAILER_ATTACHED")
@@ -801,6 +824,9 @@ addEventHandler("onTrailerDetach", root, function(truck)
         return
     end
     local driver = getVehicleController(truck)
+    if driver and getTickCount() - (driverSince[truck] or 0) < ENTER_GRACE_MS then
+        return triggerClientEvent(driver, "trailerHitchOrdered", driver, truck, source)
+    end
     if driver then
         setTrailerRecord(truck, nil)
         return toast(driver, "TRAILER_DETACHED")
@@ -812,6 +838,34 @@ addEventHandler("onTrailerDetach", root, function(truck)
         end
     end, 50, 1)
 end)
+
+-- A walk-in door (vehicle types with door = true, the towable Airstream): the interact key next to it opens or shuts
+-- it (vehicles client tryTrailerDoor).
+net.handler("trailerDoorToggleRequested", function(player, vehicle)
+    local inf = isElement(vehicle) and info[vehicle]
+    local vt = inf and exports.data:vehicleType(inf.uname)
+    if not (vt and vt.door) or getPedOccupiedVehicle(player) then
+        return
+    end
+    local px, py, pz = getElementPosition(player)
+    local vx, vy, vz = getElementPosition(vehicle)
+    if getDistanceBetweenPoints3D(px, py, pz, vx, vy, vz) > vlogic.DOOR_SERVER_REACH then
+        return
+    end
+    local open = getVehicleDoorOpenRatio(vehicle, vlogic.WALK_IN_DOOR) < 0.5
+    setVehicleDoorOpenRatio(vehicle, vlogic.WALK_IN_DOOR, open and 1 or 0, 600)
+    markUsed(vehicle)
+end, { rate = 3 })
+
+-- Someone standing in or on a vehicle (inside an Airstream, on a flatbed) uses it: checked once a minute.
+setTimer(function()
+    for _, player in ipairs(getElementsByType("player")) do
+        local under = not getPedOccupiedVehicle(player) and getPedContactElement(player)
+        if under and info[under] then
+            markUsed(under)
+        end
+    end
+end, 60000, 0)
 
 -- getVehicleWheelStates order (front-left, rear-left, front-right, rear-right) -> upstream tyre repair message
 local TIRE_REPAIRED = { "TIREREPFL", "TIREREPBL", "TIREREPFR", "TIREREPBR" }
@@ -1132,6 +1186,11 @@ addEventHandler("onResourceStart", resourceRoot, function()
         return
     end
     types = loadTypes()
+    for _, t in ipairs(types.list) do
+        for property, value in pairs(t.handling or {}) do
+            setModelHandling(t.model, property, value)
+        end
+    end
     db.settings(function(map)
         settings = map
         loadOrRoll()

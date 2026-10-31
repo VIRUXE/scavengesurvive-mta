@@ -1,4 +1,12 @@
--- Client-side vehicles: hold-action progress bars, cancel checks, the trailer hitch, and the /lock command.
+-- Client-side vehicles: hold-action progress bars, cancel checks, the trailer hitch, walk-in doors and the /lock
+-- command.
+local vlogic
+do
+    local f = fileOpen("shared/logic/vehicle.lua", true)
+    local src = fileRead(f, fileGetSize(f))
+    fileClose(f)
+    vlogic = assert(loadstring(src, "=vehicles/vehicle.lua"))()
+end
 local activeAction = nil
 local lastPos = nil
 
@@ -52,6 +60,48 @@ addEventHandler("trailerHitchOrdered", localPlayer, function(truck, trailer)
         attachTrailerToVehicle(truck, trailer)
     end
 end)
+
+-- Walk-in doors (vehicle types with door = true, the towable Airstream): the one within reach of its hinge, on foot.
+local doorTypes = {} -- vehicle type uname -> whether it has a walk-in door (the data resource, asked once)
+
+local function hasWalkInDoor(vehicle)
+    local uname = getElementData(vehicle, "vehicles.type")
+    if not uname then
+        return false
+    end
+    if doorTypes[uname] == nil then
+        local vt = exports.data:vehicleType(uname)
+        doorTypes[uname] = vt and vt.door == true or false
+    end
+    return doorTypes[uname]
+end
+
+-- export: the walk-in door in reach and whether it is open (vehicle, open) or false; the HUD's F line
+function nearbyTrailerDoor()
+    if getPedOccupiedVehicle(localPlayer) then
+        return false
+    end
+    local px, py, pz = getElementPosition(localPlayer)
+    for _, v in ipairs(getElementsByType("vehicle", root, true)) do
+        if hasWalkInDoor(v) then
+            local hx, hy, hz = getVehicleComponentPosition(v, "door_lf_dummy", "world")
+            if hx and getDistanceBetweenPoints3D(px, py, pz, hx, hy, hz) < vlogic.DOOR_REACH then
+                return v, getVehicleDoorOpenRatio(v, vlogic.WALK_IN_DOOR) > 0.5
+            end
+        end
+    end
+    return false
+end
+
+-- export: the interact key at a walk-in door opens or shuts it; true when it did (hud keys.lua stops there)
+function tryTrailerDoor()
+    local v = nearbyTrailerDoor()
+    if not v then
+        return false
+    end
+    triggerServerEvent("trailerDoorToggleRequested", localPlayer, v)
+    return true
+end
 
 addCommandHandler("lock", function()
     triggerServerEvent("lockToggleRequested", localPlayer)

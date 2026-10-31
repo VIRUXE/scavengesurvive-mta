@@ -27,6 +27,18 @@ FLAGS = {"VEHICLE_FLAG_NOT_LOCKABLE": 1, "VEHICLE_FLAG_NO_ENGINE": 2, "VEHICLE_F
          "VEHICLE_FLAG_CAN_SURF": 8}
 FLAG_KEYS = {1: "notLockable", 2: "noEngine", 4: "trailer", 8: "canSurf"}
 
+# Port-only vehicle types, after upstream's. The towable Airstream (house_shell, tools/trailer_shells/towable.py) is
+# the medium Airstream shell on model 610: a small trailer any small hitch takes, rolled rarely at civilian truck
+# points, with no trunk (it is lived in); `handling` is what the vehicles resource sets on the model, `door` marks
+# a walk-in door (its front-left vehicle door) the interact key opens and shuts.
+PORT_TYPES = [
+    {"uname": "Airstream", "model": 610, "name": "Airstream", "group": "Civilian", "category": "truck",
+     "size": "small", "maxFuel": 0.0, "fuelConsumption": 0.0, "lootTable": "", "trunkSize": 0, "spawnChance": 3.0,
+     "flags": FLAGS["VEHICLE_FLAG_TRAILER"], "door": True,
+     "handling": {"mass": 1600.0, "turnMass": 4000.0, "centerOfMass": [0.0, 0.4, -0.3], "suspensionLowerLimit": -0.04,
+                  "suspensionUpperLimit": 0.12, "suspensionForceLevel": 2.4, "suspensionDamping": 0.15}},
+]
+
 TYPE_RE = re.compile(r"(veht_\w+)\s*=\s*DefineVehicleType\((.*?)\);", re.S)
 HITCH_RE = re.compile(r"SetVehicleTypeTrailerHitch\((veht_\w+)\s*,\s*(VEHICLE_SIZE_\w+)\s*\);")
 CALL_RE = re.compile(r"^([A-Za-z_]\w*)\s*\((.*)\)\s*;?\s*$")
@@ -155,6 +167,11 @@ def render_sql(rows: list[dict]) -> str:
 def convert(src_root, out_data, out_seed) -> tuple[list[dict], list[dict], list[str]]:
     src = Path(src_root)
     types = parse_vehicle_types(read_text(src / "gamemodes/sss/core/server/init.pwn"))
+    for port in PORT_TYPES:
+        t = dict(port)
+        for bit, key in FLAG_KEYS.items():
+            t[key] = bool(t["flags"] & bit)
+        types.append(t)
     type_names = {}
     for t in types:
         type_names.setdefault(t["name"].lower(), t["uname"])
