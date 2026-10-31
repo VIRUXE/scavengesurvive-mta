@@ -306,10 +306,20 @@ return function(ctx)
         triggerServerEvent("inventoryOpenRequested", localPlayer)
     end)
 
-    local DEFAULTS = { interact = "f", dropitem = "n", putaway = "y", inventory = "i", reloadweapon = "r" }
+    local DEFAULTS = { interact = "f", dropitem = "n", inventory = "i", reloadweapon = "r" }
+    -- MTA binds Y to team chat in the core, which unbindKey cannot remove (it only touches this resource's binds);
+    -- the gamemode has no teams, so an unbound putaway answers Y itself and swallows the key before the chat sees it
+    addEventHandler("onClientKey", root, function(key, press)
+        if key ~= "y" or not press or getKeyBoundToCommand("putaway") then
+            return
+        end
+        if not guard() then
+            return
+        end
+        cancelEvent()
+        executeCommandHandler("putaway")
+    end)
     addEventHandler("onClientResourceStart", resourceRoot, function()
-        -- MTA binds Y to team chat by default; the gamemode has no teams, so Y is ours (restored on stop)
-        unbindKey("y", "down", "chatbox")
         if string.lower(getKeyBoundToCommand("inventory") or "") == "h" then
             unbindKey("h", "down", "inventory")
             bindKey("i", "down", "inventory")
@@ -330,6 +340,5 @@ return function(ctx)
             killTimer(interactHoldTimer)
             interactHoldTimer = nil
         end
-        bindKey("y", "down", "chatbox", "teamsay")
     end)
 end
