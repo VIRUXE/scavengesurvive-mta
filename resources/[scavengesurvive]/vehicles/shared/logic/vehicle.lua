@@ -216,7 +216,7 @@ M.MODEL_LENGTH = {
     [554] = 5.85,
     [579] = 5.71,
     [591] = 10.65,
-    [610] = 7.56, -- the towable Airstream (airstream_models)
+    [610] = 7.56, -- the towable Airstream (airstream_trailer)
     [611] = 2.58,
 }
 

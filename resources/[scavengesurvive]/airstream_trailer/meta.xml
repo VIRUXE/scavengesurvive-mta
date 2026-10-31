@@ -1,5 +1,5 @@
 <meta>
-    <info author="scavengesurvive-mta" type="script" name="airstream_models" description="The towable Airstream: trailer model replacing the farm trailer (610), its door leaf and wheel setup" version="0.1.0"/>
+    <info author="scavengesurvive-mta" type="script" name="airstream_trailer" description="The towable Airstream trailer: model replacing the farm trailer (610), its door leaf and wheel setup" version="0.1.0"/>
     <min_mta_version server="1.6.0" client="1.6.0-9.21695"/>
     <download_priority_group>90</download_priority_group>
     <script src="client/main.lua" type="client"/>

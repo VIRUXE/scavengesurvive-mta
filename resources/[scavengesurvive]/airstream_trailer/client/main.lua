@@ -7,7 +7,7 @@ do
     local f = fileOpen("towable.lua", true)
     local src = fileRead(f, fileGetSize(f))
     fileClose(f)
-    towable = assert(loadstring(src, "=airstream_models/towable.lua"))()
+    towable = assert(loadstring(src, "=airstream_trailer/towable.lua"))()
 end
 
 local DOOR = 2 -- the vehicle's front-left door
@@ -73,7 +73,7 @@ addEventHandler("onClientResourceStart", resourceRoot, function()
     local d = txd and engineImportTXD(txd, towable.model) and engineLoadDFF("files/" .. towable.dff .. ".dff")
     if not d or not engineReplaceModel(d, towable.model) then
         return outputDebugString(
-            "airstream_models: failed to load the towable Airstream (model " .. towable.model .. ")",
+            "airstream_trailer: failed to load the towable Airstream (model " .. towable.model .. ")",
             1
         )
     end

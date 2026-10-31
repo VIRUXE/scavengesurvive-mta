@@ -14,7 +14,7 @@
     <resource src="items" startup="1" protected="0"/>
     <resource src="attachedit" startup="1" protected="0"/>
     <resource src="loot" startup="1" protected="0"/>
-    <resource src="airstream_models" startup="1" protected="0"/>
+    <resource src="airstream_trailer" startup="1" protected="0"/>
     <resource src="vehicles" startup="1" protected="0"/>
     <resource src="crafting" startup="1" protected="0"/>
     <resource src="building" startup="1" protected="0"/>
