@@ -670,6 +670,8 @@ return function(ctx)
             exports.crafting:deconstruct(player)
         elseif action == "groundCraft" then
             exports.crafting:groundCraft(player, furnitureId)
+        elseif action == "workbenchCraft" then
+            exports.crafting:workbenchCraft(player)
         end
         return true
     end
@@ -801,6 +803,13 @@ return function(ctx)
             -- a machine (server/machines.lua): the tap opens its container or says how long the cook has left
             if machinesSrv and machinesSrv.interact(c.player, c.charId, curHeld, row) then
                 return
+            end
+
+            -- a tool in hand on a Workbench builds what lies inside it (upstream workbench.pwn OnPlayerUseItemWithItem)
+            if row.uname == "Workbench" and curHeld and isConstructionTool(curUname) then
+                if runCrafting("workbenchCraft", c.player) then
+                    return
+                end
             end
 
             -- Safebox world containers
