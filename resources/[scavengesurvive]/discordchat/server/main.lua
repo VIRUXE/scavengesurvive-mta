@@ -26,6 +26,25 @@ local function getStaffChannel()
     return (type(val) == "string" and val ~= "") and val or "1563498523507425421"
 end
 
+local function getGeneralChannel()
+    local val = get("generalChannel")
+    return (type(val) == "string" and val ~= "") and val or "general"
+end
+
+addEventHandler("vehicleRefillSpawned", root, function()
+    local res = bridge()
+    if not res or not isElement(source) then
+        return
+    end
+    local vt = exports.data:vehicleType(getElementData(source, "vehicles.type"))
+    local x, y = getElementPosition(source)
+    local zone = logic.cityAt(x, y)
+    local packet, payload = logic.vehicleSpawnPayload(vt and vt.name, zone, getGeneralChannel())
+    if packet and payload then
+        call(res, "send", packet, payload)
+    end
+end)
+
 function logItemSpawn(playerName, itemUname, itemId, zone)
     local res = bridge()
     if not res then

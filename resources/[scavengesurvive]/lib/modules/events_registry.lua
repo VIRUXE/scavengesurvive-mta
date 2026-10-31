@@ -59,6 +59,7 @@ return {
     lootSpawned = false,
     weatherChanged = false,
     vehiclesSpawned = false,
+    vehicleRefillSpawned = false,
     uiListActionSelected = false,
     uiListClosed = false,
     uiDialogResponded = false,

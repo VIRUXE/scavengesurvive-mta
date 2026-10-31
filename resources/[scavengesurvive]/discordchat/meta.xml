@@ -1,5 +1,5 @@
 <meta>
-    <info author="scavengesurvive-mta" type="script" name="discordchat" description="Relays global chat and join-part activity to and from Discord through the discord bridge resource" version="0.2.0"/>
+    <info author="scavengesurvive-mta" type="script" name="discordchat" description="Relays global chat and join-part activity to and from Discord through the discord bridge resource" version="0.3.0"/>
     <min_mta_version server="1.6.0"/>
     <include resource="chat"/>
     <script src="shared/events.lua" type="server"/>
@@ -9,6 +9,7 @@
     <export function="sendStaffLog" type="server"/>
     <settings>
         <setting name="*joinPartChannel" value="1564285345426833608" friendlyname="Discord channel ID or name for join/part activity"/>
+        <setting name="*generalChannel" value="general" friendlyname="Discord channel ID or name for new vehicle spawns"/>
         <setting name="*staffChannel" value="1563498523507425421" friendlyname="Discord channel ID or name for staff logs"/>
     </settings>
 </meta>

@@ -1,5 +1,6 @@
 -- server-local (triggered and handled on one side, or between resources)
 addEvent("vehiclesSpawned", false)
+addEvent("vehicleRefillSpawned", false)
 
 -- client to server (handlers registered with net.handler)
 addEvent("engineToggleRequested", true)

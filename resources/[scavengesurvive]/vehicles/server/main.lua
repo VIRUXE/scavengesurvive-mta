@@ -338,6 +338,7 @@ local function refillSpawns(n, cb)
             local started = spawnAt(s, 100, function(v)
                 if v then
                     coolPoint(info[v].spawnId)
+                    triggerEvent("vehicleRefillSpawned", v)
                 end
             end)
             if started then

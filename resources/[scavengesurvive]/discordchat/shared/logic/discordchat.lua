@@ -96,6 +96,36 @@ function discordchat.itemSpawnPayload(playerName, itemUname, itemId, zone, chann
     return "staff.log", payload
 end
 
+-- Server-side getZoneName does not exist (client only), so a spawn is placed by the city boxes of the map.
+local CITIES = {
+    { name = "Los Santos", x1 = 44, y1 = -2892, x2 = 2997, y2 = -768 },
+    { name = "San Fierro", x1 = -2997, y1 = -1115, x2 = -1213, y2 = 1659 },
+    { name = "Las Venturas", x1 = 869, y1 = 596, x2 = 2997, y2 = 2993 },
+}
+
+function discordchat.cityAt(x, y)
+    for _, c in ipairs(CITIES) do
+        if x >= c.x1 and x <= c.x2 and y >= c.y1 and y <= c.y2 then
+            return c.name
+        end
+    end
+    return ""
+end
+
+function discordchat.vehicleSpawnPayload(name, zone, channel)
+    local vehicle = discordchat.strip(name)
+    if vehicle == "" then
+        return nil, nil
+    end
+    local zoneClean = zone and discordchat.strip(zone) or ""
+    local zoneStr = (zoneClean ~= "" and zoneClean ~= "Unknown") and (" in **" .. zoneClean .. "**") or ""
+    local payload = { text = string.format(":red_car: A **%s** spawned%s", vehicle, zoneStr) }
+    if channel then
+        payload.channel = channel
+    end
+    return "staff.log", payload
+end
+
 function discordchat.staffLogPayload(text, channel)
     local cleaned = discordchat.strip(text)
     if cleaned == "" then

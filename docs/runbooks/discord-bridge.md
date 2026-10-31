@@ -7,7 +7,7 @@ Presence shows nothing, or the bridge has to be set up on another host.
 
 | Piece | Where | Notes |
 | --- | --- | --- |
-| `discordchat` (this repo) | `resources/[scavengesurvive]/discordchat` | relays `/g` global chat to `#in-game-chat` and join/quit/kick/ban/nickchange activity to `#join-part` (`1564285345426833608`); `chat` raises `globalChatSent`, Discord lines arrive through `exports.chat:sendGlobalExternal` as `[Discord] name: text` |
+| `discordchat` (this repo) | `resources/[scavengesurvive]/discordchat` | relays `/g` global chat to `#in-game-chat` and join/quit/kick/ban/nickchange activity to `#join-part` (`1564285345426833608`); `chat` raises `globalChatSent`, Discord lines arrive through `exports.chat:sendGlobalExternal` as `[Discord] name: text`; a vehicle the refill tick spawns (`vehicleRefillSpawned`) is announced in `general` (setting `generalChannel`) with its city |
 | `presence` (this repo) | `resources/[scavengesurvive]/presence` | Rich Presence; `*appId` / `*joinUrl` settings in its `meta.xml` |
 | `discord` (third party, MIT) | `$DM/resources/[discord]/discord`, not in git | transport from [botder/mtasa-discord-bot](https://github.com/botder/mtasa-discord-bot); its `discord-events` resource is not installed (it relays every chat mode); `config.xml` holds the channel name and the shared passphrase |
 | `ml_sockets.so` 1.4 | `$MTA/x64/modules/`, `<module src="ml_sockets.so"/>` in `mtaserver.conf` | from `nightly.mtasa.com/files/modules/64/`; loads only at server start |
