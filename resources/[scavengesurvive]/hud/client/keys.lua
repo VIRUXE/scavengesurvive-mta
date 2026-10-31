@@ -109,9 +109,6 @@ return function(ctx)
         if exports.loot:tryOpenCrate() == true then
             return
         end
-        if exports.vehicles:tryTrailerDoor() == true then
-            return
-        end
         -- a ground bag opens on a tap and is picked up on a 500 ms hold; a sign or a body lying there (empty hands)
         -- edits or investigates on a tap and is picked up on the hold (upstream "Press F to edit / investigate,
         -- Hold F to pick up", #136, #139)
@@ -232,6 +229,11 @@ return function(ctx)
         end
         if held and held.category == "bag" then
             return triggerServerEvent("itemBagOpenRequested", localPlayer)
+        end
+        -- a walk-in vehicle door (the towable Airstream's) only takes the key nothing above wanted, and gives way to a
+        -- world item lying nearer (vehicles nearbyTrailerDoor)
+        if exports.vehicles:tryTrailerDoor() == true then
+            return
         end
         triggerServerEvent("itemPickupRequested", localPlayer)
     end)

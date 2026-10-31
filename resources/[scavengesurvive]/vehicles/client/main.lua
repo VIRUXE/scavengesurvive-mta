@@ -76,7 +76,8 @@ local function hasWalkInDoor(vehicle)
     return doorTypes[uname]
 end
 
--- export: the walk-in door in reach and whether it is open (vehicle, open) or false; the HUD's F line
+-- export: the walk-in door in reach and whether it is open (vehicle, open) or false; the HUD's F line. A world item
+-- lying nearer than the door wins, as with the world's buttons: the key picks it up instead.
 function nearbyTrailerDoor()
     if getPedOccupiedVehicle(localPlayer) then
         return false
@@ -85,7 +86,12 @@ function nearbyTrailerDoor()
     for _, v in ipairs(getElementsByType("vehicle", root, true)) do
         if hasWalkInDoor(v) then
             local hx, hy, hz = getVehicleComponentPosition(v, "door_lf_dummy", "world")
-            if hx and getDistanceBetweenPoints3D(px, py, pz, hx, hy, hz) < vlogic.DOOR_REACH then
+            local d = hx and getDistanceBetweenPoints3D(px, py, pz, hx, hy, hz)
+            if d and d < vlogic.DOOR_REACH then
+                local itemD = exports.items:nearestItemDistance()
+                if itemD ~= false and itemD < d then
+                    return false
+                end
                 return v, getVehicleDoorOpenRatio(v, vlogic.WALK_IN_DOOR) > 0.5
             end
         end
