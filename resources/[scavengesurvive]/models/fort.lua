@@ -17,4 +17,6 @@ return {
     [20314] = { dff = "fort_walk_s_bridge", txd = "fort_kit", dist = 150, parent = 3406 },
     [20315] = { dff = "fort_walk_e_stairs", txd = "fort_kit", dist = 150, parent = 3406 },
     [20316] = { dff = "fort_walk_e_bridge", txd = "fort_kit", dist = 150, parent = 3406 },
+    [20317] = { dff = "fort_labdeck", txd = "fort_kit", dist = 150, parent = 3406 },
+    [20318] = { dff = "fort_shelter", txd = "fort_kit", dist = 150, parent = 3406 },
 }

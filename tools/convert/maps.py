@@ -31,7 +31,7 @@ SAMP_IDE = Path(__file__).resolve().parents[1] / "data" / "samp.ide"
 DEFAULT_RANGE = 350.0
 # upstream props the port rebuilds as custom models: rows of these models in these files are dropped (counted as
 # `replaced`), and the rows of the replacements are added in their place (counted as `added`); tools/fort_walkways.py
-REPLACED_MODELS = {"LS/Fort Defiance.map": {3406, 16502, 11496, 3361, 974, 1245, 1503, 11327}}
+REPLACED_MODELS = {"LS/Fort Defiance.map": {3406, 16502, 11496, 3361, 974, 1245, 1503, 11327, 3095, 17010, 16405, 3260}}
 BUILDING_LIMIT = 3000.0  # MTA createBuilding rejects |x| or |y| beyond this
 
 
@@ -134,9 +134,10 @@ def port_rows(rel: str) -> list[list]:
     """The rows of the port's own models that stand where `rel`'s replaced props were."""
     if rel not in REPLACED_MODELS:
         return []
-    from .. import fort_walkways, make_fort_kit
+    from .. import fort_structures, fort_walkways, make_fort_kit
 
-    return fort_walkways.placements(make_fort_kit.model_ids())
+    ids = make_fort_kit.model_ids()
+    return fort_walkways.placements(ids) + fort_structures.placements(ids)
 
 
 def render_zone_lua(zone: str, files: list[str], objects: list, removals: list, materials: list) -> str:

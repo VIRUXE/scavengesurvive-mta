@@ -640,8 +640,12 @@
     <file src="files/fort_gate.dff"/>
     <file src="files/fort_gate_closed.col"/>
     <file src="files/fort_gate_closed.dff"/>
+    <file src="files/fort_labdeck.col"/>
+    <file src="files/fort_labdeck.dff"/>
     <file src="files/fort_leanto.col"/>
     <file src="files/fort_leanto.dff"/>
+    <file src="files/fort_shelter.col"/>
+    <file src="files/fort_shelter.dff"/>
     <file src="files/fort_tower.col"/>
     <file src="files/fort_tower.dff"/>
     <file src="files/fort_walk_e_bridge.col"/>

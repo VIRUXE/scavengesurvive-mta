@@ -79,3 +79,24 @@ Other findings:
 
 So the walkways are real: four bridges and ramps between five roofs plus the stairs, and every one of them needs a model that
 meets the roof at its actual height and edge. The measured heights above are the targets.
+
+## Result
+
+Rebuilt as custom models (ids 20309-20318, `tools/fort_walkways.py`, `tools/fort_structures.py`, built by
+`python -m tools.make_fort_kit`); the converter drops the replaced rows (`REPLACED_MODELS` in `tools/convert/maps.py`) and
+adds the new ones at the same places:
+
+| upstream | now |
+| --- | --- |
+| 3406 x4 (one duplicated), 16502, 11496, 3361, 1245, 1503, 11327, 974 (12 rows) | eight walkway models: north stairs, ramp and bridge; south ridge boardwalk, rise and bridge; east stairs and bridge |
+| 3095 `a51_jetdoor`, 9 x 9 m, floating 4.5 m over open ground | `fort_labdeck`: a plank deck with beams and nine posts to the ground; the log cabin (3403) and everything on it stay |
+| 17010 `truth_barn03` on bare ground | `fort_shelter`: ten posts, tie beams and a corrugated gable roof on the barn's footprint; the beds underneath stay |
+| 16405 `desn2_hutskel03` | the kit's lean-to (20307) |
+| 3260 `oldwoodpanel` | dropped: its 3 m panel was buried in the east roof's edge (top 17.3, roof at 17.4) and showed nothing |
+
+Everything else (205 rows minus 14, plus 11 new) is exactly as upstream placed it: fences, crane towers, the camp, the wreck
+pile, the helipad, the trailer, the minigun bases and sandbags, the furniture and loot. The north minigun base at
+2493.4,-1632.7 (z 18.6) now sits on the end of the north ramp (z 18.7), where before it hung 2.3 m over the roof.
+
+Views: `docs/images/fort-defiance/walkways/` (every span from two angles), `.../structures/struct_sheet.jpg` (lab deck, shelter,
+hut) and `.../after/` (the fort from four sides, to compare with `.../before/`).

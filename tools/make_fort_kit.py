@@ -117,9 +117,10 @@ PIECES = {
 
 
 sys.path.insert(0, str(ROOT))  # Blender runs this file by path
-from tools import fort_walkways  # noqa: E402
+from tools import fort_structures, fort_walkways  # noqa: E402
 
 PIECES.update({name: (lambda name=name: fort_walkways.piece(name)) for name in fort_walkways.SPANS})  # one model per walkway span
+PIECES.update({name: (lambda name=name: fort_structures.piece(name)) for name in ("fort_labdeck", "fort_shelter")})  # the lab deck and the pole shelter
 
 
 def model_ids() -> dict[str, int]:
