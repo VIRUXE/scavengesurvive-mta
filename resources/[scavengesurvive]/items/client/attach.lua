@@ -125,11 +125,22 @@ return function(ctx)
         a.localMatrix = { r[1], r[2], r[3], { a.offsets[1], a.offsets[2], a.offsets[3] } }
     end
 
-    local function heldAttachment(uname)
+    -- player -> "items.ammo" (the loaded ammo type or false), kept ahead of element data like onDuty below
+    local loaded = {}
+
+    local function heldAttachment(uname, player)
         local t = itemType(uname)
-        -- GTA draws real weapons in the hand itself (the server gives the weapon); only custom models are attached
-        if t and t.category == "weapon" and t.categoryData and (t.categoryData.baseWeapon or 0) > 0 then
-            return nil
+        -- GTA draws real weapons in the hand itself (the server gives the weapon); only custom models are attached.
+        -- An unloaded firearm ("items.ammo" false) is no GTA weapon at all, so its item model is held instead.
+        local cd = t and t.category == "weapon" and t.categoryData
+        if cd and (cd.baseWeapon or 0) > 0 then
+            if loaded[player] == nil then
+                loaded[player] = getElementData(player, "items.ammo") or false
+            end
+            local unloaded = cd.calibre ~= nil and not cd.liquid and not loaded[player]
+            if not unloaded then
+                return nil
+            end
         end
         local o = {
             t and t.attx or 0,
@@ -242,7 +253,7 @@ return function(ctx)
         elseif slot == "hat" or slot == "mask" or slot == "armour" or slot == "holster" then
             tracked[player][slot] = apparelAttachment(slot, uname, player)
         else
-            tracked[player][slot] = heldAttachment(uname)
+            tracked[player][slot] = heldAttachment(uname, player)
         end
         local a = tracked[player][slot]
         if a and player == localPlayer and preview[slot] then
@@ -252,6 +263,7 @@ return function(ctx)
 
     local function forgetPlayer(player)
         onDuty[player] = nil
+        loaded[player] = nil
         if tracked[player] then
             for _, slot in pairs(SLOTS) do
                 clearSlot(player, slot)
@@ -329,6 +341,13 @@ return function(ctx)
                 for slotKey, slotName in pairs(SLOTS) do
                     setSlot(source, slotName, getElementData(source, slotKey))
                 end
+            end
+            return
+        end
+        if key == "items.ammo" and getElementType(source) == "player" then
+            if source == localPlayer or isElementStreamedIn(source) then
+                loaded[source] = value or false -- a gun loaded or emptied in hand swaps GTA's weapon and the item model
+                setSlot(source, "held", getElementData(source, "items.held"))
             end
             return
         end

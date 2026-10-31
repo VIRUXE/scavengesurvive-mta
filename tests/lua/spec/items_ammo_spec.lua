@@ -255,6 +255,20 @@ describe("items ammo logic", function()
         end)
         assert.same({ mag = 17, reserve = 0, ammoItem = "Ammo9mm" }, milFull)
 
+        -- a one-round gun is loaded on a coin flip, where upstream's random(1) always left it empty
+        local model70 = { category = "weapon", categoryData = { baseWeapon = 34, calibre = "308", magSize = 1 } }
+        local flips = {}
+        local loadedCiv = Ammo.rollLootData(model70, "world_civilian", { "Ammo308" }, function(a, b)
+            flips[#flips + 1] = a .. "-" .. b
+            return b
+        end)
+        assert.same({ mag = 1, reserve = 0, ammoItem = "Ammo308" }, loadedCiv)
+        assert.same({ "0-1", "1-1" }, flips)
+        local emptyCiv = Ammo.rollLootData(model70, "world_civilian", { "Ammo308" }, function(a)
+            return a
+        end)
+        assert.same({ mag = 0, reserve = 0 }, emptyCiv)
+
         local defs = { Ammo9mm = ammo9, Ammo9mmFMJ = ammo9fmj }
         local calNames = { ["9mm"] = "9mm", ["12g"] = "12 Gauge" }
         assert.equals(

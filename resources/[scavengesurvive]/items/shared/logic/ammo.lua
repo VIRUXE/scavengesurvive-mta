@@ -77,18 +77,22 @@ function Ammo.rollLootData(def, lootIndex, ammoTypes, rand)
     end
     if Ammo.isCalibreWeapon(def) then
         local magSize = math.max(0, math.floor(tonumber(def.categoryData.magSize) or 0))
+        -- upstream's random(magsize) never loads a one-round gun (Model 70, M77-RM, ...): those get a coin flip
+        local function partial()
+            return magSize > 1 and rng(0, magSize - 1) or (magSize == 1 and rng(0, 1)) or 0
+        end
         local mag
         if MILITARY_LOOT[lootIndex] then
             local r = rng(0, 99)
             if r < 30 then
                 mag = 0
             elseif r < 50 then
-                mag = magSize > 1 and rng(0, magSize - 1) or 0
+                mag = partial()
             else
                 mag = magSize
             end
         else
-            mag = magSize > 1 and rng(0, magSize - 1) or 0
+            mag = partial()
         end
         local ammoItem = nil
         if mag > 0 and type(ammoTypes) == "table" and #ammoTypes > 0 then
