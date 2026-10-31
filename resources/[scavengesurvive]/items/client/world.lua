@@ -437,8 +437,7 @@ return function(ctx)
                             true,
                             false,
                             false,
-                            false,
-                            obj
+                            obj -- its own model: a standing wall's label point lies inside it
                         ),
                         checkedAt = now,
                     }
