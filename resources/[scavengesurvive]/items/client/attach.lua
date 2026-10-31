@@ -149,6 +149,7 @@ return function(ctx)
     -- skin. swapped[player] holds the real skin meanwhile, and every per-skin row is looked up by it.
     local swapped = {} -- player -> base skin while shown on its hatless twin
     local swapping = false
+    local onDuty = {} -- player -> staff duty flag, kept ahead of element data (onClientElementDataChange fires first)
 
     local function baseSkin(player)
         return swapped[player] or getElementModel(player)
@@ -221,6 +222,12 @@ return function(ctx)
 
     local function setSlot(player, slot, uname)
         clearSlot(player, slot)
+        if onDuty[player] == nil then
+            onDuty[player] = getElementData(player, "staff.duty") == true
+        end
+        if onDuty[player] then
+            uname = nil -- staff on duty wear the duty skin bare, whatever the character carries
+        end
         if slot == "hat" then
             applyHatSwap(player, uname or nil)
         end
@@ -244,6 +251,7 @@ return function(ctx)
     end
 
     local function forgetPlayer(player)
+        onDuty[player] = nil
         if tracked[player] then
             for _, slot in pairs(SLOTS) do
                 clearSlot(player, slot)
@@ -315,6 +323,15 @@ return function(ctx)
     end)
 
     addEventHandler("onClientElementDataChange", root, function(key, _, value)
+        if key == "staff.duty" and getElementType(source) == "player" then
+            if source == localPlayer or isElementStreamedIn(source) then
+                onDuty[source] = value == true -- the event fires before the data changes
+                for slotKey, slotName in pairs(SLOTS) do
+                    setSlot(source, slotName, getElementData(source, slotKey))
+                end
+            end
+            return
+        end
         local slot = SLOTS[key]
         if not slot or getElementType(source) ~= "player" then
             return
