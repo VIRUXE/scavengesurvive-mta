@@ -48,6 +48,7 @@ describe("character medical", function()
         local expected = 0.5 - 0.5 * (1.0091 - 0.5) ^ 2.1
         assert.is_true(math.abs(medical.reduceBleed(0.5) - expected) < 1e-12)
         assert.equals(0, medical.reduceBleed(0.000001))
+        assert.equals(0, medical.reduceBleed(0.004))
     end)
 
     it("rolls loot data for the three data items only", function()

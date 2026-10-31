@@ -495,9 +495,9 @@ return function(ctx)
         end
 
         local statusY = startY + #parts * lineH + 4 * s
-        local bleedCol = bleed > 0 and tocolor(255, 60, 60, 255) or tocolor(50, 220, 50, 255)
-        -- a bleed under 0.005 is still bleeding (red): print enough digits that it does not read 0.00
-        local bleedText = string.format(bleed > 0 and bleed < 0.01 and "Bleed: %.5f" or "Bleed: %.2f", bleed)
+        -- bleed is only ever dealt with to two decimals: what reads 0.00 is green
+        local bleedText = string.format("Bleed: %.2f", bleed)
+        local bleedCol = bleedText ~= "Bleed: 0.00" and tocolor(255, 60, 60, 255) or tocolor(50, 220, 50, 255)
         dxDrawText(bleedText, px + 8 * s, statusY, px + pw, statusY + lineH, bleedCol, 0.85 * s, "default-bold")
         local foodCol = food < 20 and tocolor(255, 60, 60, 255)
             or (food < 50 and tocolor(255, 200, 50, 255) or tocolor(50, 220, 50, 255))

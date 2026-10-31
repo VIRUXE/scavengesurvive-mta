@@ -33,14 +33,15 @@ function M.canTreatOthers(uname)
     return uname ~= "Pills"
 end
 
--- Every bandage and the medkit: b -= b x (1.0091 - b)^2.1, nothing under 0.00001.
+-- Every bandage and the medkit: b -= b x (1.0091 - b)^2.1, nothing under 0.005 (the two decimals the
+-- inventory shows: a bleed that reads 0.00 has stopped).
 function M.reduceBleed(b)
     b = tonumber(b) or 0
     if b <= 0 then
         return 0
     end
     b = b - b * (1.0091 - b) ^ 2.1
-    return b < 0.00001 and 0 or b
+    return b < 0.005 and 0 or b
 end
 
 -- Loot data for the three items that carry one (upstream OnItemCreate when GetItemLootIndex != -1); rng(a, b) is
