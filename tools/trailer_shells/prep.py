@@ -1,5 +1,6 @@
 """Prepares the trailer shells' build (tools/trailer_shells/<model>.py): extracts the nine vanilla trailers (models
-3167-3175, DFF from gta3.img, COL from counxref.col / cuntysouth.col) into tools/trailer_shells/build/vanilla/, and
+3167-3175, DFF from gta3.img, COL from counxref.col / cuntysouth.col) and the utility trailer utiltr1.dff (the frame
+template of the towable Airstream, tools/trailer_shells/towable.py) into tools/trailer_shells/build/vanilla/, and
 writes the one texture dictionary they all share, house_shell/files/trailers.txd: the vanilla `trailers` dictionary
 plus the trailer interior's panelling, ceiling, carpet, lino, trim and curtain (gta_int.img trailerkb.txd) and the
 house shells' see-through house_window pane and the curtains of the trailers' windows (common.CURTAINS). Every
@@ -34,6 +35,7 @@ TRAILERS = {
     3175: "sm_airstrm_med_",
 }
 COL_ARCHIVES = ("counxref.col", "cuntysouth.col")
+TOW_TEMPLATE = "utiltr1"  # vehicle 611: chassis, wheel and hookup frames for towable.py
 INTERIOR = {"tr_wall2", "tr_wall3", "carp19s", "tr_floor2", "tr_wood1", "curtain_sink2"}  # out of trailerkb.txd
 HOUSE_WINDOW = {"house_window", "ah_curtains1", "ah_pinkcurtain", "ah_blucurtain", "curtain_sinkb", "cj_h_curtain1"}  # out of house_window.txd
 
@@ -50,7 +52,7 @@ def main(argv=None) -> int:
     vanilla = BUILD / "vanilla"
     vanilla.mkdir(parents=True, exist_ok=True)
     index = read_img_index(gta3)
-    for name in TRAILERS.values():
+    for name in [*TRAILERS.values(), TOW_TEMPLATE]:
         (vanilla / f"{name}.dff").write_bytes(read_img_entry(gta3, index[f"{name}.dff"]))
     wanted = set(TRAILERS.values())
     for archive in COL_ARCHIVES:
