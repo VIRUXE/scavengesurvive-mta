@@ -693,8 +693,9 @@ end
 -- hitched, the world items in its room are its cargo: their spot in its frame goes to every client as its
 -- "vehicles.cargo" element data ({ id, lx, ly, lz, lrz } rows; items hangs their objects on it), and their stored
 -- positions follow it, in one item_world_move call: when it stops somewhere new, every CARGO_STORE_MS on the road,
--- and when it is unhitched or lost. Standing where it was loaded, its cargo is looked for again every CARGO_TICK_MS,
--- so what is dropped, built or taken there in the meantime joins or leaves it.
+-- and when it has come off the hitch (dropped, or torn off in a crash) and stands still. Standing where it was
+-- loaded, its cargo is looked for again every CARGO_TICK_MS, so what is dropped, built or taken there in the meantime
+-- joins or leaves it. A walk-in trailer that blows up takes everything inside it along.
 local CARGO_TICK_MS = 2000
 local CARGO_STORE_MS = 60000
 local CARGO_MOVED, CARGO_TURNED = 0.3, 3.0 -- metres and degrees from where it was loaded that count as moved
@@ -705,7 +706,7 @@ local CARGO_SQL = "SELECT i.id, i.type_uname AS uname, i.x, i.y, i.z, i.rz, IFNU
 local CARGO_SKIP = { PlotPole = true } -- a plot pole's claim is a fixed server shape: it stays where it was planted
 local CARGO_HITCH_MS = 5000 -- a cargo found for a hitch that never came is let go after this
 -- trailer -> { items = { [id] = { lx, ly, lz, lrz } }, m, x, y, z, rz (the anchor: the trailer where the items'
--- stored positions put them, set when loaded and on every store), storedAt }
+-- stored positions put them, set when loaded and on every store), storedAt, hitched (it has been on a hitch) }
 local cargo = {}
 
 local function isWalkIn(v)
@@ -817,6 +818,33 @@ local function endCargo(trailer)
     end
 end
 
+-- a walk-in trailer blew up: its cargo (whose stored positions may lag behind it) and whatever lies in its room as it
+-- stands are destroyed, boxes with what they hold
+local function destroyCargo(trailer)
+    if not isWalkIn(trailer) then
+        return
+    end
+    local c = cargo[trailer]
+    cargo[trailer] = nil
+    local gone = {}
+    for id in pairs(c and c.items or {}) do
+        gone[id] = true
+        exports.items:destroyWorldItem(id)
+    end
+    publishCargo(trailer)
+    local m = getElementMatrix(trailer)
+    local x, y = getElementPosition(trailer)
+    local int, dim = getElementInterior(trailer), getElementDimension(trailer)
+    db.query(CARGO_SQL, { x, y, vlogic.CARGO_RADIUS }, function(rows)
+        for _, r in ipairs(rows or {}) do
+            local here = tonumber(r.interior) == int and tonumber(r.dimension) == dim
+            if here and not gone[r.id] and not CARGO_SKIP[r.uname] and vlogic.inCargoBox(toLocal(m, r.x, r.y, r.z)) then
+                exports.items:destroyWorldItem(r.id)
+            end
+        end
+    end)
+end
+
 local function angleOff(a, b)
     local d = math.abs((a - b) % 360)
     return math.min(d, 360 - d)
@@ -829,16 +857,23 @@ setTimer(function()
         end
     end
     for trailer, c in pairs(cargo) do
+        local towed = isElement(trailer) and getVehicleTowingVehicle(trailer)
+        c.hitched = c.hitched or towed and true
+        local speed = 0
+        if isElement(trailer) then
+            local vx, vy, vz = getElementVelocity(trailer)
+            speed = math.sqrt(vx * vx + vy * vy + vz * vz) * 50 -- MTA velocity is per 1/50 s
+        end
         if not isElement(trailer) then
             cargo[trailer] = nil
-        elseif not getVehicleTowingVehicle(trailer) and getTickCount() - c.storedAt > CARGO_HITCH_MS then
+        elseif not towed and not c.hitched and getTickCount() - c.storedAt > CARGO_HITCH_MS then
             cargo[trailer] = nil -- the hitch it was found for did not come (the trailer never moved)
             publishCargo(trailer)
+        elseif not towed and c.hitched and speed < CARGO_STILL then
+            endCargo(trailer) -- off the hitch and at rest: the cargo is stored where it ended up
         else
             local x, y, z = getElementPosition(trailer)
             local _, _, rz = getElementRotation(trailer)
-            local vx, vy, vz = getElementVelocity(trailer)
-            local speed = math.sqrt(vx * vx + vy * vy + vz * vz) * 50 -- MTA velocity is per 1/50 s
             local moved = getDistanceBetweenPoints3D(x, y, z, c.x, c.y, c.z) > CARGO_MOVED
                 or angleOff(rz, c.rz) > CARGO_TURNED
             if not moved then
@@ -973,6 +1008,9 @@ end, HINT_MS, 0)
 -- A trailer went on, by the hitch key or a truck backed into one: keep it when the pair fits, as upstream's sync task.
 addEventHandler("onTrailerAttach", root, function(truck)
     startCargo(source)
+    if cargo[source] then
+        cargo[source].hitched = true
+    end
     local inf, tinf = info[truck], info[source]
     if not inf or not tinf or inf.trailerId == tinf.id then
         return
@@ -988,9 +1026,9 @@ addEventHandler("onTrailerAttach", root, function(truck)
 end)
 
 -- A trailer came off on a client (the hitch key, a jackknife, a crash): with a driver the record goes, as upstream;
--- an unoccupied truck gets its trailer back (someone dragging it away, or desync).
+-- an unoccupied truck gets its trailer back (someone dragging it away, or desync). The cargo rides on until the
+-- trailer stands still (the cargo timer): stored now, a trailer torn off in a crash would leave it mid-tumble.
 addEventHandler("onTrailerDetach", root, function(truck)
-    endCargo(source)
     local inf, tinf = info[truck], info[source]
     if not inf or not tinf or inf.trailerId ~= tinf.id then
         return
@@ -1386,7 +1424,7 @@ addEventHandler("onVehicleExplode", resourceRoot, function()
     if not i then
         return
     end
-    endCargo(source) -- what rode in it is left where it blew up
+    destroyCargo(source) -- what was inside a walk-in trailer goes up with it
     if not i.leftSpawn then
         coolPoint(i.spawnId)
     end
