@@ -80,8 +80,18 @@ return function(ctx)
             setElementDimension(veh, dimension or 0)
             setElementPosition(veh, toX, toY, toZ)
         else
+            if veh then
+                removePedFromVehicle(who)
+            end
             setElementPosition(who, toX, toY, toZ)
         end
+    end
+
+    local function seatInto(who, veh, seat)
+        removePedFromVehicle(who)
+        setElementInterior(who, getElementInterior(veh))
+        setElementDimension(who, getElementDimension(veh))
+        warpPedIntoVehicle(who, veh, seat)
     end
 
     -- Where each teleport (/goto, /get, /gotopos) took someone from, newest last, per staff member.
@@ -95,7 +105,9 @@ return function(ctx)
         local list = history[staff] or {}
         history[staff] = list
         local interior, dimension = getElementInterior(who), getElementDimension(who)
-        list[#list + 1] = { who = who, x = x, y = y, z = z, interior = interior, dimension = dimension }
+        local seat = veh and getPedOccupiedVehicleSeat(who)
+        list[#list + 1] =
+            { who = who, x = x, y = y, z = z, interior = interior, dimension = dimension, veh = veh, seat = seat }
         if #list > HISTORY_MAX then
             table.remove(list, 1)
         end
@@ -138,13 +150,10 @@ return function(ctx)
                 return args[1] == nil and ctx.say(p, " >  Usage: /goto <player>")
             end
             remember(p, p)
-            local seat = freeSeat(getPedOccupiedVehicle(target))
+            local veh = getPedOccupiedVehicle(target)
+            local seat = freeSeat(veh)
             if seat then
-                local veh = getPedOccupiedVehicle(target)
-                removePedFromVehicle(p)
-                setElementInterior(p, getElementInterior(target))
-                setElementDimension(p, getElementDimension(target))
-                warpPedIntoVehicle(p, veh, seat)
+                seatInto(p, veh, seat)
             else
                 teleportToPlayer(p, target)
             end
@@ -170,7 +179,13 @@ return function(ctx)
                 return args[1] == nil and ctx.say(p, " >  Usage: /get <player>")
             end
             remember(p, target)
-            teleportToPlayer(target, p)
+            local veh = getPedOccupiedVehicle(p)
+            local seat = freeSeat(veh)
+            if seat then
+                seatInto(target, veh, seat)
+            else
+                teleportToPlayer(target, p)
+            end
             ctx.say(p, " >  You have teleported %s", getPlayerName(target))
             ctx.sayLang(target, "TELEPORTEDY", getPlayerName(p))
             ctx.log(p, "get", getPlayerName(target), ctx.accountId(target))
@@ -204,7 +219,11 @@ return function(ctx)
                 return ctx.say(p, " >  Nothing to take back.")
             end
             local e = table.remove(list, idx)
-            teleport(e.who, e.x, e.y, e.z, e.interior, e.dimension)
+            if e.veh and e.seat and isElement(e.veh) and e.seat > 0 and not getVehicleOccupant(e.veh, e.seat) then
+                seatInto(e.who, e.veh, e.seat)
+            else
+                teleport(e.who, e.x, e.y, e.z, e.interior, e.dimension)
+            end
             local fmt = e.who == p and " >  You are back where you were." or " >  %s is back where they were."
             ctx.say(p, fmt, getPlayerName(e.who))
             if e.who ~= p then
