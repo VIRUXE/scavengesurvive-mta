@@ -49,3 +49,33 @@ nests; the ring layout is not used.
 - Every roof height and edge the walkways meet (Ariane `raycast_segment` per span).
 - Whether the minigun / missile props sit on a roof or float (the survey's `floats` says cluster 13 floats 4.7 m).
 - Which duplicate rows to drop (3406 appears twice at the same position).
+
+## Measured spans
+
+From [the spans report](2026-10-31-fort-defiance-spans.md) (`python -m tools.fort_spans`: the first surface under each
+structure's long axis every 0.5 m, looking past the fort's own props). Heights are world z; the cul-de-sac ground is 12.5.
+
+| walkway | from | to | what the prop does today |
+| --- | --- | --- | --- |
+| south roof, 3406 at 2513.4,-1694.4 (two identical rows) and at 2516.4,-1692.8 | `lshouse1` ridge 16.1 → 17.4 over 8.8 m | same roof | a boardwalk lying along the south house's pitched roof; the prop is 8 m tall, so its legs run through the roof down to z 8.8 |
+| south bridge, 3406 at 2520.9,-1687.7 | `lshouse1` roof 17.2 (x 2519-2521) | `sweetshou1` roof 18.5 (x 2522), over 2.4 m of ground at 12.6 | a real bridge: house roof to the next house's roof, ~5 m up |
+| north bridge, 16502 at 2504.1,-1643.0 | `lshouse3` roof 17.5 (7 m) | `lshouse1` roof 16.8-17.1, over a 7.4 m gap of grass at 12.5 | a 15 m bridge, 4° tilt; the right shape, wrong prop |
+| north ramp, 11496 at 2491.3,-1640.0 | ground 12.5 at y -1647.6 | rises to 19.3 at y -1631.8, no roof under its axis | a 16 m ramp up to the minigun nest on the north roof at 2493.4,-1632.7 |
+| stairs, 3361 at 2492.7,-1652.4 | ground 12.5 at y -1647.4 | 17.7 at y -1655.9 | 8.4 m stairs up to the same roof from the cul-de-sac |
+| east ramps, 1245 at 2515.7,-1680.7 and 1503 at 2519.0,-1679.6 | sidewalk 12.5 → 13.7 | `sweetshou1` roof 18.4 | two stacked stock ramps climbing 6 m in 4 m |
+| east plank, 11327 at 2527.2,-1666.0 | ground 14.2 | `lshouse3` roof 18.2-18.7 over 10 m | a garage door laid as a ramp to the east roof |
+| ramp, 974 at 2492.3,-1639.2 (turned 91°) | grass 12.5 | `lshouse3` roof 16.3-16.8 | a fence panel used as a 5.6 m ramp |
+
+Other findings:
+
+- **Lab deck, 3095 `a51_jetdoor`** at 2523.1,-1651.9, z 17.3: a 9 x 9 m door with nothing under it but ground at 13.1, so it
+  floats 4.2 m up on air; it needs posts or it sits on the house roof it was meant for.
+- **Minigun base 2985** at 2493.4,-1632.7, z 18.6: over the `lshouse3` roof at 16.3 (2.3 m above it) and half off its edge.
+  The other one at 2537.4,-1682.1 (z 18.9) sits right on the `sweetshou1` roof at 18.9.
+- **Satellite dish 1595** at 2526.5,-1673.5, z 24.2 (prop base 18.9): the base is on the `sweetshou1` roof at 18.9. It is fine.
+- **Barn 17010, hut skeleton 16405, crane towers 8879 / 8877, blast door 2929:** all stand on the ground (12.3-12.5); the
+  blast door is a 4 m ramp panel at 2478.5,-1644.9.
+- **Duplicate:** the 3406 row at 2513.4,-1694.4 is in the map twice.
+
+So the walkways are real: four bridges and ramps between five roofs plus the stairs, and every one of them needs a model that
+meets the roof at its actual height and edge. The measured heights above are the targets.
