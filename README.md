@@ -62,8 +62,7 @@ Apparel is checked in the green-screen studio (`docs/dev-studio.md`): one ped, a
   (about 1.3 s on join), with the 209 SA-MP-only object models shipped in the `models` resource.
 - **Damage is server-authoritative.** The victim's client reports a hit; the server checks the shooter's held weapon,
   range and rate, computes the wound and applies it.
-- **Pure logic is testable.** Formulas live in `shared/logic/*.lua` with no MTA calls, so busted runs them on plain
-  Lua 5.1; converters and SQL procedures have pytest coverage, the SQL tests against a live MariaDB.
+- **Pure logic is separate.** Formulas live in `shared/logic/*.lua` with no MTA calls.
 
 Design: `docs/superpowers/specs/` (Appendix A is upstream behaviour, Appendix B the verified MTA facts).
 Decisions: `docs/adr/`. Conventions every contributor and agent follows: `CLAUDE.md`.
@@ -80,13 +79,11 @@ Decisions: `docs/adr/`. Conventions every contributor and agent follows: `CLAUDE
    restarts, chat commands and bound keys as any player, Lua, screenshots, `chat <player>` to read a client's replies).
    Details in `server-config/README.md`.
 
-Before committing, the four local checks must pass (there is no CI; commits land on `main`):
+Before committing, the local checks must pass (there is no CI; commits land on `main`):
 
 ```
-.lua\bin\busted.bat tests/lua
 .lua\bin\luacheck.bat resources
 stylua --check resources
-pytest -q
 ```
 
 ## Documentation map

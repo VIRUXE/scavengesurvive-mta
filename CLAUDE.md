@@ -12,7 +12,7 @@ Scavenge & Survive ported to MTA:SA 1.6 (Lua 5.1) with MariaDB 13.0 (12.2 also v
   `items` triggers keep `world_items_pos` in step, so nothing writes that table by hand); `sql/seed/*.sql` (generated).
 - `tools/convert/*.py` — deterministic converters from `../ScavengeSurvive` into `data/generated/` + `sql/seed/`;
   `maps.py` writes `maps/data/<ZONE>.lua`, `maps/data/zones.lua`, `maps/meta.xml` and `docs/maps-census.md` (all generated, all committed).
-- `tests/lua` (busted), `tests/tools` (pytest), `tests/sql` (pytest + live MariaDB database `scavengesurvive_test`).
+- No tests: the project has none and none are ever to be created (user decision 2026-10-31).
 - `docs/runbooks/` (operations), `docs/staff-commands.md` (staff parity table), `docs/reviews/<date>-*.md` (live checks).
 
 ## Rules
@@ -33,7 +33,7 @@ Scavenge & Survive ported to MTA:SA 1.6 (Lua 5.1) with MariaDB 13.0 (12.2 also v
 - Stored procedures: `SET TRANSACTION ISOLATION LEVEL READ COMMITTED;` before every `START TRANSACTION` (MariaDB 12 deadlocks/`1020` under REPEATABLE READ with `FOR UPDATE` races); numbers in `JSON_OBJECT` payloads are wrapped in `CAST(x AS SIGNED)` (procedure variables serialise as strings otherwise); compare possibly-NULL ownership columns with `<=>`.
 - DB rows: NULL arrives as `false`; DECIMAL as string; FLOAT is 32-bit; never select raw POINT (`ST_X/ST_Y`); every `?` in SQL text is a placeholder (`CHAR(63)` for a literal).
 - Client never calls `setElementData`. Server-set element data uses `"deny"`. `elementdata_whitelisted=1`.
-- Pure logic lives in `shared/logic/*.lua` and never calls MTA functions at file scope, so busted can `dofile` it with `tests/lua/helpers/mta_mock.lua`.
+- Pure logic lives in `shared/logic/*.lua` and never calls MTA functions at file scope.
 - No global tables used as static classes or singletons for a resource's state (`Maps = { stats = {}, … }`, `Character.byPlayer`): new code keeps state in file-local tables or closures, returns a module table, and passes state as arguments. The older `Character`/`Items`/`UI` globals are converted when their resource is reworked, not in passing.
 - Never call `engineSetPoolCapacity("building", …)`: MTA grows the building pool on demand, and re-applying a capacity on a resource restart shrank a pool in use and crashed the client (2026-10-22).
 - Style: `stylua` and `luacheck` clean before every commit. Conventional commits (`feat(items): …`).
@@ -59,8 +59,8 @@ Scavenge & Survive ported to MTA:SA 1.6 (Lua 5.1) with MariaDB 13.0 (12.2 also v
 
 ## Commands
 
-- `pwsh tools/setup-dev.ps1` — hererocks Lua 5.1 + busted/luacheck/luacov, stylua, Python deps.
-- `.lua/bin/busted.bat tests/lua` · `.lua/bin/luacheck.bat resources` · `stylua --check resources` · `pytest -q`
+- `pwsh tools/setup-dev.ps1` — hererocks Lua 5.1 + luacheck, stylua, Python deps.
+- `.lua/bin/luacheck.bat resources` · `stylua --check resources`
 - `pwsh server-config/run-local.ps1` — create DB, apply `sql/schema.sql` and seeds, link resources into the MTA server, start it.
 - `pwsh server-config/rcon.ps1 <command>` — drive the running server over its HTTP port (`help`, `players`, `rr items`,
   `cmd <player> additem M9Pistol`, `key <player> interact|inventory|arrow_d|enter|escape`, `lua return …`, `clua <player> <code>` (runs on that client, read the result with `chat`),
