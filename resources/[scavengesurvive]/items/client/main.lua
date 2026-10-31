@@ -25,7 +25,8 @@ worldCtx.gardening = gardening
 worldCtx.machines = machines
 worldCtx.furniture = loadModule("shared/logic/furniture.lua")
 local world = loadModule("client/world.lua")(worldCtx)
-local attach = loadModule("client/attach.lua")({ models = models, apparel = apparel })
+local carry = loadModule("shared/logic/carry.lua")
+local attach = loadModule("client/attach.lua")({ models = models, apparel = apparel, carry = carry })
 local preview = loadModule("client/preview.lua")({ logic = loadModule("shared/logic/preview.lua"), models = models })
 local inventoryCtx = { ammo = ammo, apparel = apparel, clothes = clothes, models = models, preview = preview }
 inventoryCtx.cooking = cooking
@@ -68,12 +69,12 @@ function nearbyMachine()
     return world.nearbyMachine(2.0) or false
 end
 
-function getAttachConfig(slot)
 -- the ids of the world items within reach that a wall hides: the hud sends them with a pickup so the server skips them
 function blockedItemsNear()
     return world.blockedNear(2.0)
 end
 
+function getAttachConfig(slot)
     return attach.getConfig(slot)
 end
 

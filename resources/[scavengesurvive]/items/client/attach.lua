@@ -5,7 +5,7 @@
 -- ctx = { models } from client/main.lua (client/models.lua).
 return function(ctx)
     local libModels = loadstring(exports.lib:getModule("models"), "=lib/models.lua")()
-    local models, apparel = ctx.models, ctx.apparel
+    local models, apparel, carry = ctx.models, ctx.apparel, ctx.carry
     local SLOTS = {
         ["items.held"] = "held",
         ["items.bag"] = "bag",
@@ -323,9 +323,24 @@ return function(ctx)
         end
     end)
 
+    -- A held useCarryAnim item is carried in both hands: the arms and spine are posed from shared/logic/carry.lua
+    -- before the attachments are placed, unless a scripted animation (lift, put down, crafting) or a vehicle has it.
+    local function poseCarry(player, slots)
+        local held = slots.held
+        local t = held and itemType(held.uname)
+        if not (t and t.useCarryAnim) or isPedDead(player) or isPedInVehicle(player) or getPedAnimation(player) then
+            return
+        end
+        for bone, rot in pairs(carry.bones) do
+            setElementBoneRotation(player, bone, rot[1], rot[2], rot[3])
+        end
+        updateElementRpHAnim(player)
+    end
+
     addEventHandler("onClientPedsProcessed", root, function()
         for player, slots in pairs(tracked) do
             if isElement(player) and (player == localPlayer or isElementStreamedIn(player)) then
+                poseCarry(player, slots)
                 for _, a in pairs(slots) do
                     if isElement(a.obj) then
                         place(a, player)

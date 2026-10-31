@@ -184,18 +184,33 @@ return function(ctx)
         end
     end
 
-    -- Bending animation for pickup and drop (#121). Note: in MTA, setPedAnimation runs as a primary task and
-    -- blocks player WASD movement (issue #3915); two-handed carried items (useCarryAnim: Wheel, boxes, panels)
-    -- cannot hold CARRY crry_prtial without freezing player movement (875e85b), so they hang in hand while moving.
+    -- Bending animation for pickup and drop (#121). In MTA setPedAnimation runs as a primary task and blocks WASD
+    -- (issue #3915), so only timed animations are played here; the carry pose held while walking is a bone pose each
+    -- client applies (client/attach.lua, shared/logic/carry.lua). Two-handed types (useCarryAnim) lift and put down
+    -- with upstream's CARRY animations (SIF item.inc PlayerPickUpItem / PlayerDropItem).
+    local CARRY_LIFT_MS = 400
     local function anim(player, ...)
         if setPedAnimation and isElement(player) then
             setPedAnimation(player, ...)
         end
     end
-    function M.pickupAnim(player, _uname)
-        anim(player, "BOMBER", "BOM_Plant_In", 450, false, false, true, false)
+    local function isCarried(uname)
+        local t = itemType(uname)
+        return t ~= nil and t.useCarryAnim == true
     end
-    function M.dropAnim(player, _uname)
+    -- itemZ: where the item lay; one at waist height (a table) is lifted with liftup105, one on the floor with liftup
+    function M.pickupAnim(player, uname, itemZ)
+        if not isCarried(uname) then
+            return anim(player, "BOMBER", "BOM_Plant_In", 450, false, false, true, false)
+        end
+        local _, _, pz = getElementPosition(player)
+        local name = (itemZ == nil or pz - itemZ < 0.3) and "liftup105" or "liftup"
+        anim(player, "CARRY", name, CARRY_LIFT_MS, false, false, true, false)
+    end
+    function M.dropAnim(player, uname)
+        if isCarried(uname) then
+            return anim(player, "CARRY", "putdwn", CARRY_LIFT_MS, false, false, true, false)
+        end
         anim(player, "BOMBER", "BOM_Plant_In", 450, false, false, true, false)
     end
 
@@ -706,7 +721,7 @@ return function(ctx)
                 return toast(c.player, res and res.code or "DB_ERROR")
             end
             M.setHeld(c.player, { id = c.row.id, uname = c.row.uname, hp = c.row.hp, data = decodeData(c.row.data) })
-            M.pickupAnim(c.player, c.row.uname)
+            M.pickupAnim(c.player, c.row.uname, c.row.z)
             triggerEvent("itemMoved", c.player, c.row.id, "world", "held")
         end, { player = player, row = row })
     end
@@ -871,7 +886,8 @@ return function(ctx)
             return toast(player, "HANDS_FULL")
         end
         local radius = tonumber(state.settings["items.pickup_radius"]) or 2.0
-        local sql = "SELECT i.id, i.type_uname AS uname, i.hitpoints AS hp, i.data, i.x, i.y, i.interior, i.dimension "
+        local sql = "SELECT i.id, i.type_uname AS uname, i.hitpoints AS hp, i.data, i.x, i.y, i.z, i.interior, "
+            .. "i.dimension "
             .. "FROM items i WHERE i.id = ? AND i.container_id IS NULL AND i.holder_char_id IS NULL "
             .. "AND i.holder_kind IS NULL AND i.x IS NOT NULL"
         db.one(sql, { worldItemId }, function(row, c)

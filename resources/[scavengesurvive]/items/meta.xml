@@ -17,6 +17,7 @@
     <file src="shared/logic/diff.lua"/>
     <file src="shared/logic/ammo.lua"/>
     <file src="shared/logic/apparel.lua"/>
+    <file src="shared/logic/carry.lua"/>
     <file src="shared/logic/skins.lua"/>
     <file src="shared/logic/clothes.lua"/>
     <file src="shared/logic/preview.lua"/>
@@ -76,5 +77,5 @@
     <export function="nearbyInspectable" type="client"/>
     <export function="nearbyMachine" type="client"/>
     <export function="nearestItemDistance" type="client"/>
-</meta>
     <export function="blockedItemsNear" type="client"/>
+</meta>
