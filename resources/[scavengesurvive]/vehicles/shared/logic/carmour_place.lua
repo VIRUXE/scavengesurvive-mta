@@ -11,7 +11,8 @@ local M = {}
 
 M.PROUD = 0.02 -- metres between the shell's highest point under a panel and the panel's inner face
 M.SUPPORT = 0.7 -- the share of a body panel's footprint that must have the shell under it, close behind it
-M.SUPPORT_GAP = 0.4 -- metres behind the panel's plane the shell may fall away and still hold it up there
+M.SUPPORT_GAP = 0.35 -- metres behind the panel's inner face the body must be, under SUPPORT of its face (it sits on
+-- the body, not floating off a curve)
 M.MAX_LIFT = 0.8 -- metres a panel may stand off the shell where the ray met it (a sharp curve under a flat panel)
 M.LIFT_STEP = 0.02 -- metres a panel is pushed out at a time until no triangle of the shell touches it
 M.FLOOR_Z = -0.3 -- a panel holds onto the body above this height (below is the chassis under the floor)
@@ -438,6 +439,22 @@ function M.place(geo, uname, o, d, existing)
                 return nil, "UNSUPPORTED"
             end
             rec.c = add(p, mul(n, lift + M.PROUD + frame.ext[3] / 2))
+        end
+        -- where it ended up, most of its inner face is close to the body
+        local face = lift + M.PROUD
+        local near = 0
+        for i = 0, M.SAMPLES - 1 do
+            for j = 0, M.SAMPLES - 1 do
+                local du = (i / (M.SAMPLES - 1) * 2 - 1) * hw
+                local dv = (j / (M.SAMPLES - 1) * 2 - 1) * hh
+                local s = add(add(add(p, mul(u, du)), mul(v, dv)), mul(n, face))
+                if raycast(geo.shell, s, mul(n, -1), M.SUPPORT_GAP) then
+                    near = near + 1
+                end
+            end
+        end
+        if near < total * M.SUPPORT then
+            return nil, "UNSUPPORTED"
         end
         if lowestZ(M.boxOf(rec, frame)) < M.GROUND_Z then
             return nil, "UNSUPPORTED"
