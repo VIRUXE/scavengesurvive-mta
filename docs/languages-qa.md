@@ -6,15 +6,15 @@ English has 554 keys.
 
 | Code | Language | Keys | Missing (fallback to English) | Untranslated | Placeholder mismatches | Leftover SA-MP tokens | Not in English |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| `es` | Español | 554 | 0 | 83 | 0 | 0 | 0 |
-| `fr` | Français | 554 | 0 | 87 | 0 | 0 | 0 |
-| `pt` | Português | 554 | 0 | 84 | 0 | 0 | 0 |
-| `ptbr` | Português do Brasil | 554 | 0 | 84 | 0 | 0 | 0 |
-| `ru` | Russian | 554 | 0 | 84 | 0 | 0 | 0 |
-| `ro` | Romanian | 554 | 0 | 84 | 0 | 0 | 0 |
-| `id` | Indonesian | 554 | 0 | 85 | 0 | 0 | 0 |
-| `bhs` | Bosanski-Hrvatski-Srpski | 554 | 0 | 84 | 0 | 0 | 0 |
-| `cs` | Čeština | 554 | 0 | 84 | 0 | 0 | 0 |
+| `es` | Español | 554 | 0 | 0 | 0 | 0 | 0 |
+| `fr` | Français | 554 | 0 | 3 | 0 | 0 | 0 |
+| `pt` | Português | 554 | 0 | 0 | 0 | 0 | 0 |
+| `ptbr` | Português do Brasil | 554 | 0 | 0 | 0 | 0 | 0 |
+| `ru` | Russian | 554 | 0 | 0 | 0 | 0 | 0 |
+| `ro` | Romanian | 554 | 0 | 0 | 0 | 0 | 0 |
+| `id` | Indonesian | 554 | 0 | 1 | 0 | 0 | 0 |
+| `bhs` | Bosanski-Hrvatski-Srpski | 554 | 0 | 0 | 0 | 0 | 0 |
+| `cs` | Čeština | 554 | 0 | 0 | 0 | 0 | 0 |
 
 ## Placeholder mismatches
 
