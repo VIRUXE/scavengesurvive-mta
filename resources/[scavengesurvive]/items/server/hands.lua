@@ -109,6 +109,9 @@ return function(ctx)
             return M.setWorn(player, item)
         end
         if state[slot] then
+            if slot == "armour" and item and ctx.armour.ensure(item, math.random) then
+                M.queueData(item)
+            end
             state[slot][player] = item
             publish(player, "items." .. slot, item)
         end

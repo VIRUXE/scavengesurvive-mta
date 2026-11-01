@@ -17,6 +17,8 @@
     <file src="shared/logic/diff.lua"/>
     <file src="shared/logic/ammo.lua"/>
     <file src="shared/logic/apparel.lua"/>
+    <file src="shared/logic/armour.lua"/>
+    <file src="server/armour.lua"/>
     <file src="shared/logic/carry.lua"/>
     <file src="shared/logic/skins.lua"/>
     <file src="shared/logic/clothes.lua"/>
@@ -58,6 +60,7 @@
     <export function="updateHeldData" type="server"/>
     <export function="meleeHit" type="server"/>
     <export function="popHeadgear" type="server"/>
+    <export function="armourHit" type="server"/>
     <export function="createStartingItems" type="server"/>
     <export function="refreshPlayer" type="server"/>
     <export function="resendWorldItem" type="server"/>

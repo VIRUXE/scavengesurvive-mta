@@ -440,6 +440,9 @@ return function(ctx)
             local state = (formatLabel(t, sl.item):gsub("^%[%d+%]", ""))
             name = string.format("(%02d) %s", t and t.size or 1, state)
         end
+        if sl.id == "armour" and type(sl.item.data) == "table" and sl.item.data.ap then
+            name = string.format("%s (%d)", name, sl.item.data.ap)
+        end
         return string.upper(name)
     end
 
