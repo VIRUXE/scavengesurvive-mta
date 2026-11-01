@@ -181,6 +181,17 @@ function M.matchGround(availableCounts, toolUname)
     return matches
 end
 
+-- a workbench set laid out on the ground with its tool in hand: upstream workbench.pwn OnPlayerConstruct refuses it
+-- with NEEDWORKBE; nil when no workbench set lies there
+function M.matchNeedsWorkbench(availableCounts, toolUname)
+    for _, r in ipairs(M.RECIPES) do
+        if r.kind == "workbench" and r.tool == toolUname and hasIngredients(availableCounts, r) then
+            return r
+        end
+    end
+    return nil
+end
+
 -- the workbench's contents must be exactly one set (upstream _craft_FindCraftset), and the held item its tool
 function M.matchWorkbench(containerCounts, toolUname)
     local matches = {}

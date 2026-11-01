@@ -41,6 +41,15 @@ local function dataTable(data)
     return type(t) == "table" and t or {}
 end
 
+-- how many of each type a list of item rows holds: { uname = n }
+local function rowCounts(rows)
+    local out = {}
+    for _, r in ipairs(rows) do
+        out[r.type_uname] = (out[r.type_uname] or 0) + 1
+    end
+    return out
+end
+
 -- a recipe whose result has data (the Lock and Chain's cut) refuses an ingredient of the result's type that already
 -- has it: cutting a cut lock would only burn the kit
 local function alreadyDone(r, a, b)
@@ -212,8 +221,9 @@ local function tryGroundCraft(player, _cid, held, px, py, pz, rz, int, dim, quie
     local query = "SELECT i.id, i.type_uname, i.x, i.y, i.z, i.data FROM world_items_pos p "
         .. "JOIN items i ON i.id = p.item_id "
         .. "WHERE ST_Distance(p.pos, POINT(?, ?)) <= 2.5 "
-        .. "AND i.container_id IS NULL AND i.holder_char_id IS NULL"
-    db.query(query, { px, py }, function(rows, c)
+        .. "AND i.container_id IS NULL AND i.holder_char_id IS NULL "
+        .. "AND IFNULL(i.interior, 0) = ? AND IFNULL(i.dimension, 0) = ?"
+    db.query(query, { px, py, int or 0, dim or 0 }, function(rows, c)
         if not isElement(c.player) then
             return
         end
@@ -235,10 +245,15 @@ local function tryGroundCraft(player, _cid, held, px, py, pz, rz, int, dim, quie
             if c.furnitureId then
                 return exports.items:placeOnFurniture(c.player, c.furnitureId)
             end
-            if not c.quiet then
-                toast(c.player, "NO_RECIPE")
+            if c.quiet then
+                return
             end
-            return
+            -- upstream workbench.pwn OnPlayerConstruct: a workbench set on the ground with its tool says so
+            if craft.matchNeedsWorkbench(counts, c.toolUname) then
+                local lang = exports.auth:getLanguage(c.player) or "en"
+                return toast(c.player, exports.data:t(lang, "NEEDWORKBE"))
+            end
+            return toast(c.player, "NO_RECIPE")
         end
         local recipe = matches[1]
         -- a key copy uses up a blank key first and keeps the cut one, whose data the copy then takes
@@ -250,38 +265,44 @@ local function tryGroundCraft(player, _cid, held, px, py, pz, rz, int, dim, quie
             end)
             source = keyCode(list[#list].data) and list[#list].data or nil
         end
+        -- the rows the set takes: consumed ones from the front of each type's list (the blank keys), kept ones from
+        -- the back (the cut key)
+        local used, consumed = {}, {}
+        for _, ing in ipairs(recipe.ingredients) do
+            local list = itemsByUname[ing.uname] or {}
+            for i = 1, ing.count do
+                local it = ing.keep and list[#list + 1 - i] or list[i]
+                if it then
+                    used[#used + 1] = it
+                    if not ing.keep then
+                        consumed[#consumed + 1] = it
+                    end
+                end
+            end
+        end
+        -- upstream craft-construct.pwn OnHoldActionFinish: the result stands at the mean position of the parts
+        local sx, sy, sz, n = 0, 0, 0, 0
+        for _, it in ipairs(used) do
+            local ix, iy, iz = tonumber(it.x), tonumber(it.y), tonumber(it.z)
+            if ix and iy and iz then
+                sx, sy, sz, n = sx + ix, sy + iy, sz + iz, n + 1
+            end
+        end
+        local mx, my, mz = px, py, pz - 0.8
+        if n > 0 then
+            mx, my, mz = sx / n, sy / n, sz / n
+        end
         cancelHold(c.player)
         -- upstream craft-construct.pwn: the skill is the result's uniqueid, its value shortens the build time
         local ms = exports.character:skillTimeModifier(c.player, recipe.buildTime, recipe.result.uname)
         triggerClientEvent(c.player, "craftHoldStarted", c.player, "Constructing " .. recipe.name, ms)
         playHoldAnim(c.player)
-        local timer = setTimer(function(pl, rec, byUname, cpx, cpy, cpz, crz, cint, cdim, src)
-            activeHold[pl] = nil
-            if not isElement(pl) then
-                return
-            end
-            clearHoldAnim(pl)
-            local curHeld = exports.items:getHeld(pl)
-            if rec.tool and (not curHeld or curHeld.uname ~= rec.tool) then
-                return toast(pl, "NEED_TOOL")
-            end
+        local function finish(pl, rec, crz, cint, cdim, src)
             -- Destroy ingredients
-            for _, ing in ipairs(rec.ingredients) do
-                if not ing.keep then
-                    local list = byUname[ing.uname] or {}
-                    for i = 1, ing.count do
-                        local it = list[i]
-                        if it then
-                            exports.items:destroyWorldItem(it.id)
-                        end
-                    end
-                end
+            for _, it in ipairs(consumed) do
+                exports.items:destroyWorldItem(it.id)
             end
-            -- Spawn output object 1.2m ahead
-            local rad = math.rad(crz or 0)
-            local dropX = cpx + 1.2 * math.sin(-rad)
-            local dropY = cpy + 1.2 * math.cos(rad)
-            local args = { rec.result.uname, nil, nil, dropX, dropY, cpz - 0.8, crz, cint, cdim, nil, nil, n = 11 }
+            local args = { rec.result.uname, nil, nil, mx, my, mz, crz, cint, cdim, nil, nil, n = 11 }
             local ctx = { player = pl, skill = rec.result.uname, tweak = rec.tweak ~= false, defence = rec.defence }
             ctx.source = src
             local function onCreated(res, c2)
@@ -307,7 +328,39 @@ local function tryGroundCraft(player, _cid, held, px, py, pz, rz, int, dim, quie
                 end
             end
             db.call("item_create", args, onCreated, ctx)
-        end, ms, 1, c.player, recipe, itemsByUname, px, py, pz, rz, int, dim, source)
+        end
+        -- the parts that get used up, as placeholders for the still-on-the-ground check
+        local ids, marks = {}, {}
+        for i, it in ipairs(consumed) do
+            ids[i], marks[i] = tonumber(it.id), "?"
+        end
+        ids.n = #ids
+        local stillThere = "SELECT COUNT(*) AS n FROM items WHERE container_id IS NULL AND holder_char_id IS NULL "
+            .. "AND id IN ("
+            .. table.concat(marks, ", ")
+            .. ")"
+        local timer = setTimer(function(pl)
+            activeHold[pl] = nil
+            if not isElement(pl) then
+                return
+            end
+            clearHoldAnim(pl)
+            local curHeld = exports.items:getHeld(pl)
+            if recipe.tool and (not curHeld or curHeld.uname ~= recipe.tool) then
+                return toast(pl, "NEED_TOOL")
+            end
+            if ids.n == 0 then
+                return finish(pl, recipe, rz, int, dim, source)
+            end
+            -- upstream: every part must still lie in the world, or nothing is built (a part picked up mid-build
+            -- would otherwise come out twice)
+            db.one(stillThere, ids, function(row, c2)
+                if not isElement(c2.player) or not row or tonumber(row.n) ~= ids.n then
+                    return
+                end
+                finish(c2.player, recipe, rz, int, dim, source)
+            end, { player = pl })
+        end, ms, 1, c.player)
         activeHold[c.player] = { timer = timer, action = "construct", anim = true }
     end, { player = player, toolUname = toolUname, quiet = quiet, furnitureId = furnitureId })
 end
@@ -365,18 +418,20 @@ local function tryDeconstruct(player, _cid, held, px, py, _pz, _rz, int, dim)
     end, { player = player })
 end
 
--- 4. Workbench Crafting: Craft inside Workbench's 16-slot container
+-- 4. Workbench Crafting: Craft from what lies in a Workbench's 16-slot container
 -- onMiss(player, why) runs when there is nothing to build (no bench, an empty one, or why == "recipe": contents no
 -- recipe takes); the default tells `items` through workbenchRecipeMissed, which opens the container as upstream does
 local function tryWorkbenchCraft(player, _cid, held, px, py, onMiss)
     onMiss = onMiss or function(pl)
         triggerEvent("workbenchRecipeMissed", pl)
     end
-    local query = "SELECT i.id, c.id AS cont_id FROM world_items_pos p "
+    local query = "SELECT i.id, i.x, i.y, i.z, i.rz, c.id AS cont_id FROM world_items_pos p "
         .. "JOIN items i ON i.id = p.item_id "
         .. "JOIN containers c ON c.owner_item_id = i.id "
-        .. "WHERE i.type_uname = 'Workbench' AND ST_Distance(p.pos, POINT(?, ?)) <= 2.5 LIMIT 1"
-    db.one(query, { px, py }, function(wb, c)
+        .. "WHERE i.type_uname = 'Workbench' AND ST_Distance(p.pos, POINT(?, ?)) <= 2.5 "
+        .. "AND IFNULL(i.interior, 0) = ? AND IFNULL(i.dimension, 0) = ? LIMIT 1"
+    local int, dim = getElementInterior(player), getElementDimension(player)
+    db.one(query, { px, py, int, dim }, function(wb, c)
         if not isElement(c.player) then
             return
         end
@@ -384,61 +439,64 @@ local function tryWorkbenchCraft(player, _cid, held, px, py, onMiss)
             return onMiss(c.player)
         end
         local contId = wb.cont_id
-        db.query("SELECT id, type_uname FROM items WHERE container_id = ?", { contId }, function(cRows, c2)
+        local contents = "SELECT id, type_uname FROM items WHERE container_id = ?"
+        db.query(contents, { contId }, function(cRows, c2)
             if not isElement(c2.player) then
                 return
             end
             if not cRows or #cRows == 0 then
                 return onMiss(c2.player)
             end
-            local counts = {}
-            local itemsByUname = {}
-            for _, r in ipairs(cRows) do
-                counts[r.type_uname] = (counts[r.type_uname] or 0) + 1
-                itemsByUname[r.type_uname] = itemsByUname[r.type_uname] or {}
-                table.insert(itemsByUname[r.type_uname], r)
-            end
             local toolUname = c2.held and c2.held.uname
-            local matches = craft.matchWorkbench(counts, toolUname)
-            if #matches == 0 then
+            local recipe = craft.matchWorkbench(rowCounts(cRows), toolUname)[1]
+            if not recipe then
                 return onMiss(c2.player, "recipe")
             end
-            local recipe = matches[1]
             cancelHold(c2.player)
             -- upstream workbench.pwn: 3.6 s per item on the bench, shortened by the skill of the result's uniqueid
             local ms = exports.character:skillTimeModifier(c2.player, craft.workbenchTime(recipe), recipe.result.uname)
             triggerClientEvent(c2.player, "craftHoldStarted", c2.player, "Crafting " .. recipe.name, ms)
-            local timer = setTimer(function(pl, rec, byUname, wbContId)
+            -- upstream _wb_StartWorking: the player turns to the bench and works the till (INT_SHOP/SHOP_CASHIER)
+            local bx, by, bz = tonumber(wb.x) or px, tonumber(wb.y) or py, tonumber(wb.z) or 0
+            local wpx, wpy = getElementPosition(c2.player)
+            setElementRotation(c2.player, 0, 0, (-math.deg(math.atan2(bx - wpx, by - wpy))) % 360)
+            setPedAnimation(c2.player, "INT_SHOP", "SHOP_CASHIER", -1, true, false, false, false)
+            local timer = setTimer(function(pl)
                 activeHold[pl] = nil
                 if not isElement(pl) then
                     return
                 end
-                -- Destroy consumed ingredients
-                for _, ing in ipairs(rec.ingredients) do
-                    if not ing.keep then
-                        local list = byUname[ing.uname] or {}
-                        for i = 1, ing.count do
-                            local it = list[i]
-                            if it then
-                                exports.items:destroyContainerItem(it.id)
-                            end
-                        end
-                    end
-                end
-                -- Spawn product inside Workbench container
-                db.call("item_create_in_container", { rec.result.uname, wbContId }, function(res, c3)
-                    if not isElement(c3.player) then
+                clearHoldAnim(pl)
+                -- the bench must still hold that very set: an item taken out mid-craft cancels it
+                db.query(contents, { contId }, function(now, c3)
+                    if not isElement(c3.player) or not now then
                         return
                     end
-                    if res and res.ok then
-                        exports.character:gainSkill(c3.player, c3.skill)
-                        toast(c3.player, "CRAFTED")
-                    else
-                        toast(c3.player, res and res.code or "DB_ERROR")
+                    if craft.matchWorkbench(rowCounts(now), toolUname)[1] ~= recipe then
+                        return
                     end
-                end, { player = pl, skill = rec.result.uname })
-            end, ms, 1, c2.player, recipe, itemsByUname, contId)
-            activeHold[c2.player] = { timer = timer, action = "workbench" }
+                    -- upstream _wb_ClearWorkbench + _wb_CreateResult: the bench is emptied and the result lies on top
+                    -- of it, z + 0.95, turned rz - 95 give or take 5 degrees
+                    for _, it in ipairs(now) do
+                        exports.items:destroyContainerItem(it.id)
+                    end
+                    local rot = ((tonumber(wb.rz) or 0) - 95 + math.random() * 10) % 360
+                    local args = { recipe.result.uname, nil, nil, bx, by, bz + 0.95, rot, int, dim, nil, nil, n = 11 }
+                    db.call("item_create", args, function(res, c4)
+                        if not isElement(c4.player) then
+                            return
+                        end
+                        if res and res.ok then
+                            exports.items:refreshPlayer(c4.player)
+                            exports.character:gainSkill(c4.player, recipe.result.uname)
+                            toast(c4.player, "CRAFTED")
+                        else
+                            toast(c4.player, res and res.code or "DB_ERROR")
+                        end
+                    end, { player = c3.player })
+                end, { player = pl })
+            end, ms, 1, c2.player)
+            activeHold[c2.player] = { timer = timer, action = "workbench", anim = true }
         end, { player = c.player, held = c.held })
     end, { player = player, held = held })
 end
