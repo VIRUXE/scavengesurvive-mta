@@ -6,6 +6,7 @@ import re
 
 from tools.port_defences import DEFENCES
 from tools.port_hats import HATS
+from tools.port_tools import TOOLS
 from tools.world_boxes import PARTS as WORLD_BOXES
 
 from .common import HEADER, NUM, SEED_HEADER, lua_index, lua_value, sql_str
@@ -272,6 +273,19 @@ def add_world_boxes(types: dict[str, dict]) -> None:
         types[b["uname"]] = fields
 
 
+def add_port_tools(types: dict[str, dict]) -> None:
+    """The welding kit (tools/port_tools.py): a Welder, a Gas Tank (data {gas}) and a Generator, held like the Large Box."""
+    hold = types["LargeBox"]
+    index = max(t["_index"] for k, t in types.items() if not k.startswith("_")) + 1
+    for i, w in enumerate(TOOLS):
+        fields = dict(DEFAULTS, name=w["name"], uname=w["uname"], model=w["model"], size=w["size"], maxhitpoints=w["hp"])
+        if w["carry"]:
+            keep = {k: hold[k] for k in ("attx", "atty", "attz", "attrx", "attry", "attrz")}
+            fields.update(keep, usecarryanim=True, longpickup=True)
+        fields.update(_symbol="port_" + w["uname"], _index=index + i, category="generic", categoryData=None)
+        types[w["uname"]] = fields
+
+
 def apply_port_defences(types: dict[str, dict]) -> None:
     """The hinged defence doors (tools/port_defences.py, #149) use their re-pivoted copies; the pivot goes with the
     defence, so building/shared/logic/defences.lua can put a built door where upstream's stood."""
@@ -348,6 +362,7 @@ def convert(src_root, out_data, out_seed) -> dict:
     apply_wear_offsets(types, init, apparel, armour)
     add_port_hats(types)
     add_world_boxes(types)
+    add_port_tools(types)
     apply_port_defences(types)
     write_text(Path(out_data) / "item_types.lua", render_lua(types))
     write_text(Path(out_seed) / "0001_item_types.sql", render_sql(types))

@@ -6,7 +6,10 @@
 -- with at the cook's unix start and ms its length. Pure: no MTA calls at file scope.
 local M = {}
 
-M.TYPES = { ScrapMachine = "scrap", RefineMachine = "refine", WaterMachine = "water" }
+-- Generator is the port's own: a fuel-only machine (no container, no cook) that powers the Welder (vehicles, carmour)
+M.TYPES = { ScrapMachine = "scrap", RefineMachine = "refine", WaterMachine = "water", Generator = "generator" }
+M.GENERATOR_REACH = 8.0 -- the Welder's cable: a running generator this near powers it
+M.GENERATOR_UNAME = "Generator"
 M.CONTAINER_SIZE = 12 -- DefineMachineType(..., 12)
 M.MAX_FUEL = 100.0 -- MAX_MACHINE_FUEL
 M.FUEL_PER_ITEM = 3.5 -- MACHINE_FUEL_USAGE
@@ -112,6 +115,9 @@ M.SCRAP = {
     Padlock = 1,
     OilDrum = 8,
     Canister = 3,
+    Generator = 6,
+    GasTank = 2,
+    Welder = 3,
     Locator = 1,
     Radio = 1,
     Locker = 12,
@@ -276,6 +282,7 @@ M.TEXT = {
     MACHCOOKTIM = "Cook time: %s",
     MACHITEMTYP = "This machine only accepts %s",
     REFUELLING = "Refuelling...",
+    GENFUEL = "Generator fuel: %.1f / %.0f",
 }
 
 -- the Start dialog's body (machine.pwn _mach_HoldInteract)

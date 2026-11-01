@@ -627,7 +627,7 @@ return function(ctx)
     local TENT = { "TentPack" }
     -- the Petrol Can also fuels the three machines (server/machines.lua, #145)
     local TARGETS = {
-        GasCan = { "Barbecue", "ScrapMachine", "RefineMachine", "WaterMachine" },
+        GasCan = { "Barbecue", "ScrapMachine", "RefineMachine", "WaterMachine", "Generator" },
         FireLighter = BARBECUE,
     }
 

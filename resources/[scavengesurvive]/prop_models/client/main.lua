@@ -1,4 +1,4 @@
--- Props the port adds to the world (props.lua, tools/make_ls_hatch.py): port model ids 20201+ with their
+-- Props the port adds to the world (props.lua, tools/make_props.py): port model ids 20201+ with their
 -- own TXD and collision.
 local loader = loadstring(exports.lib:getModule("model_loader"), "=lib/model_loader.lua")()
 
@@ -9,19 +9,14 @@ addEvent("sampModelsChanged", false)
 
 addEventHandler("onClientResourceStart", resourceRoot, function()
     local count, failed = 0, {}
-    local manifests = {
-        loader.loadLuaFile("props.lua", "=prop_models/props.lua"),
-        loader.loadLuaFile("fort.lua", "=prop_models/fort.lua"),
-    }
-    for _, manifest in ipairs(manifests) do
-        for propModel, e in pairs(manifest) do
-            local id, err = ldr.loadModel(e)
-            if id then
-                ids[propModel] = id
-                count = count + 1
-            else
-                failed[#failed + 1] = propModel .. " (" .. err .. ")"
-            end
+    local manifest = loader.loadLuaFile("props.lua", "=prop_models/props.lua")
+    for propModel, e in pairs(manifest) do
+        local id, err = ldr.loadModel(e)
+        if id then
+            ids[propModel] = id
+            count = count + 1
+        else
+            failed[#failed + 1] = propModel .. " (" .. err .. ")"
         end
     end
     if #failed > 0 then

@@ -8,5 +8,8 @@
     <file src="files/ls_hatch.col"/>
     <file src="files/ls_hatch.dff"/>
     <file src="files/ls_hatch.txd"/>
+    <file src="files/welder.col"/>
+    <file src="files/welder.dff"/>
+    <file src="files/welder.txd"/>
     <export function="resolve" type="client"/>
 </meta>

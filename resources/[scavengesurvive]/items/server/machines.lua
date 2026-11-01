@@ -13,6 +13,7 @@ return function(ctx)
     local refuels = {} -- player -> { row, held, fuel, amount, timer }
     local ROW = "SELECT id, type_uname AS uname, hitpoints AS hp, data, x, y, z, rz, interior, dimension FROM items "
         .. "WHERE id = ? AND x IS NOT NULL AND container_id IS NULL AND holder_char_id IS NULL"
+    -- (the Generator never cooks, so it is not listed)
     local COOKING = "SELECT id, data FROM items WHERE type_uname IN ('ScrapMachine', 'RefineMachine', 'WaterMachine') "
         .. "AND x IS NOT NULL AND JSON_VALUE(data, '$.machine.cooking.at') IS NOT NULL"
 
@@ -134,9 +135,48 @@ return function(ctx)
 
     -- The interact key -----------------------------------------------------------------------------------------
 
-    -- hands.lua itemPickupRequested: a tap on a machine. true when the row is a machine.
+    -- The Welder's power (vehicles, carmour) -------------------------------------------------------------------
+
+    local NEAR = "SELECT id, type_uname AS uname, hitpoints AS hp, data, x, y, z, rz, interior, dimension FROM items "
+        .. "WHERE type_uname = 'Generator' AND x IS NOT NULL AND container_id IS NULL AND holder_char_id IS NULL "
+        .. "AND IFNULL(interior, 0) = ? AND IFNULL(dimension, 0) = ? AND ABS(x - ?) <= ? AND ABS(y - ?) <= ?"
+
+    -- the nearest Generator within reach of a point holding at least `amount` fuel; cb(row | nil)
+    function M.findGenerator(x, y, z, int, dim, amount, cb)
+        local reach = machines.GENERATOR_REACH
+        db.query(NEAR, { int or 0, dim or 0, x, reach, y, reach }, function(rows)
+            local best, bestDist = nil, reach
+            for _, r in ipairs(rows or {}) do
+                local d = getDistanceBetweenPoints3D(x, y, z, r.x, r.y, r.z)
+                if d <= bestDist and machines.state(decodeData(r.data)).fuel >= amount then
+                    best, bestDist = r, d
+                end
+            end
+            cb(best)
+        end)
+    end
+
+    -- takes `amount` fuel out of a Generator's tank (written only if nobody changed the row since it was read, one
+    -- retry); cb(ok)
+    function M.drawFuel(itemId, amount, cb, retried)
+        db.one(ROW, { itemId }, function(row)
+            local st = row and row.uname == machines.GENERATOR_UNAME and machines.state(decodeData(row.data))
+            if not st or st.fuel < amount then
+                return cb(false)
+            end
+            write(row, { fuel = st.fuel - amount, cooking = nil }, function(done)
+                if not done and not retried then
+                    return M.drawFuel(itemId, amount, cb, true)
+                end
+                cb(done)
+            end)
+        end)
+    end
+
+    -- hands.lua itemPickupRequested: a tap on a machine. true when the row is a machine. A Generator is no container:
+    -- an empty-handed tap lifts it like any item.
     function M.interact(player, _, _, row)
-        if not machines.isMachine(row.uname) then
+        if not machines.isMachine(row.uname) or machines.kind(row.uname) == "generator" then
             return false
         end
         local st = machines.state(decodeData(row.data))
@@ -227,6 +267,9 @@ return function(ctx)
             local amount = held and machines.petrolIn(itemType(held.uname), held.data, liquids)
             if amount then
                 return startRefuel(p, row, st, held, amount)
+            end
+            if machines.kind(row.uname) == "generator" then
+                return text(p, "GENFUEL", st.fuel, machines.MAX_FUEL)
             end
             triggerClientEvent(p, "machineMenuShown", p, row.id, machines.kind(row.uname), st.fuel)
         end)

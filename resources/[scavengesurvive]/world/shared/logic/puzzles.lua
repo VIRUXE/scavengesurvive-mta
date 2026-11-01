@@ -37,7 +37,7 @@ M.VIEW = { -691.141845, 942.489868, 13.759174, -689.749084, 946.223693, 14.10416
 -- objects the puzzles add to the normal world (world 0), { model, x, y, z, rx, ry, rz, world }: ranch.pwn's "LS
 -- entrance (by Dogmeat)" marks the Ganton ladder button with sw_well1 (a fenced countryside well), created upstream in
 -- RANCH_STUFF_VIRTUALW with every other ranch object, so the button stood on bare grass. A cast-iron hatch the port
--- builds (model 20201, tools/make_ls_hatch.py) lies there instead at upstream's heading, sunk 1 cm into the grass and
+-- builds (model 20201, tools/make_props.py) lies there instead at upstream's heading, sunk 1 cm into the grass and
 -- tilted with it (the ground under its corners, measured in game: 13.09 to 13.24, rising 8 degrees along its y)
 M.PROPS = {
     { 20201, 2526.719482, -1648.620605, 13.157, 7.8, 0.86, 210.89904785156, 0 },

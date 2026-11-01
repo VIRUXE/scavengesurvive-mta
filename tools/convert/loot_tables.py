@@ -4,6 +4,7 @@ import re
 from pathlib import Path
 
 from tools.port_hats import HATS
+from tools.port_tools import TOOLS
 
 from .common import HEADER, NUM, lua_index, lua_value, write_text
 
@@ -58,6 +59,15 @@ def add_port_hats(tables: dict[str, dict]) -> list[str]:
     return touched
 
 
+def add_port_tools(tables: dict[str, dict]) -> None:
+    """The welding kit (tools/port_tools.py) joins the industrial tables."""
+    for w in TOOLS:
+        for table, weight in w["loot"].items():
+            if table not in tables:
+                raise KeyError(f"port tool {w['uname']}: no loot table {table}")
+            tables[table]["entries"].append({"weight": float(weight), "uname": w["uname"], "perLimit": 3, "serverLimit": 0})
+
+
 def render_lua(tables: dict[str, dict]) -> str:
     body = ["local M = {}"] + [f"M{lua_index(name)} = {lua_value(tables[name])}" for name in sorted(tables)]
     return HEADER + "\n".join(body) + "\nreturn M\n"
@@ -71,5 +81,6 @@ def convert(src_root, out_data, unames) -> dict:
     for table, uname in canonicalise(tables, unames):
         print(f"loot: dropped unknown uname {uname!r} in {table} (upstream skips it too)")
     add_port_hats(tables)
+    add_port_tools(tables)
     write_text(Path(out_data) / "loot_tables.lua", render_lua(tables))
     return tables
