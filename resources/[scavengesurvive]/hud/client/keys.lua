@@ -96,9 +96,24 @@ return function(ctx)
     -- server's onVehicleStartEnter only sees it too late.
     local TRUNK_ENTER_BLOCK_MS = 1000
     local PICKUP_REACH = 2.0
+    local ENTER_REACH = 2.5
+    local los = isLineOfSightClear
     local blockEnterUntil = 0
+    -- GTA's enter task walks to the nearest car however far it is, through walls: refuse a car out of reach or
+    -- with a building or object between it and the player
+    local function enterOutOfReach(veh)
+        local px, py, pz = getElementPosition(localPlayer)
+        local vx, vy, vz = getElementPosition(veh)
+        local minX, minY, _, maxX, maxY = getElementBoundingBox(veh)
+        local reach = math.max(maxX - minX, maxY - minY) / 2 + ENTER_REACH
+        if getDistanceBetweenPoints3D(px, py, pz, vx, vy, vz) > reach then
+            return true
+        end
+        local z1, z2 = pz + 0.5, vz + 0.5
+        return not los(px, py, z1, vx, vy, z2, true, false, false, true, false, false, false, localPlayer)
+    end
     addEventHandler("onClientVehicleStartEnter", root, function(player)
-        if player == localPlayer and (getTickCount() < blockEnterUntil or listIsOpen()) then
+        if player == localPlayer and (getTickCount() < blockEnterUntil or listIsOpen() or enterOutOfReach(source)) then
             cancelEvent()
         end
     end)
