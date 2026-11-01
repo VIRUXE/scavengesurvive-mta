@@ -17,5 +17,8 @@
     <file src="files/welder.col"/>
     <file src="files/welder.dff"/>
     <file src="files/welder.txd"/>
+    <file src="files/welder_torch.col"/>
+    <file src="files/welder_torch.dff"/>
+    <file src="files/welder_torch.txd"/>
     <export function="resolve" type="client"/>
 </meta>

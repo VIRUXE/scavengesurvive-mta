@@ -9,8 +9,9 @@ then runs itself in Blender (DragonFF) for each prop's dff and col.
     ls_hatch  20201  the Ganton ladder entrance's cast-iron hatch: a 1 m square plate, 4 cm thick, wearing pave_manhole1
                      (a square "BO-NESS IRON CO LTD / METER" cover from zombtest1.txd) on top and the cover's rim on
                      its edges, dim day/night prelight, one box of collision (world/puzzles/ranch.pwn "LS entrance").
-    welder    20202  a portable arc welder: red body with a carry handle and louvres, yellow control panel on the +Y
-                     face, a lead with a stinger hung on the -X side and an earth lead with a clamp on the floor.
+    welder    20202  a portable welder: red body with a carry handle and louvres, yellow control panel on the +Y face
+                     with the torch lead's plug (its end at WELDER_SOCKET), an earth lead with a clamp on the floor and
+                     a holster collar on the -X side that welder_torch stands in at TORCH_STOWED.
 
     gas_bottle 20203 a propane bottle: the Airstream's own right-hand tank (the faces of the vanilla sm_airstrm_med_.dff
                      textured sm_airstreamside2 on the A-frame), stood on its base; one box of collision.
@@ -20,7 +21,11 @@ then runs itself in Blender (DragonFF) for each prop's dff and col.
                      sockets on +Y, louvres on -Y; every surface a vanilla texture (GEN_TEXTURES, from five TXDs, merged);
                      0.52 x 0.32 x 0.45 m, one box of collision.
 
-Origin: the centre of the base (x, y) with z = 0 at the lowest point; the front faces +Y.
+    welder_torch 20205  a hand-held MIG gun, 0.32 m: black grip with a trigger, rubber gooseneck, chrome collars, a
+                     brass nozzle, a stub of lead (its end at TORCH_LEAD; the rest is drawn in game). Origin at the
+                     grip's centre, the grip along Y, the nozzle forward (+Y) and bent down 50 degrees, trigger on -Z.
+
+Origin (except welder_torch): the centre of the base (x, y) with z = 0 at the lowest point; the front faces +Y.
 """
 from __future__ import annotations
 
@@ -52,6 +57,42 @@ def build_ls_hatch(ctx):
     return [((0.0, 0.0, THICK / 2), (h, h, THICK / 2))]
 
 
+WELDER_SOCKET = (-0.1, 0.195, 0.08)  # welder.dff: the end of the torch lead's plug on the +Y panel
+TORCH_STOWED = (-0.27, -0.07, 0.18, -90, 0, 0)  # welder_torch in the welder's holster: x, y, z, rx, ry, rz (degrees)
+TORCH_LEAD = (0.0, -0.155, 0.0)  # welder_torch.dff: the end of the lead stub out of the back of the grip
+# (source TXD, texture) per welder_torch material: black grip, rubber neck and lead, chrome collars, brass nozzle
+TORCH_TEXTURES = [("ballys01.txd", "CJ_blackplastic"), ("cj_airprt.txd", "CJ_RUBBER"), ("industrialext.txd", "cj_chromepipe"), ("vgsedragon.txd", "buddha_gold")]
+
+
+def build_welder_torch(ctx):
+    """A MIG welding gun, the grip along Y with the origin at its centre, the trigger under it (-Z), a gooseneck
+    bending the nozzle down from +Y and a stub of lead out of the back (-Y, ending at TORCH_LEAD)."""
+    box, tube = ctx["box"], ctx["tube"]
+    grip, rubber, chrome, brass = 0, 1, 2, 3
+    white, dim, dark = (0.9, 0.9, 0.9, 1.0), (0.55, 0.55, 0.55, 1.0), (0.12, 0.1, 0.08, 1.0)
+    lead, neck = (0.35, 0.35, 0.36, 1.0), (0.7, 0.7, 0.72, 1.0)
+    # the lead stub and its strain-relief boot behind the grip
+    tube(TORCH_LEAD, (0.0, -0.118, 0.0), 0.008, 8, rubber, lead)
+    tube((0.0, -0.118, 0.0), (0.0, -0.098, 0.0), 0.012, 10, rubber, lead)
+    tube((0.0, -0.098, 0.0), (0.0, -0.08, 0.0), 0.016, 10, rubber, lead)
+    # the grip, the trigger under its front half, the chrome collar the neck screws into
+    tube((0.0, -0.075, 0.0), (0.0, 0.052, 0.0), 0.019, 12, grip, None)
+    box((0.0, 0.018, -0.021), (0.009, 0.032, 0.016), grip, dim)
+    tube((0.0, 0.052, 0.0), (0.0, 0.066, 0.0), 0.015, 12, chrome, white)
+    # the gooseneck: a 50 degree arc of radius 0.08 bending down, then the nozzle along its end
+    r, n, sweep = 0.08, 6, math.radians(50)
+    arc = [(0.0, 0.066 + r * math.sin(sweep * i / n), -r + r * math.cos(sweep * i / n)) for i in range(n + 1)]
+    for a, b in zip(arc, arc[1:]):
+        tube(a, b, 0.009, 8, rubber, neck)
+    d = (0.0, math.cos(sweep), -math.sin(sweep))
+    at = lambda t: (arc[-1][0], arc[-1][1] + d[1] * t, arc[-1][2] + d[2] * t)
+    tube(arc[-1], at(0.006), 0.011, 10, chrome, white)
+    tube(at(0.006), at(0.034), 0.0125, 12, brass, None)
+    tube(at(0.034), at(0.05), 0.0105, 12, brass, None)
+    tube(at(0.05), at(0.052), 0.007, 8, brass, dark)
+    return [((0.0, 0.0, -0.02), (0.02, 0.16, 0.05))]
+
+
 def build_welder(ctx):
     box, tube, red, panel, alu = ctx["box"], ctx["tube"], 0, 1, 2
     dark, mid = (0.16, 0.16, 0.17, 1.0), (0.6, 0.6, 0.6, 1.0)
@@ -70,16 +111,19 @@ def build_welder(ctx):
     tube((0.08, 0.135, 0.19), (0.08, 0.158, 0.19), 0.025, 8, alu, dark)
     tube((-0.1, 0.135, 0.08), (-0.1, 0.165, 0.08), 0.018, 8, alu, mid)
     tube((0.1, 0.135, 0.08), (0.1, 0.165, 0.08), 0.018, 8, alu, dark)
-    lead = [(-0.1, 0.165, 0.08), (-0.1, 0.21, 0.06), (-0.14, 0.25, 0.018), (-0.25, 0.22, 0.018), (-0.31, 0.12, 0.14), (-0.275, 0.02, 0.25)]
-    for a, b in zip(lead, lead[1:]):
-        tube(a, b, 0.008, 6, alu, dark)
+    # the torch lead's plug in the left socket; the lead itself is drawn in game from WELDER_SOCKET
+    tube((-0.1, 0.165, 0.08), (-0.1, WELDER_SOCKET[1] - 0.006, 0.08), 0.012, 8, alu, dark)
     earth = [(0.1, 0.165, 0.08), (0.1, 0.2, 0.05), (0.14, 0.26, 0.01), (0.24, 0.28, 0.01)]
     for a, b in zip(earth, earth[1:]):
         tube(a, b, 0.008, 6, alu, dark)
     box((0.28, 0.28, 0.012), (0.06, 0.035, 0.024), alu, mid)
-    tube((-0.2275, 0.0, 0.26), (-0.27, 0.0, 0.26), 0.007, 6, alu, mid)
-    tube((-0.275, 0.0, 0.14), (-0.275, 0.0, 0.27), 0.017, 8, panel, None)
-    tube((-0.275, 0.0, 0.14), (-0.275, 0.0, 0.03), 0.005, 6, alu, mid)
+    # the torch holster on -X: a square collar the grip stands in (front down), on a bracket bolted to the side
+    hx, hy, hz = TORCH_STOWED[0], TORCH_STOWED[1], 0.16
+    inner, wall, tall = 0.021, 0.006, 0.04
+    box((-0.234, hy, hz), (0.018, 0.05, tall), alu, mid)
+    for s in (-1, 1):
+        box((hx + s * (inner + wall / 2), hy, hz), (wall, 2 * (inner + wall), tall), alu, mid)
+        box((hx, hy + s * (inner + wall / 2), hz), (2 * inner, wall, tall), alu, mid)
     return [((0.0, 0.0, 0.15), (0.225, 0.125, 0.15))]
 
 
@@ -169,6 +213,7 @@ PROPS_TABLE = [
     {"name": "welder", "id": 20202, "dist": 100, "source": "dynbarrels.txd", "textures": ["redmetal", "yellowmetal", "alumplat64"], "build": build_welder},
     {"name": "gas_bottle", "id": 20203, "dist": 100, "source": "trailers.txd", "textures": [TANK_TEXTURE], "build": build_gas_bottle},
     {"name": "generator", "id": 20204, "dist": 100, "sources": GEN_TEXTURES, "build": build_generator},
+    {"name": "welder_torch", "id": 20205, "dist": 60, "sources": TORCH_TEXTURES, "build": build_welder_torch},
 ]
 
 
