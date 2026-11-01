@@ -33,6 +33,17 @@ GT = {"n": "\n", "r": "#FF3333", "g": "#33FF33", "b": "#3333FF", "y": "#FFFF33",
       "l": "#000000", "h": "#DDDDDD", "d": ""}
 KEY_RE = re.compile(r"[A-Z][A-Za-z0-9_]{3,11}")
 
+# Help tips (`<first 9 letters of the uname>_T`) for the port's own item types and for upstream types its language
+# files never covered; shown for every language, upstream's English wording.
+_WEAR = "Wear this by pressing [F]"
+_STORE = "Store items inside this to save them over restarts, read more: /restartinfo"
+_BUILD = "Use screwdriver with this to construct a permanent wall, or a hammer to construct a permanent floor, hold [F] to build"
+PORT_TIPS = {
+    **{u: _WEAR for u in ("BandanaBl", "BandanaGr", "BandanaPat", "BandanaWh", "BucketHat", "BurgerHat", "FireHelmet", "GardenerHat", "GolfCap", "MotoHelmet", "PilotCap", "RanchHat", "SheriffHat")},
+    **{u: _STORE for u in ("BigCrate", "BinBag", "CardboardBox", "Carton", "FruitCrate", "LargeCarton", "LongCrate", "OpenCardboardBox", "OpenCarton", "PackingBox", "RubbishBag", "ShippingBox", "SmallCrate", "TrashBag", "WeaponCrate", "WoodenCrate")},
+    **{u: _BUILD for u in ("GarageDoor", "InsulDoor", "InsulPanel", "LargeFrame", "SmallPanel")},
+}
+
 
 def _replace(v: str) -> str:
     v = TAG_RE.sub(lambda m: "~k~~" + KEYTEXT[m.group(1)] + "~" if m.group(1) in KEYTEXT
@@ -64,6 +75,8 @@ def convert(src_root, out_data) -> dict[str, int]:
     counts = {}
     for name, enc in ENCODINGS.items():
         entries = parse((Path(src_root) / "scriptfiles/languages" / name).read_bytes(), enc)
+        for uname, tip in PORT_TIPS.items():
+            entries.setdefault(uname[:9] + "_T", tip)
         write_text(Path(out_data) / f"lang_{CODES[name]}.lua", render_lua(entries))
         counts[CODES[name]] = len(entries)
     return counts
