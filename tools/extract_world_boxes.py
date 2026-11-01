@@ -28,7 +28,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from tools.world_boxes import PARTS, SOURCES, STATIC  # noqa: E402
+from tools.world_boxes import DOUBLES, PARTS, SOURCES, STATIC  # noqa: E402
 
 BOX_MODELS = ROOT / "resources" / "[scavengesurvive]" / "box_models"
 FILES = BOX_MODELS / "files"
@@ -219,13 +219,52 @@ def build_in_blender(gta: Path, survey: bool) -> None:
     def signature(form):
         return hashlib.sha1(repr(form).encode()).hexdigest()[:10]
 
+    def halves(o, yaw, centre, sides):
+        """A double crate cut across its long side at the middle into two objects, each capped at the cut."""
+        a = math.radians(yaw)
+        u = (math.cos(a), math.sin(a)) if sides[0] >= sides[1] else (-math.sin(a), math.cos(a))
+        out = []
+        for sign in (-1, 1):
+            half = o.copy()
+            half.data = o.data.copy()
+            for c in o.users_collection:
+                c.objects.link(half)
+            bm = bmesh.new()
+            bm.from_mesh(half.data)
+            drop = [f for f in bm.faces if sign * ((f.calc_center_median().x - centre[0]) * u[0] + (f.calc_center_median().y - centre[1]) * u[1]) < 0]
+            bmesh.ops.delete(bm, geom=drop, context="FACES")
+            cut = [e for e in bm.edges if all(abs((v.co.x - centre[0]) * u[0] + (v.co.y - centre[1]) * u[1]) < 0.002 for v in e.verts)]
+            made = bmesh.ops.contextual_create(bm, geom=cut)["faces"]
+            bm.faces.ensure_lookup_table()
+            mat = next(f.material_index for f in bm.faces if f not in made)
+            for f in made:
+                f.material_index = mat
+                n = f.normal
+                if n.x * u[0] * sign + n.y * u[1] * sign > 0:  # a cap faces away from the half it closes
+                    f.normal_flip()
+            uv = bm.loops.layers.uv.active
+            ends = [f for f in bm.faces if f not in made and abs(f.normal.x * u[0] + f.normal.y * u[1]) > 0.99]
+            if uv and ends and made:  # the cap wears the crate's own end face: the same corner gets the same UV
+                for f in made:
+                    for loop in f.loops:
+                        w = (-loop.vert.co.x * u[1] + loop.vert.co.y * u[0], loop.vert.co.z)
+                        src = min((l for e in ends for l in e.loops), key=lambda l: (w[0] - (-l.vert.co.x * u[1] + l.vert.co.y * u[0])) ** 2 + (w[1] - l.vert.co.z) ** 2)
+                        loop[uv].uv = src[uv].uv
+            bm.to_mesh(half.data)
+            bm.free()
+            out.append(half)
+        bpy.data.objects.remove(o, do_unlink=True)
+        return out
+
     parts = {}  # sig -> { forms, source, file object data }
     placed = {}
     remnants = {}
     for src in SOURCES:
         objs = islands(src)
         boxes, rest = [], []
-        for o in objs:
+        queue = list(objs)
+        while queue:
+            o = queue.pop(0)
             pts = [v.co for v in o.data.vertices]
             yaw, centre, sides = footprint(pts)
             base = min(p.z for p in pts)
@@ -236,6 +275,12 @@ def build_in_blender(gta: Path, survey: bool) -> None:
                 rest.append(o)
                 continue
             forms = canonical(o, yaw, centre, base)
+            if any(signature(f) in DOUBLES for f in forms):  # two crates in one mesh: each half is a box of its own
+                objs.remove(o)
+                for h in halves(o, yaw, centre, sides):
+                    objs.append(h)
+                    queue.append(h)
+                continue
             if any(signature(f) in STATIC for f in forms):  # a box by shape that stays in the remnant
                 rest.append(o)
                 continue

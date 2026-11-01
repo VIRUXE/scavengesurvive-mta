@@ -180,7 +180,7 @@ INSERT INTO item_types (uname,name,model,size,max_hitpoints,category,category_da
 ('LockBreaker','Electronic Lockpick',1952,2,2,'generic',NULL),
 ('Locker','Locker',11729,12,10,'safebox','{"size": 16}'),
 ('LocksmithKit','Locksmith Kit',1210,3,3,'generic',NULL),
-('LongCrate','Long Crate',20409,6,6,'safebox','{"fill": "crate", "size": 10}'),
+('LongCrate','Crate',20409,4,5,'safebox','{"fill": "crate", "size": 8}'),
 ('LongPlank','Plank',2937,9,9,'generic',NULL),
 ('M16Rifle','M16',356,5,5,'weapon','{"animSet": null, "baseWeapon": 31, "calibre": "556", "flags": 0, "magSize": 30, "maxReserveMags": 1, "melee": false, "muzzleVelocity": 948.0}'),
 ('M77RMRifle','M77-RM',357,5,5,'weapon','{"animSet": null, "baseWeapon": 33, "calibre": "357", "flags": 0, "magSize": 1, "maxReserveMags": 9, "melee": false, "muzzleVelocity": 823.0}'),

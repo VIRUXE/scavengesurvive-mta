@@ -45,8 +45,8 @@ PARTS = [
     {"uname": "WoodenCrate", "name": "Wooden Crate", "model": 20406, "sigs": ["897a546e84"], "size": 6, "hp": 6, "holds": [10, "crate"]},
     {"uname": "FruitCrate", "name": "Fruit Crate", "model": 20407, "sigs": ["4d36b5e399"], "size": 4, "hp": 5, "holds": [8, "fruit"]},
     {"uname": "SmallCrate", "name": "Small Crate", "model": 20408, "sigs": ["cc6422a514"], "size": 4, "hp": 5, "holds": [8, "crate"]},
-    {"uname": "LongCrate", "name": "Long Crate", "model": 20409, "sigs": ["091f4c05b1"], "size": 6, "hp": 6, "holds": [10, "crate"]},
-    {"uname": "BigCrate", "name": "Big Crate", "model": 20410, "sigs": ["1ef612862e"], "size": 6, "hp": 6, "holds": [10, "crate"]},
+    {"uname": "LongCrate", "name": "Crate", "model": 20409, "sigs": ["d9d54ffb22"], "size": 4, "hp": 5, "holds": [8, "crate"]},
+    {"uname": "BigCrate", "name": "Big Crate", "model": 20410, "sigs": ["7255aa71ea"], "size": 6, "hp": 6, "holds": [10, "crate"]},
     {"uname": "PackingBox", "name": "Packing Box", "model": 20411, "sigs": ["f254c60b24"], "size": 4, "hp": 4, "holds": [10, "junk"]},
     {"uname": "ShippingBox", "name": "Shipping Box", "model": 20414, "sigs": ["bdea89146d"], "size": 4, "hp": 5, "holds": [8, "junk"]},
     {"uname": "BinBag", "name": "Bin Bag", "model": 20415, "sigs": ["3b3260b1e7"], "size": 3, "hp": 3, "holds": [6, "trash"]},
@@ -57,3 +57,7 @@ PARTS = [
 
 # parts that are boxes by shape but stay where GTA put them, in their source's remnant: the 1.5 m dock crates
 STATIC = ["138faca3a1", "86c280e4e8"]
+
+# parts that are two crates in one mesh, cut at the middle into two boxes of their own (their signatures as --survey prints
+# them): the 1.85 m and 2.89 m pairs of the first import, now the Crate (LongCrate) and the Big Crate
+DOUBLES = ["091f4c05b1", "1ef612862e"]
