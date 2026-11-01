@@ -172,6 +172,14 @@ hands.setCooking(cookers)
 -- the held items' ammo, batched (hands.queueData)
 setTimer(hands.flushData, 5000, 0)
 local medical = loadFile("server/medical.lua")({ db = db, state = state, destroy = destroy })
+local function isOnDuty(player)
+    local staffRes = getResourceFromName("staff")
+    return staffRes ~= false and getResourceState(staffRes) == "running" and exports.staff:isOnDuty(player) == true
+end
+local cuffsCtx = { db = db, state = state, hands = hands, destroy = destroy, charId = charId, toast = toast }
+cuffsCtx.isPlayerCuffed, cuffsCtx.setPlayerCuffed, cuffsCtx.isOnDuty = isPlayerCuffed, setPlayerCuffed, isOnDuty
+local cuffs = loadFile("server/cuffs.lua")(cuffsCtx)
+hands.setCuffs(cuffs)
 -- a held item's data rewritten in place (a sip from a container): the row, the hand and the client
 local function writeHeldData(player, itemId, data)
     db.exec("UPDATE items SET data = ? WHERE id = ?", { toJSON(data):sub(2, -2), itemId })
@@ -192,6 +200,7 @@ local drinking = loadFile("server/drinking.lua")({
 net.handler("treatmentCancelRequested", function(player)
     medical.cancel(player)
     drinking.cancel(player)
+    cuffs.cancel(player)
 end)
 local clothesInstance = loadFile("server/clothes.lua")({
     db = db,
