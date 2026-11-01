@@ -5,7 +5,7 @@ import os
 import sys
 from pathlib import Path
 
-from . import features, houseloot, item_types, lang, loot_tables, maps, puzzles, settings, trees, vspawn, zones
+from . import features, houseloot, item_types, lang, loot_tables, maps, puzzles, settings, shellloot, trees, vspawn, zones
 from .common import read_text
 from tools.gen_vanilla_objects import DEFAULT_GTA
 
@@ -38,8 +38,10 @@ def main(argv=None) -> int:
         unames = list(item_types.parse_item_types(init))
         print(f"loot: {len(loot_tables.convert(args.src, DATA, unames))} tables")
     if args.kind in ("all", "zones"):
-        print(f"zones: {len(zones.convert(args.src, SEED, ANTICHEAT))} loot spawns")
+        spawns = zones.convert(args.src, SEED, ANTICHEAT)
+        print(f"zones: {len(spawns)} loot spawns")
         print(f"house loot: {len(houseloot.convert(args.src, SEED))} loot points in half of the hollow houses")
+        print(f"shell loot: {len(shellloot.convert(spawns, SEED))} loot points inside the trailers and cabins")
         init = read_text(Path(args.src) / "gamemodes/sss/core/server/init.pwn")
         nl, nz, nf = features.convert(args.src, WORLD, list(item_types.parse_item_types(init)))
         print(f"features: {nl} ladders, {nz} ziplines, {nf} fixed items -> world/data/features.lua")
