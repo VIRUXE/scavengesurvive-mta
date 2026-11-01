@@ -110,7 +110,7 @@ local function refreshKeys()
         interact = keyName("interact", "f"),
         putaway = keyName("putaway", "y"),
         drop = keyName("dropitem", "n"),
-        inventory = keyName("inventory", "i"),
+        inventory = keyName("inventory", "h"),
         reload = keyName("reloadweapon", "r"),
         engine = "Y",
         lights = "N",

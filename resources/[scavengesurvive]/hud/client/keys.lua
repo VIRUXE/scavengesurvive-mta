@@ -416,7 +416,7 @@ return function(ctx)
         triggerServerEvent("inventoryOpenRequested", localPlayer)
     end)
 
-    local DEFAULTS = { interact = "f", dropitem = "n", inventory = "i", reloadweapon = "r" }
+    local DEFAULTS = { interact = "f", dropitem = "n", inventory = "h", reloadweapon = "r" }
     -- MTA binds Y to team chat in the core, which unbindKey cannot remove (it only touches this resource's binds);
     -- the gamemode has no teams, so an unbound putaway answers Y itself and swallows the key before the chat sees it
     addEventHandler("onClientKey", root, function(key, press)
@@ -430,9 +430,10 @@ return function(ctx)
         executeCommandHandler("putaway")
     end)
     addEventHandler("onClientResourceStart", resourceRoot, function()
-        if string.lower(getKeyBoundToCommand("inventory") or "") == "h" then
-            unbindKey("h", "down", "inventory")
-            bindKey("i", "down", "inventory")
+        -- the inventory was on I for a while (#126), move those binds back to upstream's H
+        if string.lower(getKeyBoundToCommand("inventory") or "") == "i" then
+            unbindKey("i", "down", "inventory")
+            bindKey("h", "down", "inventory")
         end
         for cmd, key in pairs(DEFAULTS) do
             if not getKeyBoundToCommand(cmd) then
