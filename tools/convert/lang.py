@@ -44,41 +44,39 @@ PORT_TIPS = {
     **{u: _BUILD for u in ("GarageDoor", "InsulDoor", "InsulPanel", "LargeFrame", "SmallPanel")},
 }
 
-# Upstream left these as "##ITEM TIP NOT SET##"; the port gives them a text.
+# Upstream left these as "##ITEM TIP NOT SET##"; the port gives them a text, checked against what each item does in
+# the port (items/shared/logic/machines.lua SCRAP, furniture.lua, apparel.lua, vehicles/shared/logic/vehicle.lua).
 _EAT = "Eat this for food value"
 _COOK = "Cook and eat this for food value"
-_DRINK = "Drink this to quench your thirst"
-_BOOZE = "Drink this to quench your thirst, but alcohol will make you drunk"
-_SCRAP = "Used for crafting, scrap and refine it at a machine"
-_STASH = "Store items inside this, hold [F] to open it"
+_DRINK = "Hold [F] to drink from this"
+_SCRAP = "Scrap Metal: refine it in a Refining Machine, or craft with it"
+_STASH = "Press [F] to open this and store items inside it"
 _WEARIT = "Wear this by pressing [F]"
-_FURN = "Furniture: decoration for your base, hold a Crowbar and press [F] to take it apart"
-_JUNK = "This item has no use except as decoration or crafting"
+_TOP = "Furniture: press [F] with an item in hand to put it on top, and with empty hands to take it back"
+_CASE = "Furniture: press [F] with an item in hand to display it inside, and with empty hands to take it back"
+_NOUSE = "This item has no use yet"
+_SCRAPPABLE = "This item has no use yet, but a Scrap Machine breaks it down into Scrap Metal"
 UNSET_TIPS = {
     **{u: _EAT for u in ("Banana", "BreadLoaf", "Bread", "CakeSlice", "FishyFingers", "GrnApple", "IceCream", "IceCreamBars", "Lemon", "Orange", "PizzaOnly", "RedApple", "WeddingCake", "Cereal1", "Cereal2")},
     **{u: _COOK for u in ("Ham", "Steak", "WrappedMeat")},
-    **{u: _DRINK for u in ("AppleJuice", "OrangeJuice", "MilkBottle", "MilkCarton")},
-    **{u: _BOOZE for u in ("Champagne", "Whisky", "Wine1", "Wine2", "Wine3")},
+    **{u: _DRINK for u in ("AppleJuice", "OrangeJuice", "MilkBottle", "MilkCarton", "Champagne", "Whisky", "Wine1", "Wine2", "Wine3")},
     **{u: _WEARIT for u in ("Beanie", "CaptainsCap", "DevilMask", "PizzaHat", "PoliceHelm", "PussyMask", "StrawHat", "SwatHelmet", "WitchesHat")},
-    **{u: _STASH for u in ("Cupboard", "GearBox", "GunCase", "Holdall", "Locker", "ToolBox", "Workbench")},
-    **{u: _FURN for u in ("Barstool", "Desk", "SmallTable", "Table", "Doormat")},
+    **{u: _STASH for u in ("GearBox", "Holdall", "Locker", "ToolBox", "Workbench")},
+    **{u: _TOP for u in ("Barstool", "Desk", "SmallTable", "Table")},
+    **{u: _CASE for u in ("Cupboard", "GunCase")},
     **{u: _BUILD for u in ("MetalFrame", "RedPanel", "TallFrame")},
     **{u: _SCRAP for u in ("ScrapMetal", "RefinedMetal")},
-    **{u: _JUNK for u in ("Boot", "BoxingGloves", "Cross", "Fork", "Knife3", "Broom", "Computer", "Microphone", "Radio", "RadioBox", "PisschBox", "ControlBox", "Ketchup", "Mustard", "PizzaBox")},
-    **{u: "Used for crafting" for u in ("Briquettes", "BurntLog", "Canister", "OilDrum", "OilCan")},
-    "Spanner": "Used for crafting and repairs",
-    "Keycard": "Used to open locked doors that are set up for a keycard",
-    "Padlock": "Used for crafting, combine it with a defence to lock it",
-    "WheelLock": "Hold [F] at a vehicle with this to lock its wheel, or craft it into a locksmith kit",
-    "LockBreaker": "Hold [F] at a locked vehicle with this to break its lock",
-    "RemoteControl": "Used for crafting and some puzzles",
-    "Locator": "Press [F] at a phone to sync it, then use it to show the distance to the phone",
-    "PlotPole": "Place this to claim an area, the people you add can build inside it",
-    "RefineMachine": "Put Scrap Metal inside and press [F] to refine it",
-    "ScrapMachine": "Put items inside and press [F] to break them down to scrap",
-    "WaterMachine": "Put a Water Bottle of sea water inside and press [F] to purify it",
+    **{u: _NOUSE for u in ("Keycard", "Briquettes", "BurntLog", "Cross", "Microphone", "Broom", "Ketchup", "Mustard", "PizzaBox", "PisschBox", "Doormat", "Boot", "BoxingGloves", "RadioBox")},
+    **{u: _SCRAPPABLE for u in ("Spanner", "Padlock", "OilCan", "OilDrum", "Fork", "Knife3", "Radio", "RemoteControl", "ControlBox", "Computer")},
+    "Canister": "Used for crafting a machine or a plot pole, or break it down at a Scrap Machine",
+    "WheelLock": "Combine it with a Locksmith Kit to cut a key, then hold [F] at a bike or other doorless vehicle to lock it",
+    "LockBreaker": "Use it at a locked vehicle to break its lock, a crafted lock cannot be broken",
+    "Locator": "Press [F] at a mobile phone to sync it, then press [F] to show the distance to it",
+    "PlotPole": "Use a screwdriver with this to set it up as a plot pole",
+    "RefineMachine": "Put Scrap Metal inside and fuel it with a Petrol Can, it refines the metal into Refined Metal",
+    "ScrapMachine": "Put items inside and fuel it with a Petrol Can, it breaks them down into Scrap Metal",
+    "WaterMachine": "Put Water Bottles of sea water inside and fuel it with a Petrol Can, it purifies the water",
 }
-
 
 def _replace(v: str) -> str:
     v = TAG_RE.sub(lambda m: "~k~~" + KEYTEXT[m.group(1)] + "~" if m.group(1) in KEYTEXT
