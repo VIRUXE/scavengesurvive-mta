@@ -67,16 +67,18 @@ function canvas.rgba(v)
     return r, g, b, v % 256
 end
 
--- progress2 bar geometry (Southclaws/progress2): background box, a half-alpha fill and the value box inset by
--- 1.2 x 1.0 units. All in canvas units; frac in [0, 1].
+-- GTA's black bar frame (CSprite2d::DrawBarChart, as the stock health bar draws it): 6 px around the bar at 1080p.
+canvas.BAR_BORDER = 6 / 2.25
+
+-- Bar geometry in the style of GTA's own health bar: x, y, w, h is the coloured track, the black frame lies
+-- outside it. All in canvas units; frac in [0, 1].
 function canvas.progressBar(x, y, w, h, frac)
     frac = math.max(0, math.min(1, frac or 0))
-    local ix, iy = x + 1.2, y + 1.0
-    local iw, ih = w - 2.4, h - 2.0
+    local b = canvas.BAR_BORDER
     return {
-        back = { x = x, y = y, w = w, h = h },
-        fill = { x = ix, y = iy, w = iw, h = ih },
-        value = { x = ix, y = iy, w = iw * frac, h = ih },
+        frame = { x = x - b, y = y - b, w = w + 2 * b, h = h + 2 * b },
+        track = { x = x, y = y, w = w, h = h },
+        value = { x = x, y = y, w = w * frac, h = h },
     }
 end
 

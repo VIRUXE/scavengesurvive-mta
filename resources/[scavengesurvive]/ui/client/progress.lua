@@ -1,5 +1,6 @@
--- The hold-action bar (core/ui/hold-action.pwn): a progress2 bar at 291,345 of 57.5 x 5.19 units in GREY
--- (0xAFAFAFFF), one at a time, no label. The server times the action; the client only animates the fill.
+-- The hold-action bar (core/ui/hold-action.pwn): upstream's progress2 bar at 291,345 of 57.5 x 5.19 units in GREY
+-- (0xAFAFAFFF), drawn as GTA's own bar, one at a time, no label. The server times the action; the client only
+-- animates the fill.
 return function(ctx)
     local draw = ctx.draw
     local progress = nil

@@ -1,20 +1,27 @@
 -- The driver's weapon heat bar (#151, upstream char/overheat.pwn): red, where upstream's player progress bar sat
--- (220, 380, 200 x 20 on SA-MP's 640 x 480 canvas), with upstream's "Overheating!" over 80 % of the maximum.
+-- (220, 380, 200 x 20 on SA-MP's 640 x 480 canvas), drawn as GTA's own bar with the ui resource's canvas, with
+-- upstream's "Overheating!" over 80 % of the maximum.
+local function loadFile(path, chunkName)
+    local f = fileOpen(path, true)
+    local src = fileRead(f, fileGetSize(f))
+    fileClose(f)
+    return assert(loadstring(src, chunkName))()
+end
+local canvas = loadFile(":ui/shared/logic/canvas.lua", "=ui/canvas.lua")
+local sw, sh = guiGetScreenSize()
+local ctx = { canvas = canvas, c = canvas.new(sw, sh) }
+local bar = loadFile(":ui/client/draw.lua", "=ui/draw.lua")(ctx)
+local RED = tocolor(200, 0, 0, 255)
 local heat, max = nil, 40
 
 local function draw()
     if not heat then
         return
     end
-    local sw, sh = guiGetScreenSize()
-    local x, y, w, h = 220 / 640 * sw, 380 / 480 * sh, 200 / 640 * sw, 20 / 480 * sh
-    local fill = math.max(0, math.min(1, heat / max))
-    dxDrawRectangle(x - 2, y - 2, w + 4, h + 4, tocolor(0, 0, 0, 200))
-    dxDrawRectangle(x, y, w, h, tocolor(90, 0, 0, 200))
-    dxDrawRectangle(x, y, w * fill, h, tocolor(255, 0, 0, 230))
+    bar.progressBar(220, 380, 200, 20, heat / max, 0xFF, 0, 0, 0xFF, "center")
     if heat > max * 0.8 then
-        local red = tocolor(200, 0, 0, 255)
-        dxDrawText("Overheating!", 0, y - h * 2.5, sw, y - 4, red, 2, "pricedown", "center", "bottom")
+        local top, bottom = canvas.y(ctx.c, 380 - 50), canvas.y(ctx.c, 380 - canvas.BAR_BORDER) - 4
+        dxDrawText("Overheating!", 0, top, sw, bottom, RED, 2, "pricedown", "center", "bottom")
     end
 end
 

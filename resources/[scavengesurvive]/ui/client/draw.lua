@@ -66,12 +66,13 @@ return function(ctx)
         dxDrawRectangle(canvas.x(c, x, anchor), canvas.y(c, y), canvas.len(c, w), canvas.len(c, h), colour)
     end
 
-    -- A progress2 bar: background in the colour's alpha, half-alpha fill, full-colour value.
+    -- A bar as GTA draws its health bar: black frame, the track in half the colour, the value in the full colour.
     function M.progressBar(x, y, w, h, frac, r, g, b, a, anchor)
         local bar = canvas.progressBar(x, y, w, h, frac)
-        M.box(bar.back.x, bar.back.y, bar.back.w, bar.back.h, tocolor(0, 0, 0, a), anchor)
-        M.box(bar.fill.x, bar.fill.y, bar.fill.w, bar.fill.h, tocolor(r, g, b, math.min(0x66, a / 2)), anchor)
-        M.box(bar.value.x, bar.value.y, bar.value.w, bar.value.h, tocolor(r, g, b, a), anchor)
+        local frame, track, value = bar.frame, bar.track, bar.value
+        M.box(frame.x, frame.y, frame.w, frame.h, tocolor(0, 0, 0, a), anchor)
+        M.box(track.x, track.y, track.w, track.h, tocolor(r / 2, g / 2, b / 2, a), anchor)
+        M.box(value.x, value.y, value.w, value.h, tocolor(r, g, b, a), anchor)
     end
 
     -- Pixel-space helpers for the dialog widgets (the rectangles come from dialog.layout / dialog.boxLayout).
