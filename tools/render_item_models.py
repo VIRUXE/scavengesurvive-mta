@@ -2,6 +2,8 @@
 
     python -m tools.render_item_models --set scrap [--gta DIR] [--blender EXE] [--size 512]
     python -m tools.render_item_models --unames Wrench,Hammer --set tools
+    python -m tools.render_item_models --all --set all
+    python -m tools.render_item_models --vehicles
 
 Outside Blender it resolves every item's model id to a dff and its texture dictionaries (SAMP.img, gta3.img, gta_int.img,
 the port packs under resources/), stages them in a scratch folder and runs itself in Blender (DragonFF). Items that share
@@ -27,7 +29,12 @@ RES = ROOT / "resources" / "[scavengesurvive]"
 OUT = ROOT / "docs" / "images" / "items"
 SCRAP_SRC = RES / "items" / "shared" / "logic" / "machines.lua"
 ITEM_TYPES = RES / "data" / "generated" / "item_types.lua"
+VEHICLE_TYPES = RES / "data" / "generated" / "vehicle_types.lua"
+VEHICLE_OUT = ROOT / "docs" / "images" / "vehicles"
 SAMP_IDE = ROOT / "tools" / "data" / "samp.ide"
+# the paint slots of a GTA vehicle mesh, drawn in these placeholder colours by the game's own shader
+PAINT_SLOTS = {(60, 255, 0), (255, 0, 175), (0, 255, 255), (255, 175, 0), (185, 255, 0), (255, 60, 0), (0, 255, 175), (255, 0, 0)}
+BODY_COLOUR = (0.62, 0.64, 0.66, 1.0)
 LUA_ENTRY = re.compile(r"\[(\d+)\]\s*=\s*\{([^}]*)\}")
 
 
@@ -43,6 +50,17 @@ def scrap_unames() -> list[str]:
     blk = src[src.index("M.SCRAP = {") :]
     blk = blk[: blk.index("\n}")]
     return [u for u, _ in re.findall(r"(\w+) = (\d+),", blk)]
+
+
+def vehicle_models() -> dict[str, tuple[int, str]]:
+    out = {}
+    for line in VEHICLE_TYPES.read_text(encoding="utf8").splitlines():
+        m = re.match(r"M\.byUname\.(\w+) = \{", line)
+        if m:
+            mod, name = re.search(r"\bmodel = (\d+)", line), re.search(r'\bname = "([^"]*)"', line)
+            if mod:
+                out[m.group(1)] = (int(mod.group(1)), name.group(1) if name else m.group(1))
+    return out
 
 
 def item_models() -> dict[str, tuple[int, str]]:
@@ -76,6 +94,8 @@ def vanilla_ide(gta: Path) -> dict[int, tuple[str, str]]:
     for p in paths:
         for line in open(p, encoding="latin1", errors="replace"):
             parts = [x.strip() for x in line.split(",")]
+            if len(parts) >= 2 and len(parts[1].split()) == 2 and parts[0].isdigit():  # a tab where a comma belongs
+                parts[1:2] = parts[1].split()
             if len(parts) >= 3 and parts[0].isdigit():
                 out.setdefault(int(parts[0]), (parts[1].lower(), parts[2].lower()))
     return out
@@ -95,7 +115,7 @@ def stage(models: set[int], gta: Path, work: Path) -> tuple[list[dict], list[str
 
     archives = {n: gta / p for n, p in [("samp", "SAMP/SAMP.img"), ("gta3", "models/gta3.img"), ("gta_int", "models/gta_int.img"), ("cutscene", "models/cutscene.img")] if (gta / p).is_file()}
     indexes = {n: read_img_index(p) for n, p in archives.items()}
-    loose = {p.stem.lower(): p for p in (gta / "models").glob("*.txd")}
+    loose = {p.stem.lower(): p for p in list((gta / "models").glob("*.txd")) + list((gta / "models" / "generic").glob("*.txd"))}
     van, sam, port = vanilla_ide(gta), samp_ide(), port_models()
 
     def fetch(name: str, ext: str, dest: Path, order=("samp", "gta3", "gta_int", "cutscene")) -> bool:
@@ -138,7 +158,7 @@ def stage(models: set[int], gta: Path, work: Path) -> tuple[list[dict], list[str
                 txds.append(txd)
             else:
                 problems.append(f"{model}: txd {txd} not found (untextured)")
-        jobs.append({"model": model, "dir": str(d), "dff": dff, "txds": txds})
+        jobs.append({"model": model, "dir": str(d), "dff": dff, "txds": txds, "vehicle": False})
     return jobs, problems
 
 
@@ -156,6 +176,31 @@ class CaseDict(dict):
 
     def get(self, k, default=None):
         return dict.get(self, k.lower(), default)
+
+
+def recolour_vehicle(meshes):
+    """Paints the placeholder paint slots a neutral body colour and drops the hidden damage and low-detail parts."""
+    keep = []
+    for o in meshes:
+        n = o.name.lower()
+        if o.hide_viewport or o.hide_render or n.endswith("_dam") or "_dam_" in n or n.endswith("_vlo") or n.startswith("chassis_vlo") or "dummy" in n and "chassis" not in n:
+            o.hide_render = o.hide_viewport = True
+            continue
+        keep.append(o)
+        for slot in o.material_slots:
+            mat = slot.material
+            if not mat:
+                continue
+            col = tuple(round(c * 255) for c in mat.diffuse_color[:3])
+            nodes = mat.node_tree.nodes if mat.node_tree else []
+            bsdf = next((x for x in nodes if x.type == "BSDF_PRINCIPLED"), None)
+            if bsdf is not None:
+                col = tuple(round(c * 255) for c in bsdf.inputs["Base Color"].default_value[:3])
+            if any(max(abs(a - b) for a, b in zip(col, p)) <= 6 for p in PAINT_SLOTS):
+                mat.diffuse_color = BODY_COLOUR
+                if bsdf is not None:
+                    bsdf.inputs["Base Color"].default_value = BODY_COLOUR
+    return keep
 
 
 def build_in_blender(jobs_file: Path, out_dir: Path, size: int):
@@ -182,7 +227,7 @@ def build_in_blender(jobs_file: Path, out_dir: Path, size: int):
         images = CaseDict()
         for t in job["txds"]:
             images.update({k.lower(): v for k, v in txd_importer.import_txd({"file_name": os.path.join(job["dir"], t + ".txd"), "skip_mipmaps": True, "pack": True}).images.items()})
-        opts = {"file_name": os.path.join(job["dir"], job["dff"] + ".dff"), "txd_images": images, "image_ext": None, "connect_bones": False, "use_mat_split": True, "remove_doubles": False, "create_backfaces": False, "group_materials": False, "import_normals": False, "materials_naming": "DEFAULT", "hide_damage_parts": False}
+        opts = {"file_name": os.path.join(job["dir"], job["dff"] + ".dff"), "txd_images": images, "image_ext": None, "connect_bones": False, "use_mat_split": True, "remove_doubles": False, "create_backfaces": False, "group_materials": False, "import_normals": False, "materials_naming": "DEFAULT", "hide_damage_parts": bool(job.get("vehicle"))}
         dff_importer.import_dff(opts)
         meshes = [o for o in scn.objects if o.type == "MESH" and not o.dff.type == "COL"]
         for o in meshes:
@@ -199,6 +244,8 @@ def build_in_blender(jobs_file: Path, out_dir: Path, size: int):
                 bmesh.ops.delete(bm, geom=[f for f in bm.faces if f.material_index in drop], context="FACES")
                 bm.to_mesh(o.data)
                 bm.free()
+        if job.get("vehicle"):
+            meshes = recolour_vehicle(meshes)
         pts = [o.matrix_world @ Vector(c) for o in meshes for c in o.bound_box]
         if not pts:
             print("RENDER nothing", job["model"])
@@ -212,7 +259,7 @@ def build_in_blender(jobs_file: Path, out_dir: Path, size: int):
         cam.data.type = "ORTHO"
         cam.data.ortho_scale = diag * 1.15
         cam.data.clip_start, cam.data.clip_end = 0.001, diag * 20
-        direction = Vector((1.0, -1.0, 0.75)).normalized()
+        direction = Vector((1.0, 1.0, 0.75) if job.get("vehicle") else (1.0, -1.0, 0.75)).normalized()
         cam.location = mid + direction * diag * 3
         cam.rotation_euler = (mid - cam.location).to_track_quat("-Z", "Y").to_euler()
         scn.render.filepath = str(out_dir / job["file"])
@@ -244,6 +291,14 @@ def sheets(items: list[dict], out: Path, cols=4, rows=3, cell=384):
     return paths
 
 
+def fetch_vehicle_txd(gta: Path, dest: Path) -> bool:
+    src = gta / "models" / "generic" / "vehicle.txd"
+    if src.is_file():
+        (dest / "vehicle.txd").write_bytes(src.read_bytes())
+        return True
+    return False
+
+
 def main(argv=None) -> int:
     from tools.extract_ped_models import find_blender
     from tools.extract_samp_models import detect_gta
@@ -251,27 +306,38 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--set", default="scrap", help="folder name under docs/images/items/ (and the unames: scrap = machines.lua SCRAP)")
     ap.add_argument("--unames", help="comma-separated item unames instead of the set's own list")
+    ap.add_argument("--vehicles", action="store_true", help="every vehicle type of vehicle_types.lua, into docs/images/vehicles/")
+    ap.add_argument("--all", action="store_true", help="every item type with a model (NULL placeholders skipped)")
     ap.add_argument("--gta", type=Path)
     ap.add_argument("--blender")
     ap.add_argument("--size", type=int, default=512)
     args = ap.parse_args(argv)
-    unames = args.unames.split(",") if args.unames else scrap_unames()
     gta = args.gta or detect_gta()
     blender = find_blender(args.blender)
     if not gta or not blender:
         print("render_item_models: need GTA:SA (--gta) and Blender (--blender)", file=sys.stderr)
         return 2
-    types = item_models()
+    types = vehicle_models() if args.vehicles else item_models()
+    if args.vehicles:
+        unames = [u for u, (m, _) in types.items() if u != "Airstream"]
+    elif args.all:
+        unames = [u for u, (m, _) in types.items() if m > 0 and not u.startswith("NULL") and u != "VEHICLE_WEAPON"]
+    else:
+        unames = args.unames.split(",") if args.unames else scrap_unames()
     by_model: dict[int, list[str]] = {}
     for u in unames:
         if u in types:
             by_model.setdefault(types[u][0], []).append(u)
-    out = OUT / args.set
+    out = VEHICLE_OUT if args.vehicles else OUT / args.set
     out.mkdir(parents=True, exist_ok=True)
     work = Path(tempfile.mkdtemp(prefix="render_items_"))
     jobs, problems = stage(set(by_model), gta, work)
     for j in jobs:
         j["file"] = f"{j['model']}_{j['dff']}.png"
+        if args.vehicles:
+            j["vehicle"] = True
+            if "vehicle" not in j["txds"] and fetch_vehicle_txd(gta, Path(j["dir"])):
+                j["txds"].append("vehicle")
     jobs_file = work / "jobs.json"
     jobs_file.write_text(json.dumps(jobs))
     cmd = [str(blender), "-b", "--python", __file__, "--", str(jobs_file), str(out), str(args.size)]
