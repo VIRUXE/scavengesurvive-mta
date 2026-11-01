@@ -1,9 +1,8 @@
 """The towable Airstream: the medium Airstream shell (sm_airstrm_med_.py's output) as a trailer vehicle replacing the
 unused farm trailer, model 610. The utility trailer (utiltr1, model 611, extracted by prep.py) gives the frame
 hierarchy the game wants of a trailer (chassis, four wheel dummies, hookup, misc_a); the shell is the body, its door
-leaf the vehicle's front-left door, its step a frame of its own (the airstream_trailer client hides it while towed), a
-jockey leg the game lowers by itself when unhitched, and its collision boxes (for peds inside) plus underbody spheres
-the collision.
+leaf the vehicle's front-left door (the shell's step under it cut away), a jockey leg the game lowers by itself when
+unhitched, and its collision boxes (for peds inside) plus underbody spheres the collision.
 
     blender -b --python tools/trailer_shells/towable.py
 
@@ -223,9 +222,9 @@ TANK_TEXTURE = "sm_airstreamside2"
 tank_r = split(body, lambda f, m: texture(m, f.material_index) == TANK_TEXTURE and (c := f.calc_center_median()).y > 4.08 and c.z < 0.5 and c.x > 0, "gas_r")
 tank_l = split(body, lambda f, m: texture(m, f.material_index) == TANK_TEXTURE and (c := f.calc_center_median()).y > 4.08 and c.z < 0.5 and c.x < 0, "gas_l")
 
-# the step under the door: a frame of its own, which the client hides while the trailer is towed
+# the shell's step under the door: cut out of the body and dropped
 d0, d1 = meta["openings"][0]["u"]
-step = split(body, lambda f, m: (c := f.calc_center_median()).x < -1.2 and d0 - 0.1 < c.y < d1 + 0.1 and c.z < 0.3 - Z0, "step")
+split(body, lambda f, m: (c := f.calc_center_median()).x < -1.2 and d0 - 0.1 < c.y < d1 + 0.1 and c.z < 0.3 - Z0, "step")
 
 # the wheel wells: the shell's humps (x 0.86..1.06, up to z 0.95) fit the painted wheels; the game's wheel is 10 %
 # wider and rides up on its springs, so it came through them: bigger humps over the old ones, in the same trim
@@ -276,7 +275,7 @@ hinge = Vector(door["hinge"]) - Vector((0, 0, Z0))
 leaf = load_mesh(os.path.join(OUT, SHELL + "_door.dff"), Matrix.Rotation(math.radians(door["rz"]), 4, "Z"))
 
 # the shell's collision boxes (peds only: the game never tests a vehicle's boxes against the world), less the vanilla
-# wheels' (the wheels moved), plus the bigger humps'
+# wheels' (the wheels moved), plus the bigger humps', less the dropped step's
 bpy.ops.import_scene.dff(filepath=os.path.join(OUT, SHELL + ".col"))
 boxes = []
 for o in list(bpy.data.objects):
@@ -284,6 +283,8 @@ for o in list(bpy.data.objects):
         c, s = o.matrix_world.translation, o.matrix_world.to_scale()
         cz = c.z - Z0
         if abs(c.x) > 1.0 and abs(c.y - hub.y) < 0.3 and -0.65 < cz < -0.3:
+            continue
+        if c.x < -1.25 and cz < -0.6:  # the dropped step's
             continue
         boxes.append((c.x, c.y, cz, s.x, s.y, s.z))
 (hx0, hy0, hz0), (hx1, hy1, hz1) = HUMP
@@ -305,12 +306,6 @@ for name in ("chassis", "chassis_vlo"):
 objs["wheel"].data = wheel
 objs["misc_a"].data = leg  # the frame the game moves up and down (and wants of a trailer to hitch it)
 objs["misc_a"].matrix_world = Matrix.Translation(JOCKEY)
-step_obj = bpy.data.objects.new("step", step)
-step_obj.dff.type = "OBJ"
-step_obj.dff.is_frame = True
-clump.objects.link(step_obj)
-step_obj.parent = objs["chassis_dummy"]
-step_obj.matrix_world = Matrix.Identity(4)
 for tank_name, tank_mesh in (("gas_r", tank_r), ("gas_l", tank_l)):
     tank_obj = bpy.data.objects.new(tank_name, tank_mesh)
     tank_obj.dff.type = "OBJ"

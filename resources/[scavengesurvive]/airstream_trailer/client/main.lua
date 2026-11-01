@@ -1,5 +1,5 @@
 -- The towable Airstream (towable.lua, tools/trailer_shells/towable.py): the medium Airstream's shell as a trailer
--- vehicle in place of the farm trailer (model 610). Its step shows only while it stands unhitched, the rear wheel
+-- vehicle in place of the farm trailer (model 610). The rear wheel
 -- pair (0.10 m behind the front pair, so the wheelbase is not zero) never shows, and as a vehicle's door has no
 -- collision each one in view carries its door leaf as an unseen object in the doorway, solid while the door is shut.
 local towable
@@ -45,7 +45,6 @@ end
 
 local function dress(vehicle)
     if loaded and isElement(vehicle) and getElementModel(vehicle) == towable.model then
-        setVehicleComponentVisible(vehicle, "step", not getVehicleTowingVehicle(vehicle))
         setVehicleComponentVisible(vehicle, "wheel_rb_dummy", false)
         setVehicleComponentVisible(vehicle, "wheel_lb_dummy", false)
         block(vehicle)
