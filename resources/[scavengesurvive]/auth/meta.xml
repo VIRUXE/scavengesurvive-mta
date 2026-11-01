@@ -6,6 +6,7 @@
     <include resource="ui"/>
     <script src="shared/events.lua" type="shared"/>
     <script src="server/main.lua" type="server"/>
+    <script src="client/language.lua" type="client"/>
     <script src="client/login.lua" type="client"/>
     <script src="client/whitelist.lua" type="client"/>
     <file src="server/accounts.lua"/>

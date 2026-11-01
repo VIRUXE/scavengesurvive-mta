@@ -6,8 +6,10 @@ addEvent("playerLoggedOut", false)
 addEvent("loginRequested", true)
 addEvent("registrationRequested", true)
 addEvent("authPromptDismissed", true)
+addEvent("authLanguageChosen", true)
 
 -- server to client
+addEvent("authLanguageOffered", true)
 addEvent("authPromptShown", true)
 addEvent("authWelcomeShown", true)
 addEvent("whitelistCountdownChanged", true) -- seconds left, or false to hide

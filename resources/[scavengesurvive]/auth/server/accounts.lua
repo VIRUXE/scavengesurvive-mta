@@ -21,6 +21,7 @@ local function toAccount(row)
         name = row.name,
         adminLevel = row.admin_level or 0,
         lang = row.lang or "en",
+        langChosen = row.lang ~= nil and row.lang ~= false, -- NULL (read as false): the player never picked one
         tooltips = row.tooltips ~= 0,
         active = row.active ~= 0,
     }
@@ -83,6 +84,7 @@ function accounts.new(deps)
                             name = name,
                             adminLevel = 0,
                             lang = "en",
+                            langChosen = false,
                             tooltips = true,
                             active = true,
                         }

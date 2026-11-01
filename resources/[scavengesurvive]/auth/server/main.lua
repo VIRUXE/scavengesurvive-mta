@@ -18,8 +18,9 @@ local changing = {} -- player -> true while a /changepass request is in flight
 local checking = {} -- player -> true while the join-time ban lookup is in flight
 local wantsPrompt = {} -- player -> true when the client was ready before the ban lookup finished
 local blocked = {} -- player -> true once a ban (or the whitelist) kicked them
-local promptMode = {} -- player -> "login" | "register" while a dialog is up
+local promptMode = {} -- player -> "language" | "login" | "register" while a dialog is up
 local promptLang = {} -- player -> language of the dialog texts (the account's, "en" for a new name)
+local chosenLang = {} -- player -> code picked in the language window, saved on the account once they are in
 local whitelistEnabled = false
 local whitelistAuto = false
 local autoIpLogin = false
@@ -219,6 +220,21 @@ local function leave(player)
     kickLater(player, mode == "register" and "Left without registering" or "Left without logging in")
 end
 
+local function isLanguage(code)
+    for _, c in ipairs(exports.data:languages()) do
+        if c == code then
+            return true
+        end
+    end
+    return false
+end
+
+-- Whoever has no language on their account (a new name, or one that never picked) chooses one before any dialog.
+local function offerLanguage(player)
+    promptMode[player] = "language"
+    triggerClientEvent(player, "authLanguageOffered", player, exports.data:languages())
+end
+
 function prompt(player)
     if not accounts then
         if not warnedNoDb then
@@ -245,7 +261,10 @@ function prompt(player)
             util.log("auth", "info", "%s refused: account inactive", getPlayerName(player))
             return kickLater(player, "Account inactive")
         end
-        promptLang[player] = row and row.lang or "en"
+        if not chosenLang[player] and not (row and row.lang) then
+            return offerLanguage(player)
+        end
+        promptLang[player] = chosenLang[player] or row.lang
         if access.autoLoginAllowed(autoIpLogin, row, getPlayerIP(player), getPlayerSerial(player)) then
             pending[player] = true
             return accounts.loginTrusted(player, row, function(ok, code, account)
@@ -282,6 +301,11 @@ local function admit(player, account, isNew)
             util.log("auth", "info", "%s refused: account already online as %s", account.name, getPlayerName(other))
             return kickLater(player, "Account already online")
         end
+    end
+    if chosenLang[player] and not account.langChosen then
+        account.lang = chosenLang[player]
+        account.langChosen = true
+        db.exec("UPDATE accounts SET lang = ? WHERE id = ?", { account.lang, account.id })
     end
     session[player] = account
     promptMode[player] = nil
@@ -338,6 +362,15 @@ function finish(player, ok, code, account, attempts, isNew)
     end, player)
 end
 
+net.handler("authLanguageChosen", function(player, code)
+    if session[player] or blocked[player] or promptMode[player] ~= "language" or not isLanguage(code) then
+        return
+    end
+    chosenLang[player] = code
+    promptMode[player] = nil
+    prompt(player)
+end, { rate = 2 })
+
 net.handler("loginRequested", function(player, password)
     if session[player] or pending[player] or not accounts then
         return
@@ -384,6 +417,7 @@ addEventHandler("onPlayerQuit", root, function(reason)
     blocked[source] = nil
     promptMode[source] = nil
     promptLang[source] = nil
+    chosenLang[source] = nil
 end)
 
 -- /lang <code>: the language every resource reads through getLanguage (data's t()); stored on the account.
@@ -406,6 +440,7 @@ addCommandHandler("lang", function(player, _, code)
         return outputChatBox(string.format(" >  Usage: /lang <%s> (now %s)", list, account.lang), player, 255, 255, 0)
     end
     account.lang = code
+    account.langChosen = true
     db.exec("UPDATE accounts SET lang = ? WHERE id = ?", { code, account.id })
     outputChatBox(string.format(" >  Language set to %s.", code), player, 255, 255, 0)
     util.log("auth", "info", "%s set language %s", account.name, code)
