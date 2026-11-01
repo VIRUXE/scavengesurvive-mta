@@ -239,46 +239,58 @@ def tool_pack(ctx, centre, black, yellow, dim):
 
 
 TOOL_PACK_LOW = 0.046  # tool_pack: the body centre's height above the foot's underside
-TOOL_BATTERY_TEXTURES = [("ballys01.txd", "CJ_blackplastic"), ("helixbarrier.txd", "yellow"), ("cj_airprt.txd", "CJ_red_COUNTER"), ("industrialext.txd", "cj_chromepipe")]
+# UV rectangles (u0, v0, u1, v1; u0 > u1 mirrors) cut out of a texture: the "dude" brand logo on the right half of the garage
+# welder's panel, the hazard triangle on the yellow barrel paint, the green swatch of the colour boxes
+DUDE_LOGO = (1.0, 0.4, 0.5, 0.68)  # on a +Y face (its u runs along -X seen from the front)
+HAZARD = (0.74, 0.81, 0.3, 0.37)  # on a top face, turned to read from +Y
+GREEN = (0.4, 0.42, 0.6, 0.58)
+# (source TXD, texture) per tool_battery material, all vanilla and found with gta-scout: black plastic, the grinder's yellow,
+# the colour boxes (green charge lamps), chrome contacts, the "dude" label
+TOOL_BATTERY_TEXTURES = [("ballys01.txd", "CJ_blackplastic"), ("helixbarrier.txd", "yellow"), ("helixbarrier.txd", "colourboxes"), ("industrialext.txd", "cj_chromepipe"), ("hubprops2_sfse.txd", "welder")]
 BATTERY_HANDLE_Z = 0.2  # car_battery.dff: the top of the carry strap
-# (source TXD, texture) per car_battery material, all vanilla and found with gta-scout: black case, red plastic, lead/chrome
-# posts, rubber strap, a warning-strip label
-BATTERY_TEXTURES = [("ballys01.txd", "CJ_blackplastic"), ("cj_airprt.txd", "CJ_red_COUNTER"), ("industrialext.txd", "cj_chromepipe"), ("cj_airprt.txd", "CJ_RUBBER"), ("vegasdwntwn1.txd", "warning-strip64")]
+# (source TXD, texture) per car_battery material, all vanilla and found with gta-scout: black case, red cap, dull lead posts,
+# rubber strap, the "dude" brand label (the garage welder's panel), the hazard triangle (the yellow barrels' paint)
+BATTERY_TEXTURES = [("ballys01.txd", "CJ_blackplastic"), ("cj_airprt.txd", "CJ_red_COUNTER"), ("hubprops2_sfse.txd", "Alumox64b"), ("cj_airprt.txd", "CJ_RUBBER"), ("hubprops2_sfse.txd", "welder"), ("dynbarrels.txd", "yellowmetal")]
 
 
 def build_car_battery(ctx):
-    """A 12 V car battery: a ribbed black case 0.26 x 0.17 x 0.15, a stepped lid with vent plugs, a red (+) and a black (-)
-    post on the +Y edge and a rubber strap arched over the lid along X to BATTERY_HANDLE_Z. Origin at the base's centre."""
+    """A 12 V car battery: a black case 0.26 x 0.17 x 0.14 ribbed at the back, the blue "dude" label across the front (+Y),
+    an inset lid with a hazard sticker, a row of vent plugs, a red (+) and a black (-) capped lead post at the front corners
+    and a rubber strap along X with its top at BATTERY_HANDLE_Z. Origin at the base's centre."""
     box, tube = ctx["box"], ctx["tube"]
-    black, red, chrome, rubber, label = 0, 1, 2, 3, 4
+    black, red, lead, rubber, label, hazard = 0, 1, 2, 3, 4, 5
     white, dim = (0.9, 0.9, 0.9, 1.0), (0.6, 0.6, 0.6, 1.0)
     box((0.0, 0.0, 0.07), (0.26, 0.17, 0.14), black, dim)
     box((0.0, 0.0, 0.147), (0.25, 0.16, 0.014), black, None)  # the lid, inset
-    for side in (-1, 1):  # ribs down the long sides
-        for i in range(5):
-            box((-0.09 + i * 0.045, side * 0.087, 0.07), (0.02, 0.004, 0.12), black, None)
-    box((0.0, 0.0875, 0.075), (0.15, 0.002, 0.07), label, white)  # the label panel on +Y... (front face)
-    for x in (-0.06, 0.0, 0.06):  # vent plugs
-        tube((x, -0.03, 0.154), (x, -0.03, 0.162), 0.012, 10, black, dim, False)
-    for x, cap in ((-0.095, red), (0.095, black)):  # posts, capped
-        tube((x, 0.058, 0.154), (x, 0.058, 0.176), 0.017, 10, chrome, white, False)
-        tube((x, 0.058, 0.176), (x, 0.058, 0.182), 0.019, 10, cap, None, False)
-    for x in (-0.07, 0.07):  # the strap's two posts and bar, centred between the vent plugs and posts
-        box((x, -0.04, 0.17), (0.02, 0.03, 0.05), rubber, None)
-    tube((-0.07, -0.04, BATTERY_HANDLE_Z - 0.01), (0.07, -0.04, BATTERY_HANDLE_Z - 0.01), 0.011, 8, rubber, None)
+    for i in range(5):  # ribs down the back
+        box((-0.09 + i * 0.045, -0.087, 0.07), (0.02, 0.004, 0.12), black, None)
+    box((0.0, 0.0855, 0.072), (0.22, 0.002, 0.1), label, white, DUDE_LOGO)
+    box((0.0, 0.02, 0.1545), (0.044, 0.044, 0.001), hazard, white, HAZARD)
+    for x in (-0.06, -0.02, 0.02, 0.06):  # vent plugs behind the strap
+        tube((x, -0.066, 0.154), (x, -0.066, 0.16), 0.01, 10, black, dim, False)
+    for x, cap in ((-0.095, red), (0.095, black)):  # lead posts, capped
+        tube((x, 0.052, 0.154), (x, 0.052, 0.172), 0.014, 10, lead, white, False)
+        tube((x, 0.052, 0.172), (x, 0.052, 0.18), 0.019, 12, cap, None, False)
+    for x in (-0.07, 0.07):  # the strap: two posts and the bar
+        box((x, -0.035, 0.17), (0.02, 0.03, 0.05), rubber, None)
+    tube((-0.07, -0.035, BATTERY_HANDLE_Z - 0.01), (0.07, -0.035, BATTERY_HANDLE_Z - 0.01), 0.011, 8, rubber, None)
     return [((0.0, 0.0, 0.1), (0.13, 0.085, 0.1))]
 
 
 def build_tool_battery(ctx):
-    """The grinder's slide-on 18 V pack standing on its foot, charge lamps on +Y. Origin at the foot's centre."""
+    """The grinder's slide-on 18 V pack standing on its foot: the "dude" label and four green charge lamps on +Y, slide rails
+    and a chrome contact block on the yellow latch band. Origin at the foot's centre."""
     box = ctx["box"]
-    black, yellow, lamp, chrome = 0, 1, 2, 3
-    dim = (0.6, 0.6, 0.6, 1.0)
+    black, yellow, lamp, chrome, label = 0, 1, 2, 3, 4
+    white, dim = (0.9, 0.9, 0.9, 1.0), (0.6, 0.6, 0.6, 1.0)
     tool_pack(ctx, (0.0, 0.0, TOOL_PACK_LOW), black, yellow, dim)
+    box((0.0, 0.0255, 0.039), (0.048, 0.001, 0.02), label, white, DUDE_LOGO)
     for i in range(4):
-        box((-0.018 + i * 0.012, 0.0253, TOOL_PACK_LOW + 0.005), (0.007, 0.002, 0.007), lamp, None)
-    box((0.0, 0.0, TOOL_PACK_LOW + 0.033), (0.03, 0.02, 0.006), chrome, None)  # the contact block
-    return [((0.0, 0.0, 0.038), (0.032, 0.028, 0.038))]
+        box((-0.0135 + i * 0.009, 0.0255, 0.061), (0.006, 0.0012, 0.004), lamp, white, GREEN)
+    for x in (-0.021, 0.021):
+        box((x, 0.0, 0.0755), (0.004, 0.044, 0.003), black, None)
+    box((0.0, 0.006, 0.0755), (0.02, 0.02, 0.003), chrome, None)
+    return [((0.0, 0.0, 0.0385), (0.032, 0.028, 0.0385))]
 
 
 def build_grinder(ctx):
@@ -418,6 +430,10 @@ def build_in_blender(out_dir: Path, names) -> None:
             continue
         for obj in list(bpy.data.objects):
             bpy.data.objects.remove(obj)
+        # a texture an earlier prop used would come back as "name.png.001", and DragonFF writes "name.png" into the DFF
+        for block in (bpy.data.meshes, bpy.data.materials, bpy.data.images):
+            for item in list(block):
+                block.remove(item)
         name, textures = prop["name"], prop_textures(prop)
         scene = bpy.context.scene
         model = bpy.data.collections.new(name)
@@ -436,20 +452,22 @@ def build_in_blender(out_dir: Path, names) -> None:
                 loop[day] = day_col
                 loop[night] = night_col
 
-        def quad(verts, material, col):
+        def quad(verts, material, col, rect=None):
             face = bm.faces.new(verts)
             c = col if col else (0.9, 0.9, 0.9, 1.0)
-            uvs = [(0, 0), (1, 0), (1, 1), (0, 1)][: len(verts)]
+            u0, v0, u1, v1 = rect or (0, 0, 1, 1)
+            uvs = [(u0, v0), (u1, v0), (u1, v1), (u0, v1)][: len(verts)]
             if len(verts) > 4:
                 uvs = [(0.5 + 0.5 * math.cos(2 * math.pi * i / len(verts)), 0.5 + 0.5 * math.sin(2 * math.pi * i / len(verts))) for i in range(len(verts))]
             paint(face, uvs, c, (c[0] * 0.3, c[1] * 0.3, c[2] * 0.32, 1.0), material)
 
-        def box(centre, size, material, col):
+        def box(centre, size, material, col, rect=None):
+            """An axis-aligned box; `rect` (u0, v0, u1, v1) maps every face to that part of the texture."""
             cx, cy, cz = centre
             hx, hy, hz = size[0] / 2, size[1] / 2, size[2] / 2
             v = [bm.verts.new((cx + sx * hx, cy + sy * hy, cz + sz * hz)) for sz in (-1, 1) for sy in (-1, 1) for sx in (-1, 1)]
             for a, b, c, d in ((0, 1, 3, 2), (4, 5, 7, 6), (0, 1, 5, 4), (2, 3, 7, 6), (0, 2, 6, 4), (1, 3, 7, 5)):
-                quad([v[a], v[b], v[c], v[d]], material, col)
+                quad([v[a], v[b], v[c], v[d]], material, col, rect)
 
         def tube(start, end, radius, segs, material, col, extend=True):
             """A closed cylinder; `extend` runs each end on by half the radius so joined tubes leave no gap."""
