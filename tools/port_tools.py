@@ -15,11 +15,16 @@ GAS_BOTTLE_CAPACITY = 11.0  # kg of propane in a full Gas Bottle; its item data 
 # studio set (`rcon studio <player> hands`) with attachedit's preview (items/client/attach.lua setPreview).
 WELDER_HOLD = (-0.344, 0.358, -0.040, 0.0, 90.0, 0.0)
 
+# The Generator is a portable inverter unit (prop_models 20204, 0.52 x 0.33 x 0.44 m, modelled on a Honda EU2200i): carried
+# like the Welder, on the spine in the two-handed pose, its handle bar (0.42 up the model, 0.11 higher than the Welder's)
+# across both palms; the offset is the Welder's with the bar's extra height taken off along the model's up axis.
+GENERATOR_HOLD = (-0.454, 0.358, -0.040, 0.0, 90.0, 0.0)
+
 # uname, name, model, size, hitpoints, loot { table: weight }, carried: a heavy two-handed hold like the Large Box
 TOOLS = [
     dict(uname="Welder", name="Welder", model=20202, size=6, hp=3, loot={"world_industrial": 3.0, "vehicle_industrial": 2.0}, carry=False, att=WELDER_HOLD, bone=1, anim=True),
     dict(uname="GasTank", name="Gas Tank", model=1348, size=5, hp=3, loot={"world_industrial": 4.0, "vehicle_industrial": 3.0}, carry=False),
-    dict(uname="Generator", name="Generator", model=920, size=12, hp=5, loot={"world_industrial": 1.5}, carry=True),
+    dict(uname="Generator", name="Generator", model=20204, size=8, hp=5, loot={"world_industrial": 1.5}, carry=False, att=GENERATOR_HOLD, bone=1, anim=True),
     # a propane bottle (prop_models 20203, cut from the Airstream's own tanks) holding a random amount of gas; it mounts on a trailer's A-frame
     dict(uname="GasBottle", name="Gas Bottle", model=20203, size=5, hp=3, loot={"world_civilian": 4.0, "world_survivor": 6.0, "world_industrial": 8.0, "airdrop_industrial": 10.0}, carry=False),
 ]

@@ -15,6 +15,10 @@ then runs itself in Blender (DragonFF) for each prop's dff and col.
     gas_bottle 20203 a propane bottle: the Airstream's own right-hand tank (the faces of the vanilla sm_airstrm_med_.dff
                      textured sm_airstreamside2 on the A-frame), stood on its base; one box of collision.
 
+    generator 20204  a portable inverter generator (Honda EU2200i style): red rounded shell with black end caps, a carry
+                     handle bar along X on top (centre at GENERATOR_HANDLE_Z), fuel cap beside it, black control panel
+                     on the +Y face, louvres on -Y; 0.52 x 0.30 x 0.44 m, one box of collision.
+
 Origin: the centre of the base (x, y) with z = 0 at the lowest point; the front faces +Y.
 """
 from __future__ import annotations
@@ -92,10 +96,83 @@ def build_gas_bottle(ctx):
     return [(((lo[0] + hi[0]) / 2, (lo[1] + hi[1]) / 2, (lo[2] + hi[2]) / 2), ((hi[0] - lo[0]) / 2, (hi[1] - lo[1]) / 2, (hi[2] - lo[2]) / 2))]
 
 
+GENERATOR_HANDLE_Z = 0.42  # height of the carry bar's centre above the base (generator.dff, bar along X, x -0.14 .. 0.14, y 0)
+GEN_HX, GEN_HY, GEN_Z0, GEN_Z1 = 0.25, 0.15, 0.09, 0.33  # the red shell's half length, half width, bottom and top
+
+
+def gen_profile(scale):
+    """The shell's rounded-rectangle section (y, z), 16 points: big top corners, small bottom ones, shrunk about its centre."""
+    zc = (GEN_Z0 + GEN_Z1) / 2
+    out = []
+    for cy, cz, r, a0 in ((1, 1, 0.075, 0), (-1, 1, 0.075, 90), (-1, -1, 0.03, 180), (1, -1, 0.03, 270)):
+        for k in range(4):
+            a = math.radians(a0 + 30 * k)
+            y = cy * (GEN_HY - r) + r * math.cos(a)
+            z = (GEN_Z1 - r if cz > 0 else GEN_Z0 + r) + r * math.sin(a)
+            out.append((y * scale, zc + (z - zc) * scale))
+    return out
+
+
+def build_generator(ctx):
+    bm, box, tube, paint = ctx["bm"], ctx["box"], ctx["tube"], ctx["paint"]
+    red, alu = 0, 1
+    dark, mid, light = (0.12, 0.12, 0.13, 1.0), (0.55, 0.55, 0.57, 1.0), (0.8, 0.8, 0.82, 1.0)
+    night = lambda c: (c[0] * 0.3, c[1] * 0.3, c[2] * 0.32, 1.0)
+    # the shell: a rounded section lofted along X, the two end rings tapering; the end bands are the black end caps
+    stations = ((-GEN_HX, 0.84), (-GEN_HX + 0.015, 0.95), (-0.2, 1.0), (0.2, 1.0), (GEN_HX - 0.015, 0.95), (GEN_HX, 0.84))
+    rings = [[bm.verts.new((x, y, z)) for y, z in gen_profile(s)] for x, s in stations]
+    n = len(rings[0])
+    for i in range(len(rings) - 1):
+        cap = i in (0, len(rings) - 2)
+        col = dark if cap else (0.9, 0.9, 0.9, 1.0)
+        for j in range(n):
+            k = (j + 1) % n
+            face = bm.faces.new((rings[i][j], rings[i][k], rings[i + 1][k], rings[i + 1][j]))
+            u0, u1, v0, v1 = i * 0.4, i * 0.4 + 0.4, j / n, (j + 1) / n
+            paint(face, [(u0, v0), (u0, v1), (u1, v1), (u1, v0)], col, night(col), alu if cap else red)
+    for ring in (rings[0], rings[-1]):
+        face = bm.faces.new(ring)
+        paint(face, [(0.5 + 0.5 * math.cos(2 * math.pi * i / n), 0.5 + 0.5 * math.sin(2 * math.pi * i / n)) for i in range(n)], dark, night(dark), alu)
+    # base: black skid, aluminium side rails, four rubber feet
+    box((0.0, 0.0, 0.065), (0.46, 0.25, 0.07), alu, dark)
+    for y in (-0.115, 0.115):
+        tube((-0.235, y, 0.055), (0.235, y, 0.055), 0.013, 8, alu, mid)
+    for x in (-0.19, 0.19):
+        for y in (-0.095, 0.095):
+            tube((x, y, 0.011), (x, y, 0.03), 0.022, 8, alu, dark)
+    # the control panel on the +Y face: black plate, outlets, switch, indicator lights, sockets
+    box((0.0, 0.151, 0.215), (0.42, 0.014, 0.15), alu, dark)
+    box((-0.1, 0.16, 0.235), (0.11, 0.008, 0.075), alu, mid)
+    for x in (-0.12, -0.08):
+        box((x, 0.165, 0.235), (0.032, 0.004, 0.05), alu, dark)
+    tube((0.07, 0.158, 0.245), (0.07, 0.163, 0.245), 0.026, 10, alu, light)
+    box((0.07, 0.17, 0.245), (0.036, 0.006, 0.01), alu, dark)
+    for x, z in ((0.0, 0.265), (0.0, 0.24), (0.0, 0.215)):
+        box((x, 0.161, z), (0.014, 0.006, 0.014), red, None)
+    for x in (0.1, 0.14):
+        tube((x, 0.158, 0.19), (x, 0.162, 0.19), 0.014, 8, alu, mid)
+    tube((-0.02, 0.158, 0.19), (-0.02, 0.163, 0.19), 0.011, 8, alu, light)
+    # side louvres on -Y, an exhaust stub on -X
+    for i in range(6):
+        box((-0.06, -GEN_HY + 0.002, 0.14 + i * 0.03), (0.13, 0.012, 0.014), alu, dark)
+    tube((-GEN_HX, 0.0, 0.17), (-GEN_HX - 0.003, 0.0, 0.17), 0.028, 10, alu, mid)
+    # fuel cap and gauge on top, beside the handle on the panel side
+    box((0.185, 0.06, 0.335), (0.085, 0.085, 0.02), alu, dark)
+    tube((0.185, 0.06, 0.345), (0.185, 0.06, 0.382), 0.032, 10, alu, dark)
+    tube((0.185, 0.06, 0.382), (0.185, 0.06, 0.39), 0.02, 10, alu, mid)
+    box((0.1, 0.1, 0.331), (0.045, 0.03, 0.006), alu, light)
+    # the carrying handle: two red moulded posts and a black grip bar along X at GENERATOR_HANDLE_Z
+    for x in (-0.13, 0.13):
+        box((x, 0.0, 0.38), (0.045, 0.06, 0.12), red, None)
+    tube((-0.145, 0.0, GENERATOR_HANDLE_Z), (0.145, 0.0, GENERATOR_HANDLE_Z), 0.022, 10, alu, dark)
+    return [((0.0, 0.0, 0.22), (0.26, 0.16, 0.22))]
+
+
 PROPS_TABLE = [
     {"name": "ls_hatch", "id": 20201, "dist": 150, "source": "zombtest1.txd", "textures": ["pave_manhole1"], "build": build_ls_hatch},
     {"name": "welder", "id": 20202, "dist": 100, "source": "dynbarrels.txd", "textures": ["redmetal", "yellowmetal", "alumplat64"], "build": build_welder},
     {"name": "gas_bottle", "id": 20203, "dist": 100, "source": "trailers.txd", "textures": [TANK_TEXTURE], "build": build_gas_bottle},
+    {"name": "generator", "id": 20204, "dist": 100, "source": "dynbarrels.txd", "textures": ["redmetal", "alumplat64"], "build": build_generator},
 ]
 
 

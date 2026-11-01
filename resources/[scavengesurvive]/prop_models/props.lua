@@ -4,4 +4,5 @@ return {
     [20201] = { dff = "ls_hatch", txd = "ls_hatch", dist = 150 },
     [20202] = { dff = "welder", txd = "welder", dist = 100 },
     [20203] = { dff = "gas_bottle", txd = "gas_bottle", dist = 100 },
+    [20204] = { dff = "generator", txd = "generator", dist = 100 },
 }

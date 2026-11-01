@@ -129,7 +129,7 @@ INSERT INTO item_types (uname,name,model,size,max_hitpoints,category,category_da
 ('GasMask','Gas Mask',19472,1,1,'generic',NULL),
 ('GasTank','Gas Tank',1348,5,3,'generic',NULL),
 ('GearBox','Gear Box',19918,5,4,'safebox','{"size": 5}'),
-('Generator','Generator',920,12,5,'generic',NULL),
+('Generator','Generator',20204,8,5,'generic',NULL),
 ('GolfCap','Golf Cap',20007,1,5,'generic',NULL),
 ('GolfClub','Golf Club',333,3,3,'weapon','{"animSet": null, "baseWeapon": 2, "calibre": null, "flags": 0, "magSize": 35, "maxReserveMags": 0, "melee": false, "muzzleVelocity": 0.07}'),
 ('GreenGloop','Unknown',2976,3,3,'generic',NULL),

@@ -8,6 +8,9 @@
     <file src="files/gas_bottle.col"/>
     <file src="files/gas_bottle.dff"/>
     <file src="files/gas_bottle.txd"/>
+    <file src="files/generator.col"/>
+    <file src="files/generator.dff"/>
+    <file src="files/generator.txd"/>
     <file src="files/ls_hatch.col"/>
     <file src="files/ls_hatch.dff"/>
     <file src="files/ls_hatch.txd"/>
