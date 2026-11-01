@@ -180,7 +180,25 @@ class CaseDict(dict):
 
 def recolour_vehicle(meshes):
     """Paints the placeholder paint slots a neutral body colour and drops the hidden damage and low-detail parts."""
+    import bpy
+    from math import pi
+
+    for o in bpy.context.scene.objects:  # the collision hull and its shadow mesh sit on the roof and bonnet
+        if "colmesh" in o.name.lower() or "shadowmesh" in o.name.lower() or "colsphere" in o.name.lower():
+            o.hide_render = o.hide_viewport = True
     keep = []
+    wheel = next((o for o in meshes if o.name.lower() == "wheel" and o.parent), None)
+    if wheel is not None:  # the model has one wheel mesh, the game places a copy on every wheel dummy
+        side = wheel.parent.name.lower().split("_")[1][:1] if "_" in wheel.parent.name else "r"
+        for dummy in [x for x in bpy.context.scene.objects if x.type == "EMPTY" and x.name.lower().startswith("wheel_") and x.name.lower().endswith("_dummy") and x is not wheel.parent]:
+            copy = wheel.copy()
+            bpy.context.scene.collection.objects.link(copy)
+            copy.parent = dummy
+            copy.matrix_parent_inverse = wheel.matrix_parent_inverse.copy()
+            copy.location, copy.rotation_euler = wheel.location.copy(), wheel.rotation_euler.copy()
+            if dummy.name.lower().split("_")[1][:1] != side:
+                copy.rotation_euler.z += pi
+            keep.append(copy)
     for o in meshes:
         n = o.name.lower()
         if o.hide_viewport or o.hide_render or n.endswith("_dam") or "_dam_" in n or n.endswith("_vlo") or n.startswith("chassis_vlo") or "dummy" in n and "chassis" not in n:
@@ -200,6 +218,8 @@ def recolour_vehicle(meshes):
                 mat.diffuse_color = BODY_COLOUR
                 if bsdf is not None:
                     bsdf.inputs["Base Color"].default_value = BODY_COLOUR
+                for node in [x for x in nodes if x.type == "TEX_IMAGE"]:  # Workbench shows a texture raw, without the paint
+                    mat.node_tree.nodes.remove(node)
     return keep
 
 
@@ -249,6 +269,7 @@ def build_in_blender(jobs_file: Path, out_dir: Path, size: int):
                 bm.free()
         if job.get("vehicle"):
             meshes = recolour_vehicle(meshes)
+            bpy.context.view_layer.update()
         pts = [o.matrix_world @ Vector(c) for o in meshes for c in o.bound_box]
         if not pts:
             print("RENDER nothing", job["model"])
