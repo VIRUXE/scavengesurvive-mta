@@ -174,14 +174,42 @@ local function itemCommand(name, fn)
     end)
 end
 
+local function spawnItem(p, uname, pData)
+    local x, y, z = getElementPosition(p)
+    local _, _, rz = getElementRotation(p)
+    local sx, sy, sz, srz = itemSpawnLogic.calculateSpawnPosition(x, y, z, rz)
+    local interior = getElementInterior(p)
+    local dimension = getElementDimension(p)
+
+    -- Upstream ACMD:additem shows a justification dialog for staff below lead level;
+    -- the port logs all spawns via logItemSpawn to Discord and staff_actions instead.
+    local params = { uname, nil, pData, sx, sy, sz, srz, interior, dimension, nil, nil, n = 11 }
+    db.call("item_create", params, function(res, ctx)
+        if not isElement(ctx.player) then
+            return
+        end
+        if not res then
+            triggerClientEvent(ctx.player, "devItemSpawnAnswered", ctx.player, false, "db error (see logs/scripts.log)")
+            return say(ctx.player, "item_create: db error (see logs/scripts.log)")
+        end
+        if not res.ok then
+            local failed = string.format("item_create %s: code=%s", ctx.uname, tostring(res.code))
+            triggerClientEvent(ctx.player, "devItemSpawnAnswered", ctx.player, false, failed)
+            return say(ctx.player, "%s", failed)
+        end
+        local itemId = res.payload and res.payload.item_id
+        local made = string.format("created %s id=%s", ctx.uname, tostring(itemId))
+        triggerClientEvent(ctx.player, "devItemSpawnAnswered", ctx.player, true, made)
+        say(ctx.player, "%s", made)
+        exports.items:refreshPlayer(ctx.player)
+        logItemSpawn(ctx.player, ctx.uname, itemId, ctx.x, ctx.y, ctx.z)
+    end, { player = p, uname = uname, x = sx, y = sy, z = sz })
+end
+
 local function handleAddItem(p, ...)
     local args = { ... }
     if #args == 0 or not args[1] or args[1] == "" then
-        say(p, "Usage: /additem [itemid/itemname] [extradata format specifiers] [extradata array, comma separated]")
-        return say(
-            p,
-            "Example: `/additem gascan df 1, 4.5` create a petrol can with an integer and a float in extradata."
-        )
+        return triggerClientEvent(p, "devItemPickerOpened", p)
     end
     if not ready then
         return say(p, "db not connected")
@@ -212,31 +240,34 @@ local function handleAddItem(p, ...)
         pData = itemSpawnLogic.encodeJsonArray(dataArr)
     end
 
-    local x, y, z = getElementPosition(p)
-    local _, _, rz = getElementRotation(p)
-    local sx, sy, sz, srz = itemSpawnLogic.calculateSpawnPosition(x, y, z, rz)
-    local interior = getElementInterior(p)
-    local dimension = getElementDimension(p)
-
-    -- Upstream ACMD:additem shows a justification dialog for staff below lead level;
-    -- the port logs all spawns via logItemSpawn to Discord and staff_actions instead.
-    local params = { uname, nil, pData, sx, sy, sz, srz, interior, dimension, nil, nil, n = 11 }
-    db.call("item_create", params, function(res, ctx)
-        if not isElement(ctx.player) then
-            return
-        end
-        if not res then
-            return say(ctx.player, "item_create: db error (see logs/scripts.log)")
-        end
-        if not res.ok then
-            return say(ctx.player, "item_create %s: code=%s", ctx.uname, res.code)
-        end
-        local itemId = res.payload and res.payload.item_id
-        say(ctx.player, "created %s id=%s", ctx.uname, tostring(itemId))
-        exports.items:refreshPlayer(ctx.player)
-        logItemSpawn(ctx.player, ctx.uname, itemId, ctx.x, ctx.y, ctx.z)
-    end, { player = p, uname = uname, x = sx, y = sy, z = sz })
+    spawnItem(p, uname, pData)
 end
+
+-- The picker window (client/item_picker.lua) names the exact type it chose, so no substring resolving here.
+net.handler("devItemSpawnRequested", function(player, uname, spec, values)
+    local function refuse(text)
+        triggerClientEvent(player, "devItemSpawnAnswered", player, false, text)
+    end
+    if not isItemSpawnAllowed(player) then
+        return refuse("not allowed")
+    end
+    if not ready then
+        return refuse("db not connected")
+    end
+    local order = exports.data:itemTypes()
+    if type(uname) ~= "string" or uname == order[1] or not exports.data:itemType(uname) then
+        return refuse("unknown item type")
+    end
+    local pData = nil
+    if type(spec) == "string" and spec:match("%S") then
+        local dataArr, dataErr = itemSpawnLogic.parseExtraData(spec, tostring(values))
+        if not dataArr then
+            return refuse(dataErr)
+        end
+        pData = itemSpawnLogic.encodeJsonArray(dataArr)
+    end
+    spawnItem(player, uname, pData)
+end, { rate = 5 })
 
 itemCommand("additem", handleAddItem)
 itemCommand("spawnitem", handleAddItem)

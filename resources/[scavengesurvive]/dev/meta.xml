@@ -13,8 +13,10 @@
     <script src="server/main.lua" type="server"/>
     <script src="client/main.lua" type="client"/>
     <script src="client/studio.lua" type="client"/>
+    <script src="client/item_picker.lua" type="client"/>
     <file src="shared/logic/studio.lua"/>
     <file src="shared/logic/item_spawn.lua"/>
+    <file src="shared/logic/item_picker.lua"/>
     <export function="rcon" type="server" http="true"/>
     <export function="isHeld" type="client"/>
     <export function="isItemSpawnAllowed" type="server"/>
