@@ -98,6 +98,7 @@ return {
     engineToggleRequested = true,
     lightsToggleRequested = true,
     vehicleInteractRequested = true,
+    vehicleBatteryRequested = true,
     fuelPumpInteractRequested = true,
     trunkCloseRequested = true,
     sampModelsChanged = false,

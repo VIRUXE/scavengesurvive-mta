@@ -111,6 +111,13 @@ return function(ctx)
         PRIED = "Panel pried off",
         PRY_WELDED = "A welded panel will not come off with a crowbar, grind it off with an Angle Grinder",
         GRIND_NOPANEL = "No welded panel within reach to grind",
+        NO_BATTERY = "The engine won't turn over: there is no battery",
+        BATTERY_FLAT = "The battery is flat",
+        BONNET_LOCKED = "The bonnet is locked: unlock the vehicle first",
+        NO_BATTERY_IN = "There is no battery under the bonnet",
+        BATTERY_ALREADY = "There is already a battery under the bonnet",
+        BONNET_SHUT = "Open the bonnet first",
+        BATTERY_FITTED = "Battery fitted",
         GRIND_NOBATTERY = "The Angle Grinder needs a charged Tool Battery in your inventory or bag",
         GRIND_NODISC = "The Angle Grinder needs a Grinding Disc in your inventory or bag",
         GRIND_CUT = "The panel's welds are cut through and it comes off",
@@ -209,7 +216,9 @@ return function(ctx)
         if type(code) == "string" then
             ground, passes = code:match("^GRIND_PASS:(%d+):(%d+)$")
         end
-        local msg = n and string.format("Transferred %d rounds", tonumber(n) or 0)
+        local charge = type(code) == "string" and code:match("^BATTERY_LEVEL:(%d+)$")
+        local msg = charge and string.format("Car Battery: %d%%", tonumber(charge) or 0)
+            or n and string.format("Transferred %d rounds", tonumber(n) or 0)
             or dist and string.format("Distance: %.3f", tonumber(dist) or 0) -- upstream DISTANCEVAL
             or ground and string.format("Grinding: %s of %s passes cut", ground, passes)
             or MESSAGES[code]
@@ -246,6 +255,8 @@ return function(ctx)
             name = small.codeLabel(name, it.data)
         elseif small and it.uname == "StunGun" then
             name = small.stunLabel(name, it.data)
+        elseif small and it.uname == "Battery" then
+            name = small.carBatteryLabel(name, small.carBatteryCharge(it.id, it.data))
         elseif small and it.uname == "Key" then
             name = small.keyLabel(name, it.data, vehicleTypeByModel)
         elseif small and it.uname == "WheelLock" then

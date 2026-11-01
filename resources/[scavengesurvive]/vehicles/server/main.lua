@@ -22,6 +22,14 @@ do
     vlogic = assert(loadstring(src, "=vehicles/vehicle.lua"))()
 end
 
+local battery
+do
+    local f = fileOpen("shared/logic/battery.lua", true)
+    local src = fileRead(f, fileGetSize(f))
+    fileClose(f)
+    battery = assert(loadstring(src, "=vehicles/battery.lua"))()
+end
+
 local fuelPumps
 do
     local f = fileOpen("shared/logic/fuel-pumps.lua", true)
@@ -62,14 +70,14 @@ local USED_TICK_MS = 300000
 
 local SELECT_VEHICLES = "SELECT v.id, v.spawn_id, v.type_uname, v.model, v.x, v.y, v.z, v.rz, "
     .. "v.health, v.fuel, v.locked, v.damage, v.carmour, v.gas_bottles, v.key_code, v.keypad_code, "
-    .. "v.trailer_id, v.left_spawn, "
+    .. "v.trailer_id, v.left_spawn, v.battery, v.battery_since, "
     .. "c.id AS container_id, "
     .. "s.x AS spawn_x, s.y AS spawn_y FROM vehicles v LEFT JOIN containers c ON c.owner_vehicle_id = v.id "
     .. "LEFT JOIN vehicle_spawns s ON s.id = v.spawn_id"
 
 local INSERT_VEHICLE = "INSERT INTO vehicles (spawn_id, type_uname, model, x, y, z, rz, "
-    .. "health, fuel, locked, damage, key_code, trailer_id) "
-    .. "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    .. "health, fuel, locked, damage, key_code, trailer_id, battery, battery_since) "
+    .. "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 
 local SELECT_SPAWNS = "SELECT id, x, y, z, rz, group_name, type_name, categories, sizes "
     .. "FROM vehicle_spawns WHERE enabled = 1"
@@ -146,6 +154,15 @@ local function markUsed(v)
     end
 end
 
+local function unixNow()
+    return getRealTime().timestamp
+end
+
+-- the battery's level now; nil: none installed
+local function batteryLevel(inf)
+    return battery.current(inf.battery, inf.batterySince, unixNow())
+end
+
 local function toast(player, code)
     if isElement(player) then
         triggerClientEvent(player, "toastShown", player, code)
@@ -220,7 +237,13 @@ local function create(row)
         leftSpawn = (tonumber(row.left_spawn) or 0) > 0,
         damage = row.damage and row.damage ~= "" and row.damage ~= false and fromJSON(row.damage) or {},
         usedTick = 0,
+        bay = false,
+        battery = row.battery and tonumber(row.battery) or nil,
+        batterySince = row.battery_since and tonumber(row.battery_since) or unixNow(),
     }
+    local bayType = exports.data:vehicleType(row.type_uname)
+    info[v].bay = battery.hasBay(row.model, bayType, vlogic.DOORLESS_MODELS)
+    setElementData(v, "vehicles.bay", info[v].bay, "broadcast", "deny")
 
     carmourSrv.load(v, row.carmour)
     gasSrv.load(v, row.gas_bottles)
@@ -277,6 +300,8 @@ local function spawnAt(s, chance, cb)
         damage = damage and toJSON(damage) or nil,
         key_code = nil,
         trailer_id = nil,
+        battery = battery.spawnLevel(math.random),
+        battery_since = unixNow(),
     }
     local params = {
         row.spawn_id,
@@ -292,7 +317,9 @@ local function spawnAt(s, chance, cb)
         row.damage,
         row.key_code,
         row.trailer_id,
-        n = 13,
+        row.battery,
+        row.battery_since,
+        n = 15,
     }
     db.exec(INSERT_VEHICLE, params, function(ok, ctx, _, insertId)
         local v = nil
@@ -475,6 +502,8 @@ local function flushAll()
             end
             rows[#rows + 1] = {
                 id = i.id,
+                battery = i.battery,
+                since = i.battery and i.batterySince or nil,
                 x = x,
                 y = y,
                 z = z,
@@ -498,8 +527,28 @@ end
 -- 1-second simulation tick for fuel consumption and low-health stalls
 local function tickSimulation()
     for v, inf in pairs(info) do
+        if
+            isElement(v)
+            and inf.bay
+            and inf.battery
+            and not getVehicleEngineState(v)
+            and getVehicleOverrideLights(v) == 2
+        then
+            -- headlights left on with the engine off flatten the battery; a flat one puts them out
+            local level = battery.lightsDrain(batteryLevel(inf), 1.0)
+            inf.battery, inf.batterySince = level, unixNow()
+            if level < battery.START_MIN then
+                setVehicleOverrideLights(v, 1)
+            end
+        end
         if isElement(v) and getVehicleEngineState(v) then
             local vt = exports.data:vehicleType(inf.uname)
+            if inf.bay and inf.battery then
+                local vx, vy, vz = getElementVelocity(v)
+                local kmh = math.sqrt(vx * vx + vy * vy + vz * vz) * 150
+                inf.battery = battery.recharge(batteryLevel(inf), 1.0, kmh)
+                inf.batterySince = unixNow()
+            end
             if vt and not vt.noEngine and (vt.maxFuel or 0) > 0 then
                 local vx, vy, vz = getElementVelocity(v)
                 local speedKmh = math.sqrt(vx * vx + vy * vy + vz * vz) * 150
@@ -655,6 +704,12 @@ net.handler("engineToggleRequested", function(player)
             end
             return
         end
+        if inf.bay then
+            local started, why = battery.canStart(batteryLevel(inf))
+            if not started then
+                return toast(player, why)
+            end
+        end
         setVehicleEngineState(v, true)
     else
         setVehicleEngineState(v, false)
@@ -668,6 +723,15 @@ net.handler("lightsToggleRequested", function(player)
         return
     end
     local curr = getVehicleOverrideLights(v)
+    local inf = info[v]
+    local engineOn = getVehicleEngineState(v)
+    if curr ~= 2 and inf and inf.bay and not engineOn then
+        -- with the engine off the lights run off the battery: none or a flat one gives nothing
+        local ok, why = battery.canStart(batteryLevel(inf))
+        if not ok then
+            return toast(player, why)
+        end
+    end
     setVehicleOverrideLights(v, curr == 2 and 1 or 2)
 end, { rate = 3 })
 
@@ -1245,6 +1309,108 @@ end, 60000, 0)
 -- getVehicleWheelStates order (front-left, rear-left, front-right, rear-right) -> upstream tyre repair message
 local TIRE_REPAIRED = { "TIREREPFL", "TIREREPBL", "TIREREPFR", "TIREREPBR" }
 
+-- Car batteries: the bonnet opens with a tap (Case 1c below); under it a hold takes the battery out into the empty
+-- hands (vehicleBatteryRequested) and a Car Battery in hand is fitted. Both are a 3 s hold in front of the car.
+local BATTERY_HOLD_MS = 3000
+local FIT_BATTERY_SQL = "UPDATE vehicles SET battery = ?, battery_since = ? WHERE id = ?"
+
+local function atBonnet(player, vehicle)
+    local inf = info[vehicle]
+    if not (isElement(vehicle) and inf and inf.bay) or isPedDead(player) or getPedOccupiedVehicle(player) then
+        return false
+    end
+    local px, py, pz = getElementPosition(player)
+    local vx, vy, vz = getElementPosition(vehicle)
+    local _, _, vrz = getElementRotation(vehicle)
+    local near = getDistanceBetweenPoints3D(px, py, pz, vx, vy, vz) <= vlogic.maxReachDistance("medium")
+    return near and vlogic.isFront(vlogic.angleToVehicle(px, py, vx, vy, vrz))
+end
+
+local function fitBattery(player, vehicle, held)
+    cancelHoldAction(player)
+    setPedAnimation(player, "COP_AMBIENT", "COPBROWSE_LOOP", -1, true, false, false, false)
+    triggerClientEvent(player, "vehicleHoldStarted", player, "Fitting battery", BATTERY_HOLD_MS)
+    local timer = setTimer(function(p, veh, itemId)
+        activeActions[p] = nil
+        if not isElement(p) or not isElement(veh) then
+            return
+        end
+        setPedAnimation(p, nil)
+        local vinf = info[veh]
+        local cur = exports.items:getHeld(p)
+        local open = getVehicleDoorOpenRatio(veh, 0) > 0.5
+        if not vinf or vinf.battery or vinf.locked > 0 or not open or not cur or cur.id ~= itemId then
+            return
+        end
+        if not atBonnet(p, veh) then
+            return
+        end
+        local stored = type(cur.data) == "table" and (type(cur.data[1]) == "table" and cur.data[1] or cur.data) or {}
+        vinf.battery = math.max(0, math.min(100, tonumber(stored.charge) or battery.SPAWN_MIN))
+        vinf.batterySince = unixNow()
+        local args = { vinf.battery, vinf.batterySince, vinf.id }
+        db.exec(FIT_BATTERY_SQL, args)
+        exports.items:destroyItem(itemId, p)
+        toast(p, "BATTERY_FITTED")
+    end, BATTERY_HOLD_MS, 1, player, vehicle, held.id)
+    activeActions[player] = { actionType = "battery", vehicle = vehicle, timer = timer }
+end
+
+local function removeBattery(player, vehicle)
+    cancelHoldAction(player)
+    setPedAnimation(player, "COP_AMBIENT", "COPBROWSE_LOOP", -1, true, false, false, false)
+    triggerClientEvent(player, "vehicleHoldStarted", player, "Removing battery", BATTERY_HOLD_MS)
+    local timer = setTimer(function(p, veh)
+        activeActions[p] = nil
+        if not isElement(p) or not isElement(veh) then
+            return
+        end
+        setPedAnimation(p, nil)
+        local vinf = info[veh]
+        local open = getVehicleDoorOpenRatio(veh, 0) > 0.5
+        local cid = charId(p)
+        if not vinf or not vinf.battery or vinf.locked > 0 or not open or not cid or exports.items:getHeld(p) then
+            return
+        end
+        if not atBonnet(p, veh) then
+            return
+        end
+        local level = batteryLevel(vinf)
+        vinf.battery, vinf.batterySince = nil, unixNow()
+        db.exec("UPDATE vehicles SET battery = NULL WHERE id = ?", { vinf.id })
+        if getVehicleEngineState(veh) then
+            setVehicleEngineState(veh, false)
+        end
+        db.call("item_create_held", { "Battery", cid }, function(res, c)
+            if res and res.ok and isElement(c.p) then
+                local newId = res.payload.item_id
+                local data = { charge = level }
+                db.exec("UPDATE items SET data = ? WHERE id = ?", { toJSON(data), newId })
+                exports.items:setHeld(c.p, { id = newId, uname = "Battery", hp = 2, data = data })
+                toast(c.p, string.format("BATTERY_LEVEL:%d", math.floor(level + 0.5)))
+            end
+        end, { p = p })
+    end, BATTERY_HOLD_MS, 1, player, vehicle)
+    activeActions[player] = { actionType = "battery", vehicle = vehicle, timer = timer }
+end
+
+net.handler("vehicleBatteryRequested", function(player, vehicle)
+    local inf = info[vehicle]
+    if not atBonnet(player, vehicle) or exports.items:getHeld(player) or activeActions[player] then
+        return
+    end
+    if inf.locked > 0 then
+        return toast(player, "BONNET_LOCKED")
+    end
+    if getVehicleDoorOpenRatio(vehicle, 0) < 0.5 then
+        return toast(player, "BONNET_SHUT")
+    end
+    if not inf.battery then
+        return toast(player, "NO_BATTERY_IN")
+    end
+    removeBattery(player, vehicle)
+end, { rate = 3 })
+
 -- Roadside interaction: repair, locksmith, lock-breaking, trunk container, refuelling, headlights, wheels
 net.handler("vehicleInteractRequested", function(player, vehicle)
     if not isElement(vehicle) or not info[vehicle] or isPedDead(player) then
@@ -1347,6 +1513,27 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
         exports.items:destroyItem(held.id, player)
         toast(player, "REPAIRED")
         return
+    end
+
+    -- Case 1c: the bonnet of an unlocked car opens and shuts with empty hands; a Car Battery in hand is fitted while
+    -- it is open (taking one out is the hold, vehicleBatteryRequested)
+    if vlogic.isFront(angle) and inf.bay and (not held or uname == "Battery") then
+        if inf.locked > 0 then
+            return toast(player, "BONNET_LOCKED")
+        end
+        local open = getVehicleDoorOpenRatio(vehicle, 0) > 0.5
+        if not held then
+            setVehicleDoorOpenRatio(vehicle, 0, open and 0 or 1, 500)
+            markUsed(vehicle)
+            return
+        end
+        if not open then
+            return toast(player, "BONNET_SHUT")
+        end
+        if inf.battery then
+            return toast(player, "BATTERY_ALREADY")
+        end
+        return fitBattery(player, vehicle, held)
     end
 
     -- Case 1b: Front (Bonnet) Repair

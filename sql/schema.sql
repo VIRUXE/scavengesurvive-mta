@@ -350,6 +350,8 @@ CREATE TABLE IF NOT EXISTS `vehicles` (
   `last_used_at` datetime DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `battery` float DEFAULT NULL,
+  `battery_since` int(10) unsigned DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `ix_vehicles_spawn` (`spawn_id`),
   KEY `fk_vehicles_trailer` (`trailer_id`),
@@ -1977,8 +1979,10 @@ BEGIN
   UPDATE vehicles v
     JOIN JSON_TABLE(p_rows, '$[0][*]' COLUMNS (
       id INT PATH '$.id', x FLOAT PATH '$.x', y FLOAT PATH '$.y', z FLOAT PATH '$.z', rz FLOAT PATH '$.rz',
-      health FLOAT PATH '$.health', fuel FLOAT PATH '$.fuel', locked TINYINT PATH '$.locked')) j ON j.id = v.id
-    SET v.x = j.x, v.y = j.y, v.z = j.z, v.rz = j.rz, v.health = j.health, v.fuel = j.fuel, v.locked = j.locked;
+      health FLOAT PATH '$.health', fuel FLOAT PATH '$.fuel', locked TINYINT PATH '$.locked',
+      battery FLOAT PATH '$.battery', battery_since INT UNSIGNED PATH '$.since')) j ON j.id = v.id
+    SET v.x = j.x, v.y = j.y, v.z = j.z, v.rz = j.rz, v.health = j.health, v.fuel = j.fuel, v.locked = j.locked,
+        v.battery = j.battery, v.battery_since = j.battery_since;
   SET v_n = ROW_COUNT();
   COMMIT;
   SELECT 1 AS ok, 'OK' AS code, JSON_OBJECT('updated', CAST(v_n AS SIGNED)) AS payload;

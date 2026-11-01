@@ -93,6 +93,9 @@ return function(ctx)
         if r.uname == "StunGun" then
             return small.stunLabel(t and t.name or r.uname, r.data)
         end
+        if r.uname == "Battery" then
+            return small.carBatteryLabel(t and t.name or r.uname, small.carBatteryCharge(r.id, r.data))
+        end
         if r.uname == "Key" then
             return small.keyLabel(t and t.name or r.uname, r.data, vehicleTypeByModel)
         end

@@ -41,6 +41,7 @@ return function(ctx)
         Crowbar = true,
         LockBreaker = true,
         Headlight = true,
+        Battery = true,
         Wheel = true,
     }
 
@@ -255,6 +256,30 @@ return function(ctx)
             local localX = dx * math.cos(rad) + dy * math.sin(rad)
             local localY = -dx * math.sin(rad) + dy * math.cos(rad)
             local angle = (math.deg(math.atan2(localX, localY)) + 360) % 360
+            local isFront = angle < 25 or angle > 335
+            -- empty hands at the bonnet: a tap opens or shuts it, a hold takes the battery out (vehicles server)
+            if not uname and isFront and exports.vehicles:hasBatteryBay(nearVeh) then
+                blockEnterUntil = getTickCount() + TRUNK_ENTER_BLOCK_MS
+                if isTimer(interactHoldTimer) then
+                    return
+                end
+                local key = string.lower(getKeyBoundToCommand("interact") or "f")
+                local startTick = getTickCount()
+                local bonnetVeh = nearVeh
+                interactHoldTimer = setTimer(function()
+                    local heldMs = getTickCount() - startTick
+                    local released = not isKeyHeld(key, "interact")
+                    if released or heldMs >= 500 then
+                        killTimer(interactHoldTimer)
+                        interactHoldTimer = nil
+                        local eventName = heldMs >= 500 and "vehicleBatteryRequested" or "vehicleInteractRequested"
+                        if isElement(bonnetVeh) then
+                            triggerServerEvent(eventName, localPlayer, bonnetVeh)
+                        end
+                    end
+                end, 50, 0)
+                return
+            end
             local isRear = angle > 155 and angle < 205
             if (uname and VEHICLE_TOOLS[uname]) or isRear then
                 blockEnterUntil = getTickCount() + TRUNK_ENTER_BLOCK_MS

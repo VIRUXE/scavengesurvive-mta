@@ -118,6 +118,27 @@ function M.diceLanding(x, y, facing)
     return x - M.DICE_THROW * math.sin(rad), y + M.DICE_THROW * math.cos(rad)
 end
 
+-- Car Battery: the percent it holds, from its data { charge = n } (either JSON shape); a loot battery without data
+-- has a level rolled from its id (15..100), so it is the same every time it is looked at and never drains lying about
+function M.carBatteryCharge(itemId, data)
+    local stored = tonumber(unwrap(data).charge)
+    if stored then
+        return math.max(0, math.min(100, stored))
+    end
+    local s = (math.floor(tonumber(itemId) or 0) * 2654435761) % 2147483647
+    s = (16807 * (s + 1)) % 2147483647
+    s = (16807 * s) % 2147483647
+    return 15 + math.floor((s - 1) / 2147483646 * 86)
+end
+
+function M.hasCarBatteryCharge(data)
+    return tonumber(unwrap(data).charge) ~= nil
+end
+
+function M.carBatteryLabel(name, charge)
+    return string.format("%s (%d%%)", name, math.floor(charge + 0.5))
+end
+
 -- Stun gun: charged by a Tool Battery, spent by one hit
 function M.isCharged(data)
     return tonumber(unwrap(data).charged) == 1

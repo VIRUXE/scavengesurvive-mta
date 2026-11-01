@@ -149,6 +149,11 @@ function tryGasMount(heldUname)
     return false
 end
 
+-- export: the vehicle has an engine under a bonnet (a battery to take or fit); the server publishes it
+function hasBatteryBay(vehicle)
+    return isElement(vehicle) and getElementData(vehicle, "vehicles.bay") == true
+end
+
 -- upstream's KEY_SUBMISSION ("2" / Num+) toggles the lock from inside a vehicle; /lock does the same
 local function requestLockToggle()
     if getPedOccupiedVehicle(localPlayer) then

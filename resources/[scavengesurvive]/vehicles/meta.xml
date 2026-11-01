@@ -13,6 +13,7 @@
     <script src="client/carmour.lua" type="client"/>
     <file src="shared/logic/spawn.lua"/>
     <file src="shared/logic/vehicle.lua"/>
+    <file src="shared/logic/battery.lua"/>
     <file src="shared/logic/fuel-pumps.lua"/>
     <file src="shared/logic/overheat.lua"/>
     <file src="shared/logic/carmour.lua"/>
@@ -34,6 +35,7 @@
     <export function="isArmoured" type="server"/>
     <export function="hasCarmourSlots" type="server"/>
     <export function="getGasBottles" type="server"/>
+    <export function="hasBatteryBay" type="client"/>
     <export function="nearbyTrailerDoor" type="client"/>
     <export function="tryTrailerDoor" type="client"/>
     <export function="tryGasMount" type="client"/>

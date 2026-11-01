@@ -388,6 +388,14 @@ local TIP_FOOTER = "Type /tooltips to toggle these messages"
 addEventHandler("itemMoved", root, function(_, from, to)
     local item = state.held[source]
     if from == "world" and to == "held" and item then
+        if item.uname == "Battery" then
+            local level = math.floor(small.carBatteryCharge(item.id, item.data) + 0.5)
+            -- a loot battery keeps the level it showed from here on: the vehicle reads it from the item's data
+            if not small.hasCarBatteryCharge(item.data) then
+                hands.syncHeldData(source, item, { charge = level })
+            end
+            triggerClientEvent(source, "toastShown", source, string.format("BATTERY_LEVEL:%d", level))
+        end
         local key = item.uname:sub(1, 9) .. "_T"
         local text = exports.data:t(exports.auth:getLanguage(source), key)
         if text ~= key then
