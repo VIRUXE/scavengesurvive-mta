@@ -926,7 +926,9 @@ return function(ctx)
         if opts.data then
             item.data = opts.data
         elseif type(item.data) == "table" and item.data.placed then
-            item.data.placed = nil
+            -- 0, not nil: a shield's data is only { placed }, and an emptied table encodes to nothing, so the row
+            -- would keep placed = 1 and the dropped shield would stand again
+            item.data.placed = 0
         end
         if item.data then
             M.queueData(item)
