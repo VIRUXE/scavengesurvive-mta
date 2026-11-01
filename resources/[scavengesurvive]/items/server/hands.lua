@@ -17,6 +17,7 @@ return function(ctx)
     local GIVE_REACH = 1.5 -- metres to the player an item can be handed to
     local lastReload = {}
     local containers, cooking, small, machinesSrv, furnitureSrv = nil, nil, nil, nil, nil
+    local parachuteSrv = nil
     local M = {}
 
     function M.setContainers(c)
@@ -34,6 +35,11 @@ return function(ctx)
 
     function M.setSmall(s)
         small = s
+    end
+
+    -- server/parachute.lua: the worn Parachute is GTA's parachute weapon
+    function M.setParachute(p)
+        parachuteSrv = p
     end
 
     -- server/furniture.lua (#148): items put on desks and tables or shown in a gun case, the furniture never picked up
@@ -108,6 +114,10 @@ return function(ctx)
         if slot == "bag" then
             return M.setWorn(player, item)
         end
+        if slot == "parachute" then
+            state.parachute[player] = item
+            return parachuteSrv and parachuteSrv.apply(player, item)
+        end
         if state[slot] then
             state[slot][player] = item
             publish(player, "items." .. slot, item)
@@ -122,6 +132,7 @@ return function(ctx)
                 publish(player, "items." .. slot, nil)
             end
         end
+        M.setGear(player, "parachute", nil)
     end
 
     -- Ammo changes on every shot: the latest data of each held item waits here and reaches the DB in one
@@ -313,15 +324,15 @@ return function(ctx)
         end
         db.query(
             "SELECT id, type_uname AS uname, hitpoints AS hp, data, holder_kind AS kind FROM items "
-                .. "WHERE holder_char_id = ? AND holder_kind IN ('held', 'bag', 'hat', 'mask', 'armour', 'holster')",
+                .. "WHERE holder_char_id = ? AND holder_kind IS NOT NULL",
             { cid },
             function(rows, c)
                 if not isElement(c.player) or rows == false then
                     return
                 end
                 local held, bag
-                local gear = { hat = nil, mask = nil, armour = nil, holster = nil }
-                local isGear = { hat = true, mask = true, armour = true, holster = true }
+                local gear = { hat = nil, mask = nil, armour = nil, holster = nil, parachute = nil }
+                local isGear = { hat = true, mask = true, armour = true, holster = true, parachute = true }
                 for _, row in ipairs(rows) do
                     row.data = decodeData(row.data)
                     if row.kind == "bag" then

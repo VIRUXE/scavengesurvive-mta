@@ -42,6 +42,12 @@ return function(ctx)
         clothesRef = c
     end
 
+    -- server/parachute.lua: Y with the Parachute in hand puts it on (upstream KEY_YES)
+    local parachuteRef
+    function M.setParachute(p)
+        parachuteRef = p
+    end
+
     function M.openContainerId(player)
         local cont = activeContainer[player]
         if not cont then
@@ -224,6 +230,9 @@ return function(ctx)
         local t = itemType(item.uname)
         if t and t.category == "bag" then
             return wearBag(player, cid, item)
+        end
+        if item.uname == "Parachute" and parachuteRef then
+            return parachuteRef.equip(player, item.id)
         end
 
         local cont = activeContainer[player]

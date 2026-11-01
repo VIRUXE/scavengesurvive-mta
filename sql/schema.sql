@@ -171,7 +171,7 @@ CREATE TABLE IF NOT EXISTS `items` (
   `container_id` int(11) DEFAULT NULL,
   `slot` tinyint(4) DEFAULT NULL,
   `holder_char_id` int(11) DEFAULT NULL,
-  `holder_kind` enum('held','holster','bag','hat','mask','armour') DEFAULT NULL,
+  `holder_kind` enum('held','holster','bag','hat','mask','armour','parachute') DEFAULT NULL,
   `loot_spawn_id` int(11) DEFAULT NULL,
   `loot_zone` varchar(8) DEFAULT NULL,
   `despawn_at` datetime DEFAULT NULL,
@@ -1429,7 +1429,7 @@ BEGIN
   DECLARE v_free_slot INT DEFAULT NULL;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
 
-  IF p_holder_kind NOT IN ('hat', 'mask', 'armour', 'holster', 'bag') THEN
+  IF p_holder_kind NOT IN ('hat', 'mask', 'armour', 'holster', 'bag', 'parachute') THEN
     SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid holder_kind for item_unwear';
   END IF;
 
@@ -1503,7 +1503,7 @@ BEGIN
   DECLARE v_cont_kind VARCHAR(16) DEFAULT NULL;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
 
-  IF p_holder_kind NOT IN ('hat', 'mask', 'armour', 'holster', 'bag') THEN
+  IF p_holder_kind NOT IN ('hat', 'mask', 'armour', 'holster', 'bag', 'parachute') THEN
     SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid holder_kind for item_wear';
   END IF;
 

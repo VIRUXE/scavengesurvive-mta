@@ -232,7 +232,7 @@ return function(ctx)
         end
         -- food is eaten; a held treatment starts its hold, and letting go of the key cancels it (items, #94);
         -- held Clothes start the clothes change (#110); a liquid container is drunk from, sip per hold (#122);
-        -- a Note is read or written and a Locator traces its phone (#136)
+        -- a Note is read or written and a Locator traces its phone (#136); a Parachute is put on
         local drinkable = held and held.category == "liquid"
         local heldType = held and held.uname and exports.data:itemType(held.uname)
         local isExplosive = heldType and heldType.explosive
@@ -249,6 +249,7 @@ return function(ctx)
                 or held.uname == "Locator"
                 or held.uname == "Shield"
                 or held.uname == "HerpDerp"
+                or held.uname == "Parachute"
             )
         then
             return triggerServerEvent("itemUseRequested", localPlayer, held.id)
@@ -289,6 +290,10 @@ return function(ctx)
         end
         finishTweak()
         local held = ctx.getHeld()
+        -- empty hands take a worn parachute off first (upstream parachute.pwn: N with weapon 46 and nothing held)
+        if not held and getPedWeapon(localPlayer, 11) == 46 and getPedTotalAmmo(localPlayer, 11) > 0 then
+            return triggerServerEvent("itemUnwearRequested", localPlayer, "parachute")
+        end
         if not held and getElementData(localPlayer, "items.bag") then
             return triggerServerEvent("itemUnwearRequested", localPlayer, "bag")
         end

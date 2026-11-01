@@ -4,7 +4,7 @@
 -- interact key at a world item uses the held item with it); cooked food, or food that cannot be cooked, is eaten even
 -- there (upstream's campfire took any food back onto the fire).
 -- ctx = { medical, drinking, db, net, state, type, charId, toast, destroy, sendInventory, decodeData, cooking,
--- cookers, world, clothes, small, garden, ownedSql } built by server/main.lua.
+-- cookers, world, clothes, small, parachute, garden, ownedSql } built by server/main.lua.
 return function(ctx)
     local db, net, state = ctx.db, ctx.net, ctx.state
     local itemType, charId, toast = ctx.type, ctx.charId, ctx.toast
@@ -52,6 +52,9 @@ return function(ctx)
         end
         if uname == "Shield" and fromHand then
             return ctx.small.useShield(player, itemId)
+        end
+        if uname == "Parachute" and fromHand then
+            return ctx.parachute.equip(player, itemId)
         end
         if uname == "HerpDerp" then
             return ctx.small.useHerpDerp(player)

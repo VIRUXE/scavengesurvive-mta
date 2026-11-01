@@ -1,6 +1,7 @@
 -- The small item behaviours of upstream core/item/{note,sign,dice,locator,stungun,molotov}.pwn as pure rules
 -- (#136): the text a Note or Sign keeps, their labels, the dice roll and the rotation each face lands at, the
--- stun gun's charge and the petrol a Molotov takes from a can. Server and client read the same file.
+-- stun gun's charge and the petrol a Molotov takes from a can; also the Parachute's weapon and when it is spent.
+-- Server and client read the same file.
 local M = {}
 
 M.NOTE_MAX = 256 -- SetItemTypeMaxArrayData(Note, 256)
@@ -219,6 +220,18 @@ function M.lockerFacing(ix, iy, irz, px, py, prz)
         return false
     end
     return angleBetween(-math.sin(pr), math.cos(pr), -toPlayerX, -toPlayerY) <= M.LOCKER_FACING_ARC
+end
+
+-- The Parachute (item/parachute.pwn, whose _EquipParachute only said "Not implemented."): worn, it is GTA's
+-- parachute (weapon 46 in slot 11), which GTA takes away once it has carried the player down.
+M.PARACHUTE = "Parachute"
+M.PARACHUTE_WEAPON, M.PARACHUTE_SLOT = 46, 11
+M.PARACHUTE_FALL_MS = 5000 -- the parachute counts as spent only when it went this soon after the player was airborne
+
+-- true when the parachute the client had is gone because it was used: it had one, has none now, is alive and was
+-- airborne sinceAirborneMs ago (nil = not since it had it). A parachute taken off or lost to a death never counts.
+function M.parachuteSpent(had, has, dead, sinceAirborneMs)
+    return had and not has and not dead and sinceAirborneMs ~= nil and sinceAirborneMs <= M.PARACHUTE_FALL_MS
 end
 
 -- The body (item/torso.pwn, character/shared/logic/bodies.lua writes its data): a knife takes one raw Meat from it

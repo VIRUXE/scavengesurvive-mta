@@ -129,6 +129,7 @@ return {
     bodyInspected = true,
     fishCastRequested = true,
     fishCancelRequested = true,
+    parachuteSpent = true,
     fishingStarted = true,
     fishingStopped = true,
     potInspectRequested = true,

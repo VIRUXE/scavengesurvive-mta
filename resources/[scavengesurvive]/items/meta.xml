@@ -30,6 +30,8 @@
     <file src="shared/logic/gardening.lua"/>
     <file src="server/gardening.lua"/>
     <file src="server/smallitems.lua"/>
+    <file src="server/parachute.lua"/>
+    <file src="client/parachute.lua"/>
     <file src="shared/logic/machines.lua"/>
     <file src="server/machines.lua"/>
     <file src="shared/logic/furniture.lua"/>

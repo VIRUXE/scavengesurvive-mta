@@ -42,6 +42,7 @@ local state = {
     mask = {}, -- player -> { id, uname, hp, data } worn mask
     armour = {}, -- player -> { id, uname, hp, data } worn armour
     holster = {}, -- player -> { id, uname, hp, data } holstered weapon
+    parachute = {}, -- player -> { id, uname, hp, data } worn parachute (server/parachute.lua)
     typeCache = {}, -- uname -> item type or false
 }
 
@@ -247,6 +248,19 @@ local smallItems = loadFile("server/smallitems.lua")({
     garden = garden,
 })
 hands.setSmall(smallItems)
+-- the Parachute: worn, it is GTA's parachute weapon
+local parachute = loadFile("server/parachute.lua")({
+    db = db,
+    net = net,
+    state = state,
+    charId = charId,
+    toast = toast,
+    destroy = destroy,
+    hands = hands,
+    small = small,
+})
+hands.setParachute(parachute)
+containers.setParachute(parachute)
 -- the Fishing Rod (#141)
 loadFile("server/fishing.lua")({ db = db, net = net, state = state, toast = toast, world = world, fishing = fishing })
 -- the scrap machine, the refining machine and the water purifier (#145)
@@ -291,6 +305,7 @@ loadFile("server/use.lua")({
     openContainerId = containers.openContainerId,
     clothes = clothesInstance,
     small = smallItems,
+    parachute = parachute,
     garden = garden,
     ownedSql = OWNED_SQL,
 })
@@ -357,7 +372,7 @@ addEventHandler("itemMoved", root, function(_, from, to)
         if text ~= key then
             exports.ui:showTip(source, text, TIP_FOOTER, 20000)
         end
-    elseif from == "held" and to == "world" then
+    elseif from == "held" and (to == "world" or to == "parachute") then
         exports.ui:hideTip(source)
     end
 end)

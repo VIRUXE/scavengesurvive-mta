@@ -40,6 +40,7 @@ addEvent("potInspectRequested", true)
 addEvent("machineMenuRequested", true)
 addEvent("machineHoldReleased", true)
 addEvent("machineStartRequested", true)
+addEvent("parachuteSpent", true)
 
 -- server to client / client-local
 addEvent("inventorySynced", true)
