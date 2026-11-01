@@ -15,10 +15,10 @@ then runs itself in Blender (DragonFF) for each prop's dff and col.
     gas_bottle 20203 a propane bottle: the Airstream's own right-hand tank (the faces of the vanilla sm_airstrm_med_.dff
                      textured sm_airstreamside2 on the A-frame), stood on its base; one box of collision.
 
-    generator 20204  a portable open-frame site generator: the vanilla Y_GENERATOR's own yellow body, strap, stacks and
-                     dial panel (industrialext.txd) at half size without its plinth, the panel on +Y, in a chrome tube
-                     frame (cj_chromepipe) with a carry bar along X on top (centre at GENERATOR_HANDLE_Z);
-                     0.61 x 0.34 x 0.54 m, one box of collision.
+    generator 20204  a portable inverter generator after the Honda EU2200i: rounded red shell between black end caps, a
+                     carry handle along X on top (centre at GENERATOR_HANDLE_Z), a fuel cap, a control panel with two
+                     sockets on +Y, louvres on -Y; every surface a vanilla texture (GEN_TEXTURES, from five TXDs, merged);
+                     0.52 x 0.32 x 0.45 m, one box of collision.
 
 Origin: the centre of the base (x, y) with z = 0 at the lowest point; the front faces +Y.
 """
@@ -27,14 +27,12 @@ from __future__ import annotations
 import math
 import re
 import sys
-import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 PROP_MODELS = ROOT / "resources" / "[scavengesurvive]" / "prop_models"
 FILES = PROP_MODELS / "files"
 PROPS = PROP_MODELS / "props.lua"
-VANILLA = Path(tempfile.gettempdir()) / "make_props"  # vanilla DFFs a prop grafts from, cut out of gta3.img (`dffs` rows)
 
 SIZE, THICK, RIM = 1.0, 0.04, 0.04  # ls_hatch, metres; RIM: the share of the texture the edges show
 DAY, NIGHT = (0.38, 0.38, 0.38, 1.0), (0.12, 0.12, 0.13, 1.0)
@@ -99,55 +97,88 @@ def build_gas_bottle(ctx):
     return [(((lo[0] + hi[0]) / 2, (lo[1] + hi[1]) / 2, (lo[2] + hi[2]) / 2), ((hi[0] - lo[0]) / 2, (hi[1] - lo[1]) / 2, (hi[2] - lo[2]) / 2))]
 
 
-GENERATOR_HANDLE_Z = 0.52  # height of the carry bar's centre above the base (generator.dff, bar along X, x -0.29 .. 0.29, y 0)
-GEN_SRC = "y_generator.dff"  # vanilla Y_GENERATOR (920), cut out of gta3.img next to the build (main)
-GEN_TEXTURES = {"cj_yellowgenerator": 0, "cj_sheet2": 1, "cj_y_generatordetail": 2}
-GEN_SCALE, GEN_LIFT, GEN_STACK_Z = 0.5, 0.07, 0.45  # the stock unit at half size, sat on the frame; exhaust stacks cut at that height
-GEN_X, GEN_Y, GEN_ZB, GEN_HOOP_R = 0.292, 0.15, 0.035, 0.06  # the chrome frame's half length, half width, rail height, hoop corners
+GENERATOR_HANDLE_Z = 0.42  # height of the carry bar's centre above the base (generator.dff, bar along X, x -0.15 .. 0.15, y 0)
+GEN_HX, GEN_HY, GEN_Z0, GEN_Z1 = 0.25, 0.15, 0.06, 0.33  # the red shell's half length, half width, bottom and top
+# (source TXD, texture) per material, all vanilla: glossy red plastic, black plastic, a louvred vent, a double socket, rubber
+GEN_TEXTURES = [("cj_airprt.txd", "CJ_red_COUNTER"), ("ballys01.txd", "CJ_blackplastic"), ("a51.txd", "ventb64"), ("des_airfieldhus.txd", "cj_socket"), ("cj_airprt.txd", "CJ_RUBBER")]
+
+
+def gen_profile(scale):
+    """The shell's rounded-rectangle section (y, z), 16 points: big top corners, small bottom ones, shrunk about its centre."""
+    zc = (GEN_Z0 + GEN_Z1) / 2
+    out = []
+    for cy, cz, r, a0 in ((1, 1, 0.08, 0), (-1, 1, 0.08, 90), (-1, -1, 0.03, 180), (1, -1, 0.03, 270)):
+        for k in range(4):
+            a = math.radians(a0 + 30 * k)
+            y = cy * (GEN_HY - r) + r * math.cos(a)
+            z = (GEN_Z1 - r if cz > 0 else GEN_Z0 + r) + r * math.sin(a)
+            out.append((y * scale, zc + (z - zc) * scale))
+    return out
 
 
 def build_generator(ctx):
-    """Y_GENERATOR's own body (its plinth dropped, the control panel turned to +Y, half size) in a chrome tube frame: base
-    rails, an inverted-U hoop at each end, a carry bar along X across the hoops, two cradle bars and rubber feet."""
-    tube, chrome = ctx["tube"], 3
-    mid, dark = (0.75, 0.75, 0.77, 1.0), (0.12, 0.12, 0.13, 1.0)
-
-    def keep(texture, centre):  # not the plinth: the sheet-metal faces below the body
-        return texture.lower() in GEN_TEXTURES and not (texture.lower() == "cj_sheet2" and centre.z < -0.2)
-
-    def place(co):  # the graft (centred, foot on z 0) -> the prop: half size, turned 180 degrees, lifted onto the frame
-        z = co.z * GEN_SCALE + GEN_LIFT
-        if z > GEN_STACK_Z:
-            z = GEN_STACK_Z + (z - GEN_STACK_Z) * 0.3
-        return (-co.x * GEN_SCALE, -co.y * GEN_SCALE, z)
-
-    ctx["graft"](str(ctx["tmp"] / GEN_SRC), "Y_GENERATOR", keep, GEN_TEXTURES, place)
-
-    def arc(x, cy, cz, a0, a1):
-        return [(x, cy + GEN_HOOP_R * math.cos(math.radians(a0 + (a1 - a0) * k / 4)), cz + GEN_HOOP_R * math.sin(math.radians(a0 + (a1 - a0) * k / 4))) for k in range(5)]
-
-    top = GENERATOR_HANDLE_Z
-    for y in (-GEN_Y, GEN_Y):
-        tube((-GEN_X, y, GEN_ZB), (GEN_X, y, GEN_ZB), 0.013, 8, chrome, mid)
-    for x in (-GEN_X, GEN_X):
-        hoop = [(x, -GEN_Y, GEN_ZB)] + arc(x, -GEN_Y + GEN_HOOP_R, top - GEN_HOOP_R, 180, 90) + arc(x, GEN_Y - GEN_HOOP_R, top - GEN_HOOP_R, 90, 0) + [(x, GEN_Y, GEN_ZB)]
-        for a, b in zip(hoop, hoop[1:]):
-            tube(a, b, 0.013, 8, chrome, mid)
-    tube((-GEN_X, 0.0, top), (GEN_X, 0.0, top), 0.016, 8, chrome, mid)
-    for x in (-0.17, 0.17):
-        tube((x, -GEN_Y, 0.055), (x, GEN_Y, 0.055), 0.011, 8, chrome, mid)
-    for x in (-GEN_X + 0.03, GEN_X - 0.03):
-        for y in (-GEN_Y, GEN_Y):
-            tube((x, y, 0.0), (x, y, 0.022), 0.02, 8, chrome, dark)
-    return [((0.0, 0.0, 0.26), (0.3, 0.16, 0.26))]
+    """A portable inverter generator after the Honda EU2200i: a rounded red shell between black end caps on a black base,
+    the carry handle moulded into the top, a flat fuel cap at one end, the control panel (two sockets, switch, lamps) on
+    +Y, louvres on -Y and an exhaust grille on -X, the pull-start handle on +X."""
+    bm, box, tube, paint = ctx["bm"], ctx["box"], ctx["tube"], ctx["paint"]
+    red, black, vent, socket, rubber = 0, 1, 2, 3, 4
+    white, grey = (0.95, 0.95, 0.95, 1.0), (0.7, 0.7, 0.7, 1.0)
+    night = lambda c: (c[0] * 0.3, c[1] * 0.3, c[2] * 0.32, 1.0)
+    # the shell: the section lofted along X; the outer bands taper in and are the black end caps
+    stations = ((-GEN_HX, 0.86), (-GEN_HX + 0.02, 0.96), (-0.215, 1.0), (0.215, 1.0), (GEN_HX - 0.02, 0.96), (GEN_HX, 0.86))
+    rings = [[bm.verts.new((x, y, z)) for y, z in gen_profile(s)] for x, s in stations]
+    n = len(rings[0])
+    for i in range(len(rings) - 1):
+        cap = i != 2
+        for j in range(n):
+            k = (j + 1) % n
+            face = bm.faces.new((rings[i][j], rings[i][k], rings[i + 1][k], rings[i + 1][j]))
+            u0, u1 = (stations[i][0] + GEN_HX) / (2 * GEN_HX), (stations[i + 1][0] + GEN_HX) / (2 * GEN_HX)
+            paint(face, [(u0, j / n), (u0, (j + 1) / n), (u1, (j + 1) / n), (u1, j / n)], white, night(white), black if cap else red)
+    for ring in (rings[0], rings[-1]):
+        face = bm.faces.new(ring)
+        paint(face, [(0.5 + 0.5 * math.cos(2 * math.pi * i / n), 0.5 + 0.5 * math.sin(2 * math.pi * i / n)) for i in range(n)], white, night(white), black)
+    # the black base band under the shell, rubber feet
+    box((0.0, 0.0, 0.045), (0.47, 0.27, 0.05), black, None)
+    for x in (-0.19, 0.19):
+        for y in (-0.1, 0.1):
+            tube((x, y, 0.0), (x, y, 0.022), 0.022, 8, rubber, None)
+    # the control panel on +Y: a black plate on the lower half with two sockets, the eco switch and three lamps
+    box((0.03, GEN_HY + 0.002, 0.15), (0.3, 0.012, 0.13), black, None)
+    for x in (-0.06, 0.07):
+        box((x, GEN_HY + 0.01, 0.14), (0.09, 0.006, 0.07), socket, None)
+    box((0.15, GEN_HY + 0.011, 0.18), (0.03, 0.008, 0.02), black, grey)
+    for i, z in enumerate((0.2, 0.18, 0.16)):
+        box((-0.13, GEN_HY + 0.01, z), (0.012, 0.006, 0.012), red if i else black, None)
+    # louvres on -Y, the exhaust grille on the -X end, the pull-start handle on the +X end
+    box((-0.03, -GEN_HY - 0.001, 0.19), (0.24, 0.006, 0.14), vent, None)
+    box((-GEN_HX - 0.001, 0.0, 0.17), (0.006, 0.17, 0.1), vent, None)
+    box((GEN_HX + 0.012, 0.03, 0.2), (0.016, 0.08, 0.02), black, None)
+    # the fuel cap: a flat black disc on the top at the +X end; a fuel gauge window beside it
+    tube((0.195, 0.0, GEN_Z1 - 0.004), (0.195, 0.0, GEN_Z1 + 0.012), 0.036, 12, black, None)
+    tube((0.195, 0.0, GEN_Z1 + 0.012), (0.195, 0.0, GEN_Z1 + 0.022), 0.024, 12, black, grey)
+    # the carry handle moulded into the top: two red posts and a black grip bar along X at GENERATOR_HANDLE_Z
+    for x in (-0.12, 0.12):
+        box((x, 0.0, (GEN_Z1 + GENERATOR_HANDLE_Z) / 2), (0.05, 0.07, GENERATOR_HANDLE_Z - GEN_Z1 + 0.02), red, None)
+    tube((-0.145, 0.0, GENERATOR_HANDLE_Z), (0.145, 0.0, GENERATOR_HANDLE_Z), 0.022, 10, black, None)
+    return [((0.0, 0.0, 0.22), (0.26, 0.16, 0.22))]
 
 
 PROPS_TABLE = [
     {"name": "ls_hatch", "id": 20201, "dist": 150, "source": "zombtest1.txd", "textures": ["pave_manhole1"], "build": build_ls_hatch},
     {"name": "welder", "id": 20202, "dist": 100, "source": "dynbarrels.txd", "textures": ["redmetal", "yellowmetal", "alumplat64"], "build": build_welder},
     {"name": "gas_bottle", "id": 20203, "dist": 100, "source": "trailers.txd", "textures": [TANK_TEXTURE], "build": build_gas_bottle},
-    {"name": "generator", "id": 20204, "dist": 100, "source": "industrialext.txd", "textures": ["cj_yellowgenerator", "cj_sheet2", "CJ_Y_GENERATORDETAIL", "cj_chromepipe"], "dffs": [GEN_SRC], "build": build_generator},
+    {"name": "generator", "id": 20204, "dist": 100, "sources": GEN_TEXTURES, "build": build_generator},
 ]
+
+
+def prop_sources(prop):
+    """(source TXD, texture) per material: a row's `sources`, or its one `source` with each of its `textures`."""
+    return prop.get("sources") or [(prop["source"], t) for t in prop["textures"]]
+
+
+def prop_textures(prop):
+    return [t for _, t in prop_sources(prop)]
 
 
 def render_props() -> str:
@@ -203,7 +234,7 @@ def build_in_blender(out_dir: Path, names) -> None:
             continue
         for obj in list(bpy.data.objects):
             bpy.data.objects.remove(obj)
-        name, textures = prop["name"], prop["textures"]
+        name, textures = prop["name"], prop_textures(prop)
         scene = bpy.context.scene
         model = bpy.data.collections.new(name)
         scene.collection.children.link(model)
@@ -291,7 +322,7 @@ def build_in_blender(out_dir: Path, names) -> None:
             return (lo - shift, hi - shift)
 
         grafted = set()  # vanilla faces keep their own winding
-        ctx = {"bm": bm, "paint": paint, "box": box, "tube": tube, "graft": graft, "tmp": VANILLA}
+        ctx = {"bm": bm, "paint": paint, "box": box, "tube": tube, "graft": graft}
         boxes = prop["build"](ctx)
         if name != "ls_hatch":
             bmesh.ops.recalc_face_normals(bm, faces=[f for f in bm.faces if f not in grafted])
@@ -335,7 +366,7 @@ def main(argv=None) -> int:
     import subprocess
 
     from tools.extract_ped_models import find_blender
-    from tools.extract_samp_models import detect_gta, read_img_entry, read_img_index, trim_txd
+    from tools.extract_samp_models import detect_gta, merge_txd, read_img_entry, read_img_index, trim_txd
 
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("names", nargs="*", help="props to build (default: all)")
@@ -355,11 +386,11 @@ def main(argv=None) -> int:
     index = read_img_index(img)
     for prop in PROPS_TABLE:
         if prop["name"] in names:
-            txd = trim_txd(read_img_entry(img, index[prop["source"]]), {t.lower() for t in prop["textures"]})
-            (FILES / f"{prop['name']}.txd").write_bytes(txd)
-            for dff in prop.get("dffs", []):
-                VANILLA.mkdir(exist_ok=True)
-                (VANILLA / dff).write_bytes(read_img_entry(img, index[dff]))
+            parts = {}
+            for source, texture in prop_sources(prop):
+                parts.setdefault(source, set()).add(texture.lower())
+            txds = [trim_txd(read_img_entry(img, index[source]), keep) for source, keep in parts.items()]
+            (FILES / f"{prop['name']}.txd").write_bytes(txds[0] if len(txds) == 1 else merge_txd(txds))
     PROPS.write_text(render_props(), encoding="ascii", newline="\n")
     write_meta(PROP_MODELS)
     cmd = [str(blender), "-b", "--python", __file__, "--", str(FILES)] + names
