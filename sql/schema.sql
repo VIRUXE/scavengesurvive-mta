@@ -50,6 +50,12 @@ CREATE TABLE IF NOT EXISTS `anticheat_fields` (
   UNIQUE KEY `uq_anticheat_fields_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
+CREATE TABLE IF NOT EXISTS `anticheat_traps` (
+  `spot` smallint(6) NOT NULL,
+  `item_id` int(11) DEFAULT NULL,
+  PRIMARY KEY (`spot`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+
 CREATE TABLE IF NOT EXISTS `bans` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `account_id` int(11) DEFAULT NULL,

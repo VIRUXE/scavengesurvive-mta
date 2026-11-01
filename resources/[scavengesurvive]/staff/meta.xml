@@ -23,6 +23,9 @@
     <export function="getMotd" type="server"/>
     <export function="isOnDuty" type="server"/>
     <export function="reapplyDutySkin" type="server"/>
+    <export function="isFrozen" type="server"/>
+    <export function="notifyStaff" type="server"/>
+    <export function="autoBan" type="server"/>
     <export function="isMuted" type="server"/>
     <export function="logAction" type="server"/>
     <export function="mutePlayer" type="server"/>

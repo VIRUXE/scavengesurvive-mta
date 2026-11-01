@@ -34,7 +34,7 @@ files["resources/**/maps/server/**"] = { std = "lua51+mta_shared+mta_server", gl
 files["resources/**/maps/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "getMapStats" }, read_globals = { "restoreWorldModel" } }
 files["resources/**/maps/data/**"] = { std = "lua51", max_line_length = false }
 -- moveObject, createBlipAttachedTo (server) and createEffect (client) postdate the generated lists
-files["resources/**/loot/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "rollNear", "dropSupply", "dropWeaponCache", "supplyDropTypes", "dropStatus", "lootAllowances" }, read_globals = { "moveObject", "createBlipAttachedTo" } }
+files["resources/**/loot/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "rollNear", "pickItem", "dropSupply", "dropWeaponCache", "supplyDropTypes", "dropStatus", "lootAllowances" }, read_globals = { "moveObject", "createBlipAttachedTo" } }
 files["resources/**/loot/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "nearbyCrate", "tryOpenCrate" }, read_globals = { "createEffect" } }
 -- isPedDucked and getVehicleController postdate the generated .luacheck/mta_server.lua list
 files["resources/**/weapons/server/**"] = { std = "lua51+mta_shared+mta_server", read_globals = { "isPedDucked", "getVehicleController" } }
@@ -59,10 +59,10 @@ files["resources/**/building/server/**"] = { std = "lua51+mta_shared+mta_server"
 files["resources/**/building/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "tweakIsOpen", "tweakFinish" }, read_globals = { "playSoundFrontEnd" } }
 files["resources/**/crafting/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "groundCraft", "deconstruct", "workbenchCraft", "isConstructionTool" } }
 -- clearChatBox postdates the generated .luacheck/mta_server.lua list
-files["resources/**/staff/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "getLevel", "getMotd", "isOnDuty", "reapplyDutySkin", "isMuted", "logAction", "mutePlayer", "getLevelColour", "getLevelStyle", "runCommand" }, read_globals = { "clearChatBox", "getVehicleMaxPassengers", "removePedFromVehicle", "warpPedIntoVehicle", "getPedOccupiedVehicleSeat" } }
+files["resources/**/staff/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "getLevel", "getMotd", "isOnDuty", "reapplyDutySkin", "isMuted", "logAction", "mutePlayer", "getLevelColour", "getLevelStyle", "runCommand", "isFrozen", "notifyStaff", "autoBan" }, read_globals = { "clearChatBox", "getVehicleMaxPassengers", "removePedFromVehicle", "warpPedIntoVehicle", "getPedOccupiedVehicleSeat" } }
 -- the CEGUI grid list, combo box, memo and label functions postdate the generated .luacheck/mta_client.lua list
 files["resources/**/staff/client/**"] = { std = "lua51+mta_shared+mta_client", read_globals = { "guiCreateGridList", "guiGridListAddColumn", "guiGridListAddRow", "guiGridListClear", "guiGridListGetSelectedItem", "guiGridListSetItemColor", "guiGridListSetItemText", "guiGridListSetSortingEnabled", "guiCreateComboBox", "guiComboBoxAddItem", "guiComboBoxGetSelected", "guiComboBoxGetItemText", "guiCreateMemo", "guiMemoSetReadOnly", "guiMemoSetCaretIndex", "guiLabelSetColor", "guiLabelSetHorizontalAlign", "guiSetPosition", "guiGetInputMode" } }
-files["resources/**/anticheat/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "refreshFields", "isIdleKickEnabled", "setIdleKickEnabled", "toggleIdleKick", "getMaxTabOutTime", "setMaxTabOutTime" } }
+files["resources/**/anticheat/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "refreshFields", "isIdleKickEnabled", "setIdleKickEnabled", "toggleIdleKick", "getMaxTabOutTime", "setMaxTabOutTime" }, read_globals = { "setGarageOpen", "isPedWearingJetpack", "isElementInWater", "getPedOccupiedVehicleSeat", "isVehicleBlown", "getVehicleName", "getVehicleOccupants", "getVehicleTowedByVehicle", "getVehicleTowingVehicle", "isElementAttached" } }
 files["resources/**/chat/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "getRadio", "setChatMode", "sendAs", "sendGlobalExternal" } }
 files["resources/**/chat/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "radioOpen" } }
 -- getMaxPlayers/getServerName and the Discord Rich Presence functions postdate the generated .luacheck lists

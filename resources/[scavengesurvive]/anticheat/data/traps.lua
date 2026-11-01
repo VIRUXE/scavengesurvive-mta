@@ -1,0 +1,37 @@
+-- Derived from Southclaws/ScavengeSurvive (MPL-2.0). See THIRD_PARTY_NOTICES.md
+-- GENERATED FILE - do not edit; run: python -m tools.convert all
+-- Hacker traps: { x, y, z, loot table }; the spot number is the position in this list.
+
+return {
+    { -1849.03284, -103.55869, 4.64305, "world_military" },
+    { -1848.35547, -98.46133, 4.64475, "world_military" },
+    { -1844.83752, -101.30441, 4.64848, "world_military" },
+    { -1842.68433, -98.3279, 4.64715, "world_military" },
+    { -1842.06116, -103.07392, 4.6454, "world_military" },
+    { -1542.14001, -443.55999, 5.19, "world_police" },
+    { -362.127227, -1060.984008, 58.241569, "world_survivor" },
+    { 246.312789, 1780.512939, 4.162129, "world_military" },
+    { 246.760894, 1787.169311, 4.164539, "world_military" },
+    { 246.838943, 1777.742797, 4.161149, "world_military" },
+    { 247.033706, 1784.185424, 4.163459, "world_military" },
+    { 247.618255, 1785.863647, 4.16407, "world_military" },
+    { 248.001358, 1787.676757, 4.16472, "world_military" },
+    { 248.888107, 1785.989746, 4.16412, "world_military" },
+    { 248.984436, 1784.533447, 4.163599, "world_military" },
+    { 249.463699, 1782.034301, 4.16269, "world_military" },
+    { 249.651947, 1777.317626, 4.161009, "world_military" },
+    { 249.861343, 1785.931396, 4.1641, "world_military" },
+    { 250.966644, 1777.734375, 4.16117, "world_military" },
+    { 251.38092, 1781.127563, 4.16237, "world_military" },
+    { 251.440322, 1785.401123, 4.163919, "world_military" },
+    { 251.883483, 1783.548706, 4.163259, "world_military" },
+    { 252.487274, 1785.738159, 4.16405, "world_military" },
+    { 252.522598, 1785.029907, 4.16379, "world_military" },
+    { 252.917343, 1781.226562, 4.162409, "world_military" },
+    { 253.226806, 1783.215087, 4.163139, "world_military" },
+    { 253.905334, 1785.449951, 4.163949, "world_military" },
+    { 254.268676, 1784.390625, 4.163579, "world_military" },
+    { 254.308044, 1781.366699, 4.162489, "world_military" },
+    { 1229.78259, 53.5894, 13.2322, "world_police" },
+    { 7412.60131, 2543.074218, 25.582199, "world_military" },
+}

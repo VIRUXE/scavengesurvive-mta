@@ -176,6 +176,30 @@ local function fillLoveBoxes(done)
     end)
 end
 
+-- One item out of a loot table (upstream CreateLootItem): its uname and starting data (JSON text or nil), for the
+-- anticheat's hacker traps. nil, nil for an unknown table.
+function pickItem(tableName)
+    local tbl = lootTable(tostring(tableName))
+    if not tbl then
+        return nil, nil
+    end
+    local unames = {}
+    for _ = 1, 20 do
+        unames = roll.pick(tbl, 1, 100, 1, math.random)
+        if #unames > 0 then
+            break
+        end
+    end
+    local def = unames[1] and exports.data:itemType(unames[1])
+    if not def then
+        return nil, nil
+    end
+    local cal = def.categoryData and def.categoryData.calibre
+    local ammoTypes = cal and exports.data:ammoTypesForCalibre(cal) or nil
+    local medical = roll.MEDICAL_DATA[def.uname] and exports.character:medicalLootData(def.uname)
+    return def.uname, medical or roll.initialItemData(def, tostring(tableName), ammoTypes, math.random)
+end
+
 -- Rolls due spawns inside a box around (x, y): spawns are due when next_roll_at has passed and no item from the
 -- previous roll remains in the world; the zone must still have allowance and no player may be within
 -- world.min_player_distance of the point. Every roll of the batch goes to the DB in one loot_roll call.

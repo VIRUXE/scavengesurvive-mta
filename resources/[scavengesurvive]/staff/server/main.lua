@@ -25,11 +25,12 @@ local state = {
     banHolds = {}, -- staff member -> the player their open /ban dialogs froze
     lastKiller = {}, -- player -> name of the last player who killed them (for /report killer)
     kicked = {}, -- player -> true while a delayed kick is pending
+    autoBanned = {}, -- player -> true once anticheat's ban was sent (a failed ban clears it)
 }
 local ctx = { db = db, net = net, util = util, logic = logic, reg = logic.newRegistry(), state = state }
 
 local function isConsole(p)
-    return getElementType(p) == "console"
+    return p ~= nil and getElementType(p) == "console"
 end
 
 function ctx.level(p)
@@ -47,6 +48,9 @@ function ctx.accountId(p)
 end
 
 function ctx.name(p)
+    if p == nil then
+        return "Server"
+    end
     if isConsole(p) then
         return "Console"
     end
@@ -399,6 +403,7 @@ local function forget(p)
     state.dialogs[p] = nil
     state.lastKiller[p] = nil
     state.kicked[p] = nil
+    state.autoBanned[p] = nil
     modules.bans.release(p)
     modules.moderation.forget(p)
     modules.duty.forget(p)
@@ -452,6 +457,25 @@ end
 
 function isOnDuty(player)
     return state.duty[player] ~= nil
+end
+
+-- /freeze state only: isElementFrozen is also true while spectating, at a world button or in the dev studio
+function isFrozen(player)
+    return state.frozen[player] ~= nil
+end
+
+-- anticheat's staff-only warning (upstream ChatMsgAdmins from hack-detect)
+function notifyStaff(minLevel, text)
+    ctx.msgStaff(tonumber(minLevel) or 1, "%s", tostring(text))
+    return true
+end
+
+-- anticheat's automatic permanent ban (upstream BanPlayer(playerid, reason, -1, 0)); by_name 'Server'
+function autoBan(player, reason)
+    if not isElement(player) or getElementType(player) ~= "player" then
+        return false
+    end
+    return modules.bans.autoBan(player, tostring(reason))
 end
 
 -- Put the duty skin back on an on-duty member after something respawned them (character spawns with the stored skin).

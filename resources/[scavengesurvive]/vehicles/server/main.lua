@@ -190,7 +190,7 @@ local function create(row)
         util.log("vehicles", "warn", "createVehicle failed for %s (model %d)", row.type_uname, row.model)
         return nil
     end
-    setElementHealth(v, math.max(0, math.min(1000, tonumber(row.health) or 1000)))
+    setElementHealth(v, math.max(0, math.min(vlogic.HEALTH_MAX, tonumber(row.health) or vlogic.HEALTH_MAX)))
     setVehicleEngineState(v, false)
     local lockState = tonumber(row.locked) or 0
     setVehicleLocked(v, lockState > 0)

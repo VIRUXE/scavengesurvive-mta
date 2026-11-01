@@ -4,11 +4,22 @@
     <include resource="lib"/>
     <include resource="auth"/>
     <include resource="staff"/>
+    <include resource="character"/>
+    <include resource="loot"/>
+    <include resource="items"/>
     <script src="shared/events.lua" type="shared"/>
     <script src="server/main.lua" type="server"/>
     <file src="shared/logic/fields.lua"/>
     <file src="shared/logic/focus.lua"/>
+    <file src="shared/logic/water.lua"/>
+    <file src="shared/logic/accuracy.lua"/>
     <file src="server/fields.lua"/>
+    <file src="server/report.lua"/>
+    <file src="server/traps.lua"/>
+    <file src="server/movement.lua"/>
+    <file src="server/vehicles.lua"/>
+    <file src="server/accuracy.lua"/>
+    <file src="data/traps.lua"/>
     <script src="client/focus.lua" type="client"/>
     <export function="refreshFields" type="server"/>
     <export function="isIdleKickEnabled" type="server"/>

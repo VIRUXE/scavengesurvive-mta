@@ -14,6 +14,7 @@ DATA = ROOT / "resources" / "[scavengesurvive]" / "data" / "generated"
 SEED = ROOT / "sql" / "seed"
 MAPS = ROOT / "resources" / "[scavengesurvive]" / "maps"
 WORLD = ROOT / "resources" / "[scavengesurvive]" / "world"
+ANTICHEAT = ROOT / "resources" / "[scavengesurvive]" / "anticheat"
 MAPS_REPORT = ROOT / "docs" / "maps-census.md"
 SAMP_ONLY = lambda model: 18631 <= model < 20001 or 11682 <= model <= 11753  # noqa: E731 (port hats sit at 20001+)
 
@@ -37,7 +38,7 @@ def main(argv=None) -> int:
         unames = list(item_types.parse_item_types(init))
         print(f"loot: {len(loot_tables.convert(args.src, DATA, unames))} tables")
     if args.kind in ("all", "zones"):
-        print(f"zones: {len(zones.convert(args.src, SEED))} loot spawns")
+        print(f"zones: {len(zones.convert(args.src, SEED, ANTICHEAT))} loot spawns")
         print(f"house loot: {len(houseloot.convert(args.src, SEED))} loot points in half of the hollow houses")
         init = read_text(Path(args.src) / "gamemodes/sss/core/server/init.pwn")
         nl, nz, nf = features.convert(args.src, WORLD, list(item_types.parse_item_types(init)))

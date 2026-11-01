@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from .common import NUM, SEED_HEADER, UnparsedLine, read_text, write_text
+from .common import HEADER, NUM, SEED_HEADER, UnparsedLine, read_text, write_text
 
 CALL_RE = re.compile(r"CreateStaticLootSpawn\s*\(")
 ARGS_RE = re.compile(
@@ -32,6 +32,32 @@ def parse_zone(src: str, zone: str) -> list[dict]:
                      "weight": float(m.group(5)), "size": int(m.group(6)) if m.group(6) else -1, "zone": zone,
                      "dimension": int(m.group(7) or 0), "interior": int(m.group(8) or 0)})
     return rows
+
+
+TRAP_RE = re.compile(r"^\s*CreateHackerTrap\s*\(\s*(" + NUM + r")\s*,\s*(" + NUM + r")\s*,\s*(" + NUM + r")\s*,\s*"
+                     r"GetLootIndexFromName\(\"([A-Za-z0-9_]+)\"\)\s*\)\s*;")
+
+
+def parse_traps(src: str) -> list[dict]:
+    """core/admin/hack-trap.pwn CreateHackerTrap(x, y, z, lootindex): an unreachable loot item that bans its taker."""
+    traps = []
+    src = BLOCK_COMMENT_RE.sub(lambda m: "\n" * m.group(0).count("\n"), src)
+    for line in src.split("\n"):
+        if "CreateHackerTrap" not in line or line.lstrip().startswith("//"):
+            continue
+        m = TRAP_RE.match(line)
+        if not m:
+            raise UnparsedLine(line.strip())
+        traps.append({"x": float(m.group(1)), "y": float(m.group(2)), "z": float(m.group(3)), "table": m.group(4)})
+    return traps
+
+
+def render_traps_lua(traps: list[dict]) -> str:
+    traps = sorted(traps, key=lambda r: (r["x"], r["y"], r["z"], r["table"]))
+    out = [HEADER + "-- Hacker traps: { x, y, z, loot table }; the spot number is the position in this list.", "", "return {"]
+    out += [f"    {{ {r['x']!r}, {r['y']!r}, {r['z']!r}, \"{r['table']}\" }}," for r in traps]
+    out.append("}\n")
+    return "\n".join(out)
 
 
 def parse_drop_points(src: str, zone: str) -> tuple[list[dict], list[dict]]:
@@ -81,17 +107,20 @@ def render_sql(rows: list[dict]) -> str:
     return "\n".join(out)
 
 
-def convert(src_root, out_seed) -> list[dict]:
-    rows, supply, caches = [], [], []
+def convert(src_root, out_seed, out_anticheat=None) -> list[dict]:
+    rows, supply, caches, traps = [], [], [], []
     for zone in ZONES:
         src = read_text(Path(src_root) / f"gamemodes/sss/world/zones/{zone}.pwn")
         rows += parse_zone(src, zone)
         s, c = parse_drop_points(src, zone)
         supply += s
         caches += c
+        traps += parse_traps(src)
     # the puzzles' own loot: the code hunt's SF lockup (codehunt.pwn LoadLockup_SF, 4 world_survivor spots)
     for puzzle, zone in PUZZLE_LOOT:
         rows += parse_zone(read_text(Path(src_root) / f"gamemodes/sss/world/puzzles/{puzzle}.pwn"), zone)
     write_text(Path(out_seed) / "0002_loot_spawns.sql", render_sql(rows))
     write_text(Path(out_seed) / "0005_drop_points.sql", render_drop_points_sql(supply, caches))
+    if out_anticheat is not None:
+        write_text(Path(out_anticheat) / "data" / "traps.lua", render_traps_lua(traps))
     return rows

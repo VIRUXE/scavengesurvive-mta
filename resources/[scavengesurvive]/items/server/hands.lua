@@ -506,7 +506,16 @@ return function(ctx)
         end)
     end
 
+    -- anticheat's hacker traps veto the pickup of the item they planted (cancels itemPickupAttempted)
+    local function pickupVetoed(player, itemId)
+        triggerEvent("itemPickupAttempted", player, itemId)
+        return wasEventCancelled()
+    end
+
     local function tryTransferFromWorld(player, cid, held, heldType, row)
+        if pickupVetoed(player, row.id) then
+            return
+        end
         local worldType = itemType(row.uname)
         if not ammo or (not ammo.isCalibreWeapon(worldType) and not ammo.isAmmoItem(worldType)) then
             return toast(player, "HANDS_FULL")
@@ -740,6 +749,9 @@ return function(ctx)
 
     -- row = { id, uname, hp, data (JSON text) } of a world item: into the empty hand
     function M.pickup(player, cid, row)
+        if pickupVetoed(player, row.id) then
+            return
+        end
         if furnitureSrv and furnitureSrv.blocksPickup(row.uname) then
             return -- upstream OnPlayerPickUpItem breaks for furniture; a Crowbar takes it down
         end

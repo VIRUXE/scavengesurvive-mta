@@ -1,6 +1,7 @@
 -- server-local (triggered and handled on one side, or between resources)
 addEvent("itemCreated", false)
 addEvent("itemMoved", false)
+addEvent("itemPickupAttempted", false) -- cancellable: anticheat vetoes the pickup of a hacker trap
 addEvent("itemDestroyed", false)
 addEvent("itemUseAttempted", false)
 addEvent("characterSpawned", false)

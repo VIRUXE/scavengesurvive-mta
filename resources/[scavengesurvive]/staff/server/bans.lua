@@ -19,6 +19,9 @@ return function(ctx)
             n = 8,
         }, function(res, c)
             if not res or not res.ok then
+                if c.online then
+                    state.autoBanned[c.online] = nil
+                end
                 return ctx.say(c.actor, " >  Ban failed: %s", res and res.code or "db error")
             end
             local until_ = seconds > 0 and ("until " .. tostring(res.payload.expires_at)) or "forever"
@@ -28,6 +31,17 @@ return function(ctx)
                 ctx.kick(c.online, c.actor, "Banned: " .. c.reason)
             end
         end, { actor = actor, name = name, reason = reason, online = online })
+    end
+
+    -- anticheat: a permanent ban by the server itself, never against staff (upstream skipped admins on duty)
+    function M.autoBan(player, reason)
+        if ctx.level(player) > 0 or state.autoBanned[player] then
+            return false
+        end
+        state.autoBanned[player] = true
+        local account = ctx.accountId(player) and { id = ctx.accountId(player) } or nil
+        banNow(nil, getPlayerName(player), account, getPlayerIP(player), getPlayerSerial(player), reason, 0, player)
+        return true
     end
 
     -- An online player or an offline account the actor outranks: go(actor, { name, account, ip, serial, online }).
