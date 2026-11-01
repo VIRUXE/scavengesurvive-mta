@@ -936,7 +936,8 @@ return function(ctx)
         end
     end, { rate = 5 })
 
-    net.handler("itemWearRequested", function(player, itemId)
+    -- wears an item (inventory Wear action; F with it held, items use.lua); swaps what the slot holds
+    function M.wear(player, itemId)
         local cid = charId(player)
         itemId = tonumber(itemId)
         if not cid or not itemId then
@@ -1015,7 +1016,9 @@ return function(ctx)
             end,
             { player = player, itemId = itemId, cid = cid, openContainerId = openContainerId }
         )
-    end, { rate = 5 })
+    end
+
+    net.handler("itemWearRequested", M.wear, { rate = 5 })
 
     net.handler("itemUnwearRequested", function(player, slot)
         local cid = charId(player)

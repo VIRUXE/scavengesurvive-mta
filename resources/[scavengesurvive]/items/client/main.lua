@@ -47,6 +47,12 @@ function nearbyCooker()
     return world.nearbyCooker(2.0) or false
 end
 
+-- client export for the hud: whether the item is a hat, mask or armour that F wears from the hand (#154)
+function isHandWearable(uname)
+    local slot = apparel.slotFor(uname)
+    return slot == "hat" or slot == "mask" or slot == "armour"
+end
+
 function nearbyContainerItem()
     local id, category = world.nearbyContainerItem(2.0)
     return id or false, category or false

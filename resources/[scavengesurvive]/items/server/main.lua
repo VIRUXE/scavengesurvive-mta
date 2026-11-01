@@ -293,6 +293,8 @@ loadFile("server/use.lua")({
     small = smallItems,
     garden = garden,
     ownedSql = OWNED_SQL,
+    apparel = apparel,
+    wear = containers.wear,
 })
 
 addEventHandler("onResourceStart", resourceRoot, function()

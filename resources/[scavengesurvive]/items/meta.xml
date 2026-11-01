@@ -74,6 +74,7 @@
     <export function="setAttachPreview" type="client"/>
     <export function="getAttachConfig" type="client"/>
     <export function="nearbyCooker" type="client"/>
+    <export function="isHandWearable" type="client"/>
     <export function="nearbyContainerItem" type="client"/>
     <export function="nearbyInspectable" type="client"/>
     <export function="nearbyMachine" type="client"/>
