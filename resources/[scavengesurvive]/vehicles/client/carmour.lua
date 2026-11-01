@@ -176,3 +176,66 @@ addEventHandler("weldStarted", root, function(ms)
         fxAddSparks(x - math.sin(a) * 0.7, y + math.cos(a) * 0.7, z - 0.2, 0, 0, 1, 2, 6, 0, 0, 0, true, 3, 1)
     end, 120, math.ceil(ms / 120))
 end)
+
+-- The door's hitpoints as a built defence's label (items/client/world.lua): its name, then hitpoints/maximum, in
+-- yellow with a shadow, from LABEL_RANGE metres while nothing but the vehicle itself stands between it and the camera.
+local LABEL_RANGE = 10
+local labelSeen = {} -- vehicle -> { visible, checkedAt }
+
+local function doorLabel(vehicle)
+    local data = getElementData(vehicle, "vehicles.carmour")
+    if type(data) ~= "table" then
+        return nil
+    end
+    local st = carmour.decode(data)
+    local max = carmour.DOOR_BASE_HP
+    for _, p in pairs(st.slots) do
+        local t = exports.data:itemType(p.u)
+        max = max + (t and t.maxHitpoints or p.hp)
+    end
+    local hp = carmour.doorHp(st)
+    return string.format("Door\n%d/%d", hp, math.max(max, hp))
+end
+
+-- a vehicle-local point turned into the world
+local function worldPoint(vehicle, ox, oy, oz)
+    local m = getElementMatrix(vehicle)
+    local x = ox * m[1][1] + oy * m[2][1] + oz * m[3][1] + m[4][1]
+    local y = ox * m[1][2] + oy * m[2][2] + oz * m[3][2] + m[4][2]
+    local z = ox * m[1][3] + oy * m[2][3] + oz * m[3][3] + m[4][3]
+    return x, y, z
+end
+
+addEventHandler("onClientRender", root, function()
+    local px, py, pz = getElementPosition(localPlayer)
+    local cx, cy, cz = getCameraMatrix()
+    local now = getTickCount()
+    local _, sh = guiGetScreenSize()
+    for vehicle in pairs(panels) do
+        local defs = isElement(vehicle) and slotData.SLOTS[getElementModel(vehicle)]
+        local text = defs and doorLabel(vehicle)
+        if text then
+            local door = defs[1].byPanel.MetPanel
+            local x, y, z = worldPoint(vehicle, door.x, door.y, door.z)
+            local dx, dy, dz = x - px, y - py, z - pz
+            local d2 = dx * dx + dy * dy + dz * dz
+            if d2 < LABEL_RANGE * LABEL_RANGE then
+                local seen = labelSeen[vehicle]
+                if not seen or now - seen.checkedAt >= 300 then
+                    local los =
+                        isLineOfSightClear(cx, cy, cz, x, y, z, true, true, false, false, true, false, false, vehicle)
+                    seen = { visible = los, checkedAt = now }
+                    labelSeen[vehicle] = seen
+                end
+                local sx, sy = getScreenFromWorldPosition(x, y, z, 0, false)
+                if seen.visible and sx then
+                    local scale = (sh / 1080) * (d2 < 9 and 1.1 or 0.9)
+                    local shadow, yellow = tocolor(0, 0, 0, 200), tocolor(255, 255, 0, 230)
+                    local sx1, sy1 = sx + 1, sy + 1
+                    dxDrawText(text, sx1, sy1, sx1, sy1, shadow, scale, "default-bold", "center", "center")
+                    dxDrawText(text, sx, sy, sx, sy, yellow, scale, "default-bold", "center", "center")
+                end
+            end
+        end
+    end
+end)
