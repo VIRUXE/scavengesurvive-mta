@@ -33,7 +33,7 @@ addEventHandler("drugSkyEnded", localPlayer, function(weather, hour, minute)
 end)
 
 local function update()
-    if isPedDead(localPlayer) then
+    if isPedDead(localPlayer) or getElementData(localPlayer, "staff.duty") == true then
         if drunk ~= 0 then
             setDrunk(0)
         end
