@@ -250,6 +250,7 @@ return function(ctx)
                 or held.uname == "Shield"
                 or held.uname == "HerpDerp"
                 or held.uname == "Parachute"
+                or exports.items:isHandWearable(held.uname)
             )
         then
             return triggerServerEvent("itemUseRequested", localPlayer, held.id)
