@@ -11,12 +11,12 @@ return function(ctx)
     local isBadInteract = ctx.isBadInteract or function()
         return false
     end
-    local isKnockedOut, isPlayerCuffed, setPlayerCuffed = ctx.isKnockedOut, ctx.isPlayerCuffed, ctx.setPlayerCuffed
+    local isKnockedOut = ctx.isKnockedOut
     local VANILLA_MELEE_MAX = 15
     local RELOAD_COOLDOWN_MS = 1000
     local GIVE_REACH = 1.5 -- metres to the player an item can be handed to
     local lastReload = {}
-    local containers, cooking, small, machinesSrv, furnitureSrv = nil, nil, nil, nil, nil
+    local containers, cooking, small, machinesSrv, furnitureSrv, cuffsSrv = nil, nil, nil, nil, nil, nil
     local parachuteSrv = nil
     local M = {}
 
@@ -31,6 +31,11 @@ return function(ctx)
     -- server/smallitems.lua: held-with-world pairs (Locator + phone, Stun Gun + Battery, can + bottle), dice drops
     function M.setMachines(m)
         machinesSrv = m
+    end
+
+    -- server/cuffs.lua: the 3 s handcuffing hold
+    function M.setCuffs(c)
+        cuffsSrv = c
     end
 
     function M.setSmall(s)
@@ -594,37 +599,7 @@ return function(ctx)
         if not target then
             return false
         end
-        if
-            held
-            and held.uname == "HandCuffs"
-            and ctx.destroy
-            and setPlayerCuffed
-            and isPlayerCuffed
-            and not isPlayerCuffed(target)
-            and not state.held[target]
-        then
-            ctx.destroy(held.id, player, function(ok)
-                if ok and isElement(target) then
-                    setPlayerCuffed(target, true)
-                    if isElement(player) then
-                        toast(player, "CUFFED")
-                    end
-                end
-            end)
-            return true
-        end
-        if not held and isPlayerCuffed and setPlayerCuffed and isPlayerCuffed(target) then
-            db.call("item_create_held", { "HandCuffs", cid }, function(res, c)
-                if not isElement(c.player) or not res or not res.ok then
-                    return
-                end
-                if isElement(c.target) then
-                    setPlayerCuffed(c.target, false)
-                end
-                M.setHeld(c.player, { id = res.payload.item_id, uname = "HandCuffs", hp = 5, data = {} })
-                triggerEvent("itemCreated", resourceRoot, res.payload.item_id)
-                toast(c.player, "UNCUFFED")
-            end, { player = player, target = target })
+        if cuffsSrv and cuffsSrv.tryStart(player, held, target) then
             return true
         end
         if not held and isKnockedOut and isKnockedOut(target) and state.held[target] then

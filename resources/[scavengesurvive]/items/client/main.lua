@@ -113,8 +113,8 @@ end
 
 -- treatments (server/medical.lua): the healer holds the interact key, letting go cancels; the patient sees the bar
 local treatmentTimer = nil
-addEventHandler("treatmentStarted", localPlayer, function(durationMs, healer)
-    exports.ui:progressStart(healer and "Treating" or "Being treated", durationMs)
+addEventHandler("treatmentStarted", localPlayer, function(durationMs, healer, label)
+    exports.ui:progressStart(label or (healer and "Treating" or "Being treated"), durationMs)
     if isTimer(treatmentTimer) then
         killTimer(treatmentTimer)
     end
