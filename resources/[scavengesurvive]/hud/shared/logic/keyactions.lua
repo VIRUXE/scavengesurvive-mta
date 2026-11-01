@@ -33,7 +33,8 @@ M.CRATES = { supply = "Open supply crate", cache = "Open weapon cache" }
 --   carmour,                              -- vehicles carmour: "attach" (placing a defence), "weld" (the Welder's
 --                                         -- torch at a trailer), "torch" (it anywhere else), "defence" (one in hand
 --                                         -- at a trailer), "grind" (an Angle Grinder at a trailer), "welder" (empty
---                                         -- hands at a Welder); F then does only that
+--                                         -- hands at a Welder), "gas" / "gasoff" (empty hands at gas lying by a
+--                                         -- Welder); F then does only that
 --   supports = { [capability] = true },   -- eat, drink, openbag, wearbag, special, holster, reload, unload, give,
 --                                         -- removebag, uncuff, trunk, repair, engine, lights, doors, radio
 -- }
@@ -95,6 +96,9 @@ function M.lines(ctx, keys)
     elseif cm == "welder" then
         add("interact", "Take torch")
         add("interact", "(Hold) Pick up welder")
+    elseif cm == "gas" or cm == "gasoff" then
+        add("interact", cm == "gas" and "Hook up to welder" or "Unhook from welder")
+        add("interact", "(Hold) Pick up")
     end
     local busyF = cm ~= nil
     -- the towable Airstream's door (vehicles, not an upstream line)

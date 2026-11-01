@@ -45,4 +45,5 @@
     <export function="cancelAttach" type="client"/>
     <export function="hasTorch" type="client"/>
     <export function="nearbyWelder" type="client"/>
+    <export function="nearbyGas" type="client"/>
 </meta>

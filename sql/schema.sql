@@ -549,14 +549,23 @@ END//
 
 CREATE OR REPLACE PROCEDURE `carmour_weld`(IN p_vehicle_id INT, IN p_tank_id INT, IN p_carmour LONGTEXT, IN p_kg DECIMAL(4,1))
 BEGIN
+  
+  
+  
   DECLARE v_tank_data LONGTEXT DEFAULT NULL;
   DECLARE v_found INT DEFAULT 0;
   DECLARE v_gas DECIMAL(5,1) DEFAULT 0;
+  DECLARE v_type VARCHAR(32) DEFAULT NULL;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
   SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
   START TRANSACTION;
-  SELECT COUNT(*), MAX(data) INTO v_found, v_tank_data FROM items WHERE id = p_tank_id AND type_uname = 'GasBottle' FOR UPDATE;
-  SET v_gas = IFNULL(CAST(JSON_VALUE(v_tank_data, '$.gas') AS DECIMAL(5,1)), 11.0);
+  SELECT COUNT(*), MAX(data), MAX(type_uname) INTO v_found, v_tank_data, v_type FROM items
+    WHERE id = p_tank_id AND type_uname IN ('Canister', 'GasBottle') AND x IS NOT NULL AND container_id IS NULL
+      AND holder_char_id IS NULL
+    FOR UPDATE;
+  
+  SET v_gas = IFNULL(CAST(COALESCE(JSON_VALUE(v_tank_data, '$.gas'), JSON_VALUE(v_tank_data, '$[0].gas')) AS DECIMAL(5,1)),
+    IF(v_type = 'GasBottle', 11.0, 20.0));
   IF v_found = 0 OR v_gas < p_kg THEN
     ROLLBACK;
     SELECT 0 AS ok, 'NO_GAS' AS code, NULL AS payload;

@@ -13,9 +13,47 @@ return function(ctx)
     local M = {}
     local torches = {} -- player -> { id, x, y, z, rz, int, dim } of the Welder whose torch the player holds
 
-    local TANKS = "SELECT i.id, i.data FROM items i JOIN containers c ON c.id = i.container_id "
-        .. "WHERE i.type_uname = 'GasBottle' AND (c.owner_char_id = ? OR c.owner_item_id IN "
-        .. "(SELECT id FROM items WHERE holder_char_id = ? AND holder_kind = 'bag')) ORDER BY i.id"
+    -- The Welder's gas: a Gas Cylinder (the Canister item) or a Gas Bottle lying on the ground, hooked up to a Welder
+    -- lying on the ground within the hose's reach; the link is the Welder's item data { cylinder = id, wx, wy, gx, gy }
+    -- with where the Welder (w) and the gas (g) lay when hooked up: moving either undoes it (a carried Welder's data
+    -- comes back with it when it is put down, so the link cannot rest on the data being cleared)
+    local GROUND = "x IS NOT NULL AND container_id IS NULL AND holder_char_id IS NULL"
+    local GAS = "('Canister', 'GasBottle')"
+    local LINKED = "CAST(JSON_VALUE(w.data, '$.cylinder') AS UNSIGNED)"
+    local HOOKED = "SELECT c.id, c.type_uname, c.x, c.y, c.z, c.data FROM items w JOIN items c ON c.id = "
+        .. LINKED
+        .. " WHERE w.id = ? AND c.type_uname IN "
+        .. GAS
+        .. " AND c.x IS NOT NULL AND c.container_id IS NULL AND c.holder_char_id IS NULL"
+    local CYLINDER = "SELECT id, x, y, z, interior, dimension FROM items WHERE id = ? AND type_uname IN "
+        .. GAS
+        .. " AND "
+        .. GROUND
+    local WELDERS_NEAR = "SELECT id, x, y, z, data FROM items WHERE type_uname = 'Welder' AND "
+        .. GROUND
+        .. " AND IFNULL(interior, 0) = ? AND IFNULL(dimension, 0) = ? AND ABS(x - ?) <= ? AND ABS(y - ?) <= ?"
+    local LINK = "UPDATE items SET data = JSON_OBJECT('cylinder', ?, 'wx', x, 'wy', y, 'gx', ?, 'gy', ?) "
+        .. "WHERE id = ? AND type_uname = 'Welder'"
+    local UNLINK = "UPDATE items SET data = NULL WHERE type_uname = 'Welder' AND (id = ? OR "
+        .. "CAST(JSON_VALUE(data, '$.cylinder') AS UNSIGNED) = ?)"
+    -- a link whose Welder or gas was picked up or moved comes undone
+    local MOVED = "ABS(w.x - CAST(JSON_VALUE(w.data, '$.wx') AS DOUBLE)) > 0.1 OR "
+        .. "ABS(w.y - CAST(JSON_VALUE(w.data, '$.wy') AS DOUBLE)) > 0.1 OR "
+        .. "ABS(c.x - CAST(JSON_VALUE(w.data, '$.gx') AS DOUBLE)) > 0.1 OR "
+        .. "ABS(c.y - CAST(JSON_VALUE(w.data, '$.gy') AS DOUBLE)) > 0.1"
+    local LOOSE = "UPDATE items w LEFT JOIN items c ON c.id = "
+        .. LINKED
+        .. " SET w.data = NULL WHERE w.type_uname = 'Welder' AND JSON_VALUE(w.data, '$.cylinder') IS NOT NULL AND "
+        .. "(w.x IS NULL OR c.id IS NULL OR c.x IS NULL OR c.type_uname NOT IN "
+        .. GAS
+        .. " OR c.container_id IS NOT NULL "
+        .. "OR c.holder_char_id IS NOT NULL OR (w.x - c.x) * (w.x - c.x) + (w.y - c.y) * (w.y - c.y) > ? OR "
+        .. MOVED
+        .. ")"
+    local HOSES = "SELECT w.id AS w, "
+        .. LINKED
+        .. " AS c FROM items w WHERE w.type_uname = 'Welder' AND w.x IS NOT NULL AND "
+        .. "JSON_VALUE(w.data, '$.cylinder') IS NOT NULL"
     -- the character's items of one type in the inventory or a worn bag (the Grinder's Batteries and Grinding Discs)
     local CARRIED = "SELECT i.id, i.data FROM items i JOIN containers c ON c.id = i.container_id "
         .. "WHERE i.type_uname = ? AND (c.owner_char_id = ? OR c.owner_item_id IN "
@@ -450,19 +488,16 @@ return function(ctx)
         if not rec then
             return toast(player, "WELD_NOPANEL")
         end
-        -- the gas it burns follows the hitpoints the defence can take
+        -- the gas it burns follows the hitpoints the defence can take, from the cylinder hooked up to the Welder
         local t = exports.data:itemType(rec.u)
         local kg = carmour.weldGas(t and t.maxHitpoints or rec.hp)
-        local cid = exports.character:getCharacterId(player)
-        db.query(TANKS, { cid, cid }, function(tanks)
-            local tank = nil
-            for _, row in ipairs(tanks or {}) do
-                if carmour.gasOf(decodeData(row.data)) >= kg - 0.001 then
-                    tank = row
-                    break
-                end
+        db.query(HOOKED, { torch.id }, function(rows)
+            local tank = rows and rows[1]
+            local hose = tank and getDistanceBetweenPoints2D(tank.x, tank.y, torch.x, torch.y) <= carmour.HOSE
+            if not hose then
+                return toast(player, "WELD_NOCYLINDER")
             end
-            if not tank then
+            if carmour.gasOf(decodeData(tank.data), tank.type_uname) < kg - 0.001 then
                 return toast(player, "WELD_NOGAS")
             end
             local cable = carmour.GENERATOR_REACH
@@ -482,6 +517,92 @@ return function(ctx)
                 local timer = setTimer(finish, ms, 1, player, vehicle, rec.id, tank.id, gen.id, kg)
                 activeActions[player] = { actionType = "weld", vehicle = vehicle, timer = timer }
             end)
+        end)
+    end
+
+    -- Hooking a Gas Cylinder up -------------------------------------------------------------------------------------
+
+    -- the links the clients draw hoses for: { { welder id, cylinder id }, ... } on the resource root; hooked[welder]
+    -- is the gas a Welder is really hooked up to (stale data a carried Welder brought back is not)
+    local hooked = {}
+    local function publishHoses(andThen)
+        db.query(HOSES, {}, function(rows)
+            local list = {}
+            hooked = {}
+            for _, r in ipairs(rows or {}) do
+                list[#list + 1] = { tonumber(r.w), tonumber(r.c) }
+                hooked[tonumber(r.w)] = tonumber(r.c)
+            end
+            if andThen then
+                andThen()
+            end
+            setElementData(resourceRoot, "vehicles.hoses", list, "broadcast", "deny")
+        end)
+    end
+
+    local function tidyHoses(andThen)
+        db.exec(LOOSE, { carmour.HOSE * carmour.HOSE }, function()
+            publishHoses(andThen)
+        end)
+    end
+    setTimer(tidyHoses, 4000, 0)
+    tidyHoses(nil)
+
+    -- Empty hands at a Gas Cylinder lying near a Welder: it is hooked up to the nearest Welder within the hose's
+    -- reach (any other link of either undone), or unhooked when it already was
+    function M.hookCylinder(player, cylinderId)
+        cylinderId = tonumber(cylinderId)
+        if
+            not cylinderId
+            or exports.items:getHeld(player)
+            or activeActions[player]
+            or getPedOccupiedVehicle(player)
+        then
+            return
+        end
+        db.query(CYLINDER, { cylinderId }, function(rows)
+            local c = rows and rows[1]
+            if not c or not isElement(player) then
+                return
+            end
+            local px, py = getElementPosition(player)
+            if getDistanceBetweenPoints2D(px, py, c.x, c.y) > 2.5 then
+                return
+            end
+            local reach = carmour.HOSE
+            local int, dim = tonumber(c.interior) or 0, tonumber(c.dimension) or 0
+            db.query(WELDERS_NEAR, { int, dim, c.x, reach, c.y, reach }, function(welders)
+                local best, bestDist = nil, reach
+                for _, w in ipairs(welders or {}) do
+                    local d = getDistanceBetweenPoints2D(c.x, c.y, w.x, w.y)
+                    if d <= bestDist then
+                        best, bestDist = w, d
+                    end
+                end
+                if not best then
+                    return toast(player, "HOSE_NOWELDER")
+                end
+                tidyHoses(function()
+                    M.toggleHose(player, best.id, cylinderId, c)
+                end)
+            end)
+        end)
+    end
+
+    -- hooks gas cylinderId (row c) up to Welder welderId, or unhooks it when it already was
+    function M.toggleHose(player, welderId, cylinderId, c)
+        local linked = hooked[welderId] == cylinderId
+        db.exec(UNLINK, { welderId, cylinderId }, function()
+            local function done()
+                publishHoses(nil)
+                if isElement(player) then
+                    toast(player, linked and "HOSE_OFF" or "HOSE_ON")
+                end
+            end
+            if linked then
+                return done()
+            end
+            db.exec(LINK, { cylinderId, c.x, c.y, welderId }, done)
         end)
     end
 

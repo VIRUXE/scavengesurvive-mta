@@ -1697,6 +1697,11 @@ net.handler("weldTorchStowRequested", function(player)
     carmourSrv.stowTorch(player)
 end, { rate = 4 })
 
+-- empty hands at a Gas Cylinder lying near a Welder hook it up to the Welder, or unhook it
+net.handler("weldCylinderHookRequested", function(player, cylinderId)
+    carmourSrv.hookCylinder(player, cylinderId)
+end, { rate = 4 })
+
 local function loadGasBottles()
     local f = fileOpen("server/gasbottles.lua", true)
     local src = fileRead(f, fileGetSize(f))

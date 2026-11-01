@@ -142,9 +142,20 @@ return function(ctx)
             blockEnterUntil = getTickCount() + TRUNK_ENTER_BLOCK_MS
             return exports.vehicles:beginAttach(armourVeh)
         end
-        -- empty hands at a Welder lying near: a tap takes its torch, a hold picks the Welder up
-        local welderId = not heldNow and exports.vehicles:nearbyWelder()
-        if welderId then
+        -- empty hands at a Welder lying near: a tap takes its torch, a hold picks the Welder up; at a Gas Cylinder or
+        -- Gas Bottle lying near a Welder (whichever of the two is nearer) a tap hooks it up to the Welder or unhooks it
+        local welderId, welderDist = false, nil
+        local gasId, gasDist = false, nil
+        if not heldNow then
+            welderId, welderDist = exports.vehicles:nearbyWelder()
+            gasId, gasDist = exports.vehicles:nearbyGas()
+        end
+        if gasId and welderId and gasDist < welderDist then
+            welderId = false
+        elseif welderId then
+            gasId = false
+        end
+        if welderId or gasId then
             if isTimer(interactHoldTimer) then
                 return
             end
@@ -157,6 +168,8 @@ return function(ctx)
                     interactHoldTimer = nil
                     if heldMs >= 500 then
                         triggerServerEvent("itemPickupRequested", localPlayer, exports.items:blockedItemsNear())
+                    elseif gasId then
+                        triggerServerEvent("weldCylinderHookRequested", localPlayer, gasId)
                     else
                         triggerServerEvent("weldTorchGrabRequested", localPlayer, welderId)
                     end

@@ -68,7 +68,7 @@ UNSET_TIPS = {
     **{u: _SCRAP for u in ("ScrapMetal", "RefinedMetal")},
     **{u: _NOUSE for u in ("Keycard", "Briquettes", "BurntLog", "Cross", "Microphone", "Broom", "Ketchup", "Mustard", "PizzaBox", "PisschBox", "Doormat", "Boot", "BoxingGloves", "RadioBox")},
     **{u: _SCRAPPABLE for u in ("Spanner", "Padlock", "OilCan", "OilDrum", "Fork", "Knife3", "Radio", "RemoteControl", "ControlBox", "Computer")},
-    "Canister": "Used for crafting a machine or a plot pole, or break it down at a Scrap Machine",
+    "Canister": "Gas for welding: lay it within 2.5 m of a Welder and tap [F] to hook it up. Also used for crafting a machine or a plot pole",
     "WheelLock": "Combine it with a Locksmith Kit to cut a key, then hold [F] at a bike or other doorless vehicle to lock it",
     "LockBreaker": "Use it at a locked vehicle to break its lock, a crafted lock cannot be broken",
     "Locator": "Press [F] at a mobile phone to sync it, then press [F] to show the distance to it",
@@ -76,11 +76,11 @@ UNSET_TIPS = {
     "RefineMachine": "Put Scrap Metal inside and fuel it with a Petrol Can, it refines the metal into Refined Metal",
     "ScrapMachine": "Put items inside and fuel it with a Petrol Can, it breaks them down into Scrap Metal",
     "WaterMachine": "Put Water Bottles of sea water inside and fuel it with a Petrol Can, it purifies the water",
-    "Welder": "Press [F] at a vehicle with a Gas Bottle on you, a defence panel lying near and a fuelled Generator within 8 m to weld the panel on (for now only the towable Airstream takes armour)",
+    "Welder": "Lay it down and tap [F] to take its torch, with a Gas Cylinder or Gas Bottle hooked up to it and a fuelled Generator within 8 m; [F] with the torch welds a defence attached to the towable Airstream on",
     "Generator": "Hold [F] with a Petrol Can to fuel it, a Welder within 8 m runs on it",
     "Grinder": "Hold [F] at a welded defence to grind it off a vehicle; each pass burns a Battery charge and wears a Grinding Disc, carried in the inventory or bag",
     "GrindDisc": "A spare disc for the Angle Grinder, worn down a little by every pass of grinding",
-    "GasBottle": "A propane bottle with some gas left in it, hold [F] at a trailer's A-frame to mount it, and with empty hands to take it back",
+    "GasBottle": "A propane bottle with some gas left in it: hold [F] at a trailer's A-frame to mount it (empty hands take it back), or lay it within 2.5 m of a Welder and tap [F] to hook it up for welding",
 }
 # Tips the port's own behaviour changed (#156 petrol ammo, #157 tree felling): they replace upstream's wording in every
 # language.

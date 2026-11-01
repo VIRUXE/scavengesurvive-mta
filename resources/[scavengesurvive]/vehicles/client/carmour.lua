@@ -27,6 +27,7 @@ local TORCH_MODEL = 20205 -- prop_models welder_torch: origin in the grip, nozzl
 local WELDER_SOCKET = { -0.1, 0.195, 0.08 } -- the lead's plug on the Welder (welder model space, make_props)
 local TORCH_LEAD = { 0, -0.155, 0 } -- where the lead leaves the torch (torch model space)
 local TORCH_STOWED = { -0.27, -0.07, 0.18, -90, 0, 0 } -- the torch in the Welder's holster
+local WELDER_INLET = { 0.1, -0.13, 0.12 } -- where the gas hose goes into the Welder (its back, model space)
 local TORCH_HAND = { 0.04, 0.02, -0.02, 0, 90, 180 } -- the torch in the right hand (GTA bone 24), x y z rx ry rz
 local HAND_BONE = 24
 local ATTACH_LEAVE = 7.0 -- attach mode ends this far from the vehicle
@@ -589,7 +590,7 @@ end)
 
 -- the lead: a sagging line from the Welder's socket to where it leaves the torch
 local LEAD_COLOUR = tocolor(20, 20, 20, 255)
-local function drawLead(x1, y1, z1, x2, y2, z2)
+local function drawLead(x1, y1, z1, x2, y2, z2, colour)
     local dist = getDistanceBetweenPoints3D(x1, y1, z1, x2, y2, z2)
     local sag = math.max(0.05, (carmour.LEAD - dist) * 0.25)
     local floor = math.min(z1, z2) - 0.05
@@ -598,7 +599,7 @@ local function drawLead(x1, y1, z1, x2, y2, z2)
         local t = i / 12
         local x, y = x1 + (x2 - x1) * t, y1 + (y2 - y1) * t
         local z = math.max(floor, z1 + (z2 - z1) * t - sag * 4 * t * (1 - t))
-        dxDrawLine3D(lx, ly, lz, x, y, z, LEAD_COLOUR, 2)
+        dxDrawLine3D(lx, ly, lz, x, y, z, colour or LEAD_COLOUR, 2)
         lx, ly, lz = x, y, z
     end
 end
@@ -655,7 +656,7 @@ function hasTorch()
     return torchOf(localPlayer) ~= nil
 end
 
--- the Welder lying within reach whose torch is free (hud: a tap grabs it), or false
+-- the Welder lying within reach whose torch is free (hud: a tap grabs it) and how far it is, or false
 function nearbyWelder()
     local px, py, pz = getElementPosition(localPlayer)
     local grabbed = grabbedIds()
@@ -667,7 +668,85 @@ function nearbyWelder()
             best, bestDist = id, d
         end
     end
-    return best
+    return best, bestDist
+end
+
+-- Gas hooked up to Welders ----------------------------------------------------------------------------------------
+
+local GAS_TYPES = { "Canister", "GasBottle" } -- the Gas Cylinder and the Gas Bottle (carmour.GAS_CAPACITY)
+local HOSE_COLOUR = tocolor(120, 28, 22, 255)
+local hoseSeen = { at = 0, welders = {}, gas = {} } -- the objects, looked up again twice a second
+
+local function gasObjects()
+    local out = {}
+    for _, uname in ipairs(GAS_TYPES) do
+        for id, obj in pairs(exports.items:worldObjectsOfType(uname) or {}) do
+            out[id] = obj
+        end
+    end
+    return out
+end
+
+local function hoses()
+    local list = getElementData(resourceRoot, "vehicles.hoses")
+    return type(list) == "table" and list or {}
+end
+
+-- the top of a gas container's object, where the hose leaves it
+local function gasOutlet(obj)
+    local x, y, z = getElementPosition(obj)
+    local _, _, _, _, _, maxZ = getElementBoundingBox(obj)
+    return x, y, z + (maxZ or 0.4) * 0.85
+end
+
+addEventHandler("onClientRender", root, function()
+    local list = hoses()
+    if #list == 0 then
+        return
+    end
+    local now = getTickCount()
+    if now - hoseSeen.at > 500 then
+        hoseSeen.at = now
+        hoseSeen.welders = exports.items:worldObjectsOfType("Welder") or {}
+        hoseSeen.gas = gasObjects()
+    end
+    local cx, cy, cz = getCameraMatrix()
+    for _, link in ipairs(list) do
+        local welder, gas = hoseSeen.welders[link[1]], hoseSeen.gas[link[2]]
+        if isElement(welder) and isElement(gas) and isElementOnScreen(welder) then
+            local x1, y1, z1 = apply(getElementMatrix(welder), WELDER_INLET)
+            if getDistanceBetweenPoints3D(cx, cy, cz, x1, y1, z1) < 40 then
+                local x2, y2, z2 = gasOutlet(gas)
+                drawLead(x1, y1, z1, x2, y2, z2, HOSE_COLOUR)
+            end
+        end
+    end
+end)
+
+-- The Gas Cylinder or Gas Bottle lying within reach that has a Welder lying within the hose's reach of it (hud: a
+-- tap hooks it up or unhooks it): its id, how far it is and whether it is hooked up; false when there is none
+function nearbyGas()
+    local px, py, pz = getElementPosition(localPlayer)
+    local welders = exports.items:worldObjectsOfType("Welder") or {}
+    local hooked = {}
+    for _, link in ipairs(hoses()) do
+        hooked[link[2]] = true
+    end
+    local best, bestDist = false, 2.0
+    for id, obj in pairs(gasObjects()) do
+        local x, y, z = getElementPosition(obj)
+        local d = getDistanceBetweenPoints2D(px, py, x, y)
+        if d <= bestDist and math.abs(pz - z) < 2 then
+            for _, w in pairs(welders) do
+                local wx, wy = getElementPosition(w)
+                if getDistanceBetweenPoints2D(x, y, wx, wy) <= carmour.HOSE then
+                    best, bestDist = id, d
+                    break
+                end
+            end
+        end
+    end
+    return best, bestDist, best and hooked[best] == true
 end
 
 addEventHandler("onClientResourceStart", resourceRoot, function()

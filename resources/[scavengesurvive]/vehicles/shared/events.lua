@@ -16,6 +16,7 @@ addEvent("vehicleKeypadSubmitted", true)
 addEvent("carmourAttachRequested", true)
 addEvent("weldTorchGrabRequested", true)
 addEvent("weldTorchStowRequested", true)
+addEvent("weldCylinderHookRequested", true)
 
 -- server to client / client-local
 addEvent("vehicleHoldStarted", true)

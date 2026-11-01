@@ -17,7 +17,9 @@ M.DOOR_BASE_HP = 1 -- the door alone: one hit breaks its lock
 M.MASS_PER_PANEL = 180 -- kg added to the trailer per panel on it, welded or not
 M.TOW_ACCEL_PENALTY = 0.08 -- of the tower's stock engine acceleration per panel carried by the trailer behind it
 M.TOW_ACCEL_FLOOR = 0.4 -- the tower never drops below this share of its stock acceleration
-M.GAS_CAPACITY = 11 -- kg in a full Gas Bottle (items/shared/logic/gas.lua); its item data { gas = kg }, none: full
+-- the Welder's gas: kg in a full Gas Cylinder (the Canister item) or Gas Bottle; item data { gas = kg }, none: full
+M.GAS_CAPACITY = { Canister = 20, GasBottle = 11 }
+M.HOSE = 2.5 -- metres of hose: gas lying this near a Welder can be hooked up to it
 M.GAS_PER_HP = 0.44 -- kg of gas a weld burns per hitpoint the defence can take: a 5 HP panel is 2.2 kg
 M.FUEL_PER_WELD = 5 -- Generator fuel (of 100) one weld burns
 M.WELD_MS = 8000
@@ -296,17 +298,23 @@ function M.wearOf(data)
     return n == nil and M.DISC_WEAR or math.max(0, math.min(M.DISC_WEAR, math.floor(n)))
 end
 
--- kg of gas left in a Gas Bottle from its item data (either JSON shape)
-function M.gasOf(data)
+-- whether an item type is gas the Welder can be hooked up to
+function M.isGas(uname)
+    return M.GAS_CAPACITY[uname] ~= nil
+end
+
+-- kg of gas left in a Gas Cylinder or Gas Bottle (uname) from its item data (either JSON shape)
+function M.gasOf(data, uname)
+    local capacity = M.GAS_CAPACITY[uname] or M.GAS_CAPACITY.Canister
     local d = type(data) == "table" and data or {}
     if type(d[1]) == "table" then
         d = d[1]
     end
     local gas = tonumber(d.gas)
     if gas == nil then
-        return M.GAS_CAPACITY
+        return capacity
     end
-    return math.max(0, math.min(M.GAS_CAPACITY, gas))
+    return math.max(0, math.min(capacity, gas))
 end
 
 return M

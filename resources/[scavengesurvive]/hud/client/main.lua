@@ -285,7 +285,8 @@ end
 
 -- carmour (vehicles): "attach" while placing a defence, "weld" with the Welder's torch at a trailer, "torch" with it
 -- anywhere else, "defence" with a defence in hand at a trailer, "grind" with an Angle Grinder in hand at one,
--- "welder" with empty hands at a Welder lying near
+-- "welder" with empty hands at a Welder lying near, "gas" / "gasoff" with empty hands at a Gas Cylinder or Gas Bottle
+-- lying by a Welder (not hooked up / hooked up)
 local function carmourHint(held)
     if exports.vehicles:attachModeActive() then
         return "attach"
@@ -300,8 +301,15 @@ local function carmourHint(held)
     if veh and held and held.uname == "Grinder" then
         return "grind"
     end
-    if not held and exports.vehicles:nearbyWelder() then
-        return "welder"
+    if not held then
+        local welderId, welderDist = exports.vehicles:nearbyWelder()
+        local gasId, gasDist, hooked = exports.vehicles:nearbyGas()
+        if gasId and (not welderId or gasDist < welderDist) then
+            return hooked and "gasoff" or "gas"
+        end
+        if welderId then
+            return "welder"
+        end
     end
     return nil
 end
