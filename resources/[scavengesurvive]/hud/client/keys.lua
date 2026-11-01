@@ -90,8 +90,9 @@ return function(ctx)
         return exports.world:tryInteract() == true
     end
 
-    -- F is both interact and GTA's enter_exit: a press that opens a trunk (or is pressed while the trunk/inventory
-    -- list is open) must not also start the enter task (#113). The server's onVehicleStartEnter only sees it too late.
+    -- F is both interact and GTA's enter_exit: a press the interact handler consumes (a trunk, a held item's use,
+    -- a bag) or one made while the trunk/inventory list is open must not also start the enter task (#113). The
+    -- server's onVehicleStartEnter only sees it too late.
     local TRUNK_ENTER_BLOCK_MS = 1000
     local PICKUP_REACH = 2.0
     local blockEnterUntil = 0
@@ -321,9 +322,11 @@ return function(ctx)
                 or exports.items:isHandWearable(held.uname)
             )
         then
+            blockEnterUntil = getTickCount() + TRUNK_ENTER_BLOCK_MS
             return triggerServerEvent("itemUseRequested", localPlayer, held.id)
         end
         if held and (held.category == "bag" or held.category == "safebox") then
+            blockEnterUntil = getTickCount() + TRUNK_ENTER_BLOCK_MS
             return triggerServerEvent("itemBagOpenRequested", localPlayer)
         end
         -- a walk-in vehicle door (the towable Airstream's) only takes the key nothing above wanted, and gives way to a
