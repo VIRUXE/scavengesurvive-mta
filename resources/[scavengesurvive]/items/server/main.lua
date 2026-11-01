@@ -539,16 +539,6 @@ function destroyWorldItemsNear(x, y, z, radius, interior, dimension, cb)
     return true
 end
 
--- The Welder's power (vehicles, carmour): the nearest Generator within its cable with `amount` fuel left, cb(row | nil)
-function findGenerator(x, y, z, interior, dimension, amount, cb)
-    machinesSrv.findGenerator(tonumber(x), tonumber(y), tonumber(z), interior, dimension, tonumber(amount) or 0, cb)
-end
-
--- burns `amount` fuel out of that Generator; cb(ok)
-function drawGeneratorFuel(itemId, amount, cb)
-    machinesSrv.drawFuel(tonumber(itemId), tonumber(amount) or 0, cb)
-end
-
 function forgetWorldItem(itemId)
     if world and world.forgetEverywhere then
         world.forgetEverywhere(tonumber(itemId))

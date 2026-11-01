@@ -471,7 +471,7 @@ return {
     WaterMach_T = "Put Water Bottles of sea water inside and fuel it with a Petrol Can, it purifies the water",
     WeaponCra_T = "Store items inside this, they are saved over restarts",
     WeddingCa_T = "Eat this for food value",
-    Welder_T = "Hold it at an Airstream with a Gas Tank on you, a defence panel lying near and a fuelled Generator within 8 m to weld the panel on",
+    Welder_T = "Press [F] at a vehicle with a Gas Tank on you, a defence panel lying near and a fuelled Generator within 8 m to weld the panel on (for now only the towable Airstream takes armour)",
     WheelLock_T = "Combine it with a Locksmith Kit to cut a key, then hold [F] at a bike or other doorless vehicle to lock it",
     Wheel_T = "Koristi ovo da popraviš gume koje su probušene,samo staneš gdje je probušena i stisneš [F]",
     Whisky_T = "Hold [F] to drink from this",

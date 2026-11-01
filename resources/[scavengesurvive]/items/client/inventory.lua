@@ -87,6 +87,7 @@ return function(ctx)
         WELD_NOGAS = "You need a Gas Tank with gas left",
         WELD_NOPOWER = "You need a fuelled Generator within 8 metres",
         WELDED = "Panel welded on",
+        WELD_NOSLOTS = "This vehicle has nowhere to weld a panel",
         KEY_CRAFTED = "Key crafted",
         REFUELLED = "Refuelled",
         REPAIRED = "Vehicle repaired",

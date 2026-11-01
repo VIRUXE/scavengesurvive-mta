@@ -1,8 +1,8 @@
--- Server side of carmour (shared/logic/carmour.lua): welding a defence panel onto a vehicle with a Welder (the
--- towable Airstream only, for now), the armour's persistence in vehicles.carmour, the heavier trailer and the
--- slower tower, the walk-in door's hitpoints and the damage panels soak up. Clients build the panels themselves
--- from the element data "vehicles.carmour" (client/carmour.lua): server-made objects cannot carry SA-MP or port
--- models.
+-- Server side of carmour (shared/logic/carmour.lua): welding a defence panel onto a vehicle with a Welder (any
+-- vehicle model with slots; only the towable Airstream has them for now), the armour's persistence in
+-- vehicles.carmour, the heavier trailer and the slower tower, the walk-in door's hitpoints and the damage panels
+-- soak up. Clients build the panels themselves from the element data "vehicles.carmour" (client/carmour.lua):
+-- server-made objects cannot carry SA-MP or port models.
 -- ctx = { db, info, toast, activeActions, cancelHoldAction, carmour, slots, breakLock } built by server/main.lua.
 return function(ctx)
     local db, info, toast, activeActions = ctx.db, ctx.info, ctx.toast, ctx.activeActions
@@ -23,6 +23,17 @@ return function(ctx)
         .. "(SELECT id FROM items WHERE holder_char_id = ? AND holder_kind = 'bag')) ORDER BY i.id"
 
     local SAVE = "UPDATE vehicles SET carmour = ? WHERE id = ?"
+    -- a Generator lying within the Welder's cable; its fuel is read from the data in Lua and drawn in one statement
+    local GENERATORS = "SELECT id, x, y, z, data FROM items WHERE type_uname = 'Generator' AND x IS NOT NULL "
+        .. "AND container_id IS NULL AND holder_char_id IS NULL AND IFNULL(interior, 0) = ? "
+        .. "AND IFNULL(dimension, 0) = ? AND ABS(x - ?) <= ? AND ABS(y - ?) <= ?"
+    local FUEL = "CAST(JSON_VALUE(data, '$.machine.fuel') AS DECIMAL(10, 2))"
+    local DRAW = "UPDATE items SET data = JSON_SET(data, '$.machine.fuel', "
+        .. FUEL
+        .. " - ?) "
+        .. "WHERE id = ? AND type_uname = 'Generator' AND x IS NOT NULL AND "
+        .. FUEL
+        .. " >= ?"
 
     local function slotDefs(vehicle)
         return slotsByModel[getElementModel(vehicle)]
@@ -148,6 +159,24 @@ return function(ctx)
         return best
     end
 
+    -- the Generator's fuel from its item data ({ machine = { fuel } }, either JSON shape)
+    local function fuelOf(data)
+        local d = decodeData(data)
+        d = type(d) == "table" and (type(d[1]) == "table" and d[1] or d) or {}
+        return type(d.machine) == "table" and tonumber(d.machine.fuel) or 0
+    end
+
+    local function nearestGenerator(rows, x, y, z)
+        local best, bestDist = nil, carmour.GENERATOR_REACH
+        for _, r in ipairs(rows or {}) do
+            local d = getDistanceBetweenPoints3D(x, y, z, r.x, r.y, r.z)
+            if d <= bestDist and fuelOf(r.data) >= carmour.FUEL_PER_WELD then
+                best, bestDist = r, d
+            end
+        end
+        return best
+    end
+
     local function fail(player, code)
         toast(player, code)
     end
@@ -161,8 +190,9 @@ return function(ctx)
         end
         setPedAnimation(player, nil)
         triggerClientEvent(player, "vehicleHoldStopped", player)
-        exports.items:drawGeneratorFuel(genId, carmour.FUEL_PER_WELD, function(drawn)
-            if not drawn then
+        local fuel = carmour.FUEL_PER_WELD
+        db.exec(DRAW, { fuel, genId, fuel }, function(ok, _, affected)
+            if not ok or tonumber(affected) ~= 1 then
                 return fail(player, "WELD_NOPOWER")
             end
             local inf = info[vehicle]
@@ -184,7 +214,7 @@ return function(ctx)
                 M.apply(vehicle)
                 exports.items:forgetWorldItem(panel.id)
                 if isElement(player) then
-                    exports.items:sendInventory(player)
+                    exports.items:refreshPlayer(player)
                     toast(player, "WELDED")
                 end
                 local who, line = getPlayerName(player), "[CARMOUR] %s welded %s onto vehicle %d slot %d"
@@ -197,8 +227,11 @@ return function(ctx)
     function M.weld(player, vehicle)
         local inf = info[vehicle]
         local defs = inf and slotDefs(vehicle)
-        if not defs or activeActions[player] then
+        if not inf or activeActions[player] then
             return
+        end
+        if not defs then
+            return fail(player, "WELD_NOSLOTS")
         end
         local st = inf.carmour or carmour.new()
         local slot = carmour.freeSlot(st, defs)
@@ -228,7 +261,9 @@ return function(ctx)
                 if not tank then
                     return fail(player, "WELD_NOGAS")
                 end
-                exports.items:findGenerator(px, py, pz, int, dim, carmour.FUEL_PER_WELD, function(gen)
+                local cable = carmour.GENERATOR_REACH
+                db.query(GENERATORS, { int, dim, px, cable, py, cable }, function(gens)
+                    local gen = nearestGenerator(gens, px, py, pz)
                     if not gen then
                         return fail(player, "WELD_NOPOWER")
                     end

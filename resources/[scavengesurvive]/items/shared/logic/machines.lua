@@ -8,7 +8,6 @@ local M = {}
 
 -- Generator is the port's own: a fuel-only machine (no container, no cook) that powers the Welder (vehicles, carmour)
 M.TYPES = { ScrapMachine = "scrap", RefineMachine = "refine", WaterMachine = "water", Generator = "generator" }
-M.GENERATOR_REACH = 8.0 -- the Welder's cable: a running generator this near powers it
 M.GENERATOR_UNAME = "Generator"
 M.CONTAINER_SIZE = 12 -- DefineMachineType(..., 12)
 M.MAX_FUEL = 100.0 -- MAX_MACHINE_FUEL

@@ -73,8 +73,6 @@
     <export function="destroyWorldItem" type="server"/>
     <export function="destroyContainerItem" type="server"/>
     <export function="forgetWorldItem" type="server"/>
-    <export function="findGenerator" type="server"/>
-    <export function="drawGeneratorFuel" type="server"/>
     <export function="destroyWorldItemsNear" type="server"/>
     <export function="dropHeld" type="server"/>
     <export function="isFemaleSkin" type="server"/>

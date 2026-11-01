@@ -16,6 +16,7 @@ M.GAS_PER_TANK = 5 -- welds in a fresh Gas Tank (its item data is { gas = n }, n
 M.GAS_PER_WELD = 1
 M.FUEL_PER_WELD = 5 -- Generator fuel (of 100) one weld burns
 M.WELD_MS = 8000
+M.GENERATOR_REACH = 8.0 -- the Welder's cable: a Generator with fuel this near powers it
 M.PANEL_REACH = 3.0 -- the panel to weld must lie this near the player
 M.WELD_REACH = 2.5 -- and the player this near the trailer's side
 

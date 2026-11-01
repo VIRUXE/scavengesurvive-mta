@@ -76,7 +76,7 @@ UNSET_TIPS = {
     "RefineMachine": "Put Scrap Metal inside and fuel it with a Petrol Can, it refines the metal into Refined Metal",
     "ScrapMachine": "Put items inside and fuel it with a Petrol Can, it breaks them down into Scrap Metal",
     "WaterMachine": "Put Water Bottles of sea water inside and fuel it with a Petrol Can, it purifies the water",
-    "Welder": "Hold it at an Airstream with a Gas Tank on you, a defence panel lying near and a fuelled Generator within 8 m to weld the panel on",
+    "Welder": "Press [F] at a vehicle with a Gas Tank on you, a defence panel lying near and a fuelled Generator within 8 m to weld the panel on (for now only the towable Airstream takes armour)",
     "GasTank": "Fuel for the Welder, each tank holds 5 welds",
     "Generator": "Hold [F] with a Petrol Can to fuel it, a Welder within 8 m runs on it",
 }
