@@ -454,6 +454,14 @@ function isOnDuty(player)
     return state.duty[player] ~= nil
 end
 
+-- Put the duty skin back on an on-duty member after something respawned them (character spawns with the stored skin).
+function reapplyDutySkin(player)
+    local d = state.duty[player]
+    if d then
+        setElementModel(player, logic.dutySkin(exports.items:isFemaleSkin(d.skin)))
+    end
+end
+
 function isMuted(player)
     return logic.muteRemaining(state.muted[player], getTickCount()) ~= nil
 end
