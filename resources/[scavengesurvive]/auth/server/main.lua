@@ -211,11 +211,10 @@ local function showDialog(player, mode, attempts)
     triggerClientEvent(player, "authPromptShown", player, mode, title, body)
 end
 
--- Leave button, or the fifth wrong password: everyone reads the grey line, the player is kicked (upstream Kick).
+-- Leave button, or the fifth wrong password: the player is kicked (upstream Kick).
 local function leave(player)
     local mode = promptMode[player]
     promptMode[player] = nil
-    outputChatBox(prompts.leftMessage(getPlayerName(player), mode), root, 175, 175, 175)
     util.log("auth", "info", "%s left the %s dialog", getPlayerName(player), tostring(mode))
     kickLater(player, mode == "register" and "Left without registering" or "Left without logging in")
 end

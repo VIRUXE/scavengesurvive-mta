@@ -189,18 +189,6 @@ function chat.joinLines(name, motd)
     return lines
 end
 
--- MTA quit types to upstream's two reasons; kicks and bans print nothing (upstream reason 2 had no line).
-local QUIT_LINES = {
-    Quit = " >  %s left the server.",
-    ["Timed out"] = " >  %s lost connection.",
-    ["Bad Connection"] = " >  %s lost connection.",
-    Unknown = " >  %s lost connection.",
-}
-function chat.quitLine(name, quitType)
-    local fmt = QUIT_LINES[quitType]
-    return fmt and string.format(fmt, name) or nil
-end
-
 -- Info commands (upstream player/commands.pwn). SA-MP message boxes expand tabs; dx does not, so the body gets
 -- four spaces per tab before it is sent.
 function chat.dialogBody(text)

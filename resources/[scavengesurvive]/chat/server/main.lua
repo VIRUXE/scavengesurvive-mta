@@ -423,13 +423,9 @@ addEventHandler("onPlayerJoin", root, function()
     end
 end)
 
-addEventHandler("onPlayerQuit", root, function(quitType)
+addEventHandler("onPlayerQuit", root, function()
     voiceStopped(source)
     state[source] = nil
-    local line = logic.quitLine(getPlayerName(source), quitType)
-    if line then
-        outputChatBox(line, root, 175, 175, 175)
-    end
 end)
 
 addEventHandler("onResourceStart", resourceRoot, function()

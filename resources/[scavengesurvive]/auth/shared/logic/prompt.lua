@@ -41,12 +41,6 @@ function prompt.onRefused(code, attempts)
     return { action = "kick", reason = "Account load failed" }
 end
 
--- The grey line everyone reads when a player leaves the dialog (upstream ChatMsgAll GREY).
-function prompt.leftMessage(name, mode)
-    local what = mode == "register" and "registering" or "logging in"
-    return string.format(" >  %s left the server without %s.", name, what)
-end
-
 -- Welcome message (welcome-message.pwn): a message box whose only button counts down from 10 before it reads
 -- Accept; closing it earlier shows it again. Upstream hardcoded the English text.
 prompt.WELCOME_TITLE = "Welcome to the Server"
