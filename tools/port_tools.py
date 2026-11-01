@@ -1,7 +1,7 @@
 """The port's welding kit: a Welder, a Gas Tank and a Generator (carmour, vehicles/shared/logic/carmour.lua).
 
-Upstream has none of them. The Welder is the port's own model (prop_models, id 20202); the Gas Tank and the Generator
-are vanilla GTA objects (CJ_O2Tanks 1348, Y_GENERATOR 920). The converters add one item type per row
+Upstream has none of them. The Welder and the Generator are the port's own models (prop_models 20202, and 20204 built
+from the vanilla Y_GENERATOR); the Gas Tank is a vanilla GTA object (CJ_O2Tanks 1348). The converters add one item type per row
 (tools/convert/item_types.py) and its loot rows (tools/convert/loot_tables.py). The Generator is a fuel-only machine
 (items/shared/logic/machines.lua): a Petrol Can fills it, a Welder within its cable draws on it.
 """
@@ -15,10 +15,11 @@ GAS_BOTTLE_CAPACITY = 11.0  # kg of propane in a full Gas Bottle; its item data 
 # studio set (`rcon studio <player> hands`) with attachedit's preview (items/client/attach.lua setPreview).
 WELDER_HOLD = (-0.344, 0.358, -0.040, 0.0, 90.0, 0.0)
 
-# The Generator is a portable inverter unit (prop_models 20204, 0.52 x 0.33 x 0.44 m, modelled on a Honda EU2200i): carried
-# like the Welder, on the spine in the two-handed pose, its handle bar (0.42 up the model, 0.11 higher than the Welder's)
-# across both palms; the offset is the Welder's with the bar's extra height taken off along the model's up axis.
-GENERATOR_HOLD = (-0.454, 0.358, -0.040, 0.0, 90.0, 0.0)
+# The Generator is a portable open-frame unit (prop_models 20204, 0.61 x 0.34 x 0.54 m: the vanilla Y_GENERATOR's body at
+# half size in a chrome frame): carried like the Welder, on the spine in the two-handed pose, the frame's carry bar (0.52 up
+# the model, 0.21 higher than the Welder's) across both palms; the offset is the Welder's with the bar's extra height taken
+# off along the model's up axis.
+GENERATOR_HOLD = (-0.554, 0.358, -0.040, 0.0, 90.0, 0.0)
 
 # uname, name, model, size, hitpoints, loot { table: weight }, carried: a heavy two-handed hold like the Large Box
 TOOLS = [
