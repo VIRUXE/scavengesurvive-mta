@@ -32,6 +32,12 @@ then runs itself in Blender (DragonFF) for each prop's dff and col.
                      down (-Z); its lowest point at GRINDER_LOW.
     grind_disc 20207  a spare grinding disc for the grinder, lying flat: GRINDER_DISC's disc on its own.
 
+    car_battery 20208 a 12 V lead-acid car battery, 0.26 x 0.17 m, 0.2 m with its strap: black case with ribs and a warning label,
+                     a lid with a red (+) and a black (-) lead post, vent plugs and a carry strap along X (top at
+                     BATTERY_HANDLE_Z); vanilla textures (BATTERY_TEXTURES, found with gta-scout). The Battery item.
+    tool_battery 20209 a cordless tool's slide-on 18 V pack, the one under the grinder's tail (tool_pack), standing on its foot:
+                     black body, yellow latch band, charge lamps on +Y; GRINDER_TEXTURES' subset (TOOL_BATTERY_TEXTURES).
+
 Origin (except welder_torch and grinder): the centre of the base (x, y) with z = 0 at the lowest point; the front faces +Y.
 """
 from __future__ import annotations
@@ -222,6 +228,59 @@ GRINDER_LOW = -0.058  # grinder.dff: the lowest point (the battery's foot and th
 GRINDER_TEXTURES = [("helixbarrier.txd", "yellow"), ("ballys01.txd", "CJ_blackplastic"), ("cj_airprt.txd", "CJ_RUBBER"), ("des_clifftown.txd", "drvin_metal"), ("trailers.txd", "trail_wheel"), ("industrialext.txd", "cj_chromepipe"), ("bistro.txd", "vent_64")]
 
 
+def tool_pack(ctx, centre, black, yellow, dim):
+    """The cordless tool's battery pack: a black body around `centre`, a wider foot under it (the pack's lowest point is
+    TOOL_PACK_LOW below the centre) and a yellow latch band on top. Shared by the grinder and the loose Tool Battery."""
+    box = ctx["box"]
+    cx, cy, cz = centre
+    box((cx, cy, cz), (0.058, 0.05, 0.05), black, None)
+    box((cx, cy, cz - 0.034), (0.064, 0.056, 0.024), black, dim)
+    box((cx, cy, cz + 0.027), (0.052, 0.044, 0.006), yellow, None)
+
+
+TOOL_PACK_LOW = 0.046  # tool_pack: the body centre's height above the foot's underside
+TOOL_BATTERY_TEXTURES = [("ballys01.txd", "CJ_blackplastic"), ("helixbarrier.txd", "yellow"), ("cj_airprt.txd", "CJ_red_COUNTER"), ("industrialext.txd", "cj_chromepipe")]
+BATTERY_HANDLE_Z = 0.2  # car_battery.dff: the top of the carry strap
+# (source TXD, texture) per car_battery material, all vanilla and found with gta-scout: black case, red plastic, lead/chrome
+# posts, rubber strap, a warning-strip label
+BATTERY_TEXTURES = [("ballys01.txd", "CJ_blackplastic"), ("cj_airprt.txd", "CJ_red_COUNTER"), ("industrialext.txd", "cj_chromepipe"), ("cj_airprt.txd", "CJ_RUBBER"), ("vegasdwntwn1.txd", "warning-strip64")]
+
+
+def build_car_battery(ctx):
+    """A 12 V car battery: a ribbed black case 0.26 x 0.17 x 0.15, a stepped lid with vent plugs, a red (+) and a black (-)
+    post on the +Y edge and a rubber strap arched over the lid along X to BATTERY_HANDLE_Z. Origin at the base's centre."""
+    box, tube = ctx["box"], ctx["tube"]
+    black, red, chrome, rubber, label = 0, 1, 2, 3, 4
+    white, dim = (0.9, 0.9, 0.9, 1.0), (0.6, 0.6, 0.6, 1.0)
+    box((0.0, 0.0, 0.07), (0.26, 0.17, 0.14), black, dim)
+    box((0.0, 0.0, 0.147), (0.25, 0.16, 0.014), black, None)  # the lid, inset
+    for side in (-1, 1):  # ribs down the long sides
+        for i in range(5):
+            box((-0.09 + i * 0.045, side * 0.087, 0.07), (0.02, 0.004, 0.12), black, None)
+    box((0.0, 0.0875, 0.075), (0.15, 0.002, 0.07), label, white)  # the label panel on +Y... (front face)
+    for x in (-0.06, 0.0, 0.06):  # vent plugs
+        tube((x, -0.03, 0.154), (x, -0.03, 0.162), 0.012, 10, black, dim, False)
+    for x, cap in ((-0.095, red), (0.095, black)):  # posts, capped
+        tube((x, 0.058, 0.154), (x, 0.058, 0.176), 0.017, 10, chrome, white, False)
+        tube((x, 0.058, 0.176), (x, 0.058, 0.182), 0.019, 10, cap, None, False)
+    for x in (-0.07, 0.07):  # the strap's two posts and bar, centred between the vent plugs and posts
+        box((x, -0.04, 0.17), (0.02, 0.03, 0.05), rubber, None)
+    tube((-0.07, -0.04, BATTERY_HANDLE_Z - 0.01), (0.07, -0.04, BATTERY_HANDLE_Z - 0.01), 0.011, 8, rubber, None)
+    return [((0.0, 0.0, 0.1), (0.13, 0.085, 0.1))]
+
+
+def build_tool_battery(ctx):
+    """The grinder's slide-on 18 V pack standing on its foot, charge lamps on +Y. Origin at the foot's centre."""
+    box = ctx["box"]
+    black, yellow, lamp, chrome = 0, 1, 2, 3
+    dim = (0.6, 0.6, 0.6, 1.0)
+    tool_pack(ctx, (0.0, 0.0, TOOL_PACK_LOW), black, yellow, dim)
+    for i in range(4):
+        box((-0.018 + i * 0.012, 0.0253, TOOL_PACK_LOW + 0.005), (0.007, 0.002, 0.007), lamp, None)
+    box((0.0, 0.0, TOOL_PACK_LOW + 0.033), (0.03, 0.02, 0.006), chrome, None)  # the contact block
+    return [((0.0, 0.0, 0.038), (0.032, 0.028, 0.038))]
+
+
 def build_grinder(ctx):
     """A cordless 115 mm angle grinder, 0.33 m: the yellow motor housing along Y with a rubber grip band and a paddle
     switch under it, a black battery pack under the tail, the cast gear head in front with the spindle down (-Z), the
@@ -246,9 +305,7 @@ def build_grinder(ctx):
 
     # the tail: a black end cap with vents, the battery pack hanging under it (yellow latch band on top)
     tube((0.0, -0.105, 0.0), (0.0, -0.088, 0.0), 0.028, 12, black, None, False)
-    box((0.0, -0.124, -0.012), (0.058, 0.05, 0.05), black, None)
-    box((0.0, -0.124, GRINDER_LOW + 0.012), (0.064, 0.056, 0.024), black, dim)
-    box((0.0, -0.124, 0.015), (0.052, 0.044, 0.006), yellow, None)
+    tool_pack(ctx, (0.0, -0.124, -0.012), black, yellow, dim)
     # the motor housing: yellow, a rubber grip band round its rear half, vents on both sides, the paddle switch underneath
     tube((0.0, -0.088, 0.0), (0.0, 0.055, 0.0), 0.03, 14, yellow, None)
     tube((0.0, -0.072, 0.0), (0.0, -0.018, 0.0), 0.0315, 14, rubber, None, False)
@@ -294,6 +351,8 @@ PROPS_TABLE = [
     {"name": "welder_torch", "id": 20205, "dist": 60, "sources": TORCH_TEXTURES, "build": build_welder_torch},
     {"name": "grinder", "id": 20206, "dist": 60, "sources": GRINDER_TEXTURES, "build": build_grinder},
     {"name": "grind_disc", "id": 20207, "dist": 40, "sources": GRIND_DISC_TEXTURES, "build": build_grind_disc},
+    {"name": "car_battery", "id": 20208, "dist": 60, "sources": BATTERY_TEXTURES, "build": build_car_battery},
+    {"name": "tool_battery", "id": 20209, "dist": 40, "sources": TOOL_BATTERY_TEXTURES, "build": build_tool_battery},
 ]
 
 

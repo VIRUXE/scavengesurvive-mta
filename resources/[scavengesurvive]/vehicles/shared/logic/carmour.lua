@@ -8,7 +8,7 @@
 -- first), then the door's own hitpoint, which breaks its lock; it knocks every attached, unwelded panel off.
 -- A vehicle's armour is { base, next, panels = { record, ... } } stored as JSON in vehicles.carmour; a record is
 -- { id, u = uname, hp, w = welded, door, c = centre, l, s = long and short side (unit), sa, sb = door stretch }.
--- An Angle Grinder cuts a welded panel off in GRIND_PASSES held passes of GRIND_PASS_MS; each pass burns a Battery
+-- An Angle Grinder cuts a welded panel off in GRIND_PASSES held passes of GRIND_PASS_MS; each pass burns a Tool Battery
 -- charge and wears a Grinding Disc, and the panel keeps how many it has had (g), so the cut can be finished later.
 -- Pure: no MTA calls at file scope.
 local M = {}
@@ -30,7 +30,7 @@ M.WORK_REACH = 1.6 -- the player this near a panel's box welds or pries it
 M.ATTACH_REACH = 4.5 -- the player this near the spot a panel is attached to
 M.GRIND_PASS_MS = 20000 -- one held pass of the Angle Grinder at a welded panel
 M.GRIND_PASSES = 6 -- passes that cut a welded panel off: two minutes of grinding
-M.BATTERY_CHARGES = 3 -- passes a full Battery runs the Grinder for; its item data { charge = n }, none: full
+M.BATTERY_CHARGES = 3 -- passes a full Tool Battery runs the Grinder for; its item data { charge = n }, none: full
 M.DISC_WEAR = 6 -- passes a new Grinding Disc lasts; its item data { wear = n }, none: new; worn out, it is gone
 M.GROUND_DROP = 0.75 -- metres from the trailer's origin down to the ground, where a knocked-off panel lands
 

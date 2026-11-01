@@ -200,7 +200,7 @@ return {
     GreenGloo_T = "Acest obiect nu are un scop inca.",
     Grenade_T = "Arma aruncabila care poate produce inconstienta.",
     GrindDisc_T = "A spare disc for the Angle Grinder, worn down a little by every pass of grinding",
-    Grinder_T = "Hold [F] at a welded defence to grind it off a vehicle; each pass burns a Battery charge and wears a Grinding Disc, carried in the inventory or bag",
+    Grinder_T = "Hold [F] at a welded defence to grind it off a vehicle; each pass burns a Tool Battery charge and wears a Grinding Disc, carried in the inventory or bag",
     GrnApple_T = "Eat this for food value",
     GunCase_T = "Furniture: press [F] with an item in hand to display it inside, and with empty hands to take it back",
     Gyroscope_T = "Acest obiect nu are un scop inca.",

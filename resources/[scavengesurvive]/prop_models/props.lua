@@ -8,4 +8,6 @@ return {
     [20205] = { dff = "welder_torch", txd = "welder_torch", dist = 60 },
     [20206] = { dff = "grinder", txd = "grinder", dist = 60 },
     [20207] = { dff = "grind_disc", txd = "grind_disc", dist = 40 },
+    [20208] = { dff = "car_battery", txd = "car_battery", dist = 60 },
+    [20209] = { dff = "tool_battery", txd = "tool_battery", dist = 40 },
 }

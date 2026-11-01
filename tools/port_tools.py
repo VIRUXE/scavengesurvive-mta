@@ -29,7 +29,11 @@ GRINDER_HOLD = (0.08, 0.03, 0.0, 90.0, -90.0, 0.0)
 
 # upstream item types shown under another name: uname -> display name (tools/convert/item_types.py). Canister is one
 # steel gas cylinder (SA-MP model 19816), not a can.
-RENAMES = {"Canister": "Gas Cylinder"}
+RENAMES = {"Canister": "Gas Cylinder", "Battery": "Car Battery"}
+
+# upstream item types that get a port model: uname -> (upstream model, port model, modelz). The Car Battery (prop_models
+# 20208, origin at the centre of its base) stands on its base on the ground and keeps upstream's hand hold.
+MODEL_OVERRIDES = {"Battery": (1579, 20208, 0.0)}
 
 # uname, name, model, size, hitpoints, loot { table: weight }, carried: a heavy two-handed hold like the Large Box
 TOOLS = [
@@ -40,5 +44,7 @@ TOOLS = [
     # an angle grinder for cutting metal: industrial loot spots, work vans and trucks, the industrial airdrop
     dict(uname="Grinder", name="Angle Grinder", model=20206, size=3, hp=3, loot={"world_industrial": 4.0, "vehicle_industrial": 3.0, "airdrop_industrial": 6.0}, carry=False, att=GRINDER_HOLD, bone=6, modelz=0.058),
     # a spare grinding disc for the Grinder (prop_models 20207): wears one step per grinding pass; data {"wear": passes left}
+    # the grinder's slide-on 18 V pack (prop_models 20209): runs the Grinder, charges the Stun Gun
+    dict(uname="ToolBattery", name="Tool Battery", model=20209, size=1, hp=2, loot={"world_industrial": 5.0, "vehicle_industrial": 4.0, "airdrop_industrial": 6.0}, carry=False),
     dict(uname="GrindDisc", name="Grinding Disc", model=20207, size=1, hp=1, loot={"world_industrial": 10.0, "vehicle_industrial": 8.0, "airdrop_industrial": 12.0}, carry=False),
 ]

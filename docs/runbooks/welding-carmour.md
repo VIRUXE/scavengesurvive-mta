@@ -28,7 +28,7 @@ them so far).
   is damage proof and cannot blow up. Explosions eat the welded panels (the door's first), then the door's own HP, whose
   loss breaks the lock. A Crowbar or Lock Breaker is refused at the door while it is armoured.
 - **Grinding off**: an Angle Grinder in hand, tap F at the trailer: a 20 s pass at the nearest welded panel within reach
-  (walking off cancels it, nothing is used). Each pass burns one charge of a Battery (3 per Battery, item data
+  (walking off cancels it, nothing is used). Each pass burns one charge of a Tool Battery (3 per Tool Battery, item data
   `{charge}`) and wears a Grinding Disc (6 passes, data `{wear}`; a worn-out disc is gone), both taken from the
   inventory or the bag. The panel keeps its passes (`g`), so the cut can be finished later or by someone else; the
   sixth pass (two minutes in all) cuts it through and it drops to the ground, unwelded, with the HP it had.
@@ -40,7 +40,7 @@ them so far).
   ghost and the server's check run the same code), `vehicles/server/carmour.lua` (attach, torch, weld, pry, grind, persistence,
   mass, tow, damage), `vehicles/client/carmour.lua` (panel objects, door swing, attach mode, torches and their lead).
 - `vehicles.carmour` (JSON: `{ base, next, panels = [{ id, u, hp, w, door, c, l, s, sa, sb, g }] }`) and the procedures
-  `carmour_attach` (held defence used up), `carmour_weld` (one weld of gas), `carmour_grind` (one pass: a Battery
+  `carmour_attach` (held defence used up), `carmour_weld` (one weld of gas), `carmour_grind` (one pass: a Tool Battery
   charge, a disc's wear, the panel's progress), `carmour_detach` (panels back on the ground).
 - Geometry: `python -m tools.carmour_geometry` (Blender + DragonFF) writes `vehicles/shared/data/carmour_geometry.lua`:
   the Airstream's shell (decimated) and door leaf, and every defence's frame and size from its DFF.

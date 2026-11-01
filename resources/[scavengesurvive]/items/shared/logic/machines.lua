@@ -38,6 +38,7 @@ M.SCRAP = {
     FireLighter = 1,
     Timer = 1,
     Battery = 1,
+    ToolBattery = 1,
     Fusebox = 1,
     Armour = 3,
     FishRod = 1,

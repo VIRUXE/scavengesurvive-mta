@@ -5,6 +5,9 @@
     <include resource="lib"/>
     <script src="client/main.lua" type="client"/>
     <file src="props.lua"/>
+    <file src="files/car_battery.col"/>
+    <file src="files/car_battery.dff"/>
+    <file src="files/car_battery.txd"/>
     <file src="files/gas_bottle.col"/>
     <file src="files/gas_bottle.dff"/>
     <file src="files/gas_bottle.txd"/>
@@ -20,6 +23,9 @@
     <file src="files/ls_hatch.col"/>
     <file src="files/ls_hatch.dff"/>
     <file src="files/ls_hatch.txd"/>
+    <file src="files/tool_battery.col"/>
+    <file src="files/tool_battery.dff"/>
+    <file src="files/tool_battery.txd"/>
     <file src="files/welder.col"/>
     <file src="files/welder.dff"/>
     <file src="files/welder.txd"/>

@@ -110,7 +110,7 @@ return function(ctx)
         PRIED = "Panel pried off",
         PRY_WELDED = "A welded panel will not come off with a crowbar, grind it off with an Angle Grinder",
         GRIND_NOPANEL = "No welded panel within reach to grind",
-        GRIND_NOBATTERY = "The Angle Grinder needs a charged Battery in your inventory or bag",
+        GRIND_NOBATTERY = "The Angle Grinder needs a charged Tool Battery in your inventory or bag",
         GRIND_NODISC = "The Angle Grinder needs a Grinding Disc in your inventory or bag",
         GRIND_CUT = "The panel's welds are cut through and it comes off",
         KEY_CRAFTED = "Key crafted",

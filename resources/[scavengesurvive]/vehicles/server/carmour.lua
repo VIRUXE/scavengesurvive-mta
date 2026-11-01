@@ -710,7 +710,7 @@ return function(ctx)
         end)
     end
 
-    -- an Angle Grinder at a vehicle that takes armour: one pass at the nearest welded panel, with a charged Battery
+    -- an Angle Grinder at a vehicle that takes armour: one pass at the nearest welded panel, with a charged Tool Battery
     -- and a Grinding Disc with wear left in the inventory or the bag
     function M.grind(player, vehicle)
         local inf = info[vehicle]
@@ -725,7 +725,7 @@ return function(ctx)
             return toast(player, "GRIND_NOPANEL")
         end
         local cid = exports.character:getCharacterId(player)
-        db.query(CARRIED, { "Battery", cid, cid }, function(batteries)
+        db.query(CARRIED, { "ToolBattery", cid, cid }, function(batteries)
             local battery = firstWith(batteries, carmour.chargeOf)
             if not battery then
                 return toast(player, "GRIND_NOBATTERY")

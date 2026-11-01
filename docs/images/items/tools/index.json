@@ -1,5 +1,5 @@
 {
- "Battery": "1579_drug_blue.png",
- "GrindDisc": "20207_grind_disc.png",
- "Grinder": "20206_grinder.png"
+ "Battery": "20208_car_battery.png",
+ "Grinder": "20206_grinder.png",
+ "ToolBattery": "20209_tool_battery.png"
 }

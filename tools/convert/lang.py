@@ -78,7 +78,7 @@ UNSET_TIPS = {
     "WaterMachine": "Put Water Bottles of sea water inside and fuel it with a Petrol Can, it purifies the water",
     "Welder": "Lay it down and tap [F] to take its torch, with a Gas Cylinder or Gas Bottle hooked up to it and a fuelled Generator within 8 m; [F] with the torch welds a defence attached to the towable Airstream on",
     "Generator": "Hold [F] with a Petrol Can to fuel it, a Welder within 8 m runs on it",
-    "Grinder": "Hold [F] at a welded defence to grind it off a vehicle; each pass burns a Battery charge and wears a Grinding Disc, carried in the inventory or bag",
+    "Grinder": "Hold [F] at a welded defence to grind it off a vehicle; each pass burns a Tool Battery charge and wears a Grinding Disc, carried in the inventory or bag",
     "GrindDisc": "A spare disc for the Angle Grinder, worn down a little by every pass of grinding",
     "GasBottle": "A propane bottle with some gas left in it: hold [F] at a trailer's A-frame to mount it (empty hands take it back), or lay it within 2.5 m of a Welder and tap [F] to hook it up for welding",
 }

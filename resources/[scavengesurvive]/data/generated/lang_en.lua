@@ -216,7 +216,7 @@ return {
     GreenGloo_T = "This item has no use yet",
     Grenade_T = "Throwable weapon that explodes, causing massive concussion and knockouts",
     GrindDisc_T = "A spare disc for the Angle Grinder, worn down a little by every pass of grinding",
-    Grinder_T = "Hold [F] at a welded defence to grind it off a vehicle; each pass burns a Battery charge and wears a Grinding Disc, carried in the inventory or bag",
+    Grinder_T = "Hold [F] at a welded defence to grind it off a vehicle; each pass burns a Tool Battery charge and wears a Grinding Disc, carried in the inventory or bag",
     GrnApple_T = "Eat this for food value",
     GunCase_T = "Furniture: press [F] with an item in hand to display it inside, and with empty hands to take it back",
     Gyroscope_T = "This item has no use yet",
