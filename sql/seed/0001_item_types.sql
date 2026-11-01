@@ -134,6 +134,7 @@ INSERT INTO item_types (uname,name,model,size,max_hitpoints,category,category_da
 ('GolfClub','Golf Club',333,3,3,'weapon','{"animSet": null, "baseWeapon": 2, "calibre": null, "flags": 0, "magSize": 35, "maxReserveMags": 0, "melee": false, "muzzleVelocity": 0.07}'),
 ('GreenGloop','Unknown',2976,3,3,'generic',NULL),
 ('Grenade','Grenade',342,2,2,'weapon','{"animSet": null, "baseWeapon": 16, "calibre": null, "flags": 0, "magSize": 0, "maxReserveMags": 0, "melee": false, "muzzleVelocity": 0.0}'),
+('Grinder','Angle Grinder',20206,3,3,'generic',NULL),
 ('GrnApple','Green Apple',19576,1,1,'food','{"biteValue": 4.5, "canCook": false, "canRawInfect": false, "destroyOnEnd": true, "maxBites": 4}'),
 ('GunCase','Gun Case',2046,12,12,'safebox','{"size": 5}'),
 ('Gyroscope','Gyroscope Unit',1945,1,1,'generic',NULL),

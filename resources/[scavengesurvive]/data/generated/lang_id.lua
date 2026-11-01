@@ -200,6 +200,7 @@ return {
     GolfClub_T = "Ini adalah senjata berat jarak dekat, berfungsi untuk menjatuhkan lawan.",
     GreenGloo_T = "Item ini tidak berguna",
     Grenade_T = "Granat.Berfungsi melukai lawan dalam radius tertentu",
+    Grinder_T = "A cordless angle grinder with a cutting disc, found in industrial areas and work vehicles",
     GrnApple_T = "Eat this for food value",
     GunCase_T = "Furniture: press [F] with an item in hand to display it inside, and with empty hands to take it back",
     Gyroscope_T = "Item ini tidak berfungsi",

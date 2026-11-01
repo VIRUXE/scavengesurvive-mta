@@ -200,6 +200,7 @@ return {
     GolfClub_T = "Acest item este o arma alba, perfecta pentru a face jucatorii inconstienti.",
     GreenGloo_T = "Acest obiect nu are un scop inca.",
     Grenade_T = "Arma aruncabila care poate produce inconstienta.",
+    Grinder_T = "A cordless angle grinder with a cutting disc, found in industrial areas and work vehicles",
     GrnApple_T = "Eat this for food value",
     GunCase_T = "Furniture: press [F] with an item in hand to display it inside, and with empty hands to take it back",
     Gyroscope_T = "Acest obiect nu are un scop inca.",

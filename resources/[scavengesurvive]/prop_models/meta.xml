@@ -11,6 +11,9 @@
     <file src="files/generator.col"/>
     <file src="files/generator.dff"/>
     <file src="files/generator.txd"/>
+    <file src="files/grinder.col"/>
+    <file src="files/grinder.dff"/>
+    <file src="files/grinder.txd"/>
     <file src="files/ls_hatch.col"/>
     <file src="files/ls_hatch.dff"/>
     <file src="files/ls_hatch.txd"/>

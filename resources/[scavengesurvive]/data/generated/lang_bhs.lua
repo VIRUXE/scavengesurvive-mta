@@ -200,6 +200,7 @@ return {
     GolfClub_T = "To je tupo oružje, koristan je za nokautirati igraca",
     GreenGloo_T = "This item has no use yet",
     Grenade_T = "Oružje koje eksplodira kad baceno, uzrokujuci masivni potres mozga i knockouts",
+    Grinder_T = "A cordless angle grinder with a cutting disc, found in industrial areas and work vehicles",
     GrnApple_T = "Eat this for food value",
     GunCase_T = "Furniture: press [F] with an item in hand to display it inside, and with empty hands to take it back",
     Gyroscope_T = "This item has no use yet",

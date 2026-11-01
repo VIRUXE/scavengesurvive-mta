@@ -25,7 +25,13 @@ then runs itself in Blender (DragonFF) for each prop's dff and col.
                      brass nozzle, a stub of lead (its end at TORCH_LEAD; the rest is drawn in game). Origin at the
                      grip's centre, the grip along Y, the nozzle forward (+Y) and bent down 50 degrees, trigger on -Z.
 
-Origin (except welder_torch): the centre of the base (x, y) with z = 0 at the lowest point; the front faces +Y.
+    grinder  20206   a cordless 115 mm angle grinder, 0.33 m: yellow motor housing (rubber grip band, paddle switch, vents),
+                     a black battery under the tail, a cast gear head with the disc under it at GRINDER_DISC, a guard over
+                     the disc's rear half and a side handle out of +X; every surface a vanilla texture (GRINDER_TEXTURES,
+                     found with gta-scout). Origin at the grip's centre, the housing along Y, the disc forward (+Y) and
+                     down (-Z); its lowest point at GRINDER_LOW.
+
+Origin (except welder_torch and grinder): the centre of the base (x, y) with z = 0 at the lowest point; the front faces +Y.
 """
 from __future__ import annotations
 
@@ -208,12 +214,74 @@ def build_generator(ctx):
     return [((0.0, 0.0, 0.22), (0.26, 0.16, 0.22))]
 
 
+GRINDER_DISC = (0.0, 0.1, -0.0485)  # grinder.dff: the cutting disc's centre, the spindle along -Z
+GRINDER_LOW = -0.058  # grinder.dff: the lowest point (the battery's foot and the guard's rim), its item type's modelz
+# (source TXD, texture) per grinder material, all vanilla and found with gta-scout: yellow painted housing, black plastic,
+# rubber grip, dark cast metal (gear head, guard), a dark wheel with a bright hub (the disc), chrome, louvred vent
+GRINDER_TEXTURES = [("helixbarrier.txd", "yellow"), ("ballys01.txd", "CJ_blackplastic"), ("cj_airprt.txd", "CJ_RUBBER"), ("des_clifftown.txd", "drvin_metal"), ("trailers.txd", "trail_wheel"), ("industrialext.txd", "cj_chromepipe"), ("bistro.txd", "vent_64")]
+
+
+def build_grinder(ctx):
+    """A cordless 115 mm angle grinder, 0.33 m: the yellow motor housing along Y with a rubber grip band and a paddle
+    switch under it, a black battery pack under the tail, the cast gear head in front with the spindle down (-Z), the
+    disc under it at GRINDER_DISC, a guard over its rear half and a side handle out of +X. Origin at the grip's centre."""
+    bm, box, tube, paint = ctx["bm"], ctx["box"], ctx["tube"], ctx["paint"]
+    yellow, black, rubber, cast, disc, chrome, vent = 0, 1, 2, 3, 4, 5, 6
+    white, dim, dark = (0.9, 0.9, 0.9, 1.0), (0.6, 0.6, 0.6, 1.0), (0.3, 0.3, 0.32, 1.0)
+    night = lambda c: (c[0] * 0.3, c[1] * 0.3, c[2] * 0.32, 1.0)
+
+    def sector(r0, r1, z0, z1, a0, a1, n, material, col):
+        """A closed ring sector about the disc's axis: radii r0..r1, heights z0..z1, angles a0..a1 (degrees)."""
+        cx, cy = GRINDER_DISC[0], GRINDER_DISC[1]
+        at = lambda r, a, z: bm.verts.new((cx + r * math.cos(math.radians(a)), cy + r * math.sin(math.radians(a)), z))
+        cols = [[at(r, a0 + (a1 - a0) * i / n, z) for r, z in ((r0, z0), (r1, z0), (r1, z1), (r0, z1))] for i in range(n + 1)]
+        uvs = [(0, 0), (1, 0), (1, 1), (0, 1)]
+        for i in range(n):
+            for k in range(4):
+                face = bm.faces.new((cols[i][k], cols[i][(k + 1) % 4], cols[i + 1][(k + 1) % 4], cols[i + 1][k]))
+                paint(face, uvs, col, night(col), material)
+        for end in (cols[0], cols[-1]):
+            paint(bm.faces.new(end), uvs, col, night(col), material)
+
+    # the tail: a black end cap with vents, the battery pack hanging under it (yellow latch band on top)
+    tube((0.0, -0.105, 0.0), (0.0, -0.088, 0.0), 0.028, 12, black, None, False)
+    box((0.0, -0.124, -0.012), (0.058, 0.05, 0.05), black, None)
+    box((0.0, -0.124, GRINDER_LOW + 0.012), (0.064, 0.056, 0.024), black, dim)
+    box((0.0, -0.124, 0.015), (0.052, 0.044, 0.006), yellow, None)
+    # the motor housing: yellow, a rubber grip band round its rear half, vents on both sides, the paddle switch underneath
+    tube((0.0, -0.088, 0.0), (0.0, 0.055, 0.0), 0.03, 14, yellow, None)
+    tube((0.0, -0.072, 0.0), (0.0, -0.018, 0.0), 0.0315, 14, rubber, None, False)
+    for x in (-0.0285, 0.0285):
+        box((x, 0.024, 0.004), (0.004, 0.032, 0.024), vent, None)
+    box((0.0, -0.04, -0.031), (0.018, 0.075, 0.008), black, None)
+    box((0.0, 0.012, 0.03), (0.012, 0.018, 0.006), black, dim)  # the spindle lock button
+    # the gear head: a cast neck, a squat drum round the spindle, the spindle and the flange nut under the disc
+    tube((0.0, 0.05, 0.0), (0.0, 0.075, 0.0), 0.027, 12, cast, None)
+    tube((0.0, GRINDER_DISC[1], -0.03), (0.0, GRINDER_DISC[1], 0.016), 0.031, 14, cast, None, False)
+    tube((0.0, GRINDER_DISC[1], -0.03), (0.0, GRINDER_DISC[1], -0.044), 0.018, 12, cast, dim, False)
+    tube((0.0, GRINDER_DISC[1], -0.044), (0.0, GRINDER_DISC[1], -0.054), 0.007, 8, chrome, white)
+    # the disc, 115 mm, and its flange nut
+    dz = GRINDER_DISC[2]
+    tube((0.0, GRINDER_DISC[1], dz - 0.0015), (0.0, GRINDER_DISC[1], dz + 0.0015), 0.0575, 24, disc, None, False)
+    tube((0.0, GRINDER_DISC[1], dz - 0.0045), (0.0, GRINDER_DISC[1], dz - 0.0015), 0.013, 12, chrome, white, False)
+    # the guard over the rear half: a plate above the disc and a rim down past it, clamped to the drum by a collar
+    sector(0.03, 0.065, -0.044, -0.041, 180, 360, 12, cast, dark)
+    sector(0.062, 0.065, GRINDER_LOW, -0.041, 180, 360, 12, cast, dark)
+    sector(0.033, 0.037, -0.044, -0.024, 150, 390, 12, cast, dim)
+    # the side handle screwed into +X of the gear head: a stud and a black grip with a rubber end
+    tube((0.03, GRINDER_DISC[1], -0.004), (0.05, GRINDER_DISC[1], -0.004), 0.007, 8, chrome, dim)
+    tube((0.05, GRINDER_DISC[1], -0.004), (0.13, GRINDER_DISC[1], -0.004), 0.014, 10, black, None)
+    tube((0.13, GRINDER_DISC[1], -0.004), (0.14, GRINDER_DISC[1], -0.004), 0.016, 10, rubber, None, False)
+    return [((0.04, 0.0, -0.01), (0.105, 0.165, 0.048))]
+
+
 PROPS_TABLE = [
     {"name": "ls_hatch", "id": 20201, "dist": 150, "source": "zombtest1.txd", "textures": ["pave_manhole1"], "build": build_ls_hatch},
     {"name": "welder", "id": 20202, "dist": 100, "source": "dynbarrels.txd", "textures": ["redmetal", "yellowmetal", "alumplat64"], "build": build_welder},
     {"name": "gas_bottle", "id": 20203, "dist": 100, "source": "trailers.txd", "textures": [TANK_TEXTURE], "build": build_gas_bottle},
     {"name": "generator", "id": 20204, "dist": 100, "sources": GEN_TEXTURES, "build": build_generator},
     {"name": "welder_torch", "id": 20205, "dist": 60, "sources": TORCH_TEXTURES, "build": build_welder_torch},
+    {"name": "grinder", "id": 20206, "dist": 60, "sources": GRINDER_TEXTURES, "build": build_grinder},
 ]
 
 
@@ -312,11 +380,13 @@ def build_in_blender(out_dir: Path, names) -> None:
             for a, b, c, d in ((0, 1, 3, 2), (4, 5, 7, 6), (0, 1, 5, 4), (2, 3, 7, 6), (0, 2, 6, 4), (1, 3, 7, 5)):
                 quad([v[a], v[b], v[c], v[d]], material, col)
 
-        def tube(start, end, radius, segs, material, col):
+        def tube(start, end, radius, segs, material, col, extend=True):
+            """A closed cylinder; `extend` runs each end on by half the radius so joined tubes leave no gap."""
             a, b = Vector(start), Vector(end)
             axis = b - a
             axis.normalize()
-            a, b = a - axis * radius * 0.5, b + axis * radius * 0.5
+            if extend:
+                a, b = a - axis * radius * 0.5, b + axis * radius * 0.5
             helper = Vector((0, 0, 1)) if abs(axis.z) < 0.9 else Vector((1, 0, 0))
             u = axis.cross(helper)
             u.normalize()

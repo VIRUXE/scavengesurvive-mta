@@ -216,6 +216,7 @@ return {
     GolfClub_T = "This is a blunt melee weapon, useful for knocking players out",
     GreenGloo_T = "This item has no use yet",
     Grenade_T = "Throwable weapon that explodes, causing massive concussion and knockouts",
+    Grinder_T = "A cordless angle grinder with a cutting disc, found in industrial areas and work vehicles",
     GrnApple_T = "Eat this for food value",
     GunCase_T = "Furniture: press [F] with an item in hand to display it inside, and with empty hands to take it back",
     Gyroscope_T = "This item has no use yet",

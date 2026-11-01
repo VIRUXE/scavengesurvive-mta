@@ -200,6 +200,7 @@ return {
     GolfClub_T = "Esta é uma arma 'branca' robusta , útil para desmaiar jogadores.",
     GreenGloo_T = "Esse item ainda não tem uso",
     Grenade_T = "Item jogável que explode, causando um dano massive além de desmaios.",
+    Grinder_T = "A cordless angle grinder with a cutting disc, found in industrial areas and work vehicles",
     GrnApple_T = "Eat this for food value",
     GunCase_T = "Furniture: press [F] with an item in hand to display it inside, and with empty hands to take it back",
     Gyroscope_T = "Esse item ainda não tem uso",

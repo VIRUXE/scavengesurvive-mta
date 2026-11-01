@@ -200,6 +200,7 @@ return {
     GolfClub_T = "Toto je tupá ruční zbraň na blízko, vhodná ke sražení hráče na zem",
     GreenGloo_T = "Zatím žádné využití",
     Grenade_T = "Házecí zbraň která exploduje, způsobuje vážné omráčení a sražení hráče na zem",
+    Grinder_T = "A cordless angle grinder with a cutting disc, found in industrial areas and work vehicles",
     GrnApple_T = "Eat this for food value",
     GunCase_T = "Furniture: press [F] with an item in hand to display it inside, and with empty hands to take it back",
     Gyroscope_T = "Zatím žádné využití",

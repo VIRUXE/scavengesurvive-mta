@@ -200,6 +200,7 @@ return {
     GolfClub_T = "Esta es una arma de combate cuerpo a cuerpo, brusca, útil para golpear a los jugadores",
     GreenGloo_T = "Esto no tiene uso ahora",
     Grenade_T = "Arma lanzable que explota, causando conmoción masiva y nocaut",
+    Grinder_T = "A cordless angle grinder with a cutting disc, found in industrial areas and work vehicles",
     GrnApple_T = "Eat this for food value",
     GunCase_T = "Furniture: press [F] with an item in hand to display it inside, and with empty hands to take it back",
     Gyroscope_T = "Esto no tiene uso ahora",

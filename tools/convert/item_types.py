@@ -285,6 +285,8 @@ def add_port_tools(types: dict[str, dict]) -> None:
         elif w.get("att"):
             fields.update(dict(zip(("attx", "atty", "attz", "attrx", "attry", "attrz"), w["att"])))
             fields.update(boneid=w.get("bone", 6), usecarryanim=w.get("anim", False))
+        if "modelz" in w:
+            fields["modelz"] = w["modelz"]
         fields.update(_symbol="port_" + w["uname"], _index=index + i, category="generic", categoryData=None)
         types[w["uname"]] = fields
 
