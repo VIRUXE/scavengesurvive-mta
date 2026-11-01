@@ -66,7 +66,9 @@ return function(ctx)
         setPedAnimation(player, "SWORD", "sword_block", -1, true, false, false, false)
         exports.character:gainSkill(player, "Fishing")
         a.landing = true
-        a.timer = setTimer(land, math.max(50, fishing.catchDelayMs(a.dist)), 1, player, a)
+        a.timer = setTimer(function()
+            land(player, a)
+        end, math.max(50, fishing.catchDelayMs(a.dist)), 1)
     end
 
     -- water: the level under the cast point as the client measured it (getWaterLevel is client-only), false where
@@ -85,14 +87,22 @@ return function(ctx)
         end
         local wait = exports.character:skillTimeModifier(player, fishing.waitMs(), "Fishing")
         local a = { rodId = held.id, dist = dist }
-        a.timer = setTimer(lineMoves, wait, 1, player, a)
+        -- a closure, not setTimer's arguments: MTA copies a table argument, and lineMoves compares it with
+        -- active[player] to know the cast is still the one out
+        a.timer = setTimer(function()
+            lineMoves(player, a)
+        end, wait, 1)
         active[player] = a
         triggerClientEvent(player, "fishingStarted", player)
         toast(player, "FISHFISHING")
     end, { rate = 3 })
 
     net.handler("fishCancelRequested", function(player)
-        M.cancel(player)
+        if active[player] then
+            return M.cancel(player)
+        end
+        -- no line out here (lost to an items restart): the hud still thinks one is, so tell it to cast again
+        triggerClientEvent(player, "fishingStopped", player)
     end, { rate = 5 })
 
     addEventHandler("itemMoved", root, function(_, from)
