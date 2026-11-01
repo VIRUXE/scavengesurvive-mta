@@ -5,7 +5,7 @@
 --     back as signTextSubmitted and the world item is re-sent so every client draws it;
 --   Dice: a drop rolls them on and stores the face that landed up;
 --   Locator: used with a Mobile Phone lying there it syncs to it, used alone it says how far that phone is;
---   Stun Gun: used with a Battery or Tool Battery it charges, a fist hit with it (weapons resource) knocks the target out;
+--   Stun Gun: used with a Tool Battery it charges, a fist hit with it (weapons resource) knocks the target out;
 --   Molotov: a Petrol Can used with an Empty Molotov pours 0.5 L and the bottle becomes a Molotov.
 --   Shield: used from the hand it is planted standing in front of the player (weapons stops the shots it covers);
 --   HerpDerp: used, one of 25 random animations;
@@ -397,7 +397,7 @@ return function(ctx)
     local PAIRS = {
         FireLighter = { FireworkBox = launchFirework },
         Locator = { MobilePhone = syncLocator },
-        StunGun = { Battery = chargeStunGun, ToolBattery = chargeStunGun },
+        StunGun = { ToolBattery = chargeStunGun },
         GasCan = { [small.MOLOTOV_FROM] = pourMolotov },
         Knife = { Torso = harvestBody },
     }

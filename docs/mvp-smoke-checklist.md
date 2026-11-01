@@ -431,7 +431,7 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
     - f. Drop the Refined Metal and the Wood Logs, hold the Hammer and press **F**: the `Workbench` is built and the pad
       opens without an arrow; a Campfire (Fire Lighter on three logs) or a Plot Pole opens no pad, as upstream.
 37. **Small item behaviours** (#136, upstream `note`, `sign`, `dice`, `locator`, `stungun`, `molotov.pwn`). One client,
-    two for the stun gun; `/additem Note`, `Sign`, `Dice`, `Locator`, `MobilePhone`, `StunGun`, `Battery`, `GasCan`,
+    two for the stun gun; `/additem Note`, `Sign`, `Dice`, `Locator`, `MobilePhone`, `StunGun`, `ToolBattery`, `GasCan`,
     `MolotovEmpty`.
     - a. **Note.** Hold the Note, **F** (hud: `F Read note`): the input dialog `Write a message onto the note:`; `Done`
       with a message stores it (`Note (first 8 letters(...))` in hand, in the inventory and on the ground); **F** again
@@ -444,7 +444,7 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
     - d. **Locator.** Drop the Mobile Phone, hold the Locator, **F** on the phone: `Locator synced, you can now locate
       the phone.`; walk off, **F** with the Locator: `Distance: 12.345`; pick the phone up with the other client or put
       it in a safebox: the distance follows it; in a trunk: `Unable to trace the mobile phone`.
-    - e. **Stun gun.** Drop the Battery, hold the Stun Gun, **F** on it: `Stun Gun Charged`, the battery is gone and the
+    - e. **Stun gun.** Drop the Tool Battery, hold the Stun Gun, **F** on it: `Stun Gun Charged`, the battery is gone and the
       label reads `Stun Gun (Charged)`. Punch the second client: they are knocked out 60 s and the label reads
       `(Uncharged)`; punch again: `Out of charge`, no wound either time.
     - f. **Molotov.** Drop the Empty Molotov, hold a Petrol Can with petrol (fuel pump), **F** on the bottle: `Fuel

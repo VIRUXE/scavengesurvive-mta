@@ -118,7 +118,7 @@ function M.diceLanding(x, y, facing)
     return x - M.DICE_THROW * math.sin(rad), y + M.DICE_THROW * math.cos(rad)
 end
 
--- Stun gun: charged by a Battery, spent by one hit
+-- Stun gun: charged by a Tool Battery, spent by one hit
 function M.isCharged(data)
     return tonumber(unwrap(data).charged) == 1
 end

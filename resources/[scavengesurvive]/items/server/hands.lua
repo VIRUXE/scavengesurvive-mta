@@ -28,7 +28,7 @@ return function(ctx)
         cooking = c
     end
 
-    -- server/smallitems.lua: held-with-world pairs (Locator + phone, Stun Gun + Battery, can + bottle), dice drops
+    -- server/smallitems.lua: held-with-world pairs (Locator + phone, Stun Gun + Tool Battery, can + bottle), dice drops
     function M.setMachines(m)
         machinesSrv = m
     end
@@ -841,7 +841,7 @@ return function(ctx)
                 return runCrafting("deconstruct", c.player)
             end
 
-            -- a Locator on a phone, a Stun Gun on a Battery, a Petrol Can on an Empty Molotov (server/smallitems.lua)
+            -- Locator on a phone, a Stun Gun on a Tool Battery, a Petrol Can on an empty Molotov (smallitems.lua)
             if small and curHeld and small.interact(c.player, curHeld, row) then
                 return
             end
