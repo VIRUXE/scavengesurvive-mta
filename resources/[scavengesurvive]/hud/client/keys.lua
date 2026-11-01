@@ -219,7 +219,13 @@ return function(ctx)
                     killTimer(interactHoldTimer)
                     interactHoldTimer = nil
                     exports.ui:progressCancel()
-                    triggerServerEvent("fishCastRequested", localPlayer, heldMs)
+                    -- getWaterLevel is client-only: the water under the spot the line lands on (items fishing.lua
+                    -- castPoint, heldMs / 100 m ahead) goes with the cast, false where there is none
+                    local px, py, pz = getElementPosition(localPlayer)
+                    local _, _, rz = getElementRotation(localPlayer)
+                    local dist, rad = math.min(heldMs, MAX_CAST_MS) / 100, math.rad(rz)
+                    local water = getWaterLevel(px - dist * math.sin(rad), py + dist * math.cos(rad), pz)
+                    triggerServerEvent("fishCastRequested", localPlayer, heldMs, water)
                 end
             end, 50, 0)
             return

@@ -69,17 +69,17 @@ return function(ctx)
         a.timer = setTimer(land, math.max(50, fishing.catchDelayMs(a.dist)), 1, player, a)
     end
 
-    net.handler("fishCastRequested", function(player, heldMs)
+    -- water: the level under the cast point as the client measured it (getWaterLevel is client-only), false where
+    -- there is none; a lying client only ever fishes on dry land
+    net.handler("fishCastRequested", function(player, heldMs, water)
         local held = state.held[player]
         if not held or held.uname ~= fishing.ROD or isPedDead(player) or getPedOccupiedVehicle(player) then
             return
         end
         M.cancel(player, true)
         local dist = fishing.castDistance(heldMs)
-        local px, py, pz = getElementPosition(player)
-        local _, _, rz = getElementRotation(player)
-        local lx, ly = fishing.castPoint(px, py, rz, dist)
-        local level = getWaterLevel(lx, ly, pz)
+        local _, _, pz = getElementPosition(player)
+        local level = tonumber(water)
         if not level or level > pz + 1.0 then
             return toast(player, "FISHNCLOSER")
         end
