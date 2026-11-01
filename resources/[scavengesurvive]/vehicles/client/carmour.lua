@@ -85,9 +85,11 @@ local function panelObject(vehicle, rec, alpha)
     setElementInterior(obj, getElementInterior(vehicle))
     local a = place.attachOf(rec, frame)
     if a.sx ~= 1 or a.sy ~= 1 or a.sz ~= 1 then
-        -- MTA draws a non-uniform scale whose x is exactly 1 at full size: keep x a hair under
-        local sx = a.sx == 1 and 0.9999 or a.sx
-        setObjectScale(obj, sx, a.sy, a.sz)
+        -- MTA draws a non-uniform scale with any axis at exactly 1 at full size: keep those a hair under
+        local function axis(v)
+            return v == 1 and 0.9999 or v
+        end
+        setObjectScale(obj, axis(a.sx), axis(a.sy), axis(a.sz))
     end
     attachElements(obj, vehicle, a.x, a.y, a.z, a.rx, a.ry, a.rz)
     if alpha then
@@ -637,11 +639,11 @@ end
 function nearbyWelder()
     local px, py, pz = getElementPosition(localPlayer)
     local grabbed = grabbedIds()
-    local best, bestDist = false, 1.8
+    local best, bestDist = false, 2.0 -- across the ground: a Welder lies about a metre below the player's centre
     for id, obj in pairs(exports.items:worldObjectsOfType("Welder") or {}) do
         local x, y, z = getElementPosition(obj)
-        local d = getDistanceBetweenPoints3D(px, py, pz, x, y, z)
-        if d <= bestDist and not grabbed[id] then
+        local d = getDistanceBetweenPoints2D(px, py, x, y)
+        if d <= bestDist and math.abs(pz - z) < 2 and not grabbed[id] then
             best, bestDist = id, d
         end
     end
