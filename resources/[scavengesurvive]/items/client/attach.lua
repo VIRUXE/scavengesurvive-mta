@@ -334,6 +334,9 @@ return function(ctx)
         for bone, rot in pairs(carry.bones) do
             setElementBoneRotation(player, bone, rot[1], rot[2], rot[3])
         end
+        for bone, rot in pairs(carry.grips[held.uname] or {}) do
+            setElementBoneRotation(player, bone, rot[1], rot[2], rot[3])
+        end
         updateElementRpHAnim(player)
     end
 
