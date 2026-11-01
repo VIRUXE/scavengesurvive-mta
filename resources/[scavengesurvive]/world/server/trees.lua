@@ -33,8 +33,18 @@ return function(ctx)
         triggerClientEvent(root, "treeRestored", root, i, t[1], t[2], t[3], t[4])
     end
 
+    local regrowAt = {} -- tree -> unix time it stands again
+
     local function regrowIn(i, seconds)
-        setTimer(regrow, math.max(1, math.min(seconds, MAX_TIMER_S)) * 1000, 1, i)
+        regrowAt[i] = getRealTime().timestamp + seconds
+        local function arm()
+            local left = regrowAt[i] - getRealTime().timestamp
+            if left > MAX_TIMER_S then
+                return setTimer(arm, MAX_TIMER_S * 1000, 1)
+            end
+            setTimer(regrow, math.max(1, left) * 1000, 1, i)
+        end
+        arm()
     end
 
     local function chainsawRuns()

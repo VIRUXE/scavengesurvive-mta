@@ -14,7 +14,7 @@ M.MAX_MOVE = 0.8 -- metres the player may shift while cutting
 M.BASE_MS = 1000 -- one point of chop damage per second before the Forestry skill
 M.LOG_SPREAD = 1.5 -- upstream HARVEST_DROP_MAX_SPHERE_SIZE
 M.FALL_MS = 4000 -- the felled tree is drawn falling this long before the logs appear
-M.RESPAWN_S = 259200 -- 3 days: a tree grows back far more slowly than loot does
+M.RESPAWN_S = 1814400 -- 3 weeks: a tree grows back far more slowly than loot does
 
 -- species fields of data/trees.lua: { diameter, health, chop damage, pieces, fall }
 function M.reach(species)
