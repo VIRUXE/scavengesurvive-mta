@@ -370,7 +370,7 @@ return function(ctx)
                     payload.trunk = {}
                     payload.capacity.trunk = { used = 0, size = tr.size or 40, uname = tr.title or "Container" }
                     payload.trunkContainerId = tr.containerId
-                    payload.containerWorldItemId = tr.worldItemId or false
+                    payload.containerWorldItemId = not tr.carryable and tr.worldItemId or false
                     byId[tr.containerId] = { rows = payload.trunk, cap = payload.capacity.trunk }
                     ids[#ids + 1] = string.format("%d", tr.containerId)
                 end
@@ -521,6 +521,8 @@ return function(ctx)
         local ckind = opts.kind or (isTent and "tent" or (isBag and "bag" or "safebox"))
         local title = opts.title or (isTent and "Tent" or (t and t.name or uname))
         local pos = itemRow.x and itemRow.y and itemRow.z and { x = itemRow.x, y = itemRow.y, z = itemRow.z }
+        -- a bag or box is picked up with a hold of the interact key, contents and all (upstream), not from its list
+        local carryable = (isBag or (t and t.category == "safebox")) and not opts.machine or false
 
         db.one(
             "SELECT id, size, kind FROM containers WHERE owner_item_id = ? "
@@ -539,6 +541,7 @@ return function(ctx)
                         heldItemId = not c.pos and c.itemRow.id or nil,
                         pos = c.pos,
                         machine = c.machine,
+                        carryable = c.carryable,
                     }
                     sendInventory(c.player)
                 else
@@ -559,6 +562,7 @@ return function(ctx)
                                     heldItemId = not c.pos and c.itemRow.id or nil,
                                     pos = c.pos,
                                     machine = c.machine,
+                                    carryable = c.carryable,
                                 }
                                 sendInventory(c.player)
                             end
@@ -574,6 +578,7 @@ return function(ctx)
                 itemRow = itemRow,
                 pos = pos,
                 machine = opts.machine,
+                carryable = carryable,
             }
         )
     end

@@ -29,6 +29,7 @@ M.CRATES = { supply = "Open supply crate", cache = "Open weapon cache" }
 --   held = false | { uname, category, isWeapon },
 --   nearCooker,                           -- uncooked food in hand next to a campfire or barbecue (#95): "Cook"
 --   nearMachine,                          -- a machine in reach (#145): "Access machine" / "(Hold) Machine menu"
+--   nearContainer,                        -- a bag or box lying in reach: "Open" / "(Hold) Pick up"
 --   nearWeld,                             -- a Welder in hand at a vehicle that takes armour: "Weld panel" (F welds,
 --                                         -- so the door and machine lines go)
 --   supports = { [capability] = true },   -- eat, drink, openbag, wearbag, special, holster, reload, unload, give,
@@ -89,6 +90,11 @@ function M.lines(ctx, keys)
     if ctx.nearMachine and not ctx.nearWeld and not (ctx.held and ctx.held.uname == "Crowbar") then
         add("interact", "Access machine")
         add("interact", "(Hold) Machine menu")
+    end
+    -- a bag or box lying within reach (items): upstream's button "Hold F to pick up / Press F to open"
+    if ctx.nearContainer and not ctx.nearWeld and not (ctx.held and ctx.held.uname == "Crowbar") then
+        add("interact", "Open")
+        add("interact", "(Hold) Pick up")
     end
     if ctx.nearTrunk then
         add("interact", "Open Trunk", "trunk")
