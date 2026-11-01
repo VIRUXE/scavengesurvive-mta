@@ -175,6 +175,14 @@ local function hitBleed(attacker, weapon, dist)
         wound.firearmKnock(cd.muzzleVelocity, dist, ammoKoMult)
 end
 
+-- the penetration of the ammo loaded in the attacker's weapon (upstream GetAmmoTypePenetration), nil without one
+local function ammoPenetration(attacker)
+    local held = exports.items:getHeld(attacker)
+    local uname = held and held.data and held.data.ammoItem
+    local def = uname and itemType(uname) or nil
+    return def and def.categoryData and tonumber(def.categoryData.penetration) or nil
+end
+
 net.handler("weaponHitReported", function(victim, attacker, weapon, bodypart, loss)
     weapon, bodypart, loss = tonumber(weapon), tonumber(bodypart) or 3, tonumber(loss) or 0
     if not weapon or loss < 0 or loss > MAX_LOSS then
@@ -254,8 +262,12 @@ net.handler("weaponHitReported", function(victim, attacker, weapon, bodypart, lo
     end
     pairs_[victim] = now
     bleed = wound.bodypartBleed(bleed, bodypart)
-    if bodypart == 3 and getElementData(victim, "items.armour") then
-        bleed = bleed * 0.5
+    -- worn Armour takes a chest shot: the ammo's penetration cuts the bleed and the armour's points drain (#155)
+    if bodypart == 3 and weapon > 0 and getElementData(victim, "items.armour") then
+        local penetration = ammoPenetration(attacker)
+        if penetration then
+            bleed = exports.items:armourHit(victim, bleed, penetration)
+        end
     end
     local hp = wound.hpLoss(bleed)
     exports.character:applyWound(victim, bleed, hp, attacker, wound.killCause(weapon)) -- the body's reason (#139)

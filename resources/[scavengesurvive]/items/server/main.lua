@@ -11,6 +11,7 @@ local geometry = loadFile("shared/logic/geometry.lua")
 local diff = loadFile("shared/logic/diff.lua")
 local ammo = loadFile("shared/logic/ammo.lua")
 local apparel = loadFile("shared/logic/apparel.lua")
+local armourLogic = loadFile("shared/logic/armour.lua")
 local skins = loadFile("shared/logic/skins.lua")
 apparel.skins = skins
 local clothes = loadFile("shared/logic/clothes.lua")
@@ -77,6 +78,7 @@ local OWNED_SQL = "SELECT i.type_uname AS uname, i.data, i.container_id FROM ite
 local world =
     loadFile("server/world.lua")({ db = db, state = state, geometry = geometry, diff = diff, charId = charId })
 local hands
+local armourDurability
 
 -- Deletes an item the player owns (held, in their inventory or worn bag). cb(ok) runs only while the player exists.
 local function destroy(itemId, player, cb)
@@ -136,6 +138,7 @@ hands = loadFile("server/hands.lua")({
     geometry = geometry,
     ammo = ammo,
     apparel = apparel,
+    armour = armourLogic,
     type = itemType,
     defaultAmmo = defaultAmmo,
     charId = charId,
@@ -165,6 +168,8 @@ local containers = loadFile("server/containers.lua")({
     isBadInteract = isBadInteract,
 })
 hands.setContainers(containers)
+local armourCtx = { state = state, hands = hands, destroy = destroy, world = world, armour = armourLogic }
+armourDurability = loadFile("server/armour.lua")(armourCtx)
 local fixed = loadFile("server/fixed.lua")({ db = db, world = world, log = util.log })
 local cookingCtx = { db = db, state = state, type = itemType, toast = toast, world = world, hands = hands }
 cookingCtx.cooking = cooking
@@ -614,6 +619,14 @@ function closeContainer(player)
     end
     containers.closeContainer(player)
     return true
+end
+
+-- export: a chest hit on the player's worn Armour; returns the bleed that gets through (upstream armour.pwn)
+function armourHit(player, bleed, penetration)
+    if not isElement(player) then
+        return bleed
+    end
+    return armourDurability.hit(player, bleed, tonumber(penetration) or 0)
 end
 
 -- weapons: a headshot knocks the hat and mask off (hands.popGear, #137)
