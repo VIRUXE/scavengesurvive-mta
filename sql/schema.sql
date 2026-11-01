@@ -510,8 +510,8 @@ END//
 
 CREATE OR REPLACE PROCEDURE `carmour_grind`(IN p_vehicle_id INT, IN p_battery_id INT, IN p_disc_id INT, IN p_carmour LONGTEXT, IN p_battery_full INT, IN p_disc_full INT)
 BEGIN
-  
-  
+  -- one grinding pass (vehicles/server/carmour.lua): the Tool Battery loses a charge (no data: full), the Grinding Disc a
+  -- step of wear (no data: new; worn out: gone) and the vehicle's armour JSON is written, all or nothing
   DECLARE v_battery_data LONGTEXT DEFAULT NULL;
   DECLARE v_disc_data LONGTEXT DEFAULT NULL;
   DECLARE v_battery INT DEFAULT 0;
