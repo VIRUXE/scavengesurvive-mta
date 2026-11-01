@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import re
 from pathlib import Path
 
@@ -117,8 +118,30 @@ def render_lua(entries: dict[str, str]) -> str:
     return HEADER + "return {\n" + body + "\n}\n"
 
 
+PORT_DIR = Path(__file__).parent / "lang_port"
+UNTRANSLATED = "(REQUIRES TRANSLATION"
+PH_RE = re.compile(r"%(?:\d+\$)?[-+ #0]*\d*(?:\.\d+)?[a-zA-Z]")
+
+
+def load_overlay(code: str) -> dict[str, str]:
+    path = PORT_DIR / f"{code}.json"
+    return json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+
+
+def apply_overlay(entries: dict[str, str], english: dict[str, str], overlay: dict[str, str]) -> None:
+    """Port translations fill what upstream lacks: missing keys, REQUIRES TRANSLATION markers and lines equal to English."""
+    for key, text in overlay.items():
+        if "NOT SET" in text:  # an overlay built from upstream's unset-tip marker, the port's own tip stays
+            continue
+        cur = entries.get(key)
+        broken = cur is not None and PH_RE.findall(cur) != PH_RE.findall(english.get(key, cur))
+        if cur is None or cur.startswith(UNTRANSLATED) or cur == english.get(key) or broken:
+            entries[key] = _replace(text)
+
+
 def convert(src_root, out_data) -> dict[str, int]:
     counts = {}
+    english = {}
     for name, enc in ENCODINGS.items():
         entries = parse((Path(src_root) / "scriptfiles/languages" / name).read_bytes(), enc)
         for key in entries:
@@ -131,6 +154,10 @@ def convert(src_root, out_data) -> dict[str, int]:
             key = uname[:9] + "_T"
             if key not in entries or "NOT SET" in entries[key]:
                 entries[key] = tip
+        if CODES[name] == "en":
+            english = dict(entries)
+        else:
+            apply_overlay(entries, english, load_overlay(CODES[name]))
         write_text(Path(out_data) / f"lang_{CODES[name]}.lua", render_lua(entries))
         counts[CODES[name]] = len(entries)
     return counts
