@@ -189,26 +189,68 @@ function chat.joinLines(name, motd)
     return lines
 end
 
--- Info commands (upstream player/commands.pwn). SA-MP message boxes expand tabs; dx does not, so the body gets
--- four spaces per tab before it is sent.
-function chat.dialogBody(text)
-    return (tostring(text or ""):gsub("\t", "    "))
-end
+-- Info commands (upstream player/commands.pwn) as ui showInfo specs (CEGUI windows: a table, or coloured
+-- paragraphs from SA-MP dialog text).
 
 -- GENCOMDHELP lines of upstream commands the port leaves out: /restartinfo (the port has no scheduled restart and
 -- saves continuously, so upstream's restart and saving notes do not apply).
-chat.DROPPED_HELP = { "restartinfo" }
+chat.DROPPED_HELP = { restartinfo = true }
 
--- The /help body: each dropped command's line and the blank line after it removed, tabs expanded.
-function chat.helpBody(text)
-    local out = tostring(text or "")
-    for _, name in ipairs(chat.DROPPED_HELP) do
-        out = out:gsub("\t[^\n]*/" .. name .. " [^\n]*\n\n", "")
+-- Upstream's /help ends with "coded and owned by Southclaws ... all rights reserved"; the port credits both instead.
+chat.HELP_FOOTER = "#AFAFAFScavenge and Survive by Southclaws, ported to MTA:SA by VIRUXE."
+
+-- The /help window: each "#RRGGBB/command - description" line becomes a row in its colour; upstream's other text
+-- (the ownership line) gives way to HELP_FOOTER.
+function chat.helpWindow(text)
+    local rows = {}
+    for line in (tostring(text or "") .. "\n"):gmatch("(.-)\n") do
+        local colour, cmd, desc = line:match("^%s*(#%x%x%x%x%x%x)(/%S+)%s+%-%s+(.+)$")
+        if cmd and not chat.DROPPED_HELP[cmd:sub(2)] then
+            rows[#rows + 1] = { cmd, desc, colour = colour }
+        end
     end
-    return chat.dialogBody(out)
+    local columns = { "Command", "Description" }
+    return { title = "General Information", columns = columns, rows = rows, footer = chat.HELP_FOOTER }
 end
 
--- server.rules / server.staff (upstream settings.ini arrays): entries separated by "|", blanks dropped.
+-- /chatinfo: the text as coloured paragraphs.
+function chat.textWindow(title, text)
+    return { title = title, text = tostring(text or "") }
+end
+
+-- /rules: a numbered list of the setting's entries.
+function chat.listWindow(title, items)
+    local rows = {}
+    for i, item in ipairs(items) do
+        rows[#rows + 1] = { tostring(i), item }
+    end
+    local header = #items == 0 and "#AAAAAANothing listed yet." or nil
+    return { title = title, header = header, columns = { "#", title }, rows = rows }
+end
+
+-- /admins: every staff account, highest rank first (the query orders them). staff = { { name, rank, colour, online } }
+-- with colour "#RRGGBB" of the rank.
+function chat.staffWindow(staff)
+    local rows = {}
+    for _, s in ipairs(staff) do
+        rows[#rows + 1] = { s.name, s.rank, s.online and "online" or "", colour = s.colour }
+    end
+    local header = #staff == 0 and "#AAAAAANo staff yet." or nil
+    return { title = "Staff", header = header, columns = { "Name", "Rank", "Status" }, rows = rows }
+end
+
+-- /credits: the opening line, then one row per contributor.
+function chat.creditsWindow()
+    local rows = {}
+    for i = 2, #chat.CREDITS do
+        local name, what = chat.CREDITS[i]:match("^(.-) %- (.+)$")
+        rows[#rows + 1] = { name, what }
+    end
+    local header = "#FFFF00" .. chat.CREDITS[1]
+    return { title = "Credits", header = header, columns = { "Contributor", "Contribution" }, rows = rows }
+end
+
+-- server.rules (upstream settings.ini array): entries separated by "|", blanks dropped.
 function chat.listSetting(value)
     local out = {}
     if type(value) ~= "string" then
@@ -223,19 +265,11 @@ function chat.listSetting(value)
     return out
 end
 
--- /rules and /admins: a yellow header with the count, then one orange line per entry.
-function chat.listLines(header, items)
-    local lines = { string.format(" >  %s (total: %d)", header, #items) }
-    for _, item in ipairs(items) do
-        lines[#lines + 1] = " >  #FFAA00" .. item
-    end
-    return lines
-end
-
 chat.CREDITS = {
-    "Scavenge and Survive is developed by Southclaws (www.southcla.ws) and the following contributors:",
+    "Scavenge and Survive was created by Southclaws (www.southcla.ws) and ported to MTA:SA by VIRUXE, with these"
+        .. " contributors:",
     "Y_Less - Tons of useful code, libraries and conversations",
-    "Viruxe - Lots of anti-cheat work",
+    "Viruxe - MTA:SA port, anti-cheat work",
     "Kadaradam - Fishing, Trees and lots of bug fixes",
     "Eidorian - French translation",
     "Hiddos - Better water detection code",

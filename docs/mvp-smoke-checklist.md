@@ -18,9 +18,11 @@ ui 6, auth 7, character 8, items 9, loot 10, hud 11, weapons 12, dev/config 13),
    On join A reads the orange `Scavenge and Survive (Copyright (C) 2016 Barnaby "Southclaws" Keene)` line and, when
    a MoTD is set, `MoTD: …`; B reads `A has joined`. A quitting shows B `A left the server.`, a timeout `A lost
    connection.`, a kick nothing (#84).
-   `/help` and `/chatinfo` open message boxes with a lone Close (tabs as indents, colours kept); `/welcome` re-shows
-   the welcome box closable at once; `/rules` and `/admins` list `server.rules` / `server.staff` (entries split on
-   `|`, "total: 0" when empty); `/credits` and `/motd` print in chat (#85).
+   `/help` opens a CEGUI window with a coloured Command / Description table and the port credit footer; `/chatinfo`
+   a CEGUI window of coloured, indented paragraphs; `/welcome` re-shows the welcome box closable at once; `/rules` a
+   numbered table of `server.rules` (entries split on `|`, "Nothing listed yet." when empty); `/admins` every account
+   with `admin_level > 0` (Name, Rank in its colour, "online" when logged in); `/credits` a Contributor /
+   Contribution table naming the MTA:SA port; Close, Escape or Enter shuts each; `/motd` prints in chat (#85).
 3. **DB round trip.** A: `/dbtest` prints `dbtest: <n> ms ok=false code=UNKNOWN_TYPE` with n < 50.
 4. **Pick up / drop.** A: `/additem Wrench`. Within 2 s a "Wrench" label appears at the item. **F** picks it up
    (the key list changes to Put away / Drop item), **N** drops it at your feet, **F** picks it up again. B sees each change.
@@ -464,9 +466,9 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
 
 
 39. **Travel stats and Endurance** (#138, upstream `char/travel-stats.pwn`). One client.
-    - a. `/mstats` right after spawning: every `DIST_*` 0.0, `TIME_*` 0, `JUMPS: 0`. Sprint for a while, swim,
-      drive, crouch-walk: the matching lines grow (one second of sprinting is about 6.5 m, the others sort by speed),
-      and a vehicle trip shows under `DRIVING` only.
+    - a. `/mstats` right after spawning: a "Travel stats" window, every row `0 m` / `0s`, `Jumps` 0. Sprint for a
+      while, swim, drive, crouch-walk: the matching rows grow (one second of sprinting is about 6.5 m, the others
+      sort by speed), and a vehicle trip shows under `Driving` only.
     - b. Sprint 500 m in one go (a long straight road): `Endurance` appears in the inventory's Skills list; sprint
       another 500 m within 10 s of that: no second gain until 10 s have passed; swim 200 m: a gain.
     - c. Jump ten times on foot: a gain on the tenth; jumps in a vehicle or while knocked out count nothing.

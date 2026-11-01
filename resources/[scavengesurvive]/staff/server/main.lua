@@ -480,6 +480,12 @@ function getLevelColour(player)
     return logic.levelColour(ctx.level(player))
 end
 
+-- a staff level's name and colour (r, g, b), for lists other resources draw (chat /admins)
+function getLevelStyle(level)
+    local c = logic.levelColour(tonumber(level) or 0)
+    return logic.levelName(tonumber(level) or 0), c[1], c[2], c[3]
+end
+
 function logAction(actorName, action, targetName, details)
     if not state.ready then
         return false

@@ -247,7 +247,7 @@ CREATE TABLE IF NOT EXISTS `reports` (
 
 CREATE TABLE IF NOT EXISTS `settings` (
   `skey` varchar(48) NOT NULL,
-  `svalue` varchar(255) NOT NULL,
+  `svalue` varchar(2048) NOT NULL,
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   PRIMARY KEY (`skey`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;

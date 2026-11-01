@@ -1,7 +1,8 @@
 -- Server side of the travel stats (#138, shared/logic/travel.lua): the survival tick hands every spawned
 -- character's second here, the kind is read from what the server sees (vehicle, water, crouch, the distance
 -- moved), the Endurance skill gains on the rules, jumps come from the client (rate-limited, counted on foot only)
--- and /mstats prints the counters. The counters live for the session (upstream saved them with the character).
+-- and /mstats shows the counters in an info window. The counters live for the session (upstream saved them with
+-- the character).
 -- ctx = { net, travel, state, gainSkill, isKnockedOut } built by server/main.lua.
 return function(ctx)
     local net, travel, state = ctx.net, ctx.travel, ctx.state
@@ -88,9 +89,7 @@ return function(ctx)
         if not state.byPlayer[player] then
             return
         end
-        for _, line in ipairs(travel.lines(of(player))) do
-            outputChatBox(line, player, 200, 200, 200)
-        end
+        exports.ui:showInfo(player, travel.window(of(player)))
     end)
 
     addEventHandler("characterSpawned", root, function()

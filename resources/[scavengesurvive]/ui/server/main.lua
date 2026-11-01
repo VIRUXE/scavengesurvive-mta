@@ -15,3 +15,12 @@ function hideTip(player)
     triggerClientEvent(player, "helpTipHidden", player)
     return true
 end
+
+-- a read-only CEGUI window built from spec (title, header, columns + rows or text, footer), see client/info.lua
+function showInfo(player, spec)
+    if not isElement(player) or type(spec) ~= "table" then
+        return false
+    end
+    triggerClientEvent(player, "infoShown", player, spec)
+    return true
+end

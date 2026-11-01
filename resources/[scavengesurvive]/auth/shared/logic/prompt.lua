@@ -42,7 +42,8 @@ function prompt.onRefused(code, attempts)
 end
 
 -- Welcome message (welcome-message.pwn): a message box whose only button counts down from 10 before it reads
--- Accept; closing it earlier shows it again. Upstream hardcoded the English text.
+-- Accept; closing it earlier shows it again. Upstream hardcoded the English text; its closing pointer to
+-- scavenge-survive.wikia.com is gone (the wiki no longer exists).
 prompt.WELCOME_TITLE = "Welcome to the Server"
 prompt.WELCOME_COUNTDOWN = 10
 prompt.WELCOME_BODY = table.concat({
@@ -57,8 +58,6 @@ prompt.WELCOME_BODY = table.concat({
     "",
     "#008080Please take some time to look at the #33CCFF/rules #008080and #33CCFF/help #008080before diving into the"
         .. " game.",
-    "",
-    "Visit #FFFF00scavenge-survive.wikia.com #008080for more information.",
 }, "\n")
 
 function prompt.welcomeButton(secondsLeft)

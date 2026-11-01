@@ -89,18 +89,47 @@ function M.boost(endurance)
     return 1 + M.BOOST_PER_POINT * e
 end
 
--- upstream /mstats lines
-function M.lines(t)
-    local out = {}
-    for _, kind in ipairs(M.KINDS) do
-        out[#out + 1] = string.format("DIST_%s: %.1f", string.upper(kind), t.dist[kind] or 0)
+M.LABELS = {
+    walking = "Walking",
+    running = "Running",
+    sprinting = "Sprinting",
+    crouching = "Crouching",
+    swimming = "Swimming",
+    driving = "Driving",
+    air = "Falling",
+}
+
+-- metres -> "850 m" / "1.25 km"
+function M.distance(metres)
+    metres = tonumber(metres) or 0
+    if metres < 1000 then
+        return string.format("%d m", math.floor(metres + 0.5))
     end
-    for _, kind in ipairs(M.KINDS) do
-        out[#out + 1] = string.format("TIME_%s: %d", string.upper(kind), t.time[kind] or 0)
+    return string.format("%.2f km", metres / 1000)
+end
+
+-- milliseconds -> "0s" / "45s" / "3m 05s" / "1h 02m"
+function M.duration(ms)
+    local s = math.floor((tonumber(ms) or 0) / 1000)
+    if s < 60 then
+        return string.format("%ds", s)
     end
-    out[#out + 1] = string.format("TIME_KNOCKED_OUT: %d", t.knockedOutMs or 0)
-    out[#out + 1] = string.format("JUMPS: %d", t.jumps or 0)
-    return out
+    if s < 3600 then
+        return string.format("%dm %02ds", math.floor(s / 60), s % 60)
+    end
+    return string.format("%dh %02dm", math.floor(s / 3600), math.floor(s % 3600 / 60))
+end
+
+-- The /mstats window (ui showInfo spec): one row per kind of movement, then jumps and time knocked out.
+function M.window(t)
+    local rows = {}
+    for _, kind in ipairs(M.KINDS) do
+        rows[#rows + 1] = { M.LABELS[kind], M.distance(t.dist[kind]), M.duration(t.time[kind]) }
+    end
+    rows[#rows + 1] = { "Jumps", tostring(t.jumps or 0), "", colour = "#33CCFF" }
+    rows[#rows + 1] = { "Knocked out", "", M.duration(t.knockedOutMs), colour = "#33CCFF" }
+    local header = "#FFFFFFMovement this session (resets when you log in)"
+    return { title = "Travel stats", header = header, columns = { "Activity", "Distance", "Time" }, rows = rows }
 end
 
 return M

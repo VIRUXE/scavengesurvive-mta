@@ -1,6 +1,7 @@
 -- server to client
 addEvent("helpTipShown", true)
 addEvent("helpTipHidden", true)
+addEvent("infoShown", true)
 
 -- client-local
 addEvent("uiListActionSelected", false)

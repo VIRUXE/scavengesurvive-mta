@@ -9,13 +9,14 @@ end
 local canvas = loadModule("shared/logic/canvas.lua")
 local dialog = loadModule("shared/logic/dialog.lua")
 local sw, sh = guiGetScreenSize()
-local ctx = { canvas = canvas, dialog = dialog, c = canvas.new(sw, sh) }
+local ctx = { canvas = canvas, dialog = dialog, info = loadModule("shared/logic/info.lua"), c = canvas.new(sw, sh) }
 ctx.draw = loadModule("client/draw.lua")(ctx)
 local actionText = loadModule("client/actiontext.lua")(ctx)
 local tip = loadModule("client/tip.lua")(ctx)
 local progress = loadModule("client/progress.lua")(ctx)
 local list = loadModule("client/list.lua")(ctx)
 local dialogbox = loadModule("client/dialogbox.lua")(ctx)
+local info = loadModule("client/info.lua")(ctx)
 
 addEventHandler("onClientRender", root, function()
     if list.isOpen() then
@@ -105,3 +106,8 @@ end
 function dialogIsOpen()
     return dialogbox.isOpen()
 end
+
+-- read-only information windows (info.lua); the server side is exports.ui:showInfo
+addEventHandler("infoShown", localPlayer, function(spec)
+    info.show(spec)
+end)

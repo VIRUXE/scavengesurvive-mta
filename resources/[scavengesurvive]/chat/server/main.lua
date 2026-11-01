@@ -361,50 +361,52 @@ local function playerCommand(name, fn)
     end)
 end
 
-local function showInfo(p, title, body)
-    triggerClientEvent(p, "chatInfoShown", p, title, body)
-end
-
+-- the info commands open CEGUI windows (exports.ui:showInfo, specs from shared/logic/chat.lua)
 playerCommand("help", function(p)
-    showInfo(p, "General Information", logic.helpBody(exports.data:t(lang(p), "GENCOMDHELP")))
+    exports.ui:showInfo(p, logic.helpWindow(exports.data:t(lang(p), "GENCOMDHELP")))
 end)
 
 playerCommand("chatinfo", function(p)
-    showInfo(p, "Information about #33CCFFChat", logic.dialogBody(exports.data:t(lang(p), "GENCOMDCHAT")))
+    exports.ui:showInfo(p, logic.textWindow("Chat", exports.data:t(lang(p), "GENCOMDCHAT")))
 end)
 
-local function sayList(p, header, settingKey)
-    db.one("SELECT svalue FROM settings WHERE skey = ?", { settingKey }, function(row, pl)
+playerCommand("rules", function(p)
+    db.one("SELECT svalue FROM settings WHERE skey = 'server.rules'", {}, function(row, pl)
+        if isElement(pl) then
+            exports.ui:showInfo(pl, logic.listWindow("Rules", logic.listSetting(row and row.svalue)))
+        end
+    end, p)
+end)
+
+-- /admins lists the staff accounts themselves (accounts.admin_level), so it never goes stale; online means an
+-- account logged in right now
+local STAFF_SQL = "SELECT name, admin_level FROM accounts WHERE admin_level > 0 AND active = 1"
+    .. " ORDER BY admin_level DESC, name"
+
+playerCommand("admins", function(p)
+    db.query(STAFF_SQL, {}, function(rows, pl)
         if not isElement(pl) then
             return
         end
-        local items = logic.listSetting(row and row.svalue)
-        for i, line in ipairs(logic.listLines(header, items)) do
-            local r, g, b = 255, 255, 0
-            if i > 1 then
-                r, g, b = 51, 204, 255
+        local online = {}
+        for _, player in ipairs(getElementsByType("player")) do
+            local name = exports.auth:getAccountName(player)
+            if name then
+                online[name] = true
             end
-            outputChatBox(line, pl, r, g, b, true)
         end
+        local staffList = {}
+        for _, row in ipairs(rows or {}) do
+            local rank, r, g, b = exports.staff:getLevelStyle(tonumber(row.admin_level))
+            local colour = string.format("#%02X%02X%02X", r, g, b)
+            staffList[#staffList + 1] = { name = row.name, rank = rank, colour = colour, online = online[row.name] }
+        end
+        exports.ui:showInfo(pl, logic.staffWindow(staffList))
     end, p)
-end
-
-playerCommand("rules", function(p)
-    sayList(p, "Rules List", "server.rules")
-end)
-
-playerCommand("admins", function(p)
-    sayList(p, "Staff List", "server.staff")
 end)
 
 playerCommand("credits", function(p)
-    for i, line in ipairs(logic.CREDITS) do
-        local r, g, b = 51, 204, 255
-        if i == 1 then
-            r, g, b = 255, 255, 0
-        end
-        outputChatBox(" >  " .. line, p, r, g, b)
-    end
+    exports.ui:showInfo(p, logic.creditsWindow())
 end)
 
 playerCommand("pos", function(p)
