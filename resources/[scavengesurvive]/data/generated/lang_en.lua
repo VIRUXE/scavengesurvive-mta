@@ -206,6 +206,7 @@ return {
     GENDER_M = "Male",
     GarageDoo_T = "Use screwdriver with this to construct a permanent wall, or a hammer to construct a permanent floor, hold [F] to build",
     GardenerH_T = "Wear this by pressing [F]",
+    GasBottle_T = "A propane bottle with some gas left in it, hold [F] at a trailer's A-frame to mount it, and with empty hands to take it back",
     GasCan_T = "Use this to refuel vehicles by standing at the front and holding [F] refuel petrol can at fuel pumps by holding [F] at one",
     GasMask_T = "Wear this by pressing [F]",
     GasTank_T = "Fuel for the Welder, each tank holds 5 welds",

@@ -10,6 +10,7 @@ return function(ctx)
     local small = ctx and ctx.small -- shared/logic/smallitems.lua: the Note's message and the Stun Gun's charge
     local gardening = ctx and ctx.gardening -- shared/logic/gardening.lua: what a bag of Seeds holds
     local liquids = ctx and ctx.liquids -- shared/logic/liquids.lua: "(Water 0.4/0.50)" on liquid containers
+    local gas = ctx and ctx.gas -- shared/logic/gas.lua: "(6.3/11 kg)" on a Gas Bottle
     local MESSAGES = {
         HANDS_FULL = "You are already holding an item",
         LIQUID_EMPTY = "It is empty",
@@ -82,6 +83,10 @@ return function(ctx)
         UNLOCKED = "Vehicle unlocked",
         LOCKBROKEN = "Lock broken",
         DOORARMOURED = "The door is armoured, a crowbar will not work",
+        GASB_MOUNTED = "You mounted the gas bottle",
+        GASB_REMOVED = "You took the gas bottle off",
+        GASB_SLOTFULL = "There is a bottle on that mount already",
+        GASB_NONE = "There is no bottle on that mount",
         WELD_FULL = "There is no room left to weld a panel on",
         WELD_NOPANEL = "You need a defence panel lying close by",
         WELD_NOGAS = "You need a Gas Tank with gas left",
@@ -221,6 +226,8 @@ return function(ctx)
             name = small.lockLabel(name, it.data)
         elseif gardening and it.uname == gardening.BAG then
             name = gardening.seedLabel(name, gardening.seedsFor(it.id, it.data))
+        elseif gas and it.uname == gas.UNAME then
+            name = gas.label(name, it.data)
         elseif cooking and cooking.isFood(t) then
             name = cooking.label(t, name, it.data)
         elseif liquids and liquids.isContainer(t) then

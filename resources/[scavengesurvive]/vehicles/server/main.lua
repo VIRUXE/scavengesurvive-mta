@@ -47,6 +47,7 @@ do
 end
 
 local carmourSrv -- server/carmour.lua, built once the roadside helpers it needs exist
+local gasSrv -- server/gasbottles.lua, built with it
 
 local FLUSH_MS = 60000
 local WRECK_MS = 30000
@@ -55,7 +56,8 @@ local SIM_TICK_MS = 1000
 local USED_TICK_MS = 300000
 
 local SELECT_VEHICLES = "SELECT v.id, v.spawn_id, v.type_uname, v.model, v.x, v.y, v.z, v.rz, "
-    .. "v.health, v.fuel, v.locked, v.damage, v.carmour, v.key_code, v.keypad_code, v.trailer_id, v.left_spawn, "
+    .. "v.health, v.fuel, v.locked, v.damage, v.carmour, v.gas_bottles, v.key_code, v.keypad_code, "
+    .. "v.trailer_id, v.left_spawn, "
     .. "c.id AS container_id, "
     .. "s.x AS spawn_x, s.y AS spawn_y FROM vehicles v LEFT JOIN containers c ON c.owner_vehicle_id = v.id "
     .. "LEFT JOIN vehicle_spawns s ON s.id = v.spawn_id"
@@ -216,6 +218,7 @@ local function create(row)
     }
 
     carmourSrv.load(v, row.carmour)
+    gasSrv.load(v, row.gas_bottles)
 
     -- If the vehicle has trunk capacity but no container row yet, create one
     local vt = exports.data:vehicleType(row.type_uname)
@@ -1265,6 +1268,15 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
         return carmourSrv.weld(player, vehicle)
     end
 
+    -- Case G: a Gas Bottle in hand goes onto a free A-frame mount of a trailer, empty hands take one off
+    if vt and vt.trailer and vt.door and (uname == "GasBottle" or not held) then
+        local mlx, mly = toLocal(getElementMatrix(vehicle), px, py, pz)
+        local mount = vlogic.nearGasMount(mlx, mly)
+        if mount then
+            return gasSrv.interact(player, vehicle, mount, held or nil)
+        end
+    end
+
     -- Case 0: a held Wheel replaces the nearest burst or missing tyre (upstream core/item/wheel.pwn); upstream acts
     -- only within 1 m of a wheel, so at the trunk it falls through and the Wheel can go in the trunk
     if uname == "Wheel" and not vlogic.isRear(angle) then
@@ -1645,6 +1657,24 @@ local function loadCarmour()
 end
 
 carmourSrv = loadCarmour()
+
+local function loadGasBottles()
+    local f = fileOpen("server/gasbottles.lua", true)
+    local src = fileRead(f, fileGetSize(f))
+    fileClose(f)
+    local make = assert(loadstring(src, "=vehicles/server/gasbottles.lua"))()
+    local ctx = { db = db, info = info, toast = toast, activeActions = activeActions }
+    ctx.cancelHoldAction, ctx.vlogic, ctx.toLocal = cancelHoldAction, vlogic, toLocal
+    return make(ctx)
+end
+
+gasSrv = loadGasBottles()
+
+-- The gas on a trailer's A-frame mounts, { l = { gas = kg, hp = n }, r = ... } with a key per occupied mount (false
+-- for a vehicle without mounts): what a stove or heater draws from
+function getGasBottles(vehicle)
+    return gasSrv.get(vehicle)
+end
 
 -- Explosives: the blast's damage to a vehicle's armour (panels first, then the walk-in door's hitpoint); the number
 -- of panels it shed

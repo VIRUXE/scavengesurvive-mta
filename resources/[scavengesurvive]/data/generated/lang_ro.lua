@@ -190,6 +190,7 @@ return {
     Fusebox_T = "Folositoare la crafting sau la rezolvat puzzle-uri.",
     GarageDoo_T = "Use screwdriver with this to construct a permanent wall, or a hammer to construct a permanent floor, hold [F] to build",
     GardenerH_T = "Wear this by pressing [F]",
+    GasBottle_T = "A propane bottle with some gas left in it, hold [F] at a trailer's A-frame to mount it, and with empty hands to take it back",
     GasCan_T = "Foloseste asta pentru a alimenta vehicule apasand [F] canistrele pot fi umplute la statiile de beninarie apasand [F] la o pompa.",
     GasMask_T = "Poarta asta apasand [F]",
     GasTank_T = "Fuel for the Welder, each tank holds 5 welds",

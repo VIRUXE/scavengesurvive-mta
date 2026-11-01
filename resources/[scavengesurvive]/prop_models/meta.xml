@@ -5,6 +5,9 @@
     <include resource="lib"/>
     <script src="client/main.lua" type="client"/>
     <file src="props.lua"/>
+    <file src="files/gas_bottle.col"/>
+    <file src="files/gas_bottle.dff"/>
+    <file src="files/gas_bottle.txd"/>
     <file src="files/ls_hatch.col"/>
     <file src="files/ls_hatch.dff"/>
     <file src="files/ls_hatch.txd"/>

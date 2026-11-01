@@ -124,6 +124,7 @@ INSERT INTO item_types (uname,name,model,size,max_hitpoints,category,category_da
 ('Fusebox','Fuse Box',328,2,2,'generic',NULL),
 ('GarageDoor','',19908,14,10,'generic',NULL),
 ('GardenerHat','Gardener''s Hat',20003,1,5,'generic',NULL),
+('GasBottle','Gas Bottle',20203,5,3,'generic',NULL),
 ('GasCan','Petrol Can',1650,3,3,'liquid','{"capacity": 20.0, "liquids": [["Petrol", 100.0]], "reusable": true}'),
 ('GasMask','Gas Mask',19472,1,1,'generic',NULL),
 ('GasTank','Gas Tank',1348,5,3,'generic',NULL),

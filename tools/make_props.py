@@ -12,6 +12,9 @@ then runs itself in Blender (DragonFF) for each prop's dff and col.
     welder    20202  a portable arc welder: red body with a carry handle and louvres, yellow control panel on the +Y
                      face, a lead with a stinger hung on the -X side and an earth lead with a clamp on the floor.
 
+    gas_bottle 20203 a propane bottle: the Airstream's own right-hand tank (the faces of the vanilla sm_airstrm_med_.dff
+                     textured sm_airstreamside2 on the A-frame), stood on its base; one box of collision.
+
 Origin: the centre of the base (x, y) with z = 0 at the lowest point; the front faces +Y.
 """
 from __future__ import annotations
@@ -75,9 +78,24 @@ def build_welder(ctx):
     return [((0.0, 0.0, 0.15), (0.225, 0.125, 0.15))]
 
 
+TANK_SHELL = ROOT / "tools" / "trailer_shells" / "build" / "vanilla" / "sm_airstrm_med_.dff"  # tools/trailer_shells/prep.py
+TANK_TEXTURE = "sm_airstreamside2"
+
+
+def tank_faces(texture_name, centre):
+    """The Airstream's right-hand propane tank: the A-frame's faces in the tank texture, x > 0 (towable.py splits the same)."""
+    return texture_name == TANK_TEXTURE and centre.y > 4.08 and centre.z < 1.4 and centre.x > 0
+
+
+def build_gas_bottle(ctx):
+    lo, hi = ctx["graft"](str(TANK_SHELL), "sm_airstrm_med_", tank_faces, 0)
+    return [(((lo[0] + hi[0]) / 2, (lo[1] + hi[1]) / 2, (lo[2] + hi[2]) / 2), ((hi[0] - lo[0]) / 2, (hi[1] - lo[1]) / 2, (hi[2] - lo[2]) / 2))]
+
+
 PROPS_TABLE = [
     {"name": "ls_hatch", "id": 20201, "dist": 150, "source": "zombtest1.txd", "textures": ["pave_manhole1"], "build": build_ls_hatch},
     {"name": "welder", "id": 20202, "dist": 100, "source": "dynbarrels.txd", "textures": ["redmetal", "yellowmetal", "alumplat64"], "build": build_welder},
+    {"name": "gas_bottle", "id": 20203, "dist": 100, "source": "trailers.txd", "textures": [TANK_TEXTURE], "build": build_gas_bottle},
 ]
 
 
@@ -189,9 +207,36 @@ def build_in_blender(out_dir: Path, names) -> None:
             for ring in rings:
                 quad(list(ring), material, col)
 
-        ctx = {"bm": bm, "paint": paint, "box": box, "tube": tube}
+        def graft(path, mesh_name, keep, material):
+            """Copies the faces `keep(texture, centre)` picks out of a vanilla DFF into the prop, centred on x and y with
+            its lowest point at z 0, painted like the other props; returns the bounds (lo, hi) of the result."""
+            bpy.ops.import_scene.dff(filepath=path, read_mat_split=True, remove_doubles=False, load_images=False)
+            src = bpy.data.objects[mesh_name].data
+
+            def texture_of(index):
+                mat = src.materials[index]
+                nodes = [n for n in mat.node_tree.nodes if n.type == "TEX_IMAGE"] if mat and mat.node_tree else []
+                return ((nodes[0].image.name if nodes[0].image else nodes[0].label or nodes[0].name) if nodes else "").split(".")[0]
+
+            polys = [p for p in src.polygons if keep(texture_of(p.material_index), p.center)]
+            used = sorted({v for p in polys for v in p.vertices})
+            co = [src.vertices[v].co for v in used]
+            lo = Vector((min(c.x for c in co), min(c.y for c in co), min(c.z for c in co)))
+            hi = Vector((max(c.x for c in co), max(c.y for c in co), max(c.z for c in co)))
+            shift = Vector(((lo.x + hi.x) / 2, (lo.y + hi.y) / 2, lo.z))
+            verts = {v: bm.verts.new(src.vertices[v].co - shift) for v in used}
+            uv_layer = src.uv_layers[0].data
+            for poly in polys:
+                face = bm.faces.new([verts[v] for v in poly.vertices])
+                uvs = [tuple(uv_layer[i].uv) for i in poly.loop_indices]
+                paint(face, uvs, (0.9, 0.9, 0.9, 1.0), (0.27, 0.27, 0.29, 1.0), material)
+            for obj in list(bpy.data.objects):
+                bpy.data.objects.remove(obj)
+            return (lo - shift, hi - shift)
+
+        ctx = {"bm": bm, "paint": paint, "box": box, "tube": tube, "graft": graft}
         boxes = prop["build"](ctx)
-        if name != "ls_hatch":
+        if name not in ("ls_hatch", "gas_bottle"):
             bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
         bm.normal_update()
         bm.to_mesh(mesh)

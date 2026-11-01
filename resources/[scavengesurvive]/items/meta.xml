@@ -26,6 +26,7 @@
     <file src="shared/logic/tent.lua"/>
     <file src="shared/logic/cooking.lua"/>
     <file src="shared/logic/liquids.lua"/>
+    <file src="shared/logic/gas.lua"/>
     <file src="shared/logic/smallitems.lua"/>
     <file src="shared/logic/fishing.lua"/>
     <file src="server/fishing.lua"/>
@@ -54,6 +55,8 @@
     <file src="client/inventory.lua"/>
     <export function="getHeld" type="server"/>
     <export function="setHeld" type="server"/>
+    <export function="rollGasBottle" type="server"/>
+    <export function="gasBottleKg" type="server"/>
     <export function="clearHeld" type="server"/>
     <export function="openTrunkContainer" type="server"/>
     <export function="closeTrunk" type="server"/>

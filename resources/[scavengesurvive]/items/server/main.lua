@@ -17,6 +17,7 @@ apparel.skins = skins
 local clothes = loadFile("shared/logic/clothes.lua")
 local cooking = loadFile("shared/logic/cooking.lua")
 local liquids = loadFile("shared/logic/liquids.lua")
+local gas = loadFile("shared/logic/gas.lua")
 local small = loadFile("shared/logic/smallitems.lua")
 local fishing = loadFile("shared/logic/fishing.lua")
 local gardening = loadFile("shared/logic/gardening.lua")
@@ -588,6 +589,16 @@ function setHeld(player, item)
     end
     hands.setHeld(player, item)
     return true
+end
+
+-- A Gas Bottle's gas (shared/logic/gas.lua): a random fill for one found lying about, and the kg an item's data holds.
+-- A trailer's mounted bottles (vehicles/server/gasbottles.lua) keep the same {gas = kg} per mount.
+function rollGasBottle()
+    return { gas = gas.roll(math.random), hp = 3 }
+end
+
+function gasBottleKg(data)
+    return gas.of(data)
 end
 
 function clearHeld(player)

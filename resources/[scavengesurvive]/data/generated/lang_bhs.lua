@@ -190,6 +190,7 @@ return {
     Fusebox_T = "Koristi se za kombiniranje i neke zagonetke",
     GarageDoo_T = "Use screwdriver with this to construct a permanent wall, or a hammer to construct a permanent floor, hold [F] to build",
     GardenerH_T = "Wear this by pressing [F]",
+    GasBottle_T = "A propane bottle with some gas left in it, hold [F] at a trailer's A-frame to mount it, and with empty hands to take it back",
     GasCan_T = "Koristi ovo da napuniš vozilo sa gorivom,drži [F] kada si ispred vozila,da napuniš gorivo u kanister,odeš na benzisku i držiš [F]",
     GasMask_T = "Stisni [F] da nosiš ovo",
     GasTank_T = "Fuel for the Welder, each tank holds 5 welds",

@@ -15,6 +15,7 @@ local models = loadModule("client/models.lua")()
 local geometry = loadModule("shared/logic/geometry.lua")
 local cooking = loadModule("shared/logic/cooking.lua")
 local liquids = loadModule("shared/logic/liquids.lua")
+local gas = loadModule("shared/logic/gas.lua")
 local small = loadModule("shared/logic/smallitems.lua")
 local gardening = loadModule("shared/logic/gardening.lua")
 local machines = loadModule("shared/logic/machines.lua")
@@ -31,6 +32,7 @@ local preview = loadModule("client/preview.lua")({ logic = loadModule("shared/lo
 local inventoryCtx = { ammo = ammo, apparel = apparel, clothes = clothes, models = models, preview = preview }
 inventoryCtx.cooking = cooking
 inventoryCtx.liquids = liquids
+inventoryCtx.gas = gas
 inventoryCtx.small = small
 inventoryCtx.gardening = gardening
 loadModule("client/inventory.lua")(inventoryCtx)

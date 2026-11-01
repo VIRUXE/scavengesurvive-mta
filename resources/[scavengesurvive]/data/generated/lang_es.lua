@@ -190,6 +190,7 @@ return {
     Fusebox_T = "Se utiliza para la elaboración, y en algunos puzzles",
     GarageDoo_T = "Use screwdriver with this to construct a permanent wall, or a hammer to construct a permanent floor, hold [F] to build",
     GardenerH_T = "Wear this by pressing [F]",
+    GasBottle_T = "A propane bottle with some gas left in it, hold [F] at a trailer's A-frame to mount it, and with empty hands to take it back",
     GasCan_T = "Use esto para reabastecer vehículos de pie en la parte delantera y [F] combustible en las bombas de combustible manteniendo [F] de acuerdo",
     GasMask_T = "Llevar esto presionando [F]",
     GasTank_T = "Fuel for the Welder, each tank holds 5 welds",

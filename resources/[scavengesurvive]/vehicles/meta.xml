@@ -18,6 +18,7 @@
     <file src="shared/logic/carmour.lua"/>
     <file src="shared/data/carmour_slots.lua"/>
     <file src="server/carmour.lua"/>
+    <file src="server/gasbottles.lua"/>
     <export function="getVehicleDbId" type="server"/>
     <export function="countVehicles" type="server"/>
     <export function="respawnAll" type="server"/>
@@ -31,6 +32,8 @@
     <export function="damageCarmour" type="server"/>
     <export function="isArmoured" type="server"/>
     <export function="hasCarmourSlots" type="server"/>
+    <export function="getGasBottles" type="server"/>
     <export function="nearbyTrailerDoor" type="client"/>
     <export function="tryTrailerDoor" type="client"/>
+    <export function="tryGasMount" type="client"/>
 </meta>

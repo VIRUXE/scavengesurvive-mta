@@ -111,6 +111,11 @@ return function(ctx)
         if worldInteract() then
             return
         end
+        -- a Gas Bottle in hand goes onto a trailer's A-frame mount, empty hands take one off (vehicles tryGasMount)
+        local heldNow = ctx.getHeld()
+        if exports.vehicles:tryGasMount(heldNow and heldNow.uname or false) == true then
+            return
+        end
         if exports.loot:tryOpenCrate() == true then
             return
         end

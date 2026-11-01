@@ -118,6 +118,37 @@ function tryTrailerDoor()
     return true
 end
 
+-- export: the interact key at a trailer's A-frame mounts (vehicles/server/gasbottles.lua): with a Gas Bottle in hand
+-- (heldUname "GasBottle") it asks to mount it on a free mount, with empty hands (heldUname false) to take the bottle
+-- off a filled one; true when it asked (hud keys.lua stops there). A world item lying nearer takes the key instead.
+function tryGasMount(heldUname)
+    if getPedOccupiedVehicle(localPlayer) or (heldUname and heldUname ~= "GasBottle") then
+        return false
+    end
+    local px, py, pz = getElementPosition(localPlayer)
+    for _, v in ipairs(getElementsByType("vehicle", root, true)) do
+        local filled = getElementData(v, "vehicles.gasBottles")
+        if type(filled) == "string" then
+            local m = getElementMatrix(v)
+            local dx, dy, dz = px - m[4][1], py - m[4][2], pz - m[4][3]
+            local lx = dx * m[1][1] + dy * m[1][2] + dz * m[1][3]
+            local ly = dx * m[2][1] + dy * m[2][2] + dz * m[2][3]
+            local slot = vlogic.nearGasMount(lx, ly)
+            local wanted = heldUname == false
+            if slot and (filled:find(slot, 1, true) ~= nil) == wanted then
+                local mount = vlogic.GAS_MOUNTS[slot]
+                local d = math.sqrt((lx - mount.x) ^ 2 + (ly - mount.y) ^ 2)
+                local itemD = exports.items:nearestItemDistance()
+                if itemD == false or itemD >= d then
+                    triggerServerEvent("vehicleInteractRequested", localPlayer, v)
+                    return true
+                end
+            end
+        end
+    end
+    return false
+end
+
 -- upstream's KEY_SUBMISSION ("2" / Num+) toggles the lock from inside a vehicle; /lock does the same
 local function requestLockToggle()
     if getPedOccupiedVehicle(localPlayer) then

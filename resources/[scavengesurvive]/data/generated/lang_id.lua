@@ -190,6 +190,7 @@ return {
     Fusebox_T = "Periksa /recipes dan 'Workbench Crafting' untuk keterangan pengolahan benda ini",
     GarageDoo_T = "Use screwdriver with this to construct a permanent wall, or a hammer to construct a permanent floor, hold [F] to build",
     GardenerH_T = "Wear this by pressing [F]",
+    GasBottle_T = "A propane bottle with some gas left in it, hold [F] at a trailer's A-frame to mount it, and with empty hands to take it back",
     GasCan_T = "Gunakan ini apabila berisi bensin, didepan kendaraan dan menahan tombol [F] untuk mengisi bensin, pengisian bensin ke jerigen bisa dilakukan pada pomba bensin pada pombensin dengan menekan [F] at one ------ ",
     GasMask_T = "Pakai benda ini dengan menekan tombol [F]",
     GasTank_T = "Fuel for the Welder, each tank holds 5 welds",

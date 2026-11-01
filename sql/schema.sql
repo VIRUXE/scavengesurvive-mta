@@ -339,6 +339,7 @@ CREATE TABLE IF NOT EXISTS `vehicles` (
   `trailer_id` int(11) DEFAULT NULL,
   `damage` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`damage`)),
   `carmour` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`carmour`)),
+  `gas_bottles` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`gas_bottles`)),
   `left_spawn` tinyint(1) NOT NULL DEFAULT 0,
   `last_used_at` datetime DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
@@ -1095,6 +1096,89 @@ BEGIN
     END IF;
     COMMIT;
     SELECT 1 AS ok, 'OK' AS code, JSON_OBJECT('item_id', CAST(v_item AS SIGNED)) AS payload;
+  END IF;
+END//
+
+CREATE OR REPLACE PROCEDURE `gas_bottle_mount`(IN p_vehicle_id INT, IN p_item_id INT, IN p_slot VARCHAR(1), IN p_char_id INT)
+BEGIN
+  -- one Gas Bottle from the character's hands onto a trailer's A-frame mount ('l' or 'r', vehicles/server/gasbottles.lua):
+  -- the item is used up and its gas and hitpoints go into the mount, all or nothing. vehicles.gas_bottles is
+  -- {"l": {"gas": kg, "hp": n}, "r": ...} with a key per occupied mount; NULL means the mounts were never filled.
+  DECLARE v_state LONGTEXT DEFAULT NULL;
+  DECLARE v_found INT DEFAULT 0;
+  DECLARE v_data LONGTEXT DEFAULT NULL;
+  DECLARE v_hp INT DEFAULT 0;
+  DECLARE v_gas DOUBLE DEFAULT 0;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
+  SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+  START TRANSACTION;
+  SELECT COUNT(*), MAX(gas_bottles) INTO v_found, v_state FROM vehicles WHERE id = p_vehicle_id FOR UPDATE;
+  IF p_slot NOT IN ('l', 'r') THEN
+    ROLLBACK;
+    SELECT 0 AS ok, 'BAD_SLOT' AS code, NULL AS payload;
+  ELSEIF v_found = 0 THEN
+    ROLLBACK;
+    SELECT 0 AS ok, 'NO_VEHICLE' AS code, NULL AS payload;
+  ELSEIF JSON_CONTAINS_PATH(IFNULL(v_state, '{}'), 'one', CONCAT('$.', p_slot)) THEN
+    ROLLBACK;
+    SELECT 0 AS ok, 'SLOT_FULL' AS code, NULL AS payload;
+  ELSE
+    SELECT COUNT(*), MAX(data), MAX(hitpoints) INTO v_found, v_data, v_hp FROM items
+      WHERE id = p_item_id AND type_uname = 'GasBottle' AND holder_char_id = p_char_id AND holder_kind = 'held' FOR UPDATE;
+    IF v_found = 0 THEN
+      ROLLBACK;
+      SELECT 0 AS ok, 'NO_BOTTLE' AS code, NULL AS payload;
+    ELSE
+      SET v_gas = IFNULL(CAST(JSON_VALUE(v_data, '$.gas') AS DOUBLE), 11);
+      DELETE FROM items WHERE id = p_item_id;
+      UPDATE vehicles SET gas_bottles = JSON_SET(IFNULL(v_state, '{}'), CONCAT('$.', p_slot), JSON_OBJECT('gas', v_gas, 'hp', CAST(v_hp AS SIGNED))) WHERE id = p_vehicle_id;
+      COMMIT;
+      SELECT 1 AS ok, 'OK' AS code, JSON_OBJECT('gas', v_gas, 'hp', CAST(v_hp AS SIGNED)) AS payload;
+    END IF;
+  END IF;
+END//
+
+CREATE OR REPLACE PROCEDURE `gas_bottle_unmount`(IN p_vehicle_id INT, IN p_slot VARCHAR(1), IN p_char_id INT)
+BEGIN
+  -- the Gas Bottle on a mount comes off into the character's empty hands with the gas and hitpoints it holds
+  DECLARE v_state LONGTEXT DEFAULT NULL;
+  DECLARE v_found INT DEFAULT 0;
+  DECLARE v_held INT DEFAULT 0;
+  DECLARE v_alive INT DEFAULT 0;
+  DECLARE v_gas DOUBLE DEFAULT 0;
+  DECLARE v_hp INT DEFAULT 3;
+  DECLARE v_item INT DEFAULT 0;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
+  SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+  START TRANSACTION;
+  SELECT COUNT(*), MAX(gas_bottles) INTO v_found, v_state FROM vehicles WHERE id = p_vehicle_id FOR UPDATE;
+  IF p_slot NOT IN ('l', 'r') THEN
+    ROLLBACK;
+    SELECT 0 AS ok, 'BAD_SLOT' AS code, NULL AS payload;
+  ELSEIF v_found = 0 THEN
+    ROLLBACK;
+    SELECT 0 AS ok, 'NO_VEHICLE' AS code, NULL AS payload;
+  ELSEIF NOT JSON_CONTAINS_PATH(IFNULL(v_state, '{}'), 'one', CONCAT('$.', p_slot)) THEN
+    ROLLBACK;
+    SELECT 0 AS ok, 'SLOT_EMPTY' AS code, NULL AS payload;
+  ELSE
+    SELECT COUNT(*) INTO v_alive FROM characters WHERE id = p_char_id AND alive = 1 FOR UPDATE;
+    SELECT COUNT(*) INTO v_held FROM items WHERE holder_char_id = p_char_id AND holder_kind = 'held' FOR UPDATE;
+    IF v_alive = 0 THEN
+      ROLLBACK;
+      SELECT 0 AS ok, 'NO_CHARACTER' AS code, NULL AS payload;
+    ELSEIF v_held > 0 THEN
+      ROLLBACK;
+      SELECT 0 AS ok, 'HANDS_FULL' AS code, NULL AS payload;
+    ELSE
+      SET v_gas = IFNULL(CAST(JSON_VALUE(v_state, CONCAT('$.', p_slot, '.gas')) AS DOUBLE), 0);
+      SET v_hp = IFNULL(CAST(JSON_VALUE(v_state, CONCAT('$.', p_slot, '.hp')) AS SIGNED), 3);
+      INSERT INTO items (type_uname, hitpoints, data, holder_char_id, holder_kind) VALUES ('GasBottle', v_hp, JSON_OBJECT('gas', v_gas), p_char_id, 'held');
+      SET v_item = LAST_INSERT_ID();
+      UPDATE vehicles SET gas_bottles = JSON_REMOVE(v_state, CONCAT('$.', p_slot)) WHERE id = p_vehicle_id;
+      COMMIT;
+      SELECT 1 AS ok, 'OK' AS code, JSON_OBJECT('item_id', CAST(v_item AS SIGNED), 'gas', v_gas, 'hp', CAST(v_hp AS SIGNED)) AS payload;
+    END IF;
   END IF;
 END//
 

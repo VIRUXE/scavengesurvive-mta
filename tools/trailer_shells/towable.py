@@ -217,6 +217,12 @@ bm.normal_update()
 bm.to_mesh(leg)
 bm.free()
 
+# the two propane tanks on the A-frame (the faces in the vanilla tank texture, past y 4.08): a frame each, which the
+# airstream_trailer client hides while a mount is empty (a Gas Bottle item stands on it, vehicles/server/gasbottles.lua)
+TANK_TEXTURE = "sm_airstreamside2"
+tank_r = split(body, lambda f, m: texture(m, f.material_index) == TANK_TEXTURE and (c := f.calc_center_median()).y > 4.08 and c.z < 0.5 and c.x > 0, "gas_r")
+tank_l = split(body, lambda f, m: texture(m, f.material_index) == TANK_TEXTURE and (c := f.calc_center_median()).y > 4.08 and c.z < 0.5 and c.x < 0, "gas_l")
+
 # the step under the door: a frame of its own, which the client hides while the trailer is towed
 d0, d1 = meta["openings"][0]["u"]
 step = split(body, lambda f, m: (c := f.calc_center_median()).x < -1.2 and d0 - 0.1 < c.y < d1 + 0.1 and c.z < 0.3 - Z0, "step")
@@ -305,6 +311,13 @@ step_obj.dff.is_frame = True
 clump.objects.link(step_obj)
 step_obj.parent = objs["chassis_dummy"]
 step_obj.matrix_world = Matrix.Identity(4)
+for tank_name, tank_mesh in (("gas_r", tank_r), ("gas_l", tank_l)):
+    tank_obj = bpy.data.objects.new(tank_name, tank_mesh)
+    tank_obj.dff.type = "OBJ"
+    tank_obj.dff.is_frame = True
+    clump.objects.link(tank_obj)
+    tank_obj.parent = objs["chassis_dummy"]
+    tank_obj.matrix_world = Matrix.Identity(4)
 # the rear pair 0.10 m behind the front pair (the client hides it): a zero wheelbase drops the trailer when hitched
 for name, sx, dy in (("wheel_rf_dummy", 1, 0.05), ("wheel_lf_dummy", -1, 0.05), ("wheel_rb_dummy", 1, -0.05), ("wheel_lb_dummy", -1, -0.05)):
     objs[name].matrix_world = Matrix.Translation((sx * WHEEL_X, hub.y + dy, hub.z))

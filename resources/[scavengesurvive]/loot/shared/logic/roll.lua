@@ -58,7 +58,20 @@ end
 -- Looted items whose data character's medical rules roll (exports.character:medicalLootData, #94).
 roll.MEDICAL_DATA = { DoctorBag = true, Pills = true, AutoInjec = true }
 
+-- A lying Gas Bottle holds 0.5 to 11 kg of propane: the shape and capacity of items/shared/logic/gas.lua.
+roll.GAS_BOTTLE = "GasBottle"
+roll.GAS_BOTTLE_CAPACITY = 11.0
+roll.GAS_BOTTLE_MIN = 0.5
+
+function roll.gasBottleData(rng)
+    local gas = roll.GAS_BOTTLE_MIN + rng() * (roll.GAS_BOTTLE_CAPACITY - roll.GAS_BOTTLE_MIN)
+    return string.format('{"gas":%.1f}', gas)
+end
+
 function roll.initialItemData(def, tableName, ammoTypes, rand)
+    if type(def) == "table" and def.uname == roll.GAS_BOTTLE then
+        return roll.gasBottleData(rand or math.random)
+    end
     if type(def) ~= "table" or type(def.categoryData) ~= "table" then
         return nil
     end

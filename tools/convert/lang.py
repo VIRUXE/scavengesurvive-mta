@@ -79,6 +79,7 @@ UNSET_TIPS = {
     "Welder": "Press [F] at a vehicle with a Gas Tank on you, a defence panel lying near and a fuelled Generator within 8 m to weld the panel on (for now only the towable Airstream takes armour)",
     "GasTank": "Fuel for the Welder, each tank holds 5 welds",
     "Generator": "Hold [F] with a Petrol Can to fuel it, a Welder within 8 m runs on it",
+    "GasBottle": "A propane bottle with some gas left in it, hold [F] at a trailer's A-frame to mount it, and with empty hands to take it back",
 }
 # Tips the port's own behaviour changed (#156 petrol ammo, #157 tree felling): they replace upstream's wording in every
 # language.
