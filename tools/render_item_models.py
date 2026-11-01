@@ -113,12 +113,12 @@ def samp_ide() -> dict[int, tuple[str, str]]:
 def stage(models: set[int], gta: Path, work: Path) -> tuple[list[dict], list[str]]:
     from tools.extract_samp_models import is_samp_model, read_img_entry, read_img_index
 
-    archives = {n: gta / p for n, p in [("samp", "SAMP/SAMP.img"), ("gta3", "models/gta3.img"), ("gta_int", "models/gta_int.img"), ("cutscene", "models/cutscene.img")] if (gta / p).is_file()}
+    archives = {n: gta / p for n, p in [("samp", "SAMP/SAMP.img"), ("gta3", "models/gta3.img"), ("gta_int", "models/gta_int.img"), ("cutscene", "models/cutscene.img"), ("player", "models/player.img")] if (gta / p).is_file()}
     indexes = {n: read_img_index(p) for n, p in archives.items()}
     loose = {p.stem.lower(): p for p in list((gta / "models").glob("*.txd")) + list((gta / "models" / "generic").glob("*.txd"))}
     van, sam, port = vanilla_ide(gta), samp_ide(), port_models()
 
-    def fetch(name: str, ext: str, dest: Path, order=("samp", "gta3", "gta_int", "cutscene")) -> bool:
+    def fetch(name: str, ext: str, dest: Path, order=("samp", "gta3", "gta_int", "cutscene", "player")) -> bool:
         for arch in order:
             idx = indexes.get(arch, {})
             if name + ext in idx:
@@ -236,6 +236,9 @@ def build_in_blender(jobs_file: Path, out_dir: Path, size: int):
                     for n in slot.material.node_tree.nodes:
                         if n.type == "TEX_IMAGE" and not n.image and n.label in images:
                             n.image = images[n.label][0]
+        lost = sorted({n.label for o in meshes for sl in o.material_slots if sl.material and sl.material.node_tree for n in sl.material.node_tree.nodes if n.type == "TEX_IMAGE" and not n.image and n.label.lower() not in EFFECT_TEXTURES})
+        if lost:
+            print("RENDER missing", job["model"], job["dff"], ",".join(lost))
         for o in meshes:  # effect geometry (a laser's beam) would shrink the item to a speck
             drop = [i for i, sl in enumerate(o.material_slots) if sl.material and sl.material.node_tree and any(n.type == "TEX_IMAGE" and n.label.lower() in EFFECT_TEXTURES for n in sl.material.node_tree.nodes)]
             if drop:
@@ -299,6 +302,30 @@ def fetch_vehicle_txd(gta: Path, dest: Path) -> bool:
     return False
 
 
+def find_txds(names: set[str], gta: Path) -> dict[str, tuple[str, bytes]]:
+    """Texture name (lowercase) -> (txd name, bytes) of the first game TXD that holds it, for names a model's own TXD lacks."""
+    from tools.extract_samp_models import read_img_entry, read_img_index
+
+    needed = {n: n.encode("latin1") + b"\0" for n in names}
+    found: dict[str, tuple[str, bytes]] = {}
+    sources = []
+    for n, p in [("samp", "SAMP/SAMP.img"), ("gta3", "models/gta3.img"), ("gta_int", "models/gta_int.img"), ("player", "models/player.img")]:
+        if (gta / p).is_file():
+            idx = read_img_index(gta / p)
+            sources += [(k[:-4], lambda e=e, a=gta / p: read_img_entry(a, e)) for k, e in idx.items() if k.endswith(".txd")]
+    for f in list((gta / "models").glob("*.txd")) + list((gta / "models" / "generic").glob("*.txd")):
+        sources.append((f.stem.lower(), lambda f=f: f.read_bytes()))
+    for txd, load in sources:
+        if len(found) == len(needed):
+            break
+        data = load()
+        low = data.lower()
+        for n, pat in needed.items():
+            if n not in found and pat in low:
+                found[n] = (txd, data)
+    return found
+
+
 def main(argv=None) -> int:
     from tools.extract_ped_models import find_blender
     from tools.extract_samp_models import detect_gta
@@ -342,8 +369,31 @@ def main(argv=None) -> int:
     jobs_file.write_text(json.dumps(jobs))
     cmd = [str(blender), "-b", "--python", __file__, "--", str(jobs_file), str(out), str(args.size)]
     res = subprocess.run(cmd, capture_output=True, text=True)
+    lost = {}
     for line in (res.stdout + res.stderr).splitlines():
-        if line.startswith("RENDER") or "Error" in line:
+        if line.startswith("RENDER missing"):
+            _, _, model, _, names = line.split(" ", 4)
+            lost[int(model)] = {x.lower() for x in names.split(",")}
+    if lost:  # textures a model's own TXD lacks: take them from whichever game TXD holds them, then render those models again
+        where = find_txds(set().union(*lost.values()), gta)
+        again = []
+        for j in jobs:
+            for t in sorted({where[n][0] for n in lost.get(j["model"], ()) if n in where}):
+                if t not in j["txds"]:
+                    (Path(j["dir"]) / (t + ".txd")).write_bytes(next(d for n, (x, d) in where.items() if x == t))
+                    j["txds"].append(t)
+                    if j not in again:
+                        again.append(j)
+        for model, names in lost.items():
+            for n in sorted(names - set(where)):
+                problems.append(f"{model}: texture {n} is in no game TXD")
+        if again:
+            jobs_file.write_text(json.dumps(again))
+            res2 = subprocess.run(cmd, capture_output=True, text=True)
+            res = subprocess.CompletedProcess(cmd, 0, res.stdout + res2.stdout, res.stderr + res2.stderr)
+            jobs_file.write_text(json.dumps(jobs))
+    for line in (res.stdout + res.stderr).splitlines():
+        if (line.startswith("RENDER") and "RENDER ok" not in line) or "Error" in line:
             print(line)
     index, listed = {}, []
     for j in jobs:
