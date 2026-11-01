@@ -196,8 +196,11 @@ return function(ctx)
                 return triggerServerEvent("vehicleInteractRequested", localPlayer, nearVeh)
             end
         end
+        -- a Petrol Can fills at a pump and pours into an Empty Molotov lying within reach (#136): the server's pickup
+        -- with a can in hand only reaches for that bottle, so both requests go and the one with a target acts
         if uname == "GasCan" then
-            return triggerServerEvent("fuelPumpInteractRequested", localPlayer)
+            triggerServerEvent("fuelPumpInteractRequested", localPlayer)
+            return triggerServerEvent("itemPickupRequested", localPlayer)
         end
         -- a Fishing Rod casts as far as the key was held (a bar fills over 10 s); with the line out F reels it in
         if uname == "FishRod" then

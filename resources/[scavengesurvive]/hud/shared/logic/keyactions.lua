@@ -113,7 +113,7 @@ function M.lines(ctx, keys)
         add("putaway", "Wear", "wearbag")
     elseif h.category == "safebox" then
         add("interact", "Open", "openbag")
-    elseif h.category == "liquid" then
+    elseif h.category == "liquid" and h.uname ~= "GasCan" then -- F with a Petrol Can fills or pours, never drinks
         add("interact", "Drink", "drink")
     end
     if h.isWeapon then
