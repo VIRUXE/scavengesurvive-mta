@@ -18,6 +18,48 @@ function Ammo.isCalibreWeapon(def)
     return def.categoryData.calibre ~= nil and not def.categoryData.liquid
 end
 
+-- Chainsaw and Flamer (WEAPON_FLAG_LIQUID_AMMO): categoryData.liquid names the fuel, data.mag counts fuel units
+-- (100 a litre), no reserve, no unload.
+function Ammo.isLiquidWeapon(def)
+    if type(def) ~= "table" or def.category ~= "weapon" or type(def.categoryData) ~= "table" then
+        return false
+    end
+    return def.categoryData.liquid ~= nil
+end
+
+function Ammo.fuelUnits(data)
+    if type(data) ~= "table" then
+        return 0
+    end
+    return math.max(0, math.floor(tonumber(data.mag) or 0))
+end
+
+Ammo.FUEL_UNITS_PER_LITRE = 100
+Ammo.FUEL_LITRES_PER_PRESS = 1.0
+
+-- F with a Petrol Can lying there (upstream weapon/interact.pwn:105-135): up to a litre a press moves from the
+-- can into the weapon, as 100 units a litre, until the weapon holds magSize * (1 + maxReserveMags) units.
+-- Returns ok, code, nextData, nextCanLitres, litres
+function Ammo.refuel(def, data, canLitres)
+    if not Ammo.isLiquidWeapon(def) then
+        return false, "INVALID"
+    end
+    if (tonumber(canLitres) or 0) <= 0 then
+        return false, "EMPTY"
+    end
+    local cd = def.categoryData
+    local cap = math.max(0, math.floor(tonumber(cd.magSize) or 0))
+        * (1 + math.max(0, math.floor(tonumber(cd.maxReserveMags) or 0)))
+    local units = Ammo.fuelUnits(data)
+    local room = (cap - units) / Ammo.FUEL_UNITS_PER_LITRE
+    local litres = math.min(canLitres, Ammo.FUEL_LITRES_PER_PRESS, room)
+    if litres <= 0 then
+        return false, "HANDS_FULL"
+    end
+    local add = math.floor(litres * Ammo.FUEL_UNITS_PER_LITRE + 0.5)
+    return true, "AMTRANS", { mag = units + add, reserve = 0 }, canLitres - litres, litres
+end
+
 function Ammo.isAmmoItem(def)
     if type(def) ~= "table" or def.category ~= "ammo" or type(def.categoryData) ~= "table" then
         return false
