@@ -464,6 +464,45 @@ function destroyWorldItem(itemId)
     return true
 end
 
+-- Staff /di: deletes every loose world item within radius of a point (one SELECT, one batched DELETE), then
+-- calls cb(count). Items in containers or on characters are never touched.
+function destroyWorldItemsNear(x, y, z, radius, interior, dimension, cb)
+    x, y, z, radius = tonumber(x), tonumber(y), tonumber(z), tonumber(radius)
+    if not x or not y or not z or not radius or radius <= 0 then
+        return false
+    end
+    local sql = "SELECT id FROM items WHERE x IS NOT NULL AND interior <=> ? AND dimension <=> ?"
+        .. " AND x BETWEEN ? AND ? AND y BETWEEN ? AND ? AND POW(x - ?, 2) + POW(y - ?, 2) + POW(z - ?, 2) <= ?"
+    local box = { x - radius, x + radius, y - radius, y + radius, x, y, z, radius * radius }
+    local params = { interior, dimension, unpack(box) }
+    params.n = 10
+    db.query(sql, params, function(rows)
+        if not rows or #rows == 0 then
+            return cb and cb(0)
+        end
+        local ids = {}
+        for _, row in ipairs(rows) do
+            ids[#ids + 1] = tonumber(row.id)
+        end
+        local delete = "DELETE FROM items WHERE container_id IS NULL AND holder_char_id IS NULL AND id IN"
+            .. " (SELECT id FROM JSON_TABLE(?, '$[*]' COLUMNS (id INT PATH '$')) j)"
+        local json = toJSON(ids, true):sub(2, -2)
+        db.exec(delete, { json }, function(ok)
+            if not ok then
+                return cb and cb(0)
+            end
+            for _, id in ipairs(ids) do
+                world.forgetEverywhere(id)
+                triggerEvent("itemDestroyed", resourceRoot, id)
+            end
+            if cb then
+                cb(#ids)
+            end
+        end)
+    end)
+    return true
+end
+
 function forgetWorldItem(itemId)
     if world and world.forgetEverywhere then
         world.forgetEverywhere(tonumber(itemId))

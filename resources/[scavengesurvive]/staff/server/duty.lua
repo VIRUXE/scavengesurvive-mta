@@ -621,6 +621,28 @@ return function(ctx)
         end,
     })
 
+    -- Port-only: clears the loose world items around the caller; items owns the query and the batched delete.
+    ctx.command({
+        name = "di",
+        level = 3,
+        playerOnly = true,
+        usage = "/di <radius>",
+        help = "Delete every loose world item within <radius> metres (1-200) of you",
+        fn = function(p, args)
+            local radius = tonumber(args[1])
+            if not radius or radius < 1 or radius > 200 then
+                return ctx.say(p, " >  Usage: /di <radius 1-200>")
+            end
+            local x, y, z = getElementPosition(p)
+            local interior, dimension = getElementInterior(p), getElementDimension(p)
+            local function done(count)
+                ctx.say(p, " >  Deleted %d world item(s) within %.0f m.", count, radius)
+                ctx.log(p, "delete_items", nil, nil, string.format("%d items, radius %.0f", count, radius))
+            end
+            exports.items:destroyWorldItemsNear(x, y, z, radius, interior, dimension, done)
+        end,
+    })
+
     -- Supply crate / weapons cache on demand (upstream supply-crate.pwn ACMD:sc[4]); loot owns the mechanics.
     ctx.command({
         name = "sc",
