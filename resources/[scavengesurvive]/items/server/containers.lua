@@ -127,6 +127,10 @@ return function(ctx)
     end
 
     local function wearBag(player, cid, item)
+        -- a bag goes where the parachute pack sits: one worn blocks the other (parachute.lua refuses the reverse)
+        if state.parachute[player] then
+            return toast(player, "BAGPARAWORN")
+        end
         -- bag_wear refuses a second bag with BAG_SLOT_USED instead of tripping uq_items_holder_kind (1062 in the log)
         db.call("bag_wear", { item.id, cid }, function(res, c)
             if not isElement(c.player) then

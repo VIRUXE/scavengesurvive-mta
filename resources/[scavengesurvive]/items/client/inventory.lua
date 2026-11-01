@@ -44,6 +44,7 @@ return function(ctx)
         NOT_WEARABLE = "This item cannot be worn",
         PARABAGWORN = "You can't wear a parachute while you are wearing a bag",
         PARAWORN = "You are already wearing a parachute",
+        BAGPARAWORN = "You can't wear a bag while you are wearing a parachute",
         NOT_WORN = "Nothing equipped in that slot",
         INVENTORY_FULL = "Inventory is full",
         TOO_BIG = "Too big to put away, it goes in a vehicle or a box",
