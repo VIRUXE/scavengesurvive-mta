@@ -77,6 +77,14 @@ UNSET_TIPS = {
     "ScrapMachine": "Put items inside and fuel it with a Petrol Can, it breaks them down into Scrap Metal",
     "WaterMachine": "Put Water Bottles of sea water inside and fuel it with a Petrol Can, it purifies the water",
 }
+# Tips the port's own behaviour changed (#156 petrol ammo, #157 tree felling): they replace upstream's wording in every
+# language.
+CHANGED_TIPS = {
+    "Chainsaw": "Press [F] at a Petrol Can on the ground to fuel this, hold [F] next to a tree to fell it for Wood Logs",
+    "Flamer": "Press [F] at a Petrol Can on the ground to fuel this, it burns petrol as you fire",
+    "WoodLog": "Find three of these, place them in a pile and use a Lighter on them to create a fire! Fell trees with a Chainsaw to get more",
+}
+
 
 def _replace(v: str) -> str:
     v = TAG_RE.sub(lambda m: "~k~~" + KEYTEXT[m.group(1)] + "~" if m.group(1) in KEYTEXT
@@ -112,6 +120,8 @@ def convert(src_root, out_data) -> dict[str, int]:
             entries[key] = entries[key].replace(", read more: /restartinfo", "")  # the port has no /restartinfo
         for uname, tip in PORT_TIPS.items():
             entries.setdefault(uname[:9] + "_T", tip)
+        for uname, tip in CHANGED_TIPS.items():
+            entries[uname[:9] + "_T"] = tip
         for uname, tip in UNSET_TIPS.items():
             key = uname[:9] + "_T"
             if key not in entries or "NOT SET" in entries[key]:
