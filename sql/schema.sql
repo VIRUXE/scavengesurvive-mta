@@ -142,6 +142,14 @@ CREATE TABLE IF NOT EXISTS `containers` (
   CONSTRAINT `fk_containers_owner_vehicle` FOREIGN KEY (`owner_vehicle_id`) REFERENCES `vehicles` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
+CREATE TABLE IF NOT EXISTS `felled_trees` (
+  `tree_key` varchar(48) NOT NULL,
+  `felled_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `regrow_at` datetime NOT NULL,
+  PRIMARY KEY (`tree_key`),
+  KEY `idx_felled_trees_regrow` (`regrow_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+
 CREATE TABLE IF NOT EXISTS `item_types` (
   `uname` varchar(32) NOT NULL,
   `name` varchar(48) NOT NULL,

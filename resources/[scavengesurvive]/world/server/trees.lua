@@ -4,13 +4,38 @@
 -- treatmentCancelRequested).
 -- Taking the last of its health fells it: every client takes the tree out of its world and draws it falling, the logs
 -- land a moment later (one item_create_many call), and the tree stands again world.tree_respawn_s later. Felled trees
--- and half-cut health live in memory only, as upstream's trees were made again on every start.
+-- stay in the felled_trees table (kept over restarts, stood again at regrow_at, world.tree_respawn_s after the fell);
+-- half-cut health lives in memory only.
 -- ctx = { db, net, util, logic = shared/logic/trees.lua, data = data/trees.lua, setting } built by server/main.lua.
 return function(ctx)
     local db, net, util, logic, data = ctx.db, ctx.net, ctx.util, ctx.logic, ctx.data
     local index = logic.index(data)
     local felled, health = {}, {} -- tree -> true; tree -> health left
     local active = {} -- player -> { itemId, tree, x, y, z, perPointMs, timer }
+    local byKey = {} -- tree_key -> index into index.trees
+    local MAX_TIMER_S = 20 * 86400 -- setTimer takes 32-bit milliseconds
+
+    local function keyOf(t)
+        return string.format("%d:%.1f:%.1f", t[1], t[2], t[3])
+    end
+
+    for i, t in ipairs(index.trees) do
+        byKey[keyOf(t)] = i
+    end
+
+    local function regrow(i)
+        local t = index.trees[i]
+        if not felled[i] then
+            return
+        end
+        felled[i] = nil
+        db.exec("DELETE FROM felled_trees WHERE tree_key = ?", { keyOf(t) })
+        triggerClientEvent(root, "treeRestored", root, i, t[1], t[2], t[3], t[4])
+    end
+
+    local function regrowIn(i, seconds)
+        setTimer(regrow, math.max(1, math.min(seconds, MAX_TIMER_S)) * 1000, 1, i)
+    end
 
     local function chainsawRuns()
         return true
@@ -56,10 +81,10 @@ return function(ctx)
         local groundZ = a.z - 0.9
         setTimer(dropLogs, logic.FALL_MS, 1, i, groundZ)
         local respawn = ctx.setting("world.tree_respawn_s", logic.RESPAWN_S)
-        setTimer(function()
-            felled[i] = nil
-            triggerClientEvent(root, "treeRestored", root, i, t[1], t[2], t[3], t[4])
-        end, respawn * 1000, 1)
+        local sql = "INSERT INTO felled_trees (tree_key, regrow_at) VALUES (?, NOW() + INTERVAL ? SECOND) "
+            .. "ON DUPLICATE KEY UPDATE felled_at = NOW(), regrow_at = VALUES(regrow_at)"
+        db.exec(sql, { keyOf(t), respawn })
+        regrowIn(i, respawn)
         util.log("world", "info", "tree %d (%d) felled, %d logs", i, t[1], species[4])
     end
 
@@ -107,6 +132,34 @@ return function(ctx)
         triggerClientEvent(player, "treatmentStarted", player, ms, true)
         return true
     end
+
+    -- the trees felled before this start, with the seconds each has left to regrow
+    local function loadFelled()
+        local sql = "SELECT tree_key, GREATEST(TIMESTAMPDIFF(SECOND, NOW(), regrow_at), 0) AS left_s FROM felled_trees"
+        db.query(sql, {}, function(rows)
+            if not rows then
+                return util.log("world", "warn", "trees: could not read the felled trees")
+            end
+            local list = {}
+            for _, row in ipairs(rows) do
+                local i = byKey[row.tree_key]
+                local left = tonumber(row.left_s) or 0
+                if i and left > 0 then
+                    felled[i] = true
+                    regrowIn(i, left)
+                    local t = index.trees[i]
+                    list[#list + 1] = { i, t[1], t[2], t[3], t[4] }
+                else
+                    db.exec("DELETE FROM felled_trees WHERE tree_key = ?", { row.tree_key })
+                end
+            end
+            for _, player in ipairs(getElementsByType("player")) do
+                triggerClientEvent(player, "treesSynced", player, list)
+            end
+            util.log("world", "info", "trees: %d felled, regrowing", #list)
+        end)
+    end
+    loadFelled()
 
     addEventHandler("itemUseAttempted", root, function(_, uname)
         if uname ~= logic.TOOL or active[source] then
