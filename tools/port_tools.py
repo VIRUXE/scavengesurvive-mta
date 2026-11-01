@@ -1,12 +1,11 @@
-"""The port's tools: the welding kit (a Welder, a Gas Tank and a Generator; carmour, vehicles/shared/logic/carmour.lua),
-a Gas Bottle and an Angle Grinder.
+"""The port's tools: the welding kit (a Welder, a Generator and a Gas Bottle as fuel; carmour, vehicles/shared/logic/carmour.lua),
+and an Angle Grinder.
 
 Upstream has none of them. The Welder, the Generator and the Grinder are the port's own models (prop_models 20202, 20204
-and 20206, in vanilla textures); the Gas Tank is a vanilla GTA object (CJ_O2Tanks 1348). The converters add one item type per row
+and 20206, in vanilla textures). The converters add one item type per row
 (tools/convert/item_types.py) and its loot rows (tools/convert/loot_tables.py). The Generator is a fuel-only machine
 (items/shared/logic/machines.lua): a Petrol Can fills it, a Welder within its cable draws on it.
 """
-GAS_PER_TANK = 5  # welds one Gas Tank carries; its item data is {"gas": n}
 GAS_BOTTLE_CAPACITY = 11.0  # kg of propane in a full Gas Bottle; its item data is {"gas": kg} (items/shared/logic/gas.lua)
 
 # The Welder rides the spine (SA-MP bone 1), not a hand: the two-handed carry pose (useCarryAnim) holds both hands in
@@ -28,12 +27,15 @@ GENERATOR_HOLD = (-0.454, 0.358, -0.040, 0.0, 90.0, 0.0)
 # the floor.
 GRINDER_HOLD = (0.08, 0.03, 0.0, 90.0, -90.0, 0.0)
 
+# upstream item types shown under another name: uname -> display name (tools/convert/item_types.py). Canister is one
+# steel gas cylinder (SA-MP model 19816), not a can.
+RENAMES = {"Canister": "Gas Cylinder"}
+
 # uname, name, model, size, hitpoints, loot { table: weight }, carried: a heavy two-handed hold like the Large Box
 TOOLS = [
     dict(uname="Welder", name="Welder", model=20202, size=6, hp=3, loot={"world_industrial": 3.0, "vehicle_industrial": 2.0}, carry=False, att=WELDER_HOLD, bone=1, anim=True),
-    dict(uname="GasTank", name="Gas Tank", model=1348, size=5, hp=3, loot={"world_industrial": 4.0, "vehicle_industrial": 3.0}, carry=False),
     dict(uname="Generator", name="Generator", model=20204, size=8, hp=5, loot={"world_industrial": 1.5}, carry=False, att=GENERATOR_HOLD, bone=1, anim=True),
-    # a propane bottle (prop_models 20203, cut from the Airstream's own tanks) holding a random amount of gas; it mounts on a trailer's A-frame
+    # a propane bottle (prop_models 20203, cut from the Airstream's own tanks) holding a random amount of gas; it mounts on a trailer's A-frame and fuels the Welder
     dict(uname="GasBottle", name="Gas Bottle", model=20203, size=5, hp=3, loot={"world_civilian": 4.0, "world_survivor": 6.0, "world_industrial": 8.0, "airdrop_industrial": 10.0}, carry=False),
     # an angle grinder for cutting metal: industrial loot spots, work vans and trucks, the industrial airdrop
     dict(uname="Grinder", name="Angle Grinder", model=20206, size=3, hp=3, loot={"world_industrial": 4.0, "vehicle_industrial": 3.0, "airdrop_industrial": 6.0}, carry=False, att=GRINDER_HOLD, bone=6, modelz=0.058),

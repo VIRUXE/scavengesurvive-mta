@@ -508,29 +508,27 @@ BEGIN
   END IF;
 END//
 
-CREATE OR REPLACE PROCEDURE `carmour_weld`(IN p_vehicle_id INT, IN p_tank_id INT, IN p_carmour LONGTEXT)
+CREATE OR REPLACE PROCEDURE `carmour_weld`(IN p_vehicle_id INT, IN p_tank_id INT, IN p_carmour LONGTEXT, IN p_kg DECIMAL(4,1))
 BEGIN
-  
-  
   DECLARE v_tank_data LONGTEXT DEFAULT NULL;
   DECLARE v_found INT DEFAULT 0;
-  DECLARE v_gas INT DEFAULT 0;
+  DECLARE v_gas DECIMAL(5,1) DEFAULT 0;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
   SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
   START TRANSACTION;
-  SELECT COUNT(*), MAX(data) INTO v_found, v_tank_data FROM items WHERE id = p_tank_id AND type_uname = 'GasTank' FOR UPDATE;
-  SET v_gas = IFNULL(CAST(JSON_VALUE(v_tank_data, '$.gas') AS SIGNED), 5);
-  IF v_found = 0 OR v_gas <= 0 THEN
+  SELECT COUNT(*), MAX(data) INTO v_found, v_tank_data FROM items WHERE id = p_tank_id AND type_uname = 'GasBottle' FOR UPDATE;
+  SET v_gas = IFNULL(CAST(JSON_VALUE(v_tank_data, '$.gas') AS DECIMAL(5,1)), 11.0);
+  IF v_found = 0 OR v_gas < p_kg THEN
     ROLLBACK;
     SELECT 0 AS ok, 'NO_GAS' AS code, NULL AS payload;
   ELSEIF NOT EXISTS (SELECT 1 FROM vehicles WHERE id = p_vehicle_id) THEN
     ROLLBACK;
     SELECT 0 AS ok, 'NO_VEHICLE' AS code, NULL AS payload;
   ELSE
-    UPDATE items SET data = JSON_OBJECT('gas', v_gas - 1) WHERE id = p_tank_id;
+    UPDATE items SET data = JSON_OBJECT('gas', CAST(v_gas - p_kg AS DOUBLE)) WHERE id = p_tank_id;
     UPDATE vehicles SET carmour = p_carmour WHERE id = p_vehicle_id;
     COMMIT;
-    SELECT 1 AS ok, 'OK' AS code, JSON_OBJECT('gas', CAST(v_gas - 1 AS SIGNED)) AS payload;
+    SELECT 1 AS ok, 'OK' AS code, JSON_OBJECT('gas', CAST(v_gas - p_kg AS DOUBLE)) AS payload;
   END IF;
 END//
 

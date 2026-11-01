@@ -13,7 +13,7 @@ return function(ctx)
     local torches = {} -- player -> { id, x, y, z, rz, int, dim } of the Welder whose torch the player holds
 
     local TANKS = "SELECT i.id, i.data FROM items i JOIN containers c ON c.id = i.container_id "
-        .. "WHERE i.type_uname = 'GasTank' AND (c.owner_char_id = ? OR c.owner_item_id IN "
+        .. "WHERE i.type_uname = 'GasBottle' AND (c.owner_char_id = ? OR c.owner_item_id IN "
         .. "(SELECT id FROM items WHERE holder_char_id = ? AND holder_kind = 'bag')) ORDER BY i.id"
     -- a Generator lying within the Welder's cable; its fuel is read from the data in Lua and drawn in one statement
     local GENERATORS = "SELECT id, x, y, z, data FROM items WHERE type_uname = 'Generator' AND x IS NOT NULL "
@@ -415,7 +415,7 @@ return function(ctx)
                 return
             end
             local nextSt = carmour.weld(stateOf(vehicle), panelId)
-            db.call("carmour_weld", { inf.id, tankId, json(nextSt) }, function(res)
+            db.call("carmour_weld", { inf.id, tankId, json(nextSt), carmour.GAS_PER_WELD }, function(res)
                 if not res or not res.ok then
                     return toast(player, "WELD_NOGAS")
                 end
@@ -449,7 +449,7 @@ return function(ctx)
         db.query(TANKS, { cid, cid }, function(tanks)
             local tank = nil
             for _, t in ipairs(tanks or {}) do
-                if carmour.gasOf(decodeData(t.data)) >= carmour.GAS_PER_WELD then
+                if carmour.gasOf(decodeData(t.data)) >= carmour.GAS_PER_WELD - 0.001 then
                     tank = t
                     break
                 end

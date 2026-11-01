@@ -6,7 +6,7 @@ import re
 
 from tools.port_defences import DEFENCES
 from tools.port_hats import HATS
-from tools.port_tools import TOOLS
+from tools.port_tools import RENAMES, TOOLS
 from tools.world_boxes import PARTS as WORLD_BOXES
 
 from .common import HEADER, NUM, SEED_HEADER, lua_index, lua_value, sql_str
@@ -274,7 +274,10 @@ def add_world_boxes(types: dict[str, dict]) -> None:
 
 
 def add_port_tools(types: dict[str, dict]) -> None:
-    """The welding kit (tools/port_tools.py): a Welder, a Gas Tank (data {gas}) and a Generator, held like the Large Box."""
+    """The welding kit (tools/port_tools.py): a Welder, a Generator, a Gas Bottle (data {gas} kg) and a Grinder, held like the Large Box.
+    Upstream types the port renames (RENAMES) take their new display name here."""
+    for uname, name in RENAMES.items():
+        types[uname]["name"] = name
     hold = types["LargeBox"]
     index = max(t["_index"] for k, t in types.items() if not k.startswith("_")) + 1
     for i, w in enumerate(TOOLS):

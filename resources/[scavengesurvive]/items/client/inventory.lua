@@ -88,7 +88,7 @@ return function(ctx)
         GASB_SLOTFULL = "There is a bottle on that mount already",
         GASB_NONE = "There is no bottle on that mount",
         WELD_NOPANEL = "Attach a defence first, then weld it on with the torch",
-        WELD_NOGAS = "You need a Gas Tank with gas left",
+        WELD_NOGAS = "You need a Gas Bottle with gas left",
         WELD_NOPOWER = "The Welder needs a fuelled Generator within 8 metres",
         WELDED = "Panel welded on",
         WELD_NOSLOTS = "This vehicle takes no defences",

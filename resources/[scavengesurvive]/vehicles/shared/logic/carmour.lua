@@ -15,8 +15,8 @@ M.DOOR_BASE_HP = 1 -- the door alone: one hit breaks its lock
 M.MASS_PER_PANEL = 180 -- kg added to the trailer per panel on it, welded or not
 M.TOW_ACCEL_PENALTY = 0.08 -- of the tower's stock engine acceleration per panel carried by the trailer behind it
 M.TOW_ACCEL_FLOOR = 0.4 -- the tower never drops below this share of its stock acceleration
-M.GAS_PER_TANK = 5 -- welds in a fresh Gas Tank (its item data is { gas = n }, no data meaning full)
-M.GAS_PER_WELD = 1
+M.GAS_CAPACITY = 11 -- kg in a full Gas Bottle (items/shared/logic/gas.lua), its item data { gas = kg }, none meaning full
+M.GAS_PER_WELD = 2.2 -- kg one weld burns: a full bottle is five welds
 M.FUEL_PER_WELD = 5 -- Generator fuel (of 100) one weld burns
 M.WELD_MS = 8000
 M.PRY_MS = 3000 -- a Crowbar taking an attached panel off
@@ -254,7 +254,7 @@ function M.towAccel(stock, n)
     return stock * share
 end
 
--- welds left in a Gas Tank from its item data (either JSON shape)
+-- kg of gas left in a Gas Bottle from its item data (either JSON shape)
 function M.gasOf(data)
     local d = type(data) == "table" and data or {}
     if type(d[1]) == "table" then
@@ -262,9 +262,9 @@ function M.gasOf(data)
     end
     local gas = tonumber(d.gas)
     if gas == nil then
-        return M.GAS_PER_TANK
+        return M.GAS_CAPACITY
     end
-    return math.max(0, math.floor(gas))
+    return math.max(0, math.min(M.GAS_CAPACITY, gas))
 end
 
 return M

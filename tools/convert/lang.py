@@ -52,7 +52,7 @@ _DRINK = "Hold [F] to drink from this"
 _SCRAP = "Scrap Metal: refine it in a Refining Machine, or craft with it"
 _STASH = "Press [F] to open this and store items inside it"
 _WEARIT = "Wear this by pressing [F]"
-_TOP = "Furniture: press [F] with an item in hand to put it on top, and with empty hands to take it back"
+_TOP = "Furniture: press [F] with an item in hand to put it on top, and with empty hands to take it back, a Welder burns 2.2 kg of it per weld"
 _CASE = "Furniture: press [F] with an item in hand to display it inside, and with empty hands to take it back"
 _NOUSE = "This item has no use yet"
 _SCRAPPABLE = "This item has no use yet, but a Scrap Machine breaks it down into Scrap Metal"
@@ -76,8 +76,7 @@ UNSET_TIPS = {
     "RefineMachine": "Put Scrap Metal inside and fuel it with a Petrol Can, it refines the metal into Refined Metal",
     "ScrapMachine": "Put items inside and fuel it with a Petrol Can, it breaks them down into Scrap Metal",
     "WaterMachine": "Put Water Bottles of sea water inside and fuel it with a Petrol Can, it purifies the water",
-    "Welder": "Press [F] at a vehicle with a Gas Tank on you, a defence panel lying near and a fuelled Generator within 8 m to weld the panel on (for now only the towable Airstream takes armour)",
-    "GasTank": "Fuel for the Welder, each tank holds 5 welds",
+    "Welder": "Press [F] at a vehicle with a Gas Bottle on you, a defence panel lying near and a fuelled Generator within 8 m to weld the panel on (for now only the towable Airstream takes armour)",
     "Generator": "Hold [F] with a Petrol Can to fuel it, a Welder within 8 m runs on it",
     "Grinder": "A cordless angle grinder with a cutting disc, found in industrial areas and work vehicles",
     "GasBottle": "A propane bottle with some gas left in it, hold [F] at a trailer's A-frame to mount it, and with empty hands to take it back",
