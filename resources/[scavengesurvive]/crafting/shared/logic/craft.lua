@@ -216,6 +216,28 @@ function M.workbenchTime(r)
     return itemCount(r) * 3600
 end
 
+-- The recipes of one kind ("combine", "ground", "workbench") in definition order.
+function M.ofKind(kind)
+    local out = {}
+    for _, r in ipairs(M.RECIPES) do
+        if r.kind == kind then
+            out[#out + 1] = r
+        end
+    end
+    return out
+end
+
+-- A recipe's ingredients as text lines ("3x Wood Log", "Knife (kept)"); nameOf maps an item uname to its name.
+function M.ingredientLines(r, nameOf)
+    local lines = {}
+    for _, ing in ipairs(r.ingredients) do
+        local name = nameOf(ing.uname)
+        local line = ing.count > 1 and (ing.count .. "x " .. name) or name
+        lines[#lines + 1] = ing.keep and (line .. " (kept)") or line
+    end
+    return lines
+end
+
 -- The tools the ground recipes are built with, as a set: { Hammer = true, ... }.
 function M.groundTools()
     local out = {}
