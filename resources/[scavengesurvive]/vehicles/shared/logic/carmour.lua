@@ -15,7 +15,7 @@ M.DOOR_BASE_HP = 1 -- the door alone: one hit breaks its lock
 M.MASS_PER_PANEL = 180 -- kg added to the trailer per panel on it, welded or not
 M.TOW_ACCEL_PENALTY = 0.08 -- of the tower's stock engine acceleration per panel carried by the trailer behind it
 M.TOW_ACCEL_FLOOR = 0.4 -- the tower never drops below this share of its stock acceleration
-M.GAS_CAPACITY = 11 -- kg in a full Gas Bottle (items/shared/logic/gas.lua), its item data { gas = kg }, none meaning full
+M.GAS_CAPACITY = 11 -- kg in a full Gas Bottle (items/shared/logic/gas.lua); its item data { gas = kg }, none: full
 M.GAS_PER_WELD = 2.2 -- kg one weld burns: a full bottle is five welds
 M.FUEL_PER_WELD = 5 -- Generator fuel (of 100) one weld burns
 M.WELD_MS = 8000
