@@ -10,11 +10,20 @@
 local M = {}
 
 M.PROUD = 0.02 -- metres between the shell's highest point under a panel and the panel's inner face
-M.SUPPORT = 0.5 -- the share of a body panel's footprint that must have the shell under it
+M.SUPPORT = 0.7 -- the share of a body panel's footprint that must have the shell under it, close behind it
+M.SUPPORT_GAP = 0.4 -- metres behind the panel's plane the shell may fall away and still hold it up there
 M.MAX_LIFT = 0.8 -- metres a panel may stand off the shell where the ray met it (a sharp curve under a flat panel)
+M.LIFT_STEP = 0.02 -- metres a panel is pushed out at a time until no triangle of the shell touches it
+M.FLOOR_Z = -0.3 -- a panel holds onto the body above this height (below is the chassis under the floor)
+M.GROUND_Z = -0.75 -- and no part of it reaches below the ground the wheels stand on
+M.EXPOSED = 4 -- of 5 rays fanned out from where a panel holds on, this many must leave the trailer: the outer skin
+M.ESCAPE = 15 -- metres a ray must travel clear to count as leaving the trailer
 M.SAMPLES = 5 -- footprint samples per side
 M.SMOOTH = 0.45 -- metres around the hit whose triangles' normals the panel's facing averages
 M.DOOR_SWING = 1.05 -- metres in front of the door kept clear for it to swing
+-- the defences that can be welded on: metal ones (a wooden or insulated panel, or a plain door, cannot be)
+M.METAL = { MetPanel = true, CorPanel = true, SmallPanel = true, MetalGate = true, CrateDoor = true, ShipDoor = true }
+
 M.REACH = 12.0 -- the camera ray's length (a third-person camera sits a few metres behind the player)
 M.CELL = 0.5 -- metres per cell of the grid the triangles are bucketed in (rays only test the cells they cross)
 
@@ -129,6 +138,7 @@ function M.load(data)
     return {
         model = data.MODEL,
         shell = parseMesh(data.SHELL.verts, data.SHELL.tris),
+        extra = parseMesh(data.EXTRA.verts, data.EXTRA.tris),
         leaf = parseMesh(door.verts, door.tris),
         door = door,
         panels = data.PANELS,
@@ -173,21 +183,28 @@ end
 
 M.raycast = raycast
 
--- the shell's facing around point p, from the triangles near it, turned towards `toward`
-local function smoothNormal(mesh, p, toward)
+-- the shell's facing around point p: the hit triangle's facing (turned towards `toward`) averaged with the triangles
+-- near it that face the same way within 60 degrees (a hatch's sides or an inside wall nearby do not tip it over)
+local function smoothNormal(mesh, p, toward, hitIndex)
+    local ref = mesh.normals[hitIndex]
+    if dot(ref, toward) < 0 then
+        ref = mul(ref, -1)
+    end
     local sum = { 0, 0, 0 }
     local r2 = M.SMOOTH * M.SMOOTH
     for i, c in ipairs(mesh.centres) do
         local dd = sub(c, p)
         if dot(dd, dd) <= r2 then
             local n = mesh.normals[i]
-            if dot(n, toward) < 0 then
+            if dot(n, ref) < 0 then
                 n = mul(n, -1)
             end
-            sum = add(sum, mul(n, mesh.areas[i]))
+            if dot(n, ref) > 0.5 then
+                sum = add(sum, mul(n, mesh.areas[i]))
+            end
         end
     end
-    return norm(sum)
+    return norm(sum) or ref
 end
 
 -- Separating axis test of two oriented boxes { c, ax = { u, v, n } (unit), h = { half extents } }.
@@ -214,6 +231,107 @@ function M.boxesOverlap(a, b)
         end
     end
     return true
+end
+
+-- whether triangle t (three points) touches box b { c, ax, h } (separating axes: the box's three, the triangle's
+-- normal and the nine crosses of their edges)
+local function triangleTouchesBox(t, b)
+    local v = {}
+    for i = 1, 3 do
+        local d = sub(t[i], b.c)
+        v[i] = { dot(d, b.ax[1]), dot(d, b.ax[2]), dot(d, b.ax[3]) }
+    end
+    local h = b.h
+    for k = 1, 3 do
+        local lo = math.min(v[1][k], v[2][k], v[3][k])
+        local hi = math.max(v[1][k], v[2][k], v[3][k])
+        if lo > h[k] or hi < -h[k] then
+            return false
+        end
+    end
+    local e = { sub(v[2], v[1]), sub(v[3], v[2]), sub(v[1], v[3]) }
+    local axes = { cross(e[1], e[2]) }
+    local unit = { { 1, 0, 0 }, { 0, 1, 0 }, { 0, 0, 1 } }
+    for i = 1, 3 do
+        for j = 1, 3 do
+            axes[#axes + 1] = cross(unit[i], e[j])
+        end
+    end
+    for _, a in ipairs(axes) do
+        if dot(a, a) > 1e-12 then
+            local p1, p2, p3 = dot(v[1], a), dot(v[2], a), dot(v[3], a)
+            local r = h[1] * math.abs(a[1]) + h[2] * math.abs(a[2]) + h[3] * math.abs(a[3])
+            if math.min(p1, p2, p3) > r or math.max(p1, p2, p3) < -r then
+                return false
+            end
+        end
+    end
+    return true
+end
+
+-- whether any triangle of mesh touches box b (only the triangles in the grid cells the box's bounds cover)
+local function meshTouchesBox(mesh, b)
+    local lo, hi = { math.huge, math.huge, math.huge }, { -math.huge, -math.huge, -math.huge }
+    for _, sx in ipairs({ -1, 1 }) do
+        for _, sy in ipairs({ -1, 1 }) do
+            for _, sz in ipairs({ -1, 1 }) do
+                local q =
+                    add(add(add(b.c, mul(b.ax[1], sx * b.h[1])), mul(b.ax[2], sy * b.h[2])), mul(b.ax[3], sz * b.h[3]))
+                for k = 1, 3 do
+                    lo[k], hi[k] = math.min(lo[k], q[k]), math.max(hi[k], q[k])
+                end
+            end
+        end
+    end
+    local cell, seen = M.CELL, {}
+    for x = math.floor(lo[1] / cell), math.floor(hi[1] / cell) do
+        for y = math.floor(lo[2] / cell), math.floor(hi[2] / cell) do
+            for z = math.floor(lo[3] / cell), math.floor(hi[3] / cell) do
+                local list = mesh.grid[((x + 500) * 1000 + y + 500) * 1000 + z + 500]
+                for _, ti in ipairs(list or {}) do
+                    if not seen[ti] then
+                        seen[ti] = true
+                        if triangleTouchesBox(mesh.tris[ti], b) then
+                            return true
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return false
+end
+
+M.meshTouchesBox = meshTouchesBox
+
+-- whether a placed panel's box touches the body or the solid parts around it
+local function touchesTrailer(geo, b)
+    return meshTouchesBox(geo.shell, b) or meshTouchesBox(geo.extra, b)
+end
+
+-- whether point p, facing n, is on the trailer's outer skin: most rays fanned out from it leave the trailer (an
+-- inside wall seen through a window, or the frame under the floor, is boxed in)
+local function exposed(geo, p, n, u, v)
+    local o = add(p, mul(n, 0.03))
+    local dirs = {
+        n,
+        norm(add(n, mul(u, 0.6))),
+        norm(add(n, mul(u, -0.6))),
+        norm(add(n, mul(v, 0.6))),
+        norm(add(n, mul(v, -0.6))),
+    }
+    local free = 0
+    for _, d in ipairs(dirs) do
+        if not raycast(geo.shell, o, d, M.ESCAPE) and not raycast(geo.extra, o, d, M.ESCAPE) then
+            free = free + 1
+        end
+    end
+    return free >= M.EXPOSED
+end
+
+-- the lowest point of box b
+local function lowestZ(b)
+    return b.c[3] - math.abs(b.ax[1][3]) * b.h[1] - math.abs(b.ax[2][3]) * b.h[2] - math.abs(b.ax[3][3]) * b.h[3]
 end
 
 -- A placed panel's box from its record { c = centre, l, s (unit, in the panel's plane: long and short side), sa, sb }
@@ -255,12 +373,16 @@ end
 
 -- Where the defence `uname` goes for a ray from o along d (unit; the vehicle's frame), among the vehicle's
 -- `existing` records (each with .u = its uname and the placement fields). Returns the record, or nil and why:
--- "MISS" (the ray meets no part of the trailer), "DOOR_ONLY" (a door defence away from the door), "NOT_DOOR" (a
--- panel aimed at the door), "UNSUPPORTED" (hangs off the shell or stands too far off it), "BLOCKS_DOOR", "CLASH".
+-- "NOT_METAL" (only metal defences can be welded on), "MISS" (the ray meets no outside part of the trailer),
+-- "DOOR_ONLY" (a door defence away from the door), "NOT_DOOR" (a panel aimed at the door), "UNSUPPORTED" (hangs off
+-- the shell, stands too far off it, under the floor or into the ground), "BLOCKS_DOOR", "CLASH".
 function M.place(geo, uname, o, d, existing)
     local frame = geo.panels[uname]
     if not frame then
         return nil, "NOT_DEFENCE"
+    end
+    if not M.METAL[uname] then
+        return nil, "NOT_METAL"
     end
     local tShell, iShell = raycast(geo.shell, o, d, M.REACH)
     local tLeaf = raycast(geo.leaf, o, d, M.REACH)
@@ -278,11 +400,18 @@ function M.place(geo, uname, o, d, existing)
             return nil, "DOOR_ONLY"
         end
         local p = add(o, mul(d, tShell))
-        local n = smoothNormal(geo.shell, p, mul(d, -1)) or geo.shell.normals[iShell]
+        local tExtra = raycast(geo.extra, o, d, M.REACH)
+        if p[3] < M.FLOOR_Z or (tExtra and tExtra < tShell) then
+            return nil, "UNSUPPORTED" -- under the floor, or the step, hitch or a gas tank in the way
+        end
+        local n = smoothNormal(geo.shell, p, mul(d, -1), iShell)
         -- the long side level: across the facing and world up, or along the trailer on a roof
         local up = math.abs(n[3]) > 0.7 and { 0, 1, 0 } or { 0, 0, 1 }
         local u = norm(cross(up, n)) or { 0, 1, 0 }
         local v = cross(n, u)
+        if not exposed(geo, p, n, u, v) then
+            return nil, "MISS" -- an inside surface: aim at the outside of the trailer
+        end
         local hw, hh = frame.ext[1] / 2, frame.ext[2] / 2
         local lift, hits, total = -math.huge, 0, 0
         for i = 0, M.SAMPLES - 1 do
@@ -290,7 +419,7 @@ function M.place(geo, uname, o, d, existing)
                 local du = (i / (M.SAMPLES - 1) * 2 - 1) * hw
                 local dv = (j / (M.SAMPLES - 1) * 2 - 1) * hh
                 local s = add(add(p, mul(u, du)), mul(v, dv))
-                local t = raycast(geo.shell, add(s, mul(n, 1.2)), mul(n, -1), 2.4)
+                local t = raycast(geo.shell, add(s, mul(n, 1.2)), mul(n, -1), 1.2 + M.SUPPORT_GAP)
                 total = total + 1
                 if t then
                     hits = hits + 1
@@ -302,6 +431,17 @@ function M.place(geo, uname, o, d, existing)
             return nil, "UNSUPPORTED"
         end
         rec = { door = false, c = add(p, mul(n, lift + M.PROUD + frame.ext[3] / 2)), l = u, s = v, sa = 1, sb = 1 }
+        -- the samples only see the shell under 25 points: pushed out until no triangle of it touches the panel
+        while touchesTrailer(geo, M.boxOf(rec, frame)) do
+            lift = lift + M.LIFT_STEP
+            if lift > M.MAX_LIFT then
+                return nil, "UNSUPPORTED"
+            end
+            rec.c = add(p, mul(n, lift + M.PROUD + frame.ext[3] / 2))
+        end
+        if lowestZ(M.boxOf(rec, frame)) < M.GROUND_Z then
+            return nil, "UNSUPPORTED"
+        end
         if M.boxesOverlap(M.boxOf(rec, frame), geo.doorZone) then
             return nil, "BLOCKS_DOOR"
         end

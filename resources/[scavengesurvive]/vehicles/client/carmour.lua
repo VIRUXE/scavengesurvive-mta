@@ -341,6 +341,7 @@ local REASONS = {
     UNSUPPORTED = "It would hang off the trailer here",
     BLOCKS_DOOR = "It would block the door",
     CLASH = "It would hit another defence",
+    NOT_METAL = "Only metal defences can be welded on",
 }
 
 local attaching = nil -- { vehicle, uname, ghost, rec, why, o, d, placedAt }

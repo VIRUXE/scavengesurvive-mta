@@ -105,6 +105,7 @@ return function(ctx)
         ATTACH_UNSUPPORTED = "It would hang off the trailer there",
         ATTACH_BLOCKS_DOOR = "It would block the door",
         ATTACH_CLASH = "It would hit another defence",
+        ATTACH_NOT_METAL = "Only metal defences can be welded on",
         ATTACH_NOT_DEFENCE = "Hold a defence to attach it",
         ATTACH_FAR = "Get closer to where it goes",
         PRIED = "Panel pried off",

@@ -7,10 +7,13 @@ them so far).
 
 - **Attach**: hold a defence at the trailer and press F. Attach mode shows a ghost of it where the camera aims, lying
   flat on the trailer's surface at full size and turned by the face it is on (long side level; along the trailer on the
-  roof). F attaches it there, N cancels. It turns red and will not attach when it would overlap another defence, hang
-  off the trailer, stand where the door swings, or when a door defence is aimed away from the door (or a panel at the
-  door). Door defences (`Door`, `CrateDoor`, `ShipDoor`, `InsulDoor`) go on the door leaf only, stretched to fit it,
-  and swing with it; the body takes `MetPanel`, `CorPanel`, `SmallPanel`, `WoodPanel`, `InsulPanel`, `MetalGate`.
+  roof). F attaches it there, N cancels. Only metal defences can be welded on: the body takes `MetPanel`, `CorPanel`,
+  `SmallPanel` and `MetalGate`; the door leaf takes `CrateDoor` or `ShipDoor` only, stretched to fit it, swinging with it
+  (`WoodPanel`, `InsulPanel`, `InsulDoor` and `Door` are refused). The ghost turns red and will not attach when it would
+  overlap another defence, touch any part of the trailer (the body, step, hitch or A-frame gas tanks: tested triangle by
+  triangle, the panel pushed out until clear), stand more than 0.8 m off the body, have less than 70% of its face over
+  the body within 0.4 m, sit under the floor or reach into the ground, stand where the door swings, or when it is aimed
+  at an inside surface (where it holds on must be the outer skin: four of five rays fanned out from it leave the trailer).
 - An attached panel weighs on the trailer (180 kg, and the tower loses 8% engine acceleration per panel, never below
   40%) but protects nothing: a Crowbar pries it off (3 s), and any blast knocks it to the ground.
 - **Weld**: lay the Welder on the ground (one in hand is refused) and tap F at it to take its torch (hold F to pick the

@@ -263,6 +263,7 @@ return function(ctx)
         UNSUPPORTED = "ATTACH_UNSUPPORTED",
         BLOCKS_DOOR = "ATTACH_BLOCKS_DOOR",
         CLASH = "ATTACH_CLASH",
+        NOT_METAL = "ATTACH_NOT_METAL",
         NOT_DEFENCE = "ATTACH_NOT_DEFENCE",
     }
 
@@ -710,8 +711,8 @@ return function(ctx)
         end)
     end
 
-    -- an Angle Grinder at a vehicle that takes armour: one pass at the nearest welded panel, with a charged Tool Battery
-    -- and a Grinding Disc with wear left in the inventory or the bag
+    -- an Angle Grinder at a vehicle that takes armour: one pass at the nearest welded panel, with a charged Tool
+    -- Battery and a Grinding Disc with wear left in the inventory or the bag
     function M.grind(player, vehicle)
         local inf = info[vehicle]
         if not inf or activeActions[player] then
