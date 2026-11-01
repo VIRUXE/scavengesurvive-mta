@@ -31,9 +31,15 @@ GRINDER_HOLD = (0.08, 0.03, 0.0, 90.0, -90.0, 0.0)
 # steel gas cylinder (SA-MP model 19816), not a can.
 RENAMES = {"Canister": "Gas Cylinder", "Battery": "Car Battery"}
 
-# upstream item types that get a port model: uname -> (upstream model, port model, modelz). The Car Battery (prop_models
-# 20208, origin at the centre of its base) stands on its base on the ground and keeps upstream's hand hold.
-MODEL_OVERRIDES = {"Battery": (1579, 20208, 0.0)}
+# The Car Battery (prop_models 20208, origin at the centre of its base) hangs from the right hand by its strap, upright,
+# the label facing out and its long side along the walking direction; the Tool Battery (20209, origin at its foot) sits
+# in the right fist, label and charge lamps facing out. Both checked on the studio set with attachedit's preview.
+BATTERY_HOLD = (0.27, 0.0, 0.0, 90.0, -90.0, 0.0)
+TOOL_BATTERY_HOLD = (0.11, -0.02, 0.02, 90.0, -90.0, 0.0)
+
+# upstream item types that get a port model: uname -> (upstream model, port model, modelz, hold on bone 6). The Car
+# Battery stands on its base on the ground.
+MODEL_OVERRIDES = {"Battery": (1579, 20208, 0.0, BATTERY_HOLD)}
 
 # uname, name, model, size, hitpoints, loot { table: weight }, carried: a heavy two-handed hold like the Large Box
 TOOLS = [
@@ -43,8 +49,8 @@ TOOLS = [
     dict(uname="GasBottle", name="Gas Bottle", model=20203, size=5, hp=3, loot={"world_civilian": 4.0, "world_survivor": 6.0, "world_industrial": 8.0, "airdrop_industrial": 10.0}, carry=False),
     # an angle grinder for cutting metal: industrial loot spots, work vans and trucks, the industrial airdrop
     dict(uname="Grinder", name="Angle Grinder", model=20206, size=3, hp=3, loot={"world_industrial": 4.0, "vehicle_industrial": 3.0, "airdrop_industrial": 6.0}, carry=False, att=GRINDER_HOLD, bone=6, modelz=0.058),
-    # a spare grinding disc for the Grinder (prop_models 20207): wears one step per grinding pass; data {"wear": passes left}
     # the grinder's slide-on 18 V pack (prop_models 20209): runs the Grinder, charges the Stun Gun
-    dict(uname="ToolBattery", name="Tool Battery", model=20209, size=1, hp=2, loot={"world_industrial": 5.0, "vehicle_industrial": 4.0, "airdrop_industrial": 6.0}, carry=False),
+    dict(uname="ToolBattery", name="Tool Battery", model=20209, size=1, hp=2, loot={"world_industrial": 5.0, "vehicle_industrial": 4.0, "airdrop_industrial": 6.0}, carry=False, att=TOOL_BATTERY_HOLD, bone=6),
+    # a spare grinding disc for the Grinder (prop_models 20207): wears one step per grinding pass; data {"wear": passes left}
     dict(uname="GrindDisc", name="Grinding Disc", model=20207, size=1, hp=1, loot={"world_industrial": 10.0, "vehicle_industrial": 8.0, "airdrop_industrial": 12.0}, carry=False),
 ]

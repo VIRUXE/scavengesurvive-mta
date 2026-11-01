@@ -278,9 +278,10 @@ def add_port_tools(types: dict[str, dict]) -> None:
     Upstream types the port renames (RENAMES) take their new display name here."""
     for uname, name in RENAMES.items():
         types[uname]["name"] = name
-    for uname, (upstream, model, modelz) in MODEL_OVERRIDES.items():
+    for uname, (upstream, model, modelz, att) in MODEL_OVERRIDES.items():
         assert int(types[uname]["model"]) == upstream, f"{uname}: upstream model {types[uname]['model']}, table says {upstream}"
         types[uname]["model"], types[uname]["modelz"] = model, modelz
+        types[uname].update(dict(zip(("attx", "atty", "attz", "attrx", "attry", "attrz"), att)), boneid=6)
     hold = types["LargeBox"]
     index = max(t["_index"] for k, t in types.items() if not k.startswith("_")) + 1
     for i, w in enumerate(TOOLS):
