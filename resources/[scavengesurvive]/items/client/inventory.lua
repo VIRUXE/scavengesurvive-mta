@@ -104,7 +104,11 @@ return function(ctx)
         ATTACH_NOT_DEFENCE = "Hold a defence to attach it",
         ATTACH_FAR = "Get closer to where it goes",
         PRIED = "Panel pried off",
-        PRY_WELDED = "A welded panel will not come off with a crowbar",
+        PRY_WELDED = "A welded panel will not come off with a crowbar, grind it off with an Angle Grinder",
+        GRIND_NOPANEL = "No welded panel within reach to grind",
+        GRIND_NOBATTERY = "The Angle Grinder needs a charged Battery in your inventory or bag",
+        GRIND_NODISC = "The Angle Grinder needs a Grinding Disc in your inventory or bag",
+        GRIND_CUT = "The panel's welds are cut through and it comes off",
         KEY_CRAFTED = "Key crafted",
         REFUELLED = "Refuelled",
         REPAIRED = "Vehicle repaired",
@@ -196,8 +200,13 @@ return function(ctx)
     addEventHandler("toastShown", root, function(code)
         local n = type(code) == "string" and code:match("^AMTRANS:(%d+)$")
         local dist = type(code) == "string" and code:match("^DISTANCE:([%d%.]+)$")
+        local ground, passes = nil, nil
+        if type(code) == "string" then
+            ground, passes = code:match("^GRIND_PASS:(%d+):(%d+)$")
+        end
         local msg = n and string.format("Transferred %d rounds", tonumber(n) or 0)
             or dist and string.format("Distance: %.3f", tonumber(dist) or 0) -- upstream DISTANCEVAL
+            or ground and string.format("Grinding: %s of %s passes cut", ground, passes)
             or MESSAGES[code]
             or tostring(code)
         exports.ui:actionTextShow(msg, 3000)

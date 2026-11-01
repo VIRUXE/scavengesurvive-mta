@@ -125,7 +125,8 @@ return function(ctx)
         end
         -- carmour (vehicles/server/carmour.lua), ahead of the Generator powering the Welder (a machine): the torch
         -- in hand welds at a vehicle that takes armour and goes back on its Welder anywhere else; a Welder in hand is
-        -- told to be laid down; a defence in hand at such a vehicle starts attaching it where the camera aims
+        -- told to be laid down; an Angle Grinder in hand grinds a welded panel; a defence in hand at such a vehicle
+        -- starts attaching it where the camera aims
         local armourVeh = exports.vehicles:nearbyWeldTarget()
         if exports.vehicles:hasTorch() then
             if armourVeh then
@@ -134,7 +135,7 @@ return function(ctx)
             end
             return triggerServerEvent("weldTorchStowRequested", localPlayer)
         end
-        if armourVeh and heldNow and heldNow.uname == "Welder" then
+        if armourVeh and heldNow and (heldNow.uname == "Welder" or heldNow.uname == "Grinder") then
             return triggerServerEvent("vehicleInteractRequested", localPlayer, armourVeh)
         end
         if armourVeh and heldNow and exports.vehicles:isAttachable(heldNow.uname) then

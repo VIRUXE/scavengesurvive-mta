@@ -78,7 +78,8 @@ UNSET_TIPS = {
     "WaterMachine": "Put Water Bottles of sea water inside and fuel it with a Petrol Can, it purifies the water",
     "Welder": "Press [F] at a vehicle with a Gas Bottle on you, a defence panel lying near and a fuelled Generator within 8 m to weld the panel on (for now only the towable Airstream takes armour)",
     "Generator": "Hold [F] with a Petrol Can to fuel it, a Welder within 8 m runs on it",
-    "Grinder": "A cordless angle grinder with a cutting disc, found in industrial areas and work vehicles",
+    "Grinder": "Hold [F] at a welded defence to grind it off a vehicle; each pass burns a Battery charge and wears a Grinding Disc, carried in the inventory or bag",
+    "GrindDisc": "A spare disc for the Angle Grinder, worn down a little by every pass of grinding",
     "GasBottle": "A propane bottle with some gas left in it, hold [F] at a trailer's A-frame to mount it, and with empty hands to take it back",
 }
 # Tips the port's own behaviour changed (#156 petrol ammo, #157 tree felling): they replace upstream's wording in every

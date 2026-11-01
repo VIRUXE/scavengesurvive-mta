@@ -199,6 +199,26 @@ addEventHandler("weldStarted", root, function(ms)
     end, 120, math.ceil(ms / 120))
 end)
 
+-- sparks thrown back off the Grinder's disc while a pass lasts
+addEventHandler("grindStarted", root, function(ms)
+    local who = source
+    local started = getTickCount()
+    setTimer(function()
+        if not isElement(who) or getTickCount() - started > ms then
+            return
+        end
+        local x, y, z = getElementPosition(who)
+        local cx, cy, cz = getCameraMatrix()
+        if getDistanceBetweenPoints3D(x, y, z, cx, cy, cz) > 80 then
+            return
+        end
+        local _, _, rz = getElementRotation(who)
+        local a = math.rad(rz)
+        local fx, fy = -math.sin(a), math.cos(a)
+        fxAddSparks(x + fx * 0.6, y + fy * 0.6, z - 0.1, -fx, -fy, 0.6, 1.5, 10, 0, 0, 0, true, 2, 1)
+    end, 90, math.ceil(ms / 90))
+end)
+
 -- The vehicle a Welder's torch or a held defence works on (hud F key and its hints): the nearest streamed-in one
 -- that takes armour, within the server's reach of it; false when none is.
 local WELD_REACH = 6.5

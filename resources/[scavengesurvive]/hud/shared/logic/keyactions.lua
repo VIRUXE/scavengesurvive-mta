@@ -32,7 +32,8 @@ M.CRATES = { supply = "Open supply crate", cache = "Open weapon cache" }
 --   nearContainer,                        -- a bag or box lying in reach: "Open" / "(Hold) Pick up"
 --   carmour,                              -- vehicles carmour: "attach" (placing a defence), "weld" (the Welder's
 --                                         -- torch at a trailer), "torch" (it anywhere else), "defence" (one in hand
---                                         -- at a trailer), "welder" (empty hands at a Welder); F then does only that
+--                                         -- at a trailer), "grind" (an Angle Grinder at a trailer), "welder" (empty
+--                                         -- hands at a Welder); F then does only that
 --   supports = { [capability] = true },   -- eat, drink, openbag, wearbag, special, holster, reload, unload, give,
 --                                         -- removebag, uncuff, trunk, repair, engine, lights, doors, radio
 -- }
@@ -89,6 +90,8 @@ function M.lines(ctx, keys)
         return out
     elseif cm == "defence" then
         add("interact", "Attach to trailer")
+    elseif cm == "grind" then
+        add("interact", "Grind panel off")
     elseif cm == "welder" then
         add("interact", "Take torch")
         add("interact", "(Hold) Pick up welder")

@@ -30,6 +30,7 @@ then runs itself in Blender (DragonFF) for each prop's dff and col.
                      the disc's rear half and a side handle out of +X; every surface a vanilla texture (GRINDER_TEXTURES,
                      found with gta-scout). Origin at the grip's centre, the housing along Y, the disc forward (+Y) and
                      down (-Z); its lowest point at GRINDER_LOW.
+    grind_disc 20207  a spare grinding disc for the grinder, lying flat: GRINDER_DISC's disc on its own.
 
 Origin (except welder_torch and grinder): the centre of the base (x, y) with z = 0 at the lowest point; the front faces +Y.
 """
@@ -275,6 +276,16 @@ def build_grinder(ctx):
     return [((0.04, 0.0, -0.01), (0.105, 0.165, 0.048))]
 
 
+GRIND_DISC_TEXTURES = [("trailers.txd", "trail_wheel")]
+
+
+def build_grind_disc(ctx):
+    """A spare 115 mm grinding disc lying flat: the grinder's disc (trail_wheel on both faces), 3 mm thick, its centre
+    hole's bright hub up. Origin at the centre of its underside."""
+    ctx["tube"]((0.0, 0.0, 0.0), (0.0, 0.0, 0.003), 0.0575, 24, 0, None, False)
+    return [((0.0, 0.0, 0.0015), (0.0575, 0.0575, 0.0015))]
+
+
 PROPS_TABLE = [
     {"name": "ls_hatch", "id": 20201, "dist": 150, "source": "zombtest1.txd", "textures": ["pave_manhole1"], "build": build_ls_hatch},
     {"name": "welder", "id": 20202, "dist": 100, "source": "dynbarrels.txd", "textures": ["redmetal", "yellowmetal", "alumplat64"], "build": build_welder},
@@ -282,6 +293,7 @@ PROPS_TABLE = [
     {"name": "generator", "id": 20204, "dist": 100, "sources": GEN_TEXTURES, "build": build_generator},
     {"name": "welder_torch", "id": 20205, "dist": 60, "sources": TORCH_TEXTURES, "build": build_welder_torch},
     {"name": "grinder", "id": 20206, "dist": 60, "sources": GRINDER_TEXTURES, "build": build_grinder},
+    {"name": "grind_disc", "id": 20207, "dist": 40, "sources": GRIND_DISC_TEXTURES, "build": build_grind_disc},
 ]
 
 

@@ -1,5 +1,5 @@
 """The port's tools: the welding kit (a Welder, a Generator and a Gas Bottle as fuel; carmour, vehicles/shared/logic/carmour.lua),
-and an Angle Grinder.
+and an Angle Grinder with its Grinding Discs (it cuts welded defences off, vehicles/shared/logic/carmour.lua).
 
 Upstream has none of them. The Welder, the Generator and the Grinder are the port's own models (prop_models 20202, 20204
 and 20206, in vanilla textures). The converters add one item type per row
@@ -39,4 +39,6 @@ TOOLS = [
     dict(uname="GasBottle", name="Gas Bottle", model=20203, size=5, hp=3, loot={"world_civilian": 4.0, "world_survivor": 6.0, "world_industrial": 8.0, "airdrop_industrial": 10.0}, carry=False),
     # an angle grinder for cutting metal: industrial loot spots, work vans and trucks, the industrial airdrop
     dict(uname="Grinder", name="Angle Grinder", model=20206, size=3, hp=3, loot={"world_industrial": 4.0, "vehicle_industrial": 3.0, "airdrop_industrial": 6.0}, carry=False, att=GRINDER_HOLD, bone=6, modelz=0.058),
+    # a spare grinding disc for the Grinder (prop_models 20207): wears one step per grinding pass; data {"wear": passes left}
+    dict(uname="GrindDisc", name="Grinding Disc", model=20207, size=1, hp=1, loot={"world_industrial": 10.0, "vehicle_industrial": 8.0, "airdrop_industrial": 12.0}, carry=False),
 ]

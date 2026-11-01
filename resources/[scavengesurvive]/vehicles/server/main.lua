@@ -1273,12 +1273,16 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
     local hp = getElementHealth(vehicle)
 
     -- Case W: the Welder's torch welds the nearest attached panel on (server/carmour.lua); the Welder itself has to
-    -- be laid down first; a Crowbar pries an attached, unwelded panel off before it reaches for the door's lock
+    -- be laid down first; an Angle Grinder grinds a welded panel off, pass by pass; a Crowbar pries an attached,
+    -- unwelded panel off before it reaches for the door's lock
     if carmourSrv.hasTorch(player) then
         return carmourSrv.weld(player, vehicle)
     end
     if uname == "Welder" and carmourSrv.hasSlots(vehicle) then
         return toast(player, "WELD_TORCH")
+    end
+    if uname == "Grinder" and carmourSrv.hasSlots(vehicle) then
+        return carmourSrv.grind(player, vehicle)
     end
     if uname == "Crowbar" and carmourSrv.canPry(player, vehicle) then
         return carmourSrv.pry(player, vehicle)

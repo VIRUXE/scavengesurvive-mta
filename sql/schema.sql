@@ -508,6 +508,45 @@ BEGIN
   END IF;
 END//
 
+CREATE OR REPLACE PROCEDURE `carmour_grind`(IN p_vehicle_id INT, IN p_battery_id INT, IN p_disc_id INT, IN p_carmour LONGTEXT, IN p_battery_full INT, IN p_disc_full INT)
+BEGIN
+  -- one grinding pass (vehicles/server/carmour.lua): the Battery loses a charge (no data: full), the Grinding Disc a
+  -- step of wear (no data: new; worn out: gone) and the vehicle's armour JSON is written, all or nothing
+  DECLARE v_battery_data LONGTEXT DEFAULT NULL;
+  DECLARE v_disc_data LONGTEXT DEFAULT NULL;
+  DECLARE v_battery INT DEFAULT 0;
+  DECLARE v_disc INT DEFAULT 0;
+  DECLARE v_charge INT DEFAULT 0;
+  DECLARE v_wear INT DEFAULT 0;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
+  SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+  START TRANSACTION;
+  SELECT COUNT(*), MAX(data) INTO v_battery, v_battery_data FROM items WHERE id = p_battery_id AND type_uname = 'Battery' FOR UPDATE;
+  SELECT COUNT(*), MAX(data) INTO v_disc, v_disc_data FROM items WHERE id = p_disc_id AND type_uname = 'GrindDisc' FOR UPDATE;
+  SET v_charge = IFNULL(CAST(JSON_VALUE(v_battery_data, '$.charge') AS SIGNED), p_battery_full);
+  SET v_wear = IFNULL(CAST(JSON_VALUE(v_disc_data, '$.wear') AS SIGNED), p_disc_full);
+  IF v_battery = 0 OR v_charge < 1 THEN
+    ROLLBACK;
+    SELECT 0 AS ok, 'NO_BATTERY' AS code, NULL AS payload;
+  ELSEIF v_disc = 0 OR v_wear < 1 THEN
+    ROLLBACK;
+    SELECT 0 AS ok, 'NO_DISC' AS code, NULL AS payload;
+  ELSEIF NOT EXISTS (SELECT 1 FROM vehicles WHERE id = p_vehicle_id) THEN
+    ROLLBACK;
+    SELECT 0 AS ok, 'NO_VEHICLE' AS code, NULL AS payload;
+  ELSE
+    UPDATE items SET data = JSON_OBJECT('charge', CAST(v_charge - 1 AS SIGNED)) WHERE id = p_battery_id;
+    IF v_wear <= 1 THEN
+      DELETE FROM items WHERE id = p_disc_id;
+    ELSE
+      UPDATE items SET data = JSON_OBJECT('wear', CAST(v_wear - 1 AS SIGNED)) WHERE id = p_disc_id;
+    END IF;
+    UPDATE vehicles SET carmour = p_carmour WHERE id = p_vehicle_id;
+    COMMIT;
+    SELECT 1 AS ok, 'OK' AS code, JSON_OBJECT('charge', CAST(v_charge - 1 AS SIGNED), 'wear', CAST(v_wear - 1 AS SIGNED)) AS payload;
+  END IF;
+END//
+
 CREATE OR REPLACE PROCEDURE `carmour_weld`(IN p_vehicle_id INT, IN p_tank_id INT, IN p_carmour LONGTEXT, IN p_kg DECIMAL(4,1))
 BEGIN
   DECLARE v_tank_data LONGTEXT DEFAULT NULL;

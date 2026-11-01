@@ -8,6 +8,8 @@
 -- first), then the door's own hitpoint, which breaks its lock; it knocks every attached, unwelded panel off.
 -- A vehicle's armour is { base, next, panels = { record, ... } } stored as JSON in vehicles.carmour; a record is
 -- { id, u = uname, hp, w = welded, door, c = centre, l, s = long and short side (unit), sa, sb = door stretch }.
+-- An Angle Grinder cuts a welded panel off in GRIND_PASSES held passes of GRIND_PASS_MS; each pass burns a Battery
+-- charge and wears a Grinding Disc, and the panel keeps how many it has had (g), so the cut can be finished later.
 -- Pure: no MTA calls at file scope.
 local M = {}
 
@@ -24,6 +26,10 @@ M.GENERATOR_REACH = 8.0 -- the Welder's cable: a Generator with fuel this near t
 M.LEAD = 5.0 -- metres of lead between the Welder and its torch
 M.WORK_REACH = 1.6 -- the player this near a panel's box welds or pries it
 M.ATTACH_REACH = 4.5 -- the player this near the spot a panel is attached to
+M.GRIND_PASS_MS = 20000 -- one held pass of the Angle Grinder at a welded panel
+M.GRIND_PASSES = 6 -- passes that cut a welded panel off: two minutes of grinding
+M.BATTERY_CHARGES = 3 -- passes a full Battery runs the Grinder for; its item data { charge = n }, none: full
+M.DISC_WEAR = 6 -- passes a new Grinding Disc lasts; its item data { wear = n }, none: new; worn out, it is gone
 M.GROUND_DROP = 0.75 -- metres from the trailer's origin down to the ground, where a knocked-off panel lands
 
 function M.new()
@@ -65,6 +71,7 @@ function M.decode(t, panels)
                 s = s,
                 sa = tonumber(p.sa) or 1,
                 sb = tonumber(p.sb) or 1,
+                g = math.max(0, math.floor(tonumber(p.g) or 0)),
             }
             st.next = math.max(st.next, id + 1)
         end
@@ -91,6 +98,7 @@ function M.encode(st)
             s = { round(p.s[1]), round(p.s[2]), round(p.s[3]) },
             sa = round(p.sa),
             sb = round(p.sb),
+            g = p.g ~= 0 and p.g or nil,
         }
     end
     return { base = st.base, next = st.next, panels = panels }
@@ -164,6 +172,17 @@ function M.weld(st, id)
         p.w = true
     end
     return out
+end
+
+-- the state with one more grinding pass on welded panel id, and whether that pass cut it through
+function M.grind(st, id)
+    local out = copy(st)
+    local p = M.find(out, id)
+    if not p or not p.w then
+        return out, false
+    end
+    p.g = (p.g or 0) + 1
+    return out, p.g >= M.GRIND_PASSES
 end
 
 -- the state without panel id, and the record taken off
@@ -258,6 +277,23 @@ end
 function M.weldGas(maxHp)
     local kg = math.max(1, tonumber(maxHp) or 1) * M.GAS_PER_HP
     return math.max(0.1, math.floor(kg * 10 + 0.5) / 10)
+end
+
+local function firstData(data)
+    local d = type(data) == "table" and data or {}
+    return type(d[1]) == "table" and d[1] or d
+end
+
+-- passes left in a Battery from its item data (either JSON shape)
+function M.chargeOf(data)
+    local n = tonumber(firstData(data).charge)
+    return n == nil and M.BATTERY_CHARGES or math.max(0, math.min(M.BATTERY_CHARGES, math.floor(n)))
+end
+
+-- passes left in a Grinding Disc from its item data (either JSON shape)
+function M.wearOf(data)
+    local n = tonumber(firstData(data).wear)
+    return n == nil and M.DISC_WEAR or math.max(0, math.min(M.DISC_WEAR, math.floor(n)))
 end
 
 -- kg of gas left in a Gas Bottle from its item data (either JSON shape)

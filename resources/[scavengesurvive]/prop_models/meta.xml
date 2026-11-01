@@ -11,6 +11,9 @@
     <file src="files/generator.col"/>
     <file src="files/generator.dff"/>
     <file src="files/generator.txd"/>
+    <file src="files/grind_disc.col"/>
+    <file src="files/grind_disc.dff"/>
+    <file src="files/grind_disc.txd"/>
     <file src="files/grinder.col"/>
     <file src="files/grinder.dff"/>
     <file src="files/grinder.txd"/>

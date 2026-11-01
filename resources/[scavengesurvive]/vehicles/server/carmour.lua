@@ -2,7 +2,8 @@
 -- vehicle where the player aims (the client sends its camera ray, the server places the panel from it with the same
 -- rules), the Welder's torch (grabbed off a Welder lying on the ground, tethered to it by its lead), welding an
 -- attached panel on, prying an unwelded one off with a Crowbar, the armour's persistence in vehicles.carmour, the
--- heavier trailer and the slower tower, the walk-in door's hitpoints and the damage panels soak up.
+-- heavier trailer and the slower tower, grinding a welded panel off with an Angle Grinder, the walk-in door's
+-- hitpoints and the damage panels soak up.
 -- Clients build the panels themselves from the element data "vehicles.carmour" (client/carmour.lua): server-made
 -- objects cannot carry SA-MP or port models. A player's torch is the element data "vehicles.torch".
 -- ctx = { db, info, toast, activeActions, cancelHoldAction, carmour, place, geo, breakLock } built by server/main.lua.
@@ -14,6 +15,10 @@ return function(ctx)
 
     local TANKS = "SELECT i.id, i.data FROM items i JOIN containers c ON c.id = i.container_id "
         .. "WHERE i.type_uname = 'GasBottle' AND (c.owner_char_id = ? OR c.owner_item_id IN "
+        .. "(SELECT id FROM items WHERE holder_char_id = ? AND holder_kind = 'bag')) ORDER BY i.id"
+    -- the character's items of one type in the inventory or a worn bag (the Grinder's Batteries and Grinding Discs)
+    local CARRIED = "SELECT i.id, i.data FROM items i JOIN containers c ON c.id = i.container_id "
+        .. "WHERE i.type_uname = ? AND (c.owner_char_id = ? OR c.owner_item_id IN "
         .. "(SELECT id FROM items WHERE holder_char_id = ? AND holder_kind = 'bag')) ORDER BY i.id"
     -- a Generator lying within the Welder's cable; its fuel is read from the data in Lua and drawn in one statement
     local GENERATORS = "SELECT id, x, y, z, data FROM items WHERE type_uname = 'Generator' AND x IS NOT NULL "
@@ -523,6 +528,103 @@ return function(ctx)
             end)
         end, carmour.PRY_MS, 1)
         activeActions[player] = { actionType = "pry", vehicle = vehicle, timer = timer }
+    end
+
+    -- Grinding -------------------------------------------------------------------------------------------------
+
+    local function welded(rec)
+        return rec.w
+    end
+
+    -- the first of rows whose data `left(data)` says has a pass in it
+    local function firstWith(rows, left)
+        for _, r in ipairs(rows or {}) do
+            if left(decodeData(r.data)) >= 1 then
+                return r
+            end
+        end
+        return nil
+    end
+
+    -- the pass's end: one procedure takes a Battery charge and a disc's wear and stores the panel's progress; the
+    -- pass that cuts it through takes the panel off onto the ground
+    local function grindPass(player, vehicle, panelId, batteryId, discId)
+        activeActions[player] = nil
+        if not isElement(player) or not isElement(vehicle) or not info[vehicle] then
+            return
+        end
+        setPedAnimation(player, nil)
+        triggerClientEvent(player, "vehicleHoldStopped", player)
+        local inf = info[vehicle]
+        local held = exports.items:getHeld(player)
+        local rec = carmour.find(stateOf(vehicle), panelId)
+        if not held or held.uname ~= "Grinder" or not rec or not rec.w then
+            return
+        end
+        local nextSt, cut = carmour.grind(stateOf(vehicle), panelId)
+        local args = { inf.id, batteryId, discId, json(nextSt), carmour.BATTERY_CHARGES, carmour.DISC_WEAR }
+        db.call("carmour_grind", args, function(res)
+            if not res or not res.ok then
+                return toast(player, res and res.code == "NO_DISC" and "GRIND_NODISC" or "GRIND_NOBATTERY")
+            end
+            inf.carmour = nextSt
+            if isElement(player) then
+                exports.items:refreshPlayer(player)
+            end
+            if not cut then
+                M.apply(vehicle)
+                local done = carmour.find(nextSt, panelId)
+                return toast(player, string.format("GRIND_PASS:%d:%d", done and done.g or 0, carmour.GRIND_PASSES))
+            end
+            local offSt, gone = carmour.remove(nextSt, panelId)
+            gone.w = false
+            detach(vehicle, offSt, { gone }, function(ok)
+                if ok and isElement(player) then
+                    toast(player, "GRIND_CUT")
+                end
+            end)
+            local who, line = getPlayerName(player), "[CARMOUR] %s ground %s off vehicle %d"
+            outputServerLog(string.format(line, who, rec.u, inf.id))
+        end)
+    end
+
+    -- an Angle Grinder at a vehicle that takes armour: one pass at the nearest welded panel, with a charged Battery
+    -- and a Grinding Disc with wear left in the inventory or the bag
+    function M.grind(player, vehicle)
+        local inf = info[vehicle]
+        if not inf or activeActions[player] then
+            return
+        end
+        if not takesArmour(vehicle) then
+            return toast(player, "WELD_NOSLOTS")
+        end
+        local rec = panelNear(player, vehicle, welded)
+        if not rec then
+            return toast(player, "GRIND_NOPANEL")
+        end
+        local cid = exports.character:getCharacterId(player)
+        db.query(CARRIED, { "Battery", cid, cid }, function(batteries)
+            local battery = firstWith(batteries, carmour.chargeOf)
+            if not battery then
+                return toast(player, "GRIND_NOBATTERY")
+            end
+            db.query(CARRIED, { "GrindDisc", cid, cid }, function(discs)
+                local disc = firstWith(discs, carmour.wearOf)
+                if not disc then
+                    return toast(player, "GRIND_NODISC")
+                end
+                if not isElement(player) or not isElement(vehicle) or activeActions[player] then
+                    return
+                end
+                cancelHoldAction(player)
+                setPedAnimation(player, "BOMBER", "BOM_Plant_Loop", -1, true, false, false, false)
+                local ms = carmour.GRIND_PASS_MS
+                triggerClientEvent(player, "vehicleHoldStarted", player, "Grinding", ms)
+                triggerClientEvent(root, "grindStarted", player, ms)
+                local timer = setTimer(grindPass, ms, 1, player, vehicle, rec.id, battery.id, disc.id)
+                activeActions[player] = { actionType = "grind", vehicle = vehicle, timer = timer }
+            end)
+        end)
     end
 
     return M

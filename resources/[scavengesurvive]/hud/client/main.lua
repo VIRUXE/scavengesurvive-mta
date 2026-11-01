@@ -284,7 +284,8 @@ local function nearCooker(held)
 end
 
 -- carmour (vehicles): "attach" while placing a defence, "weld" with the Welder's torch at a trailer, "torch" with it
--- anywhere else, "defence" with a defence in hand at a trailer, "welder" with empty hands at a Welder lying near
+-- anywhere else, "defence" with a defence in hand at a trailer, "grind" with an Angle Grinder in hand at one,
+-- "welder" with empty hands at a Welder lying near
 local function carmourHint(held)
     if exports.vehicles:attachModeActive() then
         return "attach"
@@ -295,6 +296,9 @@ local function carmourHint(held)
     end
     if veh and held and exports.vehicles:isAttachable(held.uname) then
         return "defence"
+    end
+    if veh and held and held.uname == "Grinder" then
+        return "grind"
     end
     if not held and exports.vehicles:nearbyWelder() then
         return "welder"
