@@ -44,6 +44,41 @@ PORT_TIPS = {
     **{u: _BUILD for u in ("GarageDoor", "InsulDoor", "InsulPanel", "LargeFrame", "SmallPanel")},
 }
 
+# Upstream left these as "##ITEM TIP NOT SET##"; the port gives them a text.
+_EAT = "Eat this for food value"
+_COOK = "Cook and eat this for food value"
+_DRINK = "Drink this to quench your thirst"
+_BOOZE = "Drink this to quench your thirst, but alcohol will make you drunk"
+_SCRAP = "Used for crafting, scrap and refine it at a machine"
+_STASH = "Store items inside this, hold [F] to open it"
+_WEARIT = "Wear this by pressing [F]"
+_FURN = "Furniture: decoration for your base, hold a Crowbar and press [F] to take it apart"
+_JUNK = "This item has no use except as decoration or crafting"
+UNSET_TIPS = {
+    **{u: _EAT for u in ("Banana", "BreadLoaf", "Bread", "CakeSlice", "FishyFingers", "GrnApple", "IceCream", "IceCreamBars", "Lemon", "Orange", "PizzaOnly", "RedApple", "WeddingCake", "Cereal1", "Cereal2")},
+    **{u: _COOK for u in ("Ham", "Steak", "WrappedMeat")},
+    **{u: _DRINK for u in ("AppleJuice", "OrangeJuice", "MilkBottle", "MilkCarton")},
+    **{u: _BOOZE for u in ("Champagne", "Whisky", "Wine1", "Wine2", "Wine3")},
+    **{u: _WEARIT for u in ("Beanie", "CaptainsCap", "DevilMask", "PizzaHat", "PoliceHelm", "PussyMask", "StrawHat", "SwatHelmet", "WitchesHat")},
+    **{u: _STASH for u in ("Cupboard", "GearBox", "GunCase", "Holdall", "Locker", "ToolBox", "Workbench")},
+    **{u: _FURN for u in ("Barstool", "Desk", "SmallTable", "Table", "Doormat")},
+    **{u: _BUILD for u in ("MetalFrame", "RedPanel", "TallFrame")},
+    **{u: _SCRAP for u in ("ScrapMetal", "RefinedMetal")},
+    **{u: _JUNK for u in ("Boot", "BoxingGloves", "Cross", "Fork", "Knife3", "Broom", "Computer", "Microphone", "Radio", "RadioBox", "PisschBox", "ControlBox", "Ketchup", "Mustard", "PizzaBox")},
+    **{u: "Used for crafting" for u in ("Briquettes", "BurntLog", "Canister", "OilDrum", "OilCan")},
+    "Spanner": "Used for crafting and repairs",
+    "Keycard": "Used to open locked doors that are set up for a keycard",
+    "Padlock": "Used for crafting, combine it with a defence to lock it",
+    "WheelLock": "Hold [F] at a vehicle with this to lock its wheel, or craft it into a locksmith kit",
+    "LockBreaker": "Hold [F] at a locked vehicle with this to break its lock",
+    "RemoteControl": "Used for crafting and some puzzles",
+    "Locator": "Press [F] at a phone to sync it, then use it to show the distance to the phone",
+    "PlotPole": "Place this to claim an area, the people you add can build inside it",
+    "RefineMachine": "Put Scrap Metal inside and press [F] to refine it",
+    "ScrapMachine": "Put items inside and press [F] to break them down to scrap",
+    "WaterMachine": "Put a Water Bottle of sea water inside and press [F] to purify it",
+}
+
 
 def _replace(v: str) -> str:
     v = TAG_RE.sub(lambda m: "~k~~" + KEYTEXT[m.group(1)] + "~" if m.group(1) in KEYTEXT
@@ -77,6 +112,10 @@ def convert(src_root, out_data) -> dict[str, int]:
         entries = parse((Path(src_root) / "scriptfiles/languages" / name).read_bytes(), enc)
         for uname, tip in PORT_TIPS.items():
             entries.setdefault(uname[:9] + "_T", tip)
+        for uname, tip in UNSET_TIPS.items():
+            key = uname[:9] + "_T"
+            if key not in entries or "NOT SET" in entries[key]:
+                entries[key] = tip
         write_text(Path(out_data) / f"lang_{CODES[name]}.lua", render_lua(entries))
         counts[CODES[name]] = len(entries)
     return counts
