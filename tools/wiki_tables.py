@@ -220,14 +220,18 @@ def table_scrap(items, cal_names, img):
     return md(["Item", "Scrap"], rows, "lr")
 
 
-def table_catalogue(items, cal_names, img):
-    index = {}
-    if img:
-        import json
+WIKI = Path(".")
 
-        idx = ROOT / "docs" / "images" / "items" / "all" / "index.json"
-        if idx.exists():
-            index = json.loads(idx.read_text(encoding="utf8"))
+
+def picture_index(folder: str) -> dict:
+    import json
+
+    idx = WIKI / folder / "index.json"
+    return json.loads(idx.read_text(encoding="utf8")) if idx.exists() else {}
+
+
+def table_catalogue(items, cal_names, img):
+    index = picture_index(img)
     out = []
     groups = {"weapon": "Weapons", "ammo": "Ammunition", "food": "Food", "liquid": "Drink", "bag": "Bags", "safebox": "Containers", "generic": "Other items"}
     for cat, title in groups.items():
@@ -243,11 +247,13 @@ def table_catalogue(items, cal_names, img):
 
 def table_vehicles(items, cal_names, img):
     veh = real(lua_rows(VEHICLE_TYPES, "M.byUname."))
+    index = picture_index("images/vehicles")
     rows = []
     for u, v in veh.items():
-        rows.append([v["name"], v["category"], v["group"], num(v["maxFuel"]) + " L", v["trunkSize"], num(v["spawnChance"])])
-    rows.sort(key=lambda r: (r[1], r[0]))
-    return md(["Vehicle", "Type", "Group", "Fuel tank", "Trunk slots", "Spawn chance"], rows, "lllrrr")
+        pic = "![](images/vehicles/" + index[u] + ")" if u in index else ""
+        rows.append([pic, v["name"], v["category"], v["group"], num(v["maxFuel"]) + " L", v["trunkSize"], num(v["spawnChance"])])
+    rows.sort(key=lambda r: (r[2], r[1]))
+    return md(["", "Vehicle", "Type", "Group", "Fuel tank", "Trunk slots", "Spawn chance"], rows, "llllrrr")
 
 
 TABLES = {
@@ -271,7 +277,8 @@ def main() -> None:
     ap.add_argument("--wiki", required=True)
     ap.add_argument("--images", default="images/items")
     a = ap.parse_args()
-    wiki = Path(a.wiki)
+    global WIKI
+    wiki = WIKI = Path(a.wiki)
     items = lua_rows(ITEM_TYPES, "M.byUname.")
     src = ITEM_TYPES.read_text(encoding="utf8")
     cal_names = parse_table(tokens(re.search(r"M\.calibreNames = \{(.*)", src).group(1)))
