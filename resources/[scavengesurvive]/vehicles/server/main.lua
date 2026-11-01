@@ -555,7 +555,10 @@ net.handler("fuelPumpInteractRequested", function(player)
     local ms = math.max(500, math.ceil(transfer / PUMP_LITRES_PER_TICK) * PUMP_TICK_MS)
     setPedAnimation(player, "PED", "DRIVE_BOAT", -1, true, false, false, false)
     triggerClientEvent(player, "vehicleHoldStarted", player, "Filling petrol can", ms)
-    local timer = setTimer(function(p, canId, outlet)
+    -- the pump comes in as an upvalue: a table passed as a setTimer argument arrives as a copy, and the stock
+    -- taken from a copy never leaves the pump
+    local canId, outlet = held.id, pump
+    local timer = setTimer(function(p)
         activeActions[p] = nil
         if not isElement(p) then
             return
@@ -572,7 +575,7 @@ net.handler("fuelPumpInteractRequested", function(player)
             exports.items:updateHeldData(p, { amount = fuel + moved })
             toast(p, "REFUELLED")
         end
-    end, ms, 1, player, held.id, pump)
+    end, ms, 1, player)
     activeActions[player] = { actionType = "pump", timer = timer }
 end, { rate = 3 })
 
