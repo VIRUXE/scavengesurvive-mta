@@ -246,11 +246,6 @@ return function(ctx)
             end)
         end
 
-        local cl = clothesRef or ctx.clothes
-        if item.uname == "Clothes" and cl then
-            return cl.use(player, item.id, item.data, true)
-        end
-
         local slot = apparel and apparel.slotFor(item.uname)
         if slot == "holster" then
             lastHolster[player] = now

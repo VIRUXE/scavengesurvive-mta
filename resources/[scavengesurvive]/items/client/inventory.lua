@@ -625,13 +625,8 @@ return function(ctx)
                     view = (view == "bag") and "inventory" or "bag"
                     open(last)
                 elseif sl.id == "held" and last.held then
-                    if last.held.uname == "Clothes" then
-                        exports.ui:listClose()
-                        triggerServerEvent("itemWearRequested", localPlayer, last.held.id)
-                    else
-                        local target = (view == "bag" and "bag") or (view == "trunk" and "trunk") or nil
-                        triggerServerEvent("itemPutAwayRequested", localPlayer, target)
-                    end
+                    local target = (view == "bag" and "bag") or (view == "trunk" and "trunk") or nil
+                    triggerServerEvent("itemPutAwayRequested", localPlayer, target)
                 elseif sl.id ~= "bag" and sl.id ~= "held" then
                     local isEquipped = last.gear and last.gear[sl.id]
                     if isEquipped then
