@@ -5,7 +5,7 @@
 -- state.held / state.worn are shared with it. Busted loads this file with fake deps.
 return function(ctx)
     local db, net, state, geometry, world = ctx.db, ctx.net, ctx.state, ctx.geometry, ctx.world
-    local ammo = ctx.ammo
+    local ammo, liquids = ctx.ammo, ctx.liquids
     local itemType, defaultAmmo, charId, toast = ctx.type, ctx.defaultAmmo, ctx.charId, ctx.toast
     local isIncapacitated = ctx.isIncapacitated
     local isBadInteract = ctx.isBadInteract or function()
@@ -62,6 +62,9 @@ return function(ctx)
     -- A firearm with explicit data.mag uses that count (0 when unloaded); without data.mag it defaults
     -- to a full magazine (backwards compatibility for /additem and legacy items). Vanilla melee ids always get 1.
     local function ammoFor(t, data)
+        if ammo and ammo.isLiquidWeapon(t) then -- Chainsaw, Flamer: only the petrol put in runs them
+            return ammo.fuelUnits(data)
+        end
         if data and data.mag ~= nil then
             return math.max(0, math.floor(tonumber(data.mag) or 0))
         end
@@ -365,6 +368,15 @@ return function(ctx)
             return
         end
         local t = itemType(item.uname)
+        if ammo.isLiquidWeapon(t) then
+            local left = ammo.fuelUnits(item.data) - 1
+            if left > 0 then -- the running count only waits for the next flush; the last unit takes the weapon away
+                item.data = { mag = left, reserve = 0 }
+                M.queueData(item)
+                return
+            end
+            return syncHeldData(source, item, { mag = 0, reserve = 0 })
+        end
         if not ammo.isCalibreWeapon(t) then
             return
         end
@@ -459,6 +471,35 @@ return function(ctx)
             end
         end, { player = player, itemId = item.id, unloadedState = unloadedState })
     end, { rate = 3 })
+
+    -- a liquid weapon in hand and a Petrol Can on the ground: a litre a press into the weapon (weapon/interact.pwn)
+    local function refuelWeaponFromCan(player, held, heldType, row)
+        local rowType = itemType(row.uname)
+        local amount, liquid = liquids.decode(rowType, decodeData(row.data))
+        if liquid ~= heldType.categoryData.liquid then
+            return toast(player, "EMPTY")
+        end
+        local ok, code, nextData, canLeft = ammo.refuel(heldType, held.data, amount)
+        if not ok then
+            return toast(player, code)
+        end
+        local canData = toJSON({ amount = canLeft, liquid = liquid }, true)
+        local sql = "UPDATE items SET data = ? WHERE id = ? AND x IS NOT NULL AND IFNULL(data, '') = ?"
+        local was = (row.data and row.data ~= false) and row.data or ""
+        db.exec(sql, { canData, row.id, was }, function(done, _, affected)
+            if not done or tonumber(affected) ~= 1 or not isElement(player) then
+                return
+            end
+            world.resendEverywhere(row.id)
+            local cur = state.held[player]
+            if cur and cur.id == held.id then
+                syncHeldData(player, cur, nextData)
+            end
+            if setPedAnimation then
+                setPedAnimation(player, "BOMBER", "BOM_Plant_In", -1, false, false, false, false)
+            end
+        end)
+    end
 
     local function tryTransferFromWorld(player, cid, held, heldType, row)
         local worldType = itemType(row.uname)
@@ -653,6 +694,9 @@ return function(ctx)
     -- Crowbar reaches tents and defences; Motor, Keypad, AdvancedKeypad reach defences (building resource)
     local crowbarTargets = nil
     local function targetsFor(uname)
+        if ammo and ammo.isLiquidWeapon(itemType(uname)) then
+            return { "GasCan" } -- F with a liquid weapon in hand reaches a Petrol Can lying near
+        end
         if uname == "Motor" or uname == "Keypad" or uname == "AdvancedKeypad" then
             return getDefenceTargets()
         end
@@ -871,6 +915,9 @@ return function(ctx)
             end
 
             local curType = curHeld and itemType(curHeld.uname) or nil
+            if curHeld and row.uname == "GasCan" and ammo and ammo.isLiquidWeapon(curType) and liquids then
+                return refuelWeaponFromCan(c.player, curHeld, curType, row)
+            end
             if curHeld and (not ammo or (not ammo.isCalibreWeapon(curType) and not ammo.isAmmoItem(curType))) then
                 if furnitureSrv then -- the nearest item may lie on a table: the table takes this one too
                     return furnitureSrv.interactNear(c.player, c.charId, curHeld, c.radius)

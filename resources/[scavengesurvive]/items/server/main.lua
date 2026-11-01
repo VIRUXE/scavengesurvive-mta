@@ -137,6 +137,7 @@ hands = loadFile("server/hands.lua")({
     state = state,
     geometry = geometry,
     ammo = ammo,
+    liquids = liquids,
     apparel = apparel,
     armour = armourLogic,
     type = itemType,
