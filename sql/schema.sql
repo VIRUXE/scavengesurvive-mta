@@ -457,30 +457,76 @@ BEGIN
   END IF;
 END//
 
-CREATE OR REPLACE PROCEDURE `carmour_weld`(IN p_vehicle_id INT, IN p_panel_id INT, IN p_tank_id INT, IN p_carmour LONGTEXT)
+CREATE OR REPLACE PROCEDURE `carmour_attach`(IN p_vehicle_id INT, IN p_item_id INT, IN p_char_id INT, IN p_carmour LONGTEXT)
 BEGIN
-  -- one weld (vehicles/server/main.lua, carmour): the panel lying on the ground is used up, the Gas Tank loses one weld
-  -- (a tank without data is full: 5) and the vehicle's armour JSON is written, all or nothing
-  DECLARE v_panel INT DEFAULT NULL;
+  
+  
+  DECLARE v_item INT DEFAULT NULL;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
+  SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+  START TRANSACTION;
+  SELECT id INTO v_item FROM items WHERE id = p_item_id AND holder_char_id = p_char_id AND holder_kind = 'held' FOR UPDATE;
+  IF v_item IS NULL THEN
+    ROLLBACK;
+    SELECT 0 AS ok, 'NOT_HELD' AS code, NULL AS payload;
+  ELSEIF NOT EXISTS (SELECT 1 FROM vehicles WHERE id = p_vehicle_id) THEN
+    ROLLBACK;
+    SELECT 0 AS ok, 'NO_VEHICLE' AS code, NULL AS payload;
+  ELSE
+    DELETE FROM items WHERE id = v_item;
+    UPDATE vehicles SET carmour = p_carmour WHERE id = p_vehicle_id;
+    COMMIT;
+    SELECT 1 AS ok, 'OK' AS code, NULL AS payload;
+  END IF;
+END//
+
+CREATE OR REPLACE PROCEDURE `carmour_detach`(IN p_vehicle_id INT, IN p_carmour LONGTEXT, IN p_items JSON)
+BEGIN
+  
+  
+  
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
+  SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+  START TRANSACTION;
+  IF NOT EXISTS (SELECT 1 FROM vehicles WHERE id = p_vehicle_id FOR UPDATE) THEN
+    ROLLBACK;
+    SELECT 0 AS ok, 'NO_VEHICLE' AS code, NULL AS payload;
+  ELSE
+    UPDATE vehicles SET carmour = p_carmour WHERE id = p_vehicle_id;
+    SET @carmour_first = NULL;
+    INSERT INTO items (type_uname, hitpoints, x, y, z, rz, interior, dimension)
+      SELECT j.u, j.hp, j.x, j.y, j.z, j.rz, j.i, j.d
+      FROM JSON_TABLE(IFNULL(p_items, '[]'), '$[*]' COLUMNS (
+        u VARCHAR(32) PATH '$.u', hp SMALLINT PATH '$.hp', x FLOAT PATH '$.x', y FLOAT PATH '$.y', z FLOAT PATH '$.z',
+        rz FLOAT PATH '$.rz', i TINYINT PATH '$.int', d INT PATH '$.dim')) AS j
+      JOIN item_types t ON t.uname = j.u;
+    SET @carmour_n = ROW_COUNT();
+    SET @carmour_first = IF(@carmour_n > 0, LAST_INSERT_ID(), NULL);
+    COMMIT;
+    SELECT 1 AS ok, 'OK' AS code,
+      JSON_OBJECT('first', CAST(@carmour_first AS SIGNED), 'count', CAST(@carmour_n AS SIGNED)) AS payload;
+  END IF;
+END//
+
+CREATE OR REPLACE PROCEDURE `carmour_weld`(IN p_vehicle_id INT, IN p_tank_id INT, IN p_carmour LONGTEXT)
+BEGIN
+  
+  
   DECLARE v_tank_data LONGTEXT DEFAULT NULL;
+  DECLARE v_found INT DEFAULT 0;
   DECLARE v_gas INT DEFAULT 0;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
   SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
   START TRANSACTION;
-  SELECT id INTO v_panel FROM items WHERE id = p_panel_id AND x IS NOT NULL AND container_id IS NULL AND holder_char_id IS NULL FOR UPDATE;
-  SELECT data INTO v_tank_data FROM items WHERE id = p_tank_id AND type_uname = 'GasTank' FOR UPDATE;
+  SELECT COUNT(*), MAX(data) INTO v_found, v_tank_data FROM items WHERE id = p_tank_id AND type_uname = 'GasTank' FOR UPDATE;
   SET v_gas = IFNULL(CAST(JSON_VALUE(v_tank_data, '$.gas') AS SIGNED), 5);
-  IF v_panel IS NULL THEN
-    ROLLBACK;
-    SELECT 0 AS ok, 'NO_PANEL' AS code, NULL AS payload;
-  ELSEIF NOT EXISTS (SELECT 1 FROM items WHERE id = p_tank_id AND type_uname = 'GasTank') OR v_gas <= 0 THEN
+  IF v_found = 0 OR v_gas <= 0 THEN
     ROLLBACK;
     SELECT 0 AS ok, 'NO_GAS' AS code, NULL AS payload;
   ELSEIF NOT EXISTS (SELECT 1 FROM vehicles WHERE id = p_vehicle_id) THEN
     ROLLBACK;
     SELECT 0 AS ok, 'NO_VEHICLE' AS code, NULL AS payload;
   ELSE
-    DELETE FROM items WHERE id = v_panel;
     UPDATE items SET data = JSON_OBJECT('gas', v_gas - 1) WHERE id = p_tank_id;
     UPDATE vehicles SET carmour = p_carmour WHERE id = p_vehicle_id;
     COMMIT;

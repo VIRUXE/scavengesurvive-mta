@@ -283,6 +283,25 @@ local function nearCooker(held)
     return exports.items:nearbyCooker() ~= false
 end
 
+-- carmour (vehicles): "attach" while placing a defence, "weld" with the Welder's torch at a trailer, "torch" with it
+-- anywhere else, "defence" with a defence in hand at a trailer, "welder" with empty hands at a Welder lying near
+local function carmourHint(held)
+    if exports.vehicles:attachModeActive() then
+        return "attach"
+    end
+    local veh = exports.vehicles:nearbyWeldTarget()
+    if exports.vehicles:hasTorch() then
+        return veh and "weld" or "torch"
+    end
+    if veh and held and exports.vehicles:isAttachable(held.uname) then
+        return "defence"
+    end
+    if not held and exports.vehicles:nearbyWelder() then
+        return "welder"
+    end
+    return nil
+end
+
 local function drawKeyActions(driver)
     local held = state.held
     local isCalibreWep = held and held.category == "weapon" and held.calibre ~= nil and not held.liquid or false
@@ -300,7 +319,7 @@ local function drawKeyActions(driver)
         nearCooker = nearCooker(held),
         nearMachine = exports.items:nearbyMachine() ~= false,
         nearContainer = exports.items:nearbyContainerItem() ~= false,
-        nearWeld = held and held.uname == "Welder" and exports.vehicles:nearbyWeldTarget() ~= false or false,
+        carmour = carmourHint(held),
         cuffedNearby = not held and hasCuffedPlayerNearby() or false,
         hasHolster = getElementData(localPlayer, "items.holster") ~= false,
         supports = SUPPORTS,

@@ -728,6 +728,17 @@ return function(ctx)
         return nil
     end
 
+    -- the objects of every world item of type uname this client has: { [item id] = object }
+    function M.objectsOfType(uname)
+        local out = {}
+        for id, e in pairs(objects) do
+            if e.uname == uname and isElement(e.obj) then
+                out[id] = e.obj
+            end
+        end
+        return out
+    end
+
     -- the machine within reach (hud: a tap opens it, a hold its menu), or nil
     function M.nearbyMachine(reach)
         local px, py, pz = getElementPosition(localPlayer)

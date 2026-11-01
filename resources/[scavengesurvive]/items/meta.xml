@@ -87,6 +87,8 @@
     <export function="nearbyContainerItem" type="client"/>
     <export function="nearbyInspectable" type="client"/>
     <export function="nearbyMachine" type="client"/>
+    <export function="worldObjectsOfType" type="client"/>
+    <export function="heldObjectOf" type="client"/>
     <export function="nearestItemDistance" type="client"/>
     <export function="blockedItemsNear" type="client"/>
 </meta>

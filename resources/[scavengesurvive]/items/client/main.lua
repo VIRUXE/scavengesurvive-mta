@@ -74,6 +74,20 @@ function nearestItemDistance()
 end
 
 -- the machine within reach (#145): the hud's F taps to open it and holds for its menu
+-- the objects of the world items of a type on this client, { [item id] = object } (vehicles: Welders and their torch)
+function worldObjectsOfType(uname)
+    return world.objectsOfType(uname)
+end
+
+-- the object of the item a player holds and its type, or false
+function heldObjectOf(player)
+    local obj, uname = attach.heldObject(player)
+    if not obj then
+        return false
+    end
+    return obj, uname
+end
+
 function nearbyMachine()
     return world.nearbyMachine(2.0) or false
 end

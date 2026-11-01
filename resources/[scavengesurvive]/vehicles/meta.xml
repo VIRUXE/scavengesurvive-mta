@@ -16,7 +16,8 @@
     <file src="shared/logic/fuel-pumps.lua"/>
     <file src="shared/logic/overheat.lua"/>
     <file src="shared/logic/carmour.lua"/>
-    <file src="shared/data/carmour_slots.lua"/>
+    <file src="shared/logic/carmour_place.lua"/>
+    <file src="shared/data/carmour_geometry.lua"/>
     <file src="server/carmour.lua"/>
     <file src="server/gasbottles.lua"/>
     <export function="getVehicleDbId" type="server"/>
@@ -37,4 +38,11 @@
     <export function="tryTrailerDoor" type="client"/>
     <export function="tryGasMount" type="client"/>
     <export function="nearbyWeldTarget" type="client"/>
+    <export function="isAttachable" type="client"/>
+    <export function="beginAttach" type="client"/>
+    <export function="attachModeActive" type="client"/>
+    <export function="confirmAttach" type="client"/>
+    <export function="cancelAttach" type="client"/>
+    <export function="hasTorch" type="client"/>
+    <export function="nearbyWelder" type="client"/>
 </meta>

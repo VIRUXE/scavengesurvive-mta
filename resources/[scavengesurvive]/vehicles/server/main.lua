@@ -38,12 +38,17 @@ do
     carmour = assert(loadstring(src, "=vehicles/carmour.lua"))()
 end
 
-local carmourSlots
+-- where defences go on a vehicle: the placement rules and the Airstream's shell and every defence's frame
+local carmourPlace, carmourGeo
 do
-    local f = fileOpen("shared/data/carmour_slots.lua", true)
+    local f = fileOpen("shared/logic/carmour_place.lua", true)
     local src = fileRead(f, fileGetSize(f))
     fileClose(f)
-    carmourSlots = assert(loadstring(src, "=vehicles/carmour_slots.lua"))().SLOTS
+    carmourPlace = assert(loadstring(src, "=vehicles/carmour_place.lua"))()
+    f = fileOpen("shared/data/carmour_geometry.lua", true)
+    src = fileRead(f, fileGetSize(f))
+    fileClose(f)
+    carmourGeo = carmourPlace.load(assert(loadstring(src, "=vehicles/carmour_geometry.lua"))())
 end
 
 local carmourSrv -- server/carmour.lua, built once the roadside helpers it needs exist
@@ -1267,9 +1272,19 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
     local uname = held and held.uname
     local hp = getElementHealth(vehicle)
 
-    -- Case W: a Welder in hand welds a defence panel onto an armourable vehicle (server/carmour.lua)
-    if uname == "Welder" then
+    -- Case W: the Welder's torch welds the nearest attached panel on (server/carmour.lua); the Welder itself has to
+    -- be laid down first; a Crowbar pries an attached, unwelded panel off before it reaches for the door's lock
+    if carmourSrv.hasTorch(player) then
         return carmourSrv.weld(player, vehicle)
+    end
+    if uname == "Welder" and carmourSrv.hasSlots(vehicle) then
+        return toast(player, "WELD_TORCH")
+    end
+    if uname == "Crowbar" and carmourSrv.canPry(player, vehicle) then
+        return carmourSrv.pry(player, vehicle)
+    end
+    if uname == "Crowbar" and not atDoor and carmourSrv.weldedNear(player, vehicle) then
+        return toast(player, "PRY_WELDED")
     end
 
     -- Case G: a Gas Bottle in hand goes onto a free A-frame mount of a trailer, empty hands take one off
@@ -1656,11 +1671,27 @@ local function loadCarmour()
     fileClose(f)
     local make = assert(loadstring(src, "=vehicles/server/carmour.lua"))()
     local ctx = { db = db, info = info, toast = toast, activeActions = activeActions, carmour = carmour }
-    ctx.slots, ctx.cancelHoldAction, ctx.breakLock = carmourSlots, cancelHoldAction, breakDoorLock
+    ctx.place, ctx.geo, ctx.cancelHoldAction, ctx.breakLock = carmourPlace, carmourGeo, cancelHoldAction, breakDoorLock
     return make(ctx)
 end
 
 carmourSrv = loadCarmour()
+
+-- a held defence attached where the player aims at a vehicle: the camera ray in the vehicle's frame
+net.handler("carmourAttachRequested", function(player, vehicle, o, d)
+    if isElement(vehicle) and getElementType(vehicle) == "vehicle" then
+        carmourSrv.attach(player, vehicle, o, d)
+    end
+end, { rate = 4 })
+
+-- empty hands take the torch off a Welder lying near; N or F away from a vehicle puts it back
+net.handler("weldTorchGrabRequested", function(player, welderId)
+    carmourSrv.grabTorch(player, welderId)
+end, { rate = 4 })
+
+net.handler("weldTorchStowRequested", function(player)
+    carmourSrv.stowTorch(player)
+end, { rate = 4 })
 
 local function loadGasBottles()
     local f = fileOpen("server/gasbottles.lua", true)

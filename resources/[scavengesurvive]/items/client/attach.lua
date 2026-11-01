@@ -452,6 +452,12 @@ return function(ctx)
         }
     end
 
+    -- the object of the item a player holds (vehicles: the Welder's torch rides on a carried Welder), or nil
+    function M.heldObject(player)
+        local a = tracked[player] and tracked[player].held
+        return a and isElement(a.obj) and a.obj or nil, a and a.uname
+    end
+
     -- offsets = { x, y, z, rx, ry, rz }, scale = { sx, sy, sz } (default 1); offsets nil clears the preview and
     -- rebuilds the slot from its configured values. Returns getConfig(slot) afterwards.
     function M.setPreview(slot, offsets, scale)

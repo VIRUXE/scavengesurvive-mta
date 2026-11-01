@@ -108,6 +108,10 @@ return function(ctx)
         if getPedOccupiedVehicle(localPlayer) or tweaking() then
             return
         end
+        -- attaching a defence to a trailer (vehicles carmour): F puts it where the ghost lies
+        if exports.vehicles:attachModeActive() then
+            return exports.vehicles:confirmAttach()
+        end
         if worldInteract() then
             return
         end
@@ -119,14 +123,45 @@ return function(ctx)
         if exports.loot:tryOpenCrate() == true then
             return
         end
-        -- a Welder in hand at a vehicle that takes armour welds, ahead of the Generator powering it (a machine) or the
-        -- panel lying by it (vehicles/server/carmour.lua)
-        if heldNow and heldNow.uname == "Welder" then
-            local weldVeh = exports.vehicles:nearbyWeldTarget()
-            if weldVeh then
+        -- carmour (vehicles/server/carmour.lua), ahead of the Generator powering the Welder (a machine): the torch
+        -- in hand welds at a vehicle that takes armour and goes back on its Welder anywhere else; a Welder in hand is
+        -- told to be laid down; a defence in hand at such a vehicle starts attaching it where the camera aims
+        local armourVeh = exports.vehicles:nearbyWeldTarget()
+        if exports.vehicles:hasTorch() then
+            if armourVeh then
                 blockEnterUntil = getTickCount() + TRUNK_ENTER_BLOCK_MS
-                return triggerServerEvent("vehicleInteractRequested", localPlayer, weldVeh)
+                return triggerServerEvent("vehicleInteractRequested", localPlayer, armourVeh)
             end
+            return triggerServerEvent("weldTorchStowRequested", localPlayer)
+        end
+        if armourVeh and heldNow and heldNow.uname == "Welder" then
+            return triggerServerEvent("vehicleInteractRequested", localPlayer, armourVeh)
+        end
+        if armourVeh and heldNow and exports.vehicles:isAttachable(heldNow.uname) then
+            blockEnterUntil = getTickCount() + TRUNK_ENTER_BLOCK_MS
+            return exports.vehicles:beginAttach(armourVeh)
+        end
+        -- empty hands at a Welder lying near: a tap takes its torch, a hold picks the Welder up
+        local welderId = not heldNow and exports.vehicles:nearbyWelder()
+        if welderId then
+            if isTimer(interactHoldTimer) then
+                return
+            end
+            local key = string.lower(getKeyBoundToCommand("interact") or "f")
+            local startTick = getTickCount()
+            interactHoldTimer = setTimer(function()
+                local heldMs = getTickCount() - startTick
+                if not isKeyHeld(key, "interact") or heldMs >= 500 then
+                    killTimer(interactHoldTimer)
+                    interactHoldTimer = nil
+                    if heldMs >= 500 then
+                        triggerServerEvent("itemPickupRequested", localPlayer, exports.items:blockedItemsNear())
+                    else
+                        triggerServerEvent("weldTorchGrabRequested", localPlayer, welderId)
+                    end
+                end
+            end, 50, 0)
+            return
         end
         -- a ground bag opens on a tap and is picked up on a 500 ms hold; a sign or a body lying there (empty hands)
         -- edits or investigates on a tap and is picked up on the hold (upstream "Press F to edit / investigate,
@@ -304,6 +339,13 @@ return function(ctx)
         end
         if getPedOccupiedVehicle(localPlayer) then
             return triggerServerEvent("lightsToggleRequested", localPlayer)
+        end
+        -- N cancels attaching a defence and puts the Welder's torch back (vehicles carmour)
+        if exports.vehicles:attachModeActive() then
+            return exports.vehicles:cancelAttach()
+        end
+        if exports.vehicles:hasTorch() then
+            return triggerServerEvent("weldTorchStowRequested", localPlayer)
         end
         if isTimer(holdTimer) then
             return

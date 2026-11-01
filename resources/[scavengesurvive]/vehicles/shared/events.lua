@@ -13,6 +13,9 @@ addEvent("trunkCloseRequested", true)
 addEvent("trailerDoorToggleRequested", true)
 addEvent("vehicleKeypadSetupSubmitted", true)
 addEvent("vehicleKeypadSubmitted", true)
+addEvent("carmourAttachRequested", true)
+addEvent("weldTorchGrabRequested", true)
+addEvent("weldTorchStowRequested", true)
 
 -- server to client / client-local
 addEvent("vehicleHoldStarted", true)

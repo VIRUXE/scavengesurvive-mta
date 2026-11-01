@@ -30,8 +30,9 @@ M.CRATES = { supply = "Open supply crate", cache = "Open weapon cache" }
 --   nearCooker,                           -- uncooked food in hand next to a campfire or barbecue (#95): "Cook"
 --   nearMachine,                          -- a machine in reach (#145): "Access machine" / "(Hold) Machine menu"
 --   nearContainer,                        -- a bag or box lying in reach: "Open" / "(Hold) Pick up"
---   nearWeld,                             -- a Welder in hand at a vehicle that takes armour: "Weld panel" (F welds,
---                                         -- so the door and machine lines go)
+--   carmour,                              -- vehicles carmour: "attach" (placing a defence), "weld" (the Welder's
+--                                         -- torch at a trailer), "torch" (it anywhere else), "defence" (one in hand
+--                                         -- at a trailer), "welder" (empty hands at a Welder); F then does only that
 --   supports = { [capability] = true },   -- eat, drink, openbag, wearbag, special, holster, reload, unload, give,
 --                                         -- removebag, uncuff, trunk, repair, engine, lights, doors, radio
 -- }
@@ -76,23 +77,36 @@ function M.lines(ctx, keys)
     if M.CRATES[ctx.nearCrate] then
         add("interact", M.CRATES[ctx.nearCrate])
     end
-    -- a Welder at a vehicle that takes armour (vehicles carmour, not an upstream line): F welds and nothing else
-    if ctx.nearWeld then
-        add("interact", "Weld panel")
+    -- carmour (vehicles, not upstream lines): these lines replace everything else while attaching or with the torch
+    local cm = ctx.carmour
+    if cm == "attach" then
+        add("interact", "Attach here")
+        add("drop", "Cancel")
+        return out
+    elseif cm == "weld" or cm == "torch" then
+        add("interact", cm == "weld" and "Weld panel" or "Put torch back")
+        add("drop", "Put torch back")
+        return out
+    elseif cm == "defence" then
+        add("interact", "Attach to trailer")
+    elseif cm == "welder" then
+        add("interact", "Take torch")
+        add("interact", "(Hold) Pick up welder")
     end
+    local busyF = cm ~= nil
     -- the towable Airstream's door (vehicles, not an upstream line)
-    if ctx.nearDoor and not ctx.nearWeld then
+    if ctx.nearDoor and not busyF then
         local doorText = { open = "Close door", locked = "Door locked" }
         add("interact", doorText[ctx.nearDoor] or "Open door")
     end
     -- a machine (items, #145): upstream's button "Press F to access machine / Hold F to open menu"; a Crowbar in
     -- hand takes it down instead (Deconstruct, a port deviation: upstream left it a TODO)
-    if ctx.nearMachine and not ctx.nearWeld and not (ctx.held and ctx.held.uname == "Crowbar") then
+    if ctx.nearMachine and not busyF and not (ctx.held and ctx.held.uname == "Crowbar") then
         add("interact", "Access machine")
         add("interact", "(Hold) Machine menu")
     end
     -- a bag or box lying within reach (items): upstream's button "Hold F to pick up / Press F to open"
-    if ctx.nearContainer and not ctx.nearWeld and not (ctx.held and ctx.held.uname == "Crowbar") then
+    if ctx.nearContainer and not busyF and not (ctx.held and ctx.held.uname == "Crowbar") then
         add("interact", "Open")
         add("interact", "(Hold) Pick up")
     end
