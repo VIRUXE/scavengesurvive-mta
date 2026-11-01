@@ -291,6 +291,7 @@ loadFile("server/use.lua")({
     openContainerId = containers.openContainerId,
     clothes = clothesInstance,
     small = smallItems,
+    garden = garden,
     ownedSql = OWNED_SQL,
 })
 

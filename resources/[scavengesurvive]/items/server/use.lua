@@ -4,7 +4,7 @@
 -- interact key at a world item uses the held item with it); cooked food, or food that cannot be cooked, is eaten even
 -- there (upstream's campfire took any food back onto the fire).
 -- ctx = { medical, drinking, db, net, state, type, charId, toast, destroy, sendInventory, decodeData, cooking,
--- cookers, world, clothes, small, ownedSql } built by server/main.lua.
+-- cookers, world, clothes, small, garden, ownedSql } built by server/main.lua.
 return function(ctx)
     local db, net, state = ctx.db, ctx.net, ctx.state
     local itemType, charId, toast = ctx.type, ctx.charId, ctx.toast
@@ -61,7 +61,22 @@ return function(ctx)
         end
         local t = itemType(uname)
         if fromHand and t and t.category == "liquid" then
-            return ctx.drinking.start(player, state.held[player]) -- upstream drinks from the hand only
+            -- a Plant Pot within reach is watered first (upstream OnPlayerUseItemWithItem came before the drink);
+            -- otherwise the hand drinks (upstream drinks from the hand only)
+            local x, y = getElementPosition(player)
+            local reach = tonumber(state.settings["items.pickup_radius"]) or 2.0
+            local int, dim = getElementInterior(player), getElementDimension(player)
+            local sql = ctx.world.findNearestSql(x, y, reach, int, dim, { "PlantPot" })
+            return db.one(sql, {}, function(pot, c)
+                if not isElement(c.player) then
+                    return
+                end
+                local held = state.held[c.player]
+                if not held or (pot and ctx.garden.interact(c.player, held, pot)) then
+                    return
+                end
+                ctx.drinking.start(c.player, held)
+            end, { player = player })
         end
         if not t or t.category ~= "food" then
             return
