@@ -1,7 +1,8 @@
--- Worn armour durability (upstream item/armour.pwn). ctx = { state, hands, destroy, world, armour } built by
--- server/main.lua; the points live in the item's data.ap and reach the DB through hands.queueData.
+-- Worn armour durability (upstream item/armour.pwn). ctx = { state, hands, destroy, world, armour, sendInventory }
+-- built by server/main.lua; the points live in the item's data.ap and reach the DB through hands.queueData.
 return function(ctx)
     local state, hands, destroy, world, armour = ctx.state, ctx.hands, ctx.destroy, ctx.world, ctx.armour
+    local sendInventory = ctx.sendInventory
     local M = {}
 
     -- A chest hit on a worn Armour: returns the bleed that gets through (the armour's penetration cut) and
@@ -22,6 +23,7 @@ return function(ctx)
         if left > 0 then
             item.data.ap = left
             hands.queueData(item)
+            sendInventory(player)
             return through
         end
         item.data.ap = 0

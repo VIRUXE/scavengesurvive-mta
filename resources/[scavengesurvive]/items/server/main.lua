@@ -170,6 +170,9 @@ local containers = loadFile("server/containers.lua")({
 })
 hands.setContainers(containers)
 local armourCtx = { state = state, hands = hands, destroy = destroy, world = world, armour = armourLogic }
+armourCtx.sendInventory = function(player)
+    return sendInventory(player)
+end
 armourDurability = loadFile("server/armour.lua")(armourCtx)
 local fixed = loadFile("server/fixed.lua")({ db = db, world = world, log = util.log })
 local cookingCtx = { db = db, state = state, type = itemType, toast = toast, world = world, hands = hands }
