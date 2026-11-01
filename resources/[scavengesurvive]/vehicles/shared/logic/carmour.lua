@@ -16,7 +16,7 @@ M.MASS_PER_PANEL = 180 -- kg added to the trailer per panel on it, welded or not
 M.TOW_ACCEL_PENALTY = 0.08 -- of the tower's stock engine acceleration per panel carried by the trailer behind it
 M.TOW_ACCEL_FLOOR = 0.4 -- the tower never drops below this share of its stock acceleration
 M.GAS_CAPACITY = 11 -- kg in a full Gas Bottle (items/shared/logic/gas.lua); its item data { gas = kg }, none: full
-M.GAS_PER_WELD = 2.2 -- kg one weld burns: a full bottle is five welds
+M.GAS_PER_HP = 0.44 -- kg of gas a weld burns per hitpoint the defence can take: a 5 HP panel is 2.2 kg
 M.FUEL_PER_WELD = 5 -- Generator fuel (of 100) one weld burns
 M.WELD_MS = 8000
 M.PRY_MS = 3000 -- a Crowbar taking an attached panel off
@@ -252,6 +252,12 @@ end
 function M.towAccel(stock, n)
     local share = math.max(M.TOW_ACCEL_FLOOR, 1 - M.TOW_ACCEL_PENALTY * n)
     return stock * share
+end
+
+-- the kg of gas welding a defence of maxHp hitpoints on burns (to 0.1 kg, as the carmour_weld procedure takes it)
+function M.weldGas(maxHp)
+    local kg = math.max(1, tonumber(maxHp) or 1) * M.GAS_PER_HP
+    return math.max(0.1, math.floor(kg * 10 + 0.5) / 10)
 end
 
 -- kg of gas left in a Gas Bottle from its item data (either JSON shape)

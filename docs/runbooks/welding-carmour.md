@@ -16,8 +16,9 @@ them so far).
 - **Weld**: lay the Welder on the ground (one in hand is refused) and tap F at it to take its torch (hold F to pick the
   Welder up). The torch is tethered by 5 m of lead; walking further, taking something in hand or N puts it back. With
   the torch, F at the trailer welds the nearest attached panel within reach: an 8 s hold (shorter with the Repair
-  skill) that takes 2.2 kg of gas from a Gas Bottle (a full 11 kg bottle is 5 welds, in the inventory or the bag) and 5 fuel from a Generator within
-  8 m of the Welder. Fuel a Generator by holding F next to it with a Petrol Can in hand.
+  skill) that burns gas from a Gas Bottle in the inventory or the bag by the defence's toughness, 0.44 kg per hitpoint it
+  can take (a 4 HP Metal Gate 1.8 kg, a 5 HP Metal Panel 2.2 kg, a 9 HP Ship Door 4.0 kg; a full bottle is 11 kg), and
+  5 fuel from a Generator within 8 m of the Welder. Fuel a Generator by holding F next to it with a Petrol Can in hand.
 - **Fortified**: the door has 1 HP alone; each welded panel adds its hitpoints. While a panel is welded on, the trailer
   is damage proof and cannot blow up. Explosions eat the welded panels (the door's first), then the door's own HP, whose
   loss breaks the lock. A Crowbar or Lock Breaker is refused at the door while it is armoured.

@@ -394,7 +394,7 @@ return function(ctx)
     end
 
     -- the hold's end: the generator pays its fuel, then one procedure takes the gas and stores the welded panel
-    local function finish(player, vehicle, panelId, tankId, genId)
+    local function finish(player, vehicle, panelId, tankId, genId, kg)
         activeActions[player] = nil
         if not isElement(player) or not isElement(vehicle) or not info[vehicle] then
             return
@@ -415,7 +415,7 @@ return function(ctx)
                 return
             end
             local nextSt = carmour.weld(stateOf(vehicle), panelId)
-            db.call("carmour_weld", { inf.id, tankId, json(nextSt), carmour.GAS_PER_WELD }, function(res)
+            db.call("carmour_weld", { inf.id, tankId, json(nextSt), kg }, function(res)
                 if not res or not res.ok then
                     return toast(player, "WELD_NOGAS")
                 end
@@ -445,12 +445,15 @@ return function(ctx)
         if not rec then
             return toast(player, "WELD_NOPANEL")
         end
+        -- the gas it burns follows the hitpoints the defence can take
+        local t = exports.data:itemType(rec.u)
+        local kg = carmour.weldGas(t and t.maxHitpoints or rec.hp)
         local cid = exports.character:getCharacterId(player)
         db.query(TANKS, { cid, cid }, function(tanks)
             local tank = nil
-            for _, t in ipairs(tanks or {}) do
-                if carmour.gasOf(decodeData(t.data)) >= carmour.GAS_PER_WELD - 0.001 then
-                    tank = t
+            for _, row in ipairs(tanks or {}) do
+                if carmour.gasOf(decodeData(row.data)) >= kg - 0.001 then
+                    tank = row
                     break
                 end
             end
@@ -471,7 +474,7 @@ return function(ctx)
                 local ms = exports.character:skillTimeModifier(player, carmour.WELD_MS, "Repair")
                 triggerClientEvent(player, "vehicleHoldStarted", player, "Welding", ms)
                 triggerClientEvent(root, "weldStarted", player, ms)
-                local timer = setTimer(finish, ms, 1, player, vehicle, rec.id, tank.id, gen.id)
+                local timer = setTimer(finish, ms, 1, player, vehicle, rec.id, tank.id, gen.id, kg)
                 activeActions[player] = { actionType = "weld", vehicle = vehicle, timer = timer }
             end)
         end)
