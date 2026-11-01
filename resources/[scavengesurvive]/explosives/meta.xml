@@ -6,6 +6,7 @@
     <include resource="items"/>
     <include resource="character"/>
     <include resource="building"/>
+    <include resource="vehicles"/>
     <script src="shared/events.lua" type="shared"/>
     <script src="server/main.lua" type="server"/>
     <file src="shared/logic/explosives.lua"/>

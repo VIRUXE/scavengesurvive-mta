@@ -30,6 +30,24 @@ do
     fuelPumps = assert(loadstring(src, "=vehicles/fuel-pumps.lua"))()
 end
 
+local carmour
+do
+    local f = fileOpen("shared/logic/carmour.lua", true)
+    local src = fileRead(f, fileGetSize(f))
+    fileClose(f)
+    carmour = assert(loadstring(src, "=vehicles/carmour.lua"))()
+end
+
+local carmourSlots
+do
+    local f = fileOpen("shared/data/carmour_slots.lua", true)
+    local src = fileRead(f, fileGetSize(f))
+    fileClose(f)
+    carmourSlots = assert(loadstring(src, "=vehicles/carmour_slots.lua"))().SLOTS
+end
+
+local carmourSrv -- server/carmour.lua, built once the roadside helpers it needs exist
+
 local FLUSH_MS = 60000
 local WRECK_MS = 30000
 local SIM_TICK_MS = 1000
@@ -37,7 +55,7 @@ local SIM_TICK_MS = 1000
 local USED_TICK_MS = 300000
 
 local SELECT_VEHICLES = "SELECT v.id, v.spawn_id, v.type_uname, v.model, v.x, v.y, v.z, v.rz, "
-    .. "v.health, v.fuel, v.locked, v.damage, v.key_code, v.keypad_code, v.trailer_id, v.left_spawn, "
+    .. "v.health, v.fuel, v.locked, v.damage, v.carmour, v.key_code, v.keypad_code, v.trailer_id, v.left_spawn, "
     .. "c.id AS container_id, "
     .. "s.x AS spawn_x, s.y AS spawn_y FROM vehicles v LEFT JOIN containers c ON c.owner_vehicle_id = v.id "
     .. "LEFT JOIN vehicle_spawns s ON s.id = v.spawn_id"
@@ -196,6 +214,8 @@ local function create(row)
         damage = row.damage and row.damage ~= "" and row.damage ~= false and fromJSON(row.damage) or {},
         usedTick = 0,
     }
+
+    carmourSrv.load(v, row.carmour)
 
     -- If the vehicle has trunk capacity but no container row yet, create one
     local vt = exports.data:vehicleType(row.type_uname)
@@ -1043,6 +1063,7 @@ addEventHandler("onTrailerAttach", root, function(truck)
     end
     if vlogic.canAttachTrailer(exports.data:vehicleType(inf.uname), exports.data:vehicleType(tinf.uname)) then
         setTrailerRecord(truck, tinf.id)
+        carmourSrv.refreshTow(source)
         markUsed(source)
         local driver = getVehicleController(truck)
         if driver then
@@ -1055,6 +1076,7 @@ end)
 -- an unoccupied truck gets its trailer back (someone dragging it away, or desync). The cargo rides on until the
 -- trailer stands still (the cargo timer): stored now, a trailer torn off in a crash would leave it mid-tumble.
 addEventHandler("onTrailerDetach", root, function(truck)
+    carmourSrv.towEnded(truck)
     local inf, tinf = info[truck], info[source]
     if not inf or not tinf or inf.trailerId ~= tinf.id then
         return
@@ -1091,6 +1113,19 @@ end
 local BREAK_LOCK_SQL = "UPDATE vehicles SET locked = 0, key_code = NULL, keypad_code = NULL WHERE id = ?"
 local KEYPAD_HOLD_MS = 6000
 local KEYPAD_COOLDOWN_MS = 2000
+local function breakDoorLock(vehicle)
+    local vinf = info[vehicle]
+    if not vinf then
+        return
+    end
+    vinf.locked = vlogic.LOCK_OPEN
+    vinf.keyCode = nil
+    setVehicleLocked(vehicle, false)
+    setElementData(vehicle, "vehicles.locked", 0, "broadcast", "deny")
+    vinf.keypad = nil
+    db.exec(BREAK_LOCK_SQL, { vinf.id })
+end
+
 local pendingKeypad = {} -- player -> the vehicle whose keypad prompt is open (setup or entry)
 local lastKeypadTry = {} -- player -> tick of the last wrong code
 
@@ -1224,6 +1259,11 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
     local held = exports.items:getHeld(player)
     local uname = held and held.uname
     local hp = getElementHealth(vehicle)
+
+    -- Case W: a Welder in hand welds a defence panel onto an armourable vehicle (server/carmour.lua)
+    if uname == "Welder" then
+        return carmourSrv.weld(player, vehicle)
+    end
 
     -- Case 0: a held Wheel replaces the nearest burst or missing tyre (upstream core/item/wheel.pwn); upstream acts
     -- only within 1 m of a wheel, so at the trunk it falls through and the Wheel can go in the trunk
@@ -1404,6 +1444,9 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
         end
 
         if uname == "Crowbar" or uname == "LockBreaker" then
+            if carmourSrv.armoured(vehicle) then
+                return toast(player, "DOORARMOURED")
+            end
             local ok, err = vlogic.canBreakLock(inf.locked, uname)
             if not ok then
                 return toast(player, err)
@@ -1417,14 +1460,8 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
                     return
                 end
                 setPedAnimation(p, nil)
-                local vinf = info[veh]
-                if vinf then
-                    vinf.locked = vlogic.LOCK_OPEN
-                    vinf.keyCode = nil
-                    setVehicleLocked(veh, false)
-                    setElementData(veh, "vehicles.locked", 0, "broadcast", "deny")
-                    vinf.keypad = nil
-                    db.exec(BREAK_LOCK_SQL, { vinf.id })
+                if info[veh] then
+                    breakDoorLock(veh)
                     toast(p, "LOCKBROKEN")
                 end
             end, 3000, 1, player, vehicle)
@@ -1596,6 +1633,33 @@ addEventHandler("onVehicleExplode", resourceRoot, function()
         end
     end, WRECK_MS, 1, source, i.id)
 end)
+
+local function loadCarmour()
+    local f = fileOpen("server/carmour.lua", true)
+    local src = fileRead(f, fileGetSize(f))
+    fileClose(f)
+    local make = assert(loadstring(src, "=vehicles/server/carmour.lua"))()
+    local ctx = { db = db, info = info, toast = toast, activeActions = activeActions, carmour = carmour }
+    ctx.slots, ctx.cancelHoldAction, ctx.breakLock = carmourSlots, cancelHoldAction, breakDoorLock
+    return make(ctx)
+end
+
+carmourSrv = loadCarmour()
+
+-- Explosives: the blast's damage to a vehicle's armour (panels first, then the walk-in door's hitpoint); the number
+-- of panels it shed
+function damageCarmour(vehicle, dmg)
+    return carmourSrv.damage(vehicle, dmg)
+end
+
+-- true while at least one panel is welded on: the vehicle takes no damage and cannot blow up
+function isArmoured(vehicle)
+    return carmourSrv.armoured(vehicle)
+end
+
+function hasCarmourSlots(vehicle)
+    return carmourSrv.hasSlots(vehicle)
+end
 
 function getVehicleDbId(vehicle)
     local i = info[vehicle]

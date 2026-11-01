@@ -11,6 +11,13 @@ do
 end
 
 local DOOR = 2 -- the vehicle's front-left door
+
+local function getPositionFromElementOffset(element, ox, oy, oz)
+    local m = getElementMatrix(element)
+    return ox * m[1][1] + oy * m[2][1] + oz * m[3][1] + m[4][1],
+        ox * m[1][2] + oy * m[2][2] + oz * m[3][2] + m[4][2],
+        ox * m[1][3] + oy * m[2][3] + oz * m[3][3] + m[4][3]
+end
 local BLOCKER_MS = 200
 local loaded = false
 local doorModel = nil -- requested object model: the door leaf and its collision
@@ -133,3 +140,24 @@ setTimer(function()
         end
     end
 end, BLOCKER_MS, 0)
+
+-- the door's hitpoints (its own plus every welded panel's, vehicles/shared/logic/carmour.lua) over the door while a
+-- player stands at it
+local LABEL_REACH = 2.5
+addEventHandler("onClientRender", root, function()
+    local px, py, pz = getElementPosition(localPlayer)
+    for vehicle in pairs(blockers) do
+        local hp = isElement(vehicle) and getElementData(vehicle, "vehicles.doorHp")
+        if hp then
+            local d = towable.door
+            local wx, wy, wz = getPositionFromElementOffset(vehicle, d.x, d.y, d.z + 1.2)
+            if getDistanceBetweenPoints3D(px, py, pz, wx, wy, wz) <= LABEL_REACH then
+                local sx, sy = getScreenFromWorldPosition(wx, wy, wz)
+                if sx then
+                    local text, color = string.format("Door %d HP", hp), tocolor(255, 255, 255, 230)
+                    dxDrawText(text, sx, sy, sx, sy, color, 1.2, "default-bold", "center", "center")
+                end
+            end
+        end
+    end
+end)

@@ -338,6 +338,7 @@ CREATE TABLE IF NOT EXISTS `vehicles` (
   `keypad_code` char(4) DEFAULT NULL,
   `trailer_id` int(11) DEFAULT NULL,
   `damage` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`damage`)),
+  `carmour` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`carmour`)),
   `left_spawn` tinyint(1) NOT NULL DEFAULT 0,
   `last_used_at` datetime DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
@@ -452,6 +453,37 @@ BEGIN
     SET v_rows = ROW_COUNT();
     COMMIT;
     SELECT 1 AS ok, 'OK' AS code, JSON_OBJECT('logs', CAST(v_rows AS SIGNED)) AS payload;
+  END IF;
+END//
+
+CREATE OR REPLACE PROCEDURE `carmour_weld`(IN p_vehicle_id INT, IN p_panel_id INT, IN p_tank_id INT, IN p_carmour LONGTEXT)
+BEGIN
+  -- one weld (vehicles/server/main.lua, carmour): the panel lying on the ground is used up, the Gas Tank loses one weld
+  -- (a tank without data is full: 5) and the vehicle's armour JSON is written, all or nothing
+  DECLARE v_panel INT DEFAULT NULL;
+  DECLARE v_tank_data LONGTEXT DEFAULT NULL;
+  DECLARE v_gas INT DEFAULT 0;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
+  SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+  START TRANSACTION;
+  SELECT id INTO v_panel FROM items WHERE id = p_panel_id AND x IS NOT NULL AND container_id IS NULL AND holder_char_id IS NULL FOR UPDATE;
+  SELECT data INTO v_tank_data FROM items WHERE id = p_tank_id AND type_uname = 'GasTank' FOR UPDATE;
+  SET v_gas = IFNULL(CAST(JSON_VALUE(v_tank_data, '$.gas') AS SIGNED), 5);
+  IF v_panel IS NULL THEN
+    ROLLBACK;
+    SELECT 0 AS ok, 'NO_PANEL' AS code, NULL AS payload;
+  ELSEIF NOT EXISTS (SELECT 1 FROM items WHERE id = p_tank_id AND type_uname = 'GasTank') OR v_gas <= 0 THEN
+    ROLLBACK;
+    SELECT 0 AS ok, 'NO_GAS' AS code, NULL AS payload;
+  ELSEIF NOT EXISTS (SELECT 1 FROM vehicles WHERE id = p_vehicle_id) THEN
+    ROLLBACK;
+    SELECT 0 AS ok, 'NO_VEHICLE' AS code, NULL AS payload;
+  ELSE
+    DELETE FROM items WHERE id = v_panel;
+    UPDATE items SET data = JSON_OBJECT('gas', v_gas - 1) WHERE id = p_tank_id;
+    UPDATE vehicles SET carmour = p_carmour WHERE id = p_vehicle_id;
+    COMMIT;
+    SELECT 1 AS ok, 'OK' AS code, JSON_OBJECT('gas', CAST(v_gas - 1 AS SIGNED)) AS payload;
   END IF;
 END//
 

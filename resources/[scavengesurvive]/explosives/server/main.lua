@@ -241,7 +241,11 @@ detonateItem = function(itemId)
                     killPed(parentPlayer)
                 end
                 if parentVehicle and isElement(parentVehicle) then
-                    blowVehicle(parentVehicle)
+                    if exports.vehicles:isArmoured(parentVehicle) then
+                        exports.vehicles:damageCarmour(parentVehicle, preset.itemDmg or 1) -- the panels take it
+                    else
+                        blowVehicle(parentVehicle)
+                    end
                 end
 
                 outputServerLog(
@@ -301,6 +305,16 @@ detonateItem = function(itemId)
 
                 -- World items damage
                 if preset.itemDmg and preset.itemDmg > 0 then
+                    -- a vehicle with armour slots (the towable Airstream): the panels and its door take the blast
+                    for _, v in ipairs(getElementsByType("vehicle")) do
+                        if getElementInterior(v) == int and getElementDimension(v) == dim then
+                            local vx, vy, vz = getElementPosition(v)
+                            local armourable = exports.vehicles:hasCarmourSlots(v)
+                            if armourable and logic.isItemInRange(vx, vy, vz, x, y, z, preset.size) then
+                                exports.vehicles:damageCarmour(v, preset.itemDmg)
+                            end
+                        end
+                    end
                     local sql = "SELECT i.id, i.type_uname, i.hitpoints, i.data, i.x, i.y, i.z, i.rz, "
                         .. "i.interior, i.dimension FROM world_items_pos p JOIN items i ON i.id = p.item_id "
                         .. "WHERE ST_Distance(p.pos, POINT(?, ?)) <= ? AND i.id != ?"

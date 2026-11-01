@@ -30,6 +30,7 @@ return function(ctx)
         end
     end
     local VEHICLE_TOOLS = {
+        Welder = true,
         Wrench = true,
         Screwdriver = true,
         Hammer = true,
@@ -179,6 +180,20 @@ return function(ctx)
             if doorVeh then
                 blockEnterUntil = getTickCount() + TRUNK_ENTER_BLOCK_MS
                 return triggerServerEvent("vehicleInteractRequested", localPlayer, doorVeh)
+            end
+        end
+        -- a Welder is for the vehicles that take armour (the towable Airstream): whichever is within the server's reach
+        if uname == "Welder" then
+            local wx, wy, wz = getElementPosition(localPlayer)
+            for _, veh in ipairs(getElementsByType("vehicle", root, true)) do
+                local vx, vy, vz = getElementPosition(veh)
+                if
+                    getElementData(veh, "vehicles.carmour")
+                    and getDistanceBetweenPoints3D(wx, wy, wz, vx, vy, vz) <= 6.5
+                then
+                    blockEnterUntil = getTickCount() + TRUNK_ENTER_BLOCK_MS
+                    return triggerServerEvent("vehicleInteractRequested", localPlayer, veh)
+                end
             end
         end
         if nearVeh and nearDist <= 5.5 then
