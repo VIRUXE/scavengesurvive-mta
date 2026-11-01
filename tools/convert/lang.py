@@ -36,7 +36,7 @@ KEY_RE = re.compile(r"[A-Z][A-Za-z0-9_]{3,11}")
 # Help tips (`<first 9 letters of the uname>_T`) for the port's own item types and for upstream types its language
 # files never covered; shown for every language, upstream's English wording.
 _WEAR = "Wear this by pressing [F]"
-_STORE = "Store items inside this to save them over restarts, read more: /restartinfo"
+_STORE = "Store items inside this, they are saved over restarts"
 _BUILD = "Use screwdriver with this to construct a permanent wall, or a hammer to construct a permanent floor, hold [F] to build"
 PORT_TIPS = {
     **{u: _WEAR for u in ("BandanaBl", "BandanaGr", "BandanaPat", "BandanaWh", "BucketHat", "BurgerHat", "FireHelmet", "GardenerHat", "GolfCap", "MotoHelmet", "PilotCap", "RanchHat", "SheriffHat")},
@@ -108,6 +108,8 @@ def convert(src_root, out_data) -> dict[str, int]:
     counts = {}
     for name, enc in ENCODINGS.items():
         entries = parse((Path(src_root) / "scriptfiles/languages" / name).read_bytes(), enc)
+        for key in entries:
+            entries[key] = entries[key].replace(", read more: /restartinfo", "")  # the port has no /restartinfo
         for uname, tip in PORT_TIPS.items():
             entries.setdefault(uname[:9] + "_T", tip)
         for uname, tip in UNSET_TIPS.items():
