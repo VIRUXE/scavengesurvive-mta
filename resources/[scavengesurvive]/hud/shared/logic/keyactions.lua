@@ -29,6 +29,8 @@ M.CRATES = { supply = "Open supply crate", cache = "Open weapon cache" }
 --   held = false | { uname, category, isWeapon },
 --   nearCooker,                           -- uncooked food in hand next to a campfire or barbecue (#95): "Cook"
 --   nearMachine,                          -- a machine in reach (#145): "Access machine" / "(Hold) Machine menu"
+--   nearWeld,                             -- a Welder in hand at a vehicle that takes armour: "Weld panel" (F welds,
+--                                         -- so the door and machine lines go)
 --   supports = { [capability] = true },   -- eat, drink, openbag, wearbag, special, holster, reload, unload, give,
 --                                         -- removebag, uncuff, trunk, repair, engine, lights, doors, radio
 -- }
@@ -73,14 +75,18 @@ function M.lines(ctx, keys)
     if M.CRATES[ctx.nearCrate] then
         add("interact", M.CRATES[ctx.nearCrate])
     end
+    -- a Welder at a vehicle that takes armour (vehicles carmour, not an upstream line): F welds and nothing else
+    if ctx.nearWeld then
+        add("interact", "Weld panel")
+    end
     -- the towable Airstream's door (vehicles, not an upstream line)
-    if ctx.nearDoor then
+    if ctx.nearDoor and not ctx.nearWeld then
         local doorText = { open = "Close door", locked = "Door locked" }
         add("interact", doorText[ctx.nearDoor] or "Open door")
     end
     -- a machine (items, #145): upstream's button "Press F to access machine / Hold F to open menu"; a Crowbar in
     -- hand takes it down instead (Deconstruct, a port deviation: upstream left it a TODO)
-    if ctx.nearMachine and not (ctx.held and ctx.held.uname == "Crowbar") then
+    if ctx.nearMachine and not ctx.nearWeld and not (ctx.held and ctx.held.uname == "Crowbar") then
         add("interact", "Access machine")
         add("interact", "(Hold) Machine menu")
     end

@@ -27,8 +27,12 @@ return function(ctx)
     local GENERATORS = "SELECT id, x, y, z, data FROM items WHERE type_uname = 'Generator' AND x IS NOT NULL "
         .. "AND container_id IS NULL AND holder_char_id IS NULL AND IFNULL(interior, 0) = ? "
         .. "AND IFNULL(dimension, 0) = ? AND ABS(x - ?) <= ? AND ABS(y - ?) <= ?"
-    local FUEL = "CAST(JSON_VALUE(data, '$.machine.fuel') AS DECIMAL(10, 2))"
-    local DRAW = "UPDATE items SET data = JSON_SET(data, '$.machine.fuel', "
+    -- the item data is either {machine} or [{machine}] (fuelOf below): the fuel's path in whichever it is
+    local PATH = "IF(JSON_VALUE(data, '$.machine.fuel') IS NULL, '$[0].machine.fuel', '$.machine.fuel')"
+    local FUEL = "CAST(JSON_VALUE(data, " .. PATH .. ") AS DECIMAL(10, 2))"
+    local DRAW = "UPDATE items SET data = JSON_SET(data, "
+        .. PATH
+        .. ", "
         .. FUEL
         .. " - ?) "
         .. "WHERE id = ? AND type_uname = 'Generator' AND x IS NOT NULL AND "

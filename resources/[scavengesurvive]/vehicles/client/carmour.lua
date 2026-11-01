@@ -132,6 +132,25 @@ addEventHandler("onClientResourceStop", resourceRoot, function()
     end
 end)
 
+-- The vehicle a Welder in hand works on (hud F key and its hint): the nearest streamed-in one that takes armour,
+-- within the server's reach of it; false when none is.
+local WELD_REACH = 6.5
+
+function nearbyWeldTarget()
+    local px, py, pz = getElementPosition(localPlayer)
+    local best, bestDist = false, WELD_REACH
+    for _, veh in ipairs(getElementsByType("vehicle", root, true)) do
+        if getElementData(veh, "vehicles.carmour") then
+            local vx, vy, vz = getElementPosition(veh)
+            local d = getDistanceBetweenPoints3D(px, py, pz, vx, vy, vz)
+            if d <= bestDist then
+                best, bestDist = veh, d
+            end
+        end
+    end
+    return best
+end
+
 -- the door's panel follows the door
 addEventHandler("onClientPreRender", root, function()
     for vehicle, slots in pairs(panels) do

@@ -299,6 +299,7 @@ local function drawKeyActions(driver)
         nearDoor = walkInDoor(),
         nearCooker = nearCooker(held),
         nearMachine = exports.items:nearbyMachine() ~= false,
+        nearWeld = held and held.uname == "Welder" and exports.vehicles:nearbyWeldTarget() ~= false or false,
         cuffedNearby = not held and hasCuffedPlayerNearby() or false,
         hasHolster = getElementData(localPlayer, "items.holster") ~= false,
         supports = SUPPORTS,

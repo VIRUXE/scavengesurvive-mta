@@ -36,4 +36,5 @@
     <export function="nearbyTrailerDoor" type="client"/>
     <export function="tryTrailerDoor" type="client"/>
     <export function="tryGasMount" type="client"/>
+    <export function="nearbyWeldTarget" type="client"/>
 </meta>

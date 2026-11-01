@@ -1061,12 +1061,16 @@ addEventHandler("onTrailerAttach", root, function(truck)
         cargo[source].hitched = true
     end
     local inf, tinf = info[truck], info[source]
-    if not inf or not tinf or inf.trailerId == tinf.id then
+    if not inf or not tinf then
+        return
+    end
+    -- the tower pulls the trailer's armour whether the hitch is new or a known one put back (a restart, a re-hitch)
+    carmourSrv.refreshTow(source)
+    if inf.trailerId == tinf.id then
         return
     end
     if vlogic.canAttachTrailer(exports.data:vehicleType(inf.uname), exports.data:vehicleType(tinf.uname)) then
         setTrailerRecord(truck, tinf.id)
-        carmourSrv.refreshTow(source)
         markUsed(source)
         local driver = getVehicleController(truck)
         if driver then

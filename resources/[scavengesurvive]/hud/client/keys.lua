@@ -119,6 +119,15 @@ return function(ctx)
         if exports.loot:tryOpenCrate() == true then
             return
         end
+        -- a Welder in hand at a vehicle that takes armour welds, ahead of the Generator powering it (a machine) or the
+        -- panel lying by it (vehicles/server/carmour.lua)
+        if heldNow and heldNow.uname == "Welder" then
+            local weldVeh = exports.vehicles:nearbyWeldTarget()
+            if weldVeh then
+                blockEnterUntil = getTickCount() + TRUNK_ENTER_BLOCK_MS
+                return triggerServerEvent("vehicleInteractRequested", localPlayer, weldVeh)
+            end
+        end
         -- a ground bag opens on a tap and is picked up on a 500 ms hold; a sign or a body lying there (empty hands)
         -- edits or investigates on a tap and is picked up on the hold (upstream "Press F to edit / investigate,
         -- Hold F to pick up", #136, #139)
@@ -185,20 +194,6 @@ return function(ctx)
             if doorVeh then
                 blockEnterUntil = getTickCount() + TRUNK_ENTER_BLOCK_MS
                 return triggerServerEvent("vehicleInteractRequested", localPlayer, doorVeh)
-            end
-        end
-        -- a Welder is for the vehicles that take armour (the towable Airstream): whichever is within the server's reach
-        if uname == "Welder" then
-            local wx, wy, wz = getElementPosition(localPlayer)
-            for _, veh in ipairs(getElementsByType("vehicle", root, true)) do
-                local vx, vy, vz = getElementPosition(veh)
-                if
-                    getElementData(veh, "vehicles.carmour")
-                    and getDistanceBetweenPoints3D(wx, wy, wz, vx, vy, vz) <= 6.5
-                then
-                    blockEnterUntil = getTickCount() + TRUNK_ENTER_BLOCK_MS
-                    return triggerServerEvent("vehicleInteractRequested", localPlayer, veh)
-                end
             end
         end
         if nearVeh and nearDist <= 5.5 then
