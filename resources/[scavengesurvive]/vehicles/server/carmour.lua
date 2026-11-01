@@ -545,8 +545,9 @@ return function(ctx)
             publishHoses(andThen)
         end)
     end
+    -- every 4 s; the first a second in, once main.lua's onResourceStart has connected the database
     setTimer(tidyHoses, 4000, 0)
-    tidyHoses(nil)
+    setTimer(tidyHoses, 1000, 1)
 
     -- Empty hands at a Gas Cylinder lying near a Welder: it is hooked up to the nearest Welder within the hose's
     -- reach (any other link of either undone), or unhooked when it already was
