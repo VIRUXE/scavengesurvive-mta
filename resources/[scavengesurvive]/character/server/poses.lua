@@ -46,6 +46,15 @@ return function(ctx)
         end
     end
 
+    -- upstream played the hands-up animation frozen and position-locked, so the player stood still until the hands
+    -- came down again; sprint and crouch stay on, they lower the hands
+    local HOLD_CONTROLS = { "forwards", "backwards", "left", "right", "jump", "enter_exit" }
+    local function hold(player, on)
+        for _, ctrl in ipairs(HOLD_CONTROLS) do
+            toggleControl(player, ctrl, not on)
+        end
+    end
+
     local function stopSitTimer(player)
         if isTimer(sitTimers[player]) then
             killTimer(sitTimers[player])
@@ -61,8 +70,12 @@ return function(ctx)
     -- the pose ends without an animation (death, knockout, a vehicle): forget it
     function M.clear(player)
         stopSitTimer(player)
+        local was = posed[player]
         posed[player] = nil
         if isElement(player) then
+            if was == "handsUp" then
+                hold(player, false)
+            end
             triggerClientEvent(player, "poseChanged", player, false)
         end
     end
@@ -79,6 +92,9 @@ return function(ctx)
             return
         end
         stopSitTimer(player)
+        if (posed[player] == "handsUp") ~= (nextPose == "handsUp") then
+            hold(player, nextPose == "handsUp")
+        end
         posed[player] = nextPose
         play(player, anim)
         triggerClientEvent(player, "poseChanged", player, nextPose or false)
@@ -131,6 +147,15 @@ return function(ctx)
     addEventHandler("onPlayerVehicleEnter", root, function()
         if posed[source] then
             M.clear(source)
+        end
+    end)
+
+    -- a restart of this resource must not leave anyone with the hands-up controls off
+    addEventHandler("onResourceStop", resourceRoot, function()
+        for player, p in pairs(posed) do
+            if p == "handsUp" and isElement(player) then
+                hold(player, false)
+            end
         end
     end)
 

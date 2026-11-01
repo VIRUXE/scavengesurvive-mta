@@ -543,6 +543,9 @@ function setPlayerCuffed(player, toggle)
         return false
     end
     local flag = toggle == true
+    if flag and state.clearPose then
+        state.clearPose(player) -- raised hands give back their controls before the cuffs take theirs (#140)
+    end
     state.cuffed[player] = flag or nil
     setElementData(player, "character.cuffed", flag, "broadcast", "deny")
     if not isKnockedOut(player) then
