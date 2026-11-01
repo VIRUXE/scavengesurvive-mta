@@ -202,6 +202,10 @@ return function(ctx)
             triggerServerEvent("fuelPumpInteractRequested", localPlayer)
             return triggerServerEvent("itemPickupRequested", localPlayer)
         end
+        if uname == "Chainsaw" then
+            triggerServerEvent("itemUseRequested", localPlayer, held.id)
+            return triggerServerEvent("itemPickupRequested", localPlayer)
+        end
         -- a Fishing Rod casts as far as the key was held (a bar fills over 10 s); with the line out F reels it in
         if uname == "FishRod" then
             if fishing then

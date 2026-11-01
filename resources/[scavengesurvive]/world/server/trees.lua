@@ -1,0 +1,143 @@
+-- Felling trees (#157; upstream core/world/tree.pwn): the interact key with a Chainsaw in hand, standing within reach
+-- of one of GTA's own trees of the species in data/trees.lua (shared/logic/trees.lua), cuts it for as long as the key
+-- stays down; the hold bar and the key release are the treatment hold of items (treatmentStarted and
+-- treatmentCancelRequested).
+-- Taking the last of its health fells it: every client takes the tree out of its world and draws it falling, the logs
+-- land a moment later (one item_create_many call), and the tree stands again world.tree_respawn_s later. Felled trees
+-- and half-cut health live in memory only, as upstream's trees were made again on every start.
+-- ctx = { db, net, util, logic = shared/logic/trees.lua, data = data/trees.lua, setting } built by server/main.lua.
+return function(ctx)
+    local db, net, util, logic, data = ctx.db, ctx.net, ctx.util, ctx.logic, ctx.data
+    local index = logic.index(data)
+    local felled, health = {}, {} -- tree -> true; tree -> health left
+    local active = {} -- player -> { itemId, tree, x, y, z, perPointMs, timer }
+
+    local function chainsawRuns()
+        return true
+    end
+
+    local function stop(player, quiet)
+        local a = active[player]
+        if not a then
+            return
+        end
+        active[player] = nil
+        if isTimer(a.timer) then
+            killTimer(a.timer)
+        end
+        if isElement(player) and not quiet then
+            setPedAnimation(player)
+            triggerClientEvent(player, "treatmentStopped", player)
+        end
+    end
+
+    local function dropLogs(i, groundZ)
+        local t = index.trees[i]
+        local list = {}
+        for _, d in ipairs(logic.drops(index.species[t[1]][4], t[2], t[3], math.random)) do
+            list[#list + 1] = { u = logic.YIELD, x = d.x, y = d.y, z = groundZ, rz = d.rz, i = 0 }
+        end
+        db.call("item_create_many", { toJSON(list) }, function(res)
+            if not (res and res.ok) then
+                util.log("world", "warn", "trees: logs of tree %d: %s", i, res and res.code or "DB_ERROR")
+            end
+        end)
+    end
+
+    local function fell(player, a)
+        local i = a.tree
+        local t = index.trees[i]
+        local species = index.species[t[1]]
+        felled[i], health[i] = true, nil
+        stop(player)
+        exports.character:gainSkill(player, logic.SKILL)
+        local fall = logic.fall(species[5], math.random)
+        triggerClientEvent(root, "treeFelled", root, i, t[1], t[2], t[3], t[4], t[5], fall)
+        local groundZ = a.z - 0.9
+        setTimer(dropLogs, logic.FALL_MS, 1, i, groundZ)
+        local respawn = ctx.setting("world.tree_respawn_s", logic.RESPAWN_S)
+        setTimer(function()
+            felled[i] = nil
+            triggerClientEvent(root, "treeRestored", root, i, t[1], t[2], t[3], t[4])
+        end, respawn * 1000, 1)
+        util.log("world", "info", "tree %d (%d) felled, %d logs", i, t[1], species[4])
+    end
+
+    local function tick(player)
+        local a = active[player]
+        if not a or not isElement(player) then
+            return
+        end
+        local x, y, z = getElementPosition(player)
+        local held = exports.items:getHeld(player)
+        local moved = getDistanceBetweenPoints3D(x, y, z, a.x, a.y, a.z) > logic.MAX_MOVE
+        if isPedDead(player) or moved or getPedOccupiedVehicle(player) or felled[a.tree] then
+            return stop(player)
+        end
+        if not held or held.id ~= a.itemId or not chainsawRuns() then
+            return stop(player)
+        end
+        local species = index.species[index.trees[a.tree][1]]
+        local left = (health[a.tree] or species[2]) - logic.damage(species, logic.CHECK_MS, a.perPointMs)
+        health[a.tree] = left
+        if left <= 0 then
+            fell(player, a)
+        end
+    end
+
+    local function start(player, held)
+        local x, y, z = getElementPosition(player)
+        local i = logic.nearest(index, felled, x, y, z)
+        if not i then
+            return false
+        end
+        local t = index.trees[i]
+        local species = index.species[t[1]]
+        if not chainsawRuns() then
+            return false
+        end
+        stop(player)
+        local perPointMs = exports.character:skillTimeModifier(player, logic.BASE_MS, logic.SKILL)
+        local a = { itemId = held.id, tree = i, x = x, y = y, z = z, perPointMs = perPointMs }
+        a.timer = setTimer(tick, logic.CHECK_MS, 0, player)
+        active[player] = a
+        setElementRotation(player, 0, 0, logic.facing(x, y, t[2], t[3]))
+        setPedAnimation(player, "CHAINSAW", "CSAW_G", -1, true, false, false, false)
+        local ms = logic.remainingMs(species, health[i] or species[2], perPointMs)
+        triggerClientEvent(player, "treatmentStarted", player, ms, true)
+        return true
+    end
+
+    addEventHandler("itemUseAttempted", root, function(_, uname)
+        if uname ~= logic.TOOL or active[source] then
+            return
+        end
+        local held = exports.items:getHeld(source)
+        if not held or isPedDead(source) or getPedOccupiedVehicle(source) then
+            return
+        end
+        if getElementInterior(source) ~= 0 or getElementDimension(source) ~= 0 then
+            return
+        end
+        if start(source, held) then
+            cancelEvent()
+        end
+    end)
+
+    net.handler("treatmentCancelRequested", function(player)
+        stop(player)
+    end)
+
+    net.handler("treesStateRequested", function(player)
+        local list = {}
+        for i in pairs(felled) do
+            local t = index.trees[i]
+            list[#list + 1] = { i, t[1], t[2], t[3], t[4] }
+        end
+        triggerClientEvent(player, "treesSynced", player, list)
+    end, { rate = 2 })
+
+    addEventHandler("onPlayerQuit", root, function()
+        stop(source, true)
+    end)
+end

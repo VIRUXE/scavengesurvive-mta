@@ -38,6 +38,17 @@ local boxesSrv = loadFile("server/boxes.lua", "=world/server/boxes.lua")({
     end,
 })
 
+loadFile("server/trees.lua", "=world/server/trees.lua")({
+    db = db,
+    net = net,
+    util = util,
+    logic = loadFile("shared/logic/trees.lua", "=world/trees.lua"),
+    data = loadFile("data/trees.lua", "=world/trees_data.lua"),
+    setting = function(key, default)
+        return tonumber(settings[key]) or default
+    end,
+})
+
 -- upstream creates the zone files' fixed items and the puzzle items on every start; here the ones gone from the
 -- world are made again, with no despawn time, a puzzle item carrying its tag (shared/logic/fixtures.lua)
 local function placeFixtures()

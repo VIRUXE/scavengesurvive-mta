@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 from pathlib import Path
 
-from . import features, houseloot, item_types, lang, loot_tables, maps, puzzles, settings, vspawn, zones
+from . import features, houseloot, item_types, lang, loot_tables, maps, puzzles, settings, trees, vspawn, zones
 from .common import read_text
+from tools.gen_vanilla_objects import DEFAULT_GTA
 
 ROOT = Path(__file__).resolve().parents[2]
 DATA = ROOT / "resources" / "[scavengesurvive]" / "data" / "generated"
@@ -18,8 +20,9 @@ SAMP_ONLY = lambda model: 18631 <= model < 20001 or 11682 <= model <= 11753  # n
 
 def main(argv=None) -> int:
     p = argparse.ArgumentParser(prog="python -m tools.convert")
-    p.add_argument("kind", choices=["all", "items", "loot", "zones", "lang", "maps", "vspawn"])
+    p.add_argument("kind", choices=["all", "items", "loot", "zones", "lang", "maps", "vspawn", "trees"])
     p.add_argument("--src", default=str(ROOT.parent / "ScavengeSurvive"))
+    p.add_argument("--gta", default=os.environ.get("GTA_SA_DIR", DEFAULT_GTA), help="GTA:SA folder (trees only)")
     args = p.parse_args(argv)
     DATA.mkdir(parents=True, exist_ok=True)
     SEED.mkdir(parents=True, exist_ok=True)
@@ -55,6 +58,9 @@ def main(argv=None) -> int:
         n = sum(len(z["objects"]) for z in zones_.values())
         print(f"maps: {len(zones_)} zones, {n} objects, {sum(len(z['removals']) for z in zones_.values())} removals"
               f" -> {MAPS_REPORT.relative_to(ROOT)}")
+    if args.kind == "trees":
+        nspecies, ntrees = trees.convert(args.src, args.gta, WORLD)
+        print(f"trees: {nspecies} species, {ntrees} placements -> world/data/trees.lua")
     return 0
 
 

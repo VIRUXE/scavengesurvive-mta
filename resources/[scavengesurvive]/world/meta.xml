@@ -7,9 +7,13 @@
     <script src="server/main.lua" type="server"/>
     <script src="client/features.lua" type="client"/>
     <script src="client/buttons.lua" type="client"/>
+    <script src="client/trees.lua" type="client"/>
     <file src="client/screen.fx"/>
     <file src="server/buttons.lua"/>
     <file src="server/boxes.lua"/>
+    <file src="server/trees.lua" download="false"/>
+    <file src="shared/logic/trees.lua" download="false"/>
+    <file src="data/trees.lua" download="false"/>
     <file src="shared/logic/weather.lua"/>
     <file src="shared/logic/features.lua"/>
     <file src="shared/logic/fixtures.lua"/>
