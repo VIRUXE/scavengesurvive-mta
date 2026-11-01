@@ -201,7 +201,7 @@ return function(ctx)
         return nil -- a trunk or a crate: nothing to trace
     end
 
-    function M.useLocator(player, _, data)
+    local function traceLocator(player, data)
         local phoneId = small.locatorPhone(data)
         if not phoneId then
             return toast(player, "LOCATORDIS")
@@ -249,6 +249,24 @@ return function(ctx)
         ctx.updateHeldData(player, { phone = row.id })
         toast(player, "LOCATORSYNC")
         return true
+    end
+
+    -- F with the Locator in hand (hud sends a use): a Mobile Phone lying within reach is synced, as upstream's
+    -- OnPlayerUseItemWithItem came first; with none there the Locator traces the phone it is synced to
+    function M.useLocator(player, _, data)
+        local x, y = getElementPosition(player)
+        local reach = tonumber(state.settings["items.pickup_radius"]) or 2.0
+        local int, dim = getElementInterior(player), getElementDimension(player)
+        local sql = ctx.world.findNearestSql(x, y, reach, int, dim, { "MobilePhone" })
+        db.one(sql, {}, function(phone, c)
+            if not isElement(c.player) then
+                return
+            end
+            if phone then
+                return syncLocator(c.player, nil, phone)
+            end
+            traceLocator(c.player, c.data)
+        end, { player = player, data = data })
     end
 
     local function chargeStunGun(player, _, row)
