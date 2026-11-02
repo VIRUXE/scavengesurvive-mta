@@ -65,12 +65,12 @@ def pick_table(x: float, y: float) -> str:
 def shell_spawns(spawns: list[dict]) -> list[dict]:
     rows = []
     for model, px, py, pz, rx, ry, rz in trailer_placements():
-        for ox, oy, oz in shell_loot.TRAILER_POINTS[model]:
-            rows.append(point(spawns, px, py, pz, rx, ry, rz, ox, oy, oz, model))
+        for ox, oy, oz in shell_loot.trailer_points(model):
+            rows.append(point(spawns, px, py, pz, rx, ry, rz, ox, oy, oz))
+    cabin = shell_loot.cabin_points()
     for px, py, pz, rz in cabin_placements():
-        for dx, dy, dz in shell_loot.CABIN_OFFSETS:
-            for ox, oy, oz in shell_loot.CABIN_POINTS:
-                rows.append(point(spawns, px, py, pz, 0.0, 0.0, rz, dx + ox, dy + oy, dz + oz, 17067))
+        for ox, oy, oz in cabin:
+            rows.append(point(spawns, px, py, pz, 0.0, 0.0, rz, ox, oy, oz))
     seen, out = set(), []
     for r in rows:  # a placement listed twice would stack its points
         key = (r["x"], r["y"], r["z"])
@@ -80,10 +80,10 @@ def shell_spawns(spawns: list[dict]) -> list[dict]:
     return out
 
 
-def point(spawns, px, py, pz, rx, ry, rz, ox, oy, oz, model) -> dict:
+def point(spawns, px, py, pz, rx, ry, rz, ox, oy, oz) -> dict:
     x, y, z = attached_pos(px, py, pz, rx, ry, rz, ox, oy, oz)
     x, y, z = round(x, 4), round(y, 4), round(z, 4)
-    return {"x": x, "y": y, "z": z, "zone": nearest_zone(x, y, spawns), "table": pick_table(x, y), "model": model}
+    return {"x": x, "y": y, "z": z, "zone": nearest_zone(x, y, spawns), "table": pick_table(x, y)}
 
 
 def render_sql(rows: list[dict]) -> str:
