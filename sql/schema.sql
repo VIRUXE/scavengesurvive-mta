@@ -437,6 +437,54 @@ BEGIN
   END IF;
 END//
 
+CREATE OR REPLACE PROCEDURE `bobcat_part_install`(IN p_vehicle INT, IN p_item INT, IN p_char INT, IN p_uname VARCHAR(32), IN p_current INT, IN p_damage LONGTEXT)
+main: BEGIN
+  DECLARE v_found INT DEFAULT 0;
+  DECLARE v_model INT DEFAULT 0;
+  DECLARE v_locked INT DEFAULT 0;
+  DECLARE v_path VARCHAR(32);
+  DECLARE v_state INT;
+  DECLARE v_missing INT;
+  DECLARE v_base VARCHAR(32);
+  DECLARE v_good BOOLEAN;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
+  IF JSON_TYPE(p_damage) = 'ARRAY' THEN
+    SET p_damage = JSON_EXTRACT(p_damage,'$[0]');
+  END IF;
+  SET v_good = RIGHT(p_uname,4) = 'Good';
+  SET v_base = LEFT(p_uname, CHAR_LENGTH(p_uname) - IF(v_good,4,3));
+  SET v_path = CASE v_base WHEN 'BobcatTailgate' THEN '$.tailgate' WHEN 'BobcatHood' THEN '$.hood'
+    WHEN 'BobcatLeftDoor' THEN '$.doors[0]' WHEN 'BobcatRightDoor' THEN '$.doors[1]'
+    WHEN 'BobcatFrontBumper' THEN '$.panels[5]' WHEN 'BobcatRearBumper' THEN '$.panels[6]' END;
+  SET v_missing = IF(v_base IN ('BobcatFrontBumper','BobcatRearBumper'),3,4);
+  SET v_state = IF(v_good,0,2);
+  IF v_path IS NULL OR (NOT v_good AND RIGHT(p_uname,3) <> 'Bad') OR JSON_VALID(p_damage) <> 1
+    OR p_current IS NULL OR p_current < 0 OR p_current > v_missing
+    OR (v_good AND p_current < IF(v_missing=4,2,1)) OR (NOT v_good AND p_current <> v_missing) THEN
+    SELECT 0 AS ok, 'NO_IMPROVEMENT' AS code, NULL AS payload;
+    LEAVE main;
+  END IF;
+  SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+  START TRANSACTION;
+  SELECT COUNT(*), MAX(model), MAX(locked) INTO v_found,v_model,v_locked FROM vehicles WHERE id=p_vehicle FOR UPDATE;
+  IF v_found <> 1 OR v_model <> 422 OR v_locked <> 0 THEN
+    ROLLBACK;
+    SELECT 0 AS ok, 'NO_BOBCAT' AS code, NULL AS payload;
+    LEAVE main;
+  END IF;
+  SELECT COUNT(*) INTO v_found FROM items WHERE id=p_item AND type_uname=p_uname
+    AND holder_char_id=p_char AND holder_kind='held' AND hitpoints>0 FOR UPDATE;
+  IF v_found <> 1 THEN
+    ROLLBACK;
+    SELECT 0 AS ok, 'NOT_HELD' AS code, NULL AS payload;
+    LEAVE main;
+  END IF;
+  DELETE FROM items WHERE id=p_item;
+  UPDATE vehicles SET damage=JSON_SET(p_damage,v_path,CAST(v_state AS SIGNED)),last_used_at=NOW() WHERE id=p_vehicle;
+  COMMIT;
+  SELECT 1 AS ok, 'OK' AS code, JSON_OBJECT('state',CAST(v_state AS SIGNED)) AS payload;
+END//
+
 CREATE OR REPLACE PROCEDURE `campfire_burn_out`(IN p_cooker_id INT, IN p_log_uname VARCHAR(32), IN p_spots JSON)
 BEGIN
   -- #95: a campfire went out (burnt: Burnt Logs; rained out at once: Wood Logs): it becomes one log per spot
@@ -1980,9 +2028,9 @@ BEGIN
     JOIN JSON_TABLE(p_rows, '$[0][*]' COLUMNS (
       id INT PATH '$.id', x FLOAT PATH '$.x', y FLOAT PATH '$.y', z FLOAT PATH '$.z', rz FLOAT PATH '$.rz',
       health FLOAT PATH '$.health', fuel FLOAT PATH '$.fuel', locked TINYINT PATH '$.locked',
-      battery FLOAT PATH '$.battery', battery_since INT UNSIGNED PATH '$.since')) j ON j.id = v.id
+      damage LONGTEXT PATH '$.damage', battery FLOAT PATH '$.battery', battery_since INT UNSIGNED PATH '$.since')) j ON j.id = v.id
     SET v.x = j.x, v.y = j.y, v.z = j.z, v.rz = j.rz, v.health = j.health, v.fuel = j.fuel, v.locked = j.locked,
-        v.battery = j.battery, v.battery_since = j.battery_since;
+        v.damage = COALESCE(j.damage,v.damage), v.battery = j.battery, v.battery_since = j.battery_since;
   SET v_n = ROW_COUNT();
   COMMIT;
   SELECT 1 AS ok, 'OK' AS code, JSON_OBJECT('updated', CAST(v_n AS SIGNED)) AS payload;

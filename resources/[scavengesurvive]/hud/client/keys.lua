@@ -45,6 +45,11 @@ return function(ctx)
         Wheel = true,
     }
 
+    for _, part in ipairs({ "Tailgate", "LeftDoor", "RightDoor", "Hood", "FrontBumper", "RearBumper" }) do
+        VEHICLE_TOOLS["Bobcat" .. part .. "Good"] = true
+        VEHICLE_TOOLS["Bobcat" .. part .. "Bad"] = true
+    end
+
     local LOCK_TOOLS = { Key = true, LocksmithKit = true, WheelLock = true, Crowbar = true, LockBreaker = true }
     LOCK_TOOLS.Keypad, LOCK_TOOLS.AdvancedKeypad = true, true
 
