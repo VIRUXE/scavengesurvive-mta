@@ -1694,6 +1694,15 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
 
     -- Case 3: Rear (Trunk)
     if vlogic.isRear(angle) and not walkIn then
+        -- Reach the trunk from beside the vehicle, not while standing on a car.
+        local contact = getPedContactElement(player)
+        if isElement(contact) and getElementType(contact) == "vehicle" then
+            return
+        end
+        local _, _, prz = getElementRotation(player)
+        if getPedOccupiedVehicle(player) or not vlogic.facingTrunk(px, py, prz, vx, vy) then
+            return
+        end
         if (uname == "Crowbar" or uname == "LockBreaker") and inf.locked > 0 then
             local ok, err = vlogic.canBreakLock(inf.locked, uname)
             if not ok then
