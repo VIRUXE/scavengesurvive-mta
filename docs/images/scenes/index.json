@@ -1,0 +1,74 @@
+{
+ "airstream": {
+  "caption": "The towable Airstream hitched behind a Bobcat, a Gas Bottle and a Welder beside it",
+  "file": "airstream.png",
+  "ground": "dirt",
+  "light": "golden"
+ },
+ "arsenal": {
+  "caption": "Every firearm laid out in rows with ammunition between them",
+  "file": "arsenal.png",
+  "ground": "dirt",
+  "light": "day"
+ },
+ "camp": {
+  "caption": "A camp at dusk: the pitched tent, a campfire and a BBQ, a backpack and crates",
+  "file": "camp.png",
+  "ground": "grass",
+  "light": "dusk"
+ },
+ "doorway": {
+  "caption": "A defence wall: a Metal Door between Metal Panels, with its Keypad and a Crowbar on the ground",
+  "file": "doorway.png",
+  "ground": "dirt",
+  "light": "overcast"
+ },
+ "explosives": {
+  "caption": "Explosives around a crate: the TNT, IED and EMP variants and a Molotov",
+  "file": "explosives.png",
+  "ground": "dirt",
+  "light": "day"
+ },
+ "fuel": {
+  "caption": "A fuel outlet: Petrol Cans at the pump and a Bobcat waiting",
+  "file": "fuel.png",
+  "ground": "asphalt",
+  "light": "day"
+ },
+ "medical": {
+  "caption": "Medical supplies: Dirty and Antiseptic Bandages, a Medkit, a Doctor's Bag, Pills and an Injector",
+  "file": "medical.png",
+  "ground": "concrete",
+  "light": "overcast"
+ },
+ "scrapyard": {
+  "caption": "The machines: Scrap Machine, Refining Machine, Water Purifier and Generator, scrap in front",
+  "file": "scrapyard.png",
+  "ground": "dirt",
+  "light": "overcast"
+ },
+ "shelter": {
+  "caption": "Shelter: a town house, the log cabins and a trailer, all enterable",
+  "file": "shelter.png",
+  "ground": "grass",
+  "light": "golden"
+ },
+ "supply-drop": {
+  "caption": "A supply drop: the crate under its parachute, loot spilling out",
+  "file": "supply-drop.png",
+  "ground": "grass",
+  "light": "day"
+ },
+ "vehicles": {
+  "caption": "Common vehicles: Sentinel, Bobcat, Rumpo, Sanchez, Moonbeam and Yosemite",
+  "file": "vehicles.png",
+  "ground": "asphalt",
+  "light": "day"
+ },
+ "workbench": {
+  "caption": "The Workbench with a Wrench, Hammer, Screwdriver, Welder, Scrap Metal and Refined Metal",
+  "file": "workbench.png",
+  "ground": "concrete",
+  "light": "day"
+ }
+}
