@@ -4,6 +4,7 @@ import json
 import math
 import re
 
+from tools.bobcat_parts import PARTS as BOBCAT_PARTS
 from tools.port_defences import DEFENCES
 from tools.port_hats import HATS
 from tools.port_tools import MODEL_OVERRIDES, RENAMES, TOOLS
@@ -284,7 +285,7 @@ def add_port_tools(types: dict[str, dict]) -> None:
         types[uname].update(dict(zip(("attx", "atty", "attz", "attrx", "attry", "attrz"), att)), boneid=6)
     hold = types["LargeBox"]
     index = max(t["_index"] for k, t in types.items() if not k.startswith("_")) + 1
-    for i, w in enumerate(TOOLS):
+    for i, w in enumerate(TOOLS + BOBCAT_PARTS):
         fields = dict(DEFAULTS, name=w["name"], uname=w["uname"], model=w["model"], size=w["size"], maxhitpoints=w["hp"])
         if w["carry"]:
             keep = {k: hold[k] for k in ("attx", "atty", "attz", "attrx", "attry", "attrz")}

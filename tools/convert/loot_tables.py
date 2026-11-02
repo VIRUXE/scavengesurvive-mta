@@ -5,6 +5,7 @@ from pathlib import Path
 
 from tools.port_hats import HATS
 from tools.port_tools import TOOLS
+from tools.bobcat_parts import PARTS as BOBCAT_PARTS
 
 from .common import HEADER, NUM, lua_index, lua_value, write_text
 
@@ -61,7 +62,7 @@ def add_port_hats(tables: dict[str, dict]) -> list[str]:
 
 def add_port_tools(tables: dict[str, dict]) -> None:
     """The welding kit (tools/port_tools.py) joins the industrial tables."""
-    for w in TOOLS:
+    for w in TOOLS + BOBCAT_PARTS:
         for table, weight in w["loot"].items():
             if table not in tables:
                 raise KeyError(f"port tool {w['uname']}: no loot table {table}")

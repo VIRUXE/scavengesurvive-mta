@@ -383,7 +383,9 @@ def render_props() -> str:
         "-- in prop_models/files/ with its own TXD and collision.",
         "return {",
     ]
-    lines += [f'    [{p["id"]}] = {{ dff = "{p["name"]}", txd = "{p["name"]}", dist = {p["dist"]} }},' for p in PROPS_TABLE]
+    from tools.bobcat_parts import PARTS
+    entries = PROPS_TABLE + [dict(id=p["model"], name=p["asset"], dist=80) for p in PARTS]
+    lines += [f'    [{p["id"]}] = {{ dff = "{p["name"]}", txd = "{p["name"]}", dist = {p["dist"]} }},' for p in entries]
     return "\n".join(lines + ["}", ""])
 
 

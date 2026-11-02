@@ -18,6 +18,11 @@ M.SPECIAL = {
     FishRod = "Cast line", -- #141
 }
 
+for _, part in ipairs({ "Tailgate", "LeftDoor", "RightDoor", "Hood", "FrontBumper", "RearBumper" }) do
+    M.SPECIAL["Bobcat" .. part .. "Good"] = "Install Bobcat body part"
+    M.SPECIAL["Bobcat" .. part .. "Bad"] = "Install Bobcat body part"
+end
+
 -- The interact verb next to a landed crate, by the loot resource's crate kind.
 M.CRATES = { supply = "Open supply crate", cache = "Open weapon cache" }
 

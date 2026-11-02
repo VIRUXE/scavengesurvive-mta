@@ -60,6 +60,7 @@ do
 end
 
 local carmourSrv -- server/carmour.lua, built once the roadside helpers it needs exist
+local bodySrv -- Bobcat salvage part installation
 local gasSrv -- server/gasbottles.lua, built with it
 
 local FLUSH_MS = 60000
@@ -190,6 +191,12 @@ local function applyDamage(v, d)
     end
     for i, s in ipairs(d.doors or {}) do
         setVehicleDoorState(v, i + 1, s) -- MTA doors 2..5 are the side doors (0 bonnet, 1 boot)
+    end
+    if d.hood ~= nil then
+        setVehicleDoorState(v, 0, d.hood, false)
+    end
+    if d.tailgate ~= nil then
+        setVehicleDoorState(v, 1, d.tailgate, false)
     end
     for i, s in ipairs(d.lights or {}) do
         setVehicleLightState(v, i - 1, s)
@@ -508,6 +515,7 @@ local function flushAll()
                 y = y,
                 z = z,
                 rz = rz,
+                damage = bodySrv and not bodySrv.busy(v) and toJSON(bodySrv.snapshot(v), true):sub(2, -2) or nil,
                 health = getElementHealth(v),
                 fuel = i.fuel,
                 locked = i.locked,
@@ -1438,6 +1446,10 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
     local uname = held and held.uname
     local hp = getElementHealth(vehicle)
 
+    if bodySrv.isPart(uname) then
+        return bodySrv.install(player, vehicle, held)
+    end
+
     -- Case W: the Welder's torch welds the nearest attached panel on (server/carmour.lua); the Welder itself has to
     -- be laid down first; an Angle Grinder grinds a welded panel off, pass by pass; a Crowbar pries an attached,
     -- unwelded panel off before it reaches for the door's lock
@@ -2008,4 +2020,19 @@ function respawnAll()
         end
     end)
     return true
+end
+
+-- Shares the roadside action/cancellation lifecycle; the item and saved panel change commit together.
+do
+    local f = fileOpen("server/bodyparts.lua", true)
+    local src = fileRead(f, fileGetSize(f))
+    fileClose(f)
+    bodySrv = assert(loadstring(src, "=vehicles/bodyparts.lua"))()({
+        db = db,
+        info = info,
+        activeActions = activeActions,
+        cancel = cancelHoldAction,
+        toLocal = toLocal,
+        toast = toast,
+    })
 end
