@@ -1,0 +1,15 @@
+<meta>
+    <info author="scavengesurvive-mta" type="script" name="stove" description="Four independently controlled gas burners" version="0.1.0"/>
+    <min_mta_version server="1.6.0-9.22815" client="1.6.0"/>
+    <script src="server/main.lua" type="server"/>
+    <script src="client/main.lua" type="client"/>
+    <file src="files/stove.dff"/>
+    <file src="files/stove.txd"/>
+    <file src="files/stove.col"/>
+    <file src="client/flame.fx"/>
+    <export function="createStove" type="server"/>
+    <export function="setStoveBurner" type="server"/>
+    <export function="setStoveBurners" type="server"/>
+    <export function="getStoveBurner" type="server"/>
+    <export function="destroyStove" type="server"/>
+</meta>
