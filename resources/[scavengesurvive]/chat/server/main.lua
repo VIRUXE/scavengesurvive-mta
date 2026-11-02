@@ -332,6 +332,7 @@ addEventHandler("onPlayerVoiceStart", root, function()
     local st = get(source)
     if not exports.auth:isAuthenticated(source) or isMuted(source) then
         cancelEvent()
+        triggerClientEvent(source, "chatVoiceBlocked", source)
         if isMuted(source) and not st.voiceWarned then
             st.voiceWarned = true
             outputChatBox(logic.VOICE_MUTED, source, 255, 255, 0)
