@@ -14,10 +14,13 @@
     <script src="server/main.lua" type="server"/>
     <script src="client/main.lua" type="client"/>
     <file src="client/keys.lua"/>
+    <file src="client/voice.lua"/>
     <file src="shared/logic/bars.lua"/>
     <file src="shared/logic/keyactions.lua"/>
     <file src="shared/logic/watch.lua"/>
     <file src="shared/logic/vehiclepanel.lua"/>
+    <file src="shared/logic/voice.lua"/>
+    <file src="images/voice.png"/>
     <export function="setHidden" type="client"/>
     <export function="holdingReloadable" type="client"/>
 </meta>

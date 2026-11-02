@@ -12,6 +12,7 @@ local keyactions = loadFile("shared/logic/keyactions.lua", "=hud/keyactions.lua"
 local watch = loadFile("shared/logic/watch.lua", "=hud/watch.lua")
 local vehiclepanel = loadFile("shared/logic/vehiclepanel.lua", "=hud/vehiclepanel.lua")
 local bars = loadFile("shared/logic/bars.lua", "=hud/bars.lua")
+local voiceLogic = loadFile("shared/logic/voice.lua", "=hud/voice.lua")
 local sw, sh = guiGetScreenSize()
 local ctx = { canvas = canvas, c = canvas.new(sw, sh) }
 ctx.draw = loadFile(":ui/client/draw.lua", "=ui/draw.lua")(ctx)
@@ -61,10 +62,20 @@ local state = {
     combatUntil = 0, -- getTickCount() until which the watch is red (combatWindowChanged from character)
     hitch = false, -- "hitch" / "unhitch": the trailer line while driving (trailerHitchHintChanged from vehicles)
     frequency = watch.DEFAULT_FREQUENCY,
+    chatMode = 0,
     keys = {},
     hidden = false, -- setHidden(true): the dev studio wants clean screenshots
     skillNotice = false, -- { text, untilTick }: "+Repair" after a skill gain (skillGained from character)
 }
+
+local voiceClient = loadFile("client/voice.lua", "=hud/voice.lua")({
+    canvas = canvas,
+    c = c,
+    getState = function()
+        return state
+    end,
+    voiceLogic = voiceLogic,
+})
 local SKILL_NOTICE_MS = 5000
 local GREEN = tocolor(0, 255, 0, 255) -- upstream skl_PlayerNotification colour 16711935 (0x00FF00FF)
 local typeCache, vehicleTypeCache = {}, {}
@@ -137,8 +148,9 @@ addEventHandler("trailerHitchHintChanged", localPlayer, function(hint)
     state.hitch = hint or false
 end)
 
-addEventHandler("chatRadioChanged", root, function(freq)
+addEventHandler("chatRadioChanged", root, function(freq, mode)
     state.frequency = tonumber(freq) or state.frequency
+    state.chatMode = tonumber(mode) or state.chatMode or 0
 end)
 
 addEventHandler("deathScreenShown", root, function(show)
@@ -455,6 +467,7 @@ addEventHandler("onClientRender", root, function()
     if driver then
         drawVehiclePanel(vehicle)
     end
+    voiceClient.render()
 end)
 
 -- export: a reloadable firearm is in hand (chat holds R to open the radio then, a tap reloads)
