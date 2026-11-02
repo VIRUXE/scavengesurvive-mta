@@ -36,6 +36,17 @@ function M.isRear(angle)
     return angle > 155 and angle < 205
 end
 
+-- Ped heading uses the same rotation as vehicles: forward is (-sin(rz), cos(rz)).
+function M.facingTrunk(px, py, prz, vx, vy)
+    local dx, dy = vx - px, vy - py
+    local distance = math.sqrt(dx * dx + dy * dy)
+    if distance < 0.001 then
+        return false
+    end
+    local heading = math.rad(prz)
+    return (-math.sin(heading) * dx + math.cos(heading) * dy) / distance >= math.cos(math.rad(45))
+end
+
 function M.isDriverSide(angle)
     return angle > 225 and angle < 315
 end
