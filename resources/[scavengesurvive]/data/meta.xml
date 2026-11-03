@@ -24,6 +24,7 @@
     <file src="generated/names_pt.lua"/>
     <file src="generated/names_ptbr.lua"/>
     <file src="generated/names_ru.lua"/>
+    <file src="generated/names_cs.lua"/>
     <file src="generated/names_ro.lua"/>
     <file src="generated/names_id.lua"/>
     <file src="generated/names_bhs.lua"/>

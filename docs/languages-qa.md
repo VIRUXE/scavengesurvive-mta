@@ -46,6 +46,4 @@ English has 355 names.
 | `ro` | Romanian | 0 | 34 | 0 |
 | `id` | Indonesian | 0 | 40 | 0 |
 | `bhs` | Bosanski-Hrvatski-Srpski | 0 | 30 | 0 |
-| `cs` | Čeština | 355 | 0 | 0 |
-
-- `cs` lacks: `Knuckle Duster`, `Golf Club`, `Baton`, `Combat Knife`, `Baseball Bat`, `Spade`, `Pool Cue`, `Sword`, `Chainsaw`, `Dildo`, `Flowers`, `Cane`, `Grenade`, `Teargas`, `Molotov`, `M9`, `M9 SD`, `Desert Eagle`, `Shotgun`, `Sawnoff`, `Spas 12`, `Mac 10`, `MP5`, `WASR-3`, `M16`, `Tec 9`, `Rifle`, `Sniper`, `RPG`, `Heatseeker`, `Flamer`, `Minigun`, `Remote Bomb`, `Detonator`, `Spray Paint`, `Extinguisher`, `Camera`, `Night Vision`, `Thermal Vision`, `Parachute` …
+| `cs` | Čeština | 0 | 31 | 0 |
