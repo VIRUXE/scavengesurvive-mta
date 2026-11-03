@@ -23,10 +23,24 @@ return function(ctx)
         end
     end
 
+    local function setDutyWeather(p, onDuty)
+        triggerClientEvent(p, "dutyWeatherChanged", resourceRoot, onDuty and 0 or exports.world:getWeather())
+    end
+
+    -- Duty staff get clear Los Santos weather locally. Keep it in place when the shared world weather rolls.
+    addEventHandler("weatherChanged", root, function()
+        for p in pairs(state.duty) do
+            if isElement(p) then
+                setDutyWeather(p, true)
+            end
+        end
+    end)
+
     local function dutyOn(p)
         local skin = getElementModel(p)
         state.duty[p] = { skin = skin }
         setElementData(p, "staff.duty", true, "broadcast", "deny")
+        setDutyWeather(p, true)
         setElementModel(p, logic.dutySkin(exports.items:isFemaleSkin(skin)))
         setNametags(p, true)
         ctx.say(p, " >  You are now on duty: immune to player damage, name tags on.")
@@ -41,6 +55,7 @@ return function(ctx)
             return
         end
         setElementData(p, "staff.duty", false, "broadcast", "deny")
+        setDutyWeather(p, false)
         if getElementModel(p) == logic.DUTY_SKIN_MALE or getElementModel(p) == logic.DUTY_SKIN_FEMALE then
             setElementModel(p, d.skin)
         end

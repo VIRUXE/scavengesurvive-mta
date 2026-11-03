@@ -11,6 +11,12 @@ local logic = loadFile("shared/logic/staff.lua")
 local spectating = nil -- player element being watched
 local nametags = false
 
+addEventHandler("dutyWeatherChanged", root, function(weather)
+    if type(weather) == "number" then
+        setWeather(weather)
+    end
+end)
+
 -- Windows open at once; the cursor and the no-binds-when-editing input mode follow the count.
 local ctx = { logic = logic }
 local openWindows, savedInputMode = 0, nil

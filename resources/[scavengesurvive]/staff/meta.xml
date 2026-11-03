@@ -7,6 +7,7 @@
     <include resource="character"/>
     <include resource="maps"/>
     <include resource="loot"/>
+    <include resource="world"/>
     <script src="shared/events.lua" type="shared"/>
     <script src="server/main.lua" type="server"/>
     <script src="client/main.lua" type="client"/>
