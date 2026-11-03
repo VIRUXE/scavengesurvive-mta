@@ -6,6 +6,14 @@
 -- with at the cook's unix start and ms its length. Pure: no MTA calls at file scope.
 local M = {}
 
+-- M.tr(text): a label word in the reader's language; the client sets it to lib lang.text, identity elsewhere
+M.tr = function(s)
+    return s
+end
+local function tr(s)
+    return M.tr(s)
+end
+
 -- Generator is the port's own: a fuel-only machine (no container, no cook) that powers the Welder (vehicles, carmour)
 M.TYPES = { ScrapMachine = "scrap", RefineMachine = "refine", WaterMachine = "water", Generator = "generator" }
 M.GENERATOR_UNAME = "Generator"
@@ -19,7 +27,9 @@ M.REFUEL_STEP = 1.1 -- machine.pwn OnHoldActionUpdate: 1.1 a tick from the can i
 M.REFUEL_TICK_MS = 100
 M.REFUEL_REACH = 4.0 -- the hold ends when the player walks off (the side container's own limit)
 M.RESULTS = { scrap = "ScrapMetal", refine = "RefinedMetal", water = "Bottle" }
+-- lang:begin
 M.ACCEPTS = { refine = "Scrap Metal", water = "Water Bottle (Sea Water)" } -- MACHITEMTYP
+-- lang:end
 M.PETROL = "Petrol"
 M.SMOKE_EFFECT = "smoke30lit" -- the port's stand-in for SA-MP's smoke object 18726 (to pick on screen)
 
@@ -242,9 +252,12 @@ function M.remainingMs(st, now)
 end
 
 -- MsToString(ms, "%m minutes %s seconds")
-function M.timeText(ms)
+-- trFor translates for the reader (the server passes the player's), else M.tr
+function M.timeText(ms, trFor)
     local s = math.floor(math.max(0, ms) / 1000)
-    return string.format("%d minutes %d seconds", math.floor(s / 60), s % 60)
+    local fmt = (trFor or tr)(M.TIME)
+    local ok, out = pcall(string.format, fmt, math.floor(s / 60), s % 60)
+    return ok and out or string.format(M.TIME, math.floor(s / 60), s % 60)
 end
 
 -- the cook done (OnMachineFinish): the next state and the rows that replace the container's items, each
@@ -274,7 +287,9 @@ function M.finish(kind, st, items, liquids, itemType)
     return nextSt, out
 end
 
--- the messages the port shows in English (upstream language lines, formatted server-side)
+-- the messages the port shows (upstream language lines, formatted server-side in the player's language)
+-- lang:begin
+M.TIME = "%d minutes %d seconds"
 M.TEXT = {
     MACHPROCESS = "The machine is currently processing\n%s left",
     MACHNOITEMS = "There are no items inside.",
@@ -284,19 +299,23 @@ M.TEXT = {
     REFUELLING = "Refuelling...",
     GENFUEL = "Generator fuel: %.1f / %.0f",
 }
+-- lang:end
 
 -- the Start dialog's body (machine.pwn _mach_HoldInteract)
+-- lang:begin
+M.MENU = {
+    scrap = "Press 'Start' to activate the machine and convert certain types of items into scrap.\nItems that "
+        .. "cannot be turned into scrap metal will be destroyed.\n\nFuel amount: %.1f",
+    refine = "Press 'Start' to activate the machine and refine scrap metal.\nEach piece of scrap metal becomes "
+        .. "refined metal.\n\nFuel amount: %.1f",
+    water = "Press 'Start' to activate the machine and purify sea water.\nEach bottle of sea water becomes a "
+        .. "bottle of water.\n\nFuel amount: %.1f",
+}
+-- lang:end
 function M.menuBody(kind, fuel)
-    local what
-    if kind == "scrap" then
-        what = "convert certain types of items into scrap.\n"
-            .. "Items that cannot be turned into scrap metal will be destroyed."
-    elseif kind == "refine" then
-        what = "refine scrap metal.\nEach piece of scrap metal becomes refined metal."
-    else
-        what = "purify sea water.\nEach bottle of sea water becomes a bottle of water."
-    end
-    return string.format("Press 'Start' to activate the machine and %s\n\nFuel amount: %.1f", what, fuel)
+    local fmt = M.MENU[kind] or M.MENU.water
+    local ok, out = pcall(string.format, tr(fmt), fuel)
+    return ok and out or string.format(fmt, fuel)
 end
 
 return M

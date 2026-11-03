@@ -1,5 +1,5 @@
 -- Derived from Southclaws/ScavengeSurvive (MPL-2.0). See THIRD_PARTY_NOTICES.md
--- GENERATED FILE - do not edit; run: python -m tools.convert all
+-- Edited by hand; the language converter is gone
 return {
     ACCLOGIBODY = "#FFFFFFBon retour %s#FFFFFF, veuillez vous connecter à votre compte ci-dessous !\n\n#FFFF00Bon séjour :)",
     ACCLOGITITL = "Connexion à votre compte",
@@ -338,7 +338,7 @@ return {
     Money_T = "Cet objet n'a pas encore d'utilité",
     MotionSen_T = "Sert à l'artisanat",
     MotoHelme_T = "Portez-le en appuyant sur [F]",
-    Motor_T = "Cet objet n'a pas encore d'utilité",
+    Motor_T = "Maintenez [F] avec ceci à l'arrière d'une défense construite pour l'installer (nécessaire avant un digicode), sert aussi à l'artisanat",
     Mustard_T = "Cet objet n'a pas encore d'utilité",
     NEARBYKEYP = "Cette porte est verrouillée électroniquement par un digicode.",
     NEEDANOTOOL = "Vous avez besoin d'un autre outil",
@@ -452,7 +452,7 @@ return {
     Spas12_T = "Appuyez sur [R] pour recharger, sur [Y] pour ranger l'arme et maintenez [N] pour retirer les munitions",
     Spatula_T = "Frappez quelqu'un avec aujourd'hui !",
     SprayPain_T = "Servez-vous-en pour taguer votre nom sur certains murs ou aveugler temporairement les joueurs",
-    StarterMo_T = "Cet objet n'a pas encore d'utilité",
+    StarterMo_T = "Sert à l'artisanat",
     Steak_T = "Faites-le cuire et mangez-le pour sa valeur nutritive",
     StorageUn_T = "Sert à l'artisanat",
     StrawHat_T = "Portez-le en appuyant sur [F]",

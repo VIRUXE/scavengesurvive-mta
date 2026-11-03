@@ -2,13 +2,14 @@
 -- colour, Back returns to the inventory. The server sends the rows on spawn and after every change
 -- (characterSkillsSynced); a skill named after an item type shows that type's name.
 local rows = {}
+local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")()
 
 addEventHandler("characterSkillsSynced", localPlayer, function(list)
     rows = type(list) == "table" and list or {}
 end)
 
 local function displayName(name)
-    local t = exports.data:itemType(name)
+    local t = lang.itemType(name)
     return t and t.name or name
 end
 

@@ -3,6 +3,7 @@
 -- ctx = { medical, state, sendStats, wake, isKnockedOut } built by server/main.lua.
 return function(ctx)
     local medical, state = ctx.medical, ctx.state
+    local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")() -- notices in the player's language
     local M = {}
 
     local function notice(player, text, ms)
@@ -16,16 +17,22 @@ return function(ctx)
     end
 
     function M.applyDrug(player, st, name, ms)
+        if getElementData(player, "auth.reauthProtection") then
+            return false
+        end
         if not medical.applyDrug(st.drugs, name, ms) then
             return false
         end
         st.dirty = true
-        notice(player, string.format("Taken %s", name))
+        notice(player, lang.formatFor(player, "Taken %s", lang.textFor(player, name)))
         ctx.sendStats(player, true)
         return true
     end
 
     function M.setInfection(player, st, kind, on)
+        if getElementData(player, "auth.reauthProtection") then
+            return false
+        end
         if kind ~= "food" and kind ~= "wound" then
             return false
         end
@@ -43,7 +50,7 @@ return function(ctx)
             return
         end
         for _, name in ipairs(off) do
-            notice(player, string.format("%s has worn off", name))
+            notice(player, lang.formatFor(player, "%s has worn off", lang.textFor(player, name)))
         end
         if hadSky and not medical.drugSky(st.drugs) then
             restoreSky(player)
@@ -55,7 +62,12 @@ return function(ctx)
     -- The end of a hold: applies the outcome to the patient and returns { used, consume, data } for items.
     function M.treat(healer, patient, uname, data)
         local st = state.byPlayer[patient]
-        if not st or st.dead then
+        if
+            not st
+            or st.dead
+            or getElementData(patient, "auth.reauthProtection")
+            or getElementData(healer, "auth.reauthProtection")
+        then
             return { used = false }
         end
         local view = { bleed = st.bleed, wounds = st.wounds, infection = st.infection }
@@ -84,13 +96,13 @@ return function(ctx)
         if r.wake then
             ctx.wake(patient)
         end
-        for _, text in ipairs(r.messages) do
-            if text:find("^Reduced bleedrate") then
+        for _, m in ipairs(r.messages) do
+            local reader = m[1] == "infected" and patient or healer
+            local text = lang.formatFor(reader, unpack(m, 2))
+            if m[1] == "bleed" then
                 outputChatBox(text, healer, 255, 255, 0)
-            elseif text:find("infected") then
-                notice(patient, text, 5000)
             else
-                notice(healer, text, 5000)
+                notice(reader, text, 5000)
             end
         end
         ctx.sendStats(patient, true)

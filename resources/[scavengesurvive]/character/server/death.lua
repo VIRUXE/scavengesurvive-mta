@@ -67,7 +67,7 @@ return function(ctx)
     -- silent: the player is leaving (combat log); no kill animation and no death screen, only the drop
     function M.die(player, cause, killer, silent)
         local st = state.byPlayer[player]
-        if not st or st.dead then
+        if not st or st.dead or getElementData(player, "auth.reauthProtection") then
             return false
         end
         st.dead, st.hp = true, 0

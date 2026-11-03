@@ -12,7 +12,7 @@ Slots per model live in `vehicles/shared/logic/bodyparts.lua` (`MODELS`): hood, 
 - Damage (`vehicles.damage`: panels, side doors, lights, tyres, plus `hood` and `tailgate`) is flushed every 60 s by `vehicle_flush`, and written at once by every part change, tyre fix and headlight fix.
 - Parts spawn at industrial world loot points (`world_industrial`, weight 0.6 good / 1.2 bad), not inside vehicle containers.
 
-`tools/bobcat_parts.py` is the item/model manifest. `python3 -m tools.convert items` regenerates item definitions and the database seed. `tools/make_props.py` preserves their model registrations.
+`tools/bobcat_parts.py` is the item/model manifest. The item definitions live in `data/generated/item_types.lua` and `sql/seed/0001_item_types.sql`, edited by hand. `tools/make_props.py` preserves their model registrations.
 
 Use GTA Scout's `prepare-asset-catalog-views.mjs` with a local model record for 422 (bobcat/bobcat, vehicles.ide); the stock object catalogue omits vehicles. Prepare a second record using bobcat.dff and vehicle.txd for shared texture preview decoding. Then:
 

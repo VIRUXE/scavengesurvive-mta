@@ -4,6 +4,7 @@
 local db = loadstring(exports.lib:getModule("db"), "=lib/db.lua")()
 local net = loadstring(exports.lib:getModule("net"), "=lib/net.lua")()
 local util = loadstring(exports.lib:getModule("util"), "=lib/util.lua")()
+local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")()
 local budget = loadstring(exports.lib:getModule("budget"), "=lib/budget.lua")()
 
 local spawn
@@ -1326,6 +1327,19 @@ local TIRE_REPAIRED = { "TIREREPFL", "TIREREPBL", "TIREREPFR", "TIREREPBR" }
 local BATTERY_HOLD_MS = 3000
 local FIT_BATTERY_SQL = "UPDATE vehicles SET battery = ?, battery_since = ? WHERE id = ?"
 
+-- An EMP flattens an installed battery immediately; removing it later must return a flat one too.
+function flattenVehicleBattery(vehicle)
+    local inf = info[vehicle]
+    if not isElement(vehicle) or not inf or not inf.bay or not inf.battery then
+        return false
+    end
+    inf.battery, inf.batterySince = 0, unixNow()
+    setVehicleEngineState(vehicle, false)
+    setVehicleOverrideLights(vehicle, 1)
+    -- The normal vehicle flush persists this charge, including on a clean resource/server stop.
+    return true
+end
+
 local function atBonnet(player, vehicle)
     local inf = info[vehicle]
     if not (isElement(vehicle) and inf and inf.bay) or isPedDead(player) or getPedOccupiedVehicle(player) then
@@ -1759,7 +1773,7 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
         end
         setVehicleDoorOpenRatio(vehicle, 1, 1, 500)
         markUsed(vehicle)
-        local tname = string.format("%s Trunk", vt and vt.name or "Vehicle")
+        local tname = lang.formatFor(player, "%s Trunk", vt and vt.name or lang.textFor(player, "Vehicle"))
         exports.items:openTrunkContainer(player, vehicle, inf.containerId, tname, vt and vt.trunkSize or 40)
         return
     end

@@ -153,6 +153,7 @@ end
 local function spawnFromRow(player, row, isNew)
     local st = {
         id = row.id,
+        accountId = row.account_id,
         hp = row.hp,
         food = row.food,
         bleed = row.bleed,
@@ -169,6 +170,9 @@ local function spawnFromRow(player, row, isNew)
     sendCombatWindow(player, 0)
     clearStatuses(player, true)
     spawnPlayer(player, row.x, row.y, row.z, row.rz, row.skin, row.interior or 0, row.dimension or 0)
+    if getElementData(player, "auth.reauthProtection") then
+        setElementFrozen(player, true)
+    end
     exports.staff:reapplyDutySkin(player)
     setElementHealth(player, math.max(1, st.hp))
     setCameraTarget(player, player)
@@ -203,6 +207,7 @@ local function createAndSpawn(player, accountId, stats)
         end
         spawnFromRow(ctx.player, {
             id = res.payload.character_id,
+            account_id = accountId,
             inventory_container_id = res.payload.inventory_container_id,
             hp = stats.hp,
             food = stats.food,
@@ -217,8 +222,15 @@ local function createAndSpawn(player, accountId, stats)
 end
 
 local function loadOrCreate(player, accountId)
+    -- An auth reload asks an already spawned player to log in again; keep their live character and vehicle seat.
+    local current = state.byPlayer[player]
+    if current and current.accountId == accountId and not current.dead then
+        tick.sendStats(player, true)
+        sendSkills(player, current)
+        return
+    end
     db.one(
-        "SELECT id, hp, food, bleed, skills, infection, drugs, x, y, z, rz, skin, interior, dimension,"
+        "SELECT id, account_id, hp, food, bleed, skills, infection, drugs, x, y, z, rz, skin, interior, dimension,"
             .. " inventory_container_id"
             .. " FROM characters WHERE account_id = ? AND alive = 1",
         { accountId },
@@ -278,7 +290,7 @@ end, { rate = 1 })
 -- online, dies where they stood and drops everything (upstream accounts.pwn logout path). The character is still
 -- in memory and the element still valid here, so death_drop runs with the real position.
 local function combatLogged(player, st, quitReason)
-    if st.dead or not combatlog.countsAsLogout(quitReason) then
+    if st.dead or getElementData(player, "auth.reauthProtection") or not combatlog.countsAsLogout(quitReason) then
         return false
     end
     local window = combatWindowS()
@@ -383,6 +395,9 @@ function modifyStat(player, key, delta)
     if not st or (key ~= "hp" and key ~= "food" and key ~= "bleed") then
         return false
     end
+    if getElementData(player, "auth.reauthProtection") then
+        return st[key]
+    end
     local hi = key == "bleed" and 1 or 100
     st[key] = math.max(0, math.min(hi, st[key] + delta))
     st.dirty = true
@@ -442,7 +457,7 @@ end
 
 function applyWound(player, bleedAdd, hpLoss, killer, cause)
     local st = state.byPlayer[player]
-    if not st or st.dead then
+    if not st or st.dead or getElementData(player, "auth.reauthProtection") then
         return false
     end
     bleedAdd = math.max(0, tonumber(bleedAdd) or 0)
@@ -492,7 +507,7 @@ function wakeUpPlayer(player)
 end
 
 function knockOutPlayer(player, durationMs)
-    if not isElement(player) or isPedDead(player) then
+    if not isElement(player) or isPedDead(player) or getElementData(player, "auth.reauthProtection") then
         return false
     end
     local st = state.byPlayer[player]

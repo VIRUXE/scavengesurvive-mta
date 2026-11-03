@@ -11,6 +11,7 @@ return function(ctx)
     local ACTIVE_POTS = "SELECT id, data FROM items WHERE type_uname = 'PlantPot' AND x IS NOT NULL "
         .. "AND JSON_VALUE(data, '$.pot.active') = 1"
     local REACH = 3.0
+    local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")()
     local M = {}
 
     local function encode(t)
@@ -122,7 +123,9 @@ return function(ctx)
                 c.player,
                 "potInspected",
                 c.player,
-                gardening.status(gardening.pot(decodeData(row.data)))
+                gardening.status(gardening.pot(decodeData(row.data)), function(text)
+                    return lang.textFor(c.player, text)
+                end)
             )
         end, { player = player })
     end, { rate = 5 })

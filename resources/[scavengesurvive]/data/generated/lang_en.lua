@@ -1,5 +1,5 @@
 -- Derived from Southclaws/ScavengeSurvive (MPL-2.0). See THIRD_PARTY_NOTICES.md
--- GENERATED FILE - do not edit; run: python -m tools.convert all
+-- Edited by hand; the language converter is gone
 return {
     ACCLOGIBODY = "#FFFFFFWelcome Back %s#FFFFFF, Please log into to your account below!\n\n#FFFF00Enjoy your stay :)",
     ACCLOGITITL = "Login To Your Account",
@@ -338,7 +338,7 @@ return {
     Money_T = "This item has no use yet",
     MotionSen_T = "Used for crafting",
     MotoHelme_T = "Wear this by pressing [F]",
-    Motor_T = "This item has no use yet",
+    Motor_T = "Hold [F] with this at the back of a constructed defence to install it (needed before a Keypad), also used in crafting",
     Mustard_T = "This item has no use yet",
     NEARBYKEYP = "This door is electronically locked controlled by a nearby keypad.",
     NEEDANOTOOL = "You need another tool",
@@ -452,7 +452,7 @@ return {
     Spas12_T = "Press [R] to reload, press [Y] to holster and hold [N] to remove ammo",
     Spatula_T = "Slap someone with this today!",
     SprayPain_T = "Use this to spray your name on certain walls or blind players temporarily",
-    StarterMo_T = "This item has no use yet",
+    StarterMo_T = "Used for crafting",
     Steak_T = "Cook and eat this for food value",
     StorageUn_T = "Used for crafting",
     StrawHat_T = "Wear this by pressing [F]",

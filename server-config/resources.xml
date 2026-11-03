@@ -17,6 +17,7 @@
     <resource src="loot" startup="1" protected="0"/>
     <resource src="airstream_trailer" startup="1" protected="0"/>
     <resource src="vehicles" startup="1" protected="0"/>
+    <resource src="stove" startup="1" protected="0"/>
     <resource src="crafting" startup="1" protected="0"/>
     <resource src="building" startup="1" protected="0"/>
     <resource src="explosives" startup="1" protected="0"/>

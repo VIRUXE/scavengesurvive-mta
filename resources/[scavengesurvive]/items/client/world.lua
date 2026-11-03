@@ -14,6 +14,7 @@ return function(ctx)
     local gardening = ctx.gardening
     local machines = ctx.machines
     local furniture = ctx.furniture
+    local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")()
     local SIGN_RANGE = 25 -- metres a sign's text can be read from
     local LABEL_RANGE = 4 -- metres an item's name shows from
     local DEFENCE_LABEL_RANGE = 10 -- a built defence's hitpoints, which other walls do not hide
@@ -23,7 +24,7 @@ return function(ctx)
     local reachCache = {} -- id -> { ok, at }: no wall between the player and the item
     local itemElements = setmetatable({}, { __mode = "k" }) -- elements world items draw: never a wall
     local shaders = {} -- tent material key -> shader, or false when its texture could not be read
-    local typeCache = {}
+    local typeCache = {} -- uname -> item type with its names in the local player's language (lang.itemType)
     -- Items riding in a towed walk-in trailer (the vehicles resource lists them in the trailer's "vehicles.cargo"
     -- element data as { id, lx, ly, lz, lrz }: their stored spot in the trailer's frame): id -> { vehicle, lx, ly, lz,
     -- lrz, attached, dz }. Their objects hang on the trailer until the list drops them and their row comes again.
@@ -31,7 +32,7 @@ return function(ctx)
 
     local function itemType(uname)
         if typeCache[uname] == nil then
-            typeCache[uname] = exports.data:itemType(uname) or false
+            typeCache[uname] = lang.itemType(uname) or false
         end
         return typeCache[uname] or nil
     end
@@ -41,7 +42,7 @@ return function(ctx)
     end
 
     local function calibreName(cal)
-        return exports.data:calibreName(cal)
+        return lang.calibreName(cal)
     end
 
     local function defaultAmmo(cal)
@@ -76,7 +77,7 @@ return function(ctx)
             return string.format("%s\n%d/%d", t.name, hp, t.maxHitpoints or 0)
         end
         if isPitchedTent(r) then
-            return "Pitched Tent"
+            return lang.text("Pitched Tent")
         end
         if clothes and r.uname == "Clothes" then
             return clothes.label(clothes.skinFor(r.id, r.data))
@@ -111,6 +112,16 @@ return function(ctx)
         end
         return t and t.name or r.uname
     end
+
+    -- /lang: the labels already made are rebuilt in the new language
+    lang.onChange(function()
+        typeCache = {}
+        for _, e in pairs(objects) do
+            if e.row then
+                e.name = formatName(itemType(e.row.uname), e.row)
+            end
+        end
+    end)
 
     -- every element an item draws with: the object or tent parts, and its fires, plant, smoke, shown item, cover
     local function elementsOf(e)

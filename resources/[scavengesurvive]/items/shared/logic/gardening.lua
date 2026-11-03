@@ -3,6 +3,14 @@
 -- Pure rules; the server applies them to the item rows, the client draws the plant.
 local M = {}
 
+-- M.tr(text): a label word in the reader's language; the client sets it to lib lang.text, identity elsewhere
+M.tr = function(s)
+    return s
+end
+local function tr(s)
+    return M.tr(s)
+end
+
 -- upstream DefineSeedType in init.pwn's order (the bag's kind is 1-based here): the crop item, the growth steps,
 -- the grown plant's model and how far above the pot it stands. "Unknown" kinds grow a bush and no crop.
 M.SEEDS = {
@@ -68,9 +76,9 @@ end
 function M.seedLabel(name, seeds)
     local kind = seeds and M.SEEDS[seeds.kind]
     if seeds and seeds.amount > 0 and kind then
-        return string.format("%s (%d, %s)", name, seeds.amount, kind.name)
+        return string.format("%s (%d, %s)", name, seeds.amount, tr(kind.name))
     end
-    return name .. " (Empty)"
+    return name .. " (" .. tr("Empty") .. ")"
 end
 
 -- a pot's state from its data: { active, kind, water, growth }
@@ -166,17 +174,23 @@ function M.plantObject(pot)
     return nil
 end
 
--- upstream's status dialog lines
-function M.status(pot)
+-- upstream's status dialog lines; trFor translates for the reader (the server passes the player's), else M.tr
+-- lang:begin
+local STATUS = "Active: %s\nSeed type: %s\nWater: %d\nGrowth: %d/%d"
+local YES, NO = "yes", "no"
+-- lang:end
+function M.status(pot, trFor)
+    local t = trFor or tr
     local kind = M.SEEDS[pot.kind]
-    return string.format(
-        "Active: %s\nSeed type: %s\nWater: %d\nGrowth: %d/%d",
-        pot.active and "yes" or "no",
-        kind and kind.name or "-",
+    local args = {
+        pot.active and t(YES) or t(NO),
+        kind and t(kind.name) or "-",
         pot.water,
         pot.growth,
-        kind and kind.grows or 0
-    )
+        kind and kind.grows or 0,
+    }
+    local ok, out = pcall(string.format, t(STATUS), unpack(args))
+    return ok and out or string.format(STATUS, unpack(args))
 end
 
 return M

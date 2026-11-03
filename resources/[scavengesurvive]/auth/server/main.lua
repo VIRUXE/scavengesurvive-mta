@@ -21,6 +21,12 @@ local blocked = {} -- player -> true once a ban (or the whitelist) kicked them
 local promptMode = {} -- player -> "language" | "login" | "register" while a dialog is up
 local promptLang = {} -- player -> language of the dialog texts (the account's, "en" for a new name)
 local chosenLang = {} -- player -> code picked in the language window, saved on the account once they are in
+-- The account's language on the player element, synced to that player's own client only: clients show item names
+-- and other display names in it (lib's lang module reads it).
+local LANG_KEY = "auth.lang"
+-- Server-only state on the existing connection: survives resource reloads, disappears on disconnect.
+local SESSION_KEY = "auth.session"
+local resumedCountdowns = {} -- player -> original whitelist deadline
 local whitelistEnabled = false
 local whitelistAuto = false
 local autoIpLogin = false
@@ -30,8 +36,30 @@ local accounts
 local finish -- defined after prompt, which calls it for an auto-login
 local warnedNoDb = false
 
+-- Clear protection left by the previous auth version during the first upgrade to session restoration.
+local REAUTH_KEY = "auth.reauthProtection"
+local function finishReauth(player)
+    local previous = getElementData(player, REAUTH_KEY)
+    if type(previous) == "table" then
+        local staff = getResourceFromName("staff")
+        local staffFrozen = staff and getResourceState(staff) == "running" and exports.staff:isFrozen(player)
+        setElementFrozen(player, previous.frozen == true or staffFrozen == true)
+        setElementData(player, REAUTH_KEY, false, "broadcast", "deny")
+    end
+end
+
+local function saveSession(player)
+    local account = session[player]
+    if account and not blocked[player] then
+        local cd = countdown[player]
+        local ends = cd and cd.ends or resumedCountdowns[player]
+        setElementData(player, SESSION_KEY, { account = account, whitelistEnds = ends }, "local", "deny")
+    end
+end
+
 local function kickLater(player, reason)
     blocked[player] = true
+    setElementData(player, SESSION_KEY, { kickReason = reason }, "local", "deny")
     setTimer(function(p, r)
         if isElement(p) then
             kickPlayer(p, r)
@@ -45,6 +73,7 @@ end
 
 -- Whitelist countdown (upstream whitelist.pwn): one timer per player, the client counts the seconds down itself.
 local function stopCountdown(player, quiet)
+    resumedCountdowns[player] = nil
     local cd = countdown[player]
     if not cd then
         return
@@ -63,6 +92,9 @@ local function startCountdown(player)
     if countdown[player] or not account or account.adminLevel > 0 then
         return
     end
+    local ends = resumedCountdowns[player] or (getTickCount() + whitelistKickS * 1000)
+    resumedCountdowns[player] = nil
+    local remaining = math.max(50, ends - getTickCount())
     local timer = setTimer(function()
         countdown[player] = nil
         if not isElement(player) or not whitelistEnabled then
@@ -72,9 +104,9 @@ local function startCountdown(player)
         outputChatBox(t(player, "WHITELISTNO"), player, 255, 255, 0, true)
         util.log("auth", "info", "%s kicked: not whitelisted after the countdown", account.name)
         kickLater(player, "Not in whitelist")
-    end, whitelistKickS * 1000, 1)
-    countdown[player] = { timer = timer, ends = getTickCount() + whitelistKickS * 1000 }
-    triggerClientEvent(player, "whitelistCountdownChanged", player, whitelistKickS)
+    end, remaining, 1)
+    countdown[player] = { timer = timer, ends = ends }
+    triggerClientEvent(player, "whitelistCountdownChanged", player, math.ceil(remaining / 1000))
 end
 
 -- The whitelist just turned on: every logged-in player who is neither staff nor listed starts a countdown.
@@ -171,6 +203,22 @@ local function checkBan(player)
 end
 
 addEventHandler("onResourceStart", resourceRoot, function()
+    -- Restore trusted sessions synchronously, before client readiness can cause a login prompt.
+    -- Do not call admit: these connections are already admitted and their characters are still loaded.
+    for _, p in ipairs(getElementsByType("player")) do
+        local saved = getElementData(p, SESSION_KEY)
+        if type(saved) == "table" and type(saved.kickReason) == "string" then
+            kickLater(p, saved.kickReason)
+        elseif type(saved) == "table" and type(saved.account) == "table" and type(saved.account.id) == "number" then
+            session[p] = saved.account
+            promptLang[p] = saved.account.lang or "en"
+            resumedCountdowns[p] = tonumber(saved.whitelistEnds)
+            setElementData(p, LANG_KEY, saved.account.lang or "en", "local", "deny")
+            finishReauth(p)
+        else
+            setElementData(p, SESSION_KEY, false, "local", "deny")
+        end
+    end
     if not db.connect("auth") then
         return
     end
@@ -196,10 +244,22 @@ addEventHandler("onResourceStart", resourceRoot, function()
         autoIpLogin = access.whitelistEnabledFromSetting(map["player.auto_ip_login"])
         whitelistKickS = access.whitelistKickSeconds(map["server.whitelist_kick_s"])
         applyAutoWhitelist()
+        if whitelistEnabled then
+            startCountdowns()
+        end
     end)
 end)
 
+addEventHandler("onResourceStop", resourceRoot, function()
+    for p in pairs(session) do
+        if isElement(p) then
+            saveSession(p)
+        end
+    end
+end)
+
 addEventHandler("onPlayerJoin", root, function()
+    setElementData(source, SESSION_KEY, false, "local", "deny")
     checkBan(source)
 end)
 
@@ -308,6 +368,8 @@ local function admit(player, account, isNew)
         db.exec("UPDATE accounts SET lang = ? WHERE id = ?", { account.lang, account.id })
     end
     session[player] = account
+    saveSession(player)
+    setElementData(player, LANG_KEY, account.lang or "en", "local", "deny")
     promptMode[player] = nil
     applyAutoWhitelist(nil, player)
     local sql = "INSERT INTO connection_log (account_id, name, serial, ip) VALUES (?, ?, ?, ?)"
@@ -316,6 +378,7 @@ local function admit(player, account, isNew)
         triggerClientEvent(player, "authWelcomeShown", player)
     end
     triggerEvent("playerAuthenticated", player, account.id)
+    finishReauth(player)
     util.log("auth", "info", "%s authenticated as account %d", account.name, account.id)
 end
 
@@ -400,6 +463,7 @@ end, { rate = 2 })
 
 addEventHandler("onPlayerQuit", root, function(reason)
     local account = session[source]
+    setElementData(source, SESSION_KEY, false, "local", "deny")
     if account then
         -- the quit reason travels with the event: character decides whether a leaving player combat-logged
         triggerEvent("playerLoggedOut", source, account.id, reason)
@@ -441,6 +505,7 @@ addCommandHandler("lang", function(player, _, code)
     end
     account.lang = code
     account.langChosen = true
+    setElementData(player, LANG_KEY, code, "local", "deny")
     db.exec("UPDATE accounts SET lang = ? WHERE id = ?", { code, account.id })
     outputChatBox(string.format(" >  Language set to %s.", code), player, 255, 255, 0)
     util.log("auth", "info", "%s set language %s", account.name, code)

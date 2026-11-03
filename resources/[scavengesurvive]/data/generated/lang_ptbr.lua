@@ -1,5 +1,5 @@
 -- Derived from Southclaws/ScavengeSurvive (MPL-2.0). See THIRD_PARTY_NOTICES.md
--- GENERATED FILE - do not edit; run: python -m tools.convert all
+-- Edited by hand; the language converter is gone
 return {
     ACCLOGIBODY = "#FFFFFFBem-vindo de volta %s#FFFFFF, faça login na sua conta abaixo!\n\n#FFFF00Aproveite sua estadia :)",
     ACCLOGITITL = "Entrar na Sua Conta",
@@ -338,7 +338,7 @@ return {
     Money_T = "Esse item ainda não tem uso",
     MotionSen_T = "Usado para crafting",
     MotoHelme_T = "Use-o pressionando [F]",
-    Motor_T = "Esse item ainda não tem uso",
+    Motor_T = "Segure [F] com isto atrás de uma defesa construída para instalá-lo (necessário antes de um Keypad), também usado para craftar",
     Mustard_T = "Este item ainda não tem utilidade",
     NEARBYKEYP = "Essa porta está eletronicamente trancada e controlada por um keypad próximo.",
     NEEDANOTOOL = "Você precisa de outra ferramenta",
@@ -452,7 +452,7 @@ return {
     Spas12_T = "Pressione [R] para recarregar, pressione [Y] para usá-la no coldre e segure [N] para remover munição",
     Spatula_T = "Bata em alguém com isto hoje!",
     SprayPain_T = "Use isso para pichar seu nome em certas paredes ou para cegar jogadores temporariamente.",
-    StarterMo_T = "Esse item ainda não tem uso",
+    StarterMo_T = "Usado para craftar",
     Steak_T = "Cozinhe e coma isto para obter valor alimentar",
     StorageUn_T = "Usado para craftar",
     StrawHat_T = "Use isto pressionando [F]",

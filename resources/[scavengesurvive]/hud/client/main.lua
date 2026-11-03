@@ -79,6 +79,7 @@ local voiceClient = loadFile("client/voice.lua", "=hud/voice.lua")({
 local SKILL_NOTICE_MS = 5000
 local GREEN = tocolor(0, 255, 0, 255) -- upstream skl_PlayerNotification colour 16711935 (0x00FF00FF)
 local typeCache, vehicleTypeCache = {}, {}
+local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")()
 
 local function itemType(uname)
     if typeCache[uname] == nil then
@@ -163,7 +164,7 @@ end)
 
 -- upstream skills.pwn: "+<skill>" at 320,430 for five seconds; a skill named after an item type shows its name
 addEventHandler("skillGained", root, function(name)
-    local t = itemType(name)
+    local t = lang.itemType(name)
     state.skillNotice = { text = "+" .. (t and t.name or tostring(name)), untilTick = getTickCount() + SKILL_NOTICE_MS }
 end)
 

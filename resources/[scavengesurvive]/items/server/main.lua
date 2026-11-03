@@ -1,6 +1,7 @@
 local db = loadstring(exports.lib:getModule("db"), "=lib/db.lua")()
 local net = loadstring(exports.lib:getModule("net"), "=lib/net.lua")()
 local util = loadstring(exports.lib:getModule("util"), "=lib/util.lua")()
+local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")()
 local function loadFile(path)
     local f = fileOpen(path, true)
     local src = fileRead(f, fileGetSize(f))
@@ -383,7 +384,9 @@ end)
 
 -- Help tips (upstream ui/tool-tip.pwn): an item picked up shows its "<first 9 letters of the uname>_T" text for
 -- 20 s with upstream's English footer; dropping one hides it. Types without a text show nothing.
+-- lang:begin
 local TIP_FOOTER = "Type /tooltips to toggle these messages"
+-- lang:end
 
 addEventHandler("itemMoved", root, function(_, from, to)
     local item = state.held[source]
@@ -399,7 +402,7 @@ addEventHandler("itemMoved", root, function(_, from, to)
         local key = item.uname:sub(1, 9) .. "_T"
         local text = exports.data:t(exports.auth:getLanguage(source), key)
         if text ~= key then
-            exports.ui:showTip(source, text, TIP_FOOTER, 20000)
+            exports.ui:showTip(source, text, lang.textFor(source, TIP_FOOTER), 20000)
         end
     elseif from == "held" and (to == "world" or to == "parachute") then
         exports.ui:hideTip(source)

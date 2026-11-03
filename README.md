@@ -96,7 +96,7 @@ stylua --check resources
 | `docs/adr/` | Architecture decisions (0001: scarcity-driven respawn, accepted and implemented in #67) |
 | `docs/reviews/` | Review and live-check records with what was found and fixed |
 | `docs/mvp-smoke-checklist.md` | The playtest checklist, extended as features land |
-| `docs/maps-census.md` | Generated: every upstream map object classified vanilla / SA-MP-only |
+| `docs/maps-census.md` | Snapshot: every upstream map object classified vanilla / SA-MP-only |
 | `docs/ui-reference-samp.md` | Every SA-MP UI element with upstream geometry, footage evidence and its MTA recipe; gap list vs the current resources |
 | `docs/languages-qa.md` | Generated per-language coverage: missing keys, untranslated values, placeholder mismatches; `/lang <code>` picks a language |
 | `docs/staff-commands.md` | Staff levels, every command, upstream rules kept and deviations |

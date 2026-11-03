@@ -11,6 +11,8 @@ return function(ctx)
     local gardening = ctx and ctx.gardening -- shared/logic/gardening.lua: what a bag of Seeds holds
     local liquids = ctx and ctx.liquids -- shared/logic/liquids.lua: "(Water 0.4/0.50)" on liquid containers
     local gas = ctx and ctx.gas -- shared/logic/gas.lua: "(6.3/11 kg)" on a Gas Bottle
+    local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")() -- names in the player's language
+    -- lang:begin
     local MESSAGES = {
         HANDS_FULL = "You are already holding an item",
         LIQUID_EMPTY = "It is empty",
@@ -125,9 +127,9 @@ return function(ctx)
         REFUELLED = "Refuelled",
         REPAIRED = "Vehicle repaired",
         PART_NOT_HERE = "Stand by that part of an unlocked, parked vehicle with its engine off",
-        PART_SLOT_TAKEN = "There is a part there already. Take it off with a Wrench first",
+        PART_SLOT_TAKEN = "There is a part there already. Take it off with a Tyre Wrench first",
         PART_MISSING = "There is no part left there to take off",
-        PART_WRENCH = "Hold a Wrench to take a body part off",
+        PART_WRENCH = "Hold a Tyre Wrench to take a body part off",
         PART_REMOVED = "Body part taken off",
         PART_INSTALLED = "Body part fitted loosely, tighten it with a Wrench or it will shake off",
         PART_SECURED = "Body part tightened",
@@ -195,6 +197,18 @@ return function(ctx)
         ITEMTWKBLOC = "You are blocking an item from being built, please stand back",
         PLOTPOLEEXT = "Leaving claimed territory",
     }
+    -- lang:end
+    -- the gear tiles' titles (upstream's captions)
+    -- lang:begin
+    local SLOT_NAMES = {
+        hat = "HEAD",
+        mask = "FACE",
+        held = "HAND",
+        holster = "HOLSTER",
+        armour = "TORSO",
+        bag = "BACK",
+    }
+    -- lang:end
     local view = "inventory" -- which dialog is up: "inventory", "bag" or "trunk"
     local last = nil -- the last payload, re-rendered when the view switches
     local charStats = { hp = 100, food = 100, bleed = 0, wounds = 0 }
@@ -225,17 +239,17 @@ return function(ctx)
             ground, passes = code:match("^GRIND_PASS:(%d+):(%d+)$")
         end
         local charge = type(code) == "string" and code:match("^BATTERY_LEVEL:(%d+)$")
-        local msg = charge and string.format("Car Battery: %d%%", tonumber(charge) or 0)
-            or n and string.format("Transferred %d rounds", tonumber(n) or 0)
-            or dist and string.format("Distance: %.3f", tonumber(dist) or 0) -- upstream DISTANCEVAL
-            or ground and string.format("Grinding: %s of %s passes cut", ground, passes)
-            or MESSAGES[code]
+        local msg = charge and lang.format("Car Battery: %d%%", tonumber(charge) or 0)
+            or n and lang.format("Transferred %d rounds", tonumber(n) or 0)
+            or dist and lang.format("Distance: %.3f", tonumber(dist) or 0) -- upstream DISTANCEVAL
+            or ground and lang.format("Grinding: %s of %s passes cut", ground, passes)
+            or MESSAGES[code] and lang.text(MESSAGES[code])
             or tostring(code)
         exports.ui:actionTextShow(msg, 3000)
     end)
 
     local function itemType(uname)
-        return exports.data:itemType(uname)
+        return lang.itemType(uname)
     end
 
     local function vehicleTypeByModel(model)
@@ -243,7 +257,7 @@ return function(ctx)
     end
 
     local function calibreName(cal)
-        return exports.data:calibreName(cal)
+        return lang.calibreName(cal)
     end
 
     local function defaultAmmo(cal)
@@ -289,9 +303,9 @@ return function(ctx)
         local rows = {}
         for _, it in ipairs(list or {}) do
             local t = itemType(it.uname)
-            local actions = { { id = "take", label = "Equip" }, { id = "use", label = "Use" } }
+            local actions = { { id = "take", label = lang.text("Equip") }, { id = "use", label = lang.text("Use") } }
             if (apparel and apparel.isWearable(it.uname)) or it.uname == "Clothes" then
-                actions[#actions + 1] = { id = "wear", label = "Wear" }
+                actions[#actions + 1] = { id = "wear", label = lang.text("Wear") }
             end
             if moveActions then
                 if moveActions.id then
@@ -303,7 +317,7 @@ return function(ctx)
                 end
             end
             if last and last.held then
-                actions[#actions + 1] = { id = "combine", label = "Combine" }
+                actions[#actions + 1] = { id = "combine", label = lang.text("Combine") }
             end
             rows[#rows + 1] = {
                 id = it.id,
@@ -311,11 +325,11 @@ return function(ctx)
                 actions = actions,
             }
         end
-        local emptyRow = { label = "<Empty>", empty = true }
+        local emptyRow = { label = lang.text("<Empty>"), empty = true }
         if emptyAction then
             emptyRow = {
                 id = emptyAction.id,
-                label = "<Empty>",
+                label = lang.text("<Empty>"),
                 actions = { emptyAction },
             }
         end
@@ -328,54 +342,62 @@ return function(ctx)
     local function bagName(p)
         local uname = p.capacity and p.capacity.bag and p.capacity.bag.uname
         local t = uname and itemType(uname)
-        return t and t.name or "Bag"
+        return t and t.name or lang.text("Bag")
     end
 
     local function open(p)
         local title, rows
         local bname = bagName(p)
-        local tname = p.capacity and p.capacity.trunk and p.capacity.trunk.uname or "Trunk"
+        local tname = p.capacity and p.capacity.trunk and p.capacity.trunk.uname or lang.text("Trunk")
         if view == "trunk" and p.trunk then
             title = string.format("%s (%d/%d)", tname, p.capacity.trunk.used, p.capacity.trunk.size)
-            local moveActions = { { id = "move:inventory", label = "Move to Inventory" } }
+            local moveActions = { { id = "move:inventory", label = lang.text("Move to Inventory") } }
             if p.bag then
-                moveActions[#moveActions + 1] = { id = "move:bag", label = "Move to " .. bname }
+                moveActions[#moveActions + 1] = { id = "move:bag", label = lang.format("Move to %s", bname) }
             end
-            local emptyAction = last and last.held and { id = "put_held:trunk", label = "Store in " .. tname } or nil
+            local emptyAction = last
+                    and last.held
+                    and { id = "put_held:trunk", label = lang.format("Store in %s", tname) }
+                or nil
             rows = rowsFor(p.trunk, p.capacity.trunk, moveActions, emptyAction)
-            rows[#rows + 1] = { id = "nav:inventory", label = "My Inventory >" }
+            rows[#rows + 1] = { id = "nav:inventory", label = lang.text("My Inventory") .. " >" }
             if p.bag then
                 rows[#rows + 1] = { id = "nav:bag", label = bname .. " >" }
             end
             if p.containerWorldItemId and #p.trunk == 0 then
                 rows[#rows + 1] = {
                     id = "action:pickup_container:" .. tostring(p.containerWorldItemId),
-                    label = "[Pick up container]",
+                    label = "[" .. lang.text("Pick up container") .. "]",
                 }
             end
         elseif view == "bag" and p.bag then
             title = string.format("%s (%d/%d)", bname, p.capacity.bag.used, p.capacity.bag.size)
-            local moveActions = { { id = "move:inventory", label = "Move to Inventory" } }
+            local moveActions = { { id = "move:inventory", label = lang.text("Move to Inventory") } }
             if p.trunk then
-                moveActions[#moveActions + 1] = { id = "move:trunk", label = "Move to " .. tname }
+                moveActions[#moveActions + 1] = { id = "move:trunk", label = lang.format("Move to %s", tname) }
             end
-            local emptyAction = last and last.held and { id = "put_held:bag", label = "Store in " .. bname } or nil
+            local emptyAction = last
+                    and last.held
+                    and { id = "put_held:bag", label = lang.format("Store in %s", bname) }
+                or nil
             rows = rowsFor(p.bag, p.capacity.bag, moveActions, emptyAction)
-            rows[#rows + 1] = { id = "nav:inventory", label = "My Inventory >" }
+            rows[#rows + 1] = { id = "nav:inventory", label = lang.text("My Inventory") .. " >" }
             if p.trunk then
                 rows[#rows + 1] = { id = "nav:trunk", label = tname .. " >" }
             end
         else
             view = "inventory"
-            title = string.format("Inventory (%d/%d)", p.capacity.inv.used, p.capacity.inv.size)
+            title = lang.format("Inventory (%d/%d)", p.capacity.inv.used, p.capacity.inv.size)
             local moveActions = {}
             if p.bag then
-                moveActions[#moveActions + 1] = { id = "move:bag", label = "Move to " .. bname }
+                moveActions[#moveActions + 1] = { id = "move:bag", label = lang.format("Move to %s", bname) }
             end
             if p.trunk then
-                moveActions[#moveActions + 1] = { id = "move:trunk", label = "Move to " .. tname }
+                moveActions[#moveActions + 1] = { id = "move:trunk", label = lang.format("Move to %s", tname) }
             end
-            local emptyAction = last and last.held and { id = "put_held:inventory", label = "Store in Inventory" }
+            local emptyAction = last
+                    and last.held
+                    and { id = "put_held:inventory", label = lang.text("Store in Inventory") }
                 or nil
             rows = rowsFor(p.inventory, p.capacity.inv, #moveActions > 0 and moveActions or nil, emptyAction)
             if p.bag then
@@ -385,8 +407,8 @@ return function(ctx)
                 rows[#rows + 1] = { id = "nav:trunk", label = tname .. " >" }
             end
             -- upstream's extra list items (AddInventoryListItem): radio.pwn adds "Radio", skills.pwn "Skills"
-            rows[#rows + 1] = { id = "extra:radio", label = "Radio" }
-            rows[#rows + 1] = { id = "extra:skills", label = "Skills" }
+            rows[#rows + 1] = { id = "extra:radio", label = lang.text("Radio") }
+            rows[#rows + 1] = { id = "extra:skills", label = lang.text("Skills") }
         end
         exports.ui:listOpen("inventory", title, rows)
     end
@@ -478,12 +500,12 @@ return function(ctx)
     local function gearSlots()
         local gear = last.gear or {}
         return {
-            { id = "hat", name = "HEAD", item = gear.hat, col = 0, row = 0 },
-            { id = "mask", name = "FACE", item = gear.mask, col = 1, row = 0 },
-            { id = "held", name = "HAND", item = last.held, col = 0, row = 1 },
-            { id = "holster", name = "HOLSTER", item = gear.holster, col = 1, row = 1 },
-            { id = "armour", name = "TORSO", item = gear.armour, col = 0, row = 2 },
-            { id = "bag", name = "BACK", item = last.capacity and last.capacity.bag, col = 1, row = 2 },
+            { id = "hat", name = SLOT_NAMES.hat, item = gear.hat, col = 0, row = 0 },
+            { id = "mask", name = SLOT_NAMES.mask, item = gear.mask, col = 1, row = 0 },
+            { id = "held", name = SLOT_NAMES.held, item = last.held, col = 0, row = 1 },
+            { id = "holster", name = SLOT_NAMES.holster, item = gear.holster, col = 1, row = 1 },
+            { id = "armour", name = SLOT_NAMES.armour, item = gear.armour, col = 0, row = 2 },
+            { id = "bag", name = SLOT_NAMES.bag, item = last.capacity and last.capacity.bag, col = 1, row = 2 },
         }
     end
 
@@ -494,7 +516,7 @@ return function(ctx)
     -- upstream caption: the item name in capitals, "<EMPTY>", the hand slot as "(size) NAME" with weapon state
     local function tileCaption(sl)
         if not sl.item then
-            return "<EMPTY>"
+            return string.upper(lang.text("<Empty>"))
         end
         local t = itemType(sl.item.uname)
         local name = t and t.name or sl.item.uname
@@ -513,15 +535,17 @@ return function(ctx)
         local extra = {}
         local infection = type(charStats.infection) == "table" and charStats.infection or {}
         if infection.food then
-            extra[#extra + 1] = { "Food Infect", tocolor(255, 0, 0, 255) }
+            extra[#extra + 1] = { lang.text("Food Infect"), tocolor(255, 0, 0, 255) }
         end
         if infection.wound then
-            extra[#extra + 1] = { "Wound Infect", tocolor(255, 0, 0, 255) }
+            extra[#extra + 1] = { lang.text("Wound Infect"), tocolor(255, 0, 0, 255) }
         end
         local drugs = type(charStats.drugs) == "table" and charStats.drugs or {}
+        -- lang:begin
         for _, name in ipairs({ "Antibiotic", "Painkill", "Lsd", "Air", "Morphine", "Adrenaline", "Heroin" }) do
+            -- lang:end
             if drugs[name] then
-                extra[#extra + 1] = { name, tocolor(255, 255, 0, 255) }
+                extra[#extra + 1] = { lang.text(name), tocolor(255, 255, 0, 255) }
             end
         end
         -- seven body parts, bleed and hunger, the status rows and the footer: the panel grows past its usual
@@ -531,7 +555,7 @@ return function(ctx)
         drawPanel(px, py, pw, ph)
         dxDrawRectangle(px, py, pw, 18 * s, tocolor(50, 50, 50, 255))
         dxDrawText(
-            "Health Status",
+            lang.text("Health Status"),
             px,
             py,
             px + pw,
@@ -546,6 +570,7 @@ return function(ctx)
         local wounds = charStats.wounds or 0
         local bleed = charStats.bleed or 0
         local food = charStats.food or 100
+        -- lang:begin
         local parts = {
             { name = "Head", count = (lastHitPart == 9 and 1 or 0) },
             { name = "Torso", count = (lastHitPart == 3 and wounds or 0) },
@@ -555,6 +580,7 @@ return function(ctx)
             { name = "Leg R", count = (lastHitPart == 8 and 1 or 0) },
             { name = "Leg L", count = (lastHitPart == 7 and 1 or 0) },
         }
+        -- lang:end
         if wounds > 0 and lastHitPart == nil then
             parts[2].count = wounds
         end
@@ -563,7 +589,7 @@ return function(ctx)
         for i, pt in ipairs(parts) do
             local col = pt.count > 0 and tocolor(255, 60, 60, 255) or tocolor(220, 220, 220, 255)
             dxDrawText(
-                string.format("%s: %d", pt.name, pt.count),
+                string.format("%s: %d", lang.text(pt.name), pt.count),
                 px + 8 * s,
                 startY + (i - 1) * lineH,
                 px + pw,
@@ -576,13 +602,14 @@ return function(ctx)
 
         local statusY = startY + #parts * lineH + 4 * s
         -- bleed is only ever dealt with to two decimals: what reads 0.00 is green
-        local bleedText = string.format("Bleed: %.2f", bleed)
-        local bleedCol = bleedText ~= "Bleed: 0.00" and tocolor(255, 60, 60, 255) or tocolor(50, 220, 50, 255)
+        local bleedText = lang.format("Bleed: %.2f", bleed)
+        local bleeding = string.format("%.2f", bleed) ~= "0.00"
+        local bleedCol = bleeding and tocolor(255, 60, 60, 255) or tocolor(50, 220, 50, 255)
         dxDrawText(bleedText, px + 8 * s, statusY, px + pw, statusY + lineH, bleedCol, 0.85 * s, "default-bold")
         local foodCol = food < 20 and tocolor(255, 60, 60, 255)
             or (food < 50 and tocolor(255, 200, 50, 255) or tocolor(50, 220, 50, 255))
         dxDrawText(
-            string.format("Hunger: %d%%", math.floor(food)),
+            lang.format("Hunger: %d%%", math.floor(food)),
             px + 8 * s,
             statusY + lineH,
             px + pw,
@@ -600,7 +627,7 @@ return function(ctx)
         dxDrawRectangle(px, footerY, pw, 18 * s, tocolor(50, 50, 50, 255))
         local koChance = math.min(100, (wounds + 1) * 0.2 * ((bleed * 50) + 1) * 10)
         dxDrawText(
-            string.format("%.1f%% Unconscious", koChance),
+            lang.format("%.1f%% Unconscious", koChance),
             px,
             footerY,
             px + pw,
@@ -631,7 +658,8 @@ return function(ctx)
             local tx, ty, tw, th = tileRect(L, sl)
             drawTileFrame(tx, ty, tw, th)
             dxDrawRectangle(tx, ty, tw, L.titleH, tocolor(70, 70, 70, 255))
-            dxDrawText(sl.name, tx, ty, tx + tw, ty + L.titleH, white, 0.85 * s, "default-bold", "center", "center")
+            local slotName = lang.text(sl.name)
+            dxDrawText(slotName, tx, ty, tx + tw, ty + L.titleH, white, 0.85 * s, "default-bold", "center", "center")
             local t = sl.item and itemType(sl.item.uname)
             if t and preview and models then
                 local area = preview.logic.area(tx, ty, tw, th, L.titleH)

@@ -141,8 +141,9 @@ GTA models a skull patch under each hat, textured with a smear of the face, and 
 top, and only faces whose UV centre falls in those cells are kept. Read the cells off a sheet of the textures with
 the grid drawn. Ped meshes are wound every which way, and MTA culls a worn object on the opposite side from a
 free-standing one. So the exporter recalculates normals and writes every face twice with reversed winding, a
-double-sided shell, which is solid worn and alone. Then run `python -m tools.convert items loot` for the item types
-(generic, size 1, `roty` 270 so the X-up mesh stands on the ground) and the loot rows. Apply the seed and restart
+double-sided shell, which is solid worn and alone. Then add the item types by hand
+(generic, size 1, `roty` 270 so the X-up mesh stands on the ground) and their loot rows to
+`data/generated/item_types.lua`, `data/generated/loot_tables.lua` and `sql/seed/`, and to the live DB. Restart
 `hat_models`, `data` and `items`. `items/shared/logic/apparel.lua` lists the unames in `CUT_HATS`, worn on SA-MP bone 2.
 Per-skin fit lives in `CUT_HAT_FIT`, borrowed along the `skins.lua` chain: skin 283 is the zero row, skin 93 is
 scale 1.1 at zero offset. Add a `CUT_HAT_FIT` row for a skin that needs one, not an `OVERRIDES` row. Judge each

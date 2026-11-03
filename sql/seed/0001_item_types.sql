@@ -294,7 +294,7 @@ INSERT INTO item_types (uname,name,model,size,max_hitpoints,category,category_da
 ('SmallTable','Small Table',2346,10,10,'generic',NULL),
 ('SniperRifle','Sniper',358,5,5,'weapon','{"animSet": null, "baseWeapon": 34, "calibre": "357", "flags": 0, "magSize": 5, "maxReserveMags": 1, "melee": false, "muzzleVelocity": 864.0}'),
 ('Spade','Spade',337,3,3,'weapon','{"animSet": null, "baseWeapon": 6, "calibre": null, "flags": 0, "magSize": 40, "maxReserveMags": 0, "melee": false, "muzzleVelocity": 0.21}'),
-('Spanner','Wrench',19627,1,1,'generic',NULL),
+('Spanner','Spanner',19627,1,1,'generic',NULL),
 ('Spas12','Spas 12',351,4,4,'weapon','{"animSet": null, "baseWeapon": 27, "calibre": "12g", "flags": 0, "magSize": 6, "maxReserveMags": 1, "melee": false, "muzzleVelocity": 480.0}'),
 ('Spatula','Spatula',19586,1,1,'weapon','{"animSet": "Blunt", "baseWeapon": 0, "bleed": 0.001, "knockout": 0.0, "melee": true}'),
 ('SprayPaint','Spray Paint',365,1,1,'weapon','{"animSet": null, "baseWeapon": 41, "calibre": null, "flags": 2, "magSize": 100, "maxReserveMags": 0, "melee": false, "muzzleVelocity": 0.0}'),
@@ -344,7 +344,7 @@ INSERT INTO item_types (uname,name,model,size,max_hitpoints,category,category_da
 ('WoodenCrate','Wooden Crate',20406,6,6,'safebox','{"fill": "crate", "size": 10}'),
 ('Workbench','Workbench',936,12,12,'safebox','{"size": 16}'),
 ('WrappedMeat','Wrapped Meat',19560,1,1,'food','{"biteValue": 6.7, "canCook": true, "canRawInfect": true, "destroyOnEnd": true, "maxBites": 4}'),
-('Wrench','Wrench',18633,2,2,'weapon','{"animSet": "Blunt", "baseWeapon": 0, "bleed": 0.01, "knockout": 1.2, "melee": true}'),
+('Wrench','Tyre Wrench',18633,2,2,'weapon','{"animSet": "Blunt", "baseWeapon": 0, "bleed": 0.01, "knockout": 1.2, "melee": true}'),
 ('XmasHat','Christmas Hat',19066,1,1,'generic',NULL),
 ('ZorroMask','Zorro Mask',18974,1,1,'generic',NULL)
 ON DUPLICATE KEY UPDATE name=VALUES(name), model=VALUES(model), size=VALUES(size), max_hitpoints=VALUES(max_hitpoints), category=VALUES(category), category_data=VALUES(category_data);

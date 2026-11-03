@@ -53,4 +53,4 @@ them so far).
 ## Giving another vehicle armour
 
 `carmour_geometry.py` and `carmour_place.lua` know one model (`geo.model`). A second vehicle needs its shell exported
-and the geometry keyed by model; its door rules only apply to a walk-in door (`door = true` in `tools/convert/vspawn.py`).
+and the geometry keyed by model; its door rules only apply to a walk-in door (`door = true` on the vehicle type in `data/generated/vehicle_types.lua`).

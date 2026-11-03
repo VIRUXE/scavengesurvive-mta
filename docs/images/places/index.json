@@ -5,7 +5,20 @@
    1045.0,
    19.7
   ],
+  "camera": {
+   "azimuth": 60,
+   "distance": 24,
+   "elevation": 12,
+   "ground": true,
+   "lens": 35,
+   "look_at": [
+    -230.0,
+    1042.0,
+    1.2
+   ]
+  },
   "caption": "The towable Airstream on the Fort Carson road",
+  "engine": "cycles",
   "file": "airstream-road.png",
   "light": "golden"
  },
@@ -15,7 +28,19 @@
    1812.0,
    19.0
   ],
+  "camera": {
+   "azimuth": -60,
+   "distance": 55,
+   "elevation": 12,
+   "lens": 35,
+   "look_at": [
+    212.0,
+    1818.0,
+    19.0
+   ]
+  },
   "caption": "The gate of Area 69",
+  "engine": "cycles",
   "file": "area69-gate.png",
   "light": "day"
  },
@@ -25,7 +50,20 @@
    -2208.0,
    35.0
   ],
+  "camera": {
+   "azimuth": -28,
+   "distance": 16,
+   "elevation": 9,
+   "ground": true,
+   "lens": 32,
+   "look_at": [
+    -1612.0,
+    -2208.0,
+    1.0
+   ]
+  },
   "caption": "A camp in a Flint County forest clearing at dusk",
+  "engine": "cycles",
   "file": "camp.png",
   "light": "dusk"
  },
@@ -35,7 +73,19 @@
    -1646.64,
    483.43
   ],
+  "camera": {
+   "azimuth": -150,
+   "distance": 45,
+   "elevation": 20,
+   "lens": 32,
+   "look_at": [
+    -2316.0,
+    -1646.0,
+    485.0
+   ]
+  },
   "caption": "The Mount Chiliad summit station with the battery and fusebox puzzle",
+  "engine": "cycles",
   "file": "chiliad-station.png",
   "light": "golden"
  },
@@ -45,7 +95,19 @@
    -672.0,
    36.0
   ],
-  "caption": "The Flint County farm: the silos with their ladders",
+  "camera": {
+   "azimuth": -120,
+   "distance": 230,
+   "elevation": 20,
+   "lens": 30,
+   "look_at": [
+    -1065.0,
+    -680.0,
+    38.0
+   ]
+  },
+  "caption": "Storage tanks and towers at an industrial complex in Flint County",
+  "engine": "cycles",
   "file": "farm-silos.png",
   "light": "day"
  },
@@ -55,7 +117,19 @@
    413.0,
    6.4
   ],
+  "camera": {
+   "azimuth": 120,
+   "distance": 40,
+   "elevation": 6,
+   "lens": 35,
+   "look_at": [
+    -1675.0,
+    413.0,
+    7.5
+   ]
+  },
   "caption": "A fuel station with eight outlets (San Fierro)",
+  "engine": "cycles",
   "file": "fuel-station.png",
   "light": "day"
  },
@@ -65,7 +139,19 @@
    845.74,
    70.38
   ],
+  "camera": {
+   "azimuth": 100,
+   "distance": 9,
+   "elevation": 8,
+   "lens": 32,
+   "look_at": [
+    -2704.0,
+    847.0,
+    71.2
+   ]
+  },
   "caption": "The BBQ on the Palisades",
+  "engine": "cycles",
   "file": "palisades-bbq.png",
   "light": "golden"
  },
@@ -75,7 +161,19 @@
    -1527.0,
    140.0
   ],
+  "camera": {
+   "azimuth": -40,
+   "distance": 36,
+   "elevation": 12,
+   "lens": 35,
+   "look_at": [
+    -2814.0,
+    -1526.0,
+    141.5
+   ]
+  },
   "caption": "The quarry door's log cabin in the Whetstone woods",
+  "engine": "cycles",
   "file": "quarry-door.png",
   "light": "overcast"
  },
@@ -85,7 +183,19 @@
    315.0,
    29.5
   ],
-  "caption": "The code hunt's lockup in Queens, San Fierro",
+  "camera": {
+   "azimuth": 180,
+   "distance": 23.1,
+   "elevation": 15,
+   "lens": 35,
+   "look_at": [
+    -2496.5,
+    314.7,
+    30.2
+   ]
+  },
+  "caption": "The code hunt's lockup entrance and keypad in Queens, San Fierro",
+  "engine": "cycles",
   "file": "queens-lockup.png",
   "light": "day"
  },
@@ -95,7 +205,19 @@
    -1661.0,
    22.0
   ],
+  "camera": {
+   "azimuth": -70,
+   "distance": 80,
+   "elevation": 22,
+   "lens": 30,
+   "look_at": [
+    -1868.0,
+    -1661.0,
+    23.0
+   ]
+  },
   "caption": "The Whetstone machines in place: the Scrap Machine and the Refining Machine",
+  "engine": "cycles",
   "file": "scrapyard.png",
   "light": "day"
  },
@@ -105,7 +227,19 @@
    -1719.81,
    1.11
   ],
+  "camera": {
+   "azimuth": 160,
+   "distance": 40,
+   "elevation": 10,
+   "lens": 32,
+   "look_at": [
+    -228.8,
+    -1719.8,
+    2.2
+   ]
+  },
   "caption": "A spawn point on the beach, the sea behind",
+  "engine": "cycles",
   "file": "spawn-beach.png",
   "light": "golden"
  },
@@ -115,7 +249,19 @@
    -2005.0,
    15.3
   ],
+  "camera": {
+   "azimuth": 60,
+   "distance": 50,
+   "elevation": 8,
+   "lens": 35,
+   "look_at": [
+    2663.0,
+    -2005.0,
+    16.5
+   ]
+  },
   "caption": "A Los Santos street of house shells (East Beach)",
+  "engine": "cycles",
   "file": "townhouse-street.png",
   "light": "day"
  },
@@ -125,7 +271,19 @@
    1541.0,
    24.9
   ],
+  "camera": {
+   "azimuth": -60,
+   "distance": 60,
+   "elevation": 16,
+   "lens": 35,
+   "look_at": [
+    -890.0,
+    1541.0,
+    26.0
+   ]
+  },
   "caption": "A trailer cluster in Las Barrancas, Bone County: the enterable shells",
+  "engine": "cycles",
   "file": "trailer-park.png",
   "light": "day"
  },
@@ -135,7 +293,19 @@
    2511.17,
    15.47
   ],
+  "camera": {
+   "azimuth": -40,
+   "distance": 45,
+   "elevation": 12,
+   "lens": 35,
+   "look_at": [
+    373.0,
+    2511.0,
+    17.0
+   ]
+  },
   "caption": "The Verdant Meadows airstrip drop point with a supply crate",
+  "engine": "cycles",
   "file": "verdant-meadows.png",
   "light": "day"
  }
