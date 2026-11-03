@@ -29,7 +29,7 @@ GRINDER_HOLD = (0.08, 0.03, 0.0, 90.0, -90.0, 0.0)
 
 # upstream item types shown under another name: uname -> display name (tools/convert/item_types.py). Canister is one
 # steel gas cylinder (SA-MP model 19816), not a can.
-RENAMES = {"Canister": "Gas Cylinder", "Battery": "Car Battery", "Wrench": "Tyre Wrench", "Spanner": "Spanner"}
+RENAMES = {"Canister": "Gas Cylinder", "Battery": "Car Battery"}
 
 # The Car Battery (prop_models 20208, origin at the centre of its base) hangs from the right hand by its strap, upright,
 # the label facing out and its long side along the walking direction; the Tool Battery (20209, origin at its foot) sits
