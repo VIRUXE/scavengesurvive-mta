@@ -123,8 +123,8 @@ return function(ctx)
                 c.player,
                 "potInspected",
                 c.player,
-                gardening.status(gardening.pot(decodeData(row.data)), function(name)
-                    return lang.name(name, c.player)
+                gardening.status(gardening.pot(decodeData(row.data)), function(text)
+                    return lang.textFor(c.player, text)
                 end)
             )
         end, { player = player })

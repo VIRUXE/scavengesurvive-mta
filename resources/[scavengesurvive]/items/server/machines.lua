@@ -30,8 +30,15 @@ return function(ctx)
         return toJSON(t, true):sub(2, -2)
     end
 
+    -- a translator into the player's language, for the logic's texts that take one
+    local function trFor(player)
+        return function(s)
+            return lang.textFor(player, s)
+        end
+    end
+
     local function text(player, key, ...)
-        toast(player, string.format(machines.TEXT[key] or key, ...))
+        toast(player, lang.formatFor(player, machines.TEXT[key] or key, ...))
     end
 
     -- the machine's next state, written only if nobody changed the row since it was read; cb(ok)
@@ -144,7 +151,7 @@ return function(ctx)
         end
         local st = machines.state(decodeData(row.data))
         if st.cooking then
-            text(player, "MACHPROCESS", machines.timeText(machines.remainingMs(st, now())))
+            text(player, "MACHPROCESS", machines.timeText(machines.remainingMs(st, now()), trFor(player)))
             return true
         end
         ctx.containers.openWorldContainer(player, row, {
@@ -223,7 +230,7 @@ return function(ctx)
     net.handler("machineMenuRequested", function(player, itemId)
         withMachine(player, itemId, function(p, row, st)
             if st.cooking then
-                return text(p, "MACHPROCESS", machines.timeText(machines.remainingMs(st, now())))
+                return text(p, "MACHPROCESS", machines.timeText(machines.remainingMs(st, now()), trFor(p)))
             end
             local held = state.held[p]
             local amount = held and machines.petrolIn(itemType(held.uname), held.data, liquids)
@@ -252,7 +259,7 @@ return function(ctx)
                     local ok, nextSt = machines.start(st, count, now(), math.random)
                     if not ok then
                         if nextSt == "MACHPROCESS" then
-                            return text(p, nextSt, machines.timeText(machines.remainingMs(st, now())))
+                            return text(p, nextSt, machines.timeText(machines.remainingMs(st, now()), trFor(p)))
                         end
                         return text(p, nextSt, machines.FUEL_PER_ITEM)
                     end
@@ -271,7 +278,7 @@ return function(ctx)
                                 nextSt.cooking.ms / 1000
                             )
                         )
-                        text(p, "MACHCOOKTIM", machines.timeText(nextSt.cooking.ms))
+                        text(p, "MACHCOOKTIM", machines.timeText(nextSt.cooking.ms, trFor(p)))
                     end)
                 end
                 if not cRow then

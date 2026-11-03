@@ -83,7 +83,7 @@ return function(ctx)
         end
         local ok, needs = machinesRef.accepts(cont.machine, itemType(uname), data, liquidsRef)
         if not ok then
-            toast(player, string.format(machinesRef.TEXT.MACHITEMTYP, needs))
+            toast(player, lang.formatFor(player, machinesRef.TEXT.MACHITEMTYP, lang.textFor(player, needs)))
         end
         return ok
     end
@@ -520,7 +520,7 @@ return function(ctx)
         local csize = opts.size
             or (isTent and 16 or (t and t.categoryData and (t.categoryData.bag_size or t.categoryData.size) or 8))
         local ckind = opts.kind or (isTent and "tent" or (isBag and "bag" or "safebox"))
-        local title = opts.title or (isTent and lang.name("Tent", player) or lang.itemName(uname, player))
+        local title = opts.title or (isTent and lang.textFor(player, "Tent") or lang.itemName(uname, player))
         local pos = itemRow.x and itemRow.y and itemRow.z and { x = itemRow.x, y = itemRow.y, z = itemRow.z }
         -- a bag or box is picked up with a hold of the interact key, contents and all (upstream), not from its list
         local carryable = (isBag or (t and t.category == "safebox")) and not opts.machine or false
@@ -731,7 +731,8 @@ return function(ctx)
                 if d > 3.0 then
                     return
                 end
-                triggerClientEvent(c.player, "vehicleHoldStarted", c.player, "Pitching tent", 3000)
+                local label = lang.textFor(c.player, "Pitching tent")
+                triggerClientEvent(c.player, "vehicleHoldStarted", c.player, label, 3000)
                 setTimer(function(pl, itId, rx, ry, rz)
                     if not isElement(pl) then
                         return
@@ -788,7 +789,8 @@ return function(ctx)
                     return
                 end
                 local function startDismantle()
-                    triggerClientEvent(c.player, "vehicleHoldStarted", c.player, "Packing tent", 3000)
+                    local label = lang.textFor(c.player, "Packing tent")
+                    triggerClientEvent(c.player, "vehicleHoldStarted", c.player, label, 3000)
                     setTimer(function(pl, itId, cId, rx, ry, rz)
                         if not isElement(pl) then
                             return

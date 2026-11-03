@@ -15,7 +15,8 @@ end
 local craft = loadModule("shared/logic/craft.lua")
 local FONT, WIN_W, WIN_H = "default-normal", 620, 424
 local YELLOW, WHITE, GREEN, BLUE = { 255, 255, 0 }, { 255, 255, 255 }, { 51, 170, 51 }, { 51, 204, 255 }
-local TABS = { { "Combination", "combine" }, { "Construction", "ground" }, { "Workbench", "workbench" } }
+-- lang:begin
+local TAB_NAMES = { combine = "Combination", ground = "Construction", workbench = "Workbench" }
 
 -- upstream Dialog_ShowCraftHelp, with the port's controls: { colour, text } lines, "" for a gap
 local HELP = {
@@ -39,10 +40,13 @@ local HELP = {
     { WHITE, "Equip the 'Tool' item specified in the recipe page" },
     { WHITE, "Hold the Interact key while standing at the workbench" },
 }
+-- lang:end
+local TAB_KINDS = { "combine", "ground", "workbench" }
 
 local win = nil
 
 local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")()
+local L = lang.text
 
 local function itemName(uname)
     return lang.itemName(uname)
@@ -73,19 +77,19 @@ end
 local function detailText(r)
     local lines = {}
     if r.tool then
-        lines[#lines + 1] = "Tool: " .. itemName(r.tool)
+        lines[#lines + 1] = lang.format("Tool: %s", itemName(r.tool))
     end
-    lines[#lines + 1] = "Ingredients:"
-    for _, line in ipairs(craft.ingredientLines(r, itemName)) do
+    lines[#lines + 1] = L("Ingredients:")
+    for _, line in ipairs(craft.ingredientLines(r, itemName, L("kept"))) do
         lines[#lines + 1] = "    " .. line
     end
     local ms = r.kind == "ground" and r.buildTime or r.kind == "workbench" and craft.workbenchTime(r)
     if ms then
         lines[#lines + 1] = ""
-        lines[#lines + 1] = string.format("Takes about %.1f s.", ms / 1000)
+        lines[#lines + 1] = lang.format("Takes about %.1f s.", ms / 1000)
     end
     if r.removalTool then
-        lines[#lines + 1] = "Can be taken down again with a " .. itemName(r.removalTool) .. "."
+        lines[#lines + 1] = lang.format("Can be taken down again with a %s.", itemName(r.removalTool))
     end
     return table.concat(lines, "\n")
 end
@@ -95,7 +99,7 @@ local function recipeTab(panel, name, kind)
     local recipes = craft.ofKind(kind)
     local grid = guiCreateGridList(6, 6, 220, 292, false, tab)
     guiGridListSetSortingEnabled(grid, false)
-    guiGridListAddColumn(grid, "Recipe", 0.85)
+    guiGridListAddColumn(grid, L("Recipe"), 0.85)
     for _, r in ipairs(recipes) do
         local row = guiGridListAddRow(grid)
         guiGridListSetItemText(grid, row, 1, itemName(r.result.uname), false, false)
@@ -114,15 +118,16 @@ local function recipeTab(panel, name, kind)
 end
 
 local function helpTab(panel)
-    local tab = guiCreateTab("Help", panel)
+    local tab = guiCreateTab(L("Help"), panel)
     local pane = guiCreateScrollPane(6, 6, 578, 292, false, tab)
     local y = 4
     for _, line in ipairs(HELP) do
         if line[2] == "" then
             y = y + 8
         else
-            local rows = math.ceil(#line[2] * 6.5 / 540)
-            label(pane, 4, y, 548, rows * 15 + 2, line[2], line[1])
+            local text = L(line[2])
+            local rows = math.ceil(#text * 6.5 / 540)
+            label(pane, 4, y, 548, rows * 15 + 2, text, line[1])
             y = y + rows * 15 + 2
         end
     end
@@ -131,14 +136,14 @@ end
 local function open()
     close()
     local sw, sh = guiGetScreenSize()
-    local window = guiCreateWindow((sw - WIN_W) / 2, (sh - WIN_H) / 2, WIN_W, WIN_H, "Recipes", false)
+    local window = guiCreateWindow((sw - WIN_W) / 2, (sh - WIN_H) / 2, WIN_W, WIN_H, L("Recipes"), false)
     guiWindowSetSizable(window, false)
     local panel = guiCreateTabPanel(10, 28, WIN_W - 20, 340, false, window)
-    for _, t in ipairs(TABS) do
-        recipeTab(panel, t[1], t[2])
+    for _, kind in ipairs(TAB_KINDS) do
+        recipeTab(panel, L(TAB_NAMES[kind]), kind)
     end
     helpTab(panel)
-    local button = guiCreateButton((WIN_W - 110) / 2, WIN_H - 42, 110, 28, "Close", false, window)
+    local button = guiCreateButton((WIN_W - 110) / 2, WIN_H - 42, 110, 28, L("Close"), false, window)
     local function onKey(key, press)
         if press and (key == "escape" or key == "enter" or key == "num_enter") then
             cancelEvent()

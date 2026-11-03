@@ -77,7 +77,7 @@ return function(ctx)
             return string.format("%s\n%d/%d", t.name, hp, t.maxHitpoints or 0)
         end
         if isPitchedTent(r) then
-            return lang.name("Pitched Tent")
+            return lang.text("Pitched Tent")
         end
         if clothes and r.uname == "Clothes" then
             return clothes.label(clothes.skinFor(r.id, r.data))
@@ -104,7 +104,7 @@ return function(ctx)
             return small.lockLabel(t and t.name or r.uname, r.data)
         end
         if r.uname == gardening.BAG then
-            return gardening.seedLabel(t and t.name or r.uname, gardening.seedsFor(r.id, r.data), lang.name)
+            return gardening.seedLabel(t and t.name or r.uname, gardening.seedsFor(r.id, r.data))
         end
         if ammo and t then
             local defA = t.categoryData and defaultAmmo(t.categoryData.calibre) or nil

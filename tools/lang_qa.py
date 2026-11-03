@@ -4,8 +4,9 @@ Usage: python -m tools.lang_qa [--check]
 Checks per language: keys missing (t() falls back to English), keys not in English, untranslated values (equal to
 English or the upstream "(REQUIRES TRANSLATION:…)" marker), leftover SA-MP tokens (~x~, {C_…}, %P) and printf
 placeholders that do not match English (a translation with more or differently typed placeholders makes
-string.format fail, and t() then shows the raw string). It also lists the display names (item types, ammo kinds,
-calibres, liquids, seed kinds) each language lacks in tools/convert/lang_port/names/<code>.json. --check exits 1 when
+string.format fail, and t() then shows the raw string). It also lists the port's own texts (item, ammo, calibre,
+liquid and seed names and the texts the code passes through lib's lang module) each language lacks in
+tools/convert/lang_port/strings/<code>.json; --dump writes the English list to stdout as JSON. --check exits 1 when
 the committed report is stale.
 """
 from __future__ import annotations
@@ -19,7 +20,7 @@ ROOT = Path(__file__).resolve().parents[1]
 GENERATED = ROOT / "resources" / "[scavengesurvive]" / "data" / "generated"
 REPORT = ROOT / "docs" / "languages-qa.md"
 RESOURCES = ROOT / "resources" / "[scavengesurvive]"
-NAMES_DIR = ROOT / "tools" / "convert" / "lang_port" / "names"
+NAMES_DIR = ROOT / "tools" / "convert" / "lang_port" / "strings"
 # shown to players untranslated on purpose: placeholder types and bare calibre numbers
 NAME_SKIP = {"NULL", "<null>", "VEHICLE_WEAPON", ""}
 CALIBRE_RE = re.compile(r"[.\d]+(?:mm)?")
@@ -124,19 +125,89 @@ def render(results: dict[str, dict], en_count: int) -> str:
     return "\n".join(out)
 
 
-def english_names() -> list[str]:
-    """Every display name lib's lang module translates: item type and ammo kind names and calibre names from the
-    generated item types, and the liquid and seed kind names of the items resource, plus the pitched tent labels."""
+STRING_RE = r'"((?:[^"\\\n]|\\.)*)"'
+CHAIN_RE = re.compile(STRING_RE + r'(?:\s*\.\.\s*' + STRING_RE.replace("(", "(?:", 1) + r')*')
+LITERAL_RE = re.compile(STRING_RE)
+CALL_RE = re.compile(r'(?:(?<![\w.])(?:tr|L)|lang\.(?:text|name|format))\(\s*(?=")'
+                     r'|lang\.(?:textFor|formatFor)\(\s*[\w.]+\s*,\s*(?=")')
+COMMENT_RE = re.compile(r'--(?!\s*lang:).*$')
+
+
+def _chain(src: str, pos: int) -> tuple[str, int]:
+    """The string literal at pos, joined with any `.. "..."` literals that follow it."""
+    m = CHAIN_RE.match(src, pos)
+    return "".join(unescape(x) for x in LITERAL_RE.findall(m.group(0))), m.end()
+
+
+def _strip_comments(line: str) -> str:
+    out, i, quote = [], 0, None
+    while i < len(line):
+        ch = line[i]
+        if quote:
+            out.append(ch)
+            if ch == "\\" and i + 1 < len(line):
+                out.append(line[i + 1])
+                i += 1
+            elif ch == quote:
+                quote = None
+        elif ch in "\"'":
+            quote = ch
+            out.append(ch)
+        elif line.startswith("--", i):
+            break
+        else:
+            out.append(ch)
+        i += 1
+    return "".join(out)
+
+
+def code_texts() -> list[str]:
+    """The texts the Lua code passes through lib's lang module: the first string argument of tr / L / lang.text /
+    lang.name / lang.format / lang.textFor / lang.formatFor, and every string between `-- lang:begin` and
+    `-- lang:end` lines (a string followed by `..` and more strings counts as one)."""
     out: list[str] = []
+    for path in sorted(RESOURCES.rglob("*.lua")):
+        if "generated" in path.parts:
+            continue
+        src = path.read_text(encoding="utf-8")
+        for m in CALL_RE.finditer(src):
+            text, _ = _chain(src, m.end())
+            out.append(text)
+        inside, block = False, []
+        for line in src.splitlines():
+            mark = line.strip()
+            if mark == "-- lang:begin":
+                inside, block = True, []
+            elif mark == "-- lang:end":
+                inside = False
+                body = "\n".join(block)
+                pos = 0
+                while True:
+                    m = LITERAL_RE.search(body, pos)
+                    if not m:
+                        break
+                    text, pos = _chain(body, m.start())
+                    out.append(text)
+            elif inside:
+                block.append(_strip_comments(line))
+    return out
+
+
+def english_names() -> list[str]:
+    """Every English text lib's lang module translates: item type and ammo kind names and calibre names from the
+    generated item types, the liquid and seed kind names of the items resource, and the texts of the code."""
+    out: list[str] = []
+    seen: set[str] = set()
 
     def add(name: str) -> None:
-        if name not in NAME_SKIP and not CALIBRE_RE.fullmatch(name) and name not in out:
+        if name not in NAME_SKIP and not CALIBRE_RE.fullmatch(name) and name not in seen and re.search("[A-Za-z]", name):
+            seen.add(name)
             out.append(name)
 
     types = (GENERATED / "item_types.lua").read_text(encoding="utf-8")
     for line in types.splitlines():
         if line.startswith("M.byUname."):
-            m = re.search(r', name = "((?:[^"\\]|\\.)*)", price', line)
+            m = re.search(r', name = "((?:[^"\\\\]|\\\\.)*)", price', line)
             if m:
                 add(unescape(m.group(1)))
             m = re.search(r'categoryData = \{[^}]*\bname = "([^"]*)"', line)
@@ -148,7 +219,7 @@ def english_names() -> list[str]:
     for rel in ("items/shared/logic/liquids.lua", "items/shared/logic/gardening.lua"):
         for v in re.findall(r'\{ name = "([^"]*)"', (RESOURCES / rel).read_text(encoding="utf-8")):
             add(v)
-    for v in ("Pitched Tent", "Tent"):
+    for v in code_texts():
         add(v)
     return out
 
@@ -159,29 +230,35 @@ def compare_names(english: list[str], code: str) -> dict:
     missing = [n for n in english if not names.get(n)]
     same = [n for n in english if names.get(n) == n]
     extra = sorted(n for n in names if n not in english)
-    return {"missing": missing, "same": same, "extra": extra}
+    mismatched = [n for n in english if names.get(n) and placeholders(names[n]) != placeholders(n)]
+    return {"missing": missing, "same": same, "extra": extra, "mismatched": mismatched}
 
 
 def render_names(english: list[str], results: dict[str, dict]) -> str:
-    out = ["## Display names", "",
-           "Item type, ammo kind, calibre, liquid and seed kind names are English in the data; lib's `lang` module "
-           "shows them in the player's language from `data/generated/names_<code>.lua`, generated from "
-           "`tools/convert/lang_port/names/<code>.json` by `python -m tools.convert names`. A name a language "
-           "lacks shows in English. Names kept identical to English are model names, brands and the like.", "",
-           f"English has {len(english)} names.", "",
-           "| Code | Language | Missing (shown in English) | Kept as in English | Not in English (stale) |",
-           "| --- | --- | ---: | ---: | ---: |"]
+    out = ["## Port texts", "",
+           "Item type, ammo kind, calibre, liquid and seed kind names, and the item UI's labels, messages and format "
+           "templates, are English in the data and the code; lib's `lang` module shows them in the player's "
+           "language from `data/generated/strings_<code>.lua`, generated from "
+           "`tools/convert/lang_port/strings/<code>.json` by `python -m tools.convert strings`. The English texts "
+           "are collected from the item data and the code (`tr(\"…\")`, `L(\"…\")`, `lang.text/format(\"…\")`, "
+           "`lang.textFor/formatFor(player, \"…\")` and `-- lang:begin` … `-- lang:end` blocks). A text a language "
+           "lacks shows in English; one whose placeholders differ from English is formatted in English. Texts kept "
+           "identical to English are model names, brands, acronyms and the like.", "",
+           f"English has {len(english)} texts.", "",
+           "| Code | Language | Missing (shown in English) | Kept as in English | Placeholder mismatches | Not in English (stale) |",
+           "| --- | --- | ---: | ---: | ---: | ---: |"]
     for code in CODES[1:]:
         r = results[code]
-        out.append(f"| `{code}` | {NAMES[code]} | {len(r['missing'])} | {len(r['same'])} | {len(r['extra'])} |")
+        out.append(f"| `{code}` | {NAMES[code]} | {len(r['missing'])} | {len(r['same'])} | {len(r['mismatched'])} | "
+                   f"{len(r['extra'])} |")
     out.append("")
     for code in CODES[1:]:
         r = results[code]
-        if r["missing"]:
-            out.append(f"- `{code}` lacks: " + ", ".join(f"`{n}`" for n in r["missing"][:40])
-                       + (" …" if len(r["missing"]) > 40 else ""))
-        if r["extra"]:
-            out.append(f"- `{code}` has names no longer in English: " + ", ".join(f"`{n}`" for n in r["extra"][:40]))
+        for key, label in (("missing", "lacks"), ("mismatched", "has placeholders unlike English in"),
+                           ("extra", "has texts no longer in English")):
+            if r[key]:
+                shown = ", ".join("`" + n.replace("\n", "\\n") + "`" for n in r[key][:40])
+                out.append(f"- `{code}` {label}: {shown}" + (" …" if len(r[key]) > 40 else ""))
     if out[-1] != "":
         out.append("")
     return "\n".join(out)
@@ -197,6 +274,9 @@ def build() -> tuple[str, dict[str, dict]]:
 
 def main(argv=None) -> int:
     argv = sys.argv[1:] if argv is None else argv
+    if "--dump" in argv:
+        print(json.dumps(english_names(), ensure_ascii=False, indent=1))
+        return 0
     text, _ = build()
     if "--check" in argv:
         current = REPORT.read_text(encoding="utf-8") if REPORT.exists() else ""

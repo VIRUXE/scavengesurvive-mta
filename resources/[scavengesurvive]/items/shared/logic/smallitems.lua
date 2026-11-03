@@ -4,6 +4,14 @@
 -- Server and client read the same file.
 local M = {}
 
+-- M.tr(text): a label word in the reader's language; the client sets it to lib lang.text, identity elsewhere
+M.tr = function(s)
+    return s
+end
+local function tr(s)
+    return M.tr(s)
+end
+
 M.NOTE_MAX = 256 -- SetItemTypeMaxArrayData(Note, 256)
 M.SIGN_MAX = 128 -- MAX_SIGN_TEXT
 M.DICE_THROW = 0.4 -- metres the dice roll on from where they were dropped
@@ -41,7 +49,7 @@ end
 function M.noteLabel(name, data)
     local text = M.text(data)
     if text == "" then
-        return name .. " (Blank)"
+        return name .. " (" .. tr("Blank") .. ")"
     end
     if #text > 8 then
         return name .. " (" .. text:sub(1, 8) .. "(...))"
@@ -58,20 +66,23 @@ end
 -- A Lock and Chain (upstream locksmith.pwn SetItemNameExtra): "(Cut)" once combined with a Locksmith Kit, else
 -- "(Uncut)"
 function M.lockLabel(name, data)
-    return name .. (tonumber(unwrap(data).cut) == 1 and " (Cut)" or " (Uncut)")
+    return name .. " (" .. (tonumber(unwrap(data).cut) == 1 and tr("Cut") or tr("Uncut")) .. ")"
 end
 
 -- A vehicle key: "Car Key", "Truck Key", "Trailer Key"... from the model it was cut for (data.model);
 -- a key without one (a world puzzle's) keeps its name. typeByModel(model) returns the vehicle type or nil.
+-- lang:begin
 M.KEY_KINDS = {
-    car = "Car",
-    truck = "Truck",
-    motorbike = "Bike",
-    pushbike = "Bike",
-    boat = "Boat",
-    helicopter = "Helicopter",
-    plane = "Plane",
+    car = "Car Key",
+    truck = "Truck Key",
+    motorbike = "Bike Key",
+    pushbike = "Bike Key",
+    boat = "Boat Key",
+    helicopter = "Helicopter Key",
+    plane = "Plane Key",
 }
+M.TRAILER_KEY = "Trailer Key"
+-- lang:end
 
 function M.keyLabel(name, data, typeByModel)
     local model = tonumber(unwrap(data).model)
@@ -79,8 +90,8 @@ function M.keyLabel(name, data, typeByModel)
     if not vt then
         return name
     end
-    local kind = vt.trailer and "Trailer" or M.KEY_KINDS[vt.category]
-    return kind and (kind .. " " .. name) or name
+    local kind = vt.trailer and M.TRAILER_KEY or M.KEY_KINDS[vt.category]
+    return kind and tr(kind) or name
 end
 
 -- A sign's text as lines: upstream turned every "\" into a line break
@@ -145,7 +156,7 @@ function M.isCharged(data)
 end
 
 function M.stunLabel(name, data)
-    return name .. (M.isCharged(data) and " (Charged)" or " (Uncharged)")
+    return name .. " (" .. (M.isCharged(data) and tr("Charged") or tr("Uncharged")) .. ")"
 end
 
 -- Pouring petrol from a can (its liquid data, items/shared/logic/liquids.lua) into an empty Molotov:

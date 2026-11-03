@@ -28,10 +28,10 @@ local items = assert(loadGenerated("item_types"), "data: generated/item_types.lu
 local loot = assert(loadGenerated("loot_tables"), "data: generated/loot_tables.lua missing")
 local vehicles = assert(loadGenerated("vehicle_types"), "data: generated/vehicle_types.lua missing")
 local langs = {}
-local names = {} -- code -> English display name -> translation (generated/names_<code>.lua)
+local strings = {} -- code -> English text -> translation (generated/strings_<code>.lua)
 for _, code in ipairs(LANGUAGES) do
     langs[code] = loadGenerated("lang_" .. code) or {}
-    names[code] = code ~= "en" and loadGenerated("names_" .. code) or {}
+    strings[code] = code ~= "en" and loadGenerated("strings_" .. code) or {}
 end
 
 for _, def in pairs(items.byUname) do
@@ -118,17 +118,17 @@ function Data.t(lang, key, ...)
     return s
 end
 
--- A display name (item type, ammo kind, calibre, liquid, seed kind) in a language: names are English in the data
--- and translated by their English text, which comes back unchanged when a language has no entry for it.
-function Data.name(lang, english)
-    local s = (names[lang] or {})[english]
+-- A text in a language, looked up by its English text (item names, the items UI's labels and messages, format
+-- templates with their placeholders); the English text comes back unchanged when a language has no entry for it.
+function Data.translate(lang, english)
+    local s = (strings[lang] or {})[english]
     return type(s) == "string" and s or english
 end
 
 -- An item type's name in a language; the uname itself for an unknown type.
 function Data.itemName(lang, uname)
     local def = items.byUname[uname]
-    return def and Data.name(lang, def.name) or tostring(uname)
+    return def and Data.translate(lang, def.name) or tostring(uname)
 end
 
 -- Export wrappers: other resources call exports.data:itemType(uname) etc. (exports must be global functions).
@@ -172,8 +172,8 @@ function t(lang, key, ...)
     return Data.t(lang, key, ...)
 end
 
-function name(lang, english)
-    return Data.name(lang, english)
+function translate(lang, english)
+    return Data.translate(lang, english)
 end
 
 function itemName(lang, uname)

@@ -1,5 +1,5 @@
 <meta>
-    <info author="scavengesurvive-mta" type="script" name="data" description="Static gamemode data (items, loot tables, languages, translated names)" version="0.1.0"/>
+    <info author="scavengesurvive-mta" type="script" name="data" description="Static gamemode data (items, loot tables, languages, translated strings)" version="0.1.0"/>
     <min_mta_version server="1.6.0" client="1.6.0"/>
     <download_priority_group>95</download_priority_group>
     <include resource="lib"/>
@@ -19,15 +19,15 @@
     <file src="generated/lang_id.lua"/>
     <file src="generated/lang_bhs.lua"/>
     <file src="generated/lang_cs.lua"/>
-    <file src="generated/names_es.lua"/>
-    <file src="generated/names_fr.lua"/>
-    <file src="generated/names_pt.lua"/>
-    <file src="generated/names_ptbr.lua"/>
-    <file src="generated/names_ru.lua"/>
-    <file src="generated/names_cs.lua"/>
-    <file src="generated/names_ro.lua"/>
-    <file src="generated/names_id.lua"/>
-    <file src="generated/names_bhs.lua"/>
+    <file src="generated/strings_es.lua"/>
+    <file src="generated/strings_fr.lua"/>
+    <file src="generated/strings_pt.lua"/>
+    <file src="generated/strings_ptbr.lua"/>
+    <file src="generated/strings_ru.lua"/>
+    <file src="generated/strings_cs.lua"/>
+    <file src="generated/strings_ro.lua"/>
+    <file src="generated/strings_id.lua"/>
+    <file src="generated/strings_bhs.lua"/>
     <export function="itemType" type="shared"/>
     <export function="itemTypes" type="shared"/>
     <export function="lootTable" type="shared"/>
@@ -38,7 +38,7 @@
     <export function="vehicleTypes" type="shared"/>
     <export function="vehicleTypeByModel" type="shared"/>
     <export function="t" type="shared"/>
-    <export function="name" type="shared"/>
+    <export function="translate" type="shared"/>
     <export function="itemName" type="shared"/>
     <export function="languages" type="shared"/>
 </meta>

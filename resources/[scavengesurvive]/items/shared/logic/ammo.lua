@@ -2,6 +2,14 @@
 -- Mirrors ../ScavengeSurvive/gamemodes/sss/core/weapon/{weapon,ammunition,loot,interact}.pwn.
 local Ammo = {}
 
+-- Ammo.tr(text): a label word in the reader's language; the client sets it to lib lang.text, identity elsewhere
+Ammo.tr = function(s)
+    return s
+end
+local function tr(s)
+    return Ammo.tr(s)
+end
+
 local MILITARY_LOOT = {
     world_police = true,
     world_military = true,
@@ -311,7 +319,7 @@ function Ammo.displayName(def, data, resolveItemType, resolveCalibreName, defaul
         local cal = def.categoryData.calibre
         local calName = (resolveCalibreName and resolveCalibreName(cal)) or cal
         local state = Ammo.weaponState(def, data, defaultAmmo)
-        local ammoLabel = "Unloaded"
+        local ammoLabel = tr("Unloaded")
         if state.ammoItem and resolveItemType then
             local ammoDef = resolveItemType(state.ammoItem)
             if ammoDef then

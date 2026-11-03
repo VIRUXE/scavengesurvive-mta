@@ -4,6 +4,14 @@
 -- data.cooked = 1 (upstream food_cooked). Pure; items/server/cooking.lua does the I/O.
 local M = {}
 
+-- M.tr(text): a label word in the reader's language; the client sets it to lib lang.text, identity elsewhere
+M.tr = function(s)
+    return s
+end
+local function tr(s)
+    return M.tr(s)
+end
+
 M.CAMPFIRE_COOK_S = 60 -- cmp_FinishCooking[60000]
 M.BBQ_COOK_S = 30 -- bbq_FinishCooking[30000]
 M.CAMPFIRE_LIFE_S = 600 -- cmp_BurnOut 600000
@@ -56,7 +64,7 @@ function M.label(t, name, data)
     if not M.canCook(t) then
         return name
     end
-    return string.format("%s (%s)", name, M.isCooked(data) and "Cooked" or "Uncooked")
+    return string.format("%s (%s)", name, M.isCooked(data) and tr("Cooked") or tr("Uncooked"))
 end
 
 -- A cooker's data, normalised: numbers or nil, grill always two ids (0 = free).

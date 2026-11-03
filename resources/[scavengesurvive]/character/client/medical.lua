@@ -8,6 +8,7 @@ local function loadModule(path)
     return assert(loadstring(src, "=character/" .. path))()
 end
 local medical = loadModule("shared/logic/medical.lua")
+medical.tr = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")().text -- labels in the player's language
 
 local stats = { hp = 100, infection = {}, drugs = {} }
 local drunk, lastShake = 0, 0

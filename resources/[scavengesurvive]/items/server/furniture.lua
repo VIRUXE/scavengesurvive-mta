@@ -6,6 +6,7 @@
 return function(ctx)
     local db, state, world, hands, furniture = ctx.db, ctx.state, ctx.world, ctx.hands, ctx.furniture
     local toast, decodeData = ctx.toast, ctx.decodeData
+    local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")()
     local M = {}
 
     function M.blocksPickup(uname)
@@ -28,7 +29,7 @@ return function(ctx)
             end
             if res and res.code == "CONTAINER_FULL" then
                 local required = res.payload and tonumber(res.payload.required) or 1
-                return toast(c.player, string.format(furniture.TEXT.CNTEXTRASLO, required))
+                return toast(c.player, lang.formatFor(c.player, furniture.TEXT.CNTEXTRASLO, required))
             end
             if not res or not res.ok then
                 return -- OCCUPIED: upstream does nothing while the case shows an item
