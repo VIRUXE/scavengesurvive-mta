@@ -1,5 +1,7 @@
 # Auth reload protection — 2026-11-03
 
+Superseded later the same day by [session-preserving auth reloads](2026-11-03-auth-sessions.md): connected players now stay logged in without a freeze or reauthentication prompt. The checks below record the earlier implementation.
+
 `auth` now marks and freezes live players before its VM stops. The server-owned `auth.reauthProtection` element data survives a reload and is cleared only after successful admission, including the whitelist check. Failed passwords and repeated reloads leave the protection active. Successful login restores the previous freeze state while respecting an active staff freeze.
 
 Protected characters take no wounds, scripted health loss, knockouts, infection or drugs. The survival tick pauses, preserving health, food, bleed and existing drug timers. Weapon reports from or against protected players are ignored; client damage remains cancelled without reporting hits. Carried explosives cannot directly kill a protected player. Disconnecting during this maintenance protection saves the character instead of applying a combat-log death.
