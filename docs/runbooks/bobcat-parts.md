@@ -11,3 +11,14 @@ Slots per model live in `vehicles/shared/logic/bodyparts.lua` (`MODELS`): hood, 
 - **Crash drops:** once a second `bodySrv.scan` compares each slot with the last look; a slot that went missing since drops a Bad item at its point, written with the damage by `vehicle_parts_detached`. Slots already missing at spawn, or taken off or put on by a player, never drop.
 - Damage (`vehicles.damage`: panels, side doors, lights, tyres, plus `hood` and `tailgate`) is flushed every 60 s by `vehicle_flush`, and written at once by every part change, tyre fix and headlight fix.
 - Parts spawn at industrial world loot points (`world_industrial`, weight 0.6 good / 1.2 bad), not inside vehicle containers.
+
+`tools/bobcat_parts.py` is the item/model manifest. The item definitions live in `data/generated/item_types.lua` and `sql/seed/0001_item_types.sql`, edited by hand. `tools/make_props.py` preserves their model registrations.
+
+Use GTA Scout's `prepare-asset-catalog-views.mjs` with a local model record for 422 (bobcat/bobcat, vehicles.ide); the stock object catalogue omits vehicles. Prepare a second record using bobcat.dff and vehicle.txd for shared texture preview decoding. Then:
+
+```
+blender -b -t 2 --python tools/build_bobcat_parts.py -- SCOUT_INPUT GTA_DIRECTORY
+blender -b -t 6 --python tools/render_bobcat_parts.py -- SCOUT_INPUT SHARED_INPUT
+```
+
+Editable comparison: `docs/bobcat_parts.blend`. Renders: `docs/images/bobcat_parts_1.png` and `_2.png`. The updated data, loot, vehicles, HUD and model resources have been loaded. Live database checks covered all twelve component/condition mappings, consumption, refusal to downgrade an intact panel, and regular damage persistence. Player-operated carry and installation animations have not been visually checked.

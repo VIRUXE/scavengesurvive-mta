@@ -22,8 +22,8 @@ A door built from a lying item still stands exactly where upstream's did.
   writes `models/defences.lua` (`txdModel` and `parent` = the vanilla id, so the copy keeps its TXD and object.dat
   physical properties group) and rewrites `models/meta.xml`. If a measured centre is more than 1/256 m from the table,
   it stops and prints the value to use.
-- `tools/convert/item_types.py` `apply_port_defences`: points the item type at the port id, puts the pivot in its
-  `defence`, and moves the held bone offset (`attx/y/z`) by the pivot, turned as `items/client/attach.lua` turns the
+- The item type (`data/generated/item_types.lua` and `sql/seed/0001_item_types.sql`, edited by hand) points at the port
+  id and carries the pivot in its `defence`; the held bone offset moves the held bone offset (`attx/y/z`) by the pivot, turned as `items/client/attach.lua` turns the
   object, so the door stays where it was in the hand. `data/model_map.lua` falls back to the vanilla id while
   `models` is not running.
 - `building/shared/logic/defences.lua` `pivotOffset` = R·pivot, with MTA's object rotation R = Rz·Rx·Ry (checked
@@ -51,4 +51,5 @@ UPDATE item_types SET model = CASE uname WHEN 'MetPanel' THEN 20301 WHEN 'CrateD
 ```
 
 To add another hinged defence: add a row to `tools/port_defences.py`, run the Blender tool, run
-`python -m tools.convert items`, then commit the files, `defences.lua`, `meta.xml` and `data/generated`.
+edit the item type's model, `defence` pivot and held offset by hand in `data/generated/item_types.lua` and
+`sql/seed/0001_item_types.sql` (and `UPDATE item_types` live), then commit the files, `defences.lua` and `meta.xml`.

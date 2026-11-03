@@ -79,7 +79,7 @@ pwsh server-config/rcon.ps1 studio VIRUXE off            # back to where they we
 
 ## Tuning attachments
 
-Worn items get their per-skin rows from `wearOffsets` on the item type. Those rows are generated from upstream's
+Worn items get their per-skin rows from `wearOffsets` on the item type. Those rows were converted from upstream's
 `Set{Hat,Mask}OffsetsForSkin` and `ArmourSkinData`. Hand-tuned values live in
 `items/shared/logic/apparel.lua`:
 
