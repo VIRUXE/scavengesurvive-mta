@@ -29,11 +29,11 @@ Python with the repo's requirements; the MTA server installed at `$MTA`.
 ## Restart one resource
 
 - `rcon.ps1 rr <name>` or `restart <name>` in the console. Every resource rebuilds its state from MariaDB on
-  start (items, vehicles, zones), so a single restart is safe for players online. Restarting `auth` re-prompts
-  every connected player for their password (sessions live in that VM). Their live peds are frozen and protected
-  from damage, knockouts and survival loss until successful authentication; the prior freeze state is restored
-  afterward. Re-authenticating the same account keeps the loaded character, position and vehicle seat instead of
-  respawning it. Restarting `character` writes and
+  start (items, vehicles, zones), so a single restart is safe for players online. Restarting `auth` restores
+  authenticated sessions from server-only data on the existing player elements: no password prompt, freeze,
+  character respawn or new connection-log entry. The original whitelist countdown deadlines are retained.
+  Disconnecting destroys that player element, so reconnecting still uses normal authentication.
+  Restarting `character` writes and
   re-reads every character (stats survive, a knocked-out player stands up).
 - Never restart a `*_models` resource while a client is loading (it re-requests every custom model); never call
   `engineSetPoolCapacity("building", …)` (CLAUDE.md).
