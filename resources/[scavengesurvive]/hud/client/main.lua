@@ -327,7 +327,8 @@ local function carmourHint(held)
     return nil
 end
 
--- a Wrench in hand next to a vehicle body part that is still on: the part's name ("Left Door"), else nil
+-- a Wrench in hand next to a vehicle body part that is still on: what F held does ("Tighten Left Door" for a part
+-- fitted loose, "Remove Left Door" for a secured one), else nil
 local function bodyPartHint(held)
     if not held or held.uname ~= "Wrench" then
         return nil
@@ -336,9 +337,9 @@ local function bodyPartHint(held)
     for _, veh in ipairs(getElementsByType("vehicle", root, true)) do
         local vx, vy, vz = getElementPosition(veh)
         if getDistanceBetweenPoints3D(px, py, pz, vx, vy, vz) <= 5.5 then
-            local name, condition = exports.vehicles:bodyPartSlot(veh)
+            local name, condition, loose = exports.vehicles:bodyPartSlot(veh)
             if name and condition ~= "missing" then
-                return (name:gsub("(%l)(%u)", "%1 %2"))
+                return (loose and "Tighten " or "Remove ") .. name:gsub("(%l)(%u)", "%1 %2")
             end
         end
     end
