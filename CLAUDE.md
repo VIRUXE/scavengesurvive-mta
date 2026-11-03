@@ -11,6 +11,7 @@ Scavenge & Survive ported to MTA:SA 1.6 (Lua 5.1) with MariaDB 13.0 (12.2 also v
   EXISTS`, then a `DELIMITER //` block with every procedure, function, trigger and event as `CREATE OR REPLACE` (the
   `items` triggers keep `world_items_pos` in step, so nothing writes that table by hand); `sql/seed/*.sql` (generated).
 - `tools/convert/*.py` — deterministic converters from `../ScavengeSurvive` into `data/generated/` + `sql/seed/`;
+  `data/generated/lang_*.lua` are the exception: edited by hand (the lang converter was removed), never regenerated;
   `maps.py` writes `maps/data/<ZONE>.lua`, `maps/data/zones.lua`, `maps/meta.xml` and `docs/maps-census.md` (all generated, all committed).
 - No tests: the project has none and none are ever to be created (user decision 2026-10-31).
 - `docs/runbooks/` (operations), `docs/staff-commands.md` (staff parity table), `docs/reviews/<date>-*.md` (live checks).
