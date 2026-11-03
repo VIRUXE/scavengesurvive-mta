@@ -6,7 +6,7 @@ English or the upstream "(REQUIRES TRANSLATION:…)" marker), leftover SA-MP tok
 placeholders that do not match English (a translation with more or differently typed placeholders makes
 string.format fail, and t() then shows the raw string). It also lists the port's own texts (item, ammo, calibre,
 liquid and seed names and the texts the code passes through lib's lang module) each language lacks in
-tools/convert/lang_port/strings/<code>.json; --dump writes the English list to stdout as JSON. --check exits 1 when
+data/generated/strings_<code>.lua; --dump writes the English list to stdout as JSON. --check exits 1 when
 the committed report is stale.
 """
 from __future__ import annotations
@@ -20,7 +20,6 @@ ROOT = Path(__file__).resolve().parents[1]
 GENERATED = ROOT / "resources" / "[scavengesurvive]" / "data" / "generated"
 REPORT = ROOT / "docs" / "languages-qa.md"
 RESOURCES = ROOT / "resources" / "[scavengesurvive]"
-NAMES_DIR = ROOT / "tools" / "convert" / "lang_port" / "strings"
 # shown to players untranslated on purpose: placeholder types and bare calibre numbers
 NAME_SKIP = {"NULL", "<null>", "VEHICLE_WEAPON", ""}
 CALIBRE_RE = re.compile(r"[.\d]+(?:mm)?")
@@ -53,9 +52,9 @@ def unescape(s: str) -> str:
     return "".join(out)
 
 
-def load(code: str) -> dict[str, str]:
+def load(code: str, prefix: str = "lang") -> dict[str, str]:
     entries = {}
-    for line in (GENERATED / f"lang_{code}.lua").read_text(encoding="utf-8").splitlines():
+    for line in (GENERATED / f"{prefix}_{code}.lua").read_text(encoding="utf-8").splitlines():
         m = LINE_RE.match(line)
         if m:
             entries[m.group(1) or unescape(m.group(2))] = unescape(m.group(3))
@@ -225,8 +224,7 @@ def english_names() -> list[str]:
 
 
 def compare_names(english: list[str], code: str) -> dict:
-    path = NAMES_DIR / f"{code}.json"
-    names = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+    names = load(code, "strings")
     missing = [n for n in english if not names.get(n)]
     same = [n for n in english if names.get(n) == n]
     extra = sorted(n for n in names if n not in english)
@@ -238,8 +236,7 @@ def render_names(english: list[str], results: dict[str, dict]) -> str:
     out = ["## Port texts", "",
            "Item type, ammo kind, calibre, liquid and seed kind names, and the item UI's labels, messages and format "
            "templates, are English in the data and the code; lib's `lang` module shows them in the player's "
-           "language from `data/generated/strings_<code>.lua`, generated from "
-           "`tools/convert/lang_port/strings/<code>.json` by `python -m tools.convert strings`. The English texts "
+           "language from the hand-edited `data/generated/strings_<code>.lua` tables. The English texts "
            "are collected from the item data and the code (`tr(\"…\")`, `L(\"…\")`, `lang.text/format(\"…\")`, "
            "`lang.textFor/formatFor(player, \"…\")` and `-- lang:begin` … `-- lang:end` blocks). A text a language "
            "lacks shows in English; one whose placeholders differ from English is formatted in English. Texts kept "

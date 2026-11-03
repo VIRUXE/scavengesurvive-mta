@@ -32,18 +32,37 @@ None: the converter replaced every `~x~`, `{C_*}`, `~k~` and `%P` token.
 
 ## Port texts
 
-Item type, ammo kind, calibre, liquid and seed kind names, and the item UI's labels, messages and format templates, are English in the data and the code; lib's `lang` module shows them in the player's language from `data/generated/strings_<code>.lua`, generated from `tools/convert/lang_port/strings/<code>.json` by `python -m tools.convert strings`. The English texts are collected from the item data and the code (`tr("…")`, `L("…")`, `lang.text/format("…")`, `lang.textFor/formatFor(player, "…")` and `-- lang:begin` … `-- lang:end` blocks). A text a language lacks shows in English; one whose placeholders differ from English is formatted in English. Texts kept identical to English are model names, brands, acronyms and the like.
+Item type, ammo kind, calibre, liquid and seed kind names, and the item UI's labels, messages and format templates, are English in the data and the code; lib's `lang` module shows them in the player's language from the hand-edited `data/generated/strings_<code>.lua` tables. The English texts are collected from the item data and the code (`tr("…")`, `L("…")`, `lang.text/format("…")`, `lang.textFor/formatFor(player, "…")` and `-- lang:begin` … `-- lang:end` blocks). A text a language lacks shows in English; one whose placeholders differ from English is formatted in English. Texts kept identical to English are model names, brands, acronyms and the like.
 
-English has 678 texts.
+English has 679 texts.
 
 | Code | Language | Missing (shown in English) | Kept as in English | Placeholder mismatches | Not in English (stale) |
 | --- | --- | ---: | ---: | ---: | ---: |
-| `es` | Español | 0 | 30 | 0 | 0 |
-| `fr` | Français | 0 | 46 | 0 | 0 |
-| `pt` | Português | 0 | 29 | 0 | 0 |
-| `ptbr` | Português do Brasil | 0 | 32 | 0 | 0 |
-| `ru` | Russian | 0 | 16 | 0 | 0 |
-| `ro` | Romanian | 0 | 38 | 0 | 0 |
-| `id` | Indonesian | 0 | 35 | 0 | 0 |
-| `bhs` | Bosanski-Hrvatski-Srpski | 0 | 35 | 0 | 0 |
-| `cs` | Čeština | 0 | 34 | 0 | 0 |
+| `es` | Español | 34 | 0 | 0 | 3 |
+| `fr` | Français | 50 | 0 | 0 | 3 |
+| `pt` | Português | 33 | 0 | 0 | 3 |
+| `ptbr` | Português do Brasil | 36 | 0 | 0 | 3 |
+| `ru` | Russian | 20 | 0 | 0 | 3 |
+| `ro` | Romanian | 42 | 0 | 0 | 3 |
+| `id` | Indonesian | 39 | 0 | 0 | 3 |
+| `bhs` | Bosanski-Hrvatski-Srpski | 39 | 0 | 0 | 3 |
+| `cs` | Čeština | 38 | 0 | 0 | 3 |
+
+- `es` lacks: `M9`, `M9 SD`, `Desert Eagle`, `Spas 12`, `Mac 10`, `MP5`, `WASR-3`, `M16`, `Tec 9`, `TNT`, `Tyre Wrench`, `Pizza`, `Taco`, `Torso`, `Action Express`, `FMJ`, `Sebastian`, `Motor`, `AK-47`, `M77-RM`, `BMG`, `Model 70`, `The Len-Knocks`, `Spanner`, `Whisky`, `Radio`, `LSD`, `There is a part there already. Take it off with a Tyre Wrench first`, `Hold a Tyre Wrench to take a body part off`, `TORSO`, `S.W.A.T.`, `Southclaws`, `Morgan Freeman`, `no`
+- `es` has texts no longer in English: `Hold a Wrench to take a body part off`, `There is a part there already. Take it off with a Wrench first`, `Wrench`
+- `fr` lacks: `Grenade`, `M9`, `M9 SD`, `Desert Eagle`, `Spas 12`, `Mac 10`, `MP5`, `WASR-3`, `M16`, `Tec 9`, `Parachute`, `TNT`, `Tyre Wrench`, `Pizza`, `Burger`, `Taco`, `Capsule`, `Dynamite`, `Action Express`, `FMJ`, `Sebastian`, `Code`, `AK-47`, `M77-RM`, `BMG`, `Model 70`, `The Len-Knocks`, `Note`, `Spanner`, `Microphone`, `Orange`, `Ketchup`, `Whisky`, `Champagne`, `Steak`, `Radio`, `Table`, `Bandana`, `Carton`, `Whiskey` …
+- `fr` has texts no longer in English: `Hold a Wrench to take a body part off`, `There is a part there already. Take it off with a Wrench first`, `Wrench`
+- `pt` lacks: `Molotov`, `M9`, `M9 SD`, `Desert Eagle`, `Spas 12`, `Mac 10`, `MP5`, `WASR-3`, `M16`, `Tec 9`, `RPG`, `TNT`, `Tyre Wrench`, `Pager`, `IED`, `Action Express`, `FMJ`, `Sebastian`, `Motor`, `AK-47`, `M77-RM`, `BMG`, `Model 70`, `The Len-Knocks`, `Spanner`, `Banana`, `Ketchup`, `LSD`, `There is a part there already. Take it off with a Tyre Wrench first`, `Hold a Tyre Wrench to take a body part off`, `S.W.A.T.`, `Southclaws`, `Morgan Freeman`
+- `pt` has texts no longer in English: `Hold a Wrench to take a body part off`, `There is a part there already. Take it off with a Wrench first`, `Wrench`
+- `ptbr` lacks: `M9`, `M9 SD`, `Desert Eagle`, `Spas 12`, `Mac 10`, `MP5`, `WASR-3`, `M16`, `Tec 9`, `RPG`, `TNT`, `Tyre Wrench`, `IED`, `Pizza`, `Taco`, `Action Express`, `FMJ`, `Sebastian`, `Motor`, `AK-47`, `M77-RM`, `BMG`, `Model 70`, `The Len-Knocks`, `Spanner`, `Banana`, `Cereal`, `Ketchup`, `Bandana`, `Diesel`, `LSD`, `There is a part there already. Take it off with a Tyre Wrench first`, `Hold a Tyre Wrench to take a body part off`, `S.W.A.T.`, `Southclaws`, `Morgan Freeman`
+- `ptbr` has texts no longer in English: `Hold a Wrench to take a body part off`, `There is a part there already. Take it off with a Wrench first`, `Wrench`
+- `ru` lacks: `M9`, `M9 SD`, `Desert Eagle`, `Spas 12`, `Mac 10`, `MP5`, `WASR-3`, `M16`, `Tec 9`, `Tyre Wrench`, `Action Express`, `AK-47`, `M77-RM`, `BMG`, `Model 70`, `The Len-Knocks`, `Spanner`, `There is a part there already. Take it off with a Tyre Wrench first`, `Hold a Tyre Wrench to take a body part off`, `Southclaws`
+- `ru` has texts no longer in English: `Hold a Wrench to take a body part off`, `There is a part there already. Take it off with a Wrench first`, `Wrench`
+- `ro` lacks: `M9`, `M9 SD`, `Desert Eagle`, `Spas 12`, `Mac 10`, `MP5`, `WASR-3`, `M16`, `Tec 9`, `RPG`, `Detonator`, `TNT`, `Tyre Wrench`, `Pager`, `Pizza`, `Burger`, `Taco`, `Injector`, `Detergent`, `Action Express`, `FMJ`, `Sebastian`, `Motor`, `AK-47`, `M77-RM`, `BMG`, `Model 70`, `The Len-Knocks`, `Spanner`, `Ketchup`, `Whisky`, `Radio`, `Generator`, `Film`, `Antibiotic`, `LSD`, `There is a part there already. Take it off with a Tyre Wrench first`, `Hold a Tyre Wrench to take a body part off`, `S.W.A.T.`, `Southclaws` …
+- `ro` has texts no longer in English: `Hold a Wrench to take a body part off`, `There is a part there already. Take it off with a Wrench first`, `Wrench`
+- `id` lacks: `Dildo`, `M9`, `M9 SD`, `Desert Eagle`, `Spas 12`, `Mac 10`, `MP5`, `WASR-3`, `M16`, `Tec 9`, `RPG`, `Detonator`, `TNT`, `Tyre Wrench`, `Burger`, `Taco`, `Action Express`, `No. 1`, `FMJ`, `Sebastian`, `AK-47`, `M77-RM`, `BMG`, `Model 70`, `The Len-Knocks`, `Spanner`, `Radio`, `Bandana`, `Generator`, `Film`, `Magnesium`, `LSD`, `Heroin`, `There is a part there already. Take it off with a Tyre Wrench first`, `Hold a Tyre Wrench to take a body part off`, `S.W.A.T.`, `Triad`, `Southclaws`, `Morgan Freeman`
+- `id` has texts no longer in English: `Hold a Wrench to take a body part off`, `There is a part there already. Take it off with a Wrench first`, `Wrench`
+- `bhs` lacks: `Dildo`, `M9`, `M9 SD`, `Desert Eagle`, `Spas 12`, `Mac 10`, `MP5`, `WASR-3`, `M16`, `Tec 9`, `RPG`, `Minigun`, `Detonator`, `TNT`, `Tyre Wrench`, `IED`, `Action Express`, `FMJ`, `Sebastian`, `Motor`, `AK-47`, `M77-RM`, `BMG`, `Model 70`, `The Len-Knocks`, `Spanner`, `Banana`, `Pissh Box`, `Radio`, `Bandana`, `Film`, `LSD`, `Heroin`, `There is a part there already. Take it off with a Tyre Wrench first`, `Hold a Tyre Wrench to take a body part off`, `Biker`, `S.W.A.T.`, `Southclaws`, `Morgan Freeman`
+- `bhs` has texts no longer in English: `Hold a Wrench to take a body part off`, `There is a part there already. Take it off with a Wrench first`, `Wrench`
+- `cs` lacks: `Dildo`, `M9`, `M9 SD`, `Desert Eagle`, `Spas 12`, `Mac 10`, `MP5`, `WASR-3`, `M16`, `Tec 9`, `RPG`, `TNT`, `Tyre Wrench`, `Pager`, `IED`, `Pizza`, `Taco`, `Action Express`, `FMJ`, `Sebastian`, `Motor`, `AK-47`, `M77-RM`, `BMG`, `Model 70`, `The Len-Knocks`, `Spanner`, `Pissh Box`, `Whisky`, `Film`, `Whiskey`, `LSD`, `Heroin`, `There is a part there already. Take it off with a Tyre Wrench first`, `Hold a Tyre Wrench to take a body part off`, `S.W.A.T.`, `Southclaws`, `Morgan Freeman`
+- `cs` has texts no longer in English: `Hold a Wrench to take a body part off`, `There is a part there already. Take it off with a Wrench first`, `Wrench`

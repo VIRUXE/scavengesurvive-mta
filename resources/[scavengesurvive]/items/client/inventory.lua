@@ -355,8 +355,8 @@ return function(ctx)
                 moveActions[#moveActions + 1] = { id = "move:bag", label = lang.format("Move to %s", bname) }
             end
             local emptyAction = last
-                and last.held
-                and { id = "put_held:trunk", label = lang.format("Store in %s", tname) }
+                    and last.held
+                    and { id = "put_held:trunk", label = lang.format("Store in %s", tname) }
                 or nil
             rows = rowsFor(p.trunk, p.capacity.trunk, moveActions, emptyAction)
             rows[#rows + 1] = { id = "nav:inventory", label = lang.text("My Inventory") .. " >" }
@@ -376,8 +376,8 @@ return function(ctx)
                 moveActions[#moveActions + 1] = { id = "move:trunk", label = lang.format("Move to %s", tname) }
             end
             local emptyAction = last
-                and last.held
-                and { id = "put_held:bag", label = lang.format("Store in %s", bname) }
+                    and last.held
+                    and { id = "put_held:bag", label = lang.format("Store in %s", bname) }
                 or nil
             rows = rowsFor(p.bag, p.capacity.bag, moveActions, emptyAction)
             rows[#rows + 1] = { id = "nav:inventory", label = lang.text("My Inventory") .. " >" }
@@ -395,8 +395,8 @@ return function(ctx)
                 moveActions[#moveActions + 1] = { id = "move:trunk", label = lang.format("Move to %s", tname) }
             end
             local emptyAction = last
-                and last.held
-                and { id = "put_held:inventory", label = lang.text("Store in Inventory") }
+                    and last.held
+                    and { id = "put_held:inventory", label = lang.text("Store in Inventory") }
                 or nil
             rows = rowsFor(p.inventory, p.capacity.inv, #moveActions > 0 and moveActions or nil, emptyAction)
             if p.bag then
