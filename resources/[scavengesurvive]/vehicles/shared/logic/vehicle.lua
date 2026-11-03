@@ -346,4 +346,11 @@ function M.towReach(truckModel, trailerModel)
     return (M.MODEL_LENGTH[truckModel] or 5.0) + (M.MODEL_LENGTH[trailerModel] or 5.0) + 1.0
 end
 
+-- Per-model wheel fasteners; ordinary passenger vehicles default to five.
+M.LUG_NUTS = { [496] = 4, [549] = 4, [422] = 6, [554] = 6, [470] = 8,
+    [403] = 10, [514] = 10, [515] = 10, [431] = 10, [437] = 10 }
+function M.lugNutCount(model)
+    return M.LUG_NUTS[model] or 5
+end
+
 return M

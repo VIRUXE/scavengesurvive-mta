@@ -1504,26 +1504,79 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
         end
     end
 
-    -- Case 0: a held Wheel replaces the nearest burst or missing tyre (upstream core/item/wheel.pwn); upstream acts
-    -- only within 1 m of a wheel, so at the trunk it falls through and the Wheel can go in the trunk
-    if uname == "Wheel" and not vlogic.isRear(angle) then
-        local rad = math.rad(vrz or 0)
-        local dx, dy = px - vx, py - vy
-        local localX = dx * math.cos(rad) + dy * math.sin(rad)
-        local localY = -dx * math.sin(rad) + dy * math.cos(rad)
-        local frontLeft, rearLeft, frontRight, rearRight = getVehicleWheelStates(vehicle)
-        local tires = { frontLeft, rearLeft, frontRight, rearRight }
-        local wheel = vlogic.nearestDamagedWheel(localX, localY, tires)
-        if not wheel then
+    -- Wheels need a tyre wrench in hand; a replacement wheel is laid beside the vehicle.
+    if uname == "Wheel" then
+        outputChatBox("Lay the wheel beside the vehicle, then hold a Tyre Wrench to fit it.", player)
+        return
+    end
+    if uname == "Wrench" and not vlogic.isFront(angle) and not vlogic.isRear(angle) then
+        if activeActions[player] or bodySrv.busy(vehicle) or inf.locked > 0
+            or getPedOccupiedVehicle(player) or getVehicleEngineState(vehicle) then
             return
         end
-
-        tires[wheel] = 0
-        setVehicleWheelStates(vehicle, tires[1], tires[2], tires[3], tires[4])
-        inf.damage = bodySrv.snapshot(vehicle)
-        db.exec("UPDATE vehicles SET damage = ? WHERE id = ?", { toJSON(inf.damage), inf.id })
-        exports.items:destroyItem(held.id, player)
-        toast(player, TIRE_REPAIRED[wheel])
+        local lx, ly = toLocal(getElementMatrix(vehicle), px, py, pz)
+        local wheel = vlogic.nearestDamagedWheel(lx, ly, { 2, 2, 2, 2 })
+        local positions = { { -1, 1 }, { -1, -1 }, { 1, 1 }, { 1, -1 } }
+        local pos = positions[wheel]
+        if (lx - pos[1]) ^ 2 + (ly - pos[2]) ^ 2 > 2.25 then return end
+        local tires = { getVehicleWheelStates(vehicle) }
+        local removing = tires[wheel] ~= 2
+        local action = { actionType = "wheel", vehicle = vehicle }
+        activeActions[player] = action
+        local count = vlogic.lugNutCount(getElementModel(vehicle))
+        local duration = exports.character:skillTimeModifier(player, count * 1000, "Repair")
+        local started = getTickCount()
+        triggerClientEvent(player, "vehicleHoldStarted", player,
+            (removing and "Removing wheel: " or "Installing wheel: ") .. count .. " lug nuts", duration)
+        setPedAnimation(player, "BOMBER", "BOM_Plant_Loop", -1, true, false, false, false)
+        action.timer = setTimer(function()
+            local cur = isElement(player) and exports.items:getHeld(player)
+            if not isElement(vehicle) or not info[vehicle] or not cur or cur.id ~= held.id
+                or getPedOccupiedVehicle(player) or getVehicleEngineState(vehicle) or inf.locked > 0
+                or getElementDimension(player) ~= getElementDimension(vehicle)
+                or getElementInterior(player) ~= getElementInterior(vehicle) or isPedDead(player) then
+                return cancelHoldAction(player)
+            end
+            local x, y, z = getElementPosition(player)
+            local vx1, vy1, vz1 = getElementVelocity(vehicle)
+            if getDistanceBetweenPoints3D(x, y, z, px, py, pz) > 0.8
+                or vx1 * vx1 + vy1 * vy1 + vz1 * vz1 > 0.0001 then
+                return cancelHoldAction(player)
+            end
+            if getTickCount() - started < duration then return end
+            cancelHoldAction(player)
+            local current = { getVehicleWheelStates(vehicle) }
+            if current[wheel] ~= tires[wheel] then return end
+            local function fitted()
+                current[wheel] = removing and 2 or 0
+                setVehicleWheelStates(vehicle, unpack(current))
+                inf.damage = bodySrv.snapshot(vehicle)
+                db.exec("UPDATE vehicles SET damage = ? WHERE id = ?", { toJSON(inf.damage), inf.id })
+                exports.character:gainSkill(player, "Repair")
+            end
+            if removing then
+                db.exec("INSERT INTO items (type_uname, x, y, z, rz, interior, dimension) VALUES ('Wheel', ?, ?, ?, 0, ?, ?)",
+                    { x, y, z - 0.8, getElementInterior(player), getElementDimension(player) },
+                    function(ok, _, _, id)
+                        if ok and isElement(vehicle) then
+                            fitted()
+                            exports.items:resendWorldItem(tonumber(id))
+                        end
+                    end)
+            else
+                db.query("SELECT id FROM items WHERE type_uname = 'Wheel' AND interior = ? AND dimension = ? AND POW(x - ?, 2) + POW(y - ?, 2) + POW(z - ?, 2) < 9 LIMIT 1",
+                    { getElementInterior(player), getElementDimension(player), x, y, z }, function(rows)
+                        if rows and rows[1] and isElement(vehicle) then
+                            db.exec("DELETE FROM items WHERE id = ? AND holder_char_id IS NULL AND container_id IS NULL", { rows[1].id }, function(ok, _, affected)
+                                if ok and tonumber(affected) == 1 then
+                                    exports.items:forgetWorldItem(tonumber(rows[1].id))
+                                    if isElement(vehicle) then fitted() end
+                                end
+                            end)
+                        end
+                    end)
+            end
+        end, 100, 0)
         return
     end
 
