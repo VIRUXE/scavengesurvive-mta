@@ -1,5 +1,5 @@
 -- Derived from Southclaws/ScavengeSurvive (MPL-2.0). See THIRD_PARTY_NOTICES.md
--- GENERATED FILE - do not edit; run: python -m tools.convert all
+-- Edited by hand; the language converter is gone
 return {
     ACCLOGIBODY = "#FFFFFFDobrodošao nazad %s#FFFFFF, molimo prijavi se na svoj račun ispod!\n\n#FFFF00Uživaj u igri :)",
     ACCLOGITITL = "Prijava na račun",
@@ -338,7 +338,7 @@ return {
     Money_T = "Ovaj predmet još nema upotrebu",
     MotionSen_T = "Korisno za kombiniranje",
     MotoHelme_T = "Stavi ovo na sebe pritiskom na [F]",
-    Motor_T = "Ovaj predmet još nema upotrebu",
+    Motor_T = "Drži [F] s ovim iza izgrađene odbrane da ga ugradiš (potrebno prije Keypada), koristi se i za izradu",
     Mustard_T = "Ovaj predmet još nema upotrebu",
     NEARBYKEYP = "Ova vrata su elektronski zakljucana a kontrolira ih obližnja tipkovnica.",
     NEEDANOTOOL = "Treba ti još jedan alat",
@@ -452,7 +452,7 @@ return {
     Spas12_T = "Stisni [R] da ponovo napuniš, stisni [Y] da ga stavišu futrolu i drži [N] da izbaciš municiju",
     Spatula_T = "Opali nekoga ovim već danas!",
     SprayPain_T = "Koristite ovo da bi napisali svoje ime na nekim zidovima ili da oslijepiš igraca privremeno",
-    StarterMo_T = "Ovaj predmet još nema upotrebu",
+    StarterMo_T = "Koristi se za izradu",
     Steak_T = "Ispeci ovo pa pojedi da napuniš \"food bar\"",
     StorageUn_T = "Korisno za kombiniranje",
     StrawHat_T = "Stavi ovo na sebe pritiskom na [F]",
