@@ -50,7 +50,7 @@ end
 
 local function saveSession(player)
     local account = session[player]
-    if account then
+    if account and not blocked[player] then
         local cd = countdown[player]
         local ends = cd and cd.ends or resumedCountdowns[player]
         setElementData(player, SESSION_KEY, { account = account, whitelistEnds = ends }, "local", "deny")
@@ -59,6 +59,7 @@ end
 
 local function kickLater(player, reason)
     blocked[player] = true
+    setElementData(player, SESSION_KEY, { kickReason = reason }, "local", "deny")
     setTimer(function(p, r)
         if isElement(p) then
             kickPlayer(p, r)
@@ -206,12 +207,16 @@ addEventHandler("onResourceStart", resourceRoot, function()
     -- Do not call admit: these connections are already admitted and their characters are still loaded.
     for _, p in ipairs(getElementsByType("player")) do
         local saved = getElementData(p, SESSION_KEY)
-        if type(saved) == "table" and type(saved.account) == "table" then
+        if type(saved) == "table" and type(saved.kickReason) == "string" then
+            kickLater(p, saved.kickReason)
+        elseif type(saved) == "table" and type(saved.account) == "table" and type(saved.account.id) == "number" then
             session[p] = saved.account
             promptLang[p] = saved.account.lang or "en"
             resumedCountdowns[p] = tonumber(saved.whitelistEnds)
             setElementData(p, LANG_KEY, saved.account.lang or "en", "local", "deny")
             finishReauth(p)
+        else
+            setElementData(p, SESSION_KEY, false, "local", "deny")
         end
     end
     if not db.connect("auth") then
@@ -254,6 +259,7 @@ addEventHandler("onResourceStop", resourceRoot, function()
 end)
 
 addEventHandler("onPlayerJoin", root, function()
+    setElementData(source, SESSION_KEY, false, "local", "deny")
     checkBan(source)
 end)
 
