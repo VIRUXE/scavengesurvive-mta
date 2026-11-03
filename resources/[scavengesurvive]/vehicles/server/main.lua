@@ -254,6 +254,7 @@ local function create(row)
 
     carmourSrv.load(v, row.carmour)
     gasSrv.load(v, row.gas_bottles)
+    bodySrv.restore(v, info[v]) -- body parts fitted by hand and not yet tightened
 
     -- If the vehicle has trunk capacity but no container row yet, create one
     local vt = exports.data:vehicleType(row.type_uname)

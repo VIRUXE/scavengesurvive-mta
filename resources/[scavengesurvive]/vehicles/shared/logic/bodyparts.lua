@@ -88,6 +88,27 @@ function M.nearestSlot(model, lx, ly)
     return best
 end
 
+-- A part fitted by hand sits loose until a Wrench secures it: driving shakes it off. Above LOOSE_KMH it comes off with
+-- a chance per second that grows with speed; braking hard (LOOSE_BRAKE_KMH lost within a second) throws off every one.
+M.LOOSE_KMH = 15
+M.LOOSE_BRAKE_KMH = 25
+M.LOOSE_FULL_KMH = 75 -- from here a loose part is shaken off almost at once
+
+-- kmh: speed now, lastKmh: speed a second ago, roll: a random number in [0, 1); returns "all" | "one" | nil
+function M.comesOff(kmh, lastKmh, roll)
+    if (lastKmh or 0) - kmh >= M.LOOSE_BRAKE_KMH then
+        return "all"
+    end
+    if kmh <= M.LOOSE_KMH then
+        return nil
+    end
+    local chance = math.min(0.9, (kmh - M.LOOSE_KMH) / (M.LOOSE_FULL_KMH - M.LOOSE_KMH))
+    if roll < chance then
+        return "one"
+    end
+    return nil
+end
+
 -- where a detached part lands, in the vehicle's local frame (a little outside its slot)
 function M.dropPoint(slot)
     return slot.x * 1.4, slot.y * 1.1

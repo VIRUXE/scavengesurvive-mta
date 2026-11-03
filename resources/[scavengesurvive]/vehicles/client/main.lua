@@ -166,8 +166,8 @@ function isBodyPart(uname)
     return bodyparts.partOf(uname) ~= nil
 end
 
--- export: the body-part slot of `vehicle` nearest the local player within reach, and its condition
--- ("good" | "bad" | "missing"); nil when the model has no slots or none is within reach
+-- export: the body-part slot of `vehicle` nearest the local player within reach, its condition
+-- ("good" | "bad" | "missing") and whether it is only fitted loose; nil when the model has no slots or none is in reach
 function bodyPartSlot(vehicle)
     if not isElement(vehicle) or not bodyparts.MODELS[getElementModel(vehicle)] then
         return nil
@@ -182,7 +182,9 @@ function bodyPartSlot(vehicle)
         return nil
     end
     local value = slot.door and getVehicleDoorState(vehicle, slot.door) or getVehiclePanelState(vehicle, slot.panel)
-    return slot.name, bodyparts.condition(slot, value)
+    local loose = getElementData(vehicle, "vehicles.loose")
+    local isLoose = type(loose) == "string" and ("," .. loose .. ","):find("," .. slot.name .. ",", 1, true) ~= nil
+    return slot.name, bodyparts.condition(slot, value), isLoose
 end
 
 -- upstream's KEY_SUBMISSION ("2" / Num+) toggles the lock from inside a vehicle; /lock does the same
