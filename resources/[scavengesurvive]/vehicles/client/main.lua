@@ -7,6 +7,13 @@ do
     fileClose(f)
     vlogic = assert(loadstring(src, "=vehicles/vehicle.lua"))()
 end
+local bodyparts
+do
+    local f = fileOpen("shared/logic/bodyparts.lua", true)
+    local src = fileRead(f, fileGetSize(f))
+    fileClose(f)
+    bodyparts = assert(loadstring(src, "=vehicles/bodyparts.lua"))()
+end
 local activeAction = nil
 local lastPos = nil
 
@@ -152,6 +159,30 @@ end
 -- export: the vehicle has an engine under a bonnet (a battery to take or fit); the server publishes it
 function hasBatteryBay(vehicle)
     return isElement(vehicle) and getElementData(vehicle, "vehicles.bay") == true
+end
+
+-- export: the part item `uname` is a removable vehicle body part (fits a slot of some model)
+function isBodyPart(uname)
+    return bodyparts.partOf(uname) ~= nil
+end
+
+-- export: the body-part slot of `vehicle` nearest the local player within reach, and its condition
+-- ("good" | "bad" | "missing"); nil when the model has no slots or none is within reach
+function bodyPartSlot(vehicle)
+    if not isElement(vehicle) or not bodyparts.MODELS[getElementModel(vehicle)] then
+        return nil
+    end
+    local px, py, pz = getElementPosition(localPlayer)
+    local m = getElementMatrix(vehicle)
+    local dx, dy, dz = px - m[4][1], py - m[4][2], pz - m[4][3]
+    local lx = dx * m[1][1] + dy * m[1][2] + dz * m[1][3]
+    local ly = dx * m[2][1] + dy * m[2][2] + dz * m[2][3]
+    local slot = bodyparts.nearestSlot(getElementModel(vehicle), lx, ly)
+    if not slot then
+        return nil
+    end
+    local value = slot.door and getVehicleDoorState(vehicle, slot.door) or getVehiclePanelState(vehicle, slot.panel)
+    return slot.name, bodyparts.condition(slot, value)
 end
 
 -- upstream's KEY_SUBMISSION ("2" / Num+) toggles the lock from inside a vehicle; /lock does the same

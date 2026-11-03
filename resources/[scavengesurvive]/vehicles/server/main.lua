@@ -535,6 +535,9 @@ end
 -- 1-second simulation tick for fuel consumption and low-health stalls
 local function tickSimulation()
     for v, inf in pairs(info) do
+        if isElement(v) then
+            bodySrv.scan(v, inf) -- a body part a crash knocked off drops as an item
+        end
         if
             isElement(v)
             and inf.bay
@@ -1432,6 +1435,14 @@ net.handler("vehicleBatteryRequested", function(player, vehicle)
     removeBattery(player, vehicle)
 end, { rate = 3 })
 
+-- A Wrench held a moment at a body part takes it off the vehicle (server/bodyparts.lua)
+net.handler("vehiclePartRemoveRequested", function(player, vehicle)
+    if not isElement(vehicle) or not info[vehicle] or isPedDead(player) then
+        return
+    end
+    bodySrv.remove(player, vehicle)
+end, { rate = 3 })
+
 -- Roadside interaction: repair, locksmith, lock-breaking, trunk container, refuelling, headlights, wheels
 net.handler("vehicleInteractRequested", function(player, vehicle)
     if not isElement(vehicle) or not info[vehicle] or isPedDead(player) then
@@ -1507,8 +1518,7 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
 
         tires[wheel] = 0
         setVehicleWheelStates(vehicle, tires[1], tires[2], tires[3], tires[4])
-        inf.damage = type(inf.damage) == "table" and inf.damage or {}
-        inf.damage.tires = tires
+        inf.damage = bodySrv.snapshot(vehicle)
         db.exec("UPDATE vehicles SET damage = ? WHERE id = ?", { toJSON(inf.damage), inf.id })
         exports.items:destroyItem(held.id, player)
         toast(player, TIRE_REPAIRED[wheel])
@@ -1529,11 +1539,7 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
         end
 
         setVehicleLightState(vehicle, brokenLight, 0)
-        inf.damage = type(inf.damage) == "table" and inf.damage or {}
-        inf.damage.lights = inf.damage.lights or {}
-        for light = 0, 3 do
-            inf.damage.lights[light + 1] = getVehicleLightState(vehicle, light)
-        end
+        inf.damage = bodySrv.snapshot(vehicle)
         db.exec("UPDATE vehicles SET damage = ? WHERE id = ?", { toJSON(inf.damage), inf.id })
         exports.items:destroyItem(held.id, player)
         toast(player, "REPAIRED")
@@ -2037,15 +2043,13 @@ end
 
 -- Shares the roadside action/cancellation lifecycle; the item and saved panel change commit together.
 do
-    local f = fileOpen("server/bodyparts.lua", true)
+    local f = fileOpen("shared/logic/bodyparts.lua", true)
+    local logic = fileRead(f, fileGetSize(f))
+    fileClose(f)
+    local bp = assert(loadstring(logic, "=vehicles/bodyparts_logic.lua"))()
+    f = fileOpen("server/bodyparts.lua", true)
     local src = fileRead(f, fileGetSize(f))
     fileClose(f)
-    bodySrv = assert(loadstring(src, "=vehicles/bodyparts.lua"))()({
-        db = db,
-        info = info,
-        activeActions = activeActions,
-        cancel = cancelHoldAction,
-        toLocal = toLocal,
-        toast = toast,
-    })
-end
+    local ctx = { bp = bp, db = db, util = util, info = info, activeActions = activeActions }
+    ctx.cancel, ctx.toLocal, ctx.toWorld, ctx.toast = cancelHoldAction, toLocal, toWorld, toast
+    bodySrv = assert(loadstring(src, "=vehicles/bodyparts.lua"))()(ctx)

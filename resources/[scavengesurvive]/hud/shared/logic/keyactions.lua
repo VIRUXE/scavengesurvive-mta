@@ -31,6 +31,7 @@ M.CRATES = { supply = "Open supply crate", cache = "Open weapon cache" }
 --   cuffedNearby, hasBag,
 --   nearFeature ("ladder" / "zipline" / "ladder_on" / "zipline_on" / "button:<label>"), nearCrate ("supply" / "cache"),
 --   nearDoor ("open" / "closed" / "locked": a walk-in vehicle door in reach, the towable Airstream's),
+--   bodyPart ("Left Door": a Wrench in hand at a vehicle body part that is still on, F held takes it off),
 --   held = false | { uname, category, isWeapon },
 --   nearCooker,                           -- uncooked food in hand next to a campfire or barbecue (#95): "Cook"
 --   nearMachine,                          -- a machine in reach (#145): "Access machine" / "(Hold) Machine menu"
@@ -110,6 +111,10 @@ function M.lines(ctx, keys)
     if ctx.nearDoor and not busyF then
         local doorText = { open = "Close door", locked = "Door locked" }
         add("interact", doorText[ctx.nearDoor] or "Open door")
+    end
+    -- a Wrench at a body part of a vehicle (vehicles bodyparts, not an upstream line): a hold takes the part off
+    if ctx.bodyPart and not busyF then
+        add("interact", "(Hold) Remove " .. string.lower(ctx.bodyPart))
     end
     -- a machine (items, #145): upstream's button "Press F to access machine / Hold F to open menu"; a Crowbar in
     -- hand takes it down instead (Deconstruct, a port deviation: upstream left it a TODO)

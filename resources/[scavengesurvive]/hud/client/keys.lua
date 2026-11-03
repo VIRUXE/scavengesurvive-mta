@@ -300,8 +300,32 @@ return function(ctx)
                 end, 50, 0)
                 return
             end
+            -- a Wrench at a body part: a tap is the Wrench's usual job, a hold takes the part off (vehicles server)
+            if uname == "Wrench" and exports.vehicles:bodyPartSlot(nearVeh) then
+                blockEnterUntil = getTickCount() + TRUNK_ENTER_BLOCK_MS
+                if isTimer(interactHoldTimer) then
+                    return
+                end
+                local key = string.lower(getKeyBoundToCommand("interact") or "f")
+                local startTick = getTickCount()
+                local partVeh = nearVeh
+                interactHoldTimer = setTimer(function()
+                    local heldMs = getTickCount() - startTick
+                    local released = not isKeyHeld(key, "interact")
+                    if released or heldMs >= 500 then
+                        killTimer(interactHoldTimer)
+                        interactHoldTimer = nil
+                        local eventName = heldMs >= 500 and "vehiclePartRemoveRequested" or "vehicleInteractRequested"
+                        if isElement(partVeh) then
+                            triggerServerEvent(eventName, localPlayer, partVeh)
+                        end
+                    end
+                end, 50, 0)
+                return
+            end
             local isRear = angle > 155 and angle < 205
-            if (uname and VEHICLE_TOOLS[uname]) or isRear then
+            local isPart = uname and exports.vehicles:isBodyPart(uname)
+            if (uname and VEHICLE_TOOLS[uname]) or isPart or isRear then
                 blockEnterUntil = getTickCount() + TRUNK_ENTER_BLOCK_MS
                 return triggerServerEvent("vehicleInteractRequested", localPlayer, nearVeh)
             end

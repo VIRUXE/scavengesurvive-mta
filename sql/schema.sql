@@ -2036,6 +2036,120 @@ BEGIN
   SELECT 1 AS ok, 'OK' AS code, JSON_OBJECT('updated', CAST(v_n AS SIGNED)) AS payload;
 END//
 
+CREATE OR REPLACE PROCEDURE `vehicle_parts_detached`(IN p_vehicle INT, IN p_damage LONGTEXT, IN p_items JSON)
+main: BEGIN
+  DECLARE v_n INT DEFAULT 0;
+  DECLARE v_first BIGINT;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
+  IF JSON_VALID(p_damage) <> 1 THEN
+    SELECT 0 AS ok, 'BAD_DAMAGE' AS code, NULL AS payload;
+    LEAVE main;
+  END IF;
+  IF JSON_TYPE(p_damage) = 'ARRAY' THEN
+    SET p_damage = JSON_EXTRACT(p_damage, '$[0]');
+  END IF;
+  SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+  START TRANSACTION;
+  IF NOT EXISTS (SELECT 1 FROM vehicles WHERE id = p_vehicle FOR UPDATE) THEN
+    ROLLBACK;
+    SELECT 0 AS ok, 'NO_VEHICLE' AS code, NULL AS payload;
+    LEAVE main;
+  END IF;
+  UPDATE vehicles SET damage = p_damage WHERE id = p_vehicle;
+  INSERT INTO items (type_uname, hitpoints, x, y, z, rz, interior, dimension)
+    SELECT j.u, t.max_hitpoints, j.x, j.y, j.z, j.rz, j.i, j.d
+    FROM JSON_TABLE(IFNULL(p_items, '[]'), '$[*]' COLUMNS (
+      u VARCHAR(32) PATH '$.u', x FLOAT PATH '$.x', y FLOAT PATH '$.y', z FLOAT PATH '$.z',
+      rz FLOAT PATH '$.rz', i TINYINT PATH '$.int', d INT PATH '$.dim')) AS j
+    JOIN item_types t ON t.uname = j.u COLLATE utf8mb4_uca1400_ai_ci;
+  SET v_n = ROW_COUNT();
+  SET v_first = IF(v_n > 0, LAST_INSERT_ID(), NULL);
+  COMMIT;
+  SELECT 1 AS ok, 'OK' AS code, JSON_OBJECT('first', CAST(v_first AS SIGNED), 'count', CAST(v_n AS SIGNED)) AS payload;
+END//
+
+CREATE OR REPLACE PROCEDURE `vehicle_part_install`(IN p_vehicle INT, IN p_item INT, IN p_char INT, IN p_uname VARCHAR(32), IN p_model INT, IN p_path VARCHAR(32), IN p_missing INT, IN p_state INT, IN p_damage LONGTEXT)
+main: BEGIN
+  DECLARE v_found INT DEFAULT 0;
+  DECLARE v_model INT DEFAULT 0;
+  DECLARE v_locked INT DEFAULT 0;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
+  IF JSON_VALID(p_damage) <> 1 THEN
+    SELECT 0 AS ok, 'BAD_DAMAGE' AS code, NULL AS payload;
+    LEAVE main;
+  END IF;
+  IF JSON_TYPE(p_damage) = 'ARRAY' THEN
+    SET p_damage = JSON_EXTRACT(p_damage, '$[0]');
+  END IF;
+  IF p_path IS NULL OR JSON_VALUE(p_damage, p_path) IS NULL OR CAST(JSON_VALUE(p_damage, p_path) AS SIGNED) <> p_missing THEN
+    SELECT 0 AS ok, 'SLOT_TAKEN' AS code, NULL AS payload;
+    LEAVE main;
+  END IF;
+  SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+  START TRANSACTION;
+  SELECT COUNT(*), MAX(model), MAX(locked) INTO v_found, v_model, v_locked FROM vehicles WHERE id = p_vehicle FOR UPDATE;
+  IF v_found <> 1 OR v_model <> p_model OR v_locked <> 0 THEN
+    ROLLBACK;
+    SELECT 0 AS ok, 'NO_VEHICLE' AS code, NULL AS payload;
+    LEAVE main;
+  END IF;
+  SELECT COUNT(*) INTO v_found FROM items WHERE id = p_item AND type_uname = p_uname AND holder_char_id = p_char AND holder_kind = 'held' AND hitpoints > 0 FOR UPDATE;
+  IF v_found <> 1 THEN
+    ROLLBACK;
+    SELECT 0 AS ok, 'NOT_HELD' AS code, NULL AS payload;
+    LEAVE main;
+  END IF;
+  DELETE FROM items WHERE id = p_item;
+  UPDATE vehicles SET damage = JSON_SET(p_damage, p_path, CAST(p_state AS SIGNED)), last_used_at = NOW() WHERE id = p_vehicle;
+  COMMIT;
+  SELECT 1 AS ok, 'OK' AS code, JSON_OBJECT('state', CAST(p_state AS SIGNED)) AS payload;
+END//
+
+CREATE OR REPLACE PROCEDURE `vehicle_part_remove`(IN p_vehicle INT, IN p_char INT, IN p_model INT, IN p_path VARCHAR(32), IN p_missing INT, IN p_uname VARCHAR(32), IN p_damage LONGTEXT, IN p_x FLOAT, IN p_y FLOAT, IN p_z FLOAT, IN p_rz FLOAT, IN p_int INT, IN p_dim INT)
+main: BEGIN
+  DECLARE v_found INT DEFAULT 0;
+  DECLARE v_model INT DEFAULT 0;
+  DECLARE v_locked INT DEFAULT 0;
+  DECLARE v_hp INT;
+  DECLARE v_id BIGINT;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
+  IF JSON_VALID(p_damage) <> 1 THEN
+    SELECT 0 AS ok, 'BAD_DAMAGE' AS code, NULL AS payload;
+    LEAVE main;
+  END IF;
+  IF JSON_TYPE(p_damage) = 'ARRAY' THEN
+    SET p_damage = JSON_EXTRACT(p_damage, '$[0]');
+  END IF;
+  IF p_path IS NULL OR JSON_VALUE(p_damage, p_path) IS NULL OR CAST(JSON_VALUE(p_damage, p_path) AS SIGNED) >= p_missing THEN
+    SELECT 0 AS ok, 'SLOT_EMPTY' AS code, NULL AS payload;
+    LEAVE main;
+  END IF;
+  SELECT max_hitpoints INTO v_hp FROM item_types WHERE uname = p_uname;
+  IF v_hp IS NULL THEN
+    SELECT 0 AS ok, 'NO_ITEM_TYPE' AS code, NULL AS payload;
+    LEAVE main;
+  END IF;
+  SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+  START TRANSACTION;
+  SELECT COUNT(*), MAX(model), MAX(locked) INTO v_found, v_model, v_locked FROM vehicles WHERE id = p_vehicle FOR UPDATE;
+  IF v_found <> 1 OR v_model <> p_model OR v_locked <> 0 THEN
+    ROLLBACK;
+    SELECT 0 AS ok, 'NO_VEHICLE' AS code, NULL AS payload;
+    LEAVE main;
+  END IF;
+  SELECT COUNT(*) INTO v_found FROM items WHERE type_uname = 'Wrench' AND holder_char_id = p_char AND holder_kind = 'held' AND hitpoints > 0 FOR UPDATE;
+  IF v_found < 1 THEN
+    ROLLBACK;
+    SELECT 0 AS ok, 'NO_TOOL' AS code, NULL AS payload;
+    LEAVE main;
+  END IF;
+  UPDATE vehicles SET damage = JSON_SET(p_damage, p_path, CAST(p_missing AS SIGNED)), last_used_at = NOW() WHERE id = p_vehicle;
+  INSERT INTO items (type_uname, hitpoints, x, y, z, rz, interior, dimension) VALUES (p_uname, v_hp, p_x, p_y, p_z, p_rz, p_int, p_dim);
+  SET v_id = LAST_INSERT_ID();
+  COMMIT;
+  SELECT 1 AS ok, 'OK' AS code, JSON_OBJECT('id', CAST(v_id AS SIGNED)) AS payload;
+END//
+
 CREATE OR REPLACE PROCEDURE `weapon_unload`(
   IN p_char_id INT, IN p_weapon_id INT, IN p_weapon_data JSON,
   IN p_ammo_uname VARCHAR(32), IN p_ammo_data JSON,

@@ -644,7 +644,8 @@ class Shell:
         return path
 
     def export(self):
-        """Writes <name>.dff/.col and <name>_door.dff/.col into house_shell/files and build/<name>.json."""
+        """Writes <name>.dff/.col and <name>_door.dff/.col into house_shell/files, build/<name>.json and the committed
+        tools/shell_rooms.json (the room boxes the loot points are measured from)."""
         self._finish_mesh()
         if self.leaf is None:
             self.build_leaf()
@@ -668,6 +669,11 @@ class Shell:
             meta["door"]["hinge"] = [round(v, 4) for v in d["hinge"]]
         with open(os.path.join(BUILD, self.name + ".json"), "w") as f:
             json.dump(meta, f, indent=2)
+        rooms_path = os.path.join(ROOT, "tools", "shell_rooms.json")
+        rooms = json.load(open(rooms_path)) if os.path.exists(rooms_path) else {}
+        rooms[self.name] = meta["rooms"]
+        with open(rooms_path, "w") as f:
+            json.dump(dict(sorted(rooms.items())), f, indent=1)
         print(f"export: {self.name} ({len(self.obj.data.polygons)} faces, {len(self.cols)} collision boxes)")
 
     def _export_one(self, name, obj, boxes):
