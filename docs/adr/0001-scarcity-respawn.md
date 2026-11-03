@@ -95,3 +95,26 @@ deficit, per-point cooldowns, and placement away from players.
   the roll, not from the last pickup (a point rolls again when it is empty and the cooldown has passed). Supply
   drops, weapon caches, crafted and staff-given items have no `loot_zone` and never count.
 - **Live check:** smoke step 28 in `docs/mvp-smoke-checklist.md`; settings in `server-config/README.md`.
+
+
+## Correction (2026-11-03): pace loot instead of banking refill
+
+Loot previously accumulated unused whole-item allowance up to the entire zone deficit. Lazy placement could
+then spend hours of allowance in seconds when a player entered an area. At 23:24:38 UTC, a login followed by
+repeated movement between San Fierro and the origin activated nearby rolls with a global bank of 17,891
+permissions. The incident created 2,671 loot items; 2,668 surviving items were backed up and removed.
+
+Unspent whole-item loot allowance now expires each five-minute refill tick. Only the fractional remainder
+carries forward. New zones start with zero allowance; restart loading clamps persisted allowance to at most
+one interval without awarding new supply. Loot placement and refill are serialized so a refill cannot
+restore permissions reserved by an in-flight placement. The periodic player scan visits each player
+sequentially. Failed placements reload the persisted allowance before resuming. Vehicle refill is unchanged.
+
+Regression check: `lua tests/lua/loot_budget_test.lua` from the repository root.
+
+
+Initial player positions are guarded separately from scarcity pacing. Loot proximity rolls wait at least one
+second after spawn and require an initial position away from X/Y origin (including origin-side falling Z).
+After initialization, origin is not exempt. Anticheat uses the same initial-position guard with a maximum
+ten-second wait; normal movement checks resume even if the player remains at the origin. Respawns reset the
+baseline, and quitting clears it. Check with `lua tests/lua/spawn_guard_test.lua`.

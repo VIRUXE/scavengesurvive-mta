@@ -1,6 +1,7 @@
 local db = loadstring(exports.lib:getModule("db"), "=lib/db.lua")()
 local net = loadstring(exports.lib:getModule("net"), "=lib/net.lua")()
 local util = loadstring(exports.lib:getModule("util"), "=lib/util.lua")()
+local spawnGuard = loadstring(exports.lib:getModule("spawn_guard"), "=lib/spawn_guard.lua")().new()
 local budget = loadstring(exports.lib:getModule("budget"), "=lib/budget.lua")()
 local function loadFile(path)
     local f = fileOpen(path, true)
@@ -16,11 +17,12 @@ local busy = {}
 local warnedTables = {}
 local allowance = {} -- zone -> items the zone may still spawn (cache of world_budget.allowance between refill ticks)
 local refillTimer = nil
+local budgetBusy = true -- serialize placement and refill; startup loads the persisted budget first
 
--- Per-zone carrying capacity: enabled points × items_per_point × cap_multiplier; a new zone starts full
--- (allowance = cap), an existing row only has its cap recomputed so a settings change applies on restart.
+-- Per-zone carrying capacity: enabled points × items_per_point × cap_multiplier.
+-- New zones earn their first allowance on the refill tick; restarts never mint supply.
 local UPSERT_BUDGETS = "INSERT INTO world_budget (category, zone, cap, remainder, allowance) "
-    .. "SELECT 'loot', zone, ROUND(COUNT(*) * ? * ?), 0, ROUND(COUNT(*) * ? * ?) "
+    .. "SELECT 'loot', zone, ROUND(COUNT(*) * ? * ?), 0, 0 "
     .. "FROM loot_spawns WHERE enabled = 1 GROUP BY zone "
     .. "ON DUPLICATE KEY UPDATE cap = VALUES(cap), allowance = LEAST(allowance, VALUES(cap))"
 
@@ -31,30 +33,58 @@ local SELECT_BUDGETS = "SELECT b.zone, b.cap, b.remainder, b.allowance, (SELECT 
     .. "FROM world_budget b WHERE b.category = 'loot'"
 
 local UPDATE_BUDGET = "UPDATE world_budget SET remainder = ?, "
-    .. "allowance = LEAST(allowance + ?, GREATEST(cap - ?, 0)) WHERE category = 'loot' AND zone = ?"
+    .. "allowance = LEAST(?, GREATEST(cap - ?, 0)) WHERE category = 'loot' AND zone = ?"
 
 local function setting(key, default)
     return tonumber(settings[key]) or default
 end
 
+-- Unspent refill expires at the next tick. Banking it lets an unexplored area release hours of
+-- supply in seconds. On restart, retain at most one interval (never award fresh allowance).
 local function loadAllowances(cb)
-    db.query("SELECT zone, allowance FROM world_budget WHERE category = 'loot'", {}, function(rows)
-        for _, r in ipairs(rows or {}) do
-            allowance[r.zone] = tonumber(r.allowance) or 0
+    db.query(SELECT_BUDGETS, { setting("loot.count_carried", 1) }, function(rows)
+        if not rows then
+            allowance = {} -- fail closed until a successful refill reloads the budget
+            budgetBusy = false
+            return
         end
-        if cb then
-            cb()
+        for _, r in ipairs(rows) do
+            local quota = budget.refill(
+                tonumber(r.cap),
+                tonumber(r.alive),
+                0.999999,
+                setting("loot.refill_rate", 0.10),
+                setting("loot.refill_floor", 0.02),
+                setting("world.refill_interval_s", 300)
+            )
+            allowance[r.zone] = math.min(tonumber(r.allowance) or 0, quota)
+            db.exec(
+                "UPDATE world_budget SET allowance = LEAST(allowance, ?) WHERE category = 'loot' AND zone = ?",
+                { allowance[r.zone], r.zone }
+            )
         end
+        -- FIFO DB queue: release placement only after the startup clamps have committed.
+        db.query("SELECT 1", {}, function()
+            budgetBusy = false
+            if cb then
+                cb()
+            end
+        end)
     end)
 end
 
 -- The ADR 0001 refill tick: each zone earns spawns in proportion to its deficit, never beyond it.
 local function refillTick()
+    if budgetBusy then
+        return
+    end
+    budgetBusy = true
     local rate, floor = setting("loot.refill_rate", 0.10), setting("loot.refill_floor", 0.02)
     local interval = setting("world.refill_interval_s", 300)
     local carried = setting("loot.count_carried", 1)
     db.query(SELECT_BUDGETS, { carried }, function(rows)
         if not rows then
+            budgetBusy = false
             return
         end
         local zones, totalCap, totalAlive, totalAllow, added = 0, 0, 0, 0, 0
@@ -62,15 +92,40 @@ local function refillTick()
             local cap, alive = tonumber(b.cap) or 0, tonumber(b.alive) or 0
             local spawns, remainder = budget.refill(cap, alive, tonumber(b.remainder) or 0, rate, floor, interval)
             db.exec(UPDATE_BUDGET, { remainder, spawns, alive, b.zone })
-            local allow = math.min((tonumber(b.allowance) or 0) + spawns, math.max(cap - alive, 0))
-            allowance[b.zone] = allow
+            allowance[b.zone] = spawns
             zones, added = zones + 1, added + spawns
-            totalCap, totalAlive, totalAllow = totalCap + cap, totalAlive + alive, totalAllow + allow
+            totalCap, totalAlive, totalAllow = totalCap + cap, totalAlive + alive, totalAllow + spawns
         end
+        db.query("SELECT zone, allowance FROM world_budget WHERE category = 'loot'", {}, function(saved)
+            if saved then
+                for _, row in ipairs(saved) do
+                    allowance[row.zone] = tonumber(row.allowance) or 0
+                end
+            else
+                allowance = {}
+            end
+            budgetBusy = false
+        end)
         local line = "refill: %d zones, alive %d/%d, allowance %d (+%d)"
         util.log("loot", "info", line, zones, totalAlive, totalCap, totalAllow, added)
     end)
 end
+
+-- A character ID is installed before spawnPlayer finishes. Wait for the first settled
+-- non-origin position before allowing that player to activate lazy loot placement.
+local function playerReady(player)
+    if not exports.character:getCharacterId(player) or isPedDead(player) then
+        return false
+    end
+    local x, y, z = getElementPosition(player)
+    return spawnGuard.ready(player, getTickCount(), x, y, z)
+end
+addEventHandler("onPlayerSpawn", root, function()
+    spawnGuard.reset(source, getTickCount())
+end)
+addEventHandler("onPlayerQuit", root, function()
+    spawnGuard.forget(source)
+end)
 
 local function playerPositions()
     local out = {}
@@ -203,7 +258,20 @@ end
 -- Rolls due spawns inside a box around (x, y): spawns are due when next_roll_at has passed and no item from the
 -- previous roll remains in the world; the zone must still have allowance and no player may be within
 -- world.min_player_distance of the point. Every roll of the batch goes to the DB in one loot_roll call.
-function rollNear(x, y, radius)
+function rollNear(x, y, radius, onDone)
+    if budgetBusy then
+        if onDone then
+            onDone()
+        end
+        return false
+    end
+    budgetBusy = true
+    local function finish()
+        budgetBusy = false
+        if onDone then
+            onDone()
+        end
+    end
     local batch = setting("loot.roll_batch", 300)
     local sql = "SELECT s.id, s.x, s.y, s.z, s.zone, s.table_name, s.weight, s.size FROM loot_spawns s "
         .. "JOIN loot_spawn_state st ON st.spawn_id = s.id WHERE s.enabled = 1 AND st.next_roll_at <= NOW() "
@@ -224,6 +292,7 @@ function rollNear(x, y, radius)
         )
     db.query(sql, {}, function(rows)
         if not rows then
+            finish()
             return
         end
         local players, minDist = playerPositions(), setting("world.min_player_distance", 150)
@@ -239,6 +308,7 @@ function rollNear(x, y, radius)
             end
         end
         if #rolls == 0 then
+            finish()
             return
         end
         db.call("loot_roll", { toJSON(rolls), setting("loot.despawn_minutes", 120) }, function(res, done)
@@ -246,12 +316,14 @@ function rollNear(x, y, radius)
                 busy[r.s] = nil
             end
             if not res or not res.ok then
+                loadAllowances(onDone) -- restore reservations from the rolled-back transaction
                 return util.log("loot", "warn", "loot_roll of %d spawns failed: %s", #done, res and res.code or "db")
             end
             for _, r in ipairs(done) do
                 triggerEvent("lootSpawned", resourceRoot, r.s, #r.items, r.items)
             end
             fillLoveBoxes(done)
+            finish()
         end, rolls)
     end)
     return true
@@ -265,7 +337,7 @@ addEventHandler("onResourceStart", resourceRoot, function()
         settings = map
         drops.start()
         local perPoint, mult = setting("loot.items_per_point", 2.0), setting("loot.cap_multiplier", 1.0)
-        db.exec(UPSERT_BUDGETS, { perPoint, mult, perPoint, mult }, function()
+        db.exec(UPSERT_BUDGETS, { perPoint, mult }, function()
             loadAllowances()
         end)
         if isTimer(refillTimer) then
@@ -306,17 +378,28 @@ function dropStatus()
     return drops.status()
 end
 
+-- Visit every player sequentially so asynchronous reservations cannot overlap or starve
+-- everyone after the first player in the list.
 setTimer(function()
-    for _, p in ipairs(getElementsByType("player")) do
-        if exports.character:getCharacterId(p) then
-            local x, y = getElementPosition(p)
-            rollNear(x, y, 400)
+    local players = getElementsByType("player")
+    local index = 0
+    local function nextPlayer()
+        index = index + 1
+        local p = players[index]
+        if not p then
+            return
         end
+        if not isElement(p) or not playerReady(p) then
+            return nextPlayer()
+        end
+        local x, y = getElementPosition(p)
+        rollNear(x, y, 400, nextPlayer)
     end
+    nextPlayer()
 end, 15000, 0)
 
 addEventHandler("playerZoneEntered", root, function()
-    if exports.character:getCharacterId(source) then
+    if playerReady(source) then
         local x, y = getElementPosition(source)
         rollNear(x, y, 400)
     end
