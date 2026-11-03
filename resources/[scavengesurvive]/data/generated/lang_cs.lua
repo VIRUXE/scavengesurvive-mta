@@ -338,7 +338,7 @@ return {
     Money_T = "Zatím žádné využití",
     MotionSen_T = "Používá se ke kombinování",
     MotoHelme_T = "Nasaď si to zmáčknutím [F]",
-    Motor_T = "Namontuj na dveře pro vytvoření otevíracích dveří bez kódu",
+    Motor_T = "Drž [F] s tímto za postavenou obranou pro namontování (potřebné před klávesnicí), používá se také ke kombinování",
     Mustard_T = "Zatím žádné využití",
     NEARBYKEYP = "Dveře jsou elektronicky zamčeny a řízené klávesnicí poblíž.",
     NEEDANOTOOL = "Použij jiný nástroj",
