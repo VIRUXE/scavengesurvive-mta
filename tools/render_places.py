@@ -1,7 +1,8 @@
-"""Renders shots of real places of the game world in Blender's EEVEE for the wiki: the terrain, roads, trees and
+"""Renders shots of real places of the game world in Blender for the wiki: the terrain, roads, trees and
 buildings around a point, with item and vehicle placements dropped onto the ground there.
 
     python -m tools.render_places [--place NAME ...] [--at x,y,z --radius R] [--size WxH] [--samples N] [--stats]
+    python -m tools.render_places --engine eevee  # faster draft; default: Cycles with daylight and indirect light
     python -m tools.render_places --list
 
 The world comes from the game's own placements: the text IPLs under data/maps and the binary stream IPLs inside
@@ -14,7 +15,9 @@ object within `radius` of the place is loaded, and the large models (IDE draw di
 and lakes come from data/water.dat. Models are staged once into a cache keyed by model id. A place may carry the same
 item/vehicle placement spec as tools/render_scenes.py (positions relative to the place; every placement is dropped
 onto the terrain by a ray cast). Writes docs/images/places/<name>.png plus index.json, and a 1200 px copy into the
-wiki clone's images/places/.
+wiki clone's images/places/. Cycles uses a physical sky with a sun direction fixed in world space, so shadows and
+indirect skylight follow the surroundings rather than the camera. A supported GPU is used when available, otherwise
+the CPU; --device cpu forces the latter. EEVEE is available for quick drafts.
 """
 from __future__ import annotations
 
@@ -43,6 +46,12 @@ MAPS = RES / "maps" / "data"
 PUZZLES = RES / "world" / "data" / "puzzles.lua"
 HOUSE_SHELL = RES / "house_shell"
 BIG_DRAW_DISTANCE = 150.0  # IDE draw distance from which a model counts as large scenery (terrain chunks are 200)
+DAYLIGHT = {
+    "day": {"elevation": 42, "rotation": 225, "strength": 0.2, "sun": 1.0, "aerosol": 0.6},
+    "overcast": {"elevation": 48, "rotation": 225, "strength": 0.3, "sun": 0.08, "aerosol": 3.0},
+    "golden": {"elevation": 17, "rotation": 270, "strength": 0.3, "sun": 0.9, "aerosol": 1.0},
+    "dusk": {"elevation": 5, "rotation": 275, "strength": 0.3, "sun": 0.4, "aerosol": 1.0},
+}
 ROW = re.compile(r"\{ (\d+), ([-\d.e]+), ([-\d.e]+), ([-\d.e]+), ([-\d.e]+), ([-\d.e]+), ([-\d.e]+), (-?\d+), (-?\d+), [-\d.e]+ \}")
 REMOVAL = re.compile(r"\{ (\d+), ([-\d.e]+), ([-\d.e]+), ([-\d.e]+), ([-\d.e]+) \}")
 SECTIONS = {"inst", "cull", "path", "grge", "enex", "cars", "pick", "jump", "tcyc", "auzo", "mult", "occl", "zone", "objs", "tobj", "anim", "txdp", "peds", "weap", "hier", "2dfx"}
@@ -52,20 +61,20 @@ AIRSTREAM_ITEMS = rs.SCENES["airstream"]["items"]
 SUPPLY_CRATE = [{"model": rs.SUPPLY_CRATE, "at": (0, 0, 0), "rot": (0, 0, 20), "name": "crate"}, {"model": rs.SUPPLY_CRATE, "at": (0.01, 0.01, 0), "rot": (0, 180, 20), "on": "crate"}]
 
 PLACES = {
-    "farm-silos": {"caption": "The Flint County farm: the silos with their ladders", "at": (-1075.0, -672.0, 36.0), "camera": {"look_at": (-1065.0, -680.0, 38.0), "azimuth": -120, "elevation": 20, "distance": 230, "lens": 30}, "light": "day"},
+    "farm-silos": {"caption": "Storage tanks and towers at an industrial complex in Flint County", "at": (-1075.0, -672.0, 36.0), "camera": {"look_at": (-1065.0, -680.0, 38.0), "azimuth": -120, "elevation": 20, "distance": 230, "lens": 30}, "light": "day"},
     "area69-gate": {"caption": "The gate of Area 69", "at": (211.6, 1812.0, 19.0), "camera": {"look_at": (212.0, 1818.0, 19.0), "azimuth": -60, "elevation": 12, "distance": 55, "lens": 35}, "light": "day"},
     "chiliad-station": {"caption": "The Mount Chiliad summit station with the battery and fusebox puzzle", "at": (-2316.15, -1646.64, 483.43), "camera": {"look_at": (-2316.0, -1646.0, 485.0), "azimuth": -150, "elevation": 20, "distance": 45, "lens": 32}, "light": "golden", "items": [{"uname": "Battery", "at": (0.0, 0.0, 0.0), "yaw": 32.04}, {"uname": "Fusebox", "at": (0.48, 1.75, 0.0), "yaw": 262.98}]},
     "quarry-door": {"caption": "The quarry door's log cabin in the Whetstone woods", "at": (-2813.0, -1527.0, 140.0), "camera": {"look_at": (-2814.0, -1526.0, 141.5), "azimuth": -40, "elevation": 12, "distance": 36, "lens": 35}, "light": "overcast"},
     "scrapyard": {"caption": "The Whetstone machines in place: the Scrap Machine and the Refining Machine", "at": (-1868.0, -1661.0, 22.0), "camera": {"look_at": (-1868.0, -1661.0, 23.0), "azimuth": -70, "elevation": 22, "distance": 80, "lens": 30}, "light": "day", "items": [{"uname": "ScrapMachine", "at": (-20.26, 24.59, 0.0), "yaw": 0.0}, {"uname": "RefineMachine", "at": (19.44, -24.39, 0.0), "yaw": -54.0}]},
     "palisades-bbq": {"caption": "The BBQ on the Palisades", "at": (-2701.13, 845.74, 70.38), "camera": {"look_at": (-2704.0, 847.0, 71.2), "azimuth": 100, "elevation": 8, "distance": 9, "lens": 32}, "light": "golden", "items": [{"uname": "Barbecue", "at": (0.0, 0.0, 0.0), "yaw": 171.0}]},
-    "queens-lockup": {"caption": "The code hunt's lockup in Queens, San Fierro", "at": (-2497.0, 315.0, 29.5), "camera": {"look_at": (-2499.0, 315.0, 30.5), "azimuth": 90, "elevation": 6, "distance": 18, "lens": 35}, "light": "day"},
+    "queens-lockup": {"caption": "The code hunt's lockup entrance and keypad in Queens, San Fierro", "at": (-2497.0, 315.0, 29.5), "radius": 90.0, "backdrop": 300.0, "camera": {"look_at": (-2496.5, 314.7, 30.2), "azimuth": 180, "elevation": 15, "distance": 23.1, "lens": 35}, "light": "day"},
     "trailer-park": {"caption": "A trailer cluster in Las Barrancas, Bone County: the enterable shells", "at": (-890.0, 1541.0, 24.9), "radius": 300.0, "backdrop": 700.0, "camera": {"look_at": (-890.0, 1541.0, 26.0), "azimuth": -60, "elevation": 16, "distance": 60, "lens": 35}, "light": "day"},
     "townhouse-street": {"caption": "A Los Santos street of house shells (East Beach)", "at": (2663.0, -2005.0, 15.3), "camera": {"look_at": (2663.0, -2005.0, 16.5), "azimuth": 60, "elevation": 8, "distance": 50, "lens": 35}, "light": "day"},
     "fuel-station": {"caption": "A fuel station with eight outlets (San Fierro)", "at": (-1675.0, 413.0, 6.4), "camera": {"look_at": (-1675.0, 413.0, 7.5), "azimuth": 120, "elevation": 6, "distance": 40, "lens": 35}, "light": "day"},
     "spawn-beach": {"caption": "A spawn point on the beach, the sea behind", "at": (-228.79, -1719.81, 1.11), "camera": {"look_at": (-228.8, -1719.8, 2.2), "azimuth": 160, "elevation": 10, "distance": 40, "lens": 32}, "light": "golden"},
     "verdant-meadows": {"caption": "The Verdant Meadows airstrip drop point with a supply crate", "at": (373.17, 2511.17, 15.47), "camera": {"look_at": (373.0, 2511.0, 17.0), "azimuth": -40, "elevation": 12, "distance": 45, "lens": 35}, "light": "day", "items": SUPPLY_CRATE},
-    "camp": {"caption": "A camp in a Flint County forest clearing at dusk", "at": (-1690.0, -2150.0, 40.0), "camera": {"look_at": (-1690.0, -2150.0, 1.0), "ground": True, "azimuth": -28, "elevation": 9, "distance": 16, "lens": 32}, "light": "dusk", "items": CAMP_ITEMS},
-    "airstream-road": {"caption": "The towable Airstream on the Fort Carson road", "at": (-100.0, 1100.0, 19.0), "camera": {"look_at": (-100.0, 1097.0, 1.2), "ground": True, "azimuth": 60, "elevation": 12, "distance": 24, "lens": 35}, "light": "golden", "items": AIRSTREAM_ITEMS},
+    "camp": {"caption": "A camp in a Flint County forest clearing at dusk", "at": (-1612.0, -2208.0, 35.0), "camera": {"look_at": (-1612.0, -2208.0, 1.0), "ground": True, "azimuth": -28, "elevation": 9, "distance": 16, "lens": 32}, "light": "dusk", "items": CAMP_ITEMS},
+    "airstream-road": {"caption": "The towable Airstream on the Fort Carson road", "at": (-230.0, 1045.0, 19.7), "camera": {"look_at": (-230.0, 1042.0, 1.2), "ground": True, "azimuth": 60, "elevation": 12, "distance": 24, "lens": 35}, "light": "golden", "items": AIRSTREAM_ITEMS},
 }
 
 
@@ -168,7 +177,8 @@ def port_rows(at: tuple, reach: float) -> tuple[list[tuple], list[tuple]]:
     for path in sorted(MAPS.glob("*.lua")) + [PUZZLES]:
         text = path.read_text(encoding="utf8")
         for m, x, y, z, rx, ry, rz, world, interior in ROW.findall(text):
-            if int(world) in (-1, 0) and int(interior) in (-1, 0) and math.hypot(float(x) - at[0], float(y) - at[1]) <= reach:
+            # Teleport interiors may share the same XY at z=1000; they must not shadow the street below.
+            if int(world) in (-1, 0) and int(interior) in (-1, 0) and math.dist((float(x), float(y), float(z)), at) <= reach:
                 objects.append((int(m), float(x), float(y), float(z), float(rx), float(ry), float(rz)))
         if "removals = {" in text:
             for m, x, y, z, r in REMOVAL.findall(text[text.index("removals = {") :]):
@@ -311,6 +321,22 @@ def build_in_blender(spec_file: Path) -> None:
     bpy.ops.wm.read_factory_settings(use_empty=True)
     bpy.ops.preferences.addon_enable(module="DragonFF")
     scn = bpy.context.scene
+    use_cycles = spec.get("engine", "cycles") == "cycles"
+    if use_cycles and spec.get("device", "auto") != "cpu":
+        prefs = bpy.context.preferences.addons["cycles"].preferences
+        for backend in ("CUDA", "OPTIX", "HIP", "ONEAPI", "METAL"):
+            try:
+                prefs.compute_device_type = backend
+                prefs.get_devices()
+            except (TypeError, RuntimeError):
+                continue
+            devices = [d for d in prefs.devices if d.type == backend]
+            if devices:
+                for d in prefs.devices:
+                    d.use = d.type == backend
+                scn.cycles.device = "GPU"
+                print("PLACE device", backend, ", ".join(d.name for d in devices), flush=True)
+                break
 
     def setattr_safe(obj, name, value):
         try:
@@ -391,7 +417,8 @@ def build_in_blender(spec_file: Path) -> None:
             txd_images = images_for(texture[0])
             override = txd_images[texture[1]][0] if texture[1] in txd_images else None
         before = set(bpy.data.objects)
-        dff_importer.import_dff({"file_name": os.path.join(job["dir"], job["dff"] + ".dff"), "txd_images": images, "image_ext": None, "connect_bones": False, "use_mat_split": True, "remove_doubles": False, "create_backfaces": False, "group_materials": False, "import_normals": False, "materials_naming": "DEFAULT", "hide_damage_parts": bool(job.get("vehicle"))})
+        # GTA supplies vertex normals for its terrain, curved props and deliberately sharp building edges.
+        dff_importer.import_dff({"file_name": os.path.join(job["dir"], job["dff"] + ".dff"), "txd_images": images, "image_ext": None, "connect_bones": False, "use_mat_split": True, "remove_doubles": False, "create_backfaces": False, "group_materials": False, "import_normals": True, "materials_naming": "DEFAULT", "hide_damage_parts": bool(job.get("vehicle"))})
         new = [o for o in bpy.data.objects if o not in before]
         for o in [o for o in new if o.type == "MESH" and o.dff.type == "COL" or o.type == "LIGHT"]:
             bpy.data.objects.remove(o, do_unlink=True)
@@ -550,6 +577,26 @@ def build_in_blender(spec_file: Path) -> None:
         w.mist_settings.start, w.mist_settings.depth, w.mist_settings.falloff = 40.0, 1100.0, "LINEAR"
         scn.world = w
 
+    def make_daylight(name):
+        light = DAYLIGHT[name]
+        w = bpy.data.worlds.new("daylight")
+        w.use_nodes = True
+        nt = w.node_tree
+        bg = next(n for n in nt.nodes if n.type == "BACKGROUND")
+        sky = nt.nodes.new("ShaderNodeTexSky")
+        sky_types = {i.identifier for i in sky.bl_rna.properties["sky_type"].enum_items}
+        sky.sky_type = "MULTIPLE_SCATTERING" if "MULTIPLE_SCATTERING" in sky_types else "NISHITA"
+        sky.sun_elevation, sky.sun_rotation = math.radians(light["elevation"]), math.radians(light["rotation"])
+        sky.sun_disc, sky.sun_size, sky.sun_intensity = True, math.radians(0.526), light["sun"]
+        sky.air_density, sky.ozone_density = 1.0, 1.0
+        if hasattr(sky, "aerosol_density"):
+            sky.aerosol_density = light["aerosol"]
+        else:
+            sky.dust_density = light["aerosol"]
+        bg.inputs["Strength"].default_value = light["strength"]
+        nt.links.new(sky.outputs["Color"], bg.inputs["Color"])
+        scn.world = w
+
     def make_haze(light):
         """Aerial perspective in the compositor: the mist pass fades the picture toward the sky's horizon colour, the
         sky itself (depth beyond the world) left alone. (An EEVEE world volume blacked the frame out instead.)"""
@@ -655,7 +702,7 @@ def build_in_blender(spec_file: Path) -> None:
 
     def setup_render(samples):
         engines = [i.identifier for i in bpy.types.RenderSettings.bl_rna.properties["engine"].enum_items]
-        scn.render.engine = "BLENDER_EEVEE_NEXT" if "BLENDER_EEVEE_NEXT" in engines else "BLENDER_EEVEE"
+        scn.render.engine = "CYCLES" if use_cycles else ("BLENDER_EEVEE_NEXT" if "BLENDER_EEVEE_NEXT" in engines else "BLENDER_EEVEE")
         scn.render.resolution_x, scn.render.resolution_y, scn.render.resolution_percentage = width, height, 100
         scn.render.film_transparent = False
         scn.render.image_settings.file_format, scn.render.image_settings.color_mode = "PNG", "RGB"
@@ -682,7 +729,14 @@ def build_in_blender(spec_file: Path) -> None:
                 break
             except TypeError:
                 continue
-        scn.view_settings.exposure = 0.05
+        scn.view_settings.exposure = -0.6 if use_cycles else 0.05
+        if use_cycles:
+            scn.cycles.samples, scn.cycles.use_denoising = samples, True
+            scn.cycles.adaptive_threshold = 0.03
+            scn.cycles.max_bounces = 6
+            scn.cycles.diffuse_bounces, scn.cycles.glossy_bounces = 3, 3
+            scn.cycles.transparent_max_bounces = 16
+            scn.render.use_compositing = False
 
     for place in spec["places"]:
         clear_scene()
@@ -695,21 +749,31 @@ def build_in_blender(spec_file: Path) -> None:
         cam = make_camera(place["camera"], place["at"][2])
         cam_az = place["camera"].get("azimuth", -35)
         sun = sky_dir(light["sun_elevation"], cam_az + light["sun_offset"])
-        make_world(light, sun)
-        make_haze(light)
-        sun_at("sun", sun, light["sun_energy"], light["sun_colour"], light["sun_angle"], True)
-        sun_at("fill", sky_dir(35, cam_az + light["sun_offset"] + 180), light["fill"], light["fill_colour"], 60, False)
+        if use_cycles:
+            make_daylight(place["light"])
+        else:
+            make_world(light, sun)
+            make_haze(light)
+            sun_at("sun", sun, light["sun_energy"], light["sun_colour"], light["sun_angle"], True)
+            sun_at("fill", sky_dir(35, cam_az + light["sun_offset"] + 180), light["fill"], light["fill_colour"], 60, False)
         setup_render(spec["samples"])
         bpy.context.view_layer.update()
         look = Vector(place["camera"]["look_at"])
         look.z = cam.location.z if place["camera"].get("ground") else look.z
         hit, loc, *_ = scn.ray_cast(bpy.context.evaluated_depsgraph_get(), cam.location, (look - cam.location).normalized(), distance=max((look - cam.location).length, 1.0))
         zs = [(o.matrix_world @ Vector(c)).z for o in world.objects for c in o.bound_box]
-        print("PLACE stats %s: %d world objects, %d prototypes, camera %.1f %.1f %.1f, first hit toward the target %s, world z %.1f..%.1f" % (place["name"], len(world.objects), len(protos), *cam.location, ("%.1f m" % (loc - cam.location).length) if hit else "none", min(zs) if zs else 0, max(zs) if zs else 0))
+        print("PLACE stats %s: %d world objects, %d prototypes, camera %.1f %.1f %.1f, first hit toward the target %s, world z %.1f..%.1f" % (place["name"], len(world.objects), len(protos), *cam.location, ("%.1f m" % (loc - cam.location).length) if hit else "none", min(zs) if zs else 0, max(zs) if zs else 0), flush=True)
         path = os.path.join(spec["out"], place["name"] + ".png")
         scn.render.filepath = path
-        bpy.ops.render.render(write_still=True)
-        print("PLACE ok", place["name"], path)
+        try:
+            bpy.ops.render.render(write_still=True)
+        except RuntimeError:
+            if not use_cycles or scn.cycles.device != "GPU":
+                raise
+            print("PLACE note GPU render failed; retrying with the CPU", flush=True)
+            scn.cycles.device = "CPU"
+            bpy.ops.render.render(write_still=True)
+        print("PLACE ok", place["name"], path, flush=True)
 
 
 # ---------------------------------------------------------------- outside Blender
@@ -729,7 +793,9 @@ def main(argv=None) -> int:
     ap.add_argument("--gta", type=Path)
     ap.add_argument("--blender")
     ap.add_argument("--size", default="1920x1080", help="WxH, default 1920x1080")
-    ap.add_argument("--samples", type=int, default=64, help="EEVEE render samples, default 64")
+    ap.add_argument("--samples", type=int, default=64, help="render samples, default 64")
+    ap.add_argument("--engine", choices=("cycles", "eevee"), default="cycles", help="Cycles daylight and indirect lighting, or a fast EEVEE draft")
+    ap.add_argument("--device", choices=("auto", "cpu"), default="auto", help="use a supported GPU when available, or force the CPU")
     ap.add_argument("--out", type=Path, default=OUT)
     ap.add_argument("--wiki", type=Path, default=WIKI_OUT, help="folder for the 1200 px copies; '-' to skip")
     ap.add_argument("--stats", action="store_true", help="print what each place loaded")
@@ -777,12 +843,22 @@ def main(argv=None) -> int:
             print("%s: %d near + %d backdrop objects (%d removed by the port), %d port objects, %d models (%d not staged), %d water quads" % (n, stats["near"], stats["far"], stats["removed"], stats["port"], stats["models"], stats["unstaged"], stats["water"]))
     args.out.mkdir(parents=True, exist_ok=True)
     work = Path(tempfile.mkdtemp(prefix="render_places_"))
-    spec = {"out": str(args.out.resolve()), "size": size, "samples": args.samples, "jobs": jobs, "places": specs}
+    spec = {"out": str(args.out.resolve()), "size": size, "samples": args.samples, "engine": args.engine, "device": args.device, "jobs": jobs, "places": specs}
     spec_file = work / "spec.json"
     spec_file.write_text(json.dumps(spec))
-    cmd = [str(blender), "-b", "--python", __file__, "--", str(spec_file)]
-    res = subprocess.run(cmd, capture_output=True, text=True, encoding="utf8", errors="replace")
-    lines = (res.stdout + res.stderr).splitlines()
+    cmd = [str(blender), "-b", "--python-exit-code", "1", "--python", __file__, "--", str(spec_file)]
+
+    def run_blender():
+        lines = []
+        with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, encoding="utf8", errors="replace") as process:
+            for line in process.stdout:
+                line = line.rstrip("\r\n")
+                lines.append(line)
+                if line.startswith(("PLACE ok ", "PLACE device ")):
+                    print(line, flush=True)
+            return process.wait(), lines
+
+    returncode, lines = run_blender()
     lost: dict[str, set[str]] = {}
     for line in lines:
         if line.startswith("PLACE missing"):
@@ -804,8 +880,7 @@ def main(argv=None) -> int:
             problems.append(f"texture {n} is in no game TXD")
         if again:
             spec_file.write_text(json.dumps(spec))
-            res = subprocess.run(cmd, capture_output=True, text=True, encoding="utf8", errors="replace")
-            lines = (res.stdout + res.stderr).splitlines()
+            returncode, lines = run_blender()
     elif wanted:
         problems.append("%d textures not found in the models' own TXDs (too many to search)" % len(wanted))
     for line in lines:
@@ -819,7 +894,7 @@ def main(argv=None) -> int:
     for s in specs:
         png = args.out / (s["name"] + ".png")
         if png.is_file() and any(line.startswith("PLACE ok " + s["name"] + " ") for line in lines):
-            index[s["name"]] = {"file": png.name, "caption": s["caption"], "at": s["at"], "light": s["light"]}
+            index[s["name"]] = {"file": png.name, "caption": s["caption"], "at": s["at"], "camera": s["camera"], "light": s["light"], "engine": args.engine}
             done.append(png)
             print("wrote", png, "->", rs.wiki_copy(png, args.wiki) if str(args.wiki) != "-" else "")
         else:
@@ -827,8 +902,8 @@ def main(argv=None) -> int:
     index_file.write_text(json.dumps(index, indent=1, sort_keys=True) + "\n")
     for p in problems:
         print("problem:", p, file=sys.stderr)
-    if res.returncode:
-        print(res.stderr[-3000:], file=sys.stderr)
+    if returncode:
+        print("\n".join(lines)[-3000:], file=sys.stderr)
     return 0 if len(done) == len(specs) else 1
 
 
