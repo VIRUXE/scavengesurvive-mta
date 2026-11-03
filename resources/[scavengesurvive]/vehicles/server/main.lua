@@ -1322,6 +1322,19 @@ local TIRE_REPAIRED = { "TIREREPFL", "TIREREPBL", "TIREREPFR", "TIREREPBR" }
 local BATTERY_HOLD_MS = 3000
 local FIT_BATTERY_SQL = "UPDATE vehicles SET battery = ?, battery_since = ? WHERE id = ?"
 
+-- An EMP flattens an installed battery immediately; removing it later must return a flat one too.
+function flattenVehicleBattery(vehicle)
+    local inf = info[vehicle]
+    if not isElement(vehicle) or not inf or not inf.bay or not inf.battery then
+        return false
+    end
+    inf.battery, inf.batterySince = 0, unixNow()
+    setVehicleEngineState(vehicle, false)
+    setVehicleOverrideLights(vehicle, 1)
+    -- The normal vehicle flush persists this charge, including on a clean resource/server stop.
+    return true
+end
+
 local function atBonnet(player, vehicle)
     local inf = info[vehicle]
     if not (isElement(vehicle) and inf and inf.bay) or isPedDead(player) or getPedOccupiedVehicle(player) then

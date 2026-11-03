@@ -283,6 +283,7 @@ detonateItem = function(itemId)
                             local vx, vy, vz = getElementPosition(v)
                             if logic.isItemInRange(vx, vy, vz, x, y, z, preset.size) then
                                 setVehicleEngineState(v, false)
+                                exports.vehicles:flattenVehicleBattery(v)
                             end
                         end
                     end

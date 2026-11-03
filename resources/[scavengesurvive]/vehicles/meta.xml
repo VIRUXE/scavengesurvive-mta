@@ -27,6 +27,7 @@
     <export function="respawnAll" type="server"/>
     <export function="getVehicleFuel" type="server"/>
     <export function="setVehicleFuel" type="server"/>
+    <export function="flattenVehicleBattery" type="server"/>
     <export function="getVehicleLockState" type="server"/>
     <export function="setVehicleLockState" type="server"/>
     <export function="getVehicleKeyCode" type="server"/>
