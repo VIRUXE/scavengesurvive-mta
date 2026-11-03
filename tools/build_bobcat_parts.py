@@ -4,6 +4,7 @@ Usage: blender -b -t 2 --python tools/build_bobcat_parts.py -- /path/to/scout/in
 import sys, json, re
 from pathlib import Path
 import bpy
+import bmesh
 from mathutils import Vector
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -23,7 +24,8 @@ bpy.context.scene.collection.children.link(collection)
 assets=[]
 for p in PARTS:
     src = originals[p['mesh']]
-    obj = bpy.data.objects.new(p['asset'], src.data.copy())
+    # GTA interprets a frame ending in _dam as a damage variant, leaving standalone objects on their parent model.
+    obj = bpy.data.objects.new(p['mesh']+'_part', src.data.copy())
     collection.objects.link(obj)
     obj.data.transform(src.matrix_world)
     points=[v.co for v in obj.data.vertices]
@@ -31,7 +33,23 @@ for p in PARTS:
     hi=Vector(tuple(max(v[k] for v in points) for k in range(3)))
     shift=(lo+hi)/2  # origin at the middle of the part: carrying and lying flat both turn it about its centre
     for v in obj.data.vertices: v.co-=shift
+    if p['mesh'].startswith('bonnet_'):
+        # The vehicle bonnet is a single skin. A loose hood needs a textured underside as well; keep its UVs.
+        mesh = bmesh.new()
+        mesh.from_mesh(obj.data)
+        back = bmesh.ops.duplicate(mesh, geom=list(mesh.verts)+list(mesh.edges)+list(mesh.faces))
+        faces = [f for f in back['geom'] if isinstance(f, bmesh.types.BMFace)]
+        bmesh.ops.reverse_faces(mesh, faces=faces)
+        mesh.normal_update()
+        mesh.to_mesh(obj.data)
+        mesh.free()
     obj.dff.type='OBJ'
+    # Vehicle meshes rely on the car renderer's lighting. Ordinary objects need their own day/night prelighting.
+    for name, color in [('Day', (0.9, 0.9, 0.9, 1.0)), ('Night', (0.27, 0.27, 0.288, 1.0))]:
+        layer = obj.data.color_attributes.new(name=name, type='BYTE_COLOR', domain='CORNER')
+        for loop in layer.data: loop.color = color
+    obj.dff.day_cols=True
+    obj.dff.night_cols=True
     # Paint ids 96/25: the first stock Bobcat pairing in carcols.dat.
     # Replace the SA vehicle-only paint markers with fixed object colours.
     for slot in obj.material_slots:
@@ -47,6 +65,7 @@ for p in PARTS:
         # These plugins depend on the vehicle renderer; loose objects use ordinary materials.
         mat.dff.export_env_map=False
         mat.dff.export_specular=False
+        mat.dff.export_reflection=False
         for tex in mat.node_tree.nodes:
             if tex.type=='TEX_IMAGE' and tex.image:
                 key=re.split(r'\.png',tex.image.name,flags=re.I)[0].lower()
