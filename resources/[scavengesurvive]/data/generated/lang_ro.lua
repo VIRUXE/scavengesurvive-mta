@@ -1,5 +1,5 @@
 -- Derived from Southclaws/ScavengeSurvive (MPL-2.0). See THIRD_PARTY_NOTICES.md
--- GENERATED FILE - do not edit; run: python -m tools.convert all
+-- Edited by hand; the language converter is gone
 return {
     ACCLOGIBODY = "#FFFFFFBine ai revenit %s#FFFFFF, te rog să te autentifici mai jos!\n\n#FFFF00Distracție plăcută :)",
     ACCLOGITITL = "Autentifică-te în cont",
@@ -338,7 +338,7 @@ return {
     Money_T = "Acest obiect nu are un scop inca.",
     MotionSen_T = "Folosit in crafting.",
     MotoHelme_T = "Poartă-l apăsând [F]",
-    Motor_T = "Acest obiect nu are un scop inca.",
+    Motor_T = "Hold [F] with this at the back of a constructed defence to install it (needed before a Keypad), also used in crafting",
     Mustard_T = "Acest obiect nu are încă nicio utilizare",
     NEARBYKEYP = "Usa asta este controlata de o incuietoare cu cod de prin apropiere.",
     NEEDANOTOOL = "Ai nevoie de alta unealta.",
@@ -452,7 +452,7 @@ return {
     Spas12_T = "Apasa [R] to reload, press [Y] to holster and hold [N] to remove ammo",
     Spatula_T = "Pocnește pe cineva cu asta azi!",
     SprayPain_T = "Foloseste acest obiect sa pictezi peretii sau sa orbesti inamicii temporar.",
-    StarterMo_T = "Acest obiect nu are un scop inca.",
+    StarterMo_T = "Used for crafting",
     Steak_T = "Gătește și mănâncă asta pentru valoarea nutritivă",
     StorageUn_T = "Folosit pentru crafting.",
     StrawHat_T = "Poartă asta apăsând [F]",

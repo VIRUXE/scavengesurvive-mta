@@ -1,5 +1,5 @@
 -- Derived from Southclaws/ScavengeSurvive (MPL-2.0). See THIRD_PARTY_NOTICES.md
--- GENERATED FILE - do not edit; run: python -m tools.convert all
+-- Edited by hand; the language converter is gone
 return {
     ACCLOGIBODY = "#FFFFFFSelamat Datang Kembali %s#FFFFFF, Silakan login ke akunmu di bawah!\n\n#FFFF00Selamat bersenang-senang :)",
     ACCLOGITITL = "Login ke Akunmu",
@@ -338,7 +338,7 @@ return {
     Money_T = "Item ini tidak berguna",
     MotionSen_T = "Periksa /recipes dan 'Workbench Crafting' untuk keterangan pengolahan benda ini",
     MotoHelme_T = "Kenakan ini dengan menekan [F]",
-    Motor_T = "Item ini tidak berfungsi",
+    Motor_T = "Hold [F] with this at the back of a constructed defence to install it (needed before a Keypad), also used in crafting",
     Mustard_T = "Benda ini belum ada kegunaannya",
     NEARBYKEYP = "Pintu ini telah terkunci elektronik dan dikendalikan oleh keypad disekitar",
     NEEDANOTOOL = "Kamu harus menggunakan alat selanjutnya.",
@@ -452,7 +452,7 @@ return {
     Spas12_T = "Tekan [R] untuk mengisi ulang, tekan [Y] untuk menyarungkan dan tahan tombol [N] untuk menaruh amunisi",
     Spatula_T = "Tampar seseorang dengan ini hari ini!",
     SprayPain_T = "Gunakan ini untuk membuat lawan batuk2",
-    StarterMo_T = "Item ini tidak berfungsi",
+    StarterMo_T = "Used for crafting",
     Steak_T = "Masak dan makan ini untuk mendapatkan nilai makanan",
     StorageUn_T = "Periksa /recipes dan 'Workbench Crafting' untuk keterangan pengolahan benda ini",
     StrawHat_T = "Kenakan ini dengan menekan [F]",

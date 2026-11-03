@@ -1,5 +1,5 @@
 -- Derived from Southclaws/ScavengeSurvive (MPL-2.0). See THIRD_PARTY_NOTICES.md
--- GENERATED FILE - do not edit; run: python -m tools.convert all
+-- Edited by hand; the language converter is gone
 return {
     ACCLOGIBODY = "#FFFFFFVítej zpět %s#FFFFFF, přihlas se prosím ke svému účtu níže!\n\n#FFFF00Užij si hru :)",
     ACCLOGITITL = "Přihlášení k účtu",
