@@ -676,5 +676,6 @@
   "Plane Key": "Klíč od letadla",
   "Trailer Key": "Klíč od přívěsu",
   "%s Trunk": "Kufr: %s",
-  "Vehicle": "Vozidlo"
+  "Vehicle": "Vozidlo",
+  " >  #B8B8B8%s#FFFFFF has joined": " >  #B8B8B8%s#FFFFFF se připojil/a"
 }

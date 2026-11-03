@@ -422,7 +422,14 @@ end)
 addEventHandler("onPlayerJoin", root, function()
     local name = getPlayerName(source)
     for _, line in ipairs(logic.joinLines(name, exports.staff:getMotd())) do
-        outputChatBox(line.text, line.toAll and root or source, line.r, line.g, line.b, true)
+        if line.localized then
+            local template = " >  #B8B8B8%s#FFFFFF has joined"
+            for _, recipient in ipairs(getElementsByType("player")) do
+                outputChatBox(exports.data:t(lang(recipient), template, name), recipient, line.r, line.g, line.b, true)
+            end
+        else
+            outputChatBox(line.text, line.toAll and root or source, line.r, line.g, line.b, true)
+        end
     end
 end)
 

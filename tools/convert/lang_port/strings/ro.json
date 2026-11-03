@@ -676,5 +676,6 @@
   "Plane Key": "Cheie de avion",
   "Trailer Key": "Cheie de remorcă",
   "%s Trunk": "Portbagaj %s",
-  "Vehicle": "Vehicul"
+  "Vehicle": "Vehicul",
+  " >  #B8B8B8%s#FFFFFF has joined": " >  #B8B8B8%s#FFFFFF s-a alăturat"
 }

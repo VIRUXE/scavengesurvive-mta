@@ -181,7 +181,7 @@ chat.COPYRIGHT = 'Scavenge and Survive #33CCFF(Copyright (C) 2016 Barnaby "South
 function chat.joinLines(name, motd)
     local lines = {
         { text = chat.COPYRIGHT, r = 255, g = 170, b = 0 },
-        { text = string.format(" >  #B8B8B8%s#FFFFFF has joined", name), r = 255, g = 255, b = 255, toAll = true },
+        { text = string.format(" >  #B8B8B8%s#FFFFFF has joined", name), r = 255, g = 255, b = 255, toAll = true, localized = true },
     }
     if type(motd) == "string" and motd ~= "" then
         lines[#lines + 1] = { text = " >  MoTD: #33CCFF" .. motd, r = 255, g = 255, b = 0 }

@@ -676,5 +676,6 @@
   "Plane Key": "Chave de avião",
   "Trailer Key": "Chave de reboque",
   "%s Trunk": "Mala: %s",
-  "Vehicle": "Veículo"
+  "Vehicle": "Veículo",
+  " >  #B8B8B8%s#FFFFFF has joined": " >  #B8B8B8%s#FFFFFF entrou"
 }

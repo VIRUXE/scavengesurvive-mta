@@ -1,6 +1,7 @@
 -- Derived from Southclaws/ScavengeSurvive (MPL-2.0). See THIRD_PARTY_NOTICES.md
 -- GENERATED FILE - do not edit; run: python -m tools.convert all
 return {
+    [" >  #B8B8B8%s#FFFFFF has joined"] = " >  #B8B8B8%s#FFFFFF присоединился/лась",
     ["%.1f%% Unconscious"] = "Потеря сознания: %.1f%%",
     ["%d minutes %d seconds"] = "%d мин. %d сек.",
     ["%s Trunk"] = "Багажник: %s",

@@ -676,5 +676,6 @@
   "Plane Key": "Ключ от самолёта",
   "Trailer Key": "Ключ от прицепа",
   "%s Trunk": "Багажник: %s",
-  "Vehicle": "Транспорт"
+  "Vehicle": "Транспорт",
+  " >  #B8B8B8%s#FFFFFF has joined": " >  #B8B8B8%s#FFFFFF присоединился/лась"
 }

@@ -676,5 +676,6 @@
   "Plane Key": "Kunci Pesawat",
   "Trailer Key": "Kunci Trailer",
   "%s Trunk": "Bagasi %s",
-  "Vehicle": "Kendaraan"
+  "Vehicle": "Kendaraan",
+  " >  #B8B8B8%s#FFFFFF has joined": " >  #B8B8B8%s#FFFFFF telah bergabung"
 }

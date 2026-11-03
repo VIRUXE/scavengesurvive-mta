@@ -676,5 +676,6 @@
   "Plane Key": "Ključ aviona",
   "Trailer Key": "Ključ prikolice",
   "%s Trunk": "Gepek: %s",
-  "Vehicle": "Vozilo"
+  "Vehicle": "Vozilo",
+  " >  #B8B8B8%s#FFFFFF has joined": " >  #B8B8B8%s#FFFFFF se pridružio/la"
 }
