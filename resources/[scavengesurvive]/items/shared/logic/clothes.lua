@@ -5,10 +5,19 @@
 -- carried: every ped model wears gear through skins.lua (#72) and headgear skins have hatless twins (#75).
 local M = {}
 
+-- M.tr(text): a label word in the reader's language; the client sets it to lib lang.text, identity elsewhere
+M.tr = function(s)
+    return s
+end
+local function tr(s)
+    return M.tr(s)
+end
+
 M.MALE, M.FEMALE = 0, 1
 M.HOLD_MS = 3000
 
 -- { model, name, gender, spawn chance }, upstream order
+-- lang:begin
 M.TYPES = {
     { 60, "Civilian", 0, 1.0 },
     { 170, "Civilian", 0, 1.0 },
@@ -40,6 +49,7 @@ M.TYPES = {
     { 191, "Military", 1, 0.2 },
     { 141, "Business", 1, 0.1 },
 }
+-- lang:end
 
 local byModel = {}
 for _, row in ipairs(M.TYPES) do
@@ -60,7 +70,7 @@ end
 function M.label(model, female)
     local row = byModel[tonumber(model)]
     local isFemale = row and row[3] == M.FEMALE or (not row and female == true)
-    return (isFemale and "Female " or "Male ") .. (row and row[2] or "Clothes")
+    return string.format(isFemale and tr("Female %s") or tr("Male %s"), tr(row and row[2] or "Clothes"))
 end
 
 -- Upstream OnItemCreate: every type passes its spawn chance, one of the passes is picked. gender limits the rows

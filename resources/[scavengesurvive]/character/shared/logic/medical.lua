@@ -3,16 +3,26 @@
 -- hold actions and calls treat() at the end of one.
 local M = {}
 
+-- M.tr(text): a label word in the reader's language; the client sets it to lib lang.text, identity elsewhere
+M.tr = function(s)
+    return s
+end
+local function tr(s)
+    return M.tr(s)
+end
+
 M.HEAL_MS = 4000 -- HEAL_PROGRESS_MAX
 M.REVIVE_MS = 6000 -- REVIVE_PROGRESS_MAX, on a knocked-out patient
 M.PILL_MS = 1000
 M.INJECT_MS = 1000
 M.DRUG_MS = 300000 -- every DefineDrugType in init.pwn
 M.DRUGS = { "Antibiotic", "Painkill", "Lsd", "Air", "Morphine", "Adrenaline", "Heroin" }
+-- lang:begin
 M.BAG_DRUGS = { "Antibiotic", "Painkill", "Morphine", "Adrenaline" } -- a looted Doctor's Bag's drug
 M.PILLS = { "Antibiotics", "Painkiller", "LSD" } -- PILL_TYPE_* 0..2
 M.INJECTIONS = { "Morphine", "Adrenaline", "Heroin" } -- INJECT_TYPE_* 1..3, "Empty" is 0
 M.INJECTION_DRUG = { Empty = "Air", Morphine = "Morphine", Adrenaline = "Adrenaline", Heroin = "Heroin" }
+-- lang:end
 M.HEALING = { Bandage = true, Medkit = true, DoctorBag = true, AntiSepBandage = true }
 
 -- The hold an item starts (nil: not a treatment) and the skill that shortens it.
@@ -72,13 +82,13 @@ end
 -- The name extra upstream's OnItemNameRender shows: "Pills (LSD)", "Doctor's Bag (2/3, Morphine)".
 function M.label(uname, name, data)
     if uname == "Pills" then
-        return string.format("%s (%s)", name, M.pill(data))
+        return string.format("%s (%s)", name, tr(M.pill(data)))
     end
     if uname == "AutoInjec" then
-        return string.format("%s (%s)", name, M.injection(data))
+        return string.format("%s (%s)", name, tr(M.injection(data)))
     end
     if uname == "DoctorBag" and type(data) == "table" and (tonumber(data.charges) or 0) > 0 then
-        return string.format("%s (%d/3, %s)", name, tonumber(data.charges), tostring(data.drug or "?"))
+        return string.format("%s (%d/3, %s)", name, tonumber(data.charges), tr(tostring(data.drug or "?")))
     end
     return name
 end
@@ -86,7 +96,8 @@ end
 -- The end of a treatment hold. patient = { bleed, wounds, infection = { food, wound }, knockedOut };
 -- self = the healer treats themselves; rng() in [0,1) and rngInt(a, b) like math.random.
 -- Returns { used, consume, data, bleed, removeWounds, infect = { food, wound } (booleans to set), drug, hp, wake,
--- messages } where used = false means nothing happened (the item stays as it is).
+-- messages } where used = false means nothing happened (the item stays as it is); each message is
+-- { kind = "bleed" | "healed" | "infected", English format template, arguments... }.
 function M.treat(uname, data, patient, self, rng, rngInt)
     local r = { used = false, consume = false, infect = {}, messages = {} }
     local bleed = tonumber(patient.bleed) or 0
@@ -94,7 +105,7 @@ function M.treat(uname, data, patient, self, rng, rngInt)
     local function cutBleed()
         if bleed > 0 then
             r.bleed = M.reduceBleed(bleed)
-            r.messages[#r.messages + 1] = string.format("Reduced bleedrate from %f to %f", bleed, r.bleed)
+            r.messages[#r.messages + 1] = { "bleed", tr("Reduced bleedrate from %f to %f"), bleed, r.bleed }
             return true
         end
         return false
@@ -102,7 +113,7 @@ function M.treat(uname, data, patient, self, rng, rngInt)
 
     local function healWounds(n)
         r.removeWounds = n
-        r.messages[#r.messages + 1] = string.format("Healed %d wounds", n)
+        r.messages[#r.messages + 1] = { "healed", tr("Healed %d wounds"), n }
     end
 
     if uname == "Bandage" then
@@ -111,7 +122,7 @@ function M.treat(uname, data, patient, self, rng, rngInt)
             -- upstream infected the healer (SetPlayerInfectionIntensity(playerid, ...)): the port infects the patient
             if rng() < 0.33 then
                 r.infect.wound = true
-                r.messages[#r.messages + 1] = "Your wound has become infected!"
+                r.messages[#r.messages + 1] = { "infected", tr("Your wound has become infected!") }
             end
         end
     elseif uname == "AntiSepBandage" then

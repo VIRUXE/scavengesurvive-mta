@@ -227,13 +227,14 @@ function M.ofKind(kind)
     return out
 end
 
--- A recipe's ingredients as text lines ("3x Wood Log", "Knife (kept)"); nameOf maps an item uname to its name.
-function M.ingredientLines(r, nameOf)
+-- A recipe's ingredients as text lines ("3x Wood Log", "Knife (kept)"); nameOf maps an item uname to its name,
+-- keptWord is "kept" in the reader's language.
+function M.ingredientLines(r, nameOf, keptWord)
     local lines = {}
     for _, ing in ipairs(r.ingredients) do
         local name = nameOf(ing.uname)
         local line = ing.count > 1 and (ing.count .. "x " .. name) or name
-        lines[#lines + 1] = ing.keep and (line .. " (kept)") or line
+        lines[#lines + 1] = ing.keep and (line .. " (" .. (keptWord or "kept") .. ")") or line
     end
     return lines
 end

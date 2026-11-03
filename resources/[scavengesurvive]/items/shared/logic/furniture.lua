@@ -16,7 +16,9 @@ M.TYPES = {
 }
 M.DISPLAY_SIZE = 5
 M.ON_TOP_REACH = 0.6 -- metres from the furniture's centre an item still counts as lying on it
+-- lang:begin
 M.TEXT = { CNTEXTRASLO = "Extra %d slots required" }
+-- lang:end
 
 function M.is(uname)
     return M.TYPES[uname] ~= nil

@@ -8,6 +8,7 @@ return function(ctx)
     local charId, toast, isOnDuty = ctx.charId, ctx.toast, ctx.isOnDuty
     local isPlayerCuffed, setPlayerCuffed = ctx.isPlayerCuffed, ctx.setPlayerCuffed
     local HOLD_MS, CHECK_MS, MAX_MOVE, REACH = 3000, 250, 0.8, 2.5
+    local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")()
     local active = {} -- player -> { target, cuffing, itemId, x, y, z, left, timer }
     local beingCuffed = {} -- target -> player
     local M = {}
@@ -126,7 +127,7 @@ return function(ctx)
         a.timer = setTimer(tick, CHECK_MS, 0, player)
         active[player] = a
         beingCuffed[target] = player
-        local label = cuffing and "Handcuffing" or "Removing handcuffs"
+        local label = cuffing and lang.textFor(player, "Handcuffing") or lang.textFor(player, "Removing handcuffs")
         setPedAnimation(player, "CASINO", "DEALONE", -1, true, false, false, false)
         triggerClientEvent(player, "treatmentStarted", player, HOLD_MS, true, label)
         return true

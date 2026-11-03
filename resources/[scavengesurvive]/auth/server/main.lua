@@ -21,6 +21,9 @@ local blocked = {} -- player -> true once a ban (or the whitelist) kicked them
 local promptMode = {} -- player -> "language" | "login" | "register" while a dialog is up
 local promptLang = {} -- player -> language of the dialog texts (the account's, "en" for a new name)
 local chosenLang = {} -- player -> code picked in the language window, saved on the account once they are in
+-- The account's language on the player element, synced to that player's own client only: clients show item names
+-- and other display names in it (lib's lang module reads it).
+local LANG_KEY = "auth.lang"
 local whitelistEnabled = false
 local whitelistAuto = false
 local autoIpLogin = false
@@ -308,6 +311,7 @@ local function admit(player, account, isNew)
         db.exec("UPDATE accounts SET lang = ? WHERE id = ?", { account.lang, account.id })
     end
     session[player] = account
+    setElementData(player, LANG_KEY, account.lang or "en", "local", "deny")
     promptMode[player] = nil
     applyAutoWhitelist(nil, player)
     local sql = "INSERT INTO connection_log (account_id, name, serial, ip) VALUES (?, ?, ?, ?)"
@@ -441,6 +445,7 @@ addCommandHandler("lang", function(player, _, code)
     end
     account.lang = code
     account.langChosen = true
+    setElementData(player, LANG_KEY, code, "local", "deny")
     db.exec("UPDATE accounts SET lang = ? WHERE id = ?", { code, account.id })
     outputChatBox(string.format(" >  Language set to %s.", code), player, 255, 255, 0)
     util.log("auth", "info", "%s set language %s", account.name, code)

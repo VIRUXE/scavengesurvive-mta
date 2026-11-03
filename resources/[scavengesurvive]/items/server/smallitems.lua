@@ -22,6 +22,7 @@ return function(ctx)
     local small, liquids, decodeData = ctx.small, ctx.liquids, ctx.decodeData
     local firework = ctx.firework
     local SIGN_REACH = 2.5
+    local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")()
     local openNotes = {} -- player -> { itemId, fromHand, openContainerId }
     local openSigns = {} -- player -> itemId
     local M = {}
@@ -343,7 +344,8 @@ return function(ctx)
             toast(player, code)
             return true
         end
-        triggerClientEvent(player, "vehicleHoldStarted", player, "Harvesting", small.HARVEST_MS)
+        local label = lang.textFor(player, "Harvesting")
+        triggerClientEvent(player, "vehicleHoldStarted", player, label, small.HARVEST_MS)
         setPedAnimation(player, "BOMBER", "BOM_Plant_Loop", small.HARVEST_MS, true, false, false, false)
         setTimer(function(pl, bodyId)
             if not isElement(pl) then

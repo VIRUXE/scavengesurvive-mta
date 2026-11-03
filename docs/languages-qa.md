@@ -29,3 +29,21 @@ None: the converter replaced every `~x~`, `{C_*}`, `~k~` and `%P` token.
 ## Keys every translation lacks
 
 0 keys exist only in English (added upstream after the translations were made): 
+
+## Port texts
+
+Item type, ammo kind, calibre, liquid and seed kind names, and the item UI's labels, messages and format templates, are English in the data and the code; lib's `lang` module shows them in the player's language from `data/generated/strings_<code>.lua`, generated from `tools/convert/lang_port/strings/<code>.json` by `python -m tools.convert strings`. The English texts are collected from the item data and the code (`tr("…")`, `L("…")`, `lang.text/format("…")`, `lang.textFor/formatFor(player, "…")` and `-- lang:begin` … `-- lang:end` blocks). A text a language lacks shows in English; one whose placeholders differ from English is formatted in English. Texts kept identical to English are model names, brands, acronyms and the like.
+
+English has 678 texts.
+
+| Code | Language | Missing (shown in English) | Kept as in English | Placeholder mismatches | Not in English (stale) |
+| --- | --- | ---: | ---: | ---: | ---: |
+| `es` | Español | 0 | 30 | 0 | 0 |
+| `fr` | Français | 0 | 46 | 0 | 0 |
+| `pt` | Português | 0 | 29 | 0 | 0 |
+| `ptbr` | Português do Brasil | 0 | 32 | 0 | 0 |
+| `ru` | Russian | 0 | 16 | 0 | 0 |
+| `ro` | Romanian | 0 | 38 | 0 | 0 |
+| `id` | Indonesian | 0 | 35 | 0 | 0 |
+| `bhs` | Bosanski-Hrvatski-Srpski | 0 | 35 | 0 | 0 |
+| `cs` | Čeština | 0 | 34 | 0 | 0 |

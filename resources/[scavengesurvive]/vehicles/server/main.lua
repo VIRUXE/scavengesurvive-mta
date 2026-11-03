@@ -4,6 +4,7 @@
 local db = loadstring(exports.lib:getModule("db"), "=lib/db.lua")()
 local net = loadstring(exports.lib:getModule("net"), "=lib/net.lua")()
 local util = loadstring(exports.lib:getModule("util"), "=lib/util.lua")()
+local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")()
 local budget = loadstring(exports.lib:getModule("budget"), "=lib/budget.lua")()
 
 local spawn
@@ -1771,7 +1772,7 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
         end
         setVehicleDoorOpenRatio(vehicle, 1, 1, 500)
         markUsed(vehicle)
-        local tname = string.format("%s Trunk", vt and vt.name or "Vehicle")
+        local tname = lang.formatFor(player, "%s Trunk", vt and vt.name or lang.textFor(player, "Vehicle"))
         exports.items:openTrunkContainer(player, vehicle, inf.containerId, tname, vt and vt.trunkSize or 40)
         return
     end

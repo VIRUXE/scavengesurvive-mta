@@ -19,6 +19,11 @@ local gas = loadModule("shared/logic/gas.lua")
 local small = loadModule("shared/logic/smallitems.lua")
 local gardening = loadModule("shared/logic/gardening.lua")
 local machines = loadModule("shared/logic/machines.lua")
+-- the logic modules' label words in the local player's language (lib lang, auth's auth.lang)
+local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")()
+for _, m in ipairs({ ammo, clothes, cooking, liquids, small, gardening, machines }) do
+    m.tr = lang.text
+end
 local worldCtx = { models = models, ammo = ammo, tent = tent, clothes = clothes, geometry = geometry }
 worldCtx.cooking = cooking
 worldCtx.small = small

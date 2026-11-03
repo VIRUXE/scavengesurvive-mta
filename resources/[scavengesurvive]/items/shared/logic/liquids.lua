@@ -6,6 +6,14 @@
 -- the amount, as vehicles write it.
 local M = {}
 
+-- M.tr(text): a label word in the reader's language; the client sets it to lib lang.text, identity elsewhere
+M.tr = function(s)
+    return s
+end
+local function tr(s)
+    return M.tr(s)
+end
+
 M.SIP_LITRES = 0.2
 M.HOLD_MS = 1000
 M.EMPTY_BELOW = 0.001 -- upstream: below this the label reads "Empty" and nothing can be drunk
@@ -91,9 +99,9 @@ end
 function M.label(t, name, data)
     local amount, liquid = M.decode(t, data)
     if not liquid then
-        return name .. " (Empty)"
+        return name .. " (" .. tr("Empty") .. ")"
     end
-    return string.format("%s (%s %.1f/%.2f)", name, M.liquidName(liquid), amount, M.capacity(t))
+    return string.format("%s (%s %.1f/%.2f)", name, tr(M.liquidName(liquid)), amount, M.capacity(t))
 end
 
 -- One sip: ok, next data, food delta; or false, "EMPTY".

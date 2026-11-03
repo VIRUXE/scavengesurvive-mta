@@ -28,8 +28,10 @@ local items = assert(loadGenerated("item_types"), "data: generated/item_types.lu
 local loot = assert(loadGenerated("loot_tables"), "data: generated/loot_tables.lua missing")
 local vehicles = assert(loadGenerated("vehicle_types"), "data: generated/vehicle_types.lua missing")
 local langs = {}
+local strings = {} -- code -> English text -> translation (generated/strings_<code>.lua)
 for _, code in ipairs(LANGUAGES) do
     langs[code] = loadGenerated("lang_" .. code) or {}
+    strings[code] = code ~= "en" and loadGenerated("strings_" .. code) or {}
 end
 
 for _, def in pairs(items.byUname) do
@@ -116,6 +118,19 @@ function Data.t(lang, key, ...)
     return s
 end
 
+-- A text in a language, looked up by its English text (item names, the items UI's labels and messages, format
+-- templates with their placeholders); the English text comes back unchanged when a language has no entry for it.
+function Data.translate(lang, english)
+    local s = (strings[lang] or {})[english]
+    return type(s) == "string" and s or english
+end
+
+-- An item type's name in a language; the uname itself for an unknown type.
+function Data.itemName(lang, uname)
+    local def = items.byUname[uname]
+    return def and Data.translate(lang, def.name) or tostring(uname)
+end
+
 -- Export wrappers: other resources call exports.data:itemType(uname) etc. (exports must be global functions).
 function itemType(uname)
     return Data.itemType(uname)
@@ -155,6 +170,14 @@ end
 
 function t(lang, key, ...)
     return Data.t(lang, key, ...)
+end
+
+function translate(lang, english)
+    return Data.translate(lang, english)
+end
+
+function itemName(lang, uname)
+    return Data.itemName(lang, uname)
 end
 
 function languages()
