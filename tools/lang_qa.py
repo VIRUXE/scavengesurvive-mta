@@ -4,10 +4,13 @@ Usage: python -m tools.lang_qa [--check]
 Checks per language: keys missing (t() falls back to English), keys not in English, untranslated values (equal to
 English or the upstream "(REQUIRES TRANSLATION:…)" marker), leftover SA-MP tokens (~x~, {C_…}, %P) and printf
 placeholders that do not match English (a translation with more or differently typed placeholders makes
-string.format fail, and t() then shows the raw string). --check exits 1 when the committed report is stale.
+string.format fail, and t() then shows the raw string). It also lists the display names (item types, ammo kinds,
+calibres, liquids, seed kinds) each language lacks in tools/convert/lang_port/names/<code>.json. --check exits 1 when
+the committed report is stale.
 """
 from __future__ import annotations
 
+import json
 import re
 import sys
 from pathlib import Path
@@ -15,6 +18,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 GENERATED = ROOT / "resources" / "[scavengesurvive]" / "data" / "generated"
 REPORT = ROOT / "docs" / "languages-qa.md"
+RESOURCES = ROOT / "resources" / "[scavengesurvive]"
+NAMES_DIR = ROOT / "tools" / "convert" / "lang_port" / "names"
+# shown to players untranslated on purpose: placeholder types and bare calibre numbers
+NAME_SKIP = {"NULL", "<null>", "VEHICLE_WEAPON", ""}
+CALIBRE_RE = re.compile(r"[.\d]+(?:mm)?")
 CODES = ["en", "es", "fr", "pt", "ptbr", "ru", "ro", "id", "bhs", "cs"]
 NAMES = {"en": "English", "es": "Español", "fr": "Français", "pt": "Português", "ptbr": "Português do Brasil",
          "ru": "Russian", "ro": "Romanian", "id": "Indonesian", "bhs": "Bosanski-Hrvatski-Srpski", "cs": "Čeština"}
@@ -116,10 +124,75 @@ def render(results: dict[str, dict], en_count: int) -> str:
     return "\n".join(out)
 
 
+def english_names() -> list[str]:
+    """Every display name lib's lang module translates: item type and ammo kind names and calibre names from the
+    generated item types, and the liquid and seed kind names of the items resource, plus the pitched tent labels."""
+    out: list[str] = []
+
+    def add(name: str) -> None:
+        if name not in NAME_SKIP and not CALIBRE_RE.fullmatch(name) and name not in out:
+            out.append(name)
+
+    types = (GENERATED / "item_types.lua").read_text(encoding="utf-8")
+    for line in types.splitlines():
+        if line.startswith("M.byUname."):
+            m = re.search(r', name = "((?:[^"\\]|\\.)*)", price', line)
+            if m:
+                add(unescape(m.group(1)))
+            m = re.search(r'categoryData = \{[^}]*\bname = "([^"]*)"', line)
+            if m:
+                add(m.group(1))
+    m = re.search(r"M\.calibreNames = \{(.*)\}", types)
+    for v in re.findall(r'= "([^"]*)"', m.group(1) if m else ""):
+        add(v)
+    for rel in ("items/shared/logic/liquids.lua", "items/shared/logic/gardening.lua"):
+        for v in re.findall(r'\{ name = "([^"]*)"', (RESOURCES / rel).read_text(encoding="utf-8")):
+            add(v)
+    for v in ("Pitched Tent", "Tent"):
+        add(v)
+    return out
+
+
+def compare_names(english: list[str], code: str) -> dict:
+    path = NAMES_DIR / f"{code}.json"
+    names = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+    missing = [n for n in english if not names.get(n)]
+    same = [n for n in english if names.get(n) == n]
+    extra = sorted(n for n in names if n not in english)
+    return {"missing": missing, "same": same, "extra": extra}
+
+
+def render_names(english: list[str], results: dict[str, dict]) -> str:
+    out = ["## Display names", "",
+           "Item type, ammo kind, calibre, liquid and seed kind names are English in the data; lib's `lang` module "
+           "shows them in the player's language from `data/generated/names_<code>.lua`, generated from "
+           "`tools/convert/lang_port/names/<code>.json` by `python -m tools.convert names`. A name a language "
+           "lacks shows in English. Names kept identical to English are model names, brands and the like.", "",
+           f"English has {len(english)} names.", "",
+           "| Code | Language | Missing (shown in English) | Kept as in English | Not in English (stale) |",
+           "| --- | --- | ---: | ---: | ---: |"]
+    for code in CODES[1:]:
+        r = results[code]
+        out.append(f"| `{code}` | {NAMES[code]} | {len(r['missing'])} | {len(r['same'])} | {len(r['extra'])} |")
+    out.append("")
+    for code in CODES[1:]:
+        r = results[code]
+        if r["missing"]:
+            out.append(f"- `{code}` lacks: " + ", ".join(f"`{n}`" for n in r["missing"][:40])
+                       + (" …" if len(r["missing"]) > 40 else ""))
+        if r["extra"]:
+            out.append(f"- `{code}` has names no longer in English: " + ", ".join(f"`{n}`" for n in r["extra"][:40]))
+    if out[-1] != "":
+        out.append("")
+    return "\n".join(out)
+
+
 def build() -> tuple[str, dict[str, dict]]:
     en = load("en")
     results = {code: compare(en, load(code)) for code in CODES[1:]}
-    return render(results, len(en)), results
+    english = english_names()
+    names = {code: compare_names(english, code) for code in CODES[1:]}
+    return render(results, len(en)) + "\n" + render_names(english, names), results
 
 
 def main(argv=None) -> int:

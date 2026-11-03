@@ -13,7 +13,8 @@ files["resources/**/lib/shared/**"] = { std = "lua51+mta_shared", globals = { "g
 files["resources/**/lib/modules/surface.lua"] = { std = "lua51+mta_shared+mta_client" }
 files["resources/**/lib/modules/model_loader.lua"] = { std = "lua51+mta_shared+mta_client", read_globals = { "engineSetModelPhysicalPropertiesGroup", "engineGetModelPhysicalPropertiesGroup" } }
 files["resources/**/lib/modules/models.lua"] = { std = "lua51+mta_shared+mta_client" }
-files["resources/**/data/**"] = { std = "lua51+mta_shared", globals = { "itemType", "itemTypes", "lootTable", "calibreBleed", "calibreName", "ammoTypesForCalibre", "vehicleType", "vehicleTypes", "vehicleTypeByModel", "t", "languages" } }
+files["resources/**/lib/modules/lang.lua"] = { std = "lua51+mta_shared+mta_server+mta_client" }
+files["resources/**/data/**"] = { std = "lua51+mta_shared", globals = { "itemType", "itemTypes", "lootTable", "calibreBleed", "calibreName", "ammoTypesForCalibre", "vehicleType", "vehicleTypes", "vehicleTypeByModel", "t", "name", "itemName", "languages" } }
 files["resources/**/ui/**"] = { std = "lua51+mta_shared+mta_client", globals = { "actionTextShow", "actionTextHide", "toast", "progressStart", "progressCancel", "listOpen", "listUpdate", "listClose", "listIsOpen", "dialogOpen", "dialogSetBody", "dialogSetButtons", "dialogClose", "dialogIsOpen", "tipShow", "tipHide" }, read_globals = { "guiGetInputMode", "guiLabelSetHorizontalAlign", "guiLabelSetColor", "guiCreateGridList", "guiGridListSetSortingEnabled", "guiGridListAddColumn", "guiGridListAddRow", "guiGridListSetItemText", "guiGridListSetItemColor", "guiCreateScrollPane", "guiSetSize", "guiSetPosition", "guiLabelGetTextExtent" } }
 files["resources/**/ui/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "showTip", "hideTip", "showInfo" } }
 -- getBoundKeys/getTime/getVehicleEngineState/getVehicleName/getVehicleOccupant postdate the generated .luacheck/mta_client.lua list

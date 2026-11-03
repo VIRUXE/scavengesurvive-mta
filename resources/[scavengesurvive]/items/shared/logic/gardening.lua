@@ -64,11 +64,11 @@ function M.seedsFor(itemId, data)
     return { amount = randInt(M.MAX_SEEDS + 1) - 1, kind = randInt(#M.SEEDS) }
 end
 
--- OnItemNameRender: "Seeds (3, Tomato)" or "Seeds (Empty)"
-function M.seedLabel(name, seeds)
+-- OnItemNameRender: "Seeds (3, Tomato)" or "Seeds (Empty)"; tr translates the kind's name (lib lang.name)
+function M.seedLabel(name, seeds, tr)
     local kind = seeds and M.SEEDS[seeds.kind]
     if seeds and seeds.amount > 0 and kind then
-        return string.format("%s (%d, %s)", name, seeds.amount, kind.name)
+        return string.format("%s (%d, %s)", name, seeds.amount, tr and tr(kind.name) or kind.name)
     end
     return name .. " (Empty)"
 end
@@ -166,13 +166,13 @@ function M.plantObject(pot)
     return nil
 end
 
--- upstream's status dialog lines
-function M.status(pot)
+-- upstream's status dialog lines; tr translates the seed kind's name (lib lang.name)
+function M.status(pot, tr)
     local kind = M.SEEDS[pot.kind]
     return string.format(
         "Active: %s\nSeed type: %s\nWater: %d\nGrowth: %d/%d",
         pot.active and "yes" or "no",
-        kind and kind.name or "-",
+        kind and (tr and tr(kind.name) or kind.name) or "-",
         pot.water,
         pot.growth,
         kind and kind.grows or 0

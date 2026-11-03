@@ -42,9 +42,10 @@ local HELP = {
 
 local win = nil
 
+local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")()
+
 local function itemName(uname)
-    local t = exports.data:itemType(uname)
-    return t and t.name or uname
+    return lang.itemName(uname)
 end
 
 local function close()

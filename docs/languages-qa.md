@@ -29,3 +29,23 @@ None: the converter replaced every `~x~`, `{C_*}`, `~k~` and `%P` token.
 ## Keys every translation lacks
 
 0 keys exist only in English (added upstream after the translations were made): 
+
+## Display names
+
+Item type, ammo kind, calibre, liquid and seed kind names are English in the data; lib's `lang` module shows them in the player's language from `data/generated/names_<code>.lua`, generated from `tools/convert/lang_port/names/<code>.json` by `python -m tools.convert names`. A name a language lacks shows in English. Names kept identical to English are model names, brands and the like.
+
+English has 355 names.
+
+| Code | Language | Missing (shown in English) | Kept as in English | Not in English (stale) |
+| --- | --- | ---: | ---: | ---: |
+| `es` | Español | 0 | 28 | 0 |
+| `fr` | Français | 0 | 41 | 0 |
+| `pt` | Português | 0 | 29 | 0 |
+| `ptbr` | Português do Brasil | 0 | 30 | 0 |
+| `ru` | Russian | 0 | 15 | 0 |
+| `ro` | Romanian | 0 | 34 | 0 |
+| `id` | Indonesian | 0 | 40 | 0 |
+| `bhs` | Bosanski-Hrvatski-Srpski | 0 | 30 | 0 |
+| `cs` | Čeština | 355 | 0 | 0 |
+
+- `cs` lacks: `Knuckle Duster`, `Golf Club`, `Baton`, `Combat Knife`, `Baseball Bat`, `Spade`, `Pool Cue`, `Sword`, `Chainsaw`, `Dildo`, `Flowers`, `Cane`, `Grenade`, `Teargas`, `Molotov`, `M9`, `M9 SD`, `Desert Eagle`, `Shotgun`, `Sawnoff`, `Spas 12`, `Mac 10`, `MP5`, `WASR-3`, `M16`, `Tec 9`, `Rifle`, `Sniper`, `RPG`, `Heatseeker`, `Flamer`, `Minigun`, `Remote Bomb`, `Detonator`, `Spray Paint`, `Extinguisher`, `Camera`, `Night Vision`, `Thermal Vision`, `Parachute` …

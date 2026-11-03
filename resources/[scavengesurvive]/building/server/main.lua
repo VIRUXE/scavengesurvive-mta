@@ -3,6 +3,7 @@
 local db = assert(loadstring(exports.lib:getModule("db"), "=lib/db.lua"))()
 local net = assert(loadstring(exports.lib:getModule("net"), "=lib/net.lua"))()
 local util = assert(loadstring(exports.lib:getModule("util"), "=lib/util.lua"))()
+local lang = assert(loadstring(exports.lib:getModule("lang"), "=lib/lang.lua"))()
 db.connect("building")
 
 local function loadModule(path)
@@ -257,7 +258,8 @@ local function handleDefenceInteract(player, row)
             return toast(player, "DEFNOTMOVAB")
         end
         local ms = exports.character:skillTimeModifier(player, 6000, "Construction")
-        holdDefenceAction(player, row, "Motor", "Modifying " .. t.name, ms, function(pl, cur)
+        local label = "Modifying " .. lang.itemName(t.uname, player)
+        holdDefenceAction(player, row, "Motor", label, ms, function(pl, cur)
             local curData = decodeData(cur.data)
             local curSt = defences.state(curData)
             if not curSt then
@@ -289,7 +291,8 @@ local function handleDefenceInteract(player, row)
         local keypadType = (tool == "AdvancedKeypad") and 2 or 1
         local toastCode = (tool == "AdvancedKeypad") and "DEFINSTADKP" or "DEFINSTKEYP"
         local ms = exports.character:skillTimeModifier(player, 6000, "Construction")
-        holdDefenceAction(player, row, tool, "Modifying " .. t.name, ms, function(pl, cur)
+        local label = "Modifying " .. lang.itemName(t.uname, player)
+        holdDefenceAction(player, row, tool, label, ms, function(pl, cur)
             local curData = decodeData(cur.data)
             local curSt = defences.state(curData)
             if not curSt then
@@ -380,7 +383,8 @@ function buildDefence(player, itemId)
             return
         end
         local ms = exports.character:skillTimeModifier(c.player, defences.BUILD_MS, "Construction")
-        holdDefenceAction(c.player, row, c.tool, "Building " .. t.name, ms, function(pl, cur)
+        local label = "Building " .. lang.itemName(t.uname, c.player)
+        holdDefenceAction(c.player, row, c.tool, label, ms, function(pl, cur)
             if defences.state(decodeData(cur.data)) then
                 return
             end
@@ -451,7 +455,8 @@ function removeDefence(player, itemId)
             return toast(c.player, "DEFENCE_FRONT")
         end
         local ms = exports.character:skillTimeModifier(c.player, defences.REMOVE_MS, "Construction")
-        holdDefenceAction(c.player, row, "Crowbar", "Removing " .. t.name, ms, function(pl, cur)
+        local label = "Removing " .. lang.itemName(t.uname, c.player)
+        holdDefenceAction(c.player, row, "Crowbar", label, ms, function(pl, cur)
             local curData = decodeData(cur.data)
             local curSt = defences.state(curData)
             if not curSt then

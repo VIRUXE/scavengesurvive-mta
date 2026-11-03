@@ -11,6 +11,7 @@ return function(ctx)
     local gardening = ctx and ctx.gardening -- shared/logic/gardening.lua: what a bag of Seeds holds
     local liquids = ctx and ctx.liquids -- shared/logic/liquids.lua: "(Water 0.4/0.50)" on liquid containers
     local gas = ctx and ctx.gas -- shared/logic/gas.lua: "(6.3/11 kg)" on a Gas Bottle
+    local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")() -- names in the player's language
     local MESSAGES = {
         HANDS_FULL = "You are already holding an item",
         LIQUID_EMPTY = "It is empty",
@@ -234,7 +235,7 @@ return function(ctx)
     end)
 
     local function itemType(uname)
-        return exports.data:itemType(uname)
+        return lang.itemType(uname)
     end
 
     local function vehicleTypeByModel(model)
@@ -242,7 +243,7 @@ return function(ctx)
     end
 
     local function calibreName(cal)
-        return exports.data:calibreName(cal)
+        return lang.calibreName(cal)
     end
 
     local function defaultAmmo(cal)
@@ -269,13 +270,13 @@ return function(ctx)
         elseif small and it.uname == "WheelLock" then
             name = small.lockLabel(name, it.data)
         elseif gardening and it.uname == gardening.BAG then
-            name = gardening.seedLabel(name, gardening.seedsFor(it.id, it.data))
+            name = gardening.seedLabel(name, gardening.seedsFor(it.id, it.data), lang.name)
         elseif gas and it.uname == gas.UNAME then
             name = gas.label(name, it.data)
         elseif cooking and cooking.isFood(t) then
             name = cooking.label(t, name, it.data)
         elseif liquids and liquids.isContainer(t) then
-            name = liquids.label(t, name, it.data)
+            name = liquids.label(t, name, it.data, lang.name)
         elseif ammo and t then
             local defA = t.categoryData and defaultAmmo(t.categoryData.calibre) or nil
             name = ammo.displayName(t, it.data, itemType, calibreName, defA)

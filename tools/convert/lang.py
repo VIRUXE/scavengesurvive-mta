@@ -161,3 +161,21 @@ def convert(src_root, out_data) -> dict[str, int]:
         write_text(Path(out_data) / f"lang_{CODES[name]}.lua", render_lua(entries))
         counts[CODES[name]] = len(entries)
     return counts
+
+
+# Display names (item types, ammo kinds, calibres, liquids, seed kinds) are English in the data and in the items
+# resource; tools/convert/lang_port/names/<code>.json maps each English name to its translation, and data's name()
+# looks a name up in generated/names_<code>.lua (English falls through unchanged). They need no upstream source.
+NAMES_DIR = PORT_DIR / "names"
+
+
+def convert_names(out_data) -> dict[str, int]:
+    counts = {}
+    for code in CODES.values():
+        path = NAMES_DIR / f"{code}.json"
+        if code == "en" or not path.exists():
+            continue
+        entries = {k: v for k, v in json.loads(path.read_text(encoding="utf-8")).items() if v and v != k}
+        write_text(Path(out_data) / f"names_{code}.lua", render_lua(entries))
+        counts[code] = len(entries)
+    return counts

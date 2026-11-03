@@ -3,6 +3,7 @@
 local db = assert(loadstring(exports.lib:getModule("db"), "=lib/db.lua"))()
 local net = assert(loadstring(exports.lib:getModule("net"), "=lib/net.lua"))()
 local util = assert(loadstring(exports.lib:getModule("util"), "=lib/util.lua"))()
+local lang = assert(loadstring(exports.lib:getModule("lang"), "=lib/lang.lua"))()
 db.connect("crafting")
 
 local function loadModule(path)
@@ -250,8 +251,8 @@ local function tryGroundCraft(player, _cid, held, px, py, pz, rz, int, dim, quie
             end
             -- upstream workbench.pwn OnPlayerConstruct: a workbench set on the ground with its tool says so
             if craft.matchNeedsWorkbench(counts, c.toolUname) then
-                local lang = exports.auth:getLanguage(c.player) or "en"
-                return toast(c.player, exports.data:t(lang, "NEEDWORKBE"))
+                local code = exports.auth:getLanguage(c.player) or "en"
+                return toast(c.player, exports.data:t(code, "NEEDWORKBE"))
             end
             return toast(c.player, "NO_RECIPE")
         end
@@ -295,7 +296,8 @@ local function tryGroundCraft(player, _cid, held, px, py, pz, rz, int, dim, quie
         cancelHold(c.player)
         -- upstream craft-construct.pwn: the skill is the result's uniqueid, its value shortens the build time
         local ms = exports.character:skillTimeModifier(c.player, recipe.buildTime, recipe.result.uname)
-        triggerClientEvent(c.player, "craftHoldStarted", c.player, "Constructing " .. recipe.name, ms)
+        local label = "Constructing " .. lang.itemName(recipe.result.uname, c.player)
+        triggerClientEvent(c.player, "craftHoldStarted", c.player, label, ms)
         playHoldAnim(c.player)
         local function finish(pl, rec, crz, cint, cdim, src)
             -- Destroy ingredients
@@ -391,7 +393,7 @@ local function tryDeconstruct(player, _cid, held, px, py, _pz, _rz, int, dim)
         cancelHold(c.player)
         -- upstream craft-construct.pwn: removal time shortened by the skill of the item being taken apart, no gain
         local ms = exports.character:skillTimeModifier(c.player, info.duration, target.type_uname)
-        local label = "Deconstructing " .. target.type_uname
+        local label = "Deconstructing " .. lang.itemName(target.type_uname, c.player)
         triggerClientEvent(c.player, "craftHoldStarted", c.player, label, ms)
         playHoldAnim(c.player)
         local timer = setTimer(function(pl, tgt, dInfo, cint, cdim)
@@ -455,7 +457,8 @@ local function tryWorkbenchCraft(player, _cid, held, px, py, onMiss)
             cancelHold(c2.player)
             -- upstream workbench.pwn: 3.6 s per item on the bench, shortened by the skill of the result's uniqueid
             local ms = exports.character:skillTimeModifier(c2.player, craft.workbenchTime(recipe), recipe.result.uname)
-            triggerClientEvent(c2.player, "craftHoldStarted", c2.player, "Crafting " .. recipe.name, ms)
+            local label = "Crafting " .. lang.itemName(recipe.result.uname, c2.player)
+            triggerClientEvent(c2.player, "craftHoldStarted", c2.player, label, ms)
             -- upstream _wb_StartWorking: the player turns to the bench and works the till (INT_SHOP/SHOP_CASHIER)
             local bx, by, bz = tonumber(wb.x) or px, tonumber(wb.y) or py, tonumber(wb.z) or 0
             local wpx, wpy = getElementPosition(c2.player)

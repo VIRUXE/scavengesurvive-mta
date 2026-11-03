@@ -21,7 +21,7 @@ SAMP_ONLY = lambda model: 18631 <= model < 20001 or 11682 <= model <= 11753  # n
 
 def main(argv=None) -> int:
     p = argparse.ArgumentParser(prog="python -m tools.convert")
-    p.add_argument("kind", choices=["all", "items", "loot", "zones", "lang", "maps", "vspawn", "trees"])
+    p.add_argument("kind", choices=["all", "items", "loot", "zones", "lang", "names", "maps", "vspawn", "trees"])
     p.add_argument("--src", default=str(ROOT.parent / "ScavengeSurvive"))
     p.add_argument("--gta", default=os.environ.get("GTA_SA_DIR", DEFAULT_GTA), help="GTA:SA folder (trees only)")
     args = p.parse_args(argv)
@@ -49,6 +49,8 @@ def main(argv=None) -> int:
         print(f"puzzles: {no} objects, {ni} puzzle items -> world/data/puzzles.lua")
     if args.kind in ("all", "lang"):
         print("lang:", lang.convert(args.src, DATA))
+    if args.kind in ("all", "lang", "names"):
+        print("names:", lang.convert_names(DATA))
     if args.kind in ("all", "vspawn"):
         types, rows, dropped = vspawn.convert(args.src, DATA, SEED)
         for d in dropped:

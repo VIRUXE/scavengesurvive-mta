@@ -32,6 +32,11 @@ Scavenge & Survive ported to MTA:SA 1.6 (Lua 5.1) with MariaDB 13.0 (12.2 also v
   enforced by `auth` on join; never `banPlayer`/`addBan`.
 - Stored procedures: `SET TRANSACTION ISOLATION LEVEL READ COMMITTED;` before every `START TRANSACTION` (MariaDB 12 deadlocks/`1020` under REPEATABLE READ with `FOR UPDATE` races); numbers in `JSON_OBJECT` payloads are wrapped in `CAST(x AS SIGNED)` (procedure variables serialise as strings otherwise); compare possibly-NULL ownership columns with `<=>`.
 - DB rows: NULL arrives as `false`; DECIMAL as string; FLOAT is 32-bit; never select raw POINT (`ST_X/ST_Y`); every `?` in SQL text is a placeholder (`CHAR(63)` for a literal).
+- Item type, ammo kind, calibre, liquid and seed kind names shown to a player go through the `lib` module `lang`
+  (`lang.itemType(uname)` / `itemName` / `name(english)` / `calibreName`; on the server pass the player), never
+  `def.name` straight: names are translated by their English text in `tools/convert/lang_port/names/<code>.json`,
+  turned into `data/generated/names_<code>.lua` by `python -m tools.convert names`. A new name gets a line in every
+  language file; `python -m tools.lang_qa` lists the gaps. The client's language is auth's `auth.lang` element data.
 - Client never calls `setElementData`. Server-set element data uses `"deny"`. `elementdata_whitelisted=1`.
 - Pure logic lives in `shared/logic/*.lua` and never calls MTA functions at file scope.
 - No global tables used as static classes or singletons for a resource's state (`Maps = { stats = {}, … }`, `Character.byPlayer`): new code keeps state in file-local tables or closures, returns a module table, and passes state as arguments. The older `Character`/`Items`/`UI` globals are converted when their resource is reworked, not in passing.

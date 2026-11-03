@@ -6,6 +6,7 @@
 -- built by server/main.lua.
 return function(ctx)
     local db, net, state, world, hands = ctx.db, ctx.net, ctx.state, ctx.world, ctx.hands
+    local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")() -- machine titles in the player's language
     local machines, liquids, itemType, toast, decodeData =
         ctx.machines, ctx.liquids, ctx.type, ctx.toast, ctx.decodeData
     local M = {}
@@ -146,11 +147,10 @@ return function(ctx)
             text(player, "MACHPROCESS", machines.timeText(machines.remainingMs(st, now())))
             return true
         end
-        local t = itemType(row.uname)
         ctx.containers.openWorldContainer(player, row, {
             kind = "safebox",
             size = machines.CONTAINER_SIZE,
-            title = t and t.name or row.uname,
+            title = lang.itemName(row.uname, player),
             machine = machines.kind(row.uname),
         })
         return true

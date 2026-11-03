@@ -87,13 +87,14 @@ function M.liquidName(key)
     return l and l.name or tostring(key or "?")
 end
 
--- OnItemNameRender: "Bottle (Water 0.4/0.50)" or "Bottle (Empty)"
-function M.label(t, name, data)
+-- OnItemNameRender: "Bottle (Water 0.4/0.50)" or "Bottle (Empty)"; tr translates the liquid's name (lib lang.name)
+function M.label(t, name, data, tr)
     local amount, liquid = M.decode(t, data)
     if not liquid then
         return name .. " (Empty)"
     end
-    return string.format("%s (%s %.1f/%.2f)", name, M.liquidName(liquid), amount, M.capacity(t))
+    local liquidName = M.liquidName(liquid)
+    return string.format("%s (%s %.1f/%.2f)", name, tr and tr(liquidName) or liquidName, amount, M.capacity(t))
 end
 
 -- One sip: ok, next data, food delta; or false, "EMPTY".
