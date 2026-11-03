@@ -15,5 +15,5 @@
 
 New code is released under the Unlicense. The converted upstream data stays MPL-2.0 and the map placements CC BY-SA 4.0
 (`THIRD_PARTY_NOTICES.md`). Never commit passwords (`server-config/local.settings.xml`). The upstream conversion is
-done: `data/generated/`, `maps/data/`, `sql/seed/` and `docs/maps-census.md` are edited directly and the converters in
-`tools/convert` are not run. The `*_models` packs are built by the `tools.extract_*` scripts.
+done: `data/generated/`, `maps/data/`, `sql/seed/` and `docs/maps-census.md` are edited directly and `tools/convert` is a port
+artifact and is not run. The `*_models` packs are built by the `tools.extract_*` scripts.

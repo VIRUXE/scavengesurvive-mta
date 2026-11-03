@@ -12,7 +12,7 @@ Scavenge & Survive ported to MTA:SA 1.6 (Lua 5.1) with MariaDB 13.0 (12.2 also v
   `items` triggers keep `world_items_pos` in step, so nothing writes that table by hand); `sql/seed/*.sql` (seed data, edited by hand).
 - Upstream is fully converted. `data/generated/`, `sql/seed/`, `maps/data/<ZONE>.lua`, `maps/data/zones.lua`, `maps/meta.xml`
   and `docs/maps-census.md` are ordinary source files now: edit them directly (a new item type, loot row or map object is
-  a hand edit to those files and the live DB). `tools/convert/*.py` is kept for reference only; never run it, it would
+  a hand edit to those files and the live DB). `tools/convert/*.py` is a port artifact (it did the one-off conversion and is not tooling); never run it, it would
   overwrite hand edits.
 - No tests: the project has none and none are ever to be created (user decision 2026-10-31).
 - `docs/runbooks/` (operations), `docs/staff-commands.md` (staff parity table), `docs/reviews/<date>-*.md` (live checks).
