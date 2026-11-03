@@ -249,7 +249,7 @@ function rollNear(x, y, radius)
                 return util.log("loot", "warn", "loot_roll of %d spawns failed: %s", #done, res and res.code or "db")
             end
             for _, r in ipairs(done) do
-                triggerEvent("lootSpawned", resourceRoot, r.s, #r.items)
+                triggerEvent("lootSpawned", resourceRoot, r.s, #r.items, r.items)
             end
             fillLoveBoxes(done)
         end, rolls)

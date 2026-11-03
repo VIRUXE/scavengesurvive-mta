@@ -135,3 +135,30 @@ addEventHandler("onDiscordPacket", root, function(packet, payload)
     end
     exports.chat:sendGlobalExternal("Discord", author, text)
 end)
+
+-- lootSpawned is emitted only after the scarcity-budget placement transaction commits.
+addEventHandler("lootSpawned", root, function(spawnId, _, spawnedItems)
+    local res = bridge()
+    if not res or type(spawnedItems) ~= "table" then
+        return
+    end
+    local channel = get("itemRespawnsChannel") or "1567306210561237032"
+    for _, item in ipairs(spawnedItems) do
+        local def = exports.data:itemType(item.u)
+        local area = getZoneName(item.x, item.y, item.z, false)
+        local region = getZoneName(item.x, item.y, item.z, true)
+        local text = string.format(
+            "**%s** (`%s`)\n%s · %s\n**Coordinates:** `X %.3f · Y %.3f · Z %.3f`\n**Spawn point:** `%s` · <t:%d:T>",
+            def and def.name or item.u,
+            item.u,
+            area,
+            region,
+            item.x,
+            item.y,
+            item.z,
+            tostring(spawnId),
+            getRealTime().timestamp
+        )
+        call(res, "send", "staff.log", { text = text, channel = channel })
+    end
+end)
