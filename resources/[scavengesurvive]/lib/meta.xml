@@ -8,6 +8,7 @@
     <file src="modules/rpc.lua"/>
     <file src="modules/util.lua"/>
     <file src="modules/budget.lua"/>
+    <file src="modules/spawn_guard.lua"/>
     <file src="modules/events_registry.lua"/>
     <file src="modules/surface.lua"/>
     <file src="modules/model_loader.lua"/>

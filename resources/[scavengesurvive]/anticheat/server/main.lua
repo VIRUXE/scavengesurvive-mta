@@ -8,11 +8,13 @@ local DEFAULT_PING_LIMIT = 400
 local DEFAULT_MAX_TAB_OUT_TIME = 60
 
 local pingSince = {}
+local joinedAt = {} -- actual joins only; pingSince also starts a grace period after resource reloads
 local pingStrikes = {}
 local minimizedSince = {}
 local lastTeleportAlert = {}
 local spawnedAt = {}
 local vehicleExitedAt = {}
+local spawnGuard = loadstring(exports.lib:getModule("spawn_guard"), "=lib/spawn_guard.lua")().new(10000)
 local settings = {}
 local idleKickEnabled = true
 local db = loadstring(exports.lib:getModule("db"), "=lib/db.lua")()
@@ -54,7 +56,11 @@ function ctx.exempt(player)
 end
 
 function ctx.alive(player)
-    return exports.character:getCharacterId(player) ~= nil and not isPedDead(player)
+    return exports.character:getCharacterId(player) and not isPedDead(player)
+end
+
+function ctx.spawnReady(player, x, y, z)
+    return spawnGuard.ready(player, getTickCount(), x, y, z)
 end
 
 function ctx.sinceJoin(player)
@@ -78,22 +84,27 @@ local accuracy = loadFile("server/accuracy.lua")(ctx)
 
 addEventHandler("onPlayerJoin", root, function()
     pingSince[source] = getTickCount()
+    joinedAt[source] = pingSince[source]
     pingStrikes[source] = 0
 end)
 
 addEventHandler("onPlayerQuit", root, function()
     pingSince[source] = nil
+    joinedAt[source] = nil
     pingStrikes[source] = nil
     minimizedSince[source] = nil
     lastTeleportAlert[source] = nil
     spawnedAt[source] = nil
     vehicleExitedAt[source] = nil
+    spawnGuard.forget(source)
     movement.forget(source)
     accuracy.forget(source)
 end)
 
 addEventHandler("onPlayerSpawn", root, function()
     spawnedAt[source] = getTickCount()
+    spawnGuard.reset(source, spawnedAt[source])
+    movement.forget(source)
 end)
 
 addEventHandler("onPlayerVehicleExit", root, function()
@@ -110,30 +121,42 @@ net.handler("anticheatFocusChanged", function(player, isFocused)
 end)
 
 -- Native MTA 1.6 movement monitor. Server-side setElementPosition calls are excluded by MTA,
--- so admin moves, spawn placement, and scripted gameplay teleports do not trip this alert.
+-- so admin moves and scripted gameplay teleports do not normally trip this alert. Delayed
+-- spawn synchronization can still trigger it; report the jump without moving the player.
+-- Restoring the previous sample here can fight client sync and trap a player at the origin.
 addEventHandler("onPlayerTeleport", root, function(oldX, oldY, oldZ, newX, newY, newZ)
-    if exports.staff:isOnDuty(source) or getPedOccupiedVehicle(source) or isPedDead(source) then
+    if exports.staff:isOnDuty(source) or getPedOccupiedVehicle(source) or not ctx.alive(source) then
+        return
+    end
+    if not ctx.spawnReady(source, oldX, oldY, oldZ) then
         return
     end
     local now = getTickCount()
     if
         (pingSince[source] and now - pingSince[source] < 20000)
-        or (spawnedAt[source] and now - spawnedAt[source] < 1000)
+        or (spawnedAt[source] and now - spawnedAt[source] < 10000)
         or (vehicleExitedAt[source] and now - vehicleExitedAt[source] < 5000)
     then
         return
     end
     local distance = getDistanceBetweenPoints3D(oldX, oldY, oldZ, newX, newY, newZ)
-    setElementPosition(source, oldX, oldY, oldZ)
     if lastTeleportAlert[source] and now - lastTeleportAlert[source] < 10000 then
         return
     end
     lastTeleportAlert[source] = now
-    local detail = string.format("unexpected position change %.1f m", distance)
+    local ping = getPlayerPing(source)
+    local joined, spawned = joinedAt[source], spawnedAt[source]
+    local diagnostics = string.format(
+        "ping=%dms since_join=%s since_spawn=%s",
+        ping,
+        joined and string.format("%.1fs", (now - joined) / 1000) or "unknown",
+        spawned and string.format("%.1fs", (now - spawned) / 1000) or "unknown"
+    )
+    local detail = string.format("unexpected position change %.1f m | %s", distance, diagnostics)
     log(source, "teleport", detail)
     local from = string.format("%.0f, %.0f, %.0f", oldX, oldY, oldZ)
     local to = string.format("%.0f, %.0f, %.0f", newX, newY, newZ)
-    ctx.report(source, "TELE", string.format("Moved %.0fm (%s > %s)", distance, from, to))
+    ctx.report(source, "TELE", string.format("Moved %.0fm (%s > %s), ping %dms", distance, from, to, ping), diagnostics)
 end)
 
 -- MTA counts every client triggerServerEvent, including unregistered/non-remote event attempts.

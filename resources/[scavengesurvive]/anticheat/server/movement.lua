@@ -13,6 +13,10 @@ return function(ctx)
 
     local function sample(player, now)
         local x, y, z = getElementPosition(player)
+        if not ctx.spawnReady(player, x, y, z) then
+            M.forget(player)
+            return
+        end
         local prev = last[player]
         local frozen = exports.staff:isFrozen(player)
         last[player] = { x, y, z, frozen }
