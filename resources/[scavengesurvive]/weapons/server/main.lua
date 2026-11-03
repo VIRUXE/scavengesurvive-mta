@@ -184,6 +184,14 @@ local function ammoPenetration(attacker)
 end
 
 net.handler("weaponHitReported", function(victim, attacker, weapon, bodypart, loss)
+    local issuer = isPlayer(attacker) and attacker
+        or (isElement(attacker) and getElementType(attacker) == "vehicle" and getVehicleController(attacker))
+    if
+        getElementData(victim, "auth.reauthProtection")
+        or (issuer and getElementData(issuer, "auth.reauthProtection"))
+    then
+        return
+    end
     weapon, bodypart, loss = tonumber(weapon), tonumber(bodypart) or 3, tonumber(loss) or 0
     if not weapon or loss < 0 or loss > MAX_LOSS then
         return

@@ -29,7 +29,12 @@ return function(ctx)
 
     setTimer(function()
         for player, st in pairs(state.byPlayer) do
-            if isElement(player) and st.hp > 0 and not st.dead then
+            if
+                isElement(player)
+                and st.hp > 0
+                and not st.dead
+                and not getElementData(player, "auth.reauthProtection")
+            then
                 local vx, vy, vz = getElementVelocity(player)
                 local speed = math.sqrt(vx * vx + vy * vy + vz * vz)
                 local inVehicle = getPedOccupiedVehicle(player) ~= false

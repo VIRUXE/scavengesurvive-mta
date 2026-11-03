@@ -237,7 +237,11 @@ detonateItem = function(itemId)
                     return
                 end
 
-                if parentPlayer and isElement(parentPlayer) then
+                if
+                    parentPlayer
+                    and isElement(parentPlayer)
+                    and not getElementData(parentPlayer, "auth.reauthProtection")
+                then
                     killPed(parentPlayer)
                 end
                 if parentVehicle and isElement(parentVehicle) then

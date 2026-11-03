@@ -17,6 +17,9 @@ return function(ctx)
     end
 
     function M.applyDrug(player, st, name, ms)
+        if getElementData(player, "auth.reauthProtection") then
+            return false
+        end
         if not medical.applyDrug(st.drugs, name, ms) then
             return false
         end
@@ -27,6 +30,9 @@ return function(ctx)
     end
 
     function M.setInfection(player, st, kind, on)
+        if getElementData(player, "auth.reauthProtection") then
+            return false
+        end
         if kind ~= "food" and kind ~= "wound" then
             return false
         end
@@ -56,7 +62,12 @@ return function(ctx)
     -- The end of a hold: applies the outcome to the patient and returns { used, consume, data } for items.
     function M.treat(healer, patient, uname, data)
         local st = state.byPlayer[patient]
-        if not st or st.dead then
+        if
+            not st
+            or st.dead
+            or getElementData(patient, "auth.reauthProtection")
+            or getElementData(healer, "auth.reauthProtection")
+        then
             return { used = false }
         end
         local view = { bleed = st.bleed, wounds = st.wounds, infection = st.infection }

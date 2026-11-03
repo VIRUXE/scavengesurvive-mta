@@ -16,6 +16,9 @@ addEventHandler("onClientPlayerDamage", root, function(attacker, weapon, bodypar
         return
     end
     cancelEvent()
+    if getElementData(localPlayer, "auth.reauthProtection") then
+        return
+    end
     local now = getTickCount()
     if now - lastReport < REPORT_MS then
         return

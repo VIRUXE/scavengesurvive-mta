@@ -33,6 +33,28 @@ local accounts
 local finish -- defined after prompt, which calls it for an auto-login
 local warnedNoDb = false
 
+-- Keep this on the player element so protection survives auth's Lua VM being restarted.
+local REAUTH_KEY = "auth.reauthProtection"
+local function protectForReauth(player)
+    if isPedDead(player) then
+        return
+    end
+    if not getElementData(player, REAUTH_KEY) then
+        setElementData(player, REAUTH_KEY, { frozen = isElementFrozen(player) }, "broadcast", "deny")
+    end
+    setElementFrozen(player, true)
+end
+
+local function finishReauth(player)
+    local previous = getElementData(player, REAUTH_KEY)
+    if type(previous) == "table" then
+        local staff = getResourceFromName("staff")
+        local staffFrozen = staff and getResourceState(staff) == "running" and exports.staff:isFrozen(player)
+        setElementFrozen(player, previous.frozen == true or staffFrozen == true)
+        setElementData(player, REAUTH_KEY, false, "broadcast", "deny")
+    end
+end
+
 local function kickLater(player, reason)
     blocked[player] = true
     setTimer(function(p, r)
@@ -174,6 +196,16 @@ local function checkBan(player)
 end
 
 addEventHandler("onResourceStart", resourceRoot, function()
+    -- Also covers the first installation of this handler, when the old auth had no stop hook.
+    local character = getResourceFromName("character")
+    for _, p in ipairs(getElementsByType("player")) do
+        if
+            getElementData(p, REAUTH_KEY)
+            or (character and getResourceState(character) == "running" and exports.character:getCharacterId(p))
+        then
+            protectForReauth(p)
+        end
+    end
     if not db.connect("auth") then
         return
     end
@@ -200,6 +232,14 @@ addEventHandler("onResourceStart", resourceRoot, function()
         whitelistKickS = access.whitelistKickSeconds(map["server.whitelist_kick_s"])
         applyAutoWhitelist()
     end)
+end)
+
+addEventHandler("onResourceStop", resourceRoot, function()
+    for p in pairs(session) do
+        if isElement(p) then
+            protectForReauth(p)
+        end
+    end
 end)
 
 addEventHandler("onPlayerJoin", root, function()
@@ -320,6 +360,7 @@ local function admit(player, account, isNew)
         triggerClientEvent(player, "authWelcomeShown", player)
     end
     triggerEvent("playerAuthenticated", player, account.id)
+    finishReauth(player)
     util.log("auth", "info", "%s authenticated as account %d", account.name, account.id)
 end
 
