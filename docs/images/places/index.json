@@ -1,0 +1,142 @@
+{
+ "airstream-road": {
+  "at": [
+   -230.0,
+   1045.0,
+   19.7
+  ],
+  "caption": "The towable Airstream on the Fort Carson road",
+  "file": "airstream-road.png",
+  "light": "golden"
+ },
+ "area69-gate": {
+  "at": [
+   211.6,
+   1812.0,
+   19.0
+  ],
+  "caption": "The gate of Area 69",
+  "file": "area69-gate.png",
+  "light": "day"
+ },
+ "camp": {
+  "at": [
+   -1612.0,
+   -2208.0,
+   35.0
+  ],
+  "caption": "A camp in a Flint County forest clearing at dusk",
+  "file": "camp.png",
+  "light": "dusk"
+ },
+ "chiliad-station": {
+  "at": [
+   -2316.15,
+   -1646.64,
+   483.43
+  ],
+  "caption": "The Mount Chiliad summit station with the battery and fusebox puzzle",
+  "file": "chiliad-station.png",
+  "light": "golden"
+ },
+ "farm-silos": {
+  "at": [
+   -1075.0,
+   -672.0,
+   36.0
+  ],
+  "caption": "The Flint County farm: the silos with their ladders",
+  "file": "farm-silos.png",
+  "light": "day"
+ },
+ "fuel-station": {
+  "at": [
+   -1675.0,
+   413.0,
+   6.4
+  ],
+  "caption": "A fuel station with eight outlets (San Fierro)",
+  "file": "fuel-station.png",
+  "light": "day"
+ },
+ "palisades-bbq": {
+  "at": [
+   -2701.13,
+   845.74,
+   70.38
+  ],
+  "caption": "The BBQ on the Palisades",
+  "file": "palisades-bbq.png",
+  "light": "golden"
+ },
+ "quarry-door": {
+  "at": [
+   -2813.0,
+   -1527.0,
+   140.0
+  ],
+  "caption": "The quarry door's log cabin in the Whetstone woods",
+  "file": "quarry-door.png",
+  "light": "overcast"
+ },
+ "queens-lockup": {
+  "at": [
+   -2497.0,
+   315.0,
+   29.5
+  ],
+  "caption": "The code hunt's lockup in Queens, San Fierro",
+  "file": "queens-lockup.png",
+  "light": "day"
+ },
+ "scrapyard": {
+  "at": [
+   -1868.0,
+   -1661.0,
+   22.0
+  ],
+  "caption": "The Whetstone machines in place: the Scrap Machine and the Refining Machine",
+  "file": "scrapyard.png",
+  "light": "day"
+ },
+ "spawn-beach": {
+  "at": [
+   -228.79,
+   -1719.81,
+   1.11
+  ],
+  "caption": "A spawn point on the beach, the sea behind",
+  "file": "spawn-beach.png",
+  "light": "golden"
+ },
+ "townhouse-street": {
+  "at": [
+   2663.0,
+   -2005.0,
+   15.3
+  ],
+  "caption": "A Los Santos street of house shells (East Beach)",
+  "file": "townhouse-street.png",
+  "light": "day"
+ },
+ "trailer-park": {
+  "at": [
+   -890.0,
+   1541.0,
+   24.9
+  ],
+  "caption": "A trailer cluster in Las Barrancas, Bone County: the enterable shells",
+  "file": "trailer-park.png",
+  "light": "day"
+ },
+ "verdant-meadows": {
+  "at": [
+   373.17,
+   2511.17,
+   15.47
+  ],
+  "caption": "The Verdant Meadows airstrip drop point with a supply crate",
+  "file": "verdant-meadows.png",
+  "light": "day"
+ }
+}
