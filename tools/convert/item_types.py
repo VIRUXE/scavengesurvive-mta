@@ -290,6 +290,10 @@ def add_port_tools(types: dict[str, dict]) -> None:
         if w["carry"]:
             keep = {k: hold[k] for k in ("attx", "atty", "attz", "attrx", "attry", "attrz")}
             fields.update(keep, usecarryanim=True, longpickup=True)
+            if w.get("att"):  # a part with its own carry pose (tools/bobcat_parts.py)
+                fields.update(dict(zip(("attx", "atty", "attz", "attrx", "attry", "attrz"), w["att"])))
+            if w.get("rest"):  # and its own way of lying on the ground
+                fields.update(dict(zip(("rotx", "roty", "rotz"), w["rest"])))
         elif w.get("att"):
             fields.update(dict(zip(("attx", "atty", "attz", "attrx", "attry", "attrz"), w["att"])))
             fields.update(boneid=w.get("bone", 6), usecarryanim=w.get("anim", False))

@@ -29,7 +29,7 @@ for p in PARTS:
     points=[v.co for v in obj.data.vertices]
     lo=Vector(tuple(min(v[k] for v in points) for k in range(3)))
     hi=Vector(tuple(max(v[k] for v in points) for k in range(3)))
-    shift=Vector(((lo.x+hi.x)/2,(lo.y+hi.y)/2,lo.z))
+    shift=(lo+hi)/2  # origin at the middle of the part: carrying and lying flat both turn it about its centre
     for v in obj.data.vertices: v.co-=shift
     obj.dff.type='OBJ'
     # Paint ids 96/25: the first stock Bobcat pairing in carcols.dat.
