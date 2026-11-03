@@ -326,6 +326,24 @@ local function carmourHint(held)
     return nil
 end
 
+-- a Wrench in hand next to a vehicle body part that is still on: the part's name ("Left Door"), else nil
+local function bodyPartHint(held)
+    if not held or held.uname ~= "Wrench" then
+        return nil
+    end
+    local px, py, pz = getElementPosition(localPlayer)
+    for _, veh in ipairs(getElementsByType("vehicle", root, true)) do
+        local vx, vy, vz = getElementPosition(veh)
+        if getDistanceBetweenPoints3D(px, py, pz, vx, vy, vz) <= 5.5 then
+            local name, condition = exports.vehicles:bodyPartSlot(veh)
+            if name and condition ~= "missing" then
+                return (name:gsub("(%l)(%u)", "%1 %2"))
+            end
+        end
+    end
+    return nil
+end
+
 local function drawKeyActions(driver)
     local held = state.held
     local isCalibreWep = held and held.category == "weapon" and held.calibre ~= nil and not held.liquid or false
@@ -344,6 +362,7 @@ local function drawKeyActions(driver)
         nearMachine = exports.items:nearbyMachine() ~= false,
         nearContainer = exports.items:nearbyContainerItem() ~= false,
         carmour = carmourHint(held),
+        bodyPart = bodyPartHint(held),
         cuffedNearby = not held and hasCuffedPlayerNearby() or false,
         hasHolster = getElementData(localPlayer, "items.holster") ~= false,
         supports = SUPPORTS,

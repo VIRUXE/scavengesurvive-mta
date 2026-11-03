@@ -17,6 +17,7 @@
     <file src="shared/logic/fuel-pumps.lua"/>
     <file src="shared/logic/overheat.lua"/>
     <file src="shared/logic/carmour.lua"/>
+    <file src="shared/logic/bodyparts.lua"/>
     <file src="shared/logic/carmour_place.lua"/>
     <file src="shared/data/carmour_geometry.lua"/>
     <file src="server/carmour.lua"/>
@@ -49,4 +50,6 @@
     <export function="hasTorch" type="client"/>
     <export function="nearbyWelder" type="client"/>
     <export function="nearbyGas" type="client"/>
+    <export function="bodyPartSlot" type="client"/>
+    <export function="isBodyPart" type="client"/>
 </meta>
