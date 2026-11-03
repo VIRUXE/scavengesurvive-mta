@@ -86,6 +86,7 @@ return function(ctx)
         end
         local c = { player = player, st = st, charId = st.id, cause = cause, killer = killer, silent = silent }
         c.name = getPlayerName(player)
+        triggerEvent("characterDeathLogged", player, c.name, cause, isElement(killer) and getElementType(killer) == "player" and getPlayerName(killer) or false)
         local _, _, rz = getElementRotation(player)
         groundSpots(player, x, y, z, measure, function(spots)
             local ring, clothes = drop.split(spots)

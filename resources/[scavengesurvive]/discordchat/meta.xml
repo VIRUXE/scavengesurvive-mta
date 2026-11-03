@@ -12,5 +12,6 @@
         <setting name="*joinPartChannel" value="1564285345426833608" friendlyname="Discord channel ID or name for join/part activity"/>
         <setting name="*generalChannel" value="general" friendlyname="Discord channel ID or name for new vehicle spawns"/>
         <setting name="*staffChannel" value="1563498523507425421" friendlyname="Discord channel ID or name for staff logs"/>
+        <setting name="*deathsChannel" value="1567326963331371128" friendlyname="Discord channel ID or name for death messages"/>
     </settings>
 </meta>

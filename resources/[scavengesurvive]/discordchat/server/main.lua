@@ -31,6 +31,32 @@ local function getGeneralChannel()
     return (type(val) == "string" and val ~= "") and val or "general"
 end
 
+local function getDeathsChannel()
+    local val = get("deathsChannel")
+    return (type(val) == "string" and val ~= "") and val or "deaths"
+end
+
+addEventHandler("characterDeathLogged", root, function(playerName, cause, killerName)
+    local res = bridge()
+    if not res then
+        return
+    end
+    local victim = logic.strip(playerName)
+    local causeText = logic.strip(cause):gsub("^%l", string.upper)
+    local killer = type(killerName) == "string" and logic.strip(killerName) or nil
+    if victim == "" then
+        return
+    end
+    local text = string.format(
+        ":skull: **%s** died%s\n**Cause:** %s · <t:%d:F>",
+        victim,
+        killer and (" to **" .. killer .. "**") or "",
+        causeText ~= "" and causeText or "Unknown",
+        getRealTime().timestamp
+    )
+    call(res, "send", "staff.log", { text = text, channel = getDeathsChannel() })
+end)
+
 addEventHandler("vehicleRefillSpawned", root, function()
     local res = bridge()
     if not res or not isElement(source) then

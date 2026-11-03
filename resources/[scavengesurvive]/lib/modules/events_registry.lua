@@ -9,6 +9,7 @@ return {
     authWelcomeShown = true,
     characterSpawned = false,
     characterDied = false,
+    characterDeathLogged = false,
     characterStatsChanged = false,
     respawnRequested = true,
     characterStatsSynced = true,
