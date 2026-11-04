@@ -15,7 +15,7 @@ Scavenge & Survive ported to MTA:SA 1.6 (Lua 5.1) with MariaDB 13.0 (12.2 also v
   a hand edit to those files and the live DB). `tools/convert/*.py` is a port artifact (it did the one-off conversion and is not tooling); never run it, it would
   overwrite hand edits.
 - No tests: the project has none and none are ever to be created (user decision 2026-10-31).
-- `docs/runbooks/` (operations), `docs/staff-commands.md` (staff parity table), `docs/reviews/<date>-*.md` (live checks).
+- `ops/` (dev Loki + Grafana compose, dashboards, alert rules), `docs/runbooks/` (operations), `docs/staff-commands.md` (staff parity table), `docs/reviews/<date>-*.md` (live checks).
 
 ## Rules
 
@@ -29,6 +29,15 @@ Scavenge & Survive ported to MTA:SA 1.6 (Lua 5.1) with MariaDB 13.0 (12.2 also v
   (never hand-edit it); one-off data fixes run directly, no file (`docs/runbooks/change-database-schema.md`).
 - DDL on a system-versioned table (`accounts`, `items`, `bans`) runs `SET SESSION system_versioning_alter_history = KEEP;`
   first in the same session (MariaDB error 4119 otherwise).
+- Logging: the game log goes to Loki through the `logs` resource (`docs/runbooks/logging-loki.md`, design in
+  `docs/superpowers/specs/2026-11-04-logging-loki-design.md`). `local log = loadstring(exports.lib:getModule("log"), "=lib/log.lua")()`,
+  then `log.event("<domain>.<pastTenseVerb>", { player = player, item_id = id, ... }, level)`; a player element in
+  `player`/`attacker`/`victim`/`killer`/`to`/`actor`/`target` is expanded to name + account and character ids. Any
+  server-side change a player can dispute (items created, moved, destroyed or traded, deaths, defences, vehicles, account
+  actions) logs one event with the ids involved; a refused action logs `ok = false` and the `code`. Fields are flat and
+  snake_case, nothing per frame or per tick (batches log a count), and never a password, keypad code or token.
+  `serial` and `ip` only in `session.*`. `util.log` stays for free-text diagnostics; a fact a dashboard counts gets a kind.
+  Only `logs` calls `fetchRemote`.
 - Staff tooling lives in the `staff` resource (levels from `accounts.admin_level`, every action in `staff_actions`); a
   new privileged command goes through `ctx.command({ name, level, fn })` there, never into `dev`. Bans are MariaDB rows
   enforced by `auth` on join; never `banPlayer`/`addBan`.

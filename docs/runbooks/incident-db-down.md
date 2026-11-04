@@ -1,6 +1,7 @@
 # Incident: MariaDB unreachable
 
-**When:** `scripts.log` fills with `[<tag>] SQL error 2006/2013 …` or `dbConnect failed`, logins stall at the
+**When:** `server.log` fills with `[<tag>] db.queryFailed SQL error 2006/2013 …` or `db.connectFailed` (in Grafana:
+`{job="ss-game", level="error"} | kind=~"db\\..*"`), logins stall at the
 password prompt, item pickups do nothing, or `rcon.ps1 cmd <player> dbtest` reports `db error`.
 
 **What the server does on its own (design spec, Failure modes):** every resource connects with `autoreconnect=1`;
@@ -17,7 +18,7 @@ queue for the next flush, unless the weapon fired again meanwhile (the newer cou
    down loses nothing committed but the flush of the last minute runs when the connection returns, so a player
    who stays connected is better off.
 3. Restart MariaDB (`Restart-Service MariaDB` or the service name on that host). The resources reconnect on the
-   next query (`autoreconnect=1`); watch `scripts.log` for the errors to stop and `rcon.ps1 cmd <player> dbtest`
+   next query (`autoreconnect=1`); watch `server.log` (or the Ops dashboard) for the errors to stop and `rcon.ps1 cmd <player> dbtest`
    to answer with a latency.
 4. If MariaDB does not come back: check disk space (`innodb` stops on a full disk), `my.ini` changes, and the
    MariaDB error log. A crashed InnoDB recovers on start; do not delete `ib_logfile*`.

@@ -64,7 +64,7 @@ log.event("item.pickedUp", { player = player, item_id = id, uname = uname, x = x
 log.warn("loot", "no spawn rows for zone %s", zone)   -- util.log keeps working; it delegates here
 ```
 
-`log.event(kind, fields, level)` adds `ts`, `level` (`info` unless given), `resource` (the caller's resource
+`log.event(kind, fields, level)` adds `level` (`info` unless given), `resource` (the caller's resource
 name), and, when `fields.player` is a player element, replaces it with `player` (name), `account_id`
 (`exports.auth:getAccountId`), `character_id` (`exports.character:getCharacterId`) and drops the element. It
 serialises the line once and calls `exports.logs:write(line, labels)`. Levels: `debug` (dropped unless
@@ -74,7 +74,7 @@ serialises the line once and calls `exports.logs:write(line, labels)`. Levels: `
 **Line format** (one object per entry, flat, numbers unquoted, no nesting beyond one level):
 
 ```json
-{"ts":"2026-11-04T20:03:11.412Z","level":"info","resource":"items","kind":"item.pickedUp",
+{"level":"info","resource":"items","kind":"item.pickedUp",
  "msg":"Bob picked up M9Pistol#123","player":"Bob","account_id":12,"character_id":34,
  "item_id":123,"uname":"M9Pistol","x":2041.2,"y":-1764.9,"z":13.5,"int":0,"dim":0,"zone":"LS"}
 ```
@@ -83,11 +83,11 @@ serialises the line once and calls `exports.logs:write(line, labels)`. Levels: `
   `item.pickedUp` the log kind), so a reader of `shared/events.lua` recognises them. Domains are the resource
   names plus `session`, `combat`, `db`, `system`, `script`.
 - `msg` is optional, English, for the Explore view; every fact in it is also a field.
-- `ts` is UTC RFC 3339 with milliseconds, derived from `getRealTime().timestamp` at resource start plus
-  `getTickCount()` deltas (re-synced hourly). The same clock gives the push timestamp (next section), so a late
-  retry keeps the real order.
-- Built with `toJSON(fields, true)` and the outer `[ ]` stripped (as `death.lua` already does). Strings are
-  truncated at 512 characters; chat text at 256.
+- There is no `ts` inside the line: `logs` stamps each entry on arrival with the Loki nanosecond timestamp (UTC,
+  a string, from `getRealTime` at start plus `getTickCount` deltas, re-synced hourly, a per-line counter in the last
+  six digits), so a retried batch keeps the real order.
+- Encoded by `log.build` itself (flat object, arrays of scalars allowed, no `toJSON`), invalid UTF-8 replaced,
+  strings cut at 512 bytes on a character boundary (chat text is cut at 256 by its caller).
 - `serial` and `ip` appear only in `session.*` kinds; nothing else carries them.
 
 **Loki labels** (index) stay small: `job="ss-game"`, `host` (`*logs.host`), `env` (`*logs.env`: `prod`/`dev`),

@@ -12,6 +12,7 @@ cut after the local checks (`docs/runbooks/release.md`).
 | [backup-restore.md](backup-restore.md) | nightly backup, or restoring after data loss |
 | [ban-appeal.md](ban-appeal.md) | a player asks why they cannot join, or asks to be unbanned |
 | [incident-db-down.md](incident-db-down.md) | MariaDB is unreachable while the server runs |
+| [logging-loki.md](logging-loki.md) | setting up the log push to Loki, a Grafana panel is empty, or `[logs] push … failed` on the console |
 | [release.md](release.md) | tagging a version from `main` |
 | [discord-bridge.md](discord-bridge.md) | the Discord chat relay or Rich Presence stops working, or moving it to another host |
 | [repivot-defences.md](repivot-defences.md) | the hinged defence doors' re-pivoted copies: rebuilding them, deploying, the one-off fix of built rows |

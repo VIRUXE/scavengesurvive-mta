@@ -1,0 +1,22 @@
+<meta>
+    <info author="scavengesurvive-mta" type="script" name="logs" description="Structured game log, batched and pushed to Loki" version="0.1.0"/>
+    <min_mta_version server="1.6.0"/>
+    <script src="server/main.lua" type="server"/>
+    <file src="shared/logic/batch.lua"/>
+    <export function="write" type="server"/>
+    <settings>
+        <!-- Loki base URL, e.g. http://127.0.0.1:3100; empty = nothing is pushed (the console still gets warn and error) -->
+        <setting name="*url" value="" friendlyname="Loki base URL"/>
+        <!-- all optional: a local Loki with auth_enabled: false needs none of them -->
+        <setting name="*tenant" value="" friendlyname="X-Scope-OrgID tenant"/>
+        <setting name="*user" value="" friendlyname="Basic auth user (with pass)"/>
+        <setting name="*pass" value="" friendlyname="Basic auth password or token"/>
+        <setting name="*bearer" value="" friendlyname="Bearer token (replaces basic auth)"/>
+        <setting name="*host" value="mta" friendlyname="host label"/>
+        <setting name="*env" value="dev" friendlyname="env label (prod or dev)"/>
+        <setting name="*level" value="info" friendlyname="Lowest level kept: debug, info, warn, error"/>
+        <setting name="*slow_ms" value="50" friendlyname="db.callFinished is info at or above this many ms"/>
+        <setting name="*flush_ms" value="1000" friendlyname="Push interval"/>
+        <setting name="*max_lines" value="20000" friendlyname="Buffered lines kept while Loki is unreachable"/>
+    </settings>
+</meta>
