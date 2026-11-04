@@ -298,12 +298,23 @@ return function(ctx)
         return string.format("[%02d]%s", t and t.size or 1, name)
     end
 
+    -- Use acts on an item that is not in hand only for these (server/use.lua, the `fromHand == false` paths): food is
+    -- eaten, Clothes change, a Note is read, a Locator traces, a HerpDerp is played. Everything else (drinks, treatments,
+    -- tools, explosives, the phone) needs to be Equipped first and is used with the interact key, so it gets no Use row.
+    local INVENTORY_USABLE = { Clothes = true, Note = true, Locator = true, HerpDerp = true }
+    local function usableFromInventory(uname, t)
+        return INVENTORY_USABLE[uname] == true or (t ~= nil and t.category == "food")
+    end
+
     -- "[%02d]%s": the type size then the name, one "<Empty>" per free slot
     local function rowsFor(list, cap, moveActions, emptyAction)
         local rows = {}
         for _, it in ipairs(list or {}) do
             local t = itemType(it.uname)
-            local actions = { { id = "take", label = lang.text("Equip") }, { id = "use", label = lang.text("Use") } }
+            local actions = { { id = "take", label = lang.text("Equip") } }
+            if usableFromInventory(it.uname, t) then
+                actions[#actions + 1] = { id = "use", label = lang.text("Use") }
+            end
             if (apparel and apparel.isWearable(it.uname)) or it.uname == "Clothes" then
                 actions[#actions + 1] = { id = "wear", label = lang.text("Wear") }
             end
@@ -419,6 +430,11 @@ return function(ctx)
         return true
     end
 
+    -- Equip and Use close the dialog; the server answers each with a refreshed inventory (inventoryOpened), which would
+    -- reopen it, so refreshes inside this window only update `last`.
+    local CLOSE_QUIET_MS = 1500
+    local quietUntil = 0
+
     addEventHandler("inventoryOpened", root, function(p)
         -- a pushed refresh (another player changed the container open here) only updates a list already showing
         if p.refresh and (not last or not exports.ui:listIsOpen()) then
@@ -430,6 +446,9 @@ return function(ctx)
         last = p
         if not p.trunk and view == "trunk" then
             view = "inventory"
+        end
+        if getTickCount() < quietUntil then
+            return
         end
         open(p, p.refresh)
     end)
@@ -461,8 +480,12 @@ return function(ctx)
             end
         elseif actionId == "take" then
             triggerServerEvent("itemTakeRequested", localPlayer, rowId)
+            quietUntil = getTickCount() + CLOSE_QUIET_MS
+            exports.ui:listClose()
         elseif actionId == "use" then
             triggerServerEvent("itemUseRequested", localPlayer, rowId)
+            quietUntil = getTickCount() + CLOSE_QUIET_MS
+            exports.ui:listClose()
         elseif actionId == "wear" then
             triggerServerEvent("itemWearRequested", localPlayer, rowId)
         elseif actionId == "move:bag" then
