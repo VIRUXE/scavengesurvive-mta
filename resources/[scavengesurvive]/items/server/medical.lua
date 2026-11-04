@@ -86,7 +86,7 @@ return function(ctx)
             exports.character:gainSkill(player, "Medical")
         end
         if res.consume then
-            return ctx.destroy(a.itemId, player)
+            return ctx.destroy(a.itemId, player, nil, "used")
         end
         if type(res.data) == "table" then
             writeData(player, a.itemId, res.data)

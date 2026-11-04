@@ -63,7 +63,7 @@ return function(ctx)
                 if isElement(player) then
                     toast(player, "CUFFED")
                 end
-            end)
+            end, "used")
             return
         end
         local cid = charId(player)

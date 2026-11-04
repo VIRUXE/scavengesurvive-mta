@@ -66,7 +66,7 @@ return function(ctx)
             return
         end
         hands.setGear(player, "parachute", nil)
-        ctx.destroy(item.id, player)
+        ctx.destroy(item.id, player, nil, "used")
     end, { rate = 2 })
 
     return M

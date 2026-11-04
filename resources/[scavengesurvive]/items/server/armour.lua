@@ -28,7 +28,7 @@ return function(ctx)
         end
         item.data.ap = 0
         hands.setGear(player, "armour", nil)
-        destroy(item.id, player)
+        destroy(item.id, player, nil, "broken")
         world.syncPlayer(player)
         return through
     end

@@ -34,7 +34,7 @@ return function(ctx)
             if not fromHand then
                 ctx.sendInventory(player)
             end
-        end)
+        end, "used")
     end
 
     local function use(player, itemId, uname, fromHand, data, openContainerId)

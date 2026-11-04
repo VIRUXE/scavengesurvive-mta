@@ -4,6 +4,7 @@
 -- (drop.lua). The body itself is a Torso item (shared/logic/bodies.lua, #139) created after the drop.
 return function(ctx)
     local db, net, util, drop, state, bodies = ctx.db, ctx.net, ctx.util, ctx.drop, ctx.state, ctx.bodies
+    local log = ctx.log
     local M = {}
     local GROUND_WAIT_MS = 1000
     local BODY_HP, BODY_DROP = 6, 0.9 -- the Torso type's hitpoints; items lie this far below the ped's origin
@@ -91,16 +92,38 @@ return function(ctx)
             local ring, clothes = drop.split(spots)
             local params = { c.charId, x, y, z, int, dim, toJSON(ring, true), toJSON(clothes, true) }
             db.call("character_death_drop", params, function(res)
+                -- logged before the element check: a combat logger's element is gone by the time the drop commits
+                local ok = res and res.ok
+                log.event(
+                    "character.died",
+                    {
+                        player = isElement(c.player) and c.player or nil,
+                        name = c.name,
+                        account_id = c.st.accountId,
+                        character_id = c.charId,
+                        ok = ok and true or false,
+                        code = not ok and (res and res.code or "DB_ERROR") or nil,
+                        cause = c.cause,
+                        killer = isElement(c.killer) and c.killer or nil,
+                        silent = c.silent and true or nil,
+                        x = x,
+                        y = y,
+                        z = z,
+                        int = int,
+                        dim = dim,
+                        age_s = c.st.born and math.max(0, getRealTime().timestamp - c.st.born) or nil,
+                        items_dropped = ok and tonumber(res.payload.dropped) or nil,
+                    },
+                    ok and "info" or "error"
+                )
                 if not isElement(c.player) then
                     return
                 end
-                if not res or not res.ok then
-                    -- the character stays alive in the DB: a reconnect loads it again instead of orphaning its items
-                    util.log("character", "error", "death_drop failed for %d", c.charId)
-                elseif not c.silent then
-                    state.awaitingRespawn[c.player] = true
-                end
-                if res and res.ok then
+                -- not ok: the character stays alive in the DB, a reconnect loads it again (no orphaned items)
+                if ok then
+                    if not c.silent then
+                        state.awaitingRespawn[c.player] = true
+                    end
                     leaveBody(c, x, y, z, rz, int, dim)
                 end
                 triggerEvent("characterDied", c.player, c.charId, c.cause, c.killer)
@@ -148,9 +171,27 @@ return function(ctx)
         groundSpots(player, x, y, z, true, function(spots)
             local params = { st.id, toJSON((drop.split(spots)), true), int, dim }
             db.call("character_drop_all", params, function(res)
-                if not isElement(player) or not res or not res.ok then
+                if not isElement(player) then
                     return
                 end
+                if not res or not res.ok then
+                    log.event(
+                        "character.dropAll",
+                        {
+                            player = player,
+                            character_id = st.id,
+                            ok = false,
+                            code = res and res.code or "DB_ERROR",
+                        },
+                        res and res.code == "NOT_ALIVE" and "info" or "warn"
+                    )
+                    return
+                end
+                log.event("character.dropAll", {
+                    player = player,
+                    character_id = st.id,
+                    items = tonumber(res.payload.dropped),
+                })
                 triggerEvent("characterItemsDropped", player, st.id)
                 setPedAnimation(player, "ROB_BANK", "SHP_HandsUp_Scr", -1, false, false, true, true)
             end)
