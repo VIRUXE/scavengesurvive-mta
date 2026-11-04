@@ -47,6 +47,14 @@ do
     battery = assert(loadstring(src, "=vehicles/battery.lua"))()
 end
 
+local starter
+do
+    local f = fileOpen("shared/logic/starter.lua", true)
+    local src = fileRead(f, fileGetSize(f))
+    fileClose(f)
+    starter = assert(loadstring(src, "=vehicles/starter.lua"))()
+end
+
 local fuelPumps
 do
     local f = fileOpen("shared/logic/fuel-pumps.lua", true)
@@ -88,14 +96,14 @@ local USED_TICK_MS = 300000
 
 local SELECT_VEHICLES = "SELECT v.id, v.spawn_id, v.type_uname, v.model, v.x, v.y, v.z, v.rz, "
     .. "v.health, v.fuel, v.locked, v.damage, v.carmour, v.gas_bottles, v.key_code, v.keypad_code, "
-    .. "v.trailer_id, v.left_spawn, v.battery, v.battery_since, "
+    .. "v.trailer_id, v.left_spawn, v.battery, v.battery_since, v.starter, "
     .. "c.id AS container_id, "
     .. "s.x AS spawn_x, s.y AS spawn_y FROM vehicles v LEFT JOIN containers c ON c.owner_vehicle_id = v.id "
     .. "LEFT JOIN vehicle_spawns s ON s.id = v.spawn_id"
 
 local INSERT_VEHICLE = "INSERT INTO vehicles (spawn_id, type_uname, model, x, y, z, rz, "
-    .. "health, fuel, locked, damage, key_code, trailer_id, battery, battery_since) "
-    .. "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    .. "health, fuel, locked, damage, key_code, trailer_id, battery, battery_since, starter) "
+    .. "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 
 local SELECT_SPAWNS = "SELECT id, x, y, z, rz, group_name, type_name, categories, sizes "
     .. "FROM vehicle_spawns WHERE enabled = 1"
@@ -298,6 +306,8 @@ local function create(row)
         bay = false,
         battery = row.battery and tonumber(row.battery) or nil,
         batterySince = row.battery_since and tonumber(row.battery_since) or unixNow(),
+        -- starts the starter motor has left (0: dead); a row from before starters were tracked gets a fresh one
+        starter = row.starter and tonumber(row.starter) or starter.freshLife(math.random),
     }
     local bayType = exports.data:vehicleType(row.type_uname)
     info[v].bay = battery.hasBay(row.model, bayType, vlogic.DOORLESS_MODELS)
@@ -361,6 +371,7 @@ local function spawnAt(s, chance, cb)
         trailer_id = nil,
         battery = battery.spawnLevel(math.random),
         battery_since = unixNow(),
+        starter = starter.spawnLife(math.random),
     }
     local params = {
         row.spawn_id,
@@ -378,7 +389,8 @@ local function spawnAt(s, chance, cb)
         row.trailer_id,
         row.battery,
         row.battery_since,
-        n = 15,
+        row.starter,
+        n = 16,
     }
     db.exec(INSERT_VEHICLE, params, function(ok, ctx, _, insertId)
         local v = nil
@@ -769,6 +781,16 @@ net.handler("engineToggleRequested", function(player)
             local started, why = battery.canStart(batteryLevel(inf))
             if not started then
                 return toast(player, why)
+            end
+            -- every start wears the starter motor; once its life is spent it only clicks
+            local cranked, left, bad = starter.crank(inf.starter)
+            if not cranked then
+                return toast(player, bad)
+            end
+            inf.starter = left
+            db.exec("UPDATE vehicles SET starter = ? WHERE id = ?", { left, inf.id })
+            if left == 0 then
+                log.event("vehicle.starterFailed", vehicleLine(v, { player = player }))
             end
         end
         setVehicleEngineState(v, true)
@@ -1516,6 +1538,54 @@ local function removeBattery(player, vehicle)
     activeActions[player] = { actionType = "battery", vehicle = vehicle, timer = timer }
 end
 
+-- Starter motors: one wears out after a random number of engine starts (shared/logic/starter.lua) and a few cars
+-- spawn with a dead one. A Starter Motor in hand at the open bonnet of a car whose starter is dead replaces it: a hold
+-- in front of the car with the engine off; the dead one is scrap and goes nowhere.
+local STARTER_HOLD_MS = 6000
+
+local function replaceStarter(player, vehicle, held)
+    cancelHoldAction(player)
+    setPedAnimation(player, "INT_SHOP", "SHOP_CASHIER", -1, true, false, false, false)
+    local ms = exports.character:skillTimeModifier(player, STARTER_HOLD_MS, "Repair")
+    triggerClientEvent(player, "vehicleHoldStarted", player, lang.textFor(player, "Replacing starter motor"), ms)
+    local timer = setTimer(function(p, veh, itemId)
+        activeActions[p] = nil
+        if not isElement(p) or not isElement(veh) then
+            return
+        end
+        setPedAnimation(p, nil)
+        local vinf = info[veh]
+        local cur = exports.items:getHeld(p)
+        local open = getVehicleDoorOpenRatio(veh, 0) > 0.5
+        if not vinf or vinf.locked > 0 or not open or not cur or cur.id ~= itemId then
+            return
+        end
+        if not starter.isBad(vinf.starter) or getVehicleEngineState(veh) or not atBonnet(p, veh) then
+            return
+        end
+        -- the new starter goes in only once the held one is really gone
+        exports.items:destroyItem(itemId, p, function(gone, code)
+            local line = vehicleLine(veh, { player = p, part = "starter_motor", item_id = itemId })
+            if not gone then
+                line.ok, line.code = false, code or "DESTROY_FAILED"
+                return log.event("vehicle.partInstalled", line, "warn")
+            end
+            local now = isElement(veh) and info[veh]
+            if not now then
+                return log.event("vehicle.partInstalled", line, "warn")
+            end
+            now.starter = starter.freshLife(math.random)
+            db.exec("UPDATE vehicles SET starter = ? WHERE id = ?", { now.starter, now.id })
+            if isElement(p) then
+                exports.character:gainSkill(p, "Repair")
+                toast(p, "STARTER_FITTED")
+            end
+            log.event("vehicle.partInstalled", line)
+        end, "used")
+    end, ms, 1, player, vehicle, held.id)
+    activeActions[player] = { actionType = "starter", vehicle = vehicle, timer = timer }
+end
+
 net.handler("vehicleBatteryRequested", function(player, vehicle)
     local inf = info[vehicle]
     if not atBonnet(player, vehicle) or exports.items:getHeld(player) or activeActions[player] then
@@ -1760,6 +1830,26 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
             return toast(player, "BATTERY_ALREADY")
         end
         return fitBattery(player, vehicle, held)
+    end
+
+    -- Case 1d: a Starter Motor in hand replaces a dead one under the open bonnet
+    if vlogic.isFront(angle) and inf.bay and uname == "StarterMotor" then
+        if inf.locked > 0 then
+            return toast(player, "BONNET_LOCKED")
+        end
+        if getVehicleDoorOpenRatio(vehicle, 0) <= 0.5 then
+            return toast(player, "BONNET_SHUT")
+        end
+        if getVehicleEngineState(vehicle) then
+            return toast(player, "STARTER_ENGINE_ON")
+        end
+        if not starter.isBad(inf.starter) then
+            return toast(player, "STARTER_OK")
+        end
+        if activeActions[player] or not atBonnet(player, vehicle) then
+            return
+        end
+        return replaceStarter(player, vehicle, held)
     end
 
     -- Case 1b: Front (Bonnet) Repair

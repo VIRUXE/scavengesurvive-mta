@@ -178,6 +178,7 @@ refused action (`code="NOT_NEAR"`, `"FULL"`) is logged at `info` with `ok=false`
 | `vehicle.lockToggled`, `vehicle.keypadFailed`, `vehicle.keypadOpened` | `vehicle_id`, `locked` / `attempts` |
 | `vehicle.exploded` | `vehicle_id`, `model`, `pos`, `cargo` (item count lost) |
 | `vehicle.partInstalled` / `partRemoved` / `carmourWelded` / `carmourAttached` | `vehicle_id`, `part`, `item_id` |
+| `vehicle.starterFailed` | `vehicle_id`, `model`, `pos` — the start that spent the starter motor's life |
 | `building.placed` / `building.removed` | `defence_id`, `uname`, `pos`, `plot_id` |
 | `building.keypadFailed` / `keypadOpened` / `keypadInstalled` | `defence_id`, `attempts` — raid evidence |
 | `loot.rolled` | `zone`, `spots`, `items`, `ms` — per `loot_roll` batch, not per item |
