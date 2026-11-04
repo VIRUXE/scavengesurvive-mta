@@ -197,6 +197,9 @@ return function(ctx)
                     return
                 end
                 local title, size = drops.TITLES[kind], drops.CRATE_SIZE
+                local line = { player = p, crate_id = c.id, container_id = c.containerId, kind = kind }
+                line.x, line.y, line.z, line.zone = c.x, c.y, c.z, zoneAt(c.x, c.y)
+                log.event("world.crateOpened", line)
                 exports.items:openSupplyContainer(p, c.containerId, title, size, c.x, c.y, c.z)
                 return
             end

@@ -4,6 +4,7 @@
 -- staff (exports.staff:isMuted / mutePlayer). Built-in voice follows the same audiences (Voice section below).
 local db = loadstring(exports.lib:getModule("db"), "=lib/db.lua")()
 local net = loadstring(exports.lib:getModule("net"), "=lib/net.lua")()
+local log = loadstring(exports.lib:getModule("log"), "=lib/log.lua")()
 local logic
 do
     local f = fileOpen("shared/logic/chat.lua", true)
@@ -136,6 +137,40 @@ local function audience(p, mode)
     return out
 end
 
+local LOG_TEXT_MAX = 256
+
+-- the first max bytes of s, backed off to a whole UTF-8 character
+local function cut(s, max)
+    if #s <= max then
+        return s
+    end
+    local n = max
+    while n > 0 do
+        local b = s:byte(n + 1)
+        if b < 0x80 or b >= 0xC0 then
+            break
+        end
+        n = n - 1
+    end
+    return s:sub(1, n)
+end
+
+-- chat.messageSent: the moderation record of one line (text cut to 256 characters, where the sender stood)
+local function logMessage(p, text, mode, freq)
+    local x, y, z = getElementPosition(p)
+    local line = { player = p, mode = logic.MODE_NAMES[mode] or tostring(mode), text = cut(text, LOG_TEXT_MAX) }
+    line.x, line.y, line.z = x, y, z
+    line.int, line.dim = getElementInterior(p), getElementDimension(p)
+    if mode == MODE.RADIO then
+        line.frequency = freq
+    end
+    local ok, zone = pcall(function()
+        return exports.maps:getZoneAt(x, y)
+    end)
+    line.zone = ok and zone or nil
+    log.event("chat.messageSent", line)
+end
+
 -- Delivers one message in a mode (0-3, or "me" for /me). Logged like upstream's [CHAT] lines.
 local function deliver(p, text, mode)
     local name = getPlayerName(p)
@@ -157,6 +192,7 @@ local function deliver(p, text, mode)
     end
     send(logic.format(mode, name, text, st.freq, colourHex), audience(p, mode), rgb)
     outputServerLog(string.format("[CHAT] [%s] %s: %s", tag, name, text))
+    logMessage(p, text, mode, st.freq)
     if mode == MODE.GLOBAL then
         triggerEvent("globalChatSent", p, text) -- discordchat relays global lines only
     end
@@ -195,6 +231,13 @@ addEventHandler("onPlayerChat", root, function(message, messageType)
         return deliver(source, text, "me")
     end
     deliver(source, text, get(source).mode)
+end)
+
+-- the command name only (never its arguments: /login carries a password), for the unknown-command question
+addEventHandler("onPlayerCommand", root, function(command)
+    if log.enabled("debug") then
+        log.event("chat.commandUsed", { player = source, command = command }, "debug")
+    end
 end)
 
 -- /g /l /r (+ /global, /local): alone they switch the mode, with text they send one message in it (upstream CMD:g/l/r)
