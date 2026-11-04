@@ -2264,7 +2264,7 @@ BEGIN
   SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
   START TRANSACTION;
   INSERT INTO items (type_uname, hitpoints, data, x, y, z, rz, interior, dimension, loot_spawn_id, loot_zone, despawn_at)
-    SELECT j.u, (SELECT max_hitpoints FROM item_types WHERE uname = j.u), j.data, j.x, j.y, j.z, j.rz, s.interior, s.dimension, s.id, s.zone, NOW() + INTERVAL p_despawn_minutes MINUTE
+    SELECT j.u, t.max_hitpoints, j.data, j.x, j.y, j.z, j.rz, s.interior, s.dimension, s.id, s.zone, NOW() + INTERVAL p_despawn_minutes MINUTE
     FROM JSON_TABLE(p_rolls, '$[0][*]' COLUMNS (sid INT PATH '$.s', NESTED PATH '$.items[*]' COLUMNS (
       u VARCHAR(32) COLLATE utf8mb4_uca1400_ai_ci PATH '$.u', data LONGTEXT PATH '$.data', x FLOAT PATH '$.x', y FLOAT PATH '$.y', z FLOAT PATH '$.z',
       rz FLOAT PATH '$.rz'))) j
