@@ -30,7 +30,8 @@ end
 M.CRATES = { supply = "Open supply crate", cache = "Open weapon cache" }
 
 -- ctx = {
---   spawned, uiOpen, knockedOut, hudOff, driver, hitch ("hitch" / "unhitch"), nearTrunk, nearBonnet, nearPlayer,
+--   spawned, uiOpen, knockedOut, hudOff, driver, hitch ("hitch" / "unhitch"), nearTrunk,
+--   nearBonnet ("open" / "closed": an engine bonnet in reach with empty hands), nearPlayer,
 --   cuffedNearby, hasBag,
 --   nearFeature ("ladder" / "zipline" / "ladder_on" / "zipline_on" / "button:<label>"), nearCrate ("supply" / "cache"),
 --   nearDoor ("open" / "closed" / "locked": a walk-in vehicle door in reach, the towable Airstream's),
@@ -134,8 +135,8 @@ function M.lines(ctx, keys)
     if ctx.nearTrunk then
         add("interact", "Open Trunk", "trunk")
     end
-    if ctx.nearBonnet then
-        add("interact", "Repair with tool", "repair")
+    if ctx.nearBonnet and not busyF then
+        add("interact", ctx.nearBonnet == "open" and "Close Bonnet" or "Open Bonnet")
     end
     local h = ctx.held
     if not h then

@@ -362,6 +362,35 @@ local function installPartHint(held)
     return nearVeh and exports.vehicles:canInstallBodyPart(nearVeh, held.uname) or false
 end
 
+-- Match the vehicle and front-angle check used by the interact key before advertising the bonnet action.
+local function nearBonnetHint(held)
+    if held then
+        return nil
+    end
+    local px, py, pz = getElementPosition(localPlayer)
+    local nearVeh, nearDist = nil, 5.5
+    for _, veh in ipairs(getElementsByType("vehicle", root, true)) do
+        local vx, vy, vz = getElementPosition(veh)
+        local dist = getDistanceBetweenPoints3D(px, py, pz, vx, vy, vz)
+        if dist < nearDist then
+            nearVeh, nearDist = veh, dist
+        end
+    end
+    if not nearVeh or not exports.vehicles:hasBatteryBay(nearVeh) then
+        return nil
+    end
+    local vx, vy = getElementPosition(nearVeh)
+    local _, _, vrz = getElementRotation(nearVeh)
+    local rad = math.rad(vrz or 0)
+    local dx, dy = px - vx, py - vy
+    local angle = (math.deg(math.atan2(dx * math.cos(rad) + dy * math.sin(rad),
+        -dx * math.sin(rad) + dy * math.cos(rad))) + 360) % 360
+    if angle >= 25 and angle <= 335 then
+        return nil
+    end
+    return getVehicleDoorOpenRatio(nearVeh, 0) > 0.5 and "open" or "closed"
+end
+
 local function drawKeyActions(driver)
     local held = state.held
     local isCalibreWep = held and held.category == "weapon" and held.calibre ~= nil and not held.liquid or false
@@ -376,6 +405,7 @@ local function drawKeyActions(driver)
         nearFeature = nearFeature(),
         nearCrate = exports.loot:nearbyCrate() or nil,
         nearDoor = walkInDoor(),
+        nearBonnet = nearBonnetHint(held),
         nearCooker = nearCooker(held),
         nearMachine = exports.items:nearbyMachine() ~= false,
         nearContainer = exports.items:nearbyContainerItem() ~= false,
