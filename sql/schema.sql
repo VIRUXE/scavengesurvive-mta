@@ -355,6 +355,7 @@ CREATE TABLE IF NOT EXISTS `vehicles` (
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `battery` float DEFAULT NULL,
   `battery_since` int(10) unsigned DEFAULT NULL,
+  `starter` smallint(5) unsigned DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `ix_vehicles_spawn` (`spawn_id`),
   KEY `fk_vehicles_trailer` (`trailer_id`),

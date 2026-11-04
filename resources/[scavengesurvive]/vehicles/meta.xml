@@ -14,6 +14,7 @@
     <file src="shared/logic/spawn.lua"/>
     <file src="shared/logic/vehicle.lua"/>
     <file src="shared/logic/battery.lua"/>
+    <file src="shared/logic/starter.lua"/>
     <file src="shared/logic/fuel-pumps.lua"/>
     <file src="shared/logic/overheat.lua"/>
     <file src="shared/logic/carmour.lua"/>

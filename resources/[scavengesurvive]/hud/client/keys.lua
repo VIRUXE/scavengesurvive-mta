@@ -43,6 +43,7 @@ return function(ctx)
         LockBreaker = true,
         Headlight = true,
         Battery = true,
+        StarterMotor = true,
         Wheel = true,
     }
 
