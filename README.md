@@ -6,7 +6,7 @@ physical item on the ground, wounds bleed, and death drops it all.
 
 ![MTA:SA 1.6](https://img.shields.io/badge/MTA%3ASA-1.6-2b5797?style=flat-square)
 ![Lua 5.1](https://img.shields.io/badge/Lua-5.1-000080?style=flat-square&logo=lua)
-![MariaDB 13](https://img.shields.io/badge/MariaDB-13.0-003545?style=flat-square&logo=mariadb)
+![MariaDB 13](https://img.shields.io/badge/MariaDB-13.1-003545?style=flat-square&logo=mariadb)
 ![Milestone](https://img.shields.io/badge/milestone-M9%20Live%20economy%20%26%20release-brightgreen?style=flat-square)
 ![Code: Unlicense](https://img.shields.io/badge/code-Unlicense-lightgrey?style=flat-square)
 ![Data: MPL-2.0 · Maps: CC BY-SA 4.0](https://img.shields.io/badge/data-MPL--2.0%20%C2%B7%20CC%20BY--SA%204.0-orange?style=flat-square)
@@ -70,7 +70,7 @@ Decisions: `docs/adr/`. Conventions every contributor and agent follows: `CLAUDE
 ## Quick start (Windows)
 
 1. `pwsh tools/setup-dev.ps1` — Lua 5.1 toolchain, stylua, Python deps.
-2. MariaDB 13.0 as a local service (root, no password) and MTA:SA 1.6 client + server installed.
+2. MariaDB 13.1.1 or newer as a local service (root, no password) and MTA:SA 1.6 client + server installed.
 3. `pwsh server-config/run-local.ps1` — creates the database, applies `sql/schema.sql`, procedures, triggers, events and seeds, links the resources into the server
    and starts it. Connect to `127.0.0.1:22003`.
 4. Give yourself staff rights: `mariadb -u root scavengesurvive -e "UPDATE accounts SET admin_level = 5 WHERE name = 'You'"`,

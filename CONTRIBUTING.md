@@ -2,7 +2,7 @@
 
 1. Read `CLAUDE.md` (conventions and rules) and the design spec in `docs/superpowers/specs/`; decisions that changed
    the design since then are in `docs/adr/`.
-2. Set up the toolchain: `pwsh tools/setup-dev.ps1`; a local MariaDB 13.0 (12.2 also works).
+2. Set up the toolchain: `pwsh tools/setup-dev.ps1`; a local MariaDB 13.1.1 or newer (`JSON_TABLE ... FORMAT JSON` is required).
 3. Pick an issue from the [project board](https://github.com/users/VIRUXE/projects/3) or open one with a template.
    Work is tracked there: a commit that fixes, advances or re-scopes an issue closes or comments on it.
 4. Pure logic goes in `shared/logic/*.lua`, multi-row DB work in a stored
