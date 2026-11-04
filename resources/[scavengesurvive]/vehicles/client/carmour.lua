@@ -334,6 +334,8 @@ end)
 
 -- Attach mode ------------------------------------------------------------------------------------------------
 
+local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")()
+-- lang:begin
 local REASONS = {
     MISS = "Aim at the trailer",
     DOOR_ONLY = "A door only goes on the trailer's door",
@@ -343,6 +345,7 @@ local REASONS = {
     CLASH = "It would hit another defence",
     NOT_METAL = "Only metal defences can be welded on",
 }
+-- lang:end
 
 local attaching = nil -- { vehicle, uname, ghost, rec, why, o, d, placedAt }
 
@@ -445,7 +448,9 @@ local function updateAttach()
     end
     local sw, sh = guiGetScreenSize()
     local scale = sh / 1080
-    local text = a.rec and "F: attach here    N: cancel" or ((REASONS[a.why] or REASONS.MISS) .. "    N: cancel")
+    local cancel = "N: " .. lang.text("cancel")
+    local text = a.rec and ("F: " .. lang.text("attach here") .. "    " .. cancel)
+        or (lang.text(REASONS[a.why] or REASONS.MISS) .. "    " .. cancel)
     local colour = a.rec and tocolor(120, 255, 120, 230) or tocolor(255, 90, 90, 230)
     local y = sh * 0.62
     dxDrawText(text, 1, y + 1, sw + 1, y + 1, tocolor(0, 0, 0, 200), scale * 1.2, "default-bold", "center", "top")

@@ -338,9 +338,9 @@ local function combatLogged(player, st, quitReason)
         since_damage_s = (now - (state.combat.lastDamage[player] or now)) / 1000,
         msg = string.format("%s combat-logged (last hit by %s)", getPlayerName(player), getPlayerName(attacker)),
     }, "warn")
-    local L = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")()
+    local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")()
     for _, p in ipairs(getElementsByType("player")) do
-        outputChatBox(L.formatFor(p, "%s combat logged!", getPlayerName(player)), p, 255, 220, 0)
+        outputChatBox(lang.formatFor(p, "%s combat logged!", getPlayerName(player)), p, 255, 220, 0)
     end
     return death.die(player, "combatlog", attacker, true)
 end

@@ -70,7 +70,18 @@ local function drawScreen()
         return
     end
     dxSetRenderTarget(screenTarget, true)
-    dxDrawText(puzzles.SCREEN.text, 8, 8, 504, 504, tocolor(255, 255, 255), 1.0, "default-bold", "left", "top")
+    dxDrawText(
+        puzzles.screenText(lang.text),
+        8,
+        8,
+        504,
+        504,
+        tocolor(255, 255, 255),
+        1.0,
+        "default-bold",
+        "left",
+        "top"
+    )
     dxSetRenderTarget()
 end
 

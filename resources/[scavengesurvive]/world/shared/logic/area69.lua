@@ -195,28 +195,52 @@ local LISTS = {
     },
 }
 
+-- the list's texts; the door names are LISTS' (listed here so tools/lang_qa collects them)
 -- lang:begin
 M.CODE_LIST_TITLE = "Main Control"
+M.CODE_LIST_HEADER = "Keycodes for security system. %s:"
+M.CODE_LIST_DOORS = {
+    "Control Tower",
+    "Main gate",
+    "Airstrip Gate",
+    "Blast Door",
+    "Inner Door 1",
+    "Inner Door 2",
+    "Generator",
+    "Passage 1",
+    "Passage 2",
+    "Catwalk",
+    "Headquarters",
+    "Shaft",
+}
 -- lang:end
 
-function M.codeList(state, n)
-    local list = LISTS[n]
-    local lines = { "#FFAA00Keycodes for security system. " .. list[1] .. ":", "" }
-    for i = 2, #list do
-        lines[#lines + 1] = string.format("    #FFFFFF%s:  #FFFF00%d", list[i][1], state.codes[list[i][2]])
+-- title, body of a code list; tr(text) puts the texts in the reader's language (the server passes lang.textFor for
+-- the player the list is shown to), identity by default
+function M.codeList(state, n, tr)
+    tr = tr or function(s)
+        return s
     end
-    return M.CODE_LIST_TITLE, table.concat(lines, "\n")
+    local list = LISTS[n]
+    local header = tr(M.CODE_LIST_HEADER)
+    local ok, line = pcall(string.format, header, list[1])
+    local lines = { "#FFAA00" .. (ok and line or string.format(M.CODE_LIST_HEADER, list[1])), "" }
+    for i = 2, #list do
+        lines[#lines + 1] = string.format("    #FFFFFF%s:  #FFFF00%d", tr(list[i][1]), state.codes[list[i][2]])
+    end
+    return tr(M.CODE_LIST_TITLE), table.concat(lines, "\n")
 end
 
 -- A press on an Area 69 keypad button (OnButtonPress / OnPlayerActivateDoor -> PlayerActivateDoorButton). Returns
 -- { "keypad", "a69:<keypad>", hack } (hack: the Hack Device in hand starts trying) or, at an unlocked console,
--- { "message", title, body }. With the registry: once every door a keypad opens is open, a press does nothing
+-- { "message", title, body, codes = list } (the server rebuilds it in the reader's language). With the registry:
+-- once every door a keypad opens is open, a press does nothing
 -- (upstream showed the keypad again and a Hack Device there was used up for nothing).
 function M.press(state, b, heldUname, reg)
     local kp = M.KEYPADS[b.keypad]
     if kp.list and state.unlocked[b.keypad] then
         local title, body = M.codeList(state, kp.list)
-        return { { "message", title, body } }
+        return { { "message", title, body, codes = kp.list } }
     end
     if reg and M.allOpen(reg, b.keypad) then
         return {}
@@ -265,7 +289,7 @@ function M.enterCode(state, reg, keypadId, entered, holdingDevice)
     if kp.list then
         state.unlocked[name] = true
         local title, body = M.codeList(state, kp.list)
-        out[#out + 1] = { "message", title, body }
+        out[#out + 1] = { "message", title, body, codes = kp.list }
     end
     for _, d in ipairs(kp.doors or {}) do
         if reg.states[d] ~= "open" then

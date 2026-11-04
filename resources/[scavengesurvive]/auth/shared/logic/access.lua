@@ -10,13 +10,19 @@ access.BAN_SQL = "SELECT id, name, reason, by_name, DATE_FORMAT(created_at, '%Y-
     .. " AND (name = ? OR (ip IS NOT NULL AND ip = ?) OR (serial IS NOT NULL AND serial = ?))"
     .. " ORDER BY created_at DESC LIMIT 1"
 
--- Lines shown to a banned player (upstream dialog: Date / Reason / Unban).
-function access.banLines(row)
-    local expires = (row.expires and row.expires ~= false) and tostring(row.expires) or "Never"
+-- Lines shown to a banned player (upstream dialog: Date / Reason / Unban). format(template, ...) is string.format
+-- by default (the server passes lib lang.formatFor for the player), never the word for a ban without an end.
+-- lang:begin
+access.BAN_LINES = { "You are banned (since %s by %s).", "Reason: %s", "Unban: %s" }
+-- lang:end
+function access.banLines(row, format, never)
+    format = format or string.format
+    local expires = (row.expires and row.expires ~= false) and tostring(row.expires) or (never or "Never")
+    local by = tostring(row.by_name or "Server")
     return {
-        string.format("You are banned (since %s by %s).", tostring(row.created), tostring(row.by_name or "Server")),
-        string.format("Reason: %s", tostring(row.reason or "")),
-        string.format("Unban: %s", expires),
+        format(access.BAN_LINES[1], tostring(row.created), by),
+        format(access.BAN_LINES[2], tostring(row.reason or "")),
+        format(access.BAN_LINES[3], expires),
     }
 end
 
@@ -73,10 +79,19 @@ function access.listedSql(n)
     return "SELECT name FROM whitelist WHERE name IN (" .. string.rep("?, ", n - 1) .. "?)"
 end
 
--- The upstream textdraw text, mm:ss (a line break where the textdraw had ~n~).
-function access.countdownText(seconds)
+-- The upstream textdraw text, mm:ss (a line break where the textdraw had ~n~). tr(text) puts the two labels in
+-- the reader's language (the client passes lib lang.text), identity by default.
+-- lang:begin
+access.COUNTDOWN = { "Not whitelisted", "Time remaining: %02d:%02d" }
+-- lang:end
+function access.countdownText(seconds, tr)
+    tr = tr or function(s)
+        return s
+    end
     seconds = math.max(0, math.floor(tonumber(seconds) or 0))
-    return string.format("Not whitelisted\nTime remaining: %02d:%02d", math.floor(seconds / 60), seconds % 60)
+    local m, sec = math.floor(seconds / 60), seconds % 60
+    local ok, remaining = pcall(string.format, tr(access.COUNTDOWN[2]), m, sec)
+    return tr(access.COUNTDOWN[1]) .. "\n" .. (ok and remaining or string.format(access.COUNTDOWN[2], m, sec))
 end
 
 -- Auto-login (upstream player/auto-ip-login, setting player.auto_ip_login, off by default): skip the password

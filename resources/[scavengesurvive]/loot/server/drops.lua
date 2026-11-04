@@ -9,6 +9,7 @@
 return function(ctx)
     local db, net, util, roll, drops = ctx.db, ctx.net, ctx.util, ctx.roll, ctx.drops
     local log = ctx.log
+    local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")()
     local M = {}
     local rng = math.random
     local function rand()
@@ -34,8 +35,17 @@ return function(ctx)
         return ok and zone or nil
     end
 
-    local function say(text)
-        outputChatBox(text, root, 255, 255, 0, true)
+    -- a broadcast in each player's language: build(player, format, tr) returns that player's line
+    local function say(build)
+        for _, p in ipairs(getElementsByType("player")) do
+            local function format(fmt, ...)
+                return lang.formatFor(p, fmt, ...)
+            end
+            local function tr(text)
+                return lang.textFor(p, text)
+            end
+            outputChatBox(build(p, format, tr), p, 255, 255, 0, true)
+        end
     end
 
     local function initialData(uname, tableName)
@@ -200,7 +210,7 @@ return function(ctx)
                 if getDistanceBetweenPoints3D(px, py, pz, c.x, c.y, c.z) > drops.OPEN_RADIUS + 1.0 then
                     return
                 end
-                local title, size = drops.TITLES[kind], drops.CRATE_SIZE
+                local title, size = lang.textFor(p, drops.TITLES[kind]), drops.CRATE_SIZE
                 local line = { player = p, crate_id = c.id, container_id = c.containerId, kind = kind }
                 line.x, line.y, line.z, line.zone = c.x, c.y, c.z, zoneAt(c.x, c.y)
                 log.event("world.crateOpened", line)
@@ -264,7 +274,10 @@ return function(ctx)
         inFlight = { typeIdx = typeIdx, x = x, y = y, z = z, objects = objects, blip = blip }
         inFlight.timer = setTimer(land, ms, 1)
         triggerClientEvent(root, "supplyDropStarted", resourceRoot, objects[1], x, y, z)
-        say(drops.supplyText(drops.announceName(t.name, rand), locationName or "an unknown location"))
+        local shown = drops.announceName(t.name, rand)
+        say(function(_, format, tr)
+            return drops.supplyText(tr(shown), locationName or tr(drops.UNKNOWN_LOCATION), format)
+        end)
         local target = string.format("%s (%s) falling to %.1f, %.1f, %.1f", t.name, locationName or "?", x, y, z)
         util.log("loot", "info", "supply drop %s in %d s", target, ms / 1000)
         return true
@@ -308,7 +321,9 @@ return function(ctx)
             return rng()
         end)
         if ref then
-            say(drops.signalText(ref, x, y))
+            say(function(_, format)
+                return drops.signalText(ref, x, y, format)
+            end)
         else
             util.log("loot", "warn", "weapons cache: no reference point within %d m", drops.CACHE_REFERENCE_RADIUS)
         end

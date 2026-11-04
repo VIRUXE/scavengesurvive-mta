@@ -269,11 +269,10 @@ end
 function chat.creditsWindow(tr)
     tr = tr or identity
     local rows = {}
-    for i = 2, #chat.CREDITS do
-        local name, what = chat.CREDITS[i]:match("^(.-) %- (.+)$")
-        rows[#rows + 1] = { name, what }
+    for _, c in ipairs(chat.CREDITS) do
+        rows[#rows + 1] = { c[1], tr(c[2]) }
     end
-    local header = "#FFFF00" .. chat.CREDITS[1]
+    local header = "#FFFF00" .. tr(chat.CREDITS_INTRO)
     local columns = { tr("Contributor"), tr("Contribution") }
     return { title = tr("Credits"), header = header, columns = columns, rows = rows }
 end
@@ -293,20 +292,39 @@ function chat.listSetting(value)
     return out
 end
 
+-- the opening line, then { contributor, contribution }; the texts show in the reader's language
+-- lang:begin
+chat.CREDITS_INTRO = "Scavenge and Survive was created by Southclaws (www.southcla.ws) and ported to MTA:SA by VIRUXE,"
+    .. " with these contributors:"
+-- lang:end
 chat.CREDITS = {
-    "Scavenge and Survive was created by Southclaws (www.southcla.ws) and ported to MTA:SA by VIRUXE, with these"
-        .. " contributors:",
-    "Y_Less - Tons of useful code, libraries and conversations",
-    "Viruxe - MTA:SA port, anti-cheat work",
-    "Kadaradam - Fishing, Trees and lots of bug fixes",
-    "Eidorian - French translation",
-    "Hiddos - Better water detection code",
-    "YOLO - Bosnian/Croatian/Serbian Translation",
-    "JJ - Czech Translation",
-    "KingSergio - Russian Translation",
-    "Blacky - Romanian Translation",
-    "Reza - Indonesian Translation",
-    "PrettyDiamond - Spanish Translation",
+    { "Y_Less", "Tons of useful code, libraries and conversations" },
+    { "Viruxe", "MTA:SA port, anti-cheat work" },
+    { "Kadaradam", "Fishing, Trees and lots of bug fixes" },
+    { "Eidorian", "French translation" },
+    { "Hiddos", "Better water detection code" },
+    { "YOLO", "Bosnian/Croatian/Serbian Translation" },
+    { "JJ", "Czech Translation" },
+    { "KingSergio", "Russian Translation" },
+    { "Blacky", "Romanian Translation" },
+    { "Reza", "Indonesian Translation" },
+    { "PrettyDiamond", "Spanish Translation" },
 }
+-- the contributions, listed so tools/lang_qa collects them
+-- lang:begin
+chat.CREDITS_WORK = {
+    "Tons of useful code, libraries and conversations",
+    "MTA:SA port, anti-cheat work",
+    "Fishing, Trees and lots of bug fixes",
+    "French translation",
+    "Better water detection code",
+    "Bosnian/Croatian/Serbian Translation",
+    "Czech Translation",
+    "Russian Translation",
+    "Romanian Translation",
+    "Indonesian Translation",
+    "Spanish Translation",
+}
+-- lang:end
 
 return chat

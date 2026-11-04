@@ -7,6 +7,7 @@ return function(ctx)
     local db, net, util = ctx.db, ctx.net, ctx.util
     local log, logAt = ctx.log, ctx.logAt
     local buttons, doors, puzzles, area69 = ctx.buttons, ctx.doors, ctx.puzzles, ctx.area69
+    local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")()
     local M = {}
 
     local function rand(n)
@@ -151,6 +152,14 @@ return function(ctx)
                 autoClose(e[2], e[3])
             elseif kind == "teleport" then
                 teleport(player, e[2], e[3], e[4], e[5])
+            elseif kind == "message" and e.codes then
+                -- an Area 69 code list, built again in the player's language
+                message(
+                    player,
+                    area69.codeList(a69, e.codes, function(text)
+                        return lang.textFor(player, text)
+                    end)
+                )
             elseif kind == "message" then
                 message(player, e[2], e[3])
             elseif kind == "toast" then
