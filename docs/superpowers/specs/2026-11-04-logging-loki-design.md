@@ -206,9 +206,14 @@ Voice start/stop, HUD, UI and client-only events are not logged.
   "000000"`): a Lua 5.1 double cannot hold 1.7e18 exactly.
 - Flush every `*logs.flush_ms` (1000) or when 500 entries are waiting, whichever first; a batch is at most 500
   entries / ~1 MB (Loki's default request limit is larger, but a smaller body retries cheaply).
-- `fetchRemote(url .. "/loki/api/v1/push", { method = "POST", headers = { ["Content-Type"] =
-  "application/json", ["X-Scope-OrgID"] = tenant }, username = user, password = pass, postData = body,
-  queueName = "loki", connectionAttempts = 1, connectTimeout = 5000 }, cb)`: `queueName` serialises the
+- `fetchRemote(url .. "/loki/api/v1/push", options, cb)` with `options = { method = "POST", headers = {
+  ["Content-Type"] = "application/json" }, postData = body, queueName = "loki", connectionAttempts = 1,
+  connectTimeout = 5000 }`. **Credentials are optional**: `pushOptions(settings)` in
+  `logs/shared/logic/batch.lua` adds `username`/`password` only when both `*logs.user` and `*logs.pass` are
+  non-empty, and `headers["X-Scope-OrgID"]` only when `*logs.tenant` is non-empty, so a local Loki with
+  `auth_enabled: false` (the user's case) takes a bare `url` and sends no auth header and no tenant, while
+  Grafana Cloud or a Loki behind basic auth gets both from the same three settings. A token-style setup
+  (`Authorization: Bearer …`) is `*logs.bearer`, added as a header the same way. `queueName` serialises the
   pushes so batches arrive in order; retries are ours, not MTA's. Verify the option names against the
   `mta-wiki` MCP before coding (the table form of `fetchRemote` is the 1.5.7+ signature; the callback receives
   `data, info` with `info.success` and `info.statusCode`).
@@ -228,11 +233,18 @@ Voice start/stop, HUD, UI and client-only events are not logged.
   it to the `ScavengeSurvive` group like `function.loadstring`.
 
 **Settings** (`logs/meta.xml`, overridden in `local.settings.xml` as `*logs.<name>`): `url` (empty = pushing
-off, console only), `tenant` (empty = header omitted), `user`, `pass`, `host`, `env`, `level` (`info`),
-`slow_ms` (50), `flush_ms` (1000), `max_lines` (20000). `run-local.ps1` adds the `logs` lines to the example
-settings file it creates. Grafana Cloud takes `user` = the stack's numeric user id and `pass` = an access policy
-token with `logs:write`; a self-hosted Loki behind basic auth works the same, and an open local Loki needs only
-`url`.
+off, console only), `tenant`, `user`, `pass`, `bearer` (all empty by default = no auth, no tenant header),
+`host`, `env`, `level` (`info`), `slow_ms` (50), `flush_ms` (1000), `max_lines` (20000). `run-local.ps1`
+adds the `logs` lines to the example settings file it creates, with only `url` filled in
+(`http://127.0.0.1:3100`). The local case is therefore one line in `local.settings.xml`:
+
+```xml
+<setting name="*logs.url" value="http://127.0.0.1:3100"/>
+```
+
+Grafana Cloud takes `user` = the stack's numeric user id and `pass` = an access policy token with
+`logs:write`; a self-hosted Loki behind basic auth works the same; a reverse proxy expecting a bearer token
+takes `bearer`. `logs` prints which of the three it is using (never the secret) in one console line at start.
 
 **Loki**: `retention_enabled` with `retention_period` 90 days for `ss-game`; `session.*` carries IPs and
 serials, so a shorter period is one `retention_stream` selector on `kind=~"session\\..*"`. Set
@@ -263,8 +275,8 @@ Each step is one conventional commit, `luacheck` and `stylua` clean, `rr <resour
    retry and backoff, heartbeat, `onDebugMessage`, resource start/stop), `lib/modules/log.lua`, `util.log`
    delegating to it, `server-config/resources.xml` entry and the settings in `local.settings.example.xml` (a
    `run-local.ps1` run for the ACL). `db.lua` gets `db.queryFailed` and the `db.call` timing wrapper. Proven
-   on the dev box against a local Loki in Docker (`grafana/loki` + `grafana/grafana`, one `docker compose`
-   file under `ops/loki/` for dev only). Deliverable: every existing log line and every script error arrives
+   on the dev box against a local Loki in Docker (`grafana/loki` with `auth_enabled: false` + `grafana/grafana`,
+   one `docker compose` file under `ops/loki/` for dev only, no credentials involved). Deliverable: every existing log line and every script error arrives
    in Loki with level and resource, DB failures and slow procedures are visible.
 2. **`docs(runbooks): logging-loki`** — `docs/runbooks/logging-loki.md` (the settings, how to check a line
    reaches Loki with `rcon.ps1 lua`, what `system.pushFailed` on the console means and the backoff, how to
