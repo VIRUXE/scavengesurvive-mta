@@ -212,11 +212,17 @@ return function(ctx)
                 if not isElement(pl) or charId(pl) ~= cid then
                     return
                 end
+                -- something got into the hand during the animation (a take from a container): the draw is off, as
+                -- item_unwear would put the weapon into the inventory while the hand showed it
+                if state.held[pl] or not state.holster[pl] or state.holster[pl].id ~= hItem.id then
+                    return
+                end
                 db.call("item_unwear", { cid, "holster" }, function(res, c)
                     logProc("item.unworn", c.player, res, {
                         item_id = c.hItem.id,
                         uname = c.hItem.uname,
                         slot = "holster",
+                        destination = res and res.ok and res.payload and res.payload.destination or nil,
                         character_id = cid,
                     })
                     if not isElement(c.player) then
@@ -226,9 +232,15 @@ return function(ctx)
                         return toast(c.player, res and res.code or "DB_ERROR")
                     end
                     hands.setGear(c.player, "holster", nil)
-                    c.hItem.data = hands.decodeData(c.hItem.data)
-                    hands.setHeld(c.player, c.hItem)
-                    toast(c.player, "EQUIPPED")
+                    -- the procedure says where the weapon went: only one that reached the hand is held
+                    if res.payload and res.payload.destination == "held" then
+                        c.hItem.data = hands.decodeData(c.hItem.data)
+                        hands.setHeld(c.player, c.hItem)
+                        toast(c.player, "EQUIPPED")
+                    else
+                        sendInventory(c.player)
+                        toast(c.player, "REMOVED")
+                    end
                 end, { player = pl, hItem = hItem })
             end, anim.time, 1, player, holstered)
             return
@@ -906,7 +918,13 @@ return function(ctx)
                     if getDistanceBetweenPoints3D(curPx, curPy, curPz, rx, ry, rz) > 3.5 then
                         return
                     end
-                    db.exec("UPDATE items SET data = '{\"pitched\":true}' WHERE id = ?", { itId })
+                    -- a loot tent pitched where it lay is the player's now: its loot despawn timer would otherwise
+                    -- take the tent, and everything put inside, when it ran out (item_pickup clears the same)
+                    db.exec(
+                        "UPDATE items SET data = '{\"pitched\":true}', despawn_at = NULL, loot_spawn_id = NULL "
+                            .. "WHERE id = ?",
+                        { itId }
+                    )
                     db.exec(
                         "INSERT INTO containers (kind, size, owner_item_id) VALUES ('tent', 16, ?) "
                             .. "ON DUPLICATE KEY UPDATE size = 16",
@@ -1082,8 +1100,12 @@ return function(ctx)
                         container_id = res.payload and res.payload.container_id or nil,
                         character_id = cid,
                     }, true)
-                    if not row or not isElement(c2.player) then
+                    if not isElement(c2.player) then
                         return
+                    end
+                    if not row then
+                        -- taken into the hand and gone before the read: the hand follows the database
+                        return hands.rebuildCarried(c2.player)
                     end
                     row.data = hands.decodeData(row.data)
                     hands.setHeld(c2.player, row)

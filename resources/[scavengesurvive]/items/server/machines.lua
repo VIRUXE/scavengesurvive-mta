@@ -95,11 +95,12 @@ return function(ctx)
                 if not cRow then
                     return write(row, { fuel = st.fuel, cooking = nil })
                 end
-                local sql = "SELECT type_uname AS uname, data FROM items WHERE container_id = ? ORDER BY slot"
+                local sql = "SELECT id, type_uname AS uname, data FROM items WHERE container_id = ? ORDER BY slot"
                 db.query(sql, { cRow.id }, function(rows)
-                    local items = {}
+                    local items, ids = {}, {}
                     for i, r in ipairs(rows or {}) do
                         items[i] = { uname = r.uname, data = decodeData(r.data) }
+                        ids[i] = string.format("%d", r.id)
                     end
                     local nextSt, results = machines.finish(kind, st, items, liquids, itemType)
                     for _, res in ipairs(results) do
@@ -114,6 +115,9 @@ return function(ctx)
                     end
                     local params = { row.id, raw(row), encode(machines.encode(decodeData(row.data), nextSt)), cRow.id }
                     params[5] = #results > 0 and encode(results) or "[]" -- a bare array: the procedure reads $[*]
+                    -- the rows the results were made from: only those go, whatever got in since stays (CHANGED
+                    -- when one of them left meanwhile: read again)
+                    params[6] = "[" .. table.concat(ids, ",") .. "]"
                     db.call("machine_finish", params, function(res)
                         log.event("machine.finished", {
                             machine_id = row.id,
@@ -140,8 +144,9 @@ return function(ctx)
                                     res.payload and res.payload.created or #results
                                 )
                             )
-                        elseif res and res.code == "BUSY" then
-                            schedule(row.id, 2000) -- someone wrote the row meanwhile (a refuel): read it again
+                        elseif res and (res.code == "BUSY" or res.code == "CHANGED") then
+                            -- someone wrote the row (a refuel) or took something out meanwhile: read it again
+                            schedule(row.id, 2000)
                         end
                     end)
                 end)

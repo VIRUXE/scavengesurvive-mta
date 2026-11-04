@@ -384,6 +384,32 @@ return function(ctx)
         )
     end
 
+    -- The hand in memory and the row in the database disagree (a callback that never ran, a restart mid-move): the
+    -- database is right. A refusal that only makes sense the other way round (HANDS_FULL with nothing in the hand,
+    -- NOT_HELD with an item in it) reloads the hand and the gear from the rows, at most once a second per player.
+    local lastResync = {}
+    function M.resyncIf(player, code)
+        if not isElement(player) or not charId(player) then
+            return false
+        end
+        local held = state.held[player] ~= nil
+        if not ((code == "HANDS_FULL" and not held) or (code == "NOT_HELD" and held)) then
+            return false
+        end
+        local now = getTickCount()
+        if lastResync[player] and now - lastResync[player] < 1000 then
+            return false
+        end
+        lastResync[player] = now
+        log.event("item.handResynced", { player = player, code = code, held = held }, "warn")
+        M.rebuildCarried(player)
+        return true
+    end
+
+    addEventHandler("onPlayerQuit", root, function()
+        lastResync[source] = nil
+    end)
+
     addEventHandler("onPlayerWeaponFire", root, function()
         if not ammo then
             return
@@ -1150,8 +1176,14 @@ return function(ctx)
                 anim(c.player, "KISSING", "gift_give", 1800, false, false, false, false)
                 toast(c.player, "GAVE_ITEM")
             end
-            if isElement(c.target) and not state.held[c.target] then
-                M.setHeld(c.target, { id = c.item.id, uname = c.item.uname, hp = c.item.hp, data = c.item.data })
+            if isElement(c.target) then
+                if not state.held[c.target] then
+                    M.setHeld(c.target, { id = c.item.id, uname = c.item.uname, hp = c.item.hp, data = c.item.data })
+                else
+                    -- the row is theirs (item_give saw an empty hand) while the memory shows another item: the
+                    -- database decides what they hold
+                    M.rebuildCarried(c.target)
+                end
                 anim(c.target, "KISSING", "gift_get", 1800, false, false, false, false)
                 toast(c.target, "GOT_ITEM")
             end

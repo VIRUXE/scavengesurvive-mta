@@ -79,8 +79,15 @@ local function callerName()
     return sourceResource and getResourceName(sourceResource) or nil
 end
 
+local hands
+local armourDurability
+
+-- every refusal a player sees goes through here; one that contradicts the hand in memory reloads it (hands.resyncIf)
 local function toast(player, code)
     if isElement(player) then
+        if hands and type(code) == "string" then
+            hands.resyncIf(player, code)
+        end
         triggerClientEvent(player, "toastShown", player, code)
     end
 end
@@ -93,8 +100,6 @@ local OWNED_SQL = "SELECT i.type_uname AS uname, i.data, i.container_id FROM ite
 
 local world =
     loadFile("server/world.lua")({ db = db, state = state, geometry = geometry, diff = diff, charId = charId })
-local hands
-local armourDurability
 
 -- Deletes an item the player owns (held, in their inventory or worn bag). cb(ok) runs only while the player exists.
 -- reason is the item.destroyed log reason (used, broken, ...); by names the calling resource of an export.
@@ -273,8 +278,8 @@ local smallItems = loadFile("server/smallitems.lua")({
     charId = charId,
     toast = toast,
     destroy = destroy,
-    destroyWorldItem = function(id, reason)
-        return destroyWorldItem(id, reason)
+    destroyWorldItem = function(id, reason, withContents, cb)
+        return destroyWorldItem(id, reason, withContents, cb)
     end,
     world = world,
     updateHeldData = function(player, data)
@@ -525,30 +530,41 @@ function sendInventory(player)
     end
 end
 
-function destroyWorldItem(itemId, reason)
+-- Deletes an item lying in the world. One that is a bag, box or bench with something still inside is left alone
+-- (fk_items_container would take what it holds with it) unless withContents is true, which only a blast that is
+-- meant to take everything passes (a walk-in trailer going up). cb(ok, code) when given.
+function destroyWorldItem(itemId, reason, withContents, cb)
     itemId = tonumber(itemId)
     if not itemId then
         return false
     end
     local by = callerName()
-    db.exec(
-        "DELETE FROM items WHERE id = ? AND container_id IS NULL AND holder_char_id IS NULL",
-        { itemId },
-        function(ok)
-            if ok then
-                world.forgetEverywhere(itemId)
-                triggerEvent("itemDestroyed", resourceRoot, itemId)
-            end
-            log.event("item.destroyed", {
-                item_id = itemId,
-                reason = reason or "external",
-                by = by,
-                ok = ok,
-                code = ok and "OK" or "DB_ERROR",
-                where = "world",
-            })
+    local sql = "DELETE FROM items WHERE id = ? AND container_id IS NULL AND holder_char_id IS NULL"
+    if not withContents then
+        sql = sql
+            .. " AND NOT EXISTS (SELECT 1 FROM items c JOIN containers k ON k.id = c.container_id"
+            .. " WHERE k.owner_item_id = items.id)"
+    end
+    db.exec(sql, { itemId }, function(ok, _, affected)
+        local gone = ok and tonumber(affected) == 1
+        if gone then
+            world.forgetEverywhere(itemId)
+            triggerEvent("itemDestroyed", resourceRoot, itemId)
         end
-    )
+        local code = gone and "OK" or (ok and "NOT_DELETED" or "DB_ERROR")
+        log.event("item.destroyed", {
+            item_id = itemId,
+            reason = reason or "external",
+            by = by,
+            ok = gone,
+            code = code,
+            where = "world",
+            with_contents = withContents and true or nil,
+        })
+        if cb then
+            cb(gone, code)
+        end
+    end)
     return true
 end
 
@@ -573,8 +589,9 @@ function destroyWorldItemsNear(x, y, z, radius, interior, dimension, cb)
         for _, row in ipairs(rows) do
             ids[#ids + 1] = tonumber(row.id)
         end
-        local delete = "DELETE FROM items WHERE container_id IS NULL AND holder_char_id IS NULL AND id IN"
-            .. " (SELECT id FROM JSON_TABLE(?, '$[*]' COLUMNS (id INT PATH '$')) j)"
+        -- a join on the id list, not IN (subquery): the latter scans the whole items table
+        local delete = "DELETE i FROM items i JOIN JSON_TABLE(?, '$[*]' COLUMNS (id INT PATH '$')) j ON j.id = i.id"
+            .. " WHERE i.container_id IS NULL AND i.holder_char_id IS NULL"
         local json = toJSON(ids, true):sub(2, -2)
         db.exec(delete, { json }, function(ok)
             if not ok then
@@ -722,6 +739,13 @@ end
 -- export: the container is about to go (a supply crate replaced by the next drop): closes it for whoever has it open
 function closeContainerViewers(containerId)
     containers.closeViewers(containerId)
+    return true
+end
+
+-- export: the container's contents changed outside its viewers' own actions (a workbench craft emptied it): whoever
+-- has it open sees the change
+function refreshContainerViewers(containerId)
+    containers.containerChanged(containerId)
     return true
 end
 
