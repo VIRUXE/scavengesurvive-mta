@@ -5,9 +5,10 @@
 -- apart. One crate of each kind exists at a time (the next one replaces it, contents included, as upstream's
 -- DestroyContainer does); crates persist in world_crates so a restart rebuilds them. Players open a crate with
 -- the interact key next to it (supplyCrateOpenRequested -> items:openSupplyContainer).
--- ctx = { db, net, util, roll, drops, settings(), lootTable(name) } from server/main.lua.
+-- ctx = { db, net, util, log, roll, drops, settings(), lootTable(name) } from server/main.lua.
 return function(ctx)
     local db, net, util, roll, drops = ctx.db, ctx.net, ctx.util, ctx.roll, ctx.drops
+    local log = ctx.log
     local M = {}
     local rng = math.random
     local function rand()
@@ -23,6 +24,14 @@ return function(ctx)
 
     local function num(key, default)
         return tonumber(ctx.settings()[key]) or default
+    end
+
+    -- the map zone name at a point, nil outside every zone or while maps is not running
+    local function zoneAt(x, y)
+        local ok, zone = pcall(function()
+            return exports.maps:getZoneAt(x, y)
+        end)
+        return ok and zone or nil
     end
 
     local function say(text)
@@ -82,7 +91,8 @@ return function(ctx)
 
     -- Fills a crate container like upstream FillContainerWithLoot: every rolled item that fits goes in, one that
     -- does not (container slots count item size units) is skipped, nothing is created outside the crate.
-    local function fillContainer(containerId, tableName, count, label, where)
+    local function fillContainer(crate, tableName, count, label)
+        local containerId = crate.containerId
         local tbl = ctx.lootTable(tableName)
         if not tbl then
             return util.log("loot", "warn", "drop: unknown loot table %s", tableName)
@@ -92,8 +102,18 @@ return function(ctx)
         end)
         local placed = 0
         local function finish()
-            local counts = string.format("%d of %d rolled items in the crate", placed, #unames)
-            util.log("loot", "info", "%s at %s: %s", label, where, counts)
+            local line = {
+                crate_id = crate.id,
+                container_id = containerId,
+                msg = label,
+                items = placed,
+                rolled = #unames,
+                x = crate.x,
+                y = crate.y,
+                z = crate.z,
+                zone = zoneAt(crate.x, crate.y),
+            }
+            log.event(crate.kind == "supply" and "loot.supplyDropped" or "loot.cacheSpawned", line)
         end
         local function place(i)
             local uname = unames[i]
@@ -142,7 +162,7 @@ return function(ctx)
                 end
                 crates[kind] = c
                 tagObjects(c)
-                fillContainer(containerId, tableName, count, label, where)
+                fillContainer(c, tableName, count, label)
             end)
         end)
     end

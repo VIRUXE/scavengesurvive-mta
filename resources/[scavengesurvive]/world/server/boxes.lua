@@ -1,9 +1,9 @@
 -- GTA's boxes, crates and bags as items (data/boxes.lua): on start and every world.boxes_respawn_s each spot left
 -- without its item and with no player within world.boxes_player_distance gets one again, every new item in one
 -- item_create_many call, a bin bag or a carton with its contents (shared/logic/boxes.lua FILLS) inside.
--- ctx = { db, util, logic = shared/logic/boxes.lua, spots, setting }.
+-- ctx = { db, util, log, logic = shared/logic/boxes.lua, spots, setting }.
 return function(ctx)
-    local db, util, logic, spots = ctx.db, ctx.util, ctx.logic, ctx.spots
+    local db, util, log, logic, spots = ctx.db, ctx.util, ctx.log, ctx.logic, ctx.spots
     local types = logic.types(spots)
     local sql = "SELECT type_uname, x, y, interior FROM items WHERE x IS NOT NULL AND type_uname IN ("
         .. string.rep("?, ", #types - 1)
@@ -46,15 +46,12 @@ return function(ctx)
             end
             db.call("item_create_many", { toJSON(list) }, function(res)
                 local made = res and res.ok and res.payload and res.payload.created or 0
-                local why = res and res.code or "DB_ERROR"
-                util.log(
-                    "world",
-                    res and res.ok and "info" or "warn",
-                    "boxes: %d spots, %d made (%s)",
-                    #spots,
-                    made,
-                    why
-                )
+                local line = { spots = #spots, empty = #missing, due = #due, made = tonumber(made) or 0 }
+                if res and res.ok then
+                    return log.event("world.boxesFilled", line)
+                end
+                line.ok, line.code = false, res and res.code or "DB_ERROR"
+                log.event("world.boxesFilled", line, "warn")
             end)
         end)
     end

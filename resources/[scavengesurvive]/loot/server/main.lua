@@ -2,6 +2,7 @@ local db = loadstring(exports.lib:getModule("db"), "=lib/db.lua")()
 local net = loadstring(exports.lib:getModule("net"), "=lib/net.lua")()
 local util = loadstring(exports.lib:getModule("util"), "=lib/util.lua")()
 local budget = loadstring(exports.lib:getModule("budget"), "=lib/budget.lua")()
+local log = loadstring(exports.lib:getModule("log"), "=lib/log.lua")()
 local function loadFile(path)
     local f = fileOpen(path, true)
     local src = fileRead(f, fileGetSize(f))
@@ -57,18 +58,17 @@ local function refillTick()
         if not rows then
             return
         end
-        local zones, totalCap, totalAlive, totalAllow, added = 0, 0, 0, 0, 0
         for _, b in ipairs(rows) do
             local cap, alive = tonumber(b.cap) or 0, tonumber(b.alive) or 0
             local spawns, remainder = budget.refill(cap, alive, tonumber(b.remainder) or 0, rate, floor, interval)
             db.exec(UPDATE_BUDGET, { remainder, spawns, alive, b.zone })
             local allow = math.min((tonumber(b.allowance) or 0) + spawns, math.max(cap - alive, 0))
             allowance[b.zone] = allow
-            zones, added = zones + 1, added + spawns
-            totalCap, totalAlive, totalAllow = totalCap + cap, totalAlive + alive, totalAllow + allow
+            log.event(
+                "loot.refillTicked",
+                { zone = b.zone, cap = cap, alive = alive, spawned = spawns, allowance = allow }
+            )
         end
-        local line = "refill: %d zones, alive %d/%d, allowance %d (+%d)"
-        util.log("loot", "info", line, zones, totalAlive, totalCap, totalAllow, added)
     end)
 end
 
@@ -95,6 +95,7 @@ local drops = loadFile("server/drops.lua")({
     roll = roll,
     drops = dropsLogic,
     lootTable = lootTable,
+    log = log,
     settings = function()
         return settings
     end,
@@ -227,13 +228,14 @@ function rollNear(x, y, radius)
             return
         end
         local players, minDist = playerPositions(), setting("world.min_player_distance", 150)
-        local rolls = {}
+        local rolls, zoneOf = {}, {}
         for _, s in ipairs(rows) do
             local clear = (allowance[s.zone] or 0) > 0 and budget.clearOfPlayers(s.x, s.y, players, minDist)
             if clear and not busy[s.id] then
                 local r = rollSpawn(s)
                 if r then
                     busy[s.id] = true
+                    zoneOf[s.id] = s.zone
                     rolls[#rolls + 1] = r
                 end
             end
@@ -241,13 +243,24 @@ function rollNear(x, y, radius)
         if #rolls == 0 then
             return
         end
+        local started = getTickCount()
         db.call("loot_roll", { toJSON(rolls), setting("loot.despawn_minutes", 120) }, function(res, done)
+            local zoneSeen, zoneCount, itemCount = {}, 0, 0
             for _, r in ipairs(done) do
                 busy[r.s] = nil
+                itemCount = itemCount + #r.items
+                local zone = zoneOf[r.s]
+                if zone and not zoneSeen[zone] then
+                    zoneSeen[zone] = true
+                    zoneCount = zoneCount + 1
+                end
             end
+            local line = { zones = zoneCount, spots = #done, items = itemCount, ms = getTickCount() - started }
             if not res or not res.ok then
-                return util.log("loot", "warn", "loot_roll of %d spawns failed: %s", #done, res and res.code or "db")
+                line.ok, line.code = false, res and res.code or "DB_ERROR"
+                return log.event("loot.rolled", line, "warn")
             end
+            log.event("loot.rolled", line)
             for _, r in ipairs(done) do
                 triggerEvent("lootSpawned", resourceRoot, r.s, #r.items)
             end

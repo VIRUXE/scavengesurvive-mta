@@ -1316,7 +1316,7 @@ net.handler("vehicleKeypadSubmitted", function(player, vehicle, code)
         keypadTries[player] = tries
     end
     tries.n = tries.n + 1
-    log.event("vehicle.keypadFailed", vehicleLine(vehicle, { player = player, attempts = tries.n }), "warn")
+    log.event("vehicle.keypadFailed", vehicleLine(vehicle, { player = player, attempts = tries.n }))
 end, { rate = 3 })
 
 addEventHandler("onPlayerQuit", root, function()

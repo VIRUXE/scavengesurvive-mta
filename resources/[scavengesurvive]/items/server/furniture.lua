@@ -7,7 +7,16 @@ return function(ctx)
     local db, state, world, hands, furniture = ctx.db, ctx.state, ctx.world, ctx.hands, ctx.furniture
     local toast, decodeData = ctx.toast, ctx.decodeData
     local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")()
+    local log = loadstring(exports.lib:getModule("log"), "=lib/log.lua")()
     local M = {}
+
+    -- one event per procedure callback: ok and code come from the db.call result (res == false: the query failed)
+    local function logProc(kind, player, res, fields)
+        fields.player = player
+        fields.ok = res and res.ok or false
+        fields.code = res and res.code or "DB_ERROR"
+        log.event(kind, fields)
+    end
 
     function M.blocksPickup(uname)
         return furniture.is(uname)
@@ -24,6 +33,14 @@ return function(ctx)
         end
         hands.flushData(held.id)
         db.call("furniture_display_put", { cid, held.id, row.id, furniture.DISPLAY_SIZE }, function(res, c)
+            logProc("item.putAway", c.player, res, {
+                item_id = c.itemId,
+                uname = c.uname,
+                container_id = c.caseId,
+                container_uname = c.caseUname,
+                via = "display",
+                character_id = cid,
+            })
             if not isElement(c.player) then
                 return
             end
@@ -38,11 +55,18 @@ return function(ctx)
             triggerEvent("itemMoved", c.player, c.itemId, "held", "container")
             world.resendEverywhere(c.caseId)
             world.syncPlayer(c.player)
-        end, { player = player, itemId = held.id, caseId = row.id })
+        end, { player = player, itemId = held.id, uname = held.uname, caseId = row.id, caseUname = row.uname })
     end
 
     local function takeFromCase(player, cid, row)
         db.call("furniture_display_take", { cid, row.id }, function(res, c)
+            logProc("item.taken", c.player, res, {
+                item_id = res and res.ok and res.payload and tonumber(res.payload.item_id) or nil,
+                container_id = c.caseId,
+                container_uname = c.caseUname,
+                via = "display",
+                character_id = cid,
+            })
             if not res or not res.ok then
                 return
             end
@@ -59,7 +83,7 @@ return function(ctx)
                 triggerEvent("itemMoved", c.player, item.id, "container", "held")
                 world.syncPlayer(c.player)
             end)
-        end, { player = player, caseId = row.id })
+        end, { player = player, caseId = row.id, caseUname = row.uname })
     end
 
     -- empty hands at a desk or table: the highest item lying on it (same x/y as the furniture, so the nearest item

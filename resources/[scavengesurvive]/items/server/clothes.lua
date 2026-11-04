@@ -5,6 +5,7 @@
 return function(ctx)
     local db, state, clothes, skins = ctx.db, ctx.state, ctx.clothes, ctx.skins
     local charId, toast = ctx.charId, ctx.toast
+    local log = loadstring(exports.lib:getModule("log"), "=lib/log.lua")()
     local CHECK_MS, MAX_MOVE = 250, 0.8
     local changing = {} -- player -> { itemId, skin, fromHand, x, y, z, timer, left }
 
@@ -33,11 +34,22 @@ return function(ctx)
             end
             triggerClientEvent(player, "clothesChangeStopped", player)
         end
+        local cid = charId(player)
         local openContainerId = c.openContainerId
         if openContainerId and ctx.openContainerId(player) ~= openContainerId then
             openContainerId = nil
         end
-        db.call("clothes_swap", { c.itemId, charId(player), c.skin, openContainerId, n = 4 }, function(res, cc)
+        db.call("clothes_swap", { c.itemId, cid, c.skin, openContainerId, n = 4 }, function(res, cc)
+            log.event("item.clothesSwapped", {
+                player = cc.player,
+                item_id = cc.itemId,
+                uname = "Clothes",
+                new_skin = cc.skin,
+                old_skin = res and res.ok and res.payload and res.payload.old_skin or nil,
+                ok = res and res.ok or false,
+                code = res and res.code or "DB_ERROR",
+                character_id = cid,
+            })
             if not isElement(cc.player) then
                 return
             end
