@@ -1,3 +1,4 @@
+local spatial = loadstring(exports.lib:getModule("spatial"), "=lib/spatial.lua")()
 -- Loot vehicles: rolled once over the seeded vehicle_spawns points, persisted in MariaDB.
 -- Fuel drain, engine/lights toggle, door locks (0/1/2), roadside repair, refuelling,
 -- locksmith key crafting/usage, crowbar lock-breaking, trunk containers, and trailer hitching.
@@ -912,22 +913,26 @@ local function loadCargo(trailer)
     local c = cargo[trailer]
     local m, rz = c.m, c.rz
     local int, dim = getElementInterior(trailer), getElementDimension(trailer)
-    db.query(CARGO_SQL, { c.x, c.y, vlogic.CARGO_RADIUS }, function(rows)
-        if not rows or cargo[trailer] ~= c or not isElement(trailer) or c.m ~= m then
-            return
-        end
-        local items = {}
-        for _, r in ipairs(rows) do
-            if not CARGO_SKIP[r.uname] and tonumber(r.interior) == int and tonumber(r.dimension) == dim then
-                local lx, ly, lz = toLocal(m, r.x, r.y, r.z)
-                if vlogic.inCargoBox(lx, ly, lz) then
-                    items[r.id] = { lx, ly, lz, ((tonumber(r.rz) or 0) - rz) % 360 }
+    db.query(
+        CARGO_SQL .. " AND " .. spatial.bounds(c.x, c.y, vlogic.CARGO_RADIUS),
+        { c.x, c.y, vlogic.CARGO_RADIUS },
+        function(rows)
+            if not rows or cargo[trailer] ~= c or not isElement(trailer) or c.m ~= m then
+                return
+            end
+            local items = {}
+            for _, r in ipairs(rows) do
+                if not CARGO_SKIP[r.uname] and tonumber(r.interior) == int and tonumber(r.dimension) == dim then
+                    local lx, ly, lz = toLocal(m, r.x, r.y, r.z)
+                    if vlogic.inCargoBox(lx, ly, lz) then
+                        items[r.id] = { lx, ly, lz, ((tonumber(r.rz) or 0) - rz) % 360 }
+                    end
                 end
             end
+            c.items = items
+            publishCargo(trailer)
         end
-        c.items = items
-        publishCargo(trailer)
-    end)
+    )
 end
 
 -- the cargo's stored positions where the trailer is now, and every client draws them there again
@@ -995,14 +1000,23 @@ local function destroyCargo(trailer)
     local m = getElementMatrix(trailer)
     local x, y = getElementPosition(trailer)
     local int, dim = getElementInterior(trailer), getElementDimension(trailer)
-    db.query(CARGO_SQL, { x, y, vlogic.CARGO_RADIUS }, function(rows)
-        for _, r in ipairs(rows or {}) do
-            local here = tonumber(r.interior) == int and tonumber(r.dimension) == dim
-            if here and not gone[r.id] and not CARGO_SKIP[r.uname] and vlogic.inCargoBox(toLocal(m, r.x, r.y, r.z)) then
-                exports.items:destroyWorldItem(r.id, "exploded", true)
+    db.query(
+        CARGO_SQL .. " AND " .. spatial.bounds(x, y, vlogic.CARGO_RADIUS),
+        { x, y, vlogic.CARGO_RADIUS },
+        function(rows)
+            for _, r in ipairs(rows or {}) do
+                local here = tonumber(r.interior) == int and tonumber(r.dimension) == dim
+                if
+                    here
+                    and not gone[r.id]
+                    and not CARGO_SKIP[r.uname]
+                    and vlogic.inCargoBox(toLocal(m, r.x, r.y, r.z))
+                then
+                    exports.items:destroyWorldItem(r.id, "exploded", true)
+                end
             end
         end
-    end)
+    )
     return lost
 end
 

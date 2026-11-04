@@ -1,3 +1,4 @@
+local spatial = loadstring(exports.lib:getModule("spatial"), "=lib/spatial.lua")()
 -- Server side of the furniture (#148, shared/logic/furniture.lua has the offsets): the interact key with an item in
 -- hand puts it on a Desk, Table, Barstool or Small Table, or into an empty Gun Case or Cupboard, which then shows it
 -- (furniture_display_put); with empty hands it takes the shown item back (furniture_display_take) or whatever lies
@@ -92,7 +93,12 @@ return function(ctx)
         local f = string.format
         local sql = "SELECT i.id, i.type_uname AS uname, i.hitpoints AS hp, i.data FROM world_items_pos p "
             .. "JOIN items i ON i.id = p.item_id WHERE "
-            .. f("ST_Distance(p.pos, POINT(%f, %f)) <= %f", row.x, row.y, furniture.ON_TOP_REACH)
+            .. spatial.bounds(
+                tonumber(f("%f", row.x)),
+                tonumber(f("%f", row.y)),
+                tonumber(f("%f", furniture.ON_TOP_REACH))
+            )
+            .. f(" AND ST_Distance(p.pos, POINT(%f, %f)) <= %f", row.x, row.y, furniture.ON_TOP_REACH)
             .. f(" AND i.z > %f AND IFNULL(i.interior, 0) = %d", (row.z or 0) + 0.1, row.interior or 0)
             .. f(" AND IFNULL(i.dimension, 0) = %d", row.dimension or 0)
             .. " AND i.type_uname NOT IN ('"

@@ -1,3 +1,4 @@
+local spatial = loadstring(exports.lib:getModule("spatial"), "=lib/spatial.lua")()
 -- Crafting system: in-hand combine, ground construction, deconstruction, and workbench crafting.
 -- Ported from upstream Scavenge & Survive (core/world/craft-construct.pwn, core/item/workbench.pwn).
 local db = assert(loadstring(exports.lib:getModule("db"), "=lib/db.lua"))()
@@ -256,7 +257,9 @@ local function tryGroundCraft(player, _cid, held, px, py, pz, rz, int, dim, quie
     local toolUname = held and held.uname
     local query = "SELECT i.id, i.type_uname, i.x, i.y, i.z, i.data FROM world_items_pos p "
         .. "JOIN items i ON i.id = p.item_id "
-        .. "WHERE ST_Distance(p.pos, POINT(?, ?)) <= 2.5 "
+        .. "WHERE "
+        .. spatial.bounds(px, py, 2.5)
+        .. " AND ST_Distance(p.pos, POINT(?, ?)) <= 2.5 "
         .. "AND i.container_id IS NULL AND i.holder_char_id IS NULL "
         .. "AND IFNULL(i.interior, 0) = ? AND IFNULL(i.dimension, 0) = ?"
     db.query(query, { px, py, int or 0, dim or 0 }, function(rows, c)
@@ -424,7 +427,9 @@ local function tryDeconstruct(player, _cid, held, px, py, _pz, _rz, int, dim)
     end
     local query = "SELECT i.id, i.type_uname, i.x, i.y, i.z FROM world_items_pos p "
         .. "JOIN items i ON i.id = p.item_id "
-        .. "WHERE ST_Distance(p.pos, POINT(?, ?)) <= 2.5 "
+        .. "WHERE "
+        .. spatial.bounds(px, py, 2.5)
+        .. " AND ST_Distance(p.pos, POINT(?, ?)) <= 2.5 "
         .. "AND i.type_uname IN ("
         .. CROWBAR_TARGETS
         .. ") AND i.container_id IS NULL AND i.holder_char_id IS NULL "
@@ -525,7 +530,9 @@ local function tryWorkbenchCraft(player, _cid, held, px, py, onMiss)
     local query = "SELECT i.id, i.x, i.y, i.z, i.rz, c.id AS cont_id FROM world_items_pos p "
         .. "JOIN items i ON i.id = p.item_id "
         .. "JOIN containers c ON c.owner_item_id = i.id "
-        .. "WHERE i.type_uname = 'Workbench' AND ST_Distance(p.pos, POINT(?, ?)) <= 2.5 "
+        .. "WHERE "
+        .. spatial.bounds(px, py, 2.5)
+        .. " AND i.type_uname = 'Workbench' AND ST_Distance(p.pos, POINT(?, ?)) <= 2.5 "
         .. "AND IFNULL(i.interior, 0) = ? AND IFNULL(i.dimension, 0) = ? LIMIT 1"
     local int, dim = getElementInterior(player), getElementDimension(player)
     db.one(query, { px, py, int, dim }, function(wb, c)

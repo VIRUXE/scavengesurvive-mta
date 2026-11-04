@@ -1,3 +1,4 @@
+local spatial = loadstring(exports.lib:getModule("spatial"), "=lib/spatial.lua")()
 -- Campfires and barbecues (#95; upstream core/item/campfire.pwn, core/item/barbecue.pwn). The interact key on one
 -- with food in hand puts the food on it (campfire: cooks for 60 s; barbecue: two grill spots, cooked when lit), with
 -- a Petrol Can fuels a barbecue, with a Fire Lighter lights it (30 s, one fuel). Empty hands take food off an unlit
@@ -87,7 +88,10 @@ return function(ctx)
 
     -- empty hands at a campfire: the food lying on it (same x/y as the fire, so the nearest item is a tie)
     local function campfireTake(player, cid, row)
-        local where = string.format("ST_Distance(p.pos, POINT(%f, %f)) <= 0.3 AND i.id <> %d", row.x, row.y, row.id)
+        local qx, qy = tonumber(string.format("%f", row.x)), tonumber(string.format("%f", row.y))
+        local where = spatial.bounds(qx, qy, 0.3)
+            .. " AND "
+            .. string.format("ST_Distance(p.pos, POINT(%f, %f)) <= 0.3 AND i.id <> %d", row.x, row.y, row.id)
         local sql = "SELECT i.id, i.type_uname AS uname, i.hitpoints AS hp, i.data FROM world_items_pos p "
             .. "JOIN items i ON i.id = p.item_id WHERE "
             .. where

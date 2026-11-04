@@ -1,3 +1,4 @@
+local spatial = loadstring(exports.lib:getModule("spatial"), "=lib/spatial.lua")()
 local db = loadstring(exports.lib:getModule("db"), "=lib/db.lua")()
 local net = loadstring(exports.lib:getModule("net"), "=lib/net.lua")()
 local log = loadstring(exports.lib:getModule("log"), "=lib/log.lua")()
@@ -391,7 +392,9 @@ detonateItem = function(itemId)
                     end
                     local sql = "SELECT i.id, i.type_uname, i.hitpoints, i.data, i.x, i.y, i.z, i.rz, "
                         .. "i.interior, i.dimension FROM world_items_pos p JOIN items i ON i.id = p.item_id "
-                        .. "WHERE ST_Distance(p.pos, POINT(?, ?)) <= ? AND i.id != ?"
+                        .. "WHERE "
+                        .. spatial.bounds(x, y, preset.size)
+                        .. " AND ST_Distance(p.pos, POINT(?, ?)) <= ? AND i.id != ?"
                     db.query(sql, { x, y, preset.size, row.id }, function(nearby)
                         if not nearby or #nearby == 0 then
                             return logDetonation(nearby ~= false, nearby == false and "DB_ERROR" or "OK", 0)

@@ -1,3 +1,4 @@
+local spatial = loadstring(exports.lib:getModule("spatial"), "=lib/spatial.lua")()
 -- World projection: the world items each client sees (spatial query every 2 s, diffed per player).
 -- ctx = { db, state, geometry, diff, charId } built by server/main.lua; state.sent / state.settings are shared.
 return function(ctx)
@@ -23,7 +24,14 @@ return function(ctx)
     -- of item ids to leave out (the client's walled-off items, already cleaned to integers by M.cleanIds)
     function M.findNearestSql(x, y, r, interior, dimension, unames, exclude)
         local point = string.format("POINT(%g, %g)", x, y)
-        local where = "ST_Distance(p.pos, " .. point .. ") <= " .. string.format("%g", r)
+        -- Match the same rounded centre/radius as the existing exact predicate.
+        local qx, qy, qr =
+            tonumber(string.format("%g", x)), tonumber(string.format("%g", y)), tonumber(string.format("%g", r))
+        local where = spatial.bounds(qx, qy, qr)
+            .. " AND ST_Distance(p.pos, "
+            .. point
+            .. ") <= "
+            .. string.format("%g", r)
         if unames then
             where = where .. " AND i.type_uname IN ('" .. table.concat(unames, "', '") .. "')"
         end
