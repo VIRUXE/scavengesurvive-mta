@@ -109,6 +109,7 @@ return function(ctx)
                     db.call("machine_finish", params, function(res)
                         if res and res.ok then
                             world.resendEverywhere(row.id)
+                            ctx.containers.refreshViewers(cRow.id) -- whoever has it open sees the cook's results
                             outputServerLog(
                                 string.format(
                                     "[MACHINE] %s %d finished: %d items in, %d out",

@@ -12,7 +12,9 @@ return function(ctx)
     local isBadInteract = ctx.isBadInteract or function()
         return false
     end
-    local activeContainer = {} -- player -> { vehicle, containerId, title, size, worldItemId, pos = {x, y, z} }
+    -- player -> { vehicle, containerId, title, size, worldItemId, pos = {x, y, z} }; any number of players may have
+    -- the same container open, and every change one of them makes is pushed to the others (refreshViewers)
+    local activeContainer = {}
     local lastHolster = {}
     state.lastHolster = lastHolster
     local M = {}
@@ -323,7 +325,10 @@ return function(ctx)
         end)
     end, { rate = 5 })
 
-    sendInventory = function(player)
+    -- how: nil after a change the player made (everyone else viewing their side container is refreshed too),
+    -- "opened" when they just opened it (nothing changed for the others), "viewer" for a refresh pushed to a player
+    -- who has a container open that someone else changed (the client only updates a list already showing)
+    sendInventory = function(player, how)
         local cid = charId(player)
         if not cid then
             return
@@ -385,6 +390,7 @@ return function(ctx)
                 }
                 p.held = state.held and state.held[pl] or false
             end
+            payload.refresh = c.how == "viewer" or nil
             if #ids == 0 then
                 attachGearAndHeld(payload, c.player)
                 return triggerClientEvent(c.player, "inventoryOpened", c.player, payload)
@@ -414,7 +420,13 @@ return function(ctx)
                         }
                         target.cap.used = target.cap.used + (tonumber(r.isize) or 1)
                     end
-                    if hasExplosives and not triggered and target and target.rows ~= payload.inventory then
+                    if
+                        hasExplosives
+                        and c2.how ~= "viewer"
+                        and not triggered
+                        and target
+                        and target.rows ~= payload.inventory
+                    then
                         local rType = itemType(r.uname)
                         if rType and rType.explosive and rType.explosive.trigger == "MOTION" then
                             if itData and itData.armed == 1 then
@@ -429,10 +441,70 @@ return function(ctx)
                 end
                 attachGearAndHeld(payload, c2.player)
                 triggerClientEvent(c2.player, "inventoryOpened", c2.player, payload)
-            end, { player = c.player })
-        end, { player = player })
+                if not c2.how and payload.trunkContainerId then
+                    M.refreshViewers(payload.trunkContainerId, c2.player)
+                end
+            end, { player = c.player, how = c.how })
+        end, { player = player, how = how })
     end
-    M.sendInventory = sendInventory
+    M.sendInventory = function(player)
+        return sendInventory(player)
+    end
+
+    -- every other player with containerId open is sent its contents again
+    function M.refreshViewers(containerId, except)
+        containerId = tonumber(containerId)
+        if not containerId then
+            return
+        end
+        for p, cont in pairs(activeContainer) do
+            if p ~= except and cont.containerId == containerId and isElement(p) then
+                sendInventory(p, "viewer")
+            end
+        end
+    end
+
+    -- the container is gone (picked up, packed, destroyed): whoever had it open is back to their own inventory
+    local function closeViewers(matches)
+        local closed = {}
+        for p, cont in pairs(activeContainer) do
+            if matches(cont) then
+                activeContainer[p] = nil -- clearing an existing key while traversing is allowed
+                closed[#closed + 1] = p
+            end
+        end
+        for _, p in ipairs(closed) do
+            if isElement(p) then
+                sendInventory(p, "viewer")
+            end
+        end
+    end
+
+    local function closeWorldItem(itemId)
+        itemId = tonumber(itemId)
+        if itemId then
+            closeViewers(function(cont)
+                return cont.worldItemId == itemId
+            end)
+        end
+    end
+    addEventHandler("itemMoved", root, function(itemId, from)
+        if from == "world" then
+            closeWorldItem(itemId)
+        end
+    end)
+    addEventHandler("itemDestroyed", root, closeWorldItem)
+
+    -- the number of players with this vehicle's trunk open (vehicles resource: the lid shuts when none is left)
+    function M.trunkViewers(vehicle)
+        local n = 0
+        for p, cont in pairs(activeContainer) do
+            if cont.vehicle == vehicle and isElement(p) then
+                n = n + 1
+            end
+        end
+        return n
+    end
 
     function M.openTrunk(player, vehicle, containerId, trunkTitle, trunkSize)
         if isBadInteract(player) then
@@ -444,7 +516,7 @@ return function(ctx)
             title = trunkTitle,
             size = trunkSize,
         }
-        sendInventory(player)
+        sendInventory(player, "opened")
     end
 
     function M.closeTrunk(player)
@@ -544,10 +616,13 @@ return function(ctx)
                         machine = c.machine,
                         carryable = c.carryable,
                     }
-                    sendInventory(c.player)
+                    sendInventory(c.player, "opened")
                 else
+                    -- two players opening it for the first time at once: the second insert hits
+                    -- uq_containers_owner_item and gets the first one's id back instead of failing
                     db.exec(
-                        "INSERT INTO containers (kind, size, owner_item_id) VALUES (?, ?, ?)",
+                        "INSERT INTO containers (kind, size, owner_item_id) VALUES (?, ?, ?) "
+                            .. "ON DUPLICATE KEY UPDATE id = LAST_INSERT_ID(id)",
                         { c.ckind, c.csize, c.itemRow.id },
                         function(ok, _, _, insertId)
                             if not isElement(c.player) then
@@ -565,7 +640,7 @@ return function(ctx)
                                     machine = c.machine,
                                     carryable = c.carryable,
                                 }
-                                sendInventory(c.player)
+                                sendInventory(c.player, "opened")
                             end
                         end
                     )
@@ -642,7 +717,7 @@ return function(ctx)
             size = tonumber(size) or 32,
             pos = { x = x, y = y, z = z },
         }
-        sendInventory(player)
+        sendInventory(player, "opened")
         return true
     end
 
@@ -806,6 +881,9 @@ return function(ctx)
                         db.exec("UPDATE items SET data = NULL WHERE id = ?", { itId })
                         if cId then
                             db.exec("DELETE FROM containers WHERE id = ?", { cId })
+                            closeViewers(function(cont)
+                                return cont.containerId == cId
+                            end)
                         end
                         if world then
                             world.resendEverywhere(itId)
@@ -851,7 +929,7 @@ return function(ctx)
         if isBadInteract(player) then
             return
         end
-        sendInventory(player)
+        sendInventory(player, "opened")
     end, { rate = 3 })
 
     net.handler("itemTakeRequested", function(player, itemId)

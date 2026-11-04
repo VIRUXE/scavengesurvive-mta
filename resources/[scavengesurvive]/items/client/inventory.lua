@@ -345,7 +345,9 @@ return function(ctx)
         return t and t.name or lang.text("Bag")
     end
 
-    local function open(p)
+    -- refresh: update the list already showing in place (someone else changed the container) instead of opening it;
+    -- false when the inventory list is not the one open
+    local function open(p, refresh)
         local title, rows
         local bname = bagName(p)
         local tname = p.capacity and p.capacity.trunk and p.capacity.trunk.uname or lang.text("Trunk")
@@ -410,10 +412,18 @@ return function(ctx)
             rows[#rows + 1] = { id = "extra:radio", label = lang.text("Radio") }
             rows[#rows + 1] = { id = "extra:skills", label = lang.text("Skills") }
         end
+        if refresh then
+            return exports.ui:listUpdate("inventory", rows, title)
+        end
         exports.ui:listOpen("inventory", title, rows)
+        return true
     end
 
     addEventHandler("inventoryOpened", root, function(p)
+        -- a pushed refresh (another player changed the container open here) only updates a list already showing
+        if p.refresh and (not last or not exports.ui:listIsOpen()) then
+            return
+        end
         if p.trunk and (not last or p.trunkContainerId ~= last.trunkContainerId) then
             view = "trunk"
         end
@@ -421,7 +431,7 @@ return function(ctx)
         if not p.trunk and view == "trunk" then
             view = "inventory"
         end
-        open(p)
+        open(p, p.refresh)
     end)
 
     addEventHandler("uiListActionSelected", root, function(listId, rowId, actionId)

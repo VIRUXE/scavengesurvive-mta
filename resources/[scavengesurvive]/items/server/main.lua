@@ -636,6 +636,11 @@ function closeTrunk(player)
     return true
 end
 
+-- export: how many players have this vehicle's trunk open (vehicles resource shuts the lid when none is left)
+function trunkViewers(vehicle)
+    return isElement(vehicle) and containers.trunkViewers(vehicle) or 0
+end
+
 function openWorldContainer(player, itemRow)
     if not isElement(player) or not itemRow then
         return false
