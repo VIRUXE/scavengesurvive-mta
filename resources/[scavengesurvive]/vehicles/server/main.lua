@@ -183,6 +183,27 @@ local function loadTypes()
     return spawn.index(list)
 end
 
+local wheelFreezeTimers = {}
+local function updateWheelFreeze(v)
+    if isTimer(wheelFreezeTimers[v]) then
+        killTimer(wheelFreezeTimers[v])
+    end
+    wheelFreezeTimers[v] = nil
+    local frontLeft, rearLeft, frontRight, rearRight = getVehicleWheelStates(v)
+    if frontLeft == 2 and rearLeft == 2 and frontRight == 2 and rearRight == 2 then
+        wheelFreezeTimers[v] = setTimer(function()
+            wheelFreezeTimers[v] = nil
+            if not isElement(v) then return end
+            local fl, rl, fr, rr = getVehicleWheelStates(v)
+            if fl == 2 and rl == 2 and fr == 2 and rr == 2 then
+                setElementFrozen(v, true)
+            end
+        end, 2000, 1)
+    else
+        setElementFrozen(v, false)
+    end
+end
+
 local function applyDamage(v, d)
     if type(d) ~= "table" then
         return
@@ -205,6 +226,7 @@ local function applyDamage(v, d)
     local t = d.tires
     if t and #t == 4 then
         setVehicleWheelStates(v, t[1], t[2], t[3], t[4])
+        updateWheelFreeze(v)
     end
 end
 
@@ -1550,6 +1572,7 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
             local function fitted()
                 current[wheel] = removing and 2 or 0
                 setVehicleWheelStates(vehicle, unpack(current))
+                updateWheelFreeze(vehicle)
                 inf.damage = bodySrv.snapshot(vehicle)
                 db.exec("UPDATE vehicles SET damage = ? WHERE id = ?", { toJSON(inf.damage), inf.id })
                 exports.character:gainSkill(player, "Repair")
