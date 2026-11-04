@@ -12,6 +12,7 @@ return function(ctx)
         return false
     end
     local isKnockedOut = ctx.isKnockedOut
+    local log = loadstring(exports.lib:getModule("log"), "=lib/log.lua")()
     local VANILLA_MELEE_MAX = 15
     local RELOAD_COOLDOWN_MS = 1000
     local GIVE_REACH = 1.5 -- metres to the player an item can be handed to
@@ -19,6 +20,24 @@ return function(ctx)
     local containers, cooking, small, machinesSrv, furnitureSrv, cuffsSrv = nil, nil, nil, nil, nil, nil
     local parachuteSrv = nil
     local M = {}
+
+    -- one event per procedure callback: ok and code come from the db.call result (res == false: the query failed)
+    local function logProc(kind, player, res, fields)
+        fields.player = player
+        fields.ok = res and res.ok or false
+        fields.code = res and res.code or "DB_ERROR"
+        log.event(kind, fields)
+    end
+
+    -- the player's position as the log's pos fields (x y z int dim), when the player is still there
+    local function atPlayer(player, fields)
+        if isElement(player) then
+            local x, y, z = getElementPosition(player)
+            fields.x, fields.y, fields.z = math.floor(x), math.floor(y), math.floor(z)
+            fields.int, fields.dim = getElementInterior(player), getElementDimension(player)
+        end
+        return fields
+    end
 
     function M.setContainers(c)
         containers = c
@@ -184,6 +203,7 @@ return function(ctx)
                 return
             end
             outputDebugString("[items] item_data_flush failed: " .. tostring(res and res.code or "db"), 1)
+            log.event("weapon.ammoFlushFailed", { count = #sent, code = res and res.code or "DB_ERROR" }, "warn")
             -- the batch waits for the next flush unless newer data for the item arrived meanwhile
             for _, r in ipairs(sent) do
                 if pendingData[r.id] == nil then
@@ -456,6 +476,14 @@ return function(ctx)
         }
         dropPendingData(item.id)
         db.call("weapon_unload", params, function(res, c)
+            logProc("weapon.unloaded", c.player, res, {
+                item_id = c.itemId,
+                uname = c.uname,
+                rounds = c.rounds,
+                ammo_uname = c.ammoUname,
+                ammo_item_id = res and res.ok and res.payload and res.payload.ammo_item_id or nil,
+                character_id = cid,
+            })
             if not isElement(c.player) then
                 return
             end
@@ -474,7 +502,14 @@ return function(ctx)
             if res.payload and res.payload.ammo_item_id then
                 triggerEvent("itemCreated", resourceRoot, res.payload.ammo_item_id)
             end
-        end, { player = player, itemId = item.id, unloadedState = unloadedState })
+        end, {
+            player = player,
+            itemId = item.id,
+            uname = item.uname,
+            rounds = spawned.data.rounds,
+            ammoUname = spawned.uname,
+            unloadedState = unloadedState,
+        })
     end, { rate = 3 })
 
     -- a liquid weapon in hand and a Petrol Can on the ground: a litre a press into the weapon (weapon/interact.pwn)
@@ -541,6 +576,16 @@ return function(ctx)
         }
         dropPendingData(held.id)
         db.call("item_transfer_world", params, function(res, c)
+            logProc("item.transferred", c.player, res, {
+                item_id = c.held.id,
+                uname = c.held.uname,
+                world_item_id = c.worldId,
+                world_uname = c.worldUname,
+                moved = c.moved,
+                held_deleted = c.delHeld,
+                world_deleted = c.delWorld,
+                character_id = cid,
+            })
             if res and res.ok then
                 world.forgetEverywhere(c.worldId)
                 if c.delWorld then
@@ -571,6 +616,7 @@ return function(ctx)
             player = player,
             held = held,
             worldId = row.id,
+            worldUname = row.uname,
             nextHeld = nextHeld,
             delWorld = delWorld,
             delHeld = delHeld,
@@ -616,6 +662,13 @@ return function(ctx)
             local tCid = charId(target)
             if tCid then
                 db.call("item_disarm", { cid, tCid, tItem.id }, function(res, c)
+                    logProc("item.disarmed", c.player, res, {
+                        item_id = c.item.id,
+                        uname = c.item.uname,
+                        target = c.target,
+                        target_character_id = tCid,
+                        character_id = cid,
+                    })
                     if not isElement(c.player) or not res or not res.ok then
                         return
                     end
@@ -756,6 +809,12 @@ return function(ctx)
             return -- upstream OnPlayerPickUpItem breaks for furniture; a Crowbar takes it down
         end
         db.call("item_pickup", { row.id, cid }, function(res, c)
+            logProc(
+                "item.pickedUp",
+                c.player,
+                res,
+                atPlayer(c.player, { item_id = c.row.id, uname = c.row.uname, character_id = cid })
+            )
             if res and res.ok then
                 world.forgetEverywhere(c.row.id)
             end
@@ -991,6 +1050,16 @@ return function(ctx)
         end
         local params = { item.id, cid, dx, dy, dz, drz, getElementInterior(player), getElementDimension(player) }
         db.call("item_drop", params, function(res, c)
+            logProc("item.dropped", c.player, res, {
+                item_id = c.itemId,
+                uname = c.uname,
+                x = math.floor(c.x),
+                y = math.floor(c.y),
+                z = math.floor(c.z),
+                int = c.int,
+                dim = c.dim,
+                character_id = cid,
+            })
             if not isElement(c.player) then
                 return
             end
@@ -1004,7 +1073,17 @@ return function(ctx)
             end
             world.syncPlayer(c.player) -- the dropped item appears without waiting for the next tick
             triggerEvent("itemMoved", c.player, c.itemId, "held", "world")
-        end, { player = player, itemId = item.id, uname = item.uname, x = dx, y = dy, z = dz, rz = drz })
+        end, {
+            player = player,
+            itemId = item.id,
+            uname = item.uname,
+            x = dx,
+            y = dy,
+            z = dz,
+            rz = drz,
+            int = params[7],
+            dim = params[8],
+        })
         return true
     end
 
@@ -1056,6 +1135,13 @@ return function(ctx)
         end
         M.flushData(item.id)
         db.call("item_give", { item.id, cid, tcid }, function(res, c)
+            logProc("item.given", c.player, res, {
+                item_id = c.item.id,
+                uname = c.item.uname,
+                to = c.target,
+                to_character_id = tcid,
+                character_id = cid,
+            })
             if not res or not res.ok then
                 return isElement(c.player) and toast(c.player, res and res.code or "DB_ERROR")
             end
@@ -1088,6 +1174,19 @@ return function(ctx)
                 .. "interior = ?, dimension = ? WHERE id = ? AND holder_char_id = ? AND holder_kind = ?",
             { x, y, z - 0.9, rz, getElementInterior(player), getElementDimension(player), item.id, cid, slot },
             function(ok, c)
+                log.event("item.dropped", {
+                    player = c.player,
+                    item_id = c.item.id,
+                    uname = c.item.uname,
+                    reason = "headgear_popped",
+                    slot = c.slot,
+                    ok = ok,
+                    code = ok and "OK" or "DB_ERROR",
+                    x = math.floor(c.x),
+                    y = math.floor(c.y),
+                    z = math.floor(c.z),
+                    character_id = cid,
+                })
                 if not ok or not isElement(c.player) then
                     return
                 end
@@ -1097,7 +1196,7 @@ return function(ctx)
                 world.syncPlayer(c.player)
                 triggerEvent("itemMoved", c.player, c.item.id, c.slot, "world")
             end,
-            { player = player, slot = slot, item = item }
+            { player = player, slot = slot, item = item, x = x, y = y, z = z - 0.9 }
         )
         return true
     end

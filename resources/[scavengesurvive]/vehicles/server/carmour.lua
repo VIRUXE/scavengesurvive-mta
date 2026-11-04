@@ -10,6 +10,7 @@
 return function(ctx)
     local db, info, toast, activeActions = ctx.db, ctx.info, ctx.toast, ctx.activeActions
     local carmour, place, geo, cancelHoldAction = ctx.carmour, ctx.place, ctx.geo, ctx.cancelHoldAction
+    local log, vehicleLine = ctx.log, ctx.vehicleLine
     local M = {}
     local torches = {} -- player -> { id, x, y, z, rz, int, dim } of the Welder whose torch the player holds
 
@@ -304,9 +305,13 @@ return function(ctx)
         local nextSt = carmour.attach(st, rec, held.uname, held.hp)
         local cid = exports.character:getCharacterId(player)
         db.call("carmour_attach", { inf.id, held.id, cid, json(nextSt) }, function(res)
+            local entry = { player = player, part = held.uname, item_id = held.id }
             if not res or not res.ok then
+                entry.ok, entry.code = false, res and res.code or "DB_ERROR"
+                log.event("vehicle.carmourAttached", vehicleLine(vehicle, entry), "warn")
                 return toast(player, "ATTACH_NOT_DEFENCE")
             end
+            log.event("vehicle.carmourAttached", vehicleLine(vehicle, entry))
             inf.carmour = nextSt
             M.apply(vehicle)
             if isElement(player) then
@@ -460,9 +465,13 @@ return function(ctx)
             end
             local nextSt = carmour.weld(stateOf(vehicle), panelId)
             db.call("carmour_weld", { inf.id, tankId, json(nextSt), kg }, function(res)
+                local entry = { player = player, part = rec.u, panel_id = panelId, tank_id = tankId }
                 if not res or not res.ok then
+                    entry.ok, entry.code = false, res and res.code or "DB_ERROR"
+                    log.event("vehicle.carmourWelded", vehicleLine(vehicle, entry), "warn")
                     return toast(player, "WELD_NOGAS")
                 end
+                log.event("vehicle.carmourWelded", vehicleLine(vehicle, entry))
                 inf.carmour = nextSt
                 M.apply(vehicle)
                 if isElement(player) then
@@ -645,6 +654,8 @@ return function(ctx)
             end
             local nextSt, gone = carmour.remove(stateOf(vehicle), rec.id)
             detach(vehicle, nextSt, { gone }, function(ok)
+                local entry = { player = player, part = gone.u, via = "crowbar", ok = ok or false }
+                log.event("vehicle.partRemoved", vehicleLine(vehicle, entry), ok and "info" or "warn")
                 if ok and isElement(player) then
                     toast(player, "PRIED")
                 end
@@ -702,6 +713,8 @@ return function(ctx)
             local offSt, gone = carmour.remove(nextSt, panelId)
             gone.w = false
             detach(vehicle, offSt, { gone }, function(ok)
+                local entry = { player = player, part = gone.u, via = "grinder", ok = ok or false }
+                log.event("vehicle.partRemoved", vehicleLine(vehicle, entry), ok and "info" or "warn")
                 if ok and isElement(player) then
                     toast(player, "GRIND_CUT")
                 end

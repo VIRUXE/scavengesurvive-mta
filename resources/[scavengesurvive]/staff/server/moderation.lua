@@ -104,6 +104,15 @@ return function(ctx)
                 banSeconds,
                 n = 9,
             }, function(res, c)
+                local payload = res and res.ok and res.payload or nil
+                ctx.event(c.actor, "warn", c.name, accountId, c.reason, {
+                    ok = payload ~= nil,
+                    code = res and res.code or "DB_ERROR",
+                    warnings = payload and payload.warnings or nil,
+                    max_warnings = maxWarnings,
+                    banned = payload and tonumber(payload.banned) == 1 or nil,
+                    ban_id = payload and (tonumber(payload.ban_id) or 0) > 0 and payload.ban_id or nil,
+                })
                 if not isElement(c.actor) then
                     return
                 end
