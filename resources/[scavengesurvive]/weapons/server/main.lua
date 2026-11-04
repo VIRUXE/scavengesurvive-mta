@@ -1,5 +1,5 @@
 local net = loadstring(exports.lib:getModule("net"), "=lib/net.lua")()
-local util = loadstring(exports.lib:getModule("util"), "=lib/util.lua")()
+local log = loadstring(exports.lib:getModule("log"), "=lib/log.lua")()
 local db = loadstring(exports.lib:getModule("db"), "=lib/db.lua")()
 local wound
 do
@@ -33,13 +33,29 @@ local function isPlayer(e)
     return isElement(e) and getElementType(e) == "player"
 end
 
+-- a report the server refused (combat.hitRejected). Level warn for what only a modified client sends, debug for what
+-- lag explains; the debug ones allocate nothing while the level is off.
+local function reject(level, reason, attacker, victim, weapon, distance, loss)
+    if level == "debug" and not log.enabled("debug") then
+        return
+    end
+    log.event("combat.hitRejected", {
+        reason = reason,
+        attacker = attacker,
+        victim = victim,
+        weapon = weapon,
+        distance = distance,
+        loss = loss,
+    }, level)
+end
+
 local function report(victim, bleed, hp, bodypart)
     triggerClientEvent(victim, "woundInflicted", victim, bleed, hp, bodypart)
 end
 
 -- the wound's knockout roll (upstream damage.pwn:130-153) from the stats after the wound: the body part scales
 -- knockMult, a hat softens a headshot's chance, duration and chance grow with the wound count and the total bleed
-local function rollKnockout(victim, knockMult, bodypart)
+local function rollKnockout(victim, knockMult, bodypart, by)
     knockMult = tonumber(knockMult) or 0
     if knockMult <= 0 then
         return
@@ -56,7 +72,7 @@ local function rollKnockout(victim, knockMult, bodypart)
     if math.random() * 100 < chance then
         local koMs = wound.knockoutDuration(knockMult, bodypart, st.wounds, st.bleed, st.hp)
         if koMs > 0 then
-            exports.character:knockOutPlayer(victim, koMs)
+            exports.character:knockOutPlayer(victim, koMs, by)
         end
     end
 end
@@ -114,26 +130,29 @@ local function nonFirearm(victim, attacker, weapon, loss)
         return
     end
     if w.knockoutMs and w.knockoutMs > 0 then
-        exports.character:knockOutPlayer(victim, w.knockoutMs)
+        exports.character:knockOutPlayer(victim, w.knockoutMs, credit)
     end
     if w.hp <= 0 and w.bleed <= 0 then
         return
     end
     exports.character:applyWound(victim, w.bleed, w.hp, credit or false, w.cause)
-    rollKnockout(victim, w.knockMult, w.bodypart)
+    rollKnockout(victim, w.knockMult, w.bodypart, credit)
     report(victim, w.bleed, w.hp, w.bodypart)
-    if credit then
-        util.log(
-            "weapons",
-            "info",
-            "%s %s %s at %.0f km/h bleed %.4f hp %.1f",
-            getPlayerName(credit),
-            w.cause == "vehicle" and "rammed" or "blew up",
-            getPlayerName(victim),
-            ctx.velocity or 0,
-            w.bleed,
-            w.hp
-        )
+    if credit and log.enabled("debug") then
+        local vx, vy, vz = getElementPosition(victim)
+        log.event("combat.hit", {
+            attacker = credit,
+            victim = victim,
+            weapon = weapon,
+            loss = loss,
+            cause = w.cause,
+            velocity_kmh = ctx.velocity,
+            bleed = w.bleed,
+            hp = w.hp,
+            x = vx,
+            y = vy,
+            z = vz,
+        }, "debug")
     end
 end
 
@@ -194,30 +213,31 @@ net.handler("weaponHitReported", function(victim, attacker, weapon, bodypart, lo
     end
     weapon, bodypart, loss = tonumber(weapon), tonumber(bodypart) or 3, tonumber(loss) or 0
     if not weapon or loss < 0 or loss > MAX_LOSS then
-        return
+        return reject("warn", loss > MAX_LOSS and "maxLoss" or "invalid", attacker, victim, weapon, nil, loss)
     end
     if not exports.character:getCharacterId(victim) or isPedDead(victim) then
-        return
+        return reject("debug", "victimDead", attacker, victim, weapon)
     end
     -- a fall, drowning, fire, a ram or an explosion: no held item justifies them, so they take their own path
     -- (nonFirearm), where only a ram's driver or an explosion's creator gets the kill
     if not isPlayer(attacker) or attacker == victim or wound.isEnvironmental(weapon) then
         return nonFirearm(victim, attacker, weapon, loss)
     end
-    if
-        not exports.character:getCharacterId(attacker)
-        or isPedDead(attacker)
-        or exports.character:isKnockedOut(attacker)
-        or exports.character:isPlayerCuffed(attacker)
-    then
-        return
+    if not exports.character:getCharacterId(attacker) or isPedDead(attacker) then
+        return reject("debug", "attackerDead", attacker, victim, weapon)
+    end
+    if exports.character:isKnockedOut(attacker) then
+        return reject("warn", "knockedOut", attacker, victim, weapon)
+    end
+    if exports.character:isPlayerCuffed(attacker) then
+        return reject("warn", "cuffed", attacker, victim, weapon)
     end
     if getElementDimension(attacker) ~= getElementDimension(victim) then
-        return
+        return reject("warn", "dimension", attacker, victim, weapon)
     end
     -- staff on duty (staff resource, upstream TogglePlayerAdminDuty) are out of the game: no wounds from players
     if getElementData(victim, "staff.duty") == true then
-        return
+        return reject("debug", "staffDuty", attacker, victim, weapon)
     end
 
     local now = getTickCount()
@@ -234,19 +254,10 @@ net.handler("weaponHitReported", function(victim, attacker, weapon, bodypart, lo
     local vx, vy, vz = getElementPosition(victim)
     local dist = getDistanceBetweenPoints3D(ax, ay, az, vx, vy, vz)
     if not wound.inRange(weapon, dist) then
-        return util.log(
-            "weapons",
-            "warn",
-            "%s reported hit by %s weapon %d at %.1f m (range %d)",
-            getPlayerName(victim),
-            getPlayerName(attacker),
-            weapon,
-            dist,
-            wound.range(weapon)
-        )
+        return reject("warn", "range", attacker, victim, weapon, dist)
     end
     if weapon > 0 and getPedWeapon(attacker) ~= weapon then
-        return
+        return reject("debug", "weaponMismatch", attacker, victim, weapon, dist)
     end
     -- a charged Stun Gun in hand knocks out instead of wounding (items/server/smallitems.lua, #136)
     if weapon == 0 and exports.items:meleeHit(attacker, victim) == true then
@@ -256,7 +267,7 @@ net.handler("weaponHitReported", function(victim, attacker, weapon, bodypart, lo
 
     local bleed, knockMult = hitBleed(attacker, weapon, dist)
     if not bleed or bleed <= 0 then
-        return
+        return reject("debug", "noBleed", attacker, victim, weapon, dist)
     end
     -- a Shield in the victim's hand or on their back stops the shot (item/shield.pwn, #137)
     local where = getElementData(victim, "items.held") == "Shield" and "held"
@@ -279,23 +290,26 @@ net.handler("weaponHitReported", function(victim, attacker, weapon, bodypart, lo
     end
     local hp = wound.hpLoss(bleed)
     exports.character:applyWound(victim, bleed, hp, attacker, wound.killCause(weapon)) -- the body's reason (#139)
-    rollKnockout(victim, knockMult, bodypart)
+    rollKnockout(victim, knockMult, bodypart, attacker)
     report(victim, bleed, hp, bodypart)
     if bodypart == 9 then
         exports.items:popHeadgear(victim) -- the hat and mask fall off (char/headgear-pop.pwn, #137)
     end
-    util.log(
-        "weapons",
-        "info",
-        "%s hit %s weapon %d part %d dist %.1f bleed %.4f hp %.1f",
-        getPlayerName(attacker),
-        getPlayerName(victim),
-        weapon,
-        bodypart,
-        dist,
-        bleed,
-        hp
-    )
+    if log.enabled("debug") then
+        log.event("combat.hit", {
+            attacker = attacker,
+            victim = victim,
+            weapon = weapon,
+            bodypart = bodypart,
+            loss = loss,
+            distance = dist,
+            bleed = bleed,
+            hp = hp,
+            x = vx,
+            y = vy,
+            z = vz,
+        }, "debug")
+    end
 end, { rate = 15 })
 
 addEventHandler("onPlayerQuit", root, function()
