@@ -327,20 +327,38 @@ local function carmourHint(held)
     return nil
 end
 
+-- Vehicle actions follow the vehicle under the camera crosshair, matching the interact key's intended target.
+local function lookedAtVehicle(maxDistance)
+    local cx, cy, cz, tx, ty, tz = getCameraMatrix()
+    if not cx or not tx then
+        return nil
+    end
+    local dx, dy, dz = tx - cx, ty - cy, tz - cz
+    local length = math.sqrt(dx * dx + dy * dy + dz * dz)
+    if length == 0 then
+        return nil
+    end
+    local scale = maxDistance / length
+    local hit, _, _, _, element = processLineOfSight(cx, cy, cz,
+        cx + dx * scale, cy + dy * scale, cz + dz * scale,
+        true, true, true, true, true, false, false, localPlayer)
+    if hit and isElement(element) and getElementType(element) == "vehicle" then
+        return element
+    end
+    return nil
+end
+
 -- a Wrench in hand next to a vehicle body part that is still on: what F held does ("Tighten Left Door" for a part
 -- fitted loose, "Remove Left Door" for a secured one), else nil
 local function bodyPartHint(held)
     if not held or held.uname ~= "Wrench" then
         return nil
     end
-    local px, py, pz = getElementPosition(localPlayer)
-    for _, veh in ipairs(getElementsByType("vehicle", root, true)) do
-        local vx, vy, vz = getElementPosition(veh)
-        if getDistanceBetweenPoints3D(px, py, pz, vx, vy, vz) <= 5.5 then
-            local name, condition, loose = exports.vehicles:bodyPartSlot(veh)
-            if name and condition ~= "missing" then
-                return (loose and "Tighten " or "Remove ") .. name:gsub("(%l)(%u)", "%1 %2")
-            end
+    local veh = lookedAtVehicle(5.5)
+    if veh then
+        local name, condition, loose = exports.vehicles:bodyPartSlot(veh)
+        if name and condition ~= "missing" then
+            return (loose and "Tighten " or "Remove ") .. name:gsub("(%l)(%u)", "%1 %2")
         end
     end
     return nil
@@ -350,16 +368,8 @@ local function installPartHint(held)
     if not held or not exports.vehicles:isBodyPart(held.uname) then
         return false
     end
-    local px, py, pz = getElementPosition(localPlayer)
-    local nearVeh, nearDist = nil, 5.5
-    for _, veh in ipairs(getElementsByType("vehicle", root, true)) do
-        local vx, vy, vz = getElementPosition(veh)
-        local dist = getDistanceBetweenPoints3D(px, py, pz, vx, vy, vz)
-        if dist < nearDist then
-            nearVeh, nearDist = veh, dist
-        end
-    end
-    return nearVeh and exports.vehicles:canInstallBodyPart(nearVeh, held.uname) or false
+    local veh = lookedAtVehicle(5.5)
+    return veh and exports.vehicles:canInstallBodyPart(veh, held.uname) or false
 end
 
 -- Match the vehicle and front-angle check used by the interact key before advertising the bonnet action.
