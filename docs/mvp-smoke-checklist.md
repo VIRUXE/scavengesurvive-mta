@@ -101,7 +101,7 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
     - **Locks and entry**: Try entering a locked vehicle (`v.locked = 1`): `onVehicleStartEnter` cancels entry, doors rattle, and action text informs the vehicle is locked. Standing outside, `/lock` (or pressing **F** holding a matching `Key`) toggles lock state.
     - **Crowbar lock-breaking**: Outside near a locked vehicle, equip `Crowbar` and press **F**: a 3-second progress bar plays (kick animation). On completion, the lock breaks open and the crowbar takes durability damage.
     - **Locksmith key cutting**: Equip `LocksmithKit` and press **F** near a vehicle: a 10-second progress bar cuts a new `Key` (with matching key code in item data) and adds it to the player's inventory/hands.
-    - **Roadside repairs**: Walk to the front (bonnet) of a damaged vehicle:
+    - **Roadside repairs**: Walk to the front (bonnet) of a damaged vehicle. A car with a bonnet must have it open first (empty hands, tap **F**; a locked car's stays shut): a tool at a shut bonnet only toasts "Open the bonnet first", shutting it mid-repair voids the hold, and the bonnet stays open afterwards. Bikes, boats and the doorless utility models repair without one:
       - Health < 450 HP: holding `Hammer` (or `SledgeHammer`), press **F** to hammer out the frame back up to 450 HP (3 s progress).
       - Health 450..700 HP: holding `Screwdriver`, press **F** to adjust components up to 700 HP (3 s progress).
       - Health 700..999 HP: holding `Wrench`, press **F** to service the engine up to 1000 HP (3 s progress).

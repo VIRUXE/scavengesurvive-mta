@@ -608,9 +608,6 @@ local function cancelHoldAction(player)
         setPedAnimation(player, nil)
         triggerClientEvent(player, "vehicleHoldStopped", player)
     end
-    if act.actionType == "repair" and isElement(act.vehicle) then
-        setVehicleDoorOpenRatio(act.vehicle, 0, 0, 500) -- close bonnet
-    end
     activeActions[player] = nil
 end
 
@@ -1340,6 +1337,16 @@ function flattenVehicleBattery(vehicle)
     return true
 end
 
+-- the engine is reachable: a car's bonnet stands open or has been taken off (door state 4); a vehicle without one
+-- (bikes, boats, the doorless utility models) always is
+local function engineReachable(vehicle)
+    local inf = info[vehicle]
+    if not (inf and inf.bay) then
+        return true
+    end
+    return getVehicleDoorState(vehicle, 0) == 4 or getVehicleDoorOpenRatio(vehicle, 0) > 0.5
+end
+
 local function atBonnet(player, vehicle)
     local inf = info[vehicle]
     if not (isElement(vehicle) and inf and inf.bay) or isPedDead(player) or getPedOccupiedVehicle(player) then
@@ -1578,8 +1585,11 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
         if uname ~= toolNeeded then
             return toast(player, "NEEDANOTOOL")
         end
+        -- a car with a bonnet is repaired under it: the player opens it first (an empty-handed tap, Case 1c)
+        if not engineReachable(vehicle) then
+            return toast(player, inf.locked > 0 and "BONNET_LOCKED" or "BONNET_SHUT")
+        end
         cancelHoldAction(player)
-        setVehicleDoorOpenRatio(vehicle, 0, 1, 500)
         setPedAnimation(player, "INT_SHOP", "SHOP_CASHIER", -1, true, false, false, false)
         -- upstream repair.pwn ran the Repair skill through the per-tick health step, so skill made repairs slower;
         -- the port shortens the hold instead
@@ -1591,7 +1601,9 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
                 return
             end
             setPedAnimation(p, nil)
-            setVehicleDoorOpenRatio(veh, 0, 0, 500)
+            if not engineReachable(veh) then
+                return toast(p, "BONNET_SHUT") -- shut on them mid-repair
+            end
             local curHp = getElementHealth(veh)
             local nextHp = math.min(vlogic.HEALTH_MAX, curHp + 150)
             setElementHealth(veh, nextHp)
