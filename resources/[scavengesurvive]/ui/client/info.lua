@@ -141,7 +141,7 @@ return function(ctx)
         if #footer > 0 then
             y = placeParagraphs(window, footer, PAD, y, inner) + GAP
         end
-        local button = guiCreateButton((w - 110) / 2, y, 110, BUTTON_H, "Close", false, window)
+        local button = guiCreateButton((w - 110) / 2, y, 110, BUTTON_H, ctx.tr("Close"), false, window)
         local h = y + BUTTON_H + PAD
         guiSetSize(window, w, h, false)
         guiSetPosition(window, (sw - w) / 2, (sh - h) / 2, false)

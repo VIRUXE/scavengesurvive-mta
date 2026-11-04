@@ -16,6 +16,7 @@ local draw = loadFile(":ui/client/draw.lua", "=ui/draw.lua")(ctx)
 local rects = tweak.layout(canvas, ctx.c)
 local ARROW = tocolor(255, 220, 0, 230)
 local REPEAT_MS = 150 -- a held move button keeps stepping
+local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")()
 local state = nil -- { id, x, y, z, heading, arrow, labels, cursor }
 local repeatTimer = nil
 
@@ -78,7 +79,7 @@ addEventHandler("onClientRender", root, function()
         return
     end
     for i, b in ipairs(tweak.BUTTONS) do
-        local label = b.label
+        local label = b.id == "done" and lang.text(b.label) or b.label
         if b.id == "toggle" then
             label = state.cursor and (state.labels.move or "Move") or (state.labels.edit or "Edit: LALT")
         end

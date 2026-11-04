@@ -2,6 +2,7 @@
 -- summary from client/main.lua; the interact key eats held food or starts a held treatment, R reloads, and holding
 -- N for 300 ms on a calibre weapon unloads it (tapping N drops the item).
 return function(ctx)
+    local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")()
     local holdTimer = nil
     local interactHoldTimer = nil
 
@@ -358,7 +359,7 @@ return function(ctx)
             end
             local key = string.lower(getKeyBoundToCommand("interact") or "f")
             local startTick = getTickCount()
-            exports.ui:progressStart("Casting", MAX_CAST_MS)
+            exports.ui:progressStart(lang.text("Casting"), MAX_CAST_MS)
             interactHoldTimer = setTimer(function()
                 local heldMs = getTickCount() - startTick
                 if not isKeyHeld(key, "interact") or heldMs >= MAX_CAST_MS then

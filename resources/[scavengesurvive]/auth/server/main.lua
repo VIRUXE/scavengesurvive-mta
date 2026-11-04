@@ -2,6 +2,7 @@ local db = loadstring(exports.lib:getModule("db"), "=lib/db.lua")()
 local net = loadstring(exports.lib:getModule("net"), "=lib/net.lua")()
 local util = loadstring(exports.lib:getModule("util"), "=lib/util.lua")()
 local log = loadstring(exports.lib:getModule("log"), "=lib/log.lua")()
+local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")()
 local function loadFile(path)
     local f = fileOpen(path, true)
     local src = fileRead(f, fileGetSize(f))
@@ -110,7 +111,7 @@ local function startCountdown(player)
             reason = "whitelistCountdown",
             msg = account.name .. " kicked: not whitelisted after the countdown",
         })
-        kickLater(player, "Not in whitelist")
+        kickLater(player, lang.textFor(player, "Not in whitelist"))
     end, remaining, 1)
     countdown[player] = { timer = timer, ends = ends }
     triggerClientEvent(player, "whitelistCountdownChanged", player, math.ceil(remaining / 1000))
@@ -191,7 +192,13 @@ local function applyAutoWhitelist(leaving, announceTo)
     end
     setWhitelist(nextState, true, staffOnline)
     if not nextState and isElement(announceTo) then
-        outputChatBox(" >  Auto-whitelist: Deactivated the whitelist.", announceTo, 255, 255, 0)
+        outputChatBox(
+            " >  " .. lang.textFor(announceTo, "Auto-whitelist: Deactivated the whitelist."),
+            announceTo,
+            255,
+            255,
+            0
+        )
     end
 end
 
@@ -207,7 +214,11 @@ local function checkBan(player)
             return
         end
         if row then
-            for _, line in ipairs(access.banLines(row)) do
+            for _, line in
+                ipairs(access.banLines(row, function(fmt, ...)
+                    return lang.formatFor(p, fmt, ...)
+                end, lang.textFor(p, "Never")))
+            do
                 outputChatBox(line, p, 255, 80, 80)
             end
             log.event("session.refused", {
@@ -223,7 +234,7 @@ local function checkBan(player)
                 row.id,
                 getPlayerName(p),
             })
-            return kickLater(p, "Banned: " .. tostring(row.reason))
+            return kickLater(p, lang.formatFor(p, "Banned: %s", tostring(row.reason)))
         end
         if wantsPrompt[p] then
             wantsPrompt[p] = nil
@@ -324,7 +335,9 @@ local function leave(player)
         mode = mode,
         msg = getPlayerName(player) .. " left the " .. tostring(mode) .. " dialog",
     })
-    kickLater(player, mode == "register" and "Left without registering" or "Left without logging in")
+    local why = mode == "register" and lang.textFor(player, "Left without registering")
+        or lang.textFor(player, "Left without logging in")
+    kickLater(player, why)
 end
 
 local function isLanguage(code)
@@ -363,7 +376,7 @@ function prompt(player)
         end
         if row == false then
             log.event("session.kicked", { player = player, reason = "accountLoadFailed" })
-            return kickLater(player, "Account load failed")
+            return kickLater(player, lang.textFor(player, "Account load failed"))
         end
         if row and row.active == 0 then
             log.event("session.refused", {
@@ -372,7 +385,7 @@ function prompt(player)
                 reason = "inactive",
                 msg = getPlayerName(player) .. " refused: account inactive",
             })
-            return kickLater(player, "Account inactive")
+            return kickLater(player, lang.textFor(player, "Account inactive"))
         end
         if not chosenLang[player] and not (row and row.lang) then
             return offerLanguage(player)
@@ -417,7 +430,7 @@ local function admit(player, account, isNew, method)
                 target = other,
                 msg = account.name .. " refused: account already online as " .. getPlayerName(other),
             })
-            return kickLater(player, "Account already online")
+            return kickLater(player, lang.textFor(player, "Account already online"))
         end
     end
     if chosenLang[player] and not account.langChosen then
@@ -473,7 +486,7 @@ local function refused(player, code, attempts)
     elseif r.action == "leave" then
         leave(player)
     elseif r.action == "kick" then
-        kickLater(player, r.reason)
+        kickLater(player, lang.textFor(player, r.reason))
     end
 end
 
@@ -504,7 +517,7 @@ function finish(player, ok, code, account, attempts, isNew, method)
             reason = "notWhitelisted",
             msg = account.name .. " refused: not whitelisted",
         })
-        kickLater(p, "Not whitelisted")
+        kickLater(p, lang.textFor(p, "Not whitelisted"))
     end, player)
 end
 
@@ -583,7 +596,7 @@ addCommandHandler("lang", function(player, _, code)
     end
     local account = session[player]
     if not account then
-        return outputChatBox(" >  Log in first.", player, 255, 255, 0)
+        return outputChatBox(" >  " .. lang.textFor(player, "Log in first."), player, 255, 255, 0)
     end
     local codes = exports.data:languages()
     local valid = {}
@@ -593,13 +606,14 @@ addCommandHandler("lang", function(player, _, code)
     code = type(code) == "string" and code:lower() or nil
     if not code or not valid[code] then
         local list = table.concat(codes, ", ")
-        return outputChatBox(string.format(" >  Usage: /lang <%s> (now %s)", list, account.lang), player, 255, 255, 0)
+        local usage = " >  " .. lang.formatFor(player, "Usage: /lang <%s> (now %s)", list, account.lang)
+        return outputChatBox(usage, player, 255, 255, 0)
     end
     account.lang = code
     account.langChosen = true
     setElementData(player, LANG_KEY, code, "broadcast", "deny")
     db.exec("UPDATE accounts SET lang = ? WHERE id = ?", { code, account.id })
-    outputChatBox(string.format(" >  Language set to %s.", code), player, 255, 255, 0)
+    outputChatBox(" >  " .. lang.formatFor(player, "Language set to %s.", code), player, 255, 255, 0)
     log.event("session.languageSet", { player = player, account_id = account.id, lang = code, via = "command" })
 end)
 
@@ -628,12 +642,12 @@ addCommandHandler("changepass", function(player, _, oldPw, newPw)
         return
     end
     local account = session[player]
-    local lang = account and account.lang or "en"
+    local langCode = account and account.lang or "en"
     if not account then
-        return outputChatBox(exports.data:t(lang, "LOGGEDINREQ"), player, 255, 255, 0, true)
+        return outputChatBox(exports.data:t(langCode, "LOGGEDINREQ"), player, 255, 255, 0, true)
     end
     if not oldPw or not newPw then
-        return outputChatBox(exports.data:t(lang, "CHANGEPASSW"), player, 255, 255, 0, true)
+        return outputChatBox(exports.data:t(langCode, "CHANGEPASSW"), player, 255, 255, 0, true)
     end
     if changing[player] or not accounts then
         return
@@ -646,7 +660,7 @@ addCommandHandler("changepass", function(player, _, oldPw, newPw)
         end
         local reply = rules.changePasswordReply(code)
         local r, g, b = unpack(reply.color)
-        outputChatBox(exports.data:t(lang, reply.key, newPw), player, r, g, b, true)
+        outputChatBox(exports.data:t(langCode, reply.key, newPw), player, r, g, b, true)
         log.event("session.passwordChanged", {
             player = player,
             account_id = account.id,

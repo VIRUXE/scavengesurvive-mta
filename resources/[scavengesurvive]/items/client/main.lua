@@ -108,7 +108,7 @@ end
 
 -- changing clothes (server/clothes.lua): the server times the hold and cancels it, the client only draws the bar
 addEventHandler("clothesChangeStarted", localPlayer, function(durationMs)
-    exports.ui:progressStart("Changing clothes", durationMs)
+    exports.ui:progressStart(lang.text("Changing clothes"), durationMs)
 end)
 
 addEventHandler("clothesChangeStopped", localPlayer, function()
@@ -117,7 +117,7 @@ end)
 
 -- refuelling a machine (server/machines.lua, #145): the server moves the petrol while the key is held
 addEventHandler("machineRefuelStarted", localPlayer, function(durationMs)
-    exports.ui:progressStart("Refuelling...", durationMs)
+    exports.ui:progressStart(lang.text("Refuelling..."), durationMs)
 end)
 
 addEventHandler("machineRefuelStopped", localPlayer, function()
@@ -135,7 +135,7 @@ end
 -- treatments (server/medical.lua): the healer holds the interact key, letting go cancels; the patient sees the bar
 local treatmentTimer = nil
 addEventHandler("treatmentStarted", localPlayer, function(durationMs, healer, label)
-    exports.ui:progressStart(label or (healer and "Treating" or "Being treated"), durationMs)
+    exports.ui:progressStart(label or (healer and lang.text("Treating") or lang.text("Being treated")), durationMs)
     if isTimer(treatmentTimer) then
         killTimer(treatmentTimer)
     end

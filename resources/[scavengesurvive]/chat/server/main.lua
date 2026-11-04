@@ -33,12 +33,20 @@ local function get(p)
     return st
 end
 
-local function lang(p)
+local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")()
+-- a window's labels in p's language (chat.lua's tr argument)
+local function trFor(p)
+    return function(s)
+        return lang.textFor(p, s)
+    end
+end
+
+local function langOf(p)
     return exports.auth:getLanguage(p) or "en"
 end
 
 local function sayLang(p, key, ...)
-    outputChatBox(exports.data:t(lang(p), key, ...), p, 255, 255, 255, true)
+    outputChatBox(exports.data:t(langOf(p), key, ...), p, 255, 255, 255, true)
 end
 
 local function staffLevel(p)
@@ -287,11 +295,12 @@ addCommandHandler("freq", function(p, _, value)
     end
     local f = logic.parseFreq(value)
     if not f then
-        local fmt = " >  Usage: /freq <%.1f-%.1f> (now %.2f)"
-        return outputChatBox(string.format(fmt, logic.FREQ_MIN, logic.FREQ_MAX, get(p).freq), p, 255, 255, 0)
+        local usage =
+            lang.formatFor(p, "Usage: /freq <%.1f-%.1f> (now %.2f)", logic.FREQ_MIN, logic.FREQ_MAX, get(p).freq)
+        return outputChatBox(" >  " .. usage, p, 255, 255, 0)
     end
     setFrequency(p, f)
-    outputChatBox(string.format(" >  Radio tuned to %.2f", f), p, 255, 255, 0)
+    outputChatBox(" >  " .. lang.formatFor(p, "Radio tuned to %.2f", f), p, 255, 255, 0)
 end)
 
 addCommandHandler("radio", function(p)
@@ -378,7 +387,7 @@ addEventHandler("onPlayerVoiceStart", root, function()
         triggerClientEvent(source, "chatVoiceBlocked", source)
         if isMuted(source) and not st.voiceWarned then
             st.voiceWarned = true
-            outputChatBox(logic.VOICE_MUTED, source, 255, 255, 0)
+            outputChatBox(" >  " .. lang.textFor(source, logic.VOICE_MUTED), source, 255, 255, 0)
         end
         return
     end
@@ -407,17 +416,18 @@ end
 
 -- the info commands open CEGUI windows (exports.ui:showInfo, specs from shared/logic/chat.lua)
 playerCommand("help", function(p)
-    exports.ui:showInfo(p, logic.helpWindow(exports.data:t(lang(p), "GENCOMDHELP")))
+    exports.ui:showInfo(p, logic.helpWindow(exports.data:t(langOf(p), "GENCOMDHELP"), trFor(p)))
 end)
 
 playerCommand("chatinfo", function(p)
-    exports.ui:showInfo(p, logic.textWindow("Chat", exports.data:t(lang(p), "GENCOMDCHAT")))
+    exports.ui:showInfo(p, logic.textWindow(lang.textFor(p, "Chat"), exports.data:t(langOf(p), "GENCOMDCHAT")))
 end)
 
 playerCommand("rules", function(p)
     db.one("SELECT svalue FROM settings WHERE skey = 'server.rules'", {}, function(row, pl)
         if isElement(pl) then
-            exports.ui:showInfo(pl, logic.listWindow("Rules", logic.listSetting(row and row.svalue)))
+            local title = lang.textFor(pl, "Rules")
+            exports.ui:showInfo(pl, logic.listWindow(title, logic.listSetting(row and row.svalue), trFor(pl)))
         end
     end, p)
 end)
@@ -445,17 +455,17 @@ playerCommand("admins", function(p)
             local colour = string.format("#%02X%02X%02X", r, g, b)
             staffList[#staffList + 1] = { name = row.name, rank = rank, colour = colour, online = online[row.name] }
         end
-        exports.ui:showInfo(pl, logic.staffWindow(staffList))
+        exports.ui:showInfo(pl, logic.staffWindow(staffList, trFor(pl)))
     end, p)
 end)
 
 playerCommand("credits", function(p)
-    exports.ui:showInfo(p, logic.creditsWindow())
+    exports.ui:showInfo(p, logic.creditsWindow(trFor(p)))
 end)
 
 playerCommand("pos", function(p)
     local x, y, z = getElementPosition(p)
-    outputChatBox(string.format(" >  Position: #33CCFF%.2f, %.2f, %.2f", x, y, z), p, 255, 255, 0, true)
+    outputChatBox(" >  " .. lang.formatFor(p, "Position: #33CCFF%.2f, %.2f, %.2f", x, y, z), p, 255, 255, 0, true)
 end)
 
 playerCommand("motd", function(p)
@@ -468,7 +478,14 @@ addEventHandler("onPlayerJoin", root, function()
         if line.localized then
             local template = " >  #B8B8B8%s#FFFFFF has joined"
             for _, recipient in ipairs(getElementsByType("player")) do
-                outputChatBox(exports.data:t(lang(recipient), template, name), recipient, line.r, line.g, line.b, true)
+                outputChatBox(
+                    exports.data:t(langOf(recipient), template, name),
+                    recipient,
+                    line.r,
+                    line.g,
+                    line.b,
+                    true
+                )
             end
         else
             outputChatBox(line.text, line.toAll and root or source, line.r, line.g, line.b, true)

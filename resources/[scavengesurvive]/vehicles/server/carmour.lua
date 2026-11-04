@@ -7,6 +7,7 @@
 -- Clients build the panels themselves from the element data "vehicles.carmour" (client/carmour.lua): server-made
 -- objects cannot carry SA-MP or port models. A player's torch is the element data "vehicles.torch".
 -- ctx = { db, info, toast, activeActions, cancelHoldAction, carmour, place, geo, breakLock } built by server/main.lua.
+local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")()
 return function(ctx)
     local db, info, toast, activeActions = ctx.db, ctx.info, ctx.toast, ctx.activeActions
     local carmour, place, geo, cancelHoldAction = ctx.carmour, ctx.place, ctx.geo, ctx.cancelHoldAction
@@ -522,7 +523,7 @@ return function(ctx)
                 cancelHoldAction(player)
                 setPedAnimation(player, "BOMBER", "BOM_Plant_Loop", -1, true, false, false, false)
                 local ms = exports.character:skillTimeModifier(player, carmour.WELD_MS, "Repair")
-                triggerClientEvent(player, "vehicleHoldStarted", player, "Welding", ms)
+                triggerClientEvent(player, "vehicleHoldStarted", player, lang.textFor(player, "Welding"), ms)
                 triggerClientEvent(root, "weldStarted", player, ms)
                 local timer = setTimer(finish, ms, 1, player, vehicle, rec.id, tank.id, gen.id, kg)
                 activeActions[player] = { actionType = "weld", vehicle = vehicle, timer = timer }
@@ -640,7 +641,7 @@ return function(ctx)
         end
         cancelHoldAction(player)
         setPedAnimation(player, "POLICE", "DOOR_KICK", -1, true, false, false, false)
-        triggerClientEvent(player, "vehicleHoldStarted", player, "Prying off", carmour.PRY_MS)
+        triggerClientEvent(player, "vehicleHoldStarted", player, lang.textFor(player, "Prying off"), carmour.PRY_MS)
         local timer = setTimer(function()
             activeActions[player] = nil
             if not isElement(player) or not isElement(vehicle) or not info[vehicle] then
@@ -755,7 +756,7 @@ return function(ctx)
                 cancelHoldAction(player)
                 setPedAnimation(player, "BOMBER", "BOM_Plant_Loop", -1, true, false, false, false)
                 local ms = carmour.GRIND_PASS_MS
-                triggerClientEvent(player, "vehicleHoldStarted", player, "Grinding", ms)
+                triggerClientEvent(player, "vehicleHoldStarted", player, lang.textFor(player, "Grinding"), ms)
                 triggerClientEvent(root, "grindStarted", player, ms)
                 local timer = setTimer(grindPass, ms, 1, player, vehicle, rec.id, battery.id, disc.id)
                 activeActions[player] = { actionType = "grind", vehicle = vehicle, timer = timer }

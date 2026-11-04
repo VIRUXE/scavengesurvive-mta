@@ -22,16 +22,28 @@ M.SPARK = { model = 18724, pos = { -2311.4900, -1647.7000, 482.3600, 0, 0, 26.22
 
 -- ranch.pwn RanchPcObj: the screen the diary appears on once the hard drive is back, and the view of it
 M.SCREEN = { model = 19475, pos = { -690.966735, 942.852416, 13.642812, 0, 0, -110.324981 } }
-M.SCREEN.text = table.concat({
-    "system:",
-    "  >login terminal\\root\\user\\steve",
-    "  >open diary\\entry\\recent",
-    "   I have left the ranch, they are after me",
-    "   whoever finds this, I decided to go to a friends",
-    "   place on chilliad, he was dead when I got there",
-    "   I've hidden the key there, they won't find it",
-    "   I dont know how long it will be before they find me",
-}, "\n")
+M.SCREEN.prompt = { "system:", "  >login terminal\\root\\user\\steve", "  >open diary\\entry\\recent" }
+-- lang:begin
+M.SCREEN.diary = {
+    "I have left the ranch, they are after me",
+    "whoever finds this, I decided to go to a friends",
+    "place on chilliad, he was dead when I got there",
+    "I've hidden the key there, they won't find it",
+    "I dont know how long it will be before they find me",
+}
+-- lang:end
+
+-- the screen's text; tr(line) puts the diary in the reader's language (the client passes lang.text)
+function M.screenText(tr)
+    local lines = {}
+    for i, line in ipairs(M.SCREEN.prompt) do
+        lines[i] = line
+    end
+    for _, line in ipairs(M.SCREEN.diary) do
+        lines[#lines + 1] = "   " .. (tr and tr(line) or line)
+    end
+    return table.concat(lines, "\n")
+end
 M.VIEW = { -691.141845, 942.489868, 13.759174, -689.749084, 946.223693, 14.104162 }
 
 -- objects the puzzles add to the normal world (world 0), { model, x, y, z, rx, ry, rz, world }: ranch.pwn's "LS
@@ -159,6 +171,7 @@ function M.hidden(state, b)
     return b.id == "chDoor" and state.shorted
 end
 
+-- lang:begin
 M.SAY = {
     broken = { "Door", "The keypad seems broken" },
     pcOff = {
@@ -175,6 +188,7 @@ M.SAY = {
     },
     quarryOpened = { "Door", "You have unlocked the mystery door!" },
 }
+-- lang:end
 
 local function say(out, key)
     out[#out + 1] = { "message", M.SAY[key][1], M.SAY[key][2] }

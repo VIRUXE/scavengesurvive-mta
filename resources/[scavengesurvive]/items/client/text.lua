@@ -29,7 +29,7 @@ return function(machines)
     end)
 
     addEventHandler("bodyInspected", localPlayer, function(name, reason)
-        exports.ui:dialogOpen("items:body", "msgbox", name, reason, L("Close"), "")
+        exports.ui:dialogOpen("items:body", "msgbox", name, L(reason), L("Close"), "")
     end)
 
     addEventHandler("potInspected", localPlayer, function(status)

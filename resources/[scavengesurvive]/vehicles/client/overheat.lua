@@ -12,6 +12,7 @@ local sw, sh = guiGetScreenSize()
 local ctx = { canvas = canvas, c = canvas.new(sw, sh) }
 local bar = loadFile(":ui/client/draw.lua", "=ui/draw.lua")(ctx)
 local RED = tocolor(200, 0, 0, 255)
+local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")()
 local heat, max = nil, 40
 
 local function draw()
@@ -21,7 +22,7 @@ local function draw()
     bar.progressBar(220, 380, 200, 20, heat / max, 0xFF, 0, 0, 0xFF, "center")
     if heat > max * 0.8 then
         local top, bottom = canvas.y(ctx.c, 380 - 50), canvas.y(ctx.c, 380 - canvas.BAR_BORDER) - 4
-        dxDrawText("Overheating!", 0, top, sw, bottom, RED, 2, "pricedown", "center", "bottom")
+        dxDrawText(lang.text("Overheating!"), 0, top, sw, bottom, RED, 2, "pricedown", "center", "bottom")
     end
 end
 

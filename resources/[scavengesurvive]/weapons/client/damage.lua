@@ -1,5 +1,7 @@
+local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")()
 local REPORT_MS = 50
 local lastReport = 0
+-- lang:begin
 local PARTS = {
     [3] = "torso",
     [4] = "groin",
@@ -9,6 +11,7 @@ local PARTS = {
     [8] = "right leg",
     [9] = "head",
 }
+-- lang:end
 
 -- GTA weapon damage stays > 0 (Appendix B) so this fires; the server decides the wound and sets health.
 addEventHandler("onClientPlayerDamage", root, function(attacker, weapon, bodypart, loss)
@@ -35,9 +38,10 @@ addEventHandler("onClientPlayerDamage", root, function(attacker, weapon, bodypar
 end)
 
 addEventHandler("woundInflicted", root, function(bleedAdd, hpLoss, bodypart)
-    local text = string.format("Wounded: %s  -%d hp", PARTS[bodypart] or "body", math.floor(hpLoss + 0.5))
+    local part = PARTS[bodypart] and lang.text(PARTS[bodypart]) or lang.text("body")
+    local text = lang.format("Wounded: %s  -%d hp", part, math.floor(hpLoss + 0.5))
     if bleedAdd > 0 then
-        text = text .. "  (bleeding)"
+        text = text .. "  " .. lang.text("(bleeding)")
     end
     exports.ui:toast(text, 220, 60, 60)
 end)

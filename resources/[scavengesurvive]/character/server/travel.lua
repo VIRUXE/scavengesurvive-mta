@@ -4,6 +4,7 @@
 -- and /mstats shows the counters in an info window. The counters live for the session (upstream saved them with
 -- the character).
 -- ctx = { net, travel, state, gainSkill, isKnockedOut } built by server/main.lua.
+local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")()
 return function(ctx)
     local net, travel, state = ctx.net, ctx.travel, ctx.state
     local byPlayer = {} -- player -> travel.new() plus lastX/lastY/lastZ
@@ -89,7 +90,12 @@ return function(ctx)
         if not state.byPlayer[player] then
             return
         end
-        exports.ui:showInfo(player, travel.window(of(player)))
+        exports.ui:showInfo(
+            player,
+            travel.window(of(player), function(text)
+                return lang.textFor(player, text)
+            end)
+        )
     end)
 
     addEventHandler("characterSpawned", root, function()

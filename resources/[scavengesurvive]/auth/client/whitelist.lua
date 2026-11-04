@@ -9,6 +9,7 @@ local function loadFile(path, chunkName)
 end
 local canvas = loadFile(":ui/shared/logic/canvas.lua", "=ui/canvas.lua")
 local access = loadFile("shared/logic/access.lua", "=auth/access.lua")
+local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")()
 local sw, sh = guiGetScreenSize()
 local ctx = { canvas = canvas, c = canvas.new(sw, sh) }
 local draw = loadFile(":ui/client/draw.lua", "=ui/draw.lua")(ctx)
@@ -18,7 +19,7 @@ local ends = nil -- getTickCount() at which the countdown reaches zero
 
 local function render()
     local left = math.ceil((ends - getTickCount()) / 1000)
-    local text = access.countdownText(left)
+    local text = access.countdownText(left, lang.text)
     draw.text({
         text = text,
         x = 430,

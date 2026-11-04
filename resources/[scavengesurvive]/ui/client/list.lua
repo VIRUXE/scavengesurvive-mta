@@ -15,8 +15,13 @@ return function(ctx)
         scroll = tocolor(60, 60, 60, 255),
         thumb = tocolor(150, 150, 150, 255),
     }
-    local DEFAULT_BUTTONS = { "Options", "Close" }
-    local OPTION_BUTTONS = { "Accept", "Back" }
+    local tr = ctx.tr
+    local function defaultButtons()
+        return { tr("Options"), tr("Close") }
+    end
+    local function optionButtons()
+        return { tr("Accept"), tr("Back") }
+    end
     local state = nil -- { base = dialog state, options = dialog state | nil }
     local M = {}
 
@@ -25,7 +30,7 @@ return function(ctx)
     end
 
     function M.open(listId, title, rows, buttons)
-        state = { base = dialog.new(listId, title, rows, buttons or DEFAULT_BUTTONS) }
+        state = { base = dialog.new(listId, title, rows, buttons or defaultButtons()) }
         showCursor(true)
         return true
     end
@@ -103,7 +108,7 @@ return function(ctx)
             for _, a in ipairs(row.actions) do
                 rows[#rows + 1] = { id = a.id, label = a.label }
             end
-            state.options = dialog.new(state.base.id, row.label, rows, OPTION_BUTTONS)
+            state.options = dialog.new(state.base.id, row.label, rows, optionButtons())
             state.options.rowId = row.id
         else
             triggerEvent("uiListActionSelected", root, state.base.id, row.id, "select")
@@ -156,7 +161,7 @@ return function(ctx)
         if thumb then
             rect(thumb, COL.thumb)
         end
-        local b = st.buttons or DEFAULT_BUTTONS
+        local b = st.buttons or defaultButtons()
         button(L.left, b[1])
         button(L.right, b[2])
     end

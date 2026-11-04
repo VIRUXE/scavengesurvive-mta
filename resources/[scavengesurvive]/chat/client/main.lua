@@ -92,11 +92,13 @@ function radioOpen()
 end
 
 -- upstream ShowFrequencyDialog: a number in range retunes, anything else asks again, Cancel leaves it be
-local FREQ_BODY = string.format("Enter a frequency between %.1f and %.1f", logic.FREQ_MIN, logic.FREQ_MAX)
+local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")()
+local L = lang.text
 
 local function askFrequency()
     typing = true
-    exports.ui:dialogOpen("chat:freq", "input", "Frequency", FREQ_BODY, "Accept", "Cancel")
+    local body = lang.format("Enter a frequency between %.1f and %.1f", logic.FREQ_MIN, logic.FREQ_MAX)
+    exports.ui:dialogOpen("chat:freq", "input", L("Frequency"), body, L("Accept"), L("Cancel"))
 end
 
 addEventHandler("uiDialogResponded", root, function(id, accepted, text)
@@ -142,7 +144,7 @@ addEventHandler("onClientRender", root, function()
             draw.box(r.x, r.y, r.w, r.h, HOVER, "left")
         end
     end
-    label({ text = "RADIO", x = P.title.x, y = P.title.y, lx = 0.5, colour = WHITE, outline = 1, shadow = 0 })
+    label({ text = L("RADIO"), x = P.title.x, y = P.title.y, lx = 0.5, colour = WHITE, outline = 1, shadow = 0 })
     label({
         text = "-l-l-l-l-l-l-l-l-l-l-l-l-l-l-l-l-l-l-l-",
         x = P.strip.x,
@@ -154,10 +156,11 @@ addEventHandler("onClientRender", root, function()
     })
     label({ text = "<", x = P.knobL.x + 15, y = P.knobL.y + 6, lx = 0.5, colour = WHITE, outline = 1, shadow = 0 })
     label({ text = ">", x = P.knobR.x + 15, y = P.knobR.y + 6, lx = 0.5, colour = WHITE, outline = 1, shadow = 0 })
-    label({ text = logic.modeLabel(state.mode, state.oldMode), x = P.mode.cx, y = P.mode.y, lx = 0.3, colour = CYAN })
-    label({ text = string.format("Frequency: %.2f", state.freq), x = P.freq.cx, y = P.freq.y, lx = 0.3, colour = CYAN })
-    label({ text = logic.powerLabel(state.mode), x = P.power.cx, y = P.power.y, lx = 0.4, colour = RED })
-    label({ text = "Close", x = P.close.cx, y = P.close.y, lx = 0.3, colour = WHITE })
+    local mode = L(logic.modeLabel(state.mode, state.oldMode))
+    label({ text = mode, x = P.mode.cx, y = P.mode.y, lx = 0.3, colour = CYAN })
+    label({ text = lang.format("Frequency: %.2f", state.freq), x = P.freq.cx, y = P.freq.y, lx = 0.3, colour = CYAN })
+    label({ text = L(logic.powerLabel(state.mode)), x = P.power.cx, y = P.power.y, lx = 0.4, colour = RED })
+    label({ text = L("Close"), x = P.close.cx, y = P.close.y, lx = 0.3, colour = WHITE })
 end)
 
 addEventHandler("onClientClick", root, function(button, pressState)

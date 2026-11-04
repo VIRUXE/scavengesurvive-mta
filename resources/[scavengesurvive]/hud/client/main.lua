@@ -80,6 +80,7 @@ local SKILL_NOTICE_MS = 5000
 local GREEN = tocolor(0, 255, 0, 255) -- upstream skl_PlayerNotification colour 16711935 (0x00FF00FF)
 local typeCache, vehicleTypeCache = {}, {}
 local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")()
+keyactions.tr = lang.text -- the key-action lines in the player's language
 
 local function itemType(uname)
     if typeCache[uname] == nil then
@@ -339,9 +340,22 @@ local function lookedAtVehicle(maxDistance)
         return nil
     end
     local scale = maxDistance / length
-    local hit, _, _, _, element = processLineOfSight(cx, cy, cz,
-        cx + dx * scale, cy + dy * scale, cz + dz * scale,
-        true, true, true, true, true, false, false, localPlayer)
+    local hit, _, _, _, element = processLineOfSight(
+        cx,
+        cy,
+        cz,
+        cx + dx * scale,
+        cy + dy * scale,
+        cz + dz * scale,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false,
+        localPlayer
+    )
     if hit and isElement(element) and getElementType(element) == "vehicle" then
         return element
     end
@@ -350,6 +364,18 @@ end
 
 -- a Wrench in hand next to a vehicle body part that is still on: what F held does ("Tighten Left Door" for a part
 -- fitted loose, "Remove Left Door" for a secured one), else nil
+-- the vehicles resource's body part slot names (bodyparts.lua) as the hint shows them
+-- lang:begin
+local BODY_PART_NAMES = {
+    Hood = "Hood",
+    Tailgate = "Tailgate",
+    LeftDoor = "Left Door",
+    RightDoor = "Right Door",
+    FrontBumper = "Front Bumper",
+    RearBumper = "Rear Bumper",
+}
+-- lang:end
+
 local function bodyPartHint(held)
     if not held or held.uname ~= "Wrench" then
         return nil
@@ -358,7 +384,8 @@ local function bodyPartHint(held)
     if veh then
         local name, condition, loose = exports.vehicles:bodyPartSlot(veh)
         if name and condition ~= "missing" then
-            return (loose and "Tighten " or "Remove ") .. name:gsub("(%l)(%u)", "%1 %2")
+            local part = lang.text(BODY_PART_NAMES[name] or (name:gsub("(%l)(%u)", "%1 %2")))
+            return loose and lang.format("(Hold) Tighten %s", part) or lang.format("(Hold) Remove %s", part)
         end
     end
     return nil
@@ -393,8 +420,9 @@ local function nearBonnetHint(held)
     local _, _, vrz = getElementRotation(nearVeh)
     local rad = math.rad(vrz or 0)
     local dx, dy = px - vx, py - vy
-    local angle = (math.deg(math.atan2(dx * math.cos(rad) + dy * math.sin(rad),
-        -dx * math.sin(rad) + dy * math.cos(rad))) + 360) % 360
+    local angle = (
+        math.deg(math.atan2(dx * math.cos(rad) + dy * math.sin(rad), -dx * math.sin(rad) + dy * math.cos(rad))) + 360
+    ) % 360
     if angle >= 25 and angle <= 335 then
         return nil
     end

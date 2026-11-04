@@ -4,7 +4,9 @@
 local M = {}
 
 -- upstream death.pwn's deathreasonstring by the cause the port reports (weapons: wound.killCause; the survival
--- tick: survival.deathCause; onPlayerWasted: drowned / fall / burned)
+-- tick: survival.deathCause; onPlayerWasted: drowned / fall / burned). The body keeps the English line; whoever
+-- inspects it reads it in their own language (items/client/text.lua).
+-- lang:begin
 M.REASONS = {
     beaten = "They were beaten to death.",
     knife = "They suffered small lacerations on the torso, possibly from a knife.",
@@ -23,6 +25,7 @@ M.REASONS = {
 }
 M.KILLED = "They bled to death." -- upstream's default for a death at another player's hands
 M.UNKNOWN = "They died for an unknown reason."
+-- lang:end
 
 function M.reason(cause, byPlayer)
     local r = M.REASONS[string.lower(tostring(cause or ""))]

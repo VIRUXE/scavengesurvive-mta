@@ -11,6 +11,16 @@ drops.TYPES = {
     { name = "Industrial Supplies", table = "airdrop_industrial", interval = 2000, random = 900, required = 5 },
     { name = "Ordnance Supplies", table = "airdrop_ordnance", interval = 10800, random = 10800, required = 8 },
 }
+-- the type names as the announcement shows them (lang.textFor), listed so tools/lang_qa collects them
+-- lang:begin
+drops.TYPE_NAMES = {
+    "Food and Medical",
+    "Low Grade Weapons",
+    "Military Weapons",
+    "Industrial Supplies",
+    "Ordnance Supplies",
+}
+-- lang:end
 drops.DROP_HEIGHT = 1000.0 -- crates start here (upstream creates the objects at z 1000)
 drops.DROP_SPEED = 3.5 -- units per second
 -- The crate is a 32-slot container with no item behind it (upstream CreateContainer("Supply Crate", 32) and
@@ -23,7 +33,13 @@ drops.SUPPLY_STACK_Z = 2.465
 drops.CACHE_OBJECT = 964
 drops.CACHE_Z_OFFSET = -0.044
 drops.OPEN_RADIUS = 3.0 -- the button's range in the SIF button library
+-- lang:begin
 drops.TITLES = { supply = "Supply Crate", cache = "Weapon Cache" }
+drops.UNKNOWN_TYPE = "Unknown"
+drops.UNKNOWN_LOCATION = "an unknown location"
+drops.SIGNAL_TEXT = "[EBS]: WEAPONS CACHE SIGNAL: BEARING: %.1fDEG DISTANCE: %.1fM"
+drops.SUPPLY_TEXT = "[EBS]: SUPPLY DROP: #33CCFF\"%s\"#FFFF00 INCOMING AT: #FFAA00\"%s\""
+-- lang:end
 drops.CACHE_TABLE = "airdrop_military_weapons"
 drops.CACHE_SIGNALS = 3
 drops.CACHE_SIGNAL_INTERVAL_S = 200
@@ -63,7 +79,7 @@ function drops.announceName(typeName, rng)
     if rng() * 100 < 50 then
         return typeName
     end
-    return "Unknown"
+    return drops.UNKNOWN_TYPE
 end
 
 function drops.descentMs(fromZ, toZ, speed)
@@ -137,13 +153,15 @@ function drops.signalReference(points, cacheX, cacheY, rng)
     return candidates[math.floor(rng() * #candidates) + 1]
 end
 
-function drops.signalText(ref, cacheX, cacheY)
+-- The announcements as chat lines. format(template, ...) is string.format by default; the server passes a
+-- translating one (lib lang.formatFor) and the names already in the reader's language.
+function drops.signalText(ref, cacheX, cacheY, format)
     local bearing, dist = drops.bearing(ref.x, ref.y, cacheX, cacheY)
-    return string.format(" >  [EBS]: WEAPONS CACHE SIGNAL: BEARING: %.1fDEG DISTANCE: %.1fM", bearing, dist)
+    return " >  " .. (format or string.format)(drops.SIGNAL_TEXT, bearing, dist)
 end
 
-function drops.supplyText(name, location)
-    return string.format(' >  [EBS]: SUPPLY DROP: #33CCFF"%s"#FFFF00 INCOMING AT: #FFAA00"%s"', name, location)
+function drops.supplyText(name, location, format)
+    return " >  " .. (format or string.format)(drops.SUPPLY_TEXT, name, location)
 end
 
 -- Players standing on the landing spot get pushed LAND_PUSH_RADIUS away (upstream SupplyCrateLand).

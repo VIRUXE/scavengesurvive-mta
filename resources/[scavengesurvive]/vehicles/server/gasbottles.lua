@@ -7,6 +7,7 @@
 -- gas (none, one or both). Clients hide the tank of an empty mount from the element data "vehicles.gasBottles"
 -- (airstream_trailer/client/gasbottles.lua); a stove or heater reads the gas with exports.vehicles:getGasBottles.
 -- ctx = { db, info, toast, activeActions, cancelHoldAction, vlogic, toLocal } built by server/main.lua.
+local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")()
 return function(ctx)
     local db, info, toast, activeActions = ctx.db, ctx.info, ctx.toast, ctx.activeActions
     local vlogic, cancelHoldAction, toLocal = ctx.vlogic, ctx.cancelHoldAction, ctx.toLocal
@@ -180,7 +181,8 @@ return function(ctx)
         end
         cancelHoldAction(player)
         setPedAnimation(player, "COP_AMBIENT", "COPBROWSE_LOOP", -1, true, false, false, false)
-        local label = taking and "Taking the bottle off" or "Mounting gas bottle"
+        local label = taking and lang.textFor(player, "Taking the bottle off")
+            or lang.textFor(player, "Mounting gas bottle")
         triggerClientEvent(player, "vehicleHoldStarted", player, label, HOLD_MS)
         local timer = setTimer(function(p, veh, which, heldId)
             activeActions[p] = nil
