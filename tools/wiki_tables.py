@@ -722,7 +722,7 @@ TABLES = {
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--wiki", required=True)
+    ap.add_argument("--wiki", default=str(ROOT / "wiki"), help="the wiki checkout to write (default: the wiki/ folder of this repo, mirrored to GitHub by the pages workflow)")
     ap.add_argument("--images", default="images/items")
     ap.add_argument("--clean", action="store_true", help="delete generated item pages whose item no longer exists")
     a = ap.parse_args()

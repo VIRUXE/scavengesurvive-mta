@@ -1,0 +1,1 @@
+Scavenge & Survive Reborn player wiki. Built on the original Scavenge & Survive wiki by Southclaws and its contributors; every page describes this server as it runs today. [Source on GitHub](https://github.com/VIRUXE/scavengesurvive-mta)
