@@ -34,3 +34,5 @@ addEvent("chatVoiceBlocked", true)
 addEvent("combatWindowChanged", true)
 addEvent("skillGained", true)
 addEvent("trailerHitchHintChanged", true) -- sent by vehicles
+addEvent("engineCranked", true) -- sent by vehicles: the driver turned the key, with the reason it did not start
+addEvent("engineStalled", true) -- sent by vehicles: the engine died under the driver

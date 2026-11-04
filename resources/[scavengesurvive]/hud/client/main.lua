@@ -1,6 +1,7 @@
 -- The HUD as the SA-MP footage shows it (docs/ui-reference-samp.md): the stock GTA components upstream kept,
--- the hunger bar, the ammo text under the weapon icon, the key-actions column, the watch, the vehicle panel and
--- the low-health brightness overlay. The canvas and text primitives come from the ui resource's files.
+-- the hunger bar, the ammo text under the weapon icon, the key-actions column, the watch, the vehicle panel, the
+-- driver's dashboard and the low-health brightness overlay. The canvas and text primitives come from the ui
+-- resource's files.
 local function loadFile(path, chunkName)
     local f = fileOpen(path, true)
     local src = fileRead(f, fileGetSize(f))
@@ -13,6 +14,7 @@ local watch = loadFile("shared/logic/watch.lua", "=hud/watch.lua")
 local vehiclepanel = loadFile("shared/logic/vehiclepanel.lua", "=hud/vehiclepanel.lua")
 local bars = loadFile("shared/logic/bars.lua", "=hud/bars.lua")
 local voiceLogic = loadFile("shared/logic/voice.lua", "=hud/voice.lua")
+local dashboardLogic = loadFile("shared/logic/dashboard.lua", "=hud/dashboardlogic.lua")
 local sw, sh = guiGetScreenSize()
 local ctx = { canvas = canvas, c = canvas.new(sw, sh) }
 ctx.draw = loadFile(":ui/client/draw.lua", "=ui/draw.lua")(ctx)
@@ -76,6 +78,8 @@ local voiceClient = loadFile("client/voice.lua", "=hud/voice.lua")({
     end,
     voiceLogic = voiceLogic,
 })
+local dashboard =
+    loadFile("client/dashboard.lua", "=hud/dashboard.lua")({ canvas = canvas, c = c, logic = dashboardLogic })
 local SKILL_NOTICE_MS = 5000
 local GREEN = tocolor(0, 255, 0, 255) -- upstream skl_PlayerNotification colour 16711935 (0x00FF00FF)
 local typeCache, vehicleTypeCache = {}, {}
@@ -577,6 +581,10 @@ addEventHandler("onClientRender", root, function()
     drawSkillNotice()
     if driver then
         drawVehiclePanel(vehicle)
+        local vt = vehicleType(getElementData(vehicle, "vehicles.type"))
+        if vt and not vt.noEngine and (vt.maxFuel or 0) > 0 then
+            dashboard.draw(vehicle, vt)
+        end
     end
     voiceClient.render()
 end)
@@ -585,6 +593,13 @@ end)
 function holdingReloadable()
     local held = state.held
     return held and held.category == "weapon" and held.calibre ~= nil and not held.liquid and true or false
+end
+
+-- export: dev preview of the driver's dashboard (client/dashboard.lua), e.g. over rcon
+-- `clua <player> exports.hud:dashboardPreview({ battery = 18 })` (a low battery's slow flash) or
+-- `exports.hud:dashboardPreview(nil, "crank", "DAMAGED")` (the starter grinding); false clears the overrides
+function dashboardPreview(overrides, kind, code)
+    return dashboard.preview(overrides, kind, code)
 end
 
 -- export: hide everything this resource draws, stock components included; false brings the usual set back

@@ -29,6 +29,8 @@ addEvent("overheatChanged", true)
 addEvent("overheatEnded", true)
 addEvent("trailerHitchOrdered", true)
 addEvent("trailerHitchHintChanged", true)
+addEvent("engineCranked", true) -- hud's dashboard: the driver turned the key, false or why it did not start
+addEvent("engineStalled", true) -- hud's dashboard: the engine died under the driver
 addEvent("vehicleKeypadOpened", true)
 addEvent("keypadClosed", true)
 addEvent("weldStarted", true)
