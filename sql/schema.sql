@@ -985,6 +985,11 @@ BEGIN
       ELSE
         UPDATE items SET container_id = p_dst_container_id, slot = v_dst_slot WHERE id = p_item_id;
         UPDATE items SET slot = slot - 1 WHERE container_id = v_src_cont AND slot > v_src_slot ORDER BY slot ASC;
+        -- as in container_put: a loot crate kept things in no longer despawns with them
+        IF v_dst_owner_item IS NOT NULL THEN
+          UPDATE items SET despawn_at = NULL, loot_spawn_id = NULL
+            WHERE id = v_dst_owner_item AND (despawn_at IS NOT NULL OR loot_spawn_id IS NOT NULL);
+        END IF;
         COMMIT;
         SELECT 1 AS ok, 'OK' AS code,
           JSON_OBJECT(
@@ -1060,6 +1065,7 @@ BEGIN
   DECLARE v_owner_vehicle INT DEFAULT NULL;
   DECLARE v_owner_holder INT DEFAULT NULL;
   DECLARE v_owner_container INT DEFAULT NULL;
+  DECLARE v_owner_x FLOAT DEFAULT NULL;
   DECLARE v_kind VARCHAR(16) DEFAULT NULL;
   DECLARE v_size INT DEFAULT NULL;
   DECLARE v_used INT DEFAULT 0;
@@ -1075,7 +1081,8 @@ BEGIN
   SELECT COUNT(*) INTO v_held FROM items WHERE id = p_item_id AND holder_char_id = p_char_id AND holder_kind = 'held' FOR UPDATE;
   SELECT t.size INTO v_item_size FROM items i JOIN item_types t ON t.uname = i.type_uname WHERE i.id = p_item_id;
   IF v_owner_item IS NOT NULL THEN
-    SELECT holder_char_id, container_id INTO v_owner_holder, v_owner_container FROM items WHERE id = v_owner_item;
+    SELECT holder_char_id, container_id, x INTO v_owner_holder, v_owner_container, v_owner_x
+      FROM items WHERE id = v_owner_item FOR UPDATE;
   END IF;
   IF v_size IS NULL OR v_held = 0 THEN
     ROLLBACK;
@@ -1100,6 +1107,12 @@ BEGIN
       SELECT 0 AS ok, 'CONTAINER_FULL' AS code, JSON_OBJECT('used', CAST(v_used AS SIGNED), 'size', CAST(v_size AS SIGNED)) AS payload;
     ELSE
       UPDATE items SET holder_char_id = NULL, holder_kind = NULL, container_id = p_container_id, slot = v_slot WHERE id = p_item_id;
+      -- a loot crate or bag somebody keeps things in is theirs now: ev_despawn_items would otherwise take it, and
+      -- everything inside, when its loot timer runs out (item_pickup clears the same two columns)
+      IF v_owner_item IS NOT NULL THEN
+        UPDATE items SET despawn_at = NULL, loot_spawn_id = NULL
+          WHERE id = v_owner_item AND (despawn_at IS NOT NULL OR loot_spawn_id IS NOT NULL);
+      END IF;
       COMMIT;
       SELECT 1 AS ok, 'OK' AS code, JSON_OBJECT('slot', CAST(v_slot AS SIGNED), 'container_id', CAST(p_container_id AS SIGNED)) AS payload;
     END IF;
@@ -1225,6 +1238,220 @@ BEGIN
   END IF;
 END//
 
+CREATE OR REPLACE PROCEDURE `craft_combine`(
+  IN p_char_id INT, IN p_held_id INT, IN p_other_id INT, IN p_open_container_id INT,
+  IN p_consume_held TINYINT, IN p_consume_other TINYINT,
+  IN p_result_uname VARCHAR(32), IN p_result_data LONGTEXT)
+BEGIN
+  -- crafting/server/main.lua combineRequested: the item in hand with one in the inventory, worn bag or open side
+  -- container; the used-up ones go and the result appears in the hand (the held one consumed) or in the other's
+  -- container, all in one transaction: no half craft when an input moved meanwhile
+  DECLARE v_held INT DEFAULT 0;
+  DECLARE v_cont INT DEFAULT NULL;
+  DECLARE v_slot INT DEFAULT NULL;
+  DECLARE v_reach INT DEFAULT 0;
+  DECLARE v_cat VARCHAR(16) DEFAULT NULL;
+  DECLARE v_size INT DEFAULT 1;
+  DECLARE v_bag_size INT DEFAULT NULL;
+  DECLARE v_hp SMALLINT DEFAULT 5;
+  DECLARE v_cont_size INT DEFAULT NULL;
+  DECLARE v_used INT DEFAULT 0;
+  DECLARE v_new_slot INT DEFAULT 0;
+  DECLARE v_item INT DEFAULT NULL;
+  DECLARE v_new_cont INT DEFAULT NULL;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
+  SELECT uname, category, size, container_size, max_hitpoints INTO p_result_uname, v_cat, v_size, v_bag_size, v_hp
+    FROM item_types WHERE uname = p_result_uname;
+  IF v_cat IS NULL THEN
+    SELECT 0 AS ok, 'UNKNOWN_TYPE' AS code, NULL AS payload;
+  ELSE
+    SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+    START TRANSACTION;
+    SELECT COUNT(*) INTO v_held FROM items
+      WHERE id = p_held_id AND holder_char_id = p_char_id AND holder_kind = 'held' FOR UPDATE;
+    SELECT i.container_id, i.slot INTO v_cont, v_slot FROM items i WHERE i.id = p_other_id FOR UPDATE;
+    IF v_cont IS NOT NULL THEN
+      SELECT COUNT(*) INTO v_reach FROM containers c LEFT JOIN items owner ON owner.id = c.owner_item_id
+        WHERE c.id = v_cont AND (c.owner_char_id <=> p_char_id OR owner.holder_char_id <=> p_char_id
+          OR c.id <=> p_open_container_id) FOR UPDATE;
+      SELECT size INTO v_cont_size FROM containers WHERE id = v_cont;
+    END IF;
+    IF v_held = 0 THEN
+      ROLLBACK;
+      SELECT 0 AS ok, 'NOT_HELD' AS code, NULL AS payload;
+    ELSEIF v_cont IS NULL OR v_reach = 0 THEN
+      ROLLBACK;
+      SELECT 0 AS ok, 'NOT_OWNER' AS code, NULL AS payload;
+    ELSE
+      IF p_consume_other = 1 THEN
+        DELETE FROM items WHERE id = p_other_id;
+        UPDATE items SET slot = slot - 1 WHERE container_id = v_cont AND slot > v_slot ORDER BY slot ASC;
+      END IF;
+      IF p_consume_held = 1 THEN
+        DELETE FROM items WHERE id = p_held_id;
+        INSERT INTO items (type_uname, hitpoints, data, holder_char_id, holder_kind)
+          VALUES (p_result_uname, v_hp, p_result_data, p_char_id, 'held');
+        SET v_item = LAST_INSERT_ID();
+      ELSE
+        SELECT IFNULL(SUM(t.size), 0), IFNULL(MAX(i.slot) + 1, 0) INTO v_used, v_new_slot
+          FROM items i JOIN item_types t ON t.uname = i.type_uname WHERE i.container_id = v_cont FOR UPDATE;
+        IF v_used + v_size > v_cont_size THEN
+          ROLLBACK;
+          SELECT 0 AS ok, 'CONTAINER_FULL' AS code, NULL AS payload;
+        ELSE
+          INSERT INTO items (type_uname, hitpoints, data, container_id, slot)
+            VALUES (p_result_uname, v_hp, p_result_data, v_cont, v_new_slot);
+          SET v_item = LAST_INSERT_ID();
+        END IF;
+      END IF;
+      IF v_item IS NOT NULL THEN
+        IF v_cat IN ('bag', 'safebox') THEN
+          INSERT INTO containers (kind, size, owner_item_id) VALUES (v_cat, IFNULL(v_bag_size, 8), v_item);
+          SET v_new_cont = LAST_INSERT_ID();
+        END IF;
+        COMMIT;
+        SELECT 1 AS ok, 'OK' AS code, JSON_OBJECT('item_id', CAST(v_item AS SIGNED),
+          'held', CAST(p_consume_held = 1 AS SIGNED), 'container_id', CAST(IF(p_consume_held = 1, NULL, v_cont) AS SIGNED),
+          'own_container_id', CAST(v_new_cont AS SIGNED)) AS payload;
+      END IF;
+    END IF;
+  END IF;
+END//
+
+CREATE OR REPLACE PROCEDURE `craft_deconstruct`(IN p_item_id INT, IN p_parts JSON)
+BEGIN
+  -- crafting/server/main.lua tryDeconstruct: a built item lying in the world comes apart into p_parts, a JSON array
+  -- of {u, x, y, z, rz, int, dim}, in one transaction. One carried off meanwhile gives nothing (NOT_IN_WORLD); a
+  -- workbench, locker or machine with something still inside stays up (CONTAINER_NOT_EMPTY), what it holds would
+  -- otherwise go with it.
+  DECLARE v_rows INT DEFAULT 0;
+  DECLARE v_inside INT DEFAULT 0;
+  DECLARE v_first INT DEFAULT NULL;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
+  SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+  START TRANSACTION;
+  SELECT COUNT(*) INTO v_rows FROM items
+    WHERE id = p_item_id AND x IS NOT NULL AND container_id IS NULL AND holder_char_id IS NULL FOR UPDATE;
+  SELECT COUNT(*) INTO v_inside FROM items c JOIN containers k ON k.id = c.container_id WHERE k.owner_item_id = p_item_id;
+  IF v_rows = 0 THEN
+    ROLLBACK;
+    SELECT 0 AS ok, 'NOT_IN_WORLD' AS code, NULL AS payload;
+  ELSEIF v_inside > 0 THEN
+    ROLLBACK;
+    SELECT 0 AS ok, 'CONTAINER_NOT_EMPTY' AS code, JSON_OBJECT('inside', CAST(v_inside AS SIGNED)) AS payload;
+  ELSE
+    DELETE FROM items WHERE id = p_item_id;
+    INSERT INTO items (type_uname, hitpoints, x, y, z, rz, interior, dimension)
+      SELECT t.uname, t.max_hitpoints, j.x, j.y, j.z, j.rz, j.i, j.d
+      FROM JSON_TABLE(IFNULL(p_parts, '[]'), '$[*]' COLUMNS (
+        u VARCHAR(32) COLLATE utf8mb4_uca1400_ai_ci PATH '$.u', x FLOAT PATH '$.x', y FLOAT PATH '$.y', z FLOAT PATH '$.z',
+        rz FLOAT PATH '$.rz', i TINYINT PATH '$.int', d INT PATH '$.dim')) j
+      JOIN item_types t ON t.uname = j.u;
+    SET v_rows = ROW_COUNT();
+    SET v_first = IF(v_rows > 0, LAST_INSERT_ID(), NULL);
+    COMMIT;
+    SELECT 1 AS ok, 'OK' AS code, JSON_OBJECT('first', CAST(v_first AS SIGNED), 'count', CAST(v_rows AS SIGNED)) AS payload;
+  END IF;
+END//
+
+CREATE OR REPLACE PROCEDURE `craft_ground`(
+  IN p_ids JSON, IN p_result_uname VARCHAR(32), IN p_result_data LONGTEXT,
+  IN p_x FLOAT, IN p_y FLOAT, IN p_z FLOAT, IN p_rz FLOAT, IN p_interior TINYINT, IN p_dimension INT)
+BEGIN
+  -- crafting/server/main.lua tryGroundCraft: the parts (p_ids, a JSON array of item ids) still lying in the world go
+  -- and the result stands where they were, in one transaction; a part picked up meanwhile (or a box with something
+  -- inside) builds nothing, PARTS_MOVED, instead of coming out twice
+  DECLARE v_n INT DEFAULT 0;
+  DECLARE v_rows INT DEFAULT 0;
+  DECLARE v_cat VARCHAR(16) DEFAULT NULL;
+  DECLARE v_bag_size INT DEFAULT NULL;
+  DECLARE v_hp SMALLINT DEFAULT 5;
+  DECLARE v_item INT DEFAULT NULL;
+  DECLARE v_cont INT DEFAULT NULL;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
+  SELECT uname, category, container_size, max_hitpoints INTO p_result_uname, v_cat, v_bag_size, v_hp
+    FROM item_types WHERE uname = p_result_uname;
+  SET v_n = IFNULL(JSON_LENGTH(p_ids), 0);
+  IF v_cat IS NULL THEN
+    SELECT 0 AS ok, 'UNKNOWN_TYPE' AS code, NULL AS payload;
+  ELSE
+    SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+    START TRANSACTION;
+    -- a join on the id list (IN (subquery) scans the whole items table); c.id IS NULL = nothing inside a box
+    DELETE i FROM items i JOIN JSON_TABLE(p_ids, '$[*]' COLUMNS (id INT PATH '$')) j ON j.id = i.id
+      LEFT JOIN containers k ON k.owner_item_id = i.id LEFT JOIN items c ON c.container_id = k.id
+      WHERE i.x IS NOT NULL AND i.container_id IS NULL AND i.holder_char_id IS NULL AND c.id IS NULL;
+    SET v_rows = ROW_COUNT();
+    IF v_rows <> v_n THEN
+      ROLLBACK;
+      SELECT 0 AS ok, 'PARTS_MOVED' AS code, JSON_OBJECT('found', CAST(v_rows AS SIGNED), 'needed', CAST(v_n AS SIGNED)) AS payload;
+    ELSE
+      INSERT INTO items (type_uname, hitpoints, data, x, y, z, rz, interior, dimension)
+        VALUES (p_result_uname, v_hp, p_result_data, p_x, p_y, p_z, p_rz, p_interior, p_dimension);
+      SET v_item = LAST_INSERT_ID();
+      IF v_cat IN ('bag', 'safebox') THEN
+        INSERT INTO containers (kind, size, owner_item_id) VALUES (v_cat, IFNULL(v_bag_size, 8), v_item);
+        SET v_cont = LAST_INSERT_ID();
+      END IF;
+      COMMIT;
+      SELECT 1 AS ok, 'OK' AS code, JSON_OBJECT('item_id', CAST(v_item AS SIGNED), 'container_id', CAST(v_cont AS SIGNED),
+        'consumed', CAST(v_rows AS SIGNED)) AS payload;
+    END IF;
+  END IF;
+END//
+
+CREATE OR REPLACE PROCEDURE `craft_workbench`(
+  IN p_container_id INT, IN p_ids JSON, IN p_result_uname VARCHAR(32),
+  IN p_x FLOAT, IN p_y FLOAT, IN p_z FLOAT, IN p_rz FLOAT, IN p_interior TINYINT, IN p_dimension INT)
+BEGIN
+  -- crafting/server/main.lua tryWorkbenchCraft: the set on the bench (p_ids, a JSON array of item ids, every one
+  -- still in the bench's container) goes and the result lies on the bench, in one transaction; a part taken out
+  -- meanwhile makes it SET_CHANGED and nothing is touched. What got in meanwhile stays, closed up in slot order.
+  DECLARE v_n INT DEFAULT 0;
+  DECLARE v_rows INT DEFAULT 0;
+  DECLARE v_cat VARCHAR(16) DEFAULT NULL;
+  DECLARE v_bag_size INT DEFAULT NULL;
+  DECLARE v_hp SMALLINT DEFAULT 5;
+  DECLARE v_item INT DEFAULT NULL;
+  DECLARE v_cont INT DEFAULT NULL;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
+  SELECT uname, category, container_size, max_hitpoints INTO p_result_uname, v_cat, v_bag_size, v_hp
+    FROM item_types WHERE uname = p_result_uname;
+  SET v_n = IFNULL(JSON_LENGTH(p_ids), 0);
+  IF v_cat IS NULL THEN
+    SELECT 0 AS ok, 'UNKNOWN_TYPE' AS code, NULL AS payload;
+  ELSE
+    SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+    START TRANSACTION;
+    IF NOT EXISTS (SELECT 1 FROM containers WHERE id = p_container_id FOR UPDATE) THEN
+      ROLLBACK;
+      SELECT 0 AS ok, 'CONTAINER_NOT_FOUND' AS code, NULL AS payload;
+    ELSE
+      -- a join on the id list, not IN (subquery): the latter scans the whole items table
+      DELETE i FROM items i JOIN JSON_TABLE(p_ids, '$[*]' COLUMNS (id INT PATH '$')) j ON j.id = i.id
+        WHERE i.container_id = p_container_id;
+      SET v_rows = ROW_COUNT();
+      IF v_rows <> v_n OR v_n = 0 THEN
+        ROLLBACK;
+        SELECT 0 AS ok, 'SET_CHANGED' AS code, JSON_OBJECT('found', CAST(v_rows AS SIGNED), 'needed', CAST(v_n AS SIGNED)) AS payload;
+      ELSE
+        SET @bench_slot := -1;
+        UPDATE items SET slot = (@bench_slot := @bench_slot + 1) WHERE container_id = p_container_id ORDER BY slot ASC;
+        INSERT INTO items (type_uname, hitpoints, x, y, z, rz, interior, dimension)
+          VALUES (p_result_uname, v_hp, p_x, p_y, p_z, p_rz, p_interior, p_dimension);
+        SET v_item = LAST_INSERT_ID();
+        IF v_cat IN ('bag', 'safebox') THEN
+          INSERT INTO containers (kind, size, owner_item_id) VALUES (v_cat, IFNULL(v_bag_size, 8), v_item);
+          SET v_cont = LAST_INSERT_ID();
+        END IF;
+        COMMIT;
+        SELECT 1 AS ok, 'OK' AS code, JSON_OBJECT('item_id', CAST(v_item AS SIGNED), 'container_id', CAST(v_cont AS SIGNED),
+          'consumed', CAST(v_rows AS SIGNED)) AS payload;
+      END IF;
+    END IF;
+  END IF;
+END//
+
 CREATE OR REPLACE PROCEDURE `explosion_damage`(IN p_rows JSON)
 BEGIN
   DECLARE v_rows JSON;
@@ -1344,39 +1571,41 @@ END//
 
 CREATE OR REPLACE PROCEDURE `furniture_display_take`(IN p_char_id INT, IN p_case_id INT)
 BEGIN
-  DECLARE v_shown VARCHAR(32) DEFAULT NULL;
+  DECLARE v_case INT DEFAULT NULL;
   DECLARE v_cont INT DEFAULT NULL;
   DECLARE v_item INT DEFAULT NULL;
   DECLARE v_slot INT DEFAULT NULL;
   DECLARE v_held INT DEFAULT 0;
+  DECLARE v_shown VARCHAR(32) DEFAULT NULL;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
   SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
   START TRANSACTION;
-  SELECT JSON_VALUE(data, '$.display') INTO v_shown FROM items
+  SELECT id INTO v_case FROM items
     WHERE id = p_case_id AND x IS NOT NULL AND type_uname IN ('GunCase', 'Cupboard') FOR UPDATE;
   SELECT COUNT(*) INTO v_held FROM items WHERE holder_char_id = p_char_id AND holder_kind = 'held' FOR UPDATE;
   SELECT id INTO v_cont FROM containers WHERE owner_item_id = p_case_id FOR UPDATE;
   IF v_cont IS NOT NULL THEN
+    -- what the case holds decides, not its data.display: an item inside with the label gone is still handed out
     SELECT id, slot INTO v_item, v_slot FROM items WHERE container_id = v_cont ORDER BY slot ASC LIMIT 1 FOR UPDATE;
   END IF;
-  IF v_shown IS NULL THEN
+  IF v_case IS NULL THEN
     ROLLBACK;
+    SELECT 0 AS ok, 'NOT_FOUND' AS code, NULL AS payload;
+  ELSEIF v_item IS NULL THEN
+    UPDATE items SET data = JSON_REMOVE(data, '$.display') WHERE id = p_case_id AND data IS NOT NULL;
+    COMMIT;
     SELECT 0 AS ok, 'EMPTY' AS code, NULL AS payload;
   ELSEIF v_held > 0 THEN
     ROLLBACK;
     SELECT 0 AS ok, 'HANDS_FULL' AS code, NULL AS payload;
-  ELSEIF v_item IS NULL THEN
-    UPDATE items SET data = JSON_REMOVE(data, '$.display') WHERE id = p_case_id;
-    COMMIT;
-    SELECT 0 AS ok, 'EMPTY' AS code, NULL AS payload;
   ELSE
     UPDATE items SET container_id = NULL, slot = NULL, holder_char_id = p_char_id, holder_kind = 'held' WHERE id = v_item;
     UPDATE items SET slot = slot - 1 WHERE container_id = v_cont AND slot > v_slot ORDER BY slot ASC;
     SET v_shown = (SELECT type_uname FROM items WHERE container_id = v_cont ORDER BY slot ASC LIMIT 1);
     IF v_shown IS NULL THEN
-      UPDATE items SET data = JSON_REMOVE(data, '$.display') WHERE id = p_case_id;
+      UPDATE items SET data = JSON_REMOVE(data, '$.display') WHERE id = p_case_id AND data IS NOT NULL;
     ELSE
-      UPDATE items SET data = JSON_SET(data, '$.display', v_shown) WHERE id = p_case_id;
+      UPDATE items SET data = JSON_SET(IFNULL(data, '{}'), '$.display', v_shown) WHERE id = p_case_id;
     END IF;
     COMMIT;
     SELECT 1 AS ok, 'OK' AS code, JSON_OBJECT('item_id', CAST(v_item AS SIGNED)) AS payload;
@@ -1657,22 +1886,28 @@ BEGIN
   SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
   START TRANSACTION;
   SELECT container_id, slot INTO v_cont, v_slot FROM items WHERE id = p_item_id FOR UPDATE;
-  -- p_char_id IS NOT NULL: with <=> a NULL caller would otherwise match unowned (world) items
-  DELETE i FROM items i
-    LEFT JOIN containers c ON c.id = i.container_id
-    LEFT JOIN items owner ON owner.id = c.owner_item_id
-    WHERE i.id = p_item_id AND p_char_id IS NOT NULL
-      AND (i.holder_char_id <=> p_char_id OR c.owner_char_id <=> p_char_id OR owner.holder_char_id <=> p_char_id);
-  SET v_rows = ROW_COUNT();
-  IF v_rows = 0 THEN
+  -- a bag or box with something inside is never used up: fk_items_container would take what it holds with it
+  IF EXISTS (SELECT 1 FROM items c JOIN containers k ON k.id = c.container_id WHERE k.owner_item_id = p_item_id) THEN
     ROLLBACK;
-    SELECT 0 AS ok, 'NOT_OWNED' AS code, NULL AS payload;
+    SELECT 0 AS ok, 'CONTAINER_NOT_EMPTY' AS code, NULL AS payload;
   ELSE
-    IF v_cont IS NOT NULL THEN
-      UPDATE items SET slot = slot - 1 WHERE container_id = v_cont AND slot > v_slot ORDER BY slot ASC;
+    -- p_char_id IS NOT NULL: with <=> a NULL caller would otherwise match unowned (world) items
+    DELETE i FROM items i
+      LEFT JOIN containers c ON c.id = i.container_id
+      LEFT JOIN items owner ON owner.id = c.owner_item_id
+      WHERE i.id = p_item_id AND p_char_id IS NOT NULL
+        AND (i.holder_char_id <=> p_char_id OR c.owner_char_id <=> p_char_id OR owner.holder_char_id <=> p_char_id);
+    SET v_rows = ROW_COUNT();
+    IF v_rows = 0 THEN
+      ROLLBACK;
+      SELECT 0 AS ok, 'NOT_OWNED' AS code, NULL AS payload;
+    ELSE
+      IF v_cont IS NOT NULL THEN
+        UPDATE items SET slot = slot - 1 WHERE container_id = v_cont AND slot > v_slot ORDER BY slot ASC;
+      END IF;
+      COMMIT;
+      SELECT 1 AS ok, 'OK' AS code, JSON_OBJECT('item_id', CAST(p_item_id AS SIGNED)) AS payload;
     END IF;
-    COMMIT;
-    SELECT 1 AS ok, 'OK' AS code, JSON_OBJECT('item_id', CAST(p_item_id AS SIGNED)) AS payload;
   END IF;
 END//
 
@@ -1834,7 +2069,10 @@ BEGIN
   DECLARE v_item_id INT DEFAULT NULL;
   DECLARE v_held INT DEFAULT 0;
   DECLARE v_inv INT DEFAULT NULL;
-  DECLARE v_free_slot INT DEFAULT NULL;
+  DECLARE v_inv_size INT DEFAULT NULL;
+  DECLARE v_item_size INT DEFAULT 1;
+  DECLARE v_used INT DEFAULT 0;
+  DECLARE v_slot INT DEFAULT 0;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
 
   IF p_holder_kind NOT IN ('hat', 'mask', 'armour', 'holster', 'bag', 'parachute') THEN
@@ -1852,7 +2090,7 @@ BEGIN
     SELECT 0 AS ok, 'NOT_WORN' AS code, NULL AS payload;
   ELSE
     SELECT COUNT(*) INTO v_held
-      FROM items WHERE holder_char_id = p_char_id AND holder_kind = 'held';
+      FROM items WHERE holder_char_id = p_char_id AND holder_kind = 'held' FOR UPDATE;
 
     IF v_held = 0 THEN
       UPDATE items
@@ -1866,23 +2104,24 @@ BEGIN
           'slot', p_holder_kind
         ) AS payload;
     ELSE
+      -- the hand is taken: into the inventory, counted by size like container_put (the old fixed six slots let a
+      -- big item past a full inventory, or refused one with gaps in its slot numbers)
       SELECT inventory_container_id INTO v_inv FROM characters WHERE id = p_char_id;
+      SELECT size INTO v_inv_size FROM containers WHERE id = v_inv FOR UPDATE;
+      SELECT t.size INTO v_item_size FROM items i JOIN item_types t ON t.uname = i.type_uname WHERE i.id = v_item_id;
+      SELECT IFNULL(SUM(t.size), 0), IFNULL(MAX(i.slot) + 1, 0) INTO v_used, v_slot
+        FROM items i JOIN item_types t ON t.uname = i.type_uname WHERE i.container_id = v_inv FOR UPDATE;
 
-      SELECT s.n INTO v_free_slot
-      FROM (SELECT 0 AS n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5) s
-      WHERE s.n NOT IN (SELECT slot FROM items WHERE container_id = v_inv AND slot IS NOT NULL)
-      ORDER BY s.n LIMIT 1;
-
-      IF v_free_slot IS NOT NULL THEN
+      IF v_inv_size IS NOT NULL AND v_used + IFNULL(v_item_size, 1) <= v_inv_size THEN
         UPDATE items
-          SET holder_char_id = NULL, holder_kind = NULL, container_id = v_inv, slot = v_free_slot
+          SET holder_char_id = NULL, holder_kind = NULL, container_id = v_inv, slot = v_slot
           WHERE id = v_item_id;
         COMMIT;
         SELECT 1 AS ok, 'OK' AS code,
           JSON_OBJECT(
             'item_id', CAST(v_item_id AS SIGNED),
             'destination', 'inventory',
-            'slot', CAST(v_free_slot AS SIGNED),
+            'slot', CAST(v_slot AS SIGNED),
             'wear_slot', p_holder_kind
           ) AS payload;
       ELSE
@@ -1909,6 +2148,7 @@ BEGIN
   DECLARE v_owner_item INT DEFAULT NULL;
   DECLARE v_owner_holder INT DEFAULT NULL;
   DECLARE v_cont_kind VARCHAR(16) DEFAULT NULL;
+  DECLARE v_held INT DEFAULT 0;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
 
   IF p_holder_kind NOT IN ('hat', 'mask', 'armour', 'holster', 'bag', 'parachute') THEN
@@ -1932,6 +2172,7 @@ BEGIN
     END IF;
   END IF;
 
+  -- the item has to be on the character or in a container they reach: one lying in the world (or none) is refused
   IF NOT (
     p_char_id IS NOT NULL AND (
       v_item_char <=> p_char_id
@@ -1942,39 +2183,50 @@ BEGIN
   ) THEN
     ROLLBACK;
     SELECT 0 AS ok, 'NOT_OWNER' AS code, NULL AS payload;
+  ELSEIF v_item_char <=> p_char_id AND v_item_kind = p_holder_kind THEN
+    -- already in that slot (a second click, a stale list): swapping it with itself would move it into the hand
+    ROLLBACK;
+    SELECT 0 AS ok, 'ALREADY_WORN' AS code, NULL AS payload;
   ELSE
     SELECT id INTO v_old_id
       FROM items WHERE holder_char_id = p_char_id AND holder_kind = p_holder_kind FOR UPDATE;
-
-    IF v_old_id IS NOT NULL THEN
-      
-      UPDATE items SET holder_kind = NULL WHERE id = v_old_id;
-    END IF;
-
-    UPDATE items
-      SET holder_char_id = p_char_id, holder_kind = p_holder_kind, container_id = NULL, slot = NULL
-      WHERE id = p_item_id;
-
-    IF v_old_id IS NOT NULL THEN
-      IF v_item_kind = 'held' THEN
-        UPDATE items SET holder_char_id = p_char_id, holder_kind = 'held', container_id = NULL, slot = NULL
-          WHERE id = v_old_id;
-      ELSEIF v_item_container IS NOT NULL THEN
-        UPDATE items SET holder_char_id = NULL, holder_kind = NULL, container_id = v_item_container, slot = v_item_slot
-          WHERE id = v_old_id;
-      ELSE
-        UPDATE items SET holder_char_id = p_char_id, holder_kind = 'held', container_id = NULL, slot = NULL
-          WHERE id = v_old_id;
+    -- the swapped-out item goes to the hand the new one leaves, else into the container slot it leaves, else into
+    -- the hand, which then has to be empty (uq_items_holder_kind would otherwise abort with 1062)
+    SELECT COUNT(*) INTO v_held
+      FROM items WHERE holder_char_id = p_char_id AND holder_kind = 'held' AND id <> p_item_id;
+    IF v_old_id IS NOT NULL AND v_item_kind IS NOT NULL AND v_item_kind <> 'held' AND v_held > 0 THEN
+      ROLLBACK;
+      SELECT 0 AS ok, 'HANDS_FULL' AS code, NULL AS payload;
+    ELSE
+      IF v_old_id IS NOT NULL THEN
+        UPDATE items SET holder_kind = NULL WHERE id = v_old_id;
       END IF;
-    END IF;
 
-    COMMIT;
-    SELECT 1 AS ok, 'OK' AS code,
-      JSON_OBJECT(
-        'item_id', CAST(p_item_id AS SIGNED),
-        'swapped_id', CAST(v_old_id AS SIGNED),
-        'slot', p_holder_kind
-      ) AS payload;
+      UPDATE items
+        SET holder_char_id = p_char_id, holder_kind = p_holder_kind, container_id = NULL, slot = NULL
+        WHERE id = p_item_id;
+
+      IF v_old_id IS NOT NULL THEN
+        IF v_item_container IS NOT NULL THEN
+          UPDATE items SET holder_char_id = NULL, holder_kind = NULL, container_id = v_item_container, slot = v_item_slot
+            WHERE id = v_old_id;
+        ELSE
+          UPDATE items SET holder_char_id = p_char_id, holder_kind = 'held', container_id = NULL, slot = NULL
+            WHERE id = v_old_id;
+        END IF;
+      ELSEIF v_item_container IS NOT NULL THEN
+        -- nothing takes the slot it left: close the gap, as container_take does
+        UPDATE items SET slot = slot - 1 WHERE container_id = v_item_container AND slot > v_item_slot ORDER BY slot ASC;
+      END IF;
+
+      COMMIT;
+      SELECT 1 AS ok, 'OK' AS code,
+        JSON_OBJECT(
+          'item_id', CAST(p_item_id AS SIGNED),
+          'swapped_id', CAST(v_old_id AS SIGNED),
+          'slot', p_holder_kind
+        ) AS payload;
+    END IF;
   END IF;
 END//
 
@@ -2036,15 +2288,19 @@ BEGIN
 END//
 
 CREATE OR REPLACE PROCEDURE `machine_finish`(IN p_machine_id INT, IN p_old_data LONGTEXT, IN p_new_data LONGTEXT,
-  IN p_container_id INT, IN p_results JSON)
+  IN p_container_id INT, IN p_results JSON, IN p_ids JSON)
 BEGIN
   -- #145: a machine's cook finished (items/server/machines.lua): the machine's next data (fuel burnt, cooking cleared)
-  -- only if nobody changed it since the read ('' for NULL), then its container emptied and refilled in slot order
-  -- with p_results, a JSON array of {"uname": ..., "data": "<json text>" | ""}
+  -- only if nobody changed it since the read ('' for NULL), then the items the results were computed from (p_ids, a
+  -- JSON array of item ids) taken out of its container, every one of them or none (CHANGED: the caller reads the
+  -- contents again), what else got in meanwhile closed up in slot order, and p_results, a JSON array of
+  -- {"uname": ..., "data": "<json text>" | ""}, put in after them
   DECLARE v_rows INT DEFAULT 0;
+  DECLARE v_expected INT DEFAULT 0;
   DECLARE v_removed INT DEFAULT 0;
   DECLARE v_owner INT DEFAULT NULL;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
+  SET v_expected = IFNULL(JSON_LENGTH(p_ids), 0);
   SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
   START TRANSACTION;
   SELECT owner_item_id INTO v_owner FROM containers WHERE id = p_container_id FOR UPDATE;
@@ -2058,17 +2314,26 @@ BEGIN
     ROLLBACK;
     SELECT 0 AS ok, 'BUSY' AS code, NULL AS payload;
   ELSE
-    DELETE FROM items WHERE container_id = p_container_id;
+    -- a join on the id list, not IN (subquery): the latter scans the whole items table
+    DELETE i FROM items i JOIN JSON_TABLE(p_ids, '$[*]' COLUMNS (id INT PATH '$')) j ON j.id = i.id
+      WHERE i.container_id = p_container_id;
     SET v_removed = ROW_COUNT();
-    INSERT INTO items (type_uname, hitpoints, data, container_id, slot)
-      SELECT t.uname, t.max_hitpoints, NULLIF(j.data, ''), p_container_id, j.ord - 1
-      FROM JSON_TABLE(p_results, '$[*]' COLUMNS (ord FOR ORDINALITY, uname VARCHAR(32) PATH '$.uname',
-        data LONGTEXT PATH '$.data')) j
-      JOIN item_types t ON t.uname = j.uname;
-    SET v_rows = ROW_COUNT();
-    COMMIT;
-    SELECT 1 AS ok, 'OK' AS code,
-      JSON_OBJECT('removed', CAST(v_removed AS SIGNED), 'created', CAST(v_rows AS SIGNED)) AS payload;
+    IF v_removed <> v_expected THEN
+      ROLLBACK;
+      SELECT 0 AS ok, 'CHANGED' AS code, NULL AS payload;
+    ELSE
+      SET @machine_slot := -1;
+      UPDATE items SET slot = (@machine_slot := @machine_slot + 1) WHERE container_id = p_container_id ORDER BY slot ASC;
+      INSERT INTO items (type_uname, hitpoints, data, container_id, slot)
+        SELECT t.uname, t.max_hitpoints, NULLIF(j.data, ''), p_container_id, @machine_slot + j.ord
+        FROM JSON_TABLE(p_results, '$[*]' COLUMNS (ord FOR ORDINALITY,
+          uname VARCHAR(32) COLLATE utf8mb4_uca1400_ai_ci PATH '$.uname', data LONGTEXT PATH '$.data')) j
+        JOIN item_types t ON t.uname = j.uname;
+      SET v_rows = ROW_COUNT();
+      COMMIT;
+      SELECT 1 AS ok, 'OK' AS code,
+        JSON_OBJECT('removed', CAST(v_removed AS SIGNED), 'created', CAST(v_rows AS SIGNED)) AS payload;
+    END IF;
   END IF;
 END//
 

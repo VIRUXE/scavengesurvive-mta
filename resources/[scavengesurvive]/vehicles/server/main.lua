@@ -987,7 +987,7 @@ local function destroyCargo(trailer)
     for id in pairs(c and c.items or {}) do
         gone[id] = true
         lost = lost + 1
-        exports.items:destroyWorldItem(id)
+        exports.items:destroyWorldItem(id, "exploded", true)
     end
     publishCargo(trailer)
     local m = getElementMatrix(trailer)
@@ -997,7 +997,7 @@ local function destroyCargo(trailer)
         for _, r in ipairs(rows or {}) do
             local here = tonumber(r.interior) == int and tonumber(r.dimension) == dim
             if here and not gone[r.id] and not CARGO_SKIP[r.uname] and vlogic.inCargoBox(toLocal(m, r.x, r.y, r.z)) then
-                exports.items:destroyWorldItem(r.id)
+                exports.items:destroyWorldItem(r.id, "exploded", true)
             end
         end
     end)
@@ -1794,6 +1794,12 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
                 if not cid then
                     return
                 end
+                -- the kit (or the cut lock) has to be in the hand still: one dropped during the hold would
+                -- otherwise stay there and a key come out of nothing
+                local cur = exports.items:getHeld(p)
+                if not cur or cur.id ~= kitId then
+                    return
+                end
                 local code = math.random(100000, 999999)
                 local vinf = info[veh]
                 if vinf then
@@ -1806,16 +1812,21 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
                     local line = vehicleLine(veh, { player = p, locked = 1, via = "locksmith", item_id = kitId })
                     log.event("vehicle.lockToggled", line)
                 end
-                exports.items:destroyItem(kitId, p)
-                db.call("item_create_held", { "Key", cid }, function(res, c)
-                    if res and res.ok and isElement(c.p) then
-                        local newKeyId = res.payload.item_id
-                        local keyData = { code = code, model = vt and vt.model or 0 }
-                        db.exec("UPDATE items SET data = ? WHERE id = ?", { toJSON(keyData), newKeyId })
-                        exports.items:setHeld(c.p, { id = newKeyId, uname = "Key", hp = 5, data = keyData })
-                        toast(c.p, "KEY_CRAFTED")
+                -- the key is cut only once the kit is really gone
+                exports.items:destroyItem(kitId, p, function(gone)
+                    if not gone or not isElement(p) then
+                        return
                     end
-                end, { p = p })
+                    db.call("item_create_held", { "Key", cid }, function(res, c)
+                        if res and res.ok and isElement(c.p) then
+                            local newKeyId = res.payload.item_id
+                            local keyData = { code = code, model = vt and vt.model or 0 }
+                            db.exec("UPDATE items SET data = ? WHERE id = ?", { toJSON(keyData), newKeyId })
+                            exports.items:setHeld(c.p, { id = newKeyId, uname = "Key", hp = 5, data = keyData })
+                            toast(c.p, "KEY_CRAFTED")
+                        end
+                    end, { p = p })
+                end, "used")
             end, 3000, 1, player, vehicle, held.id)
             activeActions[player] = { actionType = "locksmith", vehicle = vehicle, timer = timer }
             return

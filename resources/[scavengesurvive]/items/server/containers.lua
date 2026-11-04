@@ -243,11 +243,17 @@ return function(ctx)
                 if not isElement(pl) or charId(pl) ~= cid then
                     return
                 end
+                -- something got into the hand during the animation (a take from a container): the draw is off, as
+                -- item_unwear would put the weapon into the inventory while the hand showed it
+                if state.held[pl] or not state.holster[pl] or state.holster[pl].id ~= hItem.id then
+                    return
+                end
                 db.call("item_unwear", { cid, "holster" }, function(res, c)
                     logProc("item.unworn", c.player, res, {
                         item_id = c.hItem.id,
                         uname = c.hItem.uname,
                         slot = "holster",
+                        destination = res and res.ok and res.payload and res.payload.destination or nil,
                         character_id = cid,
                     })
                     if not isElement(c.player) then
@@ -257,9 +263,15 @@ return function(ctx)
                         return toast(c.player, res and res.code or "DB_ERROR")
                     end
                     hands.setGear(c.player, "holster", nil)
-                    c.hItem.data = hands.decodeData(c.hItem.data)
-                    hands.setHeld(c.player, c.hItem)
-                    toast(c.player, "EQUIPPED")
+                    -- the procedure says where the weapon went: only one that reached the hand is held
+                    if res.payload and res.payload.destination == "held" then
+                        c.hItem.data = hands.decodeData(c.hItem.data)
+                        hands.setHeld(c.player, c.hItem)
+                        toast(c.player, "EQUIPPED")
+                    else
+                        sendInventory(c.player)
+                        toast(c.player, "REMOVED")
+                    end
                 end, { player = pl, hItem = hItem })
             end, anim.time, 1, player, holstered)
             return

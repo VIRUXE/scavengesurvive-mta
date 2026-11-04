@@ -280,9 +280,15 @@ return function(ctx)
     end
 
     local function chargeStunGun(player, _, row)
-        ctx.destroyWorldItem(row.id, "used")
-        ctx.updateHeldData(player, { charged = 1 })
-        toast(player, "STUNGUNCHAR")
+        -- the charge only once the battery is really gone (one picked up meanwhile charges nothing)
+        ctx.destroyWorldItem(row.id, "used", false, function(gone)
+            local cur = isElement(player) and state.held[player]
+            if not gone or not cur or cur.uname ~= "StunGun" then
+                return
+            end
+            ctx.updateHeldData(player, { charged = 1 })
+            toast(player, "STUNGUNCHAR")
+        end)
         return true
     end
 
@@ -292,28 +298,37 @@ return function(ctx)
             toast(player, nextData)
             return true
         end
-        ctx.updateHeldData(player, nextData)
-        ctx.destroyWorldItem(row.id, "used")
-        local params = { small.MOLOTOV_TO, 2, nil, row.x, row.y, row.z, row.rz, row.interior, row.dimension }
-        params[10], params[11], params.n = nil, nil, 11
-        db.call("item_create", params, function(res, c)
-            if res and res.ok then
-                triggerEvent("itemCreated", resourceRoot, res.payload.item_id)
+        -- the petrol leaves the can and the Molotov appears only once the empty bottle is really gone: one picked
+        -- up meanwhile would otherwise come out twice
+        ctx.destroyWorldItem(row.id, "used", false, function(gone)
+            if not gone or not isElement(player) then
+                return
             end
-            logProc("item.created", c.player, res, {
-                item_id = res and res.ok and res.payload.item_id or nil,
-                uname = small.MOLOTOV_TO,
-                source = "molotov",
-                x = math.floor(row.x),
-                y = math.floor(row.y),
-                z = math.floor(row.z),
-            })
-            if isElement(c.player) then
-                ctx.world.syncPlayer(c.player)
+            local cur = state.held[player]
+            if cur and cur.id == held.id then
+                ctx.updateHeldData(player, nextData)
             end
-        end, { player = player })
-        setPedAnimation(player, "BOMBER", "BOM_Plant_In", 450, false, false, true, false)
-        toast(player, "MOLOPOURBOT")
+            local params = { small.MOLOTOV_TO, 2, nil, row.x, row.y, row.z, row.rz, row.interior, row.dimension }
+            params[10], params[11], params.n = nil, nil, 11
+            db.call("item_create", params, function(res, c)
+                if res and res.ok then
+                    triggerEvent("itemCreated", resourceRoot, res.payload.item_id)
+                end
+                logProc("item.created", c.player, res, {
+                    item_id = res and res.ok and res.payload.item_id or nil,
+                    uname = small.MOLOTOV_TO,
+                    source = "molotov",
+                    x = math.floor(row.x),
+                    y = math.floor(row.y),
+                    z = math.floor(row.z),
+                })
+                if isElement(c.player) then
+                    ctx.world.syncPlayer(c.player)
+                end
+            end, { player = player })
+            setPedAnimation(player, "BOMBER", "BOM_Plant_In", 450, false, false, true, false)
+            toast(player, "MOLOPOURBOT")
+        end)
         return true
     end
 
