@@ -570,12 +570,14 @@ function destroyContainerItem(itemId)
         return false
     end
     db.one("SELECT container_id, slot FROM items WHERE id = ?", { itemId }, function(row)
-        if not row then
-            return
+        if not row or not row.container_id then
+            return -- taken out meanwhile (another viewer): it is someone's held item now, not ours to delete
         end
         local contId, slot = row.container_id, row.slot
-        db.exec("DELETE FROM items WHERE id = ?", { itemId }, function(ok)
-            if ok and contId and slot then
+        -- only while it still lies in that container: a take queued between the read and here keeps its item
+        local sql = "DELETE FROM items WHERE id = ? AND container_id = ?"
+        db.exec(sql, { itemId, contId }, function(ok, _, affected)
+            if ok and (tonumber(affected) or 0) > 0 and slot then
                 db.exec(
                     "UPDATE items SET slot = slot - 1 WHERE container_id = ? AND slot > ? ORDER BY slot ASC",
                     { contId, slot },
@@ -648,6 +650,12 @@ function openWorldContainer(player, itemRow)
         return false
     end
     containers.openWorldContainer(player, itemRow)
+    return true
+end
+
+-- export: something outside the players' own actions changed this container's contents: its viewers are refreshed
+function containerChanged(containerId)
+    containers.containerChanged(containerId)
     return true
 end
 

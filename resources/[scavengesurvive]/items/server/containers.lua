@@ -51,27 +51,46 @@ return function(ctx)
         parachuteRef = p
     end
 
+    -- a trunk stays open within this of the vehicle's centre (its rear is ~6 m from it on the longest vehicles)
+    local TRUNK_REACH = 10.0
+
+    -- true while the player can still reach the side container they opened: the bag still in hand, within 4 m of
+    -- the box, tent or crate, within TRUNK_REACH of the vehicle in its interior and dimension
+    local function inReach(player, cont)
+        if cont.vehicle then
+            local veh = cont.vehicle
+            if not isElement(veh) then
+                return false
+            end
+            if
+                getElementInterior(veh) ~= getElementInterior(player)
+                or getElementDimension(veh) ~= getElementDimension(player)
+            then
+                return false
+            end
+            local px, py, pz = getElementPosition(player)
+            local vx, vy, vz = getElementPosition(veh)
+            return getDistanceBetweenPoints3D(px, py, pz, vx, vy, vz) <= TRUNK_REACH
+        end
+        if cont.heldItemId then
+            local held = state.held[player]
+            return held ~= nil and held.id == cont.heldItemId
+        end
+        if cont.pos then
+            local px, py, pz = getElementPosition(player)
+            return getDistanceBetweenPoints3D(px, py, pz, cont.pos.x, cont.pos.y, cont.pos.z) <= 4.0
+        end
+        return true
+    end
+
     function M.openContainerId(player)
         local cont = activeContainer[player]
         if not cont then
             return nil
         end
-        if cont.vehicle and not isElement(cont.vehicle) then
+        if not inReach(player, cont) then
             activeContainer[player] = nil
             return nil
-        end
-        if cont.heldItemId then
-            local held = state.held[player]
-            if not held or held.id ~= cont.heldItemId then
-                activeContainer[player] = nil
-                return nil
-            end
-        elseif cont.pos then
-            local px, py, pz = getElementPosition(player)
-            if getDistanceBetweenPoints3D(px, py, pz, cont.pos.x, cont.pos.y, cont.pos.z) > 4.0 then
-                activeContainer[player] = nil
-                return nil
-            end
         end
         return cont.containerId
     end
@@ -357,20 +376,7 @@ return function(ctx)
             end
             local tr = activeContainer[c.player]
             if tr and tr.containerId then
-                local valid = true
-                if tr.vehicle and not isElement(tr.vehicle) then
-                    valid = false
-                elseif tr.heldItemId then
-                    local h = state.held[c.player]
-                    valid = h ~= nil and h.id == tr.heldItemId
-                elseif tr.pos then
-                    local px, py, pz = getElementPosition(c.player)
-                    local d = getDistanceBetweenPoints3D(px, py, pz, tr.pos.x, tr.pos.y, tr.pos.z)
-                    if d > 4.0 then
-                        valid = false
-                    end
-                end
-                if not valid then
+                if not inReach(c.player, tr) then
                     activeContainer[c.player] = nil
                 else
                     payload.trunk = {}
@@ -538,7 +544,7 @@ return function(ctx)
     function M.trunkViewers(vehicle)
         local n = 0
         for p, cont in pairs(activeContainer) do
-            if cont.vehicle == vehicle and isElement(p) then
+            if cont.vehicle == vehicle and isElement(p) and inReach(p, cont) then
                 n = n + 1
             end
         end
@@ -815,10 +821,12 @@ return function(ctx)
                     )
                     toast(c2.player, "PICKED_UP")
                 else
+                    -- its container is already gone (someone else got to the box first): nobody keeps it open
+                    M.closeViewers(c2.containerId)
                     toast(c2.player, res and res.code or "DB_ERROR")
                 end
-            end, { player = c.player, itemId = c.itemId, cid = c.cid })
-        end, { player = player, itemId = itemId, cid = cid })
+            end, { player = c.player, itemId = c.itemId, cid = c.cid, containerId = c.containerId })
+        end, { player = player, itemId = itemId, cid = cid, containerId = cont.containerId })
     end, { rate = 3 })
 
     -- Pitching and packing a TentPack. Reached from hands.lua (interact on the world item while holding a
@@ -979,6 +987,10 @@ return function(ctx)
     net.handler("tentDismantleRequested", dismantleTent, { rate = 3 })
 
     addEventHandler("onPlayerQuit", root, function()
+        activeContainer[source] = nil
+    end)
+    -- a death leaves the side container behind: the next character does not inherit it
+    addEventHandler("characterDied", root, function()
         activeContainer[source] = nil
     end)
 
