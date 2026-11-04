@@ -147,6 +147,7 @@ return function(ctx)
         TENT_PITCHED = "Pitched tent",
         TENT_PACKED = "Packed tent",
         TENT_NOT_EMPTY = "The tent must be empty to pack it away",
+        TENT_PACKING = "Someone is packing this tent",
         PICKED_UP = "Picked up",
         CRAFTED = "Crafted",
         DECONSTRUCTED = "Deconstructed",

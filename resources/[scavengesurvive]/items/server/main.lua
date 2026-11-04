@@ -166,7 +166,10 @@ local containers = loadFile("server/containers.lua")({
     hands = hands,
     apparel = apparel,
     world = world,
-    refreshPlayer = refreshPlayer,
+    -- refreshPlayer is defined further down: looked up when called, not now (it was always nil here)
+    refreshPlayer = function(player)
+        return refreshPlayer(player)
+    end,
     isIncapacitated = isIncapacitated,
     isBadInteract = isBadInteract,
 })

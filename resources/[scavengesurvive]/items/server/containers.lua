@@ -619,6 +619,9 @@ return function(ctx)
             return
         end
         local uname = itemRow.uname
+        if uname == "TentPack" and M.isPacking(itemRow.id) then
+            return toast(player, "TENT_PACKING")
+        end
         if uname == LOCKER and itemRow.x then
             -- port deviation (#143): the door has to face the player; one already counted in keeps it open
             if lockerBy[player] ~= itemRow.id then
@@ -888,6 +891,18 @@ return function(ctx)
         )
     end
 
+    -- tent item id -> the player packing it, from the start of the 3 s hold until it is packed or the pack fails:
+    -- nobody opens it meanwhile (an open would make a fresh container that the pack then hides inside the tent)
+    local packing = {}
+    M.isPacking = function(itemId)
+        local p = packing[itemId]
+        if p and not isElement(p) then
+            packing[itemId] = nil
+            return false
+        end
+        return p ~= nil
+    end
+
     local function dismantleTent(player, itemId)
         local cid = charId(player)
         itemId = tonumber(itemId)
@@ -913,19 +928,28 @@ return function(ctx)
                     return
                 end
                 local function startDismantle()
+                    if M.isPacking(row.id) then
+                        return toast(c.player, "TENT_PACKING")
+                    end
+                    packing[row.id] = c.player
                     local label = lang.textFor(c.player, "Packing tent")
                     triggerClientEvent(c.player, "vehicleHoldStarted", c.player, label, 3000)
                     setTimer(function(pl, itId, cId, rx, ry, rz)
+                        local function abort()
+                            if packing[itId] == pl then
+                                packing[itId] = nil
+                            end
+                        end
                         if not isElement(pl) then
-                            return
+                            return abort()
                         end
                         local curHeld = state.held[pl]
                         if not curHeld or curHeld.uname ~= "Crowbar" then
-                            return
+                            return abort()
                         end
                         local curPx, curPy, curPz = getElementPosition(pl)
                         if getDistanceBetweenPoints3D(curPx, curPy, curPz, rx, ry, rz) > 3.5 then
-                            return
+                            return abort()
                         end
                         -- someone may have opened it or put something in during the hold: the container (whatever
                         -- its id by now) goes only while empty, and a tent that still holds something stays up
@@ -935,13 +959,16 @@ return function(ctx)
                             { itId },
                             function(ok)
                                 if not ok then
-                                    return
+                                    return abort()
                                 end
                                 db.one("SELECT id FROM containers WHERE owner_item_id = ?", { itId }, function(left, c3)
                                     if left then
+                                        abort()
                                         return isElement(c3.player) and toast(c3.player, "TENT_NOT_EMPTY")
                                     end
-                                    db.exec("UPDATE items SET data = NULL WHERE id = ?", { itId })
+                                    -- the flag lifts once the tent reads as packed: an open that read it pitched is
+                                    -- answered before this, while the flag still refuses it
+                                    db.exec("UPDATE items SET data = NULL WHERE id = ?", { itId }, abort)
                                     closeViewers(function(cont)
                                         return cont.worldItemId == itId or (cId and cont.containerId == cId)
                                     end)

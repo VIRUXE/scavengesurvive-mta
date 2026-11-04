@@ -523,6 +523,7 @@ return {
     ["The panel's welds are cut through and it comes off"] = "Sudurile panoului sunt tăiate și se desprinde",
     ["The plant has not fully grown yet."] = "Planta nu a crescut încă complet.",
     ["The tent must be empty to pack it away"] = "Cortul trebuie să fie gol ca să-l poți strânge",
+    ["Someone is packing this tent"] = "Cineva strânge acest cort",
     ["The torch went back on the Welder"] = "Arzătorul a revenit pe aparatul de sudură",
     ["Their hands are full"] = "Are mâinile ocupate",
     ["There are no items inside."] = "Nu există obiecte înăuntru.",

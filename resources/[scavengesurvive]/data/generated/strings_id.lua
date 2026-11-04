@@ -526,6 +526,7 @@ return {
     ["The panel's welds are cut through and it comes off"] = "Lasan panel terpotong dan panel pun lepas",
     ["The plant has not fully grown yet."] = "Tanaman belum tumbuh sepenuhnya.",
     ["The tent must be empty to pack it away"] = "Tenda harus kosong untuk dilipat",
+    ["Someone is packing this tent"] = "Seseorang sedang melipat tenda ini",
     ["The torch went back on the Welder"] = "Obor kembali ke Alat Las",
     ["Their hands are full"] = "Tangan mereka penuh",
     ["There are no items inside."] = "Tidak ada benda di dalamnya.",
