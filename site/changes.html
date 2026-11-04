@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>What changed — Scavenge &amp; Survive Reborn</title>
+<meta name="description" content="Every way the MTA:SA port of Scavenge & Survive differs from Southclaws' SA-MP original: new, changed, dropped and deferred, each with its source.">
+<meta name="theme-color" content="#0b0b0b">
+<link rel="icon" href="assets/img/brand/logo-64.webp" type="image/webp">
+<link rel="preload" href="assets/fonts/bebas-neue-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/css/site.css">
+</head>
+<body>
+
+<header class="nav is-solid">
+  <div class="container">
+    <a class="brand" href="index.html"><img src="assets/img/brand/logo-64.webp" alt="" width="36" height="36">Scavenge &amp; Survive <small>REBORN</small></a>
+    <button class="nav-toggle" aria-label="Menu" aria-expanded="false"><span></span><span></span><span></span></button>
+    <nav class="nav-links" aria-label="Site">
+      <a href="index.html" data-i18n="nav.home">Home</a>
+      <a href="changes.html" data-i18n="nav.changes">What changed</a>
+      <a href="mta.html" data-i18n="nav.mta">Why MTA</a>
+      <a href="media.html" data-i18n="nav.media">Media</a>
+      <a href="servers.html" data-i18n="nav.servers">Servers</a>
+      <a href="https://github.com/VIRUXE/scavengesurvive-mta/wiki" rel="noopener" data-i18n="nav.wiki">Wiki</a>
+      <a href="https://github.com/VIRUXE/scavengesurvive-mta" rel="noopener">GitHub</a>
+      <div class="lang-switch" role="group" aria-label="Language"><button data-lang="en" aria-pressed="true">EN</button><button data-lang="pt" aria-pressed="false">PT</button></div>
+    </nav>
+  </div>
+</header>
+
+<main>
+<section class="page-head">
+  <div class="container">
+    <p class="eyebrow" data-i18n="chg.eyebrow">Reborn vs the original</p>
+    <h1 data-i18n="chg.title">Every difference, with receipts</h1>
+    <p class="lead" data-i18n="chg.lead">Scavenge &amp; Survive Reborn is a faithful port: the same 345 item types, loot tables, maps, vehicles, recipes and rules as Southclaws' SA-MP gamemode, checked line by line against the Pawn source. This page lists everything that is not the same, and why. Each entry links to the design document, review, runbook or commit that records it.</p>
+    <div class="row">
+      <span class="badge badge--on" data-i18n="chg.b1">New: no upstream equivalent</span>
+      <span class="badge" style="border-color:#4fb3ff;color:#4fb3ff" data-i18n="chg.b2">Changed: upstream did it differently</span>
+      <span class="badge" data-i18n="chg.b3">Dropped or deferred</span>
+    </div>
+  </div>
+</section>
+
+<section class="section section--tight">
+  <div class="container">
+    <div class="toolbar">
+      <label class="sr-only" for="changes-search" data-i18n="chg.search">Search</label>
+      <input id="changes-search" type="search" placeholder="Search the changes…" data-i18n-attr="placeholder:chg.placeholder">
+      <div class="chips" id="changes-filters">
+        <button class="chip" data-group="all" aria-pressed="true" data-i18n="chg.f.all">All</button>
+        <button class="chip" data-group="new" aria-pressed="false" data-i18n="chg.f.new">New</button>
+        <button class="chip" data-group="changed" aria-pressed="false" data-i18n="chg.f.changed">Changed</button>
+        <button class="chip" data-group="dropped" aria-pressed="false" data-i18n="chg.f.dropped">Dropped / deferred</button>
+      </div>
+      <span class="count-pill" id="changes-count"></span>
+    </div>
+    <div id="changes" class="grid" style="gap:14px"></div>
+    <div class="divider"></div>
+    <div class="notice" data-i18n="chg.note">Honesty note: the two-client live checks for the late milestones are still open, the camper stove is a model that does not cook yet, and the Fort Defiance rebuild stopped at the rooftop walkways. The <a href="https://github.com/VIRUXE/scavengesurvive-mta#what-works-today" rel="noopener">README's milestone table</a> is the live status.</div>
+  </div>
+</section>
+</main>
+
+<footer class="footer">
+  <div class="container">
+    <div><h4 data-i18n="foot.play">Play</h4><ul><li><a href="mtasa://185.103.74.67:22003" data-i18n="foot.join">Join the server</a></li><li><a href="servers.html" data-i18n="nav.servers">Servers</a></li><li><a href="https://github.com/VIRUXE/scavengesurvive-mta/wiki/Getting-Started" rel="noopener" data-i18n="foot.start">Getting Started</a></li><li><a href="https://github.com/VIRUXE/scavengesurvive-mta/wiki/Fair-Play" rel="noopener" data-i18n="foot.rules">Fair Play</a></li><li><a href="https://github.com/VIRUXE/scavengesurvive-mta/wiki" rel="noopener" data-i18n="foot.wiki">The wiki</a></li></ul></div>
+    <div><h4 data-i18n="foot.project">Project</h4><ul><li><a href="https://github.com/VIRUXE/scavengesurvive-mta" rel="noopener" data-i18n="foot.source">Source on GitHub</a></li><li><a href="https://github.com/VIRUXE/scavengesurvive-mta/issues" rel="noopener" data-i18n="foot.issues">Issues and roadmap</a></li><li><a href="changes.html" data-i18n="nav.changes">What changed</a></li><li><a href="mta.html" data-i18n="nav.mta">Why MTA</a></li><li><a href="media.html" data-i18n="nav.media">Media</a></li></ul></div>
+    <div><h4 data-i18n="foot.credits">Credits</h4><ul><li><a href="https://github.com/Southclaws/ScavengeSurvive" rel="noopener" data-i18n="foot.upstream">Scavenge &amp; Survive by Southclaws</a></li><li><a href="https://scavengesurvive.com" rel="noopener" data-i18n="foot.upstream-site">The original site</a></li><li><a href="https://multitheftauto.com" rel="noopener">Multi Theft Auto</a></li></ul></div>
+    <p class="footer__note" data-i18n="foot.note">Scavenge &amp; Survive is Copyright © Barnaby "Southclaws" Keene and the community that built its maps from 2008 to 2017. New code in this port is released under the Unlicense; converted upstream data stays MPL-2.0, the map placements CC BY-SA 4.0, and the SA-MP object models belong to the SA-MP team. Grand Theft Auto is a trademark of Take-Two Interactive; this project is not affiliated with Rockstar Games, Take-Two, SA-MP or the MTA team. © <span data-year>2026</span> the Reborn contributors.</p>
+  </div>
+</footer>
+
+<script src="assets/js/site.js" defer></script>
+</body>
+</html>

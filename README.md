@@ -28,6 +28,9 @@ physical item on the ground, wounds bleed, and death drops it all.
 | M8 Content & Polish | 🔶 | Done: supply drops and weapons caches (upstream's crate objects and 32-slot containers, persisted across restarts), chat modes (local 40 m / global / radio by frequency / admin) with the dx radio panel, house loot in the hollow houses, ziplines and ladders, character skills (saved per character, shorten crafting, construction and repair holds, Skills row in the inventory), treatment, infection and drugs (bandages, medkits, Doctor's Bags, pills and injectors on yourself or a player next to you, food and wound infection, seven stacking drugs, all saved with the character), cooking on campfires and barbecues (raw meat and fish give 70 % and infect), ten languages with English fallback. 2026-10-30, branch `ccr-e37baa1b-tmao7k` (awaiting the on-screen checks, smoke steps 36-44): the tweak pad after building (#133), notes, signs, dice, the locator, the stun gun and the molotov (#136), headgear pop, the shield and HerpDerp (#137), travel stats and the Endurance skill (#138), the body a death leaves (#139), sitting, hands up and the aim shout (#140), fishing (#141), gardening (#142), the locker's door and the Love Box (#143), falls, drowning, rams and explosions wounding like upstream (#144, smoke step 45), the scrap machine, the refining machine and the water purifier (#145, smoke step 46; `machine_finish` goes in with `sqltool apply`). Live-checked with one client (`docs/reviews/2026-10-23-m8-live.md`); open: the two-client parts (automatic drops, who hears what, relog persistence), the hand-held ladder climb and balancing |
 | M9 Live economy & release | 🔶 | Done: scarcity-driven respawn for loot and vehicles (ADR 0001, #67: carrying capacity per category and zone, deficit-proportional refill, jittered cooldowns, no respawn near players, carried loot counts). Open: the two-client live checks (combat log #26, smoke steps 12 and 22-28; #55 is answered by measurement), balancing on the playtest, `v1.0.0` |
 
+Website: <https://viruxe.github.io/scavengesurvive-mta/> (source in `site/`, every difference from upstream on its
+[What changed](https://viruxe.github.io/scavengesurvive-mta/changes.html) page). Player wiki: the [GitHub wiki](https://github.com/VIRUXE/scavengesurvive-mta/wiki), written in `wiki/` and mirrored on push.
+
 Progress is tracked in the [issues](https://github.com/VIRUXE/scavengesurvive-mta/issues) and the
 [project board](https://github.com/users/VIRUXE/projects/3); each milestone is an epic there.
 
@@ -102,6 +105,8 @@ stylua --check resources
 | `docs/staff-commands.md` | Staff levels, every command, upstream rules kept and deviations |
 | `docs/dev-studio.md` | The green-screen studio: presets, rcon usage, how the apparel sheets are taken |
 | `docs/PROJECT_README.md` | The GitHub project board: fields, views and how issues flow through milestones |
+| `site/` | The website (GitHub Pages): landing page, the census of changes vs upstream, why MTA, servers, media; `site/PLACEHOLDERS.md` lists the shots still to take |
+| `wiki/` | The player wiki's source, mirrored to the GitHub wiki by `.github/workflows/pages.yml` |
 | `docs/runbooks/` | Start/stop/restart, schema changes, backup/restore, ban appeal, DB-down incident, release |
 | `server-config/README.md` | Local server setup, HTTP rcon, dev and staff commands |
 | `THIRD_PARTY_NOTICES.md` | Upstream data (MPL-2.0), maps (CC BY-SA 4.0), SA-MP models |

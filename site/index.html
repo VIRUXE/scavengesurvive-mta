@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scavenge &amp; Survive Reborn — PvP survival on a decayed San Andreas, for MTA:SA</title>
+<meta name="description" content="Scavenge & Survive, the SA-MP survival gamemode by Southclaws, rebuilt for Multi Theft Auto: one alive character, every item on the ground, wounds that bleed, death that drops it all.">
+<meta property="og:title" content="Scavenge & Survive Reborn">
+<meta property="og:description" content="PvP survival on a decayed San Andreas, rebuilt for MTA:SA 1.6 in Lua on MariaDB.">
+<meta property="og:image" content="assets/img/hero/sandstorm.webp">
+<meta name="theme-color" content="#0b0b0b">
+<link rel="icon" href="assets/img/brand/logo-64.webp" type="image/webp">
+<link rel="apple-touch-icon" href="assets/img/brand/logo-192.webp">
+<link rel="preload" href="assets/fonts/bebas-neue-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/img/hero/sandstorm.webp" as="image">
+<link rel="stylesheet" href="assets/css/site.css">
+</head>
+<body>
+
+<header class="nav">
+  <div class="container">
+    <a class="brand" href="index.html"><img src="assets/img/brand/logo-64.webp" alt="" width="36" height="36">Scavenge &amp; Survive <small>REBORN</small></a>
+    <button class="nav-toggle" aria-label="Menu" aria-expanded="false"><span></span><span></span><span></span></button>
+    <nav class="nav-links" aria-label="Site">
+      <a href="index.html" data-i18n="nav.home">Home</a>
+      <a href="changes.html" data-i18n="nav.changes">What changed</a>
+      <a href="mta.html" data-i18n="nav.mta">Why MTA</a>
+      <a href="media.html" data-i18n="nav.media">Media</a>
+      <a href="servers.html" data-i18n="nav.servers">Servers</a>
+      <a href="https://github.com/VIRUXE/scavengesurvive-mta/wiki" rel="noopener" data-i18n="nav.wiki">Wiki</a>
+      <a href="https://github.com/VIRUXE/scavengesurvive-mta" rel="noopener">GitHub</a>
+      <div class="lang-switch" role="group" aria-label="Language"><button data-lang="en" aria-pressed="true">EN</button><button data-lang="pt" aria-pressed="false">PT</button></div>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+<!-- ===== HERO ===== -->
+<section class="hero">
+  <div class="hero__bg" style="background-image:url(assets/img/hero/sandstorm.webp)"></div>
+  <canvas class="hero__fx" aria-hidden="true"></canvas>
+  <div class="container hero__content">
+    <p class="hero__kicker"><span class="dot"></span><span data-i18n="hero.kicker">PvP survival · San Andreas · Multi Theft Auto 1.6</span></p>
+    <h1>Scavenge<br>&amp; Survive <span class="ember" data-i18n="hero.reborn">Reborn</span></h1>
+    <p class="hero__lead" data-i18n="hero.lead">One alive character. Every item is a physical object on the ground. Wounds bleed. Death drops it all. Southclaws' SA-MP gamemode, rebuilt from the ground up for Multi Theft Auto in Lua on MariaDB, with everything the original promised and a decade of things it never could do.</p>
+    <div class="hero__actions">
+      <a class="btn btn--ember" href="mtasa://185.103.74.67:22003" data-i18n="hero.join">Join the server</a>
+      <a class="btn btn--ghost" href="https://github.com/VIRUXE/scavengesurvive-mta/wiki/Getting-Started" rel="noopener" data-i18n="hero.wiki">Read the first hour</a>
+      <a class="btn btn--ghost" href="changes.html" data-i18n="hero.changes">What changed</a>
+    </div>
+    <div class="hero__strip" data-reveal>
+      <div class="live"><b data-live-players>—</b><span data-i18n="hero.online">Players online</span></div>
+      <div><b>345</b><span data-i18n="hero.items">Item types</span></div>
+      <div><b>11,062</b><span data-i18n="hero.loot">Loot points</span></div>
+      <div><b>7</b><span data-i18n="hero.zones">Zones, no safe areas</span></div>
+      <div><b>10</b><span data-i18n="hero.langs">Languages</span></div>
+    </div>
+  </div>
+  <div class="scroll-cue" aria-hidden="true" data-i18n="hero.scroll">Scroll</div>
+</section>
+
+<!-- ===== THE RULES ===== -->
+<section class="section" id="rules">
+  <div class="container">
+    <div class="section-head" data-reveal>
+      <p class="eyebrow" data-i18n="rules.eyebrow">The four rules</p>
+      <h2 data-i18n="rules.title">Nothing is yours until you are dead with it</h2>
+      <p class="lead" data-i18n="rules.lead">Scavenge &amp; Survive has never been about levels or money. Supplies are scarce, everyone wants the same things, and safety in numbers is the only safety there is. Trust is the rarest loot on the map.</p>
+    </div>
+    <div class="grid rules">
+      <div class="rule tilt" data-n="01" data-reveal>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        <h3 data-i18n="rules.1.t">One alive character</h3>
+        <p data-i18n="rules.1.p">Your nickname is your account. When your character dies, it is gone: skills, wounds, hunger and everything on it. The next one wakes up on a beach with a bandage.</p>
+      </div>
+      <div class="rule tilt" data-n="02" data-reveal style="--d:80ms">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-5 9 5-9 5z"/><path d="M3 9v7l9 5 9-5V9"/><path d="M12 14v7"/></svg>
+        <h3 data-i18n="rules.2.t">Everything is an item</h3>
+        <p data-i18n="rules.2.p">No menus full of abstract inventory. A pistol, a bandage, a crate, a car door: all of it lies on the ground as a real object, can be picked up, dropped, stolen, put in a trunk or buried in a safebox.</p>
+      </div>
+      <div class="rule tilt" data-n="03" data-reveal style="--d:160ms">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg>
+        <h3 data-i18n="rules.3.t">Wounds bleed</h3>
+        <p data-i18n="rules.3.p">Every hit is a wound with a calibre, a body part and a bleed rate. A dirty bandage stops it and infects you; an antiseptic one does not. Untreated, you bleed out walking home.</p>
+      </div>
+      <div class="rule tilt" data-n="04" data-reveal style="--d:240ms">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 20h16M6 20V9a6 6 0 0 1 12 0v11"/><path d="M9 13h6M9 16h6"/></svg>
+        <h3 data-i18n="rules.4.t">Death drops it all</h3>
+        <p data-i18n="rules.4.p">Your body stays, your things land in a ring around it, and whoever gets there first keeps them. Combat-logging does not save you: the server finishes the fight without you.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== SIX PROMISES (upstream's five + driving) ===== -->
+<section class="section" id="features">
+  <div class="container">
+    <div class="section-head" data-reveal>
+      <p class="eyebrow" data-i18n="feat.eyebrow">What you will be doing</p>
+      <h2 data-i18n="feat.title">The original's five promises, plus one it never made</h2>
+      <p class="lead" data-i18n="feat.lead">Southclaws' site summed the game up in five slates. All five are here, and the port adds a sixth: vehicles are now machines with batteries, starters, dashboards and salvageable bodywork.</p>
+    </div>
+    <div class="grid slates">
+      <article class="slate tilt" data-reveal>
+        <div class="slate__img" style="background-image:url(assets/img/places/townhouse-street.webp)"></div>
+        <div class="slate__bar" data-i18n="feat.objective.t">Objective</div>
+        <div class="slate__body"><ul>
+          <li data-i18n="feat.objective.1">The objective is still up to you.</li>
+          <li data-i18n="feat.objective.2">Survive with a friend, a group or alone.</li>
+          <li data-i18n="feat.objective.3">Build a stable society, or burn it down.</li>
+          <li data-i18n="feat.objective.4">No safe zones, no staff events: the players set the rules.</li>
+        </ul></div>
+      </article>
+      <article class="slate tilt" data-reveal style="--d:80ms">
+        <div class="slate__img" style="background-image:url(assets/img/scenes/camp.webp)"></div>
+        <div class="slate__bar" data-i18n="feat.survival.t">Survival</div>
+        <div class="slate__body"><ul>
+          <li data-i18n="feat.survival.1">Hunger falls all the time, faster when you run.</li>
+          <li data-i18n="feat.survival.2">Wounds bleed until bandaged, and infect if the bandage is dirty.</li>
+          <li data-i18n="feat.survival.3">Raw meat and fish infect you: cook them on a campfire.</li>
+          <li data-i18n="feat.survival.4">Seven drugs stack, and every one of them has a price.</li>
+        </ul></div>
+      </article>
+      <article class="slate tilt" data-reveal style="--d:160ms">
+        <div class="slate__img" style="background-image:url(assets/img/scenes/doorway.webp)"></div>
+        <div class="slate__bar" data-i18n="feat.building.t">Building</div>
+        <div class="slate__body"><ul>
+          <li data-i18n="feat.building.1">Walls, floors, doors and keypads anywhere in the world.</li>
+          <li data-i18n="feat.building.2">A plot pole claims the 20 metres around it.</li>
+          <li data-i18n="feat.building.3">Explosives pass through stacked walls: a fort is only as strong as its skin.</li>
+          <li data-i18n="feat.building.4">Safeboxes and tents keep your things while you are gone.</li>
+        </ul></div>
+      </article>
+      <article class="slate tilt" data-reveal>
+        <div class="slate__img" style="background-image:url(assets/img/scenes/arsenal.webp)"></div>
+        <div class="slate__bar" data-i18n="feat.combat.t">Combat</div>
+        <div class="slate__body"><ul>
+          <li data-i18n="feat.combat.1">Server-checked wounds with calibre, ammo type and distance falloff.</li>
+          <li data-i18n="feat.combat.2">Magazines reload on <kbd>R</kbd>; hold <kbd>N</kbd> to unload.</li>
+          <li data-i18n="feat.combat.3">Knockouts, handcuffs, disarm, surrender and the aim shout.</li>
+          <li data-i18n="feat.combat.4">Firearms are deadly, if you can spare the ammo. Melee and explosives are always there.</li>
+        </ul></div>
+      </article>
+      <article class="slate tilt" data-reveal style="--d:80ms">
+        <div class="slate__img" style="background-image:url(assets/img/scenes/workbench.webp)"></div>
+        <div class="slate__bar" data-i18n="feat.crafting.t">Crafting</div>
+        <div class="slate__body"><ul>
+          <li data-i18n="feat.crafting.1">46 recipes: combine in hand, construct on the ground, build at a Workbench.</li>
+          <li data-i18n="feat.crafting.2">Scrap machines, refining machines, water purifiers and generators.</li>
+          <li data-i18n="feat.crafting.3">Gardening, fishing and cooking.</li>
+          <li data-i18n="feat.crafting.4">Skills shorten every hold the more you use them.</li>
+        </ul></div>
+      </article>
+      <article class="slate slate--new tilt" data-reveal style="--d:160ms">
+        <div class="slate__img" style="background-image:url(assets/img/scenes/airstream.webp)"></div>
+        <div class="slate__bar" data-i18n="feat.driving.t">Driving</div>
+        <span class="slate__tag" data-i18n="feat.new">New in Reborn</span>
+        <div class="slate__body"><ul>
+          <li data-i18n="feat.driving.1">Fuel burns and spills. Batteries drain and recharge. Starters wear out.</li>
+          <li data-i18n="feat.driving.2">A dashboard with warning lamps, a tacho and a voltmeter.</li>
+          <li data-i18n="feat.driving.3">Twelve Bobcat parts you wrench off and fit back on.</li>
+          <li data-i18n="feat.driving.4">A towable Airstream you can weld armour onto.</li>
+        </ul></div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ===== ITEM MARQUEE ===== -->
+<section class="section section--tight section--flush" aria-label="Items">
+  <div class="marquee" style="padding:40px 0"><div class="marquee__track"></div></div>
+</section>
+
+<!-- ===== THE WORLD ===== -->
+<section class="section" id="world">
+  <div class="container">
+    <div class="section-head" data-reveal>
+      <p class="eyebrow" data-i18n="world.eyebrow">The world</p>
+      <h2 data-i18n="world.title">All of San Andreas. Nowhere safe.</h2>
+      <p class="lead" data-i18n="world.lead">Three cities, the country between them and the desert in the north, cut into seven zones that decide how much loot each region may hold. Drag the map, scroll to zoom, and switch layers to see where things are.</p>
+    </div>
+    <div class="map" data-reveal>
+      <div class="map__stage" aria-label="Map of San Andreas">
+        <div class="map__layers">
+          <img data-layer="overview" src="assets/img/map/overview.webp" alt="Everything on one map" width="1536" height="1536">
+          <img data-layer="zones" data-src="assets/img/map/zones.webp" alt="The seven zones" width="1536" height="1536">
+          <img data-layer="loot" data-src="assets/img/map/loot.webp" alt="Every loot point" width="1536" height="1536">
+          <img data-layer="vehicles" data-src="assets/img/map/vehicles.webp" alt="Every vehicle point" width="1536" height="1536">
+          <img data-layer="drops" data-src="assets/img/map/drops.webp" alt="Supply drop points" width="1536" height="1536">
+          <img data-layer="spawns" data-src="assets/img/map/spawns.webp" alt="Spawn beaches" width="1536" height="1536">
+          <img data-layer="shelters" data-src="assets/img/map/shelters.webp" alt="Houses, trailers and cabins" width="1536" height="1536">
+          <img data-layer="puzzles" data-src="assets/img/map/puzzles.webp" alt="The code hunt and the puzzles" width="1536" height="1536">
+          <img data-layer="fixtures" data-src="assets/img/map/fixtures.webp" alt="Workbenches, machines, barbecues and campfires" width="1536" height="1536">
+          <img data-layer="features" data-src="assets/img/map/features.webp" alt="Ladders, ziplines, fuel outlets" width="1536" height="1536">
+        </div>
+        <div class="map__scan"></div>
+        <div class="map__hud"><button data-act="in" aria-label="Zoom in">+</button><button data-act="out" aria-label="Zoom out">−</button><button data-act="reset" aria-label="Reset">⟲</button></div>
+      </div>
+      <aside class="map__panel">
+        <h3 data-i18n="world.layers">Layers</h3>
+        <div class="chips">
+          <button class="chip" data-layer="overview" data-caption="Everything on one map: every kind of point, drawn on the radar tiles." data-i18n-attr="data-caption:world.cap.overview" data-i18n="world.l.overview">Overview</button>
+          <button class="chip" data-layer="zones" data-caption="The seven zones. Each has its own loot budget and names the places in chat." data-i18n-attr="data-caption:world.cap.zones" data-i18n="world.l.zones">Zones</button>
+          <button class="chip" data-layer="loot" data-caption="11,062 loot points. The denser the dots, the richer the streets: cities first, country last." data-i18n-attr="data-caption:world.cap.loot" data-i18n="world.l.loot">Loot</button>
+          <button class="chip" data-layer="vehicles" data-caption="2,017 vehicle points for about 80 vehicles at a time, each smoking and nearly dry when it spawns." data-i18n-attr="data-caption:world.cap.vehicles" data-i18n="world.l.vehicles">Vehicles</button>
+          <button class="chip" data-layer="drops" data-caption="36 supply drop points. A point rests 24 hours after a drop." data-i18n-attr="data-caption:world.cap.drops" data-i18n="world.l.drops">Supply drops</button>
+          <button class="chip" data-layer="spawns" data-caption="The 14 beaches a new character can wake up on, never the same one twice in a row." data-i18n-attr="data-caption:world.cap.spawns" data-i18n="world.l.spawns">Spawns</button>
+          <button class="chip" data-layer="shelters" data-caption="Town houses, trailers and log cabins you can walk into, with loot inside and rain outside." data-i18n-attr="data-caption:world.cap.shelters" data-i18n="world.l.shelters">Shelters</button>
+          <button class="chip" data-layer="puzzles" data-caption="The code hunt, the Chiliad station and the gate of Area 69." data-i18n-attr="data-caption:world.cap.puzzles" data-i18n="world.l.puzzles">Puzzles</button>
+          <button class="chip" data-layer="fixtures" data-caption="Workbenches, scrap and refining machines, barbecues and campfires that come back after a restart." data-i18n-attr="data-caption:world.cap.fixtures" data-i18n="world.l.fixtures">Fixtures</button>
+          <button class="chip" data-layer="features" data-caption="14 ladders, 13 ziplines and 78 fuel outlets." data-i18n-attr="data-caption:world.cap.features" data-i18n="world.l.features">Features</button>
+        </div>
+        <p class="map__caption"></p>
+        <ul class="zones">
+          <li><span>Los Santos</span><span>≈4,000 <span data-i18n="world.pts">pts</span></span></li>
+          <li><span>San Fierro</span><span>≈3,200 <span data-i18n="world.pts">pts</span></span></li>
+          <li><span>Las Venturas</span><span>≈2,000 <span data-i18n="world.pts">pts</span></span></li>
+          <li><span>Red County</span><span>≈650 <span data-i18n="world.pts">pts</span></span></li>
+          <li><span>Bone County</span><span>≈550 <span data-i18n="world.pts">pts</span></span></li>
+          <li><span>Flint County</span><span>≈500 <span data-i18n="world.pts">pts</span></span></li>
+          <li><span>Tierra Robada</span><span>≈180 <span data-i18n="world.pts">pts</span></span></li>
+        </ul>
+        <p class="small muted" style="margin:14px 0 0" data-i18n="world.more">Full detail: <a href="https://github.com/VIRUXE/scavengesurvive-mta/wiki/World-and-Zones" rel="noopener">World &amp; Zones</a> and <a href="https://github.com/VIRUXE/scavengesurvive-mta/wiki/Loot-and-Respawn" rel="noopener">Loot &amp; Respawn</a> on the wiki.</p>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<!-- ===== SCARCITY ===== -->
+<section class="section" id="scarcity">
+  <div class="container split">
+    <div data-reveal>
+      <p class="eyebrow" data-i18n="scar.eyebrow">New in Reborn</p>
+      <h2 data-i18n="scar.title">Scarcity is a budget, not a timer</h2>
+      <p class="lead" data-i18n="scar.lead">The original re-rolled the map every five hours. Reborn gives every zone a carrying capacity and refills only what is missing, slowly, with cooldowns, and never within 150 metres of a player.</p>
+      <p data-i18n="scar.p1">What players carry still counts against the budget. A clan that hoards two hundred rifles in a safebox is starving its own map; the server does not notice the difference between a crate on the ground and a crate in a fort.</p>
+      <p data-i18n="scar.p2">Vehicles work the same way: about eighty on the map at once, abandoned ones retired after three days, each new one spawning smoking, half-wrecked and almost out of fuel.</p>
+      <p><a href="https://github.com/VIRUXE/scavengesurvive-mta/blob/main/docs/adr/0001-scarcity-respawn.md" rel="noopener" data-i18n="scar.link">Read the design decision →</a></p>
+    </div>
+    <div class="grid counters" data-reveal>
+      <div class="counter"><b data-count="10" data-suffix="%/h">0</b><span data-i18n="scar.c1">of the gap refilled per hour</span></div>
+      <div class="counter"><b data-count="150" data-suffix="m">0</b><span data-i18n="scar.c2">nothing respawns nearer a player</span></div>
+      <div class="counter"><b data-count="80" data-suffix="">0</b><span data-i18n="scar.c3">vehicles on the map at a time</span></div>
+      <div class="counter"><b data-count="7" data-suffix="h">0</b><span data-i18n="scar.c4">half-life of a looted zone</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== NUMBERS ===== -->
+<section class="section" id="numbers">
+  <div class="container">
+    <div class="section-head" data-reveal>
+      <p class="eyebrow" data-i18n="num.eyebrow">By the numbers</p>
+      <h2 data-i18n="num.title">Everything the original had, ported whole</h2>
+    </div>
+    <div class="grid counters" data-reveal>
+      <div class="counter"><b data-count="345">0</b><span data-i18n="num.1">item types</span></div>
+      <div class="counter"><b data-count="11062">0</b><span data-i18n="num.2">loot points</span></div>
+      <div class="counter"><b data-count="2017">0</b><span data-i18n="num.3">vehicle points, 66 vehicle types</span></div>
+      <div class="counter"><b data-count="23211">0</b><span data-i18n="num.4">map objects from 221 maps</span></div>
+      <div class="counter"><b data-count="46">0</b><span data-i18n="num.5">recipes</span></div>
+      <div class="counter"><b data-count="310">0</b><span data-i18n="num.6">skins that wear hats and masks</span></div>
+      <div class="counter"><b data-count="10">0</b><span data-i18n="num.7">languages, 554 texts each</span></div>
+      <div class="counter"><b data-count="56">0</b><span data-i18n="num.8">stored procedures doing the heavy lifting</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== GALLERY ===== -->
+<section class="section" id="gallery">
+  <div class="container">
+    <div class="section-head" data-reveal>
+      <p class="eyebrow" data-i18n="gal.eyebrow">Seen in the world</p>
+      <h2 data-i18n="gal.title">Scenes from a decayed state</h2>
+      <p class="lead" data-i18n="gal.lead">Renders of the real places and item sets, built from the server's own data. The green slates are shots still to be taken.</p>
+    </div>
+  </div>
+  <div class="container">
+    <div class="strip" data-reveal>
+      <figure class="card" data-lightbox="gal" data-full="assets/img/places/spawn-beach.webp" data-caption="A spawn point on the beach, the sea behind"><img src="assets/img/places/spawn-beach-800.webp" alt="A spawn point on the beach, the sea behind" loading="lazy"><figcaption data-kind="Place" data-i18n="gal.1">A spawn point on the beach, the sea behind</figcaption></figure>
+      <div class="card ph ph--wide" data-ph="shot-hero-gameplay" data-brief="Third-person fight at dusk near a fort wall"></div>
+      <figure class="card" data-lightbox="gal" data-full="assets/img/scenes/supply-drop.webp" data-caption="A supply drop: the crate under its parachute, loot spilling out"><img src="assets/img/scenes/supply-drop-800.webp" alt="A supply drop: the crate under its parachute, loot spilling out" loading="lazy"><figcaption data-kind="Scene" data-i18n="gal.2">A supply drop: the crate under its parachute, loot spilling out</figcaption></figure>
+      <figure class="card" data-lightbox="gal" data-full="assets/img/places/queens-lockup.webp" data-caption="The code hunt's lockup entrance and keypad in Queens, San Fierro"><img src="assets/img/places/queens-lockup-800.webp" alt="The code hunt's lockup entrance and keypad in Queens, San Fierro" loading="lazy"><figcaption data-kind="Place" data-i18n="gal.3">The code hunt's lockup entrance and keypad in Queens</figcaption></figure>
+      <div class="card ph ph--wide" data-ph="shot-inventory" data-brief="The inventory with its 3D previews"></div>
+      <figure class="card" data-lightbox="gal" data-full="assets/img/scenes/shelter.webp" data-caption="Shelter: a town house, the log cabins and a trailer, all enterable"><img src="assets/img/scenes/shelter-800.webp" alt="Shelter: a town house, the log cabins and a trailer, all enterable" loading="lazy"><figcaption data-kind="Scene" data-i18n="gal.4">Shelter: a town house, the log cabins and a trailer, all enterable</figcaption></figure>
+      <figure class="card" data-lightbox="gal" data-full="assets/img/places/chiliad-station.webp" data-caption="The Mount Chiliad summit station with the battery and fusebox puzzle"><img src="assets/img/places/chiliad-station-800.webp" alt="The Mount Chiliad summit station with the battery and fusebox puzzle" loading="lazy"><figcaption data-kind="Place" data-i18n="gal.5">The Mount Chiliad summit station and its puzzle</figcaption></figure>
+      <div class="card ph ph--wide" data-ph="shot-combat-tracers" data-brief="Tracers crossing a street at night"></div>
+      <figure class="card" data-lightbox="gal" data-full="assets/img/scenes/scrapyard.webp" data-caption="The machines: Scrap Machine, Refining Machine, Water Purifier and Generator"><img src="assets/img/scenes/scrapyard-800.webp" alt="The machines: Scrap Machine, Refining Machine, Water Purifier and Generator" loading="lazy"><figcaption data-kind="Scene" data-i18n="gal.6">The machines: scrap, refining, purifier and generator</figcaption></figure>
+      <figure class="card" data-lightbox="gal" data-full="assets/img/shots/apparel-armour.webp" data-caption="The 14 spawn skins in body armour, pistol holstered"><img src="assets/img/shots/apparel-armour-800.webp" alt="The 14 spawn skins in body armour, pistol holstered" loading="lazy"><figcaption data-kind="Studio" data-i18n="gal.7">The 14 spawn skins in body armour, pistol holstered</figcaption></figure>
+      <figure class="card" data-lightbox="gal" data-full="assets/img/shots/cut-hats-worn.webp" data-caption="The nine cut hats, worn"><img src="assets/img/shots/cut-hats-worn-1080.webp" alt="The nine cut hats, worn" loading="lazy"><figcaption data-kind="Studio" data-i18n="gal.8">The nine hats cut off the headgear skins, worn by anyone</figcaption></figure>
+      <figure class="card" data-lightbox="gal" data-full="assets/img/places/trailer-park.webp" data-caption="A trailer cluster in Las Barrancas, Bone County: the enterable shells"><img src="assets/img/places/trailer-park-800.webp" alt="A trailer cluster in Las Barrancas: the enterable shells" loading="lazy"><figcaption data-kind="Place" data-i18n="gal.9">A trailer cluster in Las Barrancas: the enterable shells</figcaption></figure>
+    </div>
+    <p class="small muted" data-i18n="gal.more"><a href="media.html">All renders, sheets and map layers →</a></p>
+  </div>
+</section>
+
+<!-- ===== DRIVING (new) ===== -->
+<section class="section" id="driving">
+  <div class="container">
+    <div class="section-head" data-reveal>
+      <p class="eyebrow" data-i18n="drv.eyebrow">New in Reborn</p>
+      <h2 data-i18n="drv.title">Cars are machines now</h2>
+      <p class="lead" data-i18n="drv.lead">The original had fuel, locks and a bonnet to repair. Reborn opens the bonnet properly: a battery that drains and recharges, a starter motor with a life of its own, a dashboard that tells you which of them just let you down, and bodywork you can take off and sell.</p>
+    </div>
+    <div class="grid grid-3">
+      <div class="fcard tilt" data-reveal><h3 data-i18n="drv.1.t">The dashboard</h3><p data-i18n="drv.1.p">BAT, CHK, FUEL, TYRE and LGT lamps, a segmented tacho and a voltmeter in the HUD's own style. Turn the key: a flat battery clicks, a wrecked engine grinds, an empty tank cranks evenly, a start does the bulb check and the needle catches.</p></div>
+      <div class="fcard tilt" data-reveal style="--d:80ms"><h3 data-i18n="drv.2.t">Batteries and starters</h3><p data-i18n="drv.2.p">Parked cars lose charge, lights left on drain it fast, driving puts it back. The battery comes out from under the bonnet, so does a dead starter. A Starter Motor lasts 60 to 400 starts; 2 % of cars spawn with one that is already gone.</p></div>
+      <div class="fcard tilt" data-reveal style="--d:160ms"><h3 data-i18n="drv.3.t">Salvage and armour</h3><p data-i18n="drv.3.p">Twelve Bobcat parts, good or bad, come off with a Wrench and go back on in an empty slot; crashes knock them loose. The Airstream hitches to anything and takes welded metal panels, 180 kg and 8 % acceleration each, until an angle grinder takes them off.</p></div>
+    </div>
+    <div class="grid grid-2" style="margin-top:28px">
+      <div class="ph ph--wide" data-ph="shot-dashboard" data-brief="The driver's dashboard, lamps lit"></div>
+      <div class="ph ph--wide" data-ph="shot-bobcat-salvage" data-brief="A Bobcat with its parts on the ground"></div>
+    </div>
+    <div class="grid grid-2" style="margin-top:28px">
+      <figure class="card" data-lightbox="drv" data-full="assets/img/shots/bobcat-parts-1.webp" data-caption="The twelve Bobcat salvage parts, good and bad"><img src="assets/img/shots/bobcat-parts-1-700.webp" alt="The twelve Bobcat salvage parts, good and bad" loading="lazy"><figcaption data-kind="Render" data-i18n="drv.f1">The twelve Bobcat salvage parts, good and bad</figcaption></figure>
+      <figure class="card" data-lightbox="drv" data-full="assets/img/places/airstream-road.webp" data-caption="The towable Airstream on the Fort Carson road"><img src="assets/img/places/airstream-road-800.webp" alt="The towable Airstream on the Fort Carson road" loading="lazy"><figcaption data-kind="Place" data-i18n="drv.f2">The towable Airstream on the Fort Carson road</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<!-- ===== COMPARE TEASER ===== -->
+<section class="section" id="compare">
+  <div class="container">
+    <div class="section-head" data-reveal>
+      <p class="eyebrow" data-i18n="cmp.eyebrow">Reborn vs the original</p>
+      <h2 data-i18n="cmp.title">Same game. Different engine room.</h2>
+      <p class="lead" data-i18n="cmp.lead">Everything the SA-MP version did is here, by the numbers and by the feel. What is different is the machinery underneath, and the things that machinery made possible. Six of the sixty-odd differences:</p>
+    </div>
+    <div class="compare" data-reveal>
+      <div class="compare__row compare__head"><div data-i18n="cmp.h1">The original (SA-MP)</div><div data-i18n="cmp.h2">Reborn (MTA:SA)</div></div>
+      <div class="compare__row"><div><b data-i18n="cmp.was">was</b><span data-i18n="cmp.1.a">Items lived in files; a crash lost up to a minute, a restart re-rolled the world.</span></div><div><b data-i18n="cmp.now">now</b><span data-i18n="cmp.1.b">Every item is a MariaDB row with a spatial index. Every move is one atomic procedure. Restarts lose nothing.</span></div></div>
+      <div class="compare__row"><div><b data-i18n="cmp.was">was</b><span data-i18n="cmp.2.a">Health was whatever the client reported.</span></div><div><b data-i18n="cmp.now">now</b><span data-i18n="cmp.2.b">The server checks the shooter's weapon, range and rate and computes the wound. A client cannot snap it back.</span></div></div>
+      <div class="compare__row"><div><b data-i18n="cmp.was">was</b><span data-i18n="cmp.3.a">Hats and masks fitted on 17 tuned skins; the hollow houses had empty window holes and oversized doors.</span></div><div><b data-i18n="cmp.now">now</b><span data-i18n="cmp.3.b">All 310 human peds wear them, 22 helmeted skins have hatless twins, 75 windows are glazed, 571 doors fitted.</span></div></div>
+      <div class="compare__row"><div><b data-i18n="cmp.was">was</b><span data-i18n="cmp.4.a">Map objects through a streamer plugin, SA-MP-only models and all.</span></div><div><b data-i18n="cmp.now">now</b><span data-i18n="cmp.4.b">23,211 objects built on your client in about 1.3 s, the 209 SA-MP-only models shipped as custom models.</span></div></div>
+      <div class="compare__row"><div><b data-i18n="cmp.was">was</b><span data-i18n="cmp.5.a">Language files in mixed encodings, about 150 texts missing per language.</span></div><div><b data-i18n="cmp.now">now</b><span data-i18n="cmp.5.b">Ten languages, 554 texts each, every one filled, items included.</span></div></div>
+      <div class="compare__row"><div><b data-i18n="cmp.was">was</b><span data-i18n="cmp.6.a">Bans by name or IP; mutes ended when you relogged.</span></div><div><b data-i18n="cmp.now">now</b><span data-i18n="cmp.6.b">Bans by name, IP and serial with durations, mutes that persist, every staff action logged.</span></div></div>
+    </div>
+    <p style="margin-top:24px" data-reveal><a class="btn btn--ghost" href="changes.html" data-i18n="cmp.all">See every difference</a></p>
+  </div>
+</section>
+
+<!-- ===== WHY MTA TEASER ===== -->
+<section class="section" id="mta">
+  <div class="container">
+    <div class="section-head" data-reveal>
+      <p class="eyebrow" data-i18n="mta.eyebrow">Why Multi Theft Auto</p>
+      <h2 data-i18n="mta.title">The platform is the point</h2>
+      <p class="lead" data-i18n="mta.lead">Scavenge &amp; Survive was always pushing against what SA-MP could do. MTA:SA is open source, still released, scripted in Lua on both sides, and lets a server ship its own models, draw its own interface and build the world on the client.</p>
+    </div>
+    <div class="grid grid-4">
+      <div class="fcard tilt" data-reveal><h3 data-i18n="mta.1.t">Custom models</h3><p data-i18n="mta.1.p">Load DFF, TXD and COL files from a script. That is how the Airstream, the Bobcat parts, the cut hats, the hatless twins and the enterable trailers exist.</p></div>
+      <div class="fcard tilt" data-reveal style="--d:80ms"><h3 data-i18n="mta.2.t">A client that draws</h3><p data-i18n="mta.2.p">dx drawing, render targets, 3D models in the UI, SVG, shaders. The SA-MP look rebuilt pixel-close, with live item previews the original could never show.</p></div>
+      <div class="fcard tilt" data-reveal style="--d:160ms"><h3 data-i18n="mta.3.t">Honest sync</h3><p data-i18n="mta.3.p">Limb-level hits, cancellable client damage and sync-time contexts make a server-authoritative wound model possible instead of a hope.</p></div>
+      <div class="fcard tilt" data-reveal style="--d:240ms"><h3 data-i18n="mta.4.t">Alive</h3><p data-i18n="mta.4.p">Open source since 2008, 1.6 in 2023, nightlies since. SA-MP's last client shipped in 2015. The functions this port leans on did not exist two years ago.</p></div>
+    </div>
+    <p style="margin-top:24px" data-reveal><a class="btn btn--ghost" href="mta.html" data-i18n="mta.more">Why MTA, in full</a></p>
+  </div>
+</section>
+
+<!-- ===== MEDIA ===== -->
+<section class="section" id="videos">
+  <div class="container">
+    <div class="section-head" data-reveal>
+      <p class="eyebrow" data-i18n="vid.eyebrow">Videos</p>
+      <h2 data-i18n="vid.title">See it move</h2>
+      <p class="lead" data-i18n="vid.lead">Three films, still to be shot. The original's trailers are on <a href="https://scavengesurvive.com" rel="noopener">scavengesurvive.com</a>.</p>
+    </div>
+    <div class="grid grid-3" data-reveal>
+      <div class="ph ph--wide" data-ph="video-trailer" data-brief="60 s trailer"></div>
+      <div class="ph ph--wide" data-ph="video-first-hour" data-brief="Your first hour"></div>
+      <div class="ph ph--wide" data-ph="video-driving" data-brief="Driving"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== JOIN ===== -->
+<section class="section" id="join">
+  <div class="container split">
+    <div data-reveal>
+      <p class="eyebrow" data-i18n="join.eyebrow">Join</p>
+      <h2 data-i18n="join.title">Wake up on the beach</h2>
+      <div class="steps">
+        <div class="step"><h3 data-i18n="join.1.t">GTA: San Andreas 1.0 for PC</h3><p class="muted" data-i18n="join.1.p">The original 2005 release. The Definitive Edition does not work with any San Andreas multiplayer, and newer Steam builds are downgraded with a community patch.</p></div>
+        <div class="step"><h3 data-i18n="join.2.t">Install Multi Theft Auto 1.6</h3><p class="muted" data-i18n="join.2.p">A free client from <a href="https://multitheftauto.com" rel="noopener">multitheftauto.com</a>, separate from SA-MP: both can live on the same game. No MTA account is needed.</p></div>
+        <div class="step"><h3 data-i18n="join.3.t">Connect and pick a name</h3><p class="muted" data-i18n="join.3.p">Your nickname is your account: 1 to 22 characters, a password of at least 4. Pick a language, accept the welcome text, and you are on the sand with a knife.</p></div>
+      </div>
+      <p class="small muted" data-i18n="join.more">Step by step on the wiki: <a href="https://github.com/VIRUXE/scavengesurvive-mta/wiki/Joining-the-Server" rel="noopener">Joining the Server</a> and <a href="https://github.com/VIRUXE/scavengesurvive-mta/wiki/Getting-Started" rel="noopener">Getting Started</a>.</p>
+    </div>
+    <div class="server" data-reveal>
+      <div class="server__name"><span class="status"></span>Scavenge &amp; Survive Reborn</div>
+      <div class="server__addr"><span>185.103.74.67:22003</span><button data-copy="185.103.74.67:22003" data-i18n="copy">Copy</button></div>
+      <dl>
+        <dt data-i18n="servers.players">Players</dt><dd data-live-players>—</dd>
+        <dt data-i18n="servers.lang">Language</dt><dd data-i18n="join.srv.lang">English, with ten interface languages</dd>
+        <dt data-i18n="servers.region">Region</dt><dd data-i18n="join.srv.region">Europe</dd>
+        <dt data-i18n="servers.rules">Rules</dt><dd><a href="https://github.com/VIRUXE/scavengesurvive-mta/wiki/Fair-Play" rel="noopener" data-i18n="join.srv.rules">Fair Play</a></dd>
+      </dl>
+      <div class="row"><a class="btn btn--ember" href="mtasa://185.103.74.67:22003" data-i18n="join.now">Join now</a><a class="btn btn--ghost" href="servers.html" data-i18n="join.servers">All servers</a></div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="footer">
+  <div class="container">
+    <div>
+      <h4 data-i18n="foot.play">Play</h4>
+      <ul>
+        <li><a href="mtasa://185.103.74.67:22003" data-i18n="foot.join">Join the server</a></li>
+        <li><a href="servers.html" data-i18n="nav.servers">Servers</a></li>
+        <li><a href="https://github.com/VIRUXE/scavengesurvive-mta/wiki/Getting-Started" rel="noopener" data-i18n="foot.start">Getting Started</a></li>
+        <li><a href="https://github.com/VIRUXE/scavengesurvive-mta/wiki/Fair-Play" rel="noopener" data-i18n="foot.rules">Fair Play</a></li>
+        <li><a href="https://github.com/VIRUXE/scavengesurvive-mta/wiki" rel="noopener" data-i18n="foot.wiki">The wiki</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4 data-i18n="foot.project">Project</h4>
+      <ul>
+        <li><a href="https://github.com/VIRUXE/scavengesurvive-mta" rel="noopener" data-i18n="foot.source">Source on GitHub</a></li>
+        <li><a href="https://github.com/VIRUXE/scavengesurvive-mta/issues" rel="noopener" data-i18n="foot.issues">Issues and roadmap</a></li>
+        <li><a href="changes.html" data-i18n="nav.changes">What changed</a></li>
+        <li><a href="mta.html" data-i18n="nav.mta">Why MTA</a></li>
+        <li><a href="media.html" data-i18n="nav.media">Media</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4 data-i18n="foot.credits">Credits</h4>
+      <ul>
+        <li><a href="https://github.com/Southclaws/ScavengeSurvive" rel="noopener" data-i18n="foot.upstream">Scavenge &amp; Survive by Southclaws</a></li>
+        <li><a href="https://scavengesurvive.com" rel="noopener" data-i18n="foot.upstream-site">The original site</a></li>
+        <li><a href="https://multitheftauto.com" rel="noopener">Multi Theft Auto</a></li>
+      </ul>
+    </div>
+    <p class="footer__note" data-i18n="foot.note">Scavenge &amp; Survive is Copyright © Barnaby "Southclaws" Keene and the community that built its maps from 2008 to 2017. New code in this port is released under the Unlicense; converted upstream data stays MPL-2.0, the map placements CC BY-SA 4.0, and the SA-MP object models belong to the SA-MP team. Grand Theft Auto is a trademark of Take-Two Interactive; this project is not affiliated with Rockstar Games, Take-Two, SA-MP or the MTA team. © <span data-year>2026</span> the Reborn contributors.</p>
+  </div>
+</footer>
+
+<script src="assets/js/site.js" defer></script>
+</body>
+</html>
