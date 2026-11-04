@@ -1632,6 +1632,12 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
         end
         local open = getVehicleDoorOpenRatio(vehicle, 0) > 0.5
         if not held then
+            if not open then
+                local _, _, prz = getElementRotation(player)
+                if not vlogic.facingVehicle(px, py, prz, vx, vy) then
+                    return
+                end
+            end
             setVehicleDoorOpenRatio(vehicle, 0, open and 0 or 1, 500)
             markUsed(vehicle)
             return
@@ -1809,7 +1815,7 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
             return
         end
         local _, _, prz = getElementRotation(player)
-        if getPedOccupiedVehicle(player) or not vlogic.facingTrunk(px, py, prz, vx, vy) then
+        if getPedOccupiedVehicle(player) or not vlogic.facingVehicle(px, py, prz, vx, vy) then
             return
         end
         if (uname == "Crowbar" or uname == "LockBreaker") and inf.locked > 0 then

@@ -37,7 +37,7 @@ function M.isRear(angle)
 end
 
 -- Ped heading uses the same rotation as vehicles: forward is (-sin(rz), cos(rz)).
-function M.facingTrunk(px, py, prz, vx, vy)
+function M.facingVehicle(px, py, prz, vx, vy)
     local dx, dy = vx - px, vy - py
     local distance = math.sqrt(dx * dx + dy * dy)
     if distance < 0.001 then
