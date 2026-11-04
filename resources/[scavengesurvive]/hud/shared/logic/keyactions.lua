@@ -32,6 +32,8 @@ M.CRATES = { supply = "Open supply crate", cache = "Open weapon cache" }
 -- ctx = {
 --   spawned, uiOpen, knockedOut, hudOff, driver, hitch ("hitch" / "unhitch"), nearTrunk,
 --   nearBonnet ("open" / "closed": an engine bonnet in reach with empty hands), nearPlayer,
+--   nearItem (a loose world item in pickup reach),
+--   nearInspectable (the uname of a nearby sign, plant pot or body),
 --   cuffedNearby, hasBag,
 --   nearFeature ("ladder" / "zipline" / "ladder_on" / "zipline_on" / "button:<label>"), nearCrate ("supply" / "cache"),
 --   nearDoor ("open" / "closed" / "locked": a walk-in vehicle door in reach, the towable Airstream's),
@@ -71,6 +73,31 @@ function M.lines(ctx, keys)
         if ctx.hitch then
             add("hitch", ctx.hitch == "unhitch" and "Unhitch trailer" or "Hitch trailer")
         end
+        return out
+    end
+    -- A reachable world item consumes F before nearby world, crate or vehicle actions.
+    if ctx.nearItem and not ctx.held then
+        local cm = ctx.carmour
+        if cm == "welder" then
+            add("interact", "Take torch")
+            add("interact", "(Hold) Pick up welder")
+        elseif cm == "gas" or cm == "gasoff" then
+            add("interact", cm == "gas" and "Hook up to welder" or "Unhook from welder")
+            add("interact", "(Hold) Pick up")
+        elseif ctx.nearContainer then
+            add("interact", "Open")
+            add("interact", "(Hold) Pick up")
+        elseif ctx.nearInspectable then
+            local inspectText = { Sign = "Edit sign", PlantPot = "Inspect plant pot" }
+            add("interact", inspectText[ctx.nearInspectable] or "Investigate")
+            add("interact", "(Hold) Pick up")
+        elseif ctx.nearMachine then
+            add("interact", "Access machine")
+            add("interact", "(Hold) Machine menu")
+        else
+            add("interact", "Pick up")
+        end
+        add("inventory", "Open inventory")
         return out
     end
     -- ladders and ziplines (world resource): the F line replaces everything else while climbing or riding

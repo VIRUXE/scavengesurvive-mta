@@ -130,27 +130,31 @@ return function(ctx)
         if getPedOccupiedVehicle(localPlayer) or tweaking() then
             return
         end
+        -- Reachable world items take the interact key before world features, crates and vehicle actions.
+        -- Keep the existing item-specific handlers below for Welders, bags, machines and inspectables.
+        local heldNow = ctx.getHeld()
+        local itemDist = not heldNow and exports.items:nearestItemDistance() or false
+        local groundItemFirst = itemDist and itemDist <= PICKUP_REACH
         -- attaching a defence to a trailer (vehicles carmour): F puts it where the ghost lies
-        if exports.vehicles:attachModeActive() then
+        if not groundItemFirst and exports.vehicles:attachModeActive() then
             return exports.vehicles:confirmAttach()
         end
-        if worldInteract() then
+        if not groundItemFirst and worldInteract() then
             return
         end
         -- a Gas Bottle in hand goes onto a trailer's A-frame mount, empty hands take one off (vehicles tryGasMount)
-        local heldNow = ctx.getHeld()
-        if exports.vehicles:tryGasMount(heldNow and heldNow.uname or false) == true then
+        if not groundItemFirst and exports.vehicles:tryGasMount(heldNow and heldNow.uname or false) == true then
             return
         end
-        if exports.loot:tryOpenCrate() == true then
+        if not groundItemFirst and exports.loot:tryOpenCrate() == true then
             return
         end
         -- carmour (vehicles/server/carmour.lua), ahead of the Generator powering the Welder (a machine): the torch
         -- in hand welds at a vehicle that takes armour and goes back on its Welder anywhere else; a Welder in hand is
         -- told to be laid down; an Angle Grinder in hand grinds a welded panel; a defence in hand at such a vehicle
         -- starts attaching it where the camera aims
-        local armourVeh = exports.vehicles:nearbyWeldTarget()
-        if exports.vehicles:hasTorch() then
+        local armourVeh = not groundItemFirst and exports.vehicles:nearbyWeldTarget() or false
+        if not groundItemFirst and exports.vehicles:hasTorch() then
             if armourVeh then
                 blockEnterUntil = getTickCount() + TRUNK_ENTER_BLOCK_MS
                 return triggerServerEvent("vehicleInteractRequested", localPlayer, armourVeh)
@@ -255,6 +259,10 @@ return function(ctx)
                 end
             end, 50, 0)
             return
+        end
+        if groundItemFirst then
+            blockEnterUntil = getTickCount() + TRUNK_ENTER_BLOCK_MS
+            return triggerServerEvent("itemPickupRequested", localPlayer, exports.items:blockedItemsNear())
         end
         local nearVeh, nearDist = getNearbyVehicle()
         local held = ctx.getHeld()

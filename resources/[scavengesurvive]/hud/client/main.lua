@@ -394,6 +394,9 @@ end
 local function drawKeyActions(driver)
     local held = state.held
     local isCalibreWep = held and held.category == "weapon" and held.calibre ~= nil and not held.liquid or false
+    local itemDist = not held and exports.items:nearestItemDistance() or false
+    local nearItem = itemDist and itemDist <= 2.0
+    local _, inspectUname = exports.items:nearbyInspectable()
     local lines = keyactions.lines({
         spawned = true,
         uiOpen = uiListIsOpen(),
@@ -406,6 +409,8 @@ local function drawKeyActions(driver)
         nearCrate = exports.loot:nearbyCrate() or nil,
         nearDoor = walkInDoor(),
         nearBonnet = nearBonnetHint(held),
+        nearItem = nearItem,
+        nearInspectable = not held and inspectUname or false,
         nearCooker = nearCooker(held),
         nearMachine = exports.items:nearbyMachine() ~= false,
         nearContainer = exports.items:nearbyContainerItem() ~= false,
