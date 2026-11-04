@@ -1112,10 +1112,13 @@ return function(ctx)
             return
         end
         local worn = state[slot] and state[slot][player]
+        if type(worn) ~= "table" then
+            worn = nil -- the slot name is the client's: state.lastHolster holds ticks, not items
+        end
         db.call("item_unwear", { cid, slot }, function(res, c)
             logProc("item.unworn", c.player, res, {
                 item_id = res and res.ok and res.payload and res.payload.item_id or nil,
-                uname = worn and worn.uname or nil,
+                uname = worn and worn.uname,
                 slot = slot,
                 destination = res and res.ok and res.payload and res.payload.destination or nil,
                 character_id = cid,
