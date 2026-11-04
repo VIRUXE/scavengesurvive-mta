@@ -6,6 +6,21 @@ local net = loadstring(exports.lib:getModule("net"), "=lib/net.lua")()
 local util = loadstring(exports.lib:getModule("util"), "=lib/util.lua")()
 local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")()
 local budget = loadstring(exports.lib:getModule("budget"), "=lib/budget.lua")()
+local log = loadstring(exports.lib:getModule("log"), "=lib/log.lua")()
+
+-- adds the pos fields (x y z int dim zone) of an element to a log line
+local function logAt(fields, element)
+    if isElement(element) then
+        local x, y, z = getElementPosition(element)
+        fields.x, fields.y, fields.z = x, y, z
+        fields.int, fields.dim = getElementInterior(element), getElementDimension(element)
+        local ok, zone = pcall(function()
+            return exports.maps:getZoneAt(x, y)
+        end)
+        fields.zone = ok and zone or nil
+    end
+    return fields
+end
 
 local spawn
 do
@@ -122,6 +137,16 @@ local function setting(key, default)
     return tonumber(settings[key]) or default
 end
 
+-- a vehicle's log line: its database id, model and position next to the given fields
+local function vehicleLine(vehicle, fields)
+    local i = info[vehicle]
+    fields.vehicle_id = i and i.id
+    if isElement(vehicle) then
+        fields.model = getElementModel(vehicle)
+    end
+    return logAt(fields, vehicle)
+end
+
 -- Puts a spawn point on cooldown (its vehicle was destroyed or driven away): vehicles.cooldown_hours ± jitter.
 local function coolPoint(spawnId)
     if not spawnId then
@@ -234,7 +259,7 @@ end
 local function create(row)
     local v = createVehicle(row.model, row.x, row.y, row.z, 0, 0, row.rz)
     if not v then
-        util.log("vehicles", "warn", "createVehicle failed for %s (model %d)", row.type_uname, row.model)
+        log.event("vehicle.createFailed", { vehicle_id = row.id, uname = row.type_uname, model = row.model }, "warn")
         return nil
     end
     setElementHealth(v, math.max(0, math.min(vlogic.HEALTH_MAX, tonumber(row.health) or vlogic.HEALTH_MAX)))
@@ -384,7 +409,7 @@ local function rollAll(cb)
                 rolling = false
                 local cap = budget.cap(created, settings["vehicles.cap_multiplier"])
                 db.exec(UPSERT_BUDGET, { cap })
-                util.log("vehicles", "info", "rolled %d spawn points: %d vehicles, cap %d", #rows, created, cap)
+                log.event("vehicle.rolled", { spawns = #rows, created = created, cap = cap })
                 triggerEvent("vehiclesSpawned", resourceRoot, created)
                 if cb then
                     cb(created)
@@ -424,6 +449,7 @@ local function refillSpawns(n, cb)
             local started = spawnAt(s, 100, function(v)
                 if v then
                     coolPoint(info[v].spawnId)
+                    log.event("vehicle.spawned", vehicleLine(v, { uname = info[v].uname, reason = "refill" }))
                     triggerEvent("vehicleRefillSpawned", v)
                 end
             end)
@@ -450,6 +476,7 @@ local function refillTick()
             local id = tonumber(r.id)
             for v, i in pairs(info) do
                 if i.id == id then
+                    log.event("vehicle.removed", vehicleLine(v, { uname = i.uname, reason = "abandoned" }))
                     forget(v)
                     if isElement(v) then
                         destroyElement(v)
@@ -473,8 +500,7 @@ local function refillTick()
             local spawns, remainder = budget.refill(cap, alive, tonumber(b.remainder) or 0, rate, floor, interval)
             local function store(spawned)
                 db.exec(UPDATE_REMAINDER, { remainder })
-                local line = "refill: cap %d alive %d removed %d spawned %d"
-                util.log("vehicles", "info", line, cap, alive, removed, spawned)
+                log.event("vehicle.refillTicked", { cap = cap, alive = alive, removed = removed, spawned = spawned })
                 finish()
             end
             if spawns <= 0 then
@@ -513,7 +539,7 @@ local function loadOrRoll()
                 end
             end
         end
-        util.log("vehicles", "info", "%d vehicles rebuilt from the database", n)
+        log.event("vehicle.loaded", { count = n })
         triggerEvent("vehiclesSpawned", resourceRoot, n)
     end)
 end
@@ -788,6 +814,7 @@ net.handler("lockToggleRequested", function(player)
     end
     setElementData(v, "vehicles.locked", inf.locked, "broadcast", "deny")
     db.exec("UPDATE vehicles SET locked = ? WHERE id = ?", { inf.locked, inf.id })
+    log.event("vehicle.lockToggled", vehicleLine(v, { player = player, locked = inf.locked, via = "inside" }))
 end, { rate = 3 })
 
 -- Trailers (upstream vehicle/trailer.pwn): the driver of a vehicle with a hitch toggles it with upstream's KEY_ACTION
@@ -956,9 +983,10 @@ local function destroyCargo(trailer)
     end
     local c = cargo[trailer]
     cargo[trailer] = nil
-    local gone = {}
+    local gone, lost = {}, 0
     for id in pairs(c and c.items or {}) do
         gone[id] = true
+        lost = lost + 1
         exports.items:destroyWorldItem(id)
     end
     publishCargo(trailer)
@@ -973,6 +1001,7 @@ local function destroyCargo(trailer)
             end
         end
     end)
+    return lost
 end
 
 local function angleOff(a, b)
@@ -1108,6 +1137,8 @@ local function logSeat(vehicle, player, seat, action)
         return
     end
     local x, y, z = getElementPosition(vehicle)
+    local kind = action == "enter" and "vehicle.entered" or "vehicle.exited"
+    log.event(kind, vehicleLine(vehicle, { player = player, seat = seat }))
     local cols = "vehicle_id, character_id, name, seat, action, x, y, z"
     local sql = "INSERT INTO vehicle_events (" .. cols .. ") VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
     db.exec(sql, { i.id, charId(player) or nil, getPlayerName(player), seat, action, x, y, z })
@@ -1221,7 +1252,7 @@ end
 local BREAK_LOCK_SQL = "UPDATE vehicles SET locked = 0, key_code = NULL, keypad_code = NULL WHERE id = ?"
 local KEYPAD_HOLD_MS = 6000
 local KEYPAD_COOLDOWN_MS = 2000
-local function breakDoorLock(vehicle)
+local function breakDoorLock(vehicle, player)
     local vinf = info[vehicle]
     if not vinf then
         return
@@ -1232,10 +1263,12 @@ local function breakDoorLock(vehicle)
     setElementData(vehicle, "vehicles.locked", 0, "broadcast", "deny")
     vinf.keypad = nil
     db.exec(BREAK_LOCK_SQL, { vinf.id })
+    log.event("vehicle.lockToggled", vehicleLine(vehicle, { player = player, locked = 0, via = "broken" }))
 end
 
 local pendingKeypad = {} -- player -> the vehicle whose keypad prompt is open (setup or entry)
 local lastKeypadTry = {} -- player -> tick of the last wrong code
+local keypadTries = {} -- player -> { vehicle, wrong codes since the last right one }
 
 local function nearDoorOf(player, vehicle)
     if not isElement(vehicle) or not info[vehicle] or getPedOccupiedVehicle(player) then
@@ -1288,15 +1321,27 @@ net.handler("vehicleKeypadSubmitted", function(player, vehicle, code)
         triggerClientEvent(player, "keypadClosed", player)
         setVehicleDoorOpenRatio(vehicle, vlogic.WALK_IN_DOOR, 1, 600)
         markUsed(vehicle)
+        local tries = keypadTries[player]
+        local attempts = (tries and tries.vehicle == vehicle and tries.n or 0) + 1
+        keypadTries[player] = nil
+        log.event("vehicle.keypadOpened", vehicleLine(vehicle, { player = player, attempts = attempts }))
         return
     end
     lastKeypadTry[player] = now
     toast(player, "WRONG_PASSCODE")
+    local tries = keypadTries[player]
+    if not tries or tries.vehicle ~= vehicle then
+        tries = { vehicle = vehicle, n = 0 }
+        keypadTries[player] = tries
+    end
+    tries.n = tries.n + 1
+    log.event("vehicle.keypadFailed", vehicleLine(vehicle, { player = player, attempts = tries.n }))
 end, { rate = 3 })
 
 addEventHandler("onPlayerQuit", root, function()
     pendingKeypad[source] = nil
     lastKeypadTry[source] = nil
+    keypadTries[source] = nil
 end)
 
 -- A walk-in door (vehicle types with door = true, the towable Airstream): the interact key next to it opens or shuts
@@ -1407,6 +1452,7 @@ local function fitBattery(player, vehicle, held)
         db.exec(FIT_BATTERY_SQL, args)
         exports.items:destroyItem(itemId, p)
         toast(p, "BATTERY_FITTED")
+        log.event("vehicle.partInstalled", vehicleLine(veh, { player = p, part = "battery", item_id = itemId }))
     end, BATTERY_HOLD_MS, 1, player, vehicle, held.id)
     activeActions[player] = { actionType = "battery", vehicle = vehicle, timer = timer }
 end
@@ -1443,8 +1489,13 @@ local function removeBattery(player, vehicle)
                 db.exec("UPDATE items SET data = ? WHERE id = ?", { toJSON(data), newId })
                 exports.items:setHeld(c.p, { id = newId, uname = "Battery", hp = 2, data = data })
                 toast(c.p, string.format("BATTERY_LEVEL:%d", math.floor(level + 0.5)))
+                log.event("vehicle.partRemoved", vehicleLine(c.v, { player = c.p, part = "battery", item_id = newId }))
+            elseif not (res and res.ok) then
+                local code = res and res.code or "DB_ERROR"
+                local line = vehicleLine(c.v, { player = c.p, part = "battery", ok = false, code = code })
+                log.event("vehicle.partRemoved", line, "warn")
             end
-        end, { p = p })
+        end, { p = p, v = veh })
     end, BATTERY_HOLD_MS, 1, player, vehicle)
     activeActions[player] = { actionType = "battery", vehicle = vehicle, timer = timer }
 end
@@ -1719,6 +1770,8 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
             end
             setElementData(vehicle, "vehicles.locked", inf.locked, "broadcast", "deny")
             db.exec("UPDATE vehicles SET locked = ? WHERE id = ?", { inf.locked, inf.id })
+            local line = vehicleLine(vehicle, { player = player, locked = inf.locked, via = "key", item_id = held.id })
+            log.event("vehicle.lockToggled", line)
             return
         end
 
@@ -1750,6 +1803,8 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
                     shutWalkInDoor(veh)
                     setElementData(veh, "vehicles.locked", 1, "broadcast", "deny")
                     db.exec("UPDATE vehicles SET locked = 1, key_code = ? WHERE id = ?", { code, vinf.id })
+                    local line = vehicleLine(veh, { player = p, locked = 1, via = "locksmith", item_id = kitId })
+                    log.event("vehicle.lockToggled", line)
                 end
                 exports.items:destroyItem(kitId, p)
                 db.call("item_create_held", { "Key", cid }, function(res, c)
@@ -1789,6 +1844,7 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
                 db.exec("UPDATE vehicles SET keypad_code = '' WHERE id = ?", { vinf.id })
                 exports.items:destroyItem(kitId, p)
                 exports.character:gainSkill(p, "Construction")
+                log.event("vehicle.keypadInstalled", vehicleLine(veh, { player = p, item_id = kitId }))
                 pendingKeypad[p] = veh
                 triggerClientEvent(p, "vehicleKeypadOpened", p, veh, true)
             end, ms, 1, player, vehicle, held.id)
@@ -1814,7 +1870,7 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
                 end
                 setPedAnimation(p, nil)
                 if info[veh] then
-                    breakDoorLock(veh)
+                    breakDoorLock(veh, p)
                     toast(p, "LOCKBROKEN")
                 end
             end, 3000, 1, player, vehicle)
@@ -1856,6 +1912,7 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
                     setElementData(veh, "vehicles.locked", 0, "broadcast", "deny")
                     vinf.keypad = nil
                     db.exec(BREAK_LOCK_SQL, { vinf.id })
+                    log.event("vehicle.lockToggled", vehicleLine(veh, { player = p, locked = 0, via = "broken" }))
                     toast(p, "LOCKBROKEN")
                 end
             end, 3000, 1, player, vehicle)
@@ -1910,6 +1967,7 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
             gcan.data = { amount = nextCanFuel }
             exports.items:updateHeldData(p, gcan.data)
             toast(p, "REFUELLED")
+            log.event("vehicle.refuelled", vehicleLine(veh, { player = p, litres = transfer, fuel = nextVehFuel }))
         end, 3000, 1, player, vehicle, held)
         activeActions[player] = { actionType = "refuel", vehicle = vehicle, timer = timer }
         return
@@ -1983,13 +2041,15 @@ addEventHandler("onVehicleExplode", resourceRoot, function()
     if not i then
         return
     end
-    destroyCargo(source) -- what was inside a walk-in trailer goes up with it
+    local lost = destroyCargo(source) -- what was inside a walk-in trailer goes up with it
+    log.event("vehicle.exploded", vehicleLine(source, { uname = i.uname, cargo = lost or 0 }))
     if not i.leftSpawn then
         coolPoint(i.spawnId)
     end
     setTimer(function(v, id)
         db.exec("DELETE FROM vehicles WHERE id = ?", { id })
         if isElement(v) then
+            log.event("vehicle.removed", vehicleLine(v, { uname = i.uname, reason = "exploded" }))
             forget(v)
             destroyElement(v)
         end
@@ -2002,6 +2062,7 @@ local function loadCarmour()
     fileClose(f)
     local make = assert(loadstring(src, "=vehicles/server/carmour.lua"))()
     local ctx = { db = db, info = info, toast = toast, activeActions = activeActions, carmour = carmour }
+    ctx.log, ctx.vehicleLine = log, vehicleLine
     ctx.place, ctx.geo, ctx.cancelHoldAction, ctx.breakLock = carmourPlace, carmourGeo, cancelHoldAction, breakDoorLock
     return make(ctx)
 end
@@ -2125,11 +2186,14 @@ function respawnAll()
     if rolling then
         return false
     end
+    local removed = 0
     for v in pairs(info) do
         if isElement(v) then
             destroyElement(v)
+            removed = removed + 1
         end
     end
+    log.event("vehicle.removed", { reason = "staff", count = removed })
     info = {}
     -- the dev reset: every point is free again and the roll writes a fresh budget row
     db.exec("DELETE FROM vehicle_spawn_state", {})
@@ -2151,6 +2215,7 @@ do
     local src = fileRead(f, fileGetSize(f))
     fileClose(f)
     local ctx = { bp = bp, db = db, util = util, info = info, activeActions = activeActions }
+    ctx.log, ctx.vehicleLine = log, vehicleLine
     ctx.cancel, ctx.toLocal, ctx.toWorld, ctx.toast = cancelHoldAction, toLocal, toWorld, toast
     bodySrv = assert(loadstring(src, "=vehicles/bodyparts.lua"))()(ctx)
 end

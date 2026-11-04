@@ -2,6 +2,16 @@
 -- one up is banned. The spots are generated (data/traps.lua, 31 of them), the item ids live in anticheat_traps, and
 -- items asks every pickup through the cancellable itemPickupAttempted event. A trap item has no despawn time and
 -- no loot spot, so nothing removes it; one that is gone (staff /di, a wipe) is made again on the next start.
+local log = loadstring(exports.lib:getModule("log"), "=lib/log.lua")()
+
+-- the player's zone name, or nil when maps is not running
+local function zoneOf(player)
+    local ok, zone = pcall(function()
+        return exports.maps:getPlayerZone(player)
+    end)
+    return ok and zone or nil
+end
+
 return function(ctx)
     local db = ctx.db
     local spots = ctx.loadFile("data/traps.lua")
@@ -14,13 +24,17 @@ return function(ctx)
         local row = spots[spot]
         local uname, data = exports.loot:pickItem(row[4])
         if not uname then
-            return outputServerLog(string.format("[anticheat] trap %d: no item from loot table %s", spot, row[4]))
+            return log.event("anticheat.trapFailed", {
+                trap_id = spot,
+                reason = "noLootItem",
+                loot_table = tostring(row[4]),
+            }, "warn")
         end
         local args = { uname, nil, data, row[1], row[2], row[3], math.random(0, 359), 0, 0, nil, nil, n = 11 }
         db.call("item_create", args, function(res)
             local itemId = res and res.ok and res.payload and tonumber(res.payload.item_id)
             if not itemId then
-                return outputServerLog(string.format("[anticheat] trap %d: item_create failed", spot))
+                return log.event("anticheat.trapFailed", { trap_id = spot, reason = "itemCreateFailed" }, "warn")
             end
             bySpot[spot], byItem[itemId] = itemId, spot
             db.exec(SAVE_SQL, { spot, itemId })
@@ -33,7 +47,7 @@ return function(ctx)
             "SELECT t.spot, t.item_id FROM anticheat_traps t JOIN items i ON i.id = t.item_id WHERE i.x IS NOT NULL"
         db.query(sql, {}, function(rows)
             if not rows then
-                return outputServerLog("[anticheat] traps: could not read the trap items")
+                return log.event("anticheat.trapFailed", { reason = "readFailed" }, "warn")
             end
             bySpot, byItem = {}, {}
             for _, r in ipairs(rows) do
@@ -49,9 +63,12 @@ return function(ctx)
                     place(spot)
                 end
             end
-            local line =
-                string.format("[anticheat] traps: %d of %d in place, %d made again", #spots - made, #spots, made)
-            outputServerLog(line)
+            log.event("anticheat.trapsSynced", {
+                total = #spots,
+                in_place = #spots - made,
+                made = made,
+                msg = string.format("traps: %d of %d in place, %d made again", #spots - made, #spots, made),
+            })
         end)
     end
 
@@ -61,6 +78,19 @@ return function(ctx)
             return
         end
         cancelEvent()
+        local x, y, z = getElementPosition(source)
+        log.event("anticheat.trapTriggered", {
+            player = source,
+            trap_id = spot,
+            item_id = tonumber(itemId),
+            exempt = ctx.exempt(source) == true,
+            x = x,
+            y = y,
+            z = z,
+            int = getElementInterior(source),
+            dim = getElementDimension(source),
+            zone = zoneOf(source),
+        }, "warn")
         if ctx.exempt(source) then
             return
         end

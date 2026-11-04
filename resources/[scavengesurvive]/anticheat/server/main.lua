@@ -19,6 +19,7 @@ local settings = {}
 local idleKickEnabled = true
 local db = loadstring(exports.lib:getModule("db"), "=lib/db.lua")()
 local net = loadstring(exports.lib:getModule("net"), "=lib/net.lua")()
+local log = loadstring(exports.lib:getModule("log"), "=lib/log.lua")()
 local function loadFile(path)
     local f = fileOpen(path, true)
     local src = fileRead(f, fileGetSize(f))
@@ -29,25 +30,22 @@ local fieldsLogic = loadFile("shared/logic/fields.lua")
 local fields = loadFile("server/fields.lua")(db, fieldsLogic)
 local focusLogic = loadFile("shared/logic/focus.lua")
 
-local function playerName(player)
-    return isElement(player) and getPlayerName(player) or "<left>"
+-- one line per suspicious thing a check saw; the report, kick and ban helpers below all start with it
+local function detected(player, check, detail)
+    log.event("anticheat.detected", { player = player, check = tostring(check), detail = tostring(detail) }, "warn")
 end
 
-local function log(player, check, detail)
-    outputServerLog(string.format("[anticheat] %s (%s): %s", playerName(player), tostring(check), tostring(detail)))
-end
-
-local function kick(player, reason)
+local function kick(player, reason, check)
     if not isElement(player) then
         return
     end
-    log(player, "kick", reason)
+    log.event("anticheat.kicked", { player = player, check = check or "kick", reason = tostring(reason) }, "warn")
     kickPlayer(player, "ScavengeSurvive", reason)
 end
 
 -- what the hack-detect and hack-trap modules share: staff on duty are out of every check, a player without a living
 -- character (not spawned yet, dead) has nothing to cheat with, and the tick helpers give the upstream grace windows
-local ctx = { db = db, loadFile = loadFile, log = log, kick = kick, fields = fieldsLogic }
+local ctx = { db = db, loadFile = loadFile, log = detected, kick = kick, fields = fieldsLogic }
 ctx.water = loadFile("shared/logic/water.lua")
 ctx.accuracyLogic = loadFile("shared/logic/accuracy.lua")
 
@@ -72,7 +70,7 @@ function ctx.sinceSpawn(player)
 end
 
 function ctx.autoBan(player, reason)
-    log(player, "ban", reason)
+    detected(player, "ban", reason)
     return exports.staff:autoBan(player, reason)
 end
 
@@ -116,7 +114,7 @@ net.handler("anticheatFocusChanged", function(player, isFocused)
         minimizedSince[player] = nil
     elseif isFocused == false and not minimizedSince[player] then
         minimizedSince[player] = getTickCount()
-        log(player, "focus", "game minimized")
+        detected(player, "focus", "game minimized")
     end
 end)
 
@@ -153,7 +151,7 @@ addEventHandler("onPlayerTeleport", root, function(oldX, oldY, oldZ, newX, newY,
         spawned and string.format("%.1fs", (now - spawned) / 1000) or "unknown"
     )
     local detail = string.format("unexpected position change %.1f m | %s", distance, diagnostics)
-    log(source, "teleport", detail)
+    detected(source, "teleport", detail)
     local from = string.format("%.0f, %.0f, %.0f", oldX, oldY, oldZ)
     local to = string.format("%.0f, %.0f, %.0f", newX, newY, newZ)
     ctx.report(source, "TELE", string.format("Moved %.0fm (%s > %s), ping %dms", distance, from, to, ping), diagnostics)
@@ -161,7 +159,7 @@ end)
 
 -- MTA counts every client triggerServerEvent, including unregistered/non-remote event attempts.
 addEventHandler("onPlayerTriggerEventThreshold", root, function(eventName)
-    kick(source, "event flood" .. (eventName and (": " .. tostring(eventName)) or ""))
+    kick(source, "event flood" .. (eventName and (": " .. tostring(eventName)) or ""), "eventFlood")
 end)
 
 -- Only a server-only event (added, not remote) is proof of a forged trigger. An event that is not added at all is
@@ -175,9 +173,9 @@ addEventHandler("onPlayerTriggerInvalidEvent", root, function(eventName, isAdded
         tostring(isRemote)
     )
     if isAdded then
-        kick(source, detail)
+        kick(source, detail, "forgedEvent")
     else
-        log(source, "event", detail)
+        detected(source, "event", detail)
     end
 end)
 
@@ -201,7 +199,7 @@ setTimer(function()
             if not onDuty and getPlayerPing(player) > limit then
                 pingStrikes[player] = (pingStrikes[player] or 0) + 1
                 if pingStrikes[player] >= PING_STRIKES then
-                    kick(player, string.format("ping exceeded %d ms for 10 seconds", limit))
+                    kick(player, string.format("ping exceeded %d ms for 10 seconds", limit), "ping")
                 end
             else
                 pingStrikes[player] = 0
@@ -210,7 +208,7 @@ setTimer(function()
 
         local minimizedAt = minimizedSince[player]
         if focusLogic.shouldKick(idleKickEnabled, maxTabOutTime, minimizedAt, now, onDuty) then
-            kick(player, string.format("game unfocused for over %d seconds", maxTabOutTime))
+            kick(player, string.format("game unfocused for over %d seconds", maxTabOutTime), "unfocused")
             minimizedSince[player] = nil
         end
     end

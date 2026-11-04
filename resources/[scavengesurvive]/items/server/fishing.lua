@@ -7,7 +7,16 @@
 return function(ctx)
     local db, net, state, toast, fishing = ctx.db, ctx.net, ctx.state, ctx.toast, ctx.fishing
     local active = {} -- player -> { rodId, dist, timer, landing }
+    local log = loadstring(exports.lib:getModule("log"), "=lib/log.lua")()
     local M = {}
+
+    -- one event per procedure callback: ok and code come from the db.call result (res == false: the query failed)
+    local function logProc(kind, player, res, fields)
+        fields.player = player
+        fields.ok = res and res.ok or false
+        fields.code = res and res.code or "DB_ERROR"
+        log.event(kind, fields)
+    end
 
     local function encode(t)
         return toJSON(t, true):sub(2, -2)
@@ -42,6 +51,14 @@ return function(ctx)
             if res and res.ok then
                 triggerEvent("itemCreated", resourceRoot, res.payload.item_id)
             end
+            logProc("item.created", c.player, res, {
+                item_id = res and res.ok and res.payload.item_id or nil,
+                uname = fishing.CATCH,
+                source = "fishing",
+                x = math.floor(params[4]),
+                y = math.floor(params[5]),
+                z = math.floor(params[6]),
+            })
             if isElement(c.player) then
                 ctx.world.syncPlayer(c.player)
             end

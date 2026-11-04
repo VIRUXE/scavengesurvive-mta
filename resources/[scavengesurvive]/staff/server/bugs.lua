@@ -1,6 +1,7 @@
 -- Bug reports (#153, upstream admin/bug-report.pwn): /bug for everyone asks for a description (128 characters) and
 -- stores it in bug_reports, telling staff; /issues, also for everyone, lists the oldest 32 and opens one, and from
 -- level 2 the open report can be deleted. Every "Back" or "Delete" returns to the list, as upstream.
+local log = loadstring(exports.lib:getModule("log"), "=lib/log.lua")()
 return function(ctx)
     local db, logic = ctx.db, ctx.logic
     local M = {}
@@ -8,7 +9,13 @@ return function(ctx)
     local function file(p, reason)
         local sql = "INSERT INTO bug_reports (name, account_id, reason) VALUES (?, ?, ?)"
         local params = { ctx.name(p), ctx.accountId(p), reason:sub(1, logic.BUG_REASON_MAX), n = 3 }
-        db.exec(sql, params, function(ok, r)
+        db.exec(sql, params, function(ok, r, _, insertId)
+            log.event("staff.bugReported", {
+                player = r,
+                ok = ok and true or false,
+                report_id = ok and insertId or nil,
+                reason = params[3],
+            })
             if not ok then
                 return ctx.say(r, " >  Your bug report could not be saved; try again later.")
             end

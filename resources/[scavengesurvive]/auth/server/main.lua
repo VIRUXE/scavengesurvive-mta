@@ -1,6 +1,7 @@
 local db = loadstring(exports.lib:getModule("db"), "=lib/db.lua")()
 local net = loadstring(exports.lib:getModule("net"), "=lib/net.lua")()
 local util = loadstring(exports.lib:getModule("util"), "=lib/util.lua")()
+local log = loadstring(exports.lib:getModule("log"), "=lib/log.lua")()
 local function loadFile(path)
     local f = fileOpen(path, true)
     local src = fileRead(f, fileGetSize(f))
@@ -35,6 +36,7 @@ local countdown = {} -- player -> { timer, ends } while a player not listed wait
 local accounts
 local finish -- defined after prompt, which calls it for an auto-login
 local warnedNoDb = false
+local joinedAt = {} -- player -> tick of onPlayerJoin, for session.left's duration_s
 
 -- Clear protection left by the previous auth version during the first upgrade to session restoration.
 local REAUTH_KEY = "auth.reauthProtection"
@@ -102,7 +104,12 @@ local function startCountdown(player)
         end
         outputChatBox(t(player, "WHITELISTAC"), player, 255, 255, 0, true)
         outputChatBox(t(player, "WHITELISTNO"), player, 255, 255, 0, true)
-        util.log("auth", "info", "%s kicked: not whitelisted after the countdown", account.name)
+        log.event("session.kicked", {
+            player = player,
+            account_id = account.id,
+            reason = "whitelistCountdown",
+            msg = account.name .. " kicked: not whitelisted after the countdown",
+        })
         kickLater(player, "Not in whitelist")
     end, remaining, 1)
     countdown[player] = { timer = timer, ends = ends }
@@ -135,15 +142,33 @@ local function startCountdowns()
                 startCountdown(p)
             end
         end
-        util.log("auth", "info", "whitelist on: %d player(s) not listed get %d s", #targets, whitelistKickS)
+        log.event("session.whitelistCountdownStarted", {
+            players = #targets,
+            kick_s = whitelistKickS,
+            msg = string.format("whitelist on: %d player(s) not listed get %d s", #targets, whitelistKickS),
+        })
     end)
 end
 
-local function setWhitelist(flag)
+local function setWhitelist(flag, auto, staffOnline)
     if flag == whitelistEnabled then
         return
     end
     whitelistEnabled = flag
+    if not staffOnline then
+        staffOnline = 0
+        for _, account in pairs(session) do
+            if account.adminLevel >= access.AUTO_WHITELIST_LEVEL then
+                staffOnline = staffOnline + 1
+            end
+        end
+    end
+    log.event("session.whitelistToggled", {
+        on = flag,
+        auto = auto == true,
+        staff_online = staffOnline,
+        msg = "whitelist " .. (flag and "on" or "off"),
+    })
     if flag then
         return startCountdowns()
     end
@@ -164,8 +189,7 @@ local function applyAutoWhitelist(leaving, announceTo)
     if nextState == nil then
         return
     end
-    setWhitelist(nextState)
-    util.log("auth", "info", "auto-whitelist: whitelist %s (%d staff online)", nextState and "on" or "off", staffOnline)
+    setWhitelist(nextState, true, staffOnline)
     if not nextState and isElement(announceTo) then
         outputChatBox(" >  Auto-whitelist: Deactivated the whitelist.", announceTo, 255, 255, 0)
     end
@@ -186,7 +210,13 @@ local function checkBan(player)
             for _, line in ipairs(access.banLines(row)) do
                 outputChatBox(line, p, 255, 80, 80)
             end
-            util.log("auth", "info", "%s refused: ban %d (%s)", getPlayerName(p), row.id, tostring(row.reason))
+            log.event("session.refused", {
+                player = p,
+                reason = "banned",
+                ban_id = row.id,
+                ban_reason = tostring(row.reason),
+                msg = getPlayerName(p) .. " refused: banned",
+            })
             db.exec("UPDATE bans SET ip = ?, serial = ? WHERE id = ? AND name = ?", {
                 getPlayerIP(p),
                 getPlayerSerial(p),
@@ -211,6 +241,11 @@ addEventHandler("onResourceStart", resourceRoot, function()
             kickLater(p, saved.kickReason)
         elseif type(saved) == "table" and type(saved.account) == "table" and type(saved.account.id) == "number" then
             session[p] = saved.account
+            log.event("session.authenticated", {
+                player = p,
+                account_id = saved.account.id,
+                method = "restored",
+            })
             promptLang[p] = saved.account.lang or "en"
             resumedCountdowns[p] = tonumber(saved.whitelistEnds)
             setElementData(p, LANG_KEY, saved.account.lang or "en", "local", "deny")
@@ -259,6 +294,13 @@ addEventHandler("onResourceStop", resourceRoot, function()
 end)
 
 addEventHandler("onPlayerJoin", root, function()
+    joinedAt[source] = getTickCount()
+    log.event("session.joined", {
+        player = source,
+        serial = getPlayerSerial(source),
+        ip = getPlayerIP(source),
+        version = getPlayerVersion(source) or nil,
+    })
     setElementData(source, SESSION_KEY, false, "local", "deny")
     checkBan(source)
 end)
@@ -276,7 +318,12 @@ end
 local function leave(player)
     local mode = promptMode[player]
     promptMode[player] = nil
-    util.log("auth", "info", "%s left the %s dialog", getPlayerName(player), tostring(mode))
+    log.event("session.kicked", {
+        player = player,
+        reason = "dialogLeft",
+        mode = mode,
+        msg = getPlayerName(player) .. " left the " .. tostring(mode) .. " dialog",
+    })
     kickLater(player, mode == "register" and "Left without registering" or "Left without logging in")
 end
 
@@ -315,10 +362,16 @@ function prompt(player)
             return
         end
         if row == false then
+            log.event("session.kicked", { player = player, reason = "accountLoadFailed" })
             return kickLater(player, "Account load failed")
         end
         if row and row.active == 0 then
-            util.log("auth", "info", "%s refused: account inactive", getPlayerName(player))
+            log.event("session.refused", {
+                player = player,
+                account_id = row.id,
+                reason = "inactive",
+                msg = getPlayerName(player) .. " refused: account inactive",
+            })
             return kickLater(player, "Account inactive")
         end
         if not chosenLang[player] and not (row and row.lang) then
@@ -328,8 +381,7 @@ function prompt(player)
         if access.autoLoginAllowed(autoIpLogin, row, getPlayerIP(player), getPlayerSerial(player)) then
             pending[player] = true
             return accounts.loginTrusted(player, row, function(ok, code, account)
-                util.log("auth", "info", "%s auto-logged in by IP and serial", row.name)
-                finish(player, ok, code, account, nil, false)
+                finish(player, ok, code, account, nil, false, "autologin")
             end)
         end
         showDialog(player, row and "login" or "register")
@@ -353,12 +405,18 @@ addEventHandler("onPlayerResourceStart", root, function(res)
     end
 end)
 
-local function admit(player, account, isNew)
+local function admit(player, account, isNew, method)
     -- one session per account: a client that renamed itself (/nick) keeps its session, so a second client joining
     -- under the account's name must not load and control the same character
     for other, held in pairs(session) do
         if other ~= player and held.id == account.id then
-            util.log("auth", "info", "%s refused: account already online as %s", account.name, getPlayerName(other))
+            log.event("session.refused", {
+                player = player,
+                account_id = account.id,
+                reason = "alreadyOnline",
+                target = other,
+                msg = account.name .. " refused: account already online as " .. getPlayerName(other),
+            })
             return kickLater(player, "Account already online")
         end
     end
@@ -366,6 +424,12 @@ local function admit(player, account, isNew)
         account.lang = chosenLang[player]
         account.langChosen = true
         db.exec("UPDATE accounts SET lang = ? WHERE id = ?", { account.lang, account.id })
+        log.event("session.languageSet", {
+            player = player,
+            account_id = account.id,
+            lang = account.lang,
+            via = "dialog",
+        })
     end
     session[player] = account
     saveSession(player)
@@ -377,13 +441,28 @@ local function admit(player, account, isNew)
     if isNew then
         triggerClientEvent(player, "authWelcomeShown", player)
     end
+    log.event("session.authenticated", {
+        player = player,
+        account_id = account.id,
+        method = method,
+        is_new = isNew == true,
+        msg = account.name .. " authenticated as account " .. account.id,
+    })
     triggerEvent("playerAuthenticated", player, account.id)
     finishReauth(player)
-    util.log("auth", "info", "%s authenticated as account %d", account.name, account.id)
 end
 
 local function refused(player, code, attempts)
     local r = prompts.onRefused(code, attempts)
+    if code == "BAD_PASSWORD" or code == "TOO_MANY_ATTEMPTS" then
+        log.event("session.refused", { player = player, reason = "badPassword", code = code, attempts = attempts })
+    elseif r.action == "kick" then
+        log.event("session.refused", {
+            player = player,
+            reason = code == "INACTIVE" and "inactive" or "loginFailed",
+            code = code,
+        })
+    end
     if r.chatKey then
         outputChatBox(t(player, r.chatKey), player, 255, 255, 0, true)
     end
@@ -394,12 +473,11 @@ local function refused(player, code, attempts)
     elseif r.action == "leave" then
         leave(player)
     elseif r.action == "kick" then
-        util.log("auth", "info", "%s refused: %s", getPlayerName(player), code)
         kickLater(player, r.reason)
     end
 end
 
-function finish(player, ok, code, account, attempts, isNew)
+function finish(player, ok, code, account, attempts, isNew, method)
     pending[player] = nil
     if not isElement(player) or blocked[player] then
         return
@@ -408,7 +486,7 @@ function finish(player, ok, code, account, attempts, isNew)
         return refused(player, code, attempts)
     end
     if not whitelistEnabled or account.adminLevel > 0 then
-        return admit(player, account, isNew)
+        return admit(player, account, isNew, method)
     end
     -- whitelist on (upstream player/whitelist.pwn): only listed names and staff may stay
     db.one("SELECT name FROM whitelist WHERE name = ?", { account.name }, function(row, p)
@@ -416,11 +494,16 @@ function finish(player, ok, code, account, attempts, isNew)
             return
         end
         if access.whitelistAllows(true, row ~= nil and row ~= false, account.adminLevel) then
-            return admit(p, account, isNew)
+            return admit(p, account, isNew, method)
         end
         outputChatBox(t(p, "WHITELISTAC"), p, 255, 255, 0, true)
         outputChatBox(t(p, "WHITELISTNO"), p, 255, 255, 0, true)
-        util.log("auth", "info", "%s refused: not whitelisted", account.name)
+        log.event("session.refused", {
+            player = p,
+            account_id = account.id,
+            reason = "notWhitelisted",
+            msg = account.name .. " refused: not whitelisted",
+        })
         kickLater(p, "Not whitelisted")
     end, player)
 end
@@ -440,7 +523,7 @@ net.handler("loginRequested", function(player, password)
     end
     pending[player] = true
     accounts.login(player, getPlayerName(player), tostring(password), function(ok, code, account, attempts)
-        finish(player, ok, code, account, attempts, false)
+        finish(player, ok, code, account, attempts, false, "password")
     end)
 end, { rate = 2 })
 
@@ -450,7 +533,7 @@ net.handler("registrationRequested", function(player, password)
     end
     pending[player] = true
     accounts.register(player, getPlayerName(player), tostring(password), function(ok, code, account)
-        finish(player, ok, code, account, nil, true)
+        finish(player, ok, code, account, nil, true, "register")
     end)
 end, { rate = 2 })
 
@@ -464,6 +547,15 @@ end, { rate = 2 })
 addEventHandler("onPlayerQuit", root, function(reason)
     local account = session[source]
     setElementData(source, SESSION_KEY, false, "local", "deny")
+    local joined = joinedAt[source]
+    joinedAt[source] = nil
+    log.event("session.left", {
+        player = source,
+        account_id = account and account.id or nil,
+        authenticated = account ~= nil,
+        quit_reason = reason,
+        duration_s = joined and math.floor((getTickCount() - joined) / 1000) or nil,
+    })
     if account then
         -- the quit reason travels with the event: character decides whether a leaving player combat-logged
         triggerEvent("playerLoggedOut", source, account.id, reason)
@@ -508,7 +600,7 @@ addCommandHandler("lang", function(player, _, code)
     setElementData(player, LANG_KEY, code, "local", "deny")
     db.exec("UPDATE accounts SET lang = ? WHERE id = ?", { code, account.id })
     outputChatBox(string.format(" >  Language set to %s.", code), player, 255, 255, 0)
-    util.log("auth", "info", "%s set language %s", account.name, code)
+    log.event("session.languageSet", { player = player, account_id = account.id, lang = code, via = "command" })
 end)
 
 -- /tooltips (upstream commands.pwn): the pickup and vehicle tips (ui's showTip) on or off; stored on the account.
@@ -555,7 +647,12 @@ addCommandHandler("changepass", function(player, _, oldPw, newPw)
         local reply = rules.changePasswordReply(code)
         local r, g, b = unpack(reply.color)
         outputChatBox(exports.data:t(lang, reply.key, newPw), player, r, g, b, true)
-        util.log("auth", "info", "%s /changepass: %s", account.name, code)
+        log.event("session.passwordChanged", {
+            player = player,
+            account_id = account.id,
+            ok = code == "OK",
+            code = code,
+        })
     end)
 end)
 

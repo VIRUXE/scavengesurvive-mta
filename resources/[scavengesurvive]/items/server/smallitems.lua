@@ -23,9 +23,18 @@ return function(ctx)
     local firework = ctx.firework
     local SIGN_REACH = 2.5
     local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")()
+    local log = loadstring(exports.lib:getModule("log"), "=lib/log.lua")()
     local openNotes = {} -- player -> { itemId, fromHand, openContainerId }
     local openSigns = {} -- player -> itemId
     local M = {}
+
+    -- one event per procedure callback: ok and code come from the db.call result (res == false: the query failed)
+    local function logProc(kind, player, res, fields)
+        fields.player = player
+        fields.ok = res and res.ok or false
+        fields.code = res and res.code or "DB_ERROR"
+        log.event(kind, fields)
+    end
 
     local function encode(t)
         return toJSON(t, true):sub(2, -2)
@@ -91,7 +100,7 @@ return function(ctx)
                 if ok and not fromHand then
                     ctx.sendInventory(pl)
                 end
-            end)
+            end, "used")
         end)
     end, { rate = 5 })
 
@@ -271,7 +280,7 @@ return function(ctx)
     end
 
     local function chargeStunGun(player, _, row)
-        ctx.destroyWorldItem(row.id)
+        ctx.destroyWorldItem(row.id, "used")
         ctx.updateHeldData(player, { charged = 1 })
         toast(player, "STUNGUNCHAR")
         return true
@@ -284,13 +293,21 @@ return function(ctx)
             return true
         end
         ctx.updateHeldData(player, nextData)
-        ctx.destroyWorldItem(row.id)
+        ctx.destroyWorldItem(row.id, "used")
         local params = { small.MOLOTOV_TO, 2, nil, row.x, row.y, row.z, row.rz, row.interior, row.dimension }
         params[10], params[11], params.n = nil, nil, 11
         db.call("item_create", params, function(res, c)
             if res and res.ok then
                 triggerEvent("itemCreated", resourceRoot, res.payload.item_id)
             end
+            logProc("item.created", c.player, res, {
+                item_id = res and res.ok and res.payload.item_id or nil,
+                uname = small.MOLOTOV_TO,
+                source = "molotov",
+                x = math.floor(row.x),
+                y = math.floor(row.y),
+                z = math.floor(row.z),
+            })
             if isElement(c.player) then
                 ctx.world.syncPlayer(c.player)
             end
@@ -332,6 +349,15 @@ return function(ctx)
             if res and res.ok then
                 triggerEvent("itemCreated", resourceRoot, res.payload.item_id)
             end
+            logProc("item.created", c.player, res, {
+                item_id = res and res.ok and res.payload.item_id or nil,
+                uname = "Meat",
+                source = "body",
+                body_id = row.id,
+                x = math.floor(row.x),
+                y = math.floor(row.y),
+                z = math.floor(row.z),
+            })
             if isElement(c.player) then
                 ctx.world.syncPlayer(c.player)
             end

@@ -4,6 +4,7 @@ local db = assert(loadstring(exports.lib:getModule("db"), "=lib/db.lua"))()
 local net = assert(loadstring(exports.lib:getModule("net"), "=lib/net.lua"))()
 local util = assert(loadstring(exports.lib:getModule("util"), "=lib/util.lua"))()
 local lang = assert(loadstring(exports.lib:getModule("lang"), "=lib/lang.lua"))()
+local log = assert(loadstring(exports.lib:getModule("log"), "=lib/log.lua"))()
 db.connect("crafting")
 
 local function loadModule(path)
@@ -22,6 +23,40 @@ end
 
 local function toast(player, code)
     triggerClientEvent(player, "toastShown", player, code)
+end
+
+-- the end of a craft that asked the database for its result: crafting.finished or crafting.failed with the recipe,
+-- the input unames and the output, plus the item.created of the result. fields: recipe, mode, inputs, input_ids,
+-- output_uname and optionally x y z int dim; ok, code and output_id come from the db.call result (false = DB failure)
+local function logCraft(player, res, fields)
+    local ok = res and res.ok or false
+    fields.player = player
+    fields.ok = ok
+    fields.code = res and res.code or "DB_ERROR"
+    fields.output_id = ok and res.payload and tonumber(res.payload.item_id) or nil
+    log.event(ok and "crafting.finished" or "crafting.failed", fields, fields.code == "DB_ERROR" and "warn" or "info")
+    log.event("item.created", {
+        player = player,
+        item_id = fields.output_id,
+        uname = fields.output_uname,
+        source = "craft",
+        recipe = fields.recipe,
+        ok = ok,
+        code = fields.code,
+        x = fields.x,
+        y = fields.y,
+        z = fields.z,
+        int = fields.int,
+        dim = fields.dim,
+    })
+end
+
+-- a craft that stopped before the database was asked (missing tool, parts moved, set changed)
+local function logCraftRefused(player, code, fields)
+    fields.player = player
+    fields.ok = false
+    fields.code = code
+    log.event("crafting.failed", fields)
 end
 
 -- a Key row's cut code (data as the vehicles resource writes it, toJSON({ code, model })), or nil for a blank key
@@ -145,14 +180,30 @@ net.handler("combineRequested", function(player, invItemId)
                 return toast(c.player, "NO_RECIPE")
             end
             local r = match.recipe
+            local inputs = { c.held.uname, row.uname }
             if alreadyDone(r, c.held, row) then
+                logCraftRefused(c.player, "ALREADY_DONE", {
+                    recipe = r.name,
+                    mode = "combine",
+                    inputs = inputs,
+                    input_ids = { c.held.id, row.id },
+                    output_uname = r.result.uname,
+                })
                 return toast(c.player, r.result.uname == "WheelLock" and "LOCKCHCUT" or "NO_RECIPE")
             end
+            local logFields = {
+                recipe = r.name,
+                mode = "combine",
+                inputs = inputs,
+                input_ids = { c.held.id, row.id },
+                output_uname = r.result.uname,
+                character_id = c.cid,
+            }
             local resultJson = r.result.data and toJSON(r.result.data)
             -- Check consume logic
             local invContId = row.container_id
             if match.consumeB then
-                exports.items:destroyItem(row.id, c.player)
+                exports.items:destroyItem(row.id, c.player, nil, "crafted")
             end
             if match.consumeA then
                 exports.items:destroyItem(c.held.id, c.player, function(ok)
@@ -161,6 +212,7 @@ net.handler("combineRequested", function(player, invItemId)
                     end
                     -- Created item becomes held once the previous held item has been removed from DB
                     db.call("item_create_held", { r.result.uname, c.cid }, function(res, c2)
+                        logCraft(c2.player, res, logFields)
                         if not isElement(c2.player) then
                             return
                         end
@@ -190,10 +242,11 @@ net.handler("combineRequested", function(player, invItemId)
                             toast(c2.player, res and res.code or "DB_ERROR")
                         end
                     end, { player = c.player })
-                end)
+                end, "crafted")
             else
                 -- Held tool is kept, created item goes to inventory container
                 db.call("item_create_in_container", { r.result.uname, invContId }, function(res, c2)
+                    logCraft(c2.player, res, logFields)
                     if not isElement(c2.player) then
                         return
                     end
@@ -286,6 +339,13 @@ local function tryGroundCraft(player, _cid, held, px, py, pz, rz, int, dim, quie
                 end
             end
         end
+        local inputNames, consumedIds = {}, {}
+        for i, it in ipairs(used) do
+            inputNames[i] = it.type_uname
+        end
+        for i, it in ipairs(consumed) do
+            consumedIds[i] = it.id
+        end
         -- upstream craft-construct.pwn OnHoldActionFinish: the result stands at the mean position of the parts
         local sx, sy, sz, n = 0, 0, 0, 0
         for _, it in ipairs(used) do
@@ -307,12 +367,26 @@ local function tryGroundCraft(player, _cid, held, px, py, pz, rz, int, dim, quie
         local function finish(pl, rec, crz, cint, cdim, src)
             -- Destroy ingredients
             for _, it in ipairs(consumed) do
-                exports.items:destroyWorldItem(it.id)
+                exports.items:destroyWorldItem(it.id, "crafted")
             end
             local args = { rec.result.uname, nil, nil, mx, my, mz, crz, cint, cdim, nil, nil, n = 11 }
             local ctx = { player = pl, skill = rec.result.uname, tweak = rec.tweak ~= false, defence = rec.defence }
             ctx.source = src
+            ctx.logFields = {
+                recipe = rec.name,
+                mode = "ground",
+                inputs = inputNames,
+                input_ids = consumedIds,
+                output_uname = rec.result.uname,
+                tool = rec.tool,
+                x = math.floor(mx),
+                y = math.floor(my),
+                z = math.floor(mz),
+                int = cint,
+                dim = cdim,
+            }
             local function onCreated(res, c2)
+                logCraft(c2.player, res, c2.logFields)
                 if not isElement(c2.player) then
                     return
                 end
@@ -354,6 +428,13 @@ local function tryGroundCraft(player, _cid, held, px, py, pz, rz, int, dim, quie
             clearHoldAnim(pl)
             local curHeld = exports.items:getHeld(pl)
             if recipe.tool and (not curHeld or curHeld.uname ~= recipe.tool) then
+                logCraftRefused(pl, "NEED_TOOL", {
+                    recipe = recipe.name,
+                    mode = "ground",
+                    inputs = inputNames,
+                    output_uname = recipe.result.uname,
+                    tool = recipe.tool,
+                })
                 return toast(pl, "NEED_TOOL")
             end
             if ids.n == 0 then
@@ -363,6 +444,15 @@ local function tryGroundCraft(player, _cid, held, px, py, pz, rz, int, dim, quie
             -- would otherwise come out twice)
             db.one(stillThere, ids, function(row, c2)
                 if not isElement(c2.player) or not row or tonumber(row.n) ~= ids.n then
+                    if row and isElement(c2.player) then
+                        logCraftRefused(c2.player, "PARTS_MOVED", {
+                            recipe = recipe.name,
+                            mode = "ground",
+                            inputs = inputNames,
+                            input_ids = consumedIds,
+                            output_uname = recipe.result.uname,
+                        })
+                    end
                     return
                 end
                 finish(c2.player, recipe, rz, int, dim, source)
@@ -411,13 +501,38 @@ local function tryDeconstruct(player, _cid, held, px, py, _pz, _rz, int, dim)
             if not curHeld or curHeld.uname ~= "Crowbar" then
                 return toast(pl, "NEED_TOOL")
             end
-            exports.items:destroyWorldItem(tgt.id)
+            exports.items:destroyWorldItem(tgt.id, "deconstructed")
             -- upstream: each part at x + frandom(0.6), y + frandom(0.6), a random heading
+            local parts = {}
             for _, ing in ipairs(dInfo.ingredients) do
                 local x, y, prz = tgt.x + math.random() * 0.6, tgt.y + math.random() * 0.6, math.random() * 360
                 local args = { ing.uname, nil, nil, x, y, tgt.z, prz, cint, cdim, nil, nil, n = 11 }
-                db.call("item_create", args, function() end)
+                parts[#parts + 1] = ing.uname
+                db.call("item_create", args, function(res)
+                    log.event("item.created", {
+                        player = pl,
+                        item_id = res and res.ok and res.payload and tonumber(res.payload.item_id) or nil,
+                        uname = ing.uname,
+                        source = "deconstruct",
+                        ok = res and res.ok or false,
+                        code = res and res.code or "DB_ERROR",
+                        x = math.floor(tgt.x),
+                        y = math.floor(tgt.y),
+                        z = math.floor(tgt.z),
+                    })
+                end)
             end
+            log.event("crafting.finished", {
+                player = pl,
+                recipe = dInfo.recipe.name,
+                mode = "deconstruct",
+                inputs = { tgt.type_uname },
+                input_ids = { tgt.id },
+                output_uname = parts,
+                tool = "Crowbar",
+                ok = true,
+                code = "OK",
+            })
             exports.items:refreshPlayer(pl)
             toast(pl, "DECONSTRUCTED")
         end, ms, 1, c.player, target, info, int, dim)
@@ -481,16 +596,37 @@ local function tryWorkbenchCraft(player, _cid, held, px, py, onMiss)
                         return
                     end
                     if craft.matchWorkbench(rowCounts(now), toolUname)[1] ~= recipe then
+                        logCraftRefused(c3.player, "SET_CHANGED", {
+                            recipe = recipe.name,
+                            mode = "workbench",
+                            workbench_id = wb.id,
+                            output_uname = recipe.result.uname,
+                        })
                         return
                     end
                     -- upstream _wb_ClearWorkbench + _wb_CreateResult: the bench is emptied and the result lies on top
                     -- of it, z + 0.95, turned rz - 95 give or take 5 degrees
-                    for _, it in ipairs(now) do
-                        exports.items:destroyContainerItem(it.id)
+                    local inputNames, inputIds = {}, {}
+                    for i, it in ipairs(now) do
+                        inputNames[i], inputIds[i] = it.type_uname, it.id
+                        exports.items:destroyContainerItem(it.id, "crafted")
                     end
                     local rot = ((tonumber(wb.rz) or 0) - 95 + math.random() * 10) % 360
                     local args = { recipe.result.uname, nil, nil, bx, by, bz + 0.95, rot, int, dim, nil, nil, n = 11 }
                     db.call("item_create", args, function(res, c4)
+                        logCraft(c4.player, res, {
+                            recipe = recipe.name,
+                            mode = "workbench",
+                            inputs = inputNames,
+                            input_ids = inputIds,
+                            output_uname = recipe.result.uname,
+                            workbench_id = wb.id,
+                            x = math.floor(bx),
+                            y = math.floor(by),
+                            z = math.floor(bz + 0.95),
+                            int = int,
+                            dim = dim,
+                        })
                         if not isElement(c4.player) then
                             return
                         end

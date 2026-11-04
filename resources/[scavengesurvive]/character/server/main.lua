@@ -2,6 +2,7 @@ local db = loadstring(exports.lib:getModule("db"), "=lib/db.lua")()
 local net = loadstring(exports.lib:getModule("net"), "=lib/net.lua")()
 local rpc = loadstring(exports.lib:getModule("rpc"), "=lib/rpc.lua")()
 local util = loadstring(exports.lib:getModule("util"), "=lib/util.lua")()
+local log = loadstring(exports.lib:getModule("log"), "=lib/log.lua")()
 local function loadFile(path)
     local f = fileOpen(path, true)
     local src = fileRead(f, fileGetSize(f))
@@ -66,8 +67,15 @@ local function clearStatuses(player, restoreControls)
     end
 end
 state.clearStatuses = clearStatuses
-local death =
-    loadFile("server/death.lua")({ db = db, net = net, util = util, drop = drop, state = state, bodies = bodies })
+local death = loadFile("server/death.lua")({
+    db = db,
+    net = net,
+    util = util,
+    log = log,
+    drop = drop,
+    state = state,
+    bodies = bodies,
+})
 local tickCtx = { db = db, util = util, survival = survival, skills = skills, medical = medical, state = state }
 tickCtx.bleeding = bleeding
 tickCtx.blood = loadFile("server/blood.lua")({ bleeding = bleeding, net = net })
@@ -162,6 +170,7 @@ local function spawnFromRow(player, row, isNew)
         infection = medical.decodeInfection(row.infection),
         drugs = loadDrugs(row.drugs),
         dirty = false,
+        born = tonumber(row.born) or getRealTime().timestamp, -- unix time the character was created (death age)
         inventoryContainerId = row.inventory_container_id,
         lastSent = { hp = -1, food = -1, bleed = -1 },
     }
@@ -178,6 +187,16 @@ local function spawnFromRow(player, row, isNew)
     setCameraTarget(player, player)
     fadeCamera(player, true)
     triggerEvent("characterSpawned", player, row.id, isNew)
+    log.event("character.spawned", {
+        player = player,
+        character_id = row.id,
+        x = tonumber(row.x),
+        y = tonumber(row.y),
+        z = tonumber(row.z),
+        int = row.interior or 0,
+        dim = row.dimension or 0,
+        fresh = isNew,
+    })
     if isNew then
         startingItems(row.id, row.hp == survival.NEW.hp)
     end
@@ -203,8 +222,24 @@ local function createAndSpawn(player, accountId, stats)
             return
         end
         if not res or not res.ok then
-            return util.log("character", "error", "character_create failed: %s", res and res.code or "db")
+            return log.event(
+                "character.created",
+                {
+                    player = ctx.player,
+                    account_id = accountId,
+                    ok = false,
+                    code = res and res.code or "DB_ERROR",
+                },
+                "error"
+            )
         end
+        log.event("character.created", {
+            player = ctx.player,
+            account_id = accountId,
+            character_id = res.payload.character_id,
+            name = getPlayerName(ctx.player),
+            skin = skin,
+        })
         spawnFromRow(ctx.player, {
             id = res.payload.character_id,
             account_id = accountId,
@@ -231,7 +266,7 @@ local function loadOrCreate(player, accountId)
     end
     db.one(
         "SELECT id, account_id, hp, food, bleed, skills, infection, drugs, x, y, z, rz, skin, interior, dimension,"
-            .. " inventory_container_id"
+            .. " inventory_container_id, UNIX_TIMESTAMP(spawned_at) AS born"
             .. " FROM characters WHERE account_id = ? AND alive = 1",
         { accountId },
         function(row, ctx)
@@ -298,7 +333,19 @@ local function combatLogged(player, st, quitReason)
     if not attacker then
         return false
     end
-    util.log("character", "info", "%s combat-logged (last hit by %s)", getPlayerName(player), getPlayerName(attacker))
+    local now = getTickCount()
+    log.event(
+        "character.combatLogged",
+        {
+            player = player,
+            character_id = st.id,
+            attacker = attacker,
+            window_s = window,
+            since_damage_s = (now - (state.combat.lastDamage[player] or now)) / 1000,
+            msg = string.format("%s combat-logged (last hit by %s)", getPlayerName(player), getPlayerName(attacker)),
+        },
+        "warn"
+    )
     outputChatBox(string.format("%s combat logged!", getPlayerName(player)), root, 255, 220, 0)
     return death.die(player, "combatlog", attacker, true)
 end
@@ -491,6 +538,9 @@ function wakeUpPlayer(player)
     if not isElement(player) then
         return false
     end
+    if ko then
+        log.event("character.wokeUp", { player = player })
+    end
     setElementData(player, "character.knockedOut", false, "broadcast", "deny")
     triggerClientEvent(player, "knockedOut", player, 0)
     local st = state.byPlayer[player]
@@ -506,7 +556,8 @@ function wakeUpPlayer(player)
     return true
 end
 
-function knockOutPlayer(player, durationMs)
+-- by: the player who caused it (optional, only logged)
+function knockOutPlayer(player, durationMs, by)
     if not isElement(player) or isPedDead(player) or getElementData(player, "auth.reauthProtection") then
         return false
     end
@@ -541,6 +592,11 @@ function knockOutPlayer(player, durationMs)
         setPedAnimation(player, "PED", "KO_SHOT_STOM", -1, false, false, false, true)
     end
     triggerClientEvent(player, "knockedOut", player, total)
+    log.event("character.knockedOut", {
+        player = player,
+        by = isElement(by) and getElementType(by) == "player" and getPlayerName(by) or nil,
+        duration_ms = total,
+    })
     return true
 end
 

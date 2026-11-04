@@ -7,4 +7,8 @@
     <!-- HTTP rcon for scripts/agents (server-config/rcon.ps1); run-local.ps1 fills in a random password -->
     <setting name="*dev.http_user" value="rcon"/>
     <setting name="*dev.http_pass" value=""/>
+    <!-- Game log pushed to Loki (resource logs). Only the URL is needed for a local Loki without auth; remove the line to
+         push nothing. Optional: *logs.tenant, *logs.user + *logs.pass (basic auth), *logs.bearer, *logs.host, *logs.env -->
+    <setting name="*logs.url" value="http://127.0.0.1:3100"/>
+    <setting name="*logs.env" value="dev"/>
 </settings>

@@ -1,5 +1,5 @@
 local util = {}
-local LEVELS = { error = 1, warn = 2, info = 3 }
+local log = nil
 
 function util.clamp(v, lo, hi)
     if v < lo then
@@ -48,10 +48,11 @@ function util.split(s, sep)
     return out
 end
 
+-- free-text diagnostic: "[tag] message" on the server console and a log.message line in Loki (lib/modules/log.lua);
+-- a fact a dashboard will count belongs in log.event with its own kind instead
 function util.log(tag, level, fmt, ...)
-    local msg = "[" .. tag .. "] " .. string.format(fmt, ...)
-    outputDebugString(msg, LEVELS[level] or 3)
-    outputServerLog(msg)
+    log = log or loadstring(exports.lib:getModule("log"), "=lib/log.lua")()
+    log.message(tag, level, fmt, ...)
 end
 
 return util

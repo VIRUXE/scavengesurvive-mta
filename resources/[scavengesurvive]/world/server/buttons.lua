@@ -2,9 +2,10 @@
 -- area69.lua). The client finds the button in reach and sends buttonPressed; the server checks the player is there,
 -- applies what the press does and sends every client the door and puzzle state (buttonsStateChanged), which their
 -- copies of the objects follow. Codes never leave the server.
--- ctx = { db, net, util, buttons, doors, puzzles, area69 }
+-- ctx = { db, net, util, log, logAt, buttons, doors, puzzles, area69 }
 return function(ctx)
     local db, net, util = ctx.db, ctx.net, ctx.util
+    local log, logAt = ctx.log, ctx.logAt
     local buttons, doors, puzzles, area69 = ctx.buttons, ctx.doors, ctx.puzzles, ctx.area69
     local M = {}
 
@@ -123,7 +124,7 @@ return function(ctx)
             setPedAnimation(player, nil)
             local value = area69.codeFor(a69, id)
             local won = area69.hackSucceeds(rand)
-            util.log("world", "info", "hack: %s at %s %s", getPlayerName(player), id, won and "got in" or "failed")
+            log.event("world.keypadHacked", logAt({ player = player, keypad_id = id, won = won }, player))
             if not won then
                 value = 1000 + rand(8999)
                 local x, y, z = getElementPosition(player)
@@ -186,6 +187,8 @@ return function(ctx)
             return
         end
         local held = exports.items:getHeld(player)
+        local line = { player = player, button_id = b.id, owner = b.owner or "buttons", state = reg.states[b.id] }
+        log.event("world.buttonPressed", logAt(line, player))
         local effects
         if b.owner == "puzzles" then
             effects = puzzles.press(state, reg, buttons, b.id, held and puzzles.tagOf(held.data), held ~= false)

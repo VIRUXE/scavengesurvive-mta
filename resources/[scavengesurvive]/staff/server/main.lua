@@ -4,6 +4,7 @@
 local db = loadstring(exports.lib:getModule("db"), "=lib/db.lua")()
 local net = loadstring(exports.lib:getModule("net"), "=lib/net.lua")()
 local util = loadstring(exports.lib:getModule("util"), "=lib/util.lua")()
+local log = loadstring(exports.lib:getModule("log"), "=lib/log.lua")()
 local function loadFile(path)
     local f = fileOpen(path, true)
     local src = fileRead(f, fileGetSize(f))
@@ -95,16 +96,33 @@ function ctx.msgStaff(minLevel, fmt, ...)
     outputServerLog("[staff] " .. msg:gsub("#%x%x%x%x%x%x", ""))
 end
 
+-- staff.actionTaken for one staff action. actor is a player, the console, nil (the server) or a destroyed element;
+-- extra carries the kind's other fields (ok, code, ban_id, ...). The serial lookup's details are the serial itself,
+-- which only session.* kinds may carry.
+function ctx.event(actor, action, targetName, targetAccountId, details, extra)
+    local fields = extra or {}
+    if isElement(actor) then
+        fields.actor = getElementType(actor) == "player" and actor or ctx.name(actor)
+        fields.actor_account_id = ctx.accountId(actor)
+    else
+        fields.actor = actor == nil and "Server" or "unknown"
+    end
+    fields.action = action
+    fields.target = targetName
+    fields.target_account_id = targetAccountId
+    fields.details = action ~= "serial" and details ~= nil and tostring(details) or nil
+    log.event("staff.actionTaken", fields)
+end
+
 -- One row per staff action; the ban/warn procedures write theirs inside their own transaction.
 function ctx.log(actor, action, targetName, targetAccountId, details)
+    ctx.event(actor, action, targetName, targetAccountId, details)
     if not state.ready then
         return
     end
     local sql = "INSERT INTO staff_actions (actor_account_id, actor_name, action, target_name, target_account_id,"
         .. " details) VALUES (?, ?, ?, ?, ?, ?)"
     db.exec(sql, { ctx.accountId(actor), ctx.name(actor), action, targetName, targetAccountId, details, n = 6 })
-    local suffix = details and (" (" .. tostring(details) .. ")") or ""
-    util.log("staff", "info", "%s %s %s%s", ctx.name(actor), action, tostring(targetName or ""), suffix)
 end
 
 function ctx.onlinePlayers()
@@ -511,6 +529,12 @@ function getLevelStyle(level)
 end
 
 function logAction(actorName, action, targetName, details)
+    log.event("staff.actionTaken", {
+        actor = tostring(actorName or "Server"),
+        action = tostring(action),
+        target = targetName,
+        details = details ~= nil and tostring(details) or nil,
+    })
     if not state.ready then
         return false
     end

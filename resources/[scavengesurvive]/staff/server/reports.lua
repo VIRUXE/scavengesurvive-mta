@@ -1,6 +1,7 @@
 -- Player reports: /report for everyone, /reports and /deletereports for staff.
 -- Upstream: admin/report.pwn (storage) and report-cmds.pwn (the four filing modes and the staff list).
 -- /report alone opens upstream's dialog chain; /report <name|near|killer> [reason] skips the menu (port addition).
+local log = loadstring(exports.lib:getModule("log"), "=lib/log.lua")()
 return function(ctx)
     local db, logic, state = ctx.db, ctx.logic, ctx.state
     local M = {}
@@ -12,7 +13,15 @@ return function(ctx)
         local by, byId = ctx.name(reporter), ctx.accountId(reporter)
         local t = target
         local params = { t.name, reason:sub(1, 128), t.kind, t.x, t.y, t.z, t.interior, t.dimension, by, byId, n = 10 }
-        db.exec(sql, params, function(ok, r)
+        db.exec(sql, params, function(ok, r, _, insertId)
+            log.event("staff.reportFiled", {
+                player = r,
+                ok = ok and true or false,
+                report_id = ok and insertId or nil,
+                reason = reason:sub(1, 128),
+                about = t.name,
+                report_type = t.kind,
+            })
             if not ok then
                 return ctx.say(r, " >  Your report could not be saved; try again later.")
             end
@@ -224,6 +233,7 @@ return function(ctx)
                     return
                 end
                 db.exec("UPDATE reports SET read_at = COALESCE(read_at, NOW()) WHERE id = ?", { reportId })
+                log.event("staff.reportRead", { actor = a, report_id = reportId, about = r.name })
                 ctx.say(a, " >  #33CCFF%s#FFFF00 (%s) reported by %s on %s", r.name, r.type, r.by_name, r.created)
                 ctx.say(a, " >  Reason: #33CCFF%s", r.reason)
                 if r.x and r.x ~= false then

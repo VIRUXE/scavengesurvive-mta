@@ -1,5 +1,5 @@
 <meta>
-    <info author="scavengesurvive-mta" type="script" name="lib" description="Shared modules: db, net, rpc, util, surface, lang" version="0.1.0"/>
+    <info author="scavengesurvive-mta" type="script" name="lib" description="Shared modules: db, net, rpc, util, log, surface, lang" version="0.1.0"/>
     <min_mta_version server="1.6.0" client="1.6.0"/>
     <download_priority_group>100</download_priority_group>
     <script src="shared/main.lua" type="shared"/>
@@ -7,6 +7,7 @@
     <file src="modules/net.lua"/>
     <file src="modules/rpc.lua"/>
     <file src="modules/util.lua"/>
+    <file src="modules/log.lua"/>
     <file src="modules/budget.lua"/>
     <file src="modules/spawn_guard.lua"/>
     <file src="modules/events_registry.lua"/>

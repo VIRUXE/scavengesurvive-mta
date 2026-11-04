@@ -1,6 +1,7 @@
 <!-- Startup order for mtaserver.conf. Only lines starting with <resource are used. -->
 <resources>
     <resource src="lib" startup="1" protected="0"/>
+    <resource src="logs" startup="1" protected="0"/>
     <resource src="data" startup="1" protected="0"/>
     <resource src="samp_models" startup="1" protected="0"/>
     <resource src="hat_models" startup="1" protected="0"/>

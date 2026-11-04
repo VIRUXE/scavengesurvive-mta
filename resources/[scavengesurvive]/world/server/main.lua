@@ -1,7 +1,22 @@
 local util = loadstring(exports.lib:getModule("util"), "=lib/util.lua")()
 local db = assert(loadstring(exports.lib:getModule("db"), "=lib/db.lua"))()
 local net = assert(loadstring(exports.lib:getModule("net"), "=lib/net.lua"))()
+local log = assert(loadstring(exports.lib:getModule("log"), "=lib/log.lua"))()
 db.connect("world")
+
+-- adds the pos fields (x y z int dim zone) of an element to a log line
+local function logAt(fields, element)
+    if isElement(element) then
+        local x, y, z = getElementPosition(element)
+        fields.x, fields.y, fields.z = x, y, z
+        fields.int, fields.dim = getElementInterior(element), getElementDimension(element)
+        local ok, zone = pcall(function()
+            return exports.maps:getZoneAt(x, y)
+        end)
+        fields.zone = ok and zone or nil
+    end
+    return fields
+end
 
 local function loadFile(path, name)
     local f = fileOpen(path, true)
@@ -21,6 +36,8 @@ local buttonsSrv = loadFile("server/buttons.lua", "=world/server/buttons.lua")({
     db = db,
     net = net,
     util = util,
+    log = log,
+    logAt = logAt,
     buttons = loadFile("shared/logic/buttons.lua", "=world/buttons.lua"),
     doors = loadFile("shared/logic/doors.lua", "=world/doors.lua"),
     puzzles = puzzles,
@@ -31,6 +48,7 @@ local settings = {}
 local boxesSrv = loadFile("server/boxes.lua", "=world/server/boxes.lua")({
     db = db,
     util = util,
+    log = log,
     logic = loadFile("shared/logic/boxes.lua", "=world/boxes.lua"),
     spots = loadFile("data/boxes.lua", "=world/boxes_data.lua").spots,
     setting = function(key, default)
@@ -42,6 +60,8 @@ loadFile("server/trees.lua", "=world/server/trees.lua")({
     db = db,
     net = net,
     util = util,
+    log = log,
+    logAt = logAt,
     logic = loadFile("shared/logic/trees.lua", "=world/trees.lua"),
     data = loadFile("data/trees.lua", "=world/trees_data.lua"),
     setting = function(key, default)
@@ -83,7 +103,7 @@ local lastChange = 0
 local function apply(id, why)
     current, lastChange = id, getTickCount()
     setWeather(id)
-    util.log("world", "info", "weather %d (%s) %s", id, weather.name(id), why)
+    log.event("world.weatherChanged", { weather_id = id, name = weather.name(id), why = why })
     triggerEvent("weatherChanged", resourceRoot, id)
 end
 

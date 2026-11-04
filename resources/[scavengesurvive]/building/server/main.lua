@@ -4,6 +4,7 @@ local db = assert(loadstring(exports.lib:getModule("db"), "=lib/db.lua"))()
 local net = assert(loadstring(exports.lib:getModule("net"), "=lib/net.lua"))()
 local util = assert(loadstring(exports.lib:getModule("util"), "=lib/util.lua"))()
 local lang = assert(loadstring(exports.lib:getModule("lang"), "=lib/lang.lua"))()
+local log = assert(loadstring(exports.lib:getModule("log"), "=lib/log.lua"))()
 db.connect("building")
 
 local function loadModule(path)
@@ -22,12 +23,39 @@ local pendingOpen = {} -- player -> defence itemId
 local passCooldown = {} -- player -> duration in ms (cooldown)
 local passFails = {} -- player -> fail count
 local lastPassEntry = {} -- player -> timestamp (tick count)
+local keypadTries = {} -- player -> { defence id, wrong codes since the last right one }
 
 local DEFENCE_ROW = "SELECT id, type_uname, data, x, y, z, rz, interior, dimension FROM items "
     .. "WHERE id = ? AND container_id IS NULL AND holder_char_id IS NULL"
 
 local function charId(player)
     return exports.character:getCharacterId(player)
+end
+
+-- the id of the plot pole whose circle holds the point, nil outside every plot
+local function plotAt(x, y)
+    for id, col in pairs(plotPoleColshapes) do
+        if isElement(col) then
+            local cx, cy = getElementPosition(col)
+            if defences.isInsidePlotPole(x, y, cx, cy, 20.0) then
+                return id
+            end
+        end
+    end
+    return nil
+end
+
+-- a defence's log line: its item id, type, position (x y z int dim zone) and plot next to the given fields
+local function defenceLine(row, fields)
+    fields.defence_id, fields.uname = row.id, row.type_uname or row.uname
+    fields.x, fields.y, fields.z = row.x, row.y, row.z
+    fields.int, fields.dim = row.interior or 0, row.dimension or 0
+    local ok, zone = pcall(function()
+        return exports.maps:getZoneAt(row.x, row.y)
+    end)
+    fields.zone = ok and zone or nil
+    fields.plot_id = row.x and plotAt(row.x, row.y) or nil
+    return fields
 end
 
 local function heldUname(player)
@@ -54,6 +82,7 @@ addEventHandler("onPlayerQuit", root, function()
     passCooldown[source] = nil
     passFails[source] = nil
     lastPassEntry[source] = nil
+    keypadTries[source] = nil
 end)
 
 addEventHandler("characterDied", root, function()
@@ -195,20 +224,9 @@ local function moveDefence(itemId, player)
                 { newX, newY, newZ, newRz, encodeData(d), row.id },
                 function()
                     exports.items:resendWorldItem(row.id)
-                    local poseLabel = (newSt.pose == "vertical") and "CLOSED" or "OPEN"
-                    local pName = isElement(c.player) and getPlayerName(c.player) or "unknown"
-                    util.log(
-                        "building",
-                        "info",
-                        "[DEFMOVE] Player %s moved defence %d (%s) into %s position at %.1f, %.1f, %.1f",
-                        pName,
-                        row.id,
-                        row.type_uname,
-                        poseLabel,
-                        newX,
-                        newY,
-                        newZ
-                    )
+                    local moved = { id = row.id, type_uname = row.type_uname, x = newX, y = newY, z = newZ }
+                    moved.interior, moved.dimension = itemInt, itemDim
+                    log.event("building.moved", defenceLine(moved, { player = c.player, pose = newSt.pose }))
                 end
             )
         end, { player = pl })
@@ -346,7 +364,7 @@ end
 
 -- Makes a lying item a built defence (upstream ConvertItemToDefenceItem): the pose's rotation and height, no despawn
 -- timer, no longer a loot spawn's item; done(x, y, z, rz, data) once the row is written
-local function activateDefence(row, t, pose, done)
+local function activateDefence(row, t, pose, done, player)
     local x, y, z, rz, st = defences.build(t.defence, pose, row.x, row.y, row.z, row.rz, t.rotz)
     local d = decodeData(row.data)
     d.defence = st
@@ -354,8 +372,9 @@ local function activateDefence(row, t, pose, done)
         .. "WHERE id = ? AND x IS NOT NULL"
     db.exec(sql, { x, y, z, rz, encodeData(d), row.id }, function()
         exports.items:resendWorldItem(row.id)
-        local where = string.format("%f, %f, %f rz %f", x, y, z, rz)
-        util.log("building", "info", "built defence %d (%s, %s) at %s", row.id, row.type_uname, st.pose, where)
+        local placed = { id = row.id, type_uname = row.type_uname, x = x, y = y, z = z }
+        placed.interior, placed.dimension = row.interior, row.dimension
+        log.event("building.placed", defenceLine(placed, { player = player, pose = st.pose }))
         done(x, y, z, rz, d)
     end)
 end
@@ -396,7 +415,7 @@ function buildDefence(player, itemId)
                     cur.x, cur.y, cur.z, cur.rz, cur.data = x, y, z, rz, d
                     tweak.start(pl, cur, true)
                 end
-            end)
+            end, pl)
         end)
     end, { player = player, tool = tool, pose = pose })
 end
@@ -421,7 +440,7 @@ function tweakItem(player, itemId, pose)
                     row.x, row.y, row.z, row.rz, row.data = x, y, z, rz, d
                     tweak.start(c.player, row, true)
                 end
-            end)
+            end, c.player)
         end
         tweak.start(c.player, row, built == true)
     end, { player = player, pose = pose })
@@ -481,17 +500,7 @@ function removeDefence(player, itemId)
                 end
             )
             -- upstream's [CROWBAR] line, kept so a wrongly broken base can be put back
-            util.log(
-                "building",
-                "info",
-                "%s removed defence %d (%s) at %f, %f, %f",
-                getPlayerName(pl),
-                cur.id,
-                cur.type_uname,
-                cur.x,
-                cur.y,
-                cur.z
-            )
+            log.event("building.removed", defenceLine(cur, { player = pl, rz = cur.rz }))
         end)
     end, { player = player })
 end
@@ -555,6 +564,10 @@ net.handler("keypadSubmitted", function(player, defenceId, enteredCode)
             passFails[c.player] = nil
             lastPassEntry[c.player] = nil
             pendingOpen[c.player] = nil
+            local tries = keypadTries[c.player]
+            local attempts = (tries and tries[1] == row.id and tries[2] or 0) + 1
+            keypadTries[c.player] = nil
+            log.event("building.keypadOpened", defenceLine(row, { player = c.player, attempts = attempts }))
 
             triggerClientEvent(c.player, "keypadClosed", c.player)
             toast(c.player, "DEFMOVINGIT")
@@ -572,15 +585,14 @@ net.handler("keypadSubmitted", function(player, defenceId, enteredCode)
             lastPassEntry[c.player] = getTickCount()
 
             toast(c.player, "WRONG_PASSCODE")
-            util.log(
-                "building",
-                "info",
-                "[DEFFAIL] Player %s failed defence %d (%s) keypad code %s",
-                getPlayerName(c.player),
-                row.id,
-                row.type_uname,
-                tostring(c.enteredCode)
-            )
+            -- the code entered is never logged, only how many wrong ones this player has tried on the defence
+            local tries = keypadTries[c.player]
+            if not tries or tries[1] ~= row.id then
+                tries = { row.id, 0 }
+                keypadTries[c.player] = tries
+            end
+            tries[2] = tries[2] + 1
+            log.event("building.keypadFailed", defenceLine(row, { player = c.player, attempts = tries[2] }))
         end
     end, { player = player, enteredCode = enteredCode })
 end, { rate = 3 })
@@ -621,6 +633,7 @@ net.handler("keypadInstallRequested", function(player, defenceId, newPasscode)
         d.defence = st
         db.exec("UPDATE items SET data = ? WHERE id = ?", { encodeData(d), row.id }, function()
             exports.items:resendWorldItem(row.id)
+            log.event("building.keypadInstalled", defenceLine(row, { player = c.player }))
             if isElement(c.player) then
                 toast(c.player, "KEYPAD_INSTALLED")
                 if codeNum == 0 then

@@ -1,5 +1,6 @@
 local db = loadstring(exports.lib:getModule("db"), "=lib/db.lua")()
 local net = loadstring(exports.lib:getModule("net"), "=lib/net.lua")()
+local log = loadstring(exports.lib:getModule("log"), "=lib/log.lua")()
 
 local function loadModule(path)
     local f = fileOpen(path, true)
@@ -35,6 +36,18 @@ end
 
 local function itemType(uname)
     return exports.data:itemType(uname)
+end
+
+-- a vehicle's database id for the log (element data first, the vehicles export when that is not set yet)
+local function vehicleDbId(vehicle)
+    local id = getElementData(vehicle, "vehicles.id")
+    if not id then
+        local vehRes = getResourceFromName("vehicles")
+        if vehRes and getResourceState(vehRes) == "running" then
+            id = exports.vehicles:getVehicleDbId(vehicle)
+        end
+    end
+    return id or nil
 end
 
 local function decodeData(raw)
@@ -149,11 +162,23 @@ addEventHandler("onColShapeHit", resourceRoot, function(hitElement, matchingDime
     setTimer(detonateItem, logic.PROX_TRIGGER_DELAY_MS, 1, data.itemId)
 end)
 
-local function finishArming(player, itemId, trigger)
+local function finishArming(player, itemId, trigger, uname)
     if not isElement(player) then
         return
     end
     cancelArming(player)
+    local x, y, z = getElementPosition(player)
+    log.event("explosive.armed", {
+        player = player,
+        item_id = itemId,
+        uname = uname,
+        trigger = trigger,
+        x = math.floor(x),
+        y = math.floor(y),
+        z = math.floor(z),
+        int = getElementInterior(player),
+        dim = getElementDimension(player),
+    })
     if trigger == logic.TRIGGERS.TIMED then
         outputServerLog(string.format("[EXPLOSIVE] Time bomb %d placed by %s", itemId, getPlayerName(player)))
         toast(player, "ARMEDBOMB5S")
@@ -179,7 +204,7 @@ addEventHandler("itemMoved", root, function(itemId, from, to)
         pendingArm[player] = nil
         setPedAnimation(player, "BOMBER", "BOM_Plant_Loop", -1, true, false, false, false)
         toast(player, "ARMINGBOMB")
-        local timer = setTimer(finishArming, logic.ARM_HOLD_MS, 1, player, itemId, pending.trigger)
+        local timer = setTimer(finishArming, logic.ARM_HOLD_MS, 1, player, itemId, pending.trigger, pending.uname)
         activeArming[player] = { itemId = itemId, timer = timer }
     end
 end)
@@ -188,7 +213,7 @@ local function startArming(player, heldItem, trigger)
     if not isElement(player) or not heldItem then
         return
     end
-    pendingArm[player] = { itemId = heldItem.id, trigger = trigger }
+    pendingArm[player] = { itemId = heldItem.id, trigger = trigger, uname = heldItem.uname }
     local ok = exports.items:dropHeld(player)
     if not ok then
         pendingArm[player] = nil
@@ -226,14 +251,51 @@ detonateItem = function(itemId)
             local function executeExplosion(x, y, z, int, dim, parentPlayer, parentVehicle)
                 -- Delete the detonating explosive itself wherever it is
                 if row.holder_char_id and parentPlayer then
-                    exports.items:destroyItem(row.id, parentPlayer)
+                    exports.items:destroyItem(row.id, parentPlayer, nil, "detonated")
                 elseif row.container_id then
-                    exports.items:destroyContainerItem(row.id)
+                    exports.items:destroyContainerItem(row.id, "detonated")
                 else
-                    exports.items:destroyWorldItem(row.id)
+                    exports.items:destroyWorldItem(row.id, "detonated")
+                end
+
+                -- the one explosive.detonated event: who it hurt, the vehicles it hit and the defences it destroyed
+                -- (the defences are known only once the item damage is in, so those paths call it last)
+                local victims, victimSeen, vehicleIds, defenceIds = {}, {}, {}, {}
+                local function addVictim(p)
+                    if not victimSeen[p] then
+                        victimSeen[p] = true
+                        victims[#victims + 1] = getPlayerName(p)
+                    end
+                end
+                local function addVehicle(v)
+                    vehicleIds[#vehicleIds + 1] = vehicleDbId(v)
+                end
+                local logged = false
+                local function logDetonation(ok, code, itemsDestroyed)
+                    if logged then
+                        return
+                    end
+                    logged = true
+                    log.event("explosive.detonated", {
+                        item_id = row.id,
+                        uname = row.type_uname,
+                        trigger = t.explosive.trigger,
+                        x = x and math.floor(x) or nil,
+                        y = y and math.floor(y) or nil,
+                        z = z and math.floor(z) or nil,
+                        int = int,
+                        dim = dim,
+                        victims = victims,
+                        vehicles = vehicleIds,
+                        defences = defenceIds,
+                        items_destroyed = itemsDestroyed,
+                        ok = ok,
+                        code = code,
+                    })
                 end
 
                 if not x or not y or not z then
+                    logDetonation(false, "NO_POSITION")
                     return
                 end
 
@@ -242,9 +304,11 @@ detonateItem = function(itemId)
                     and isElement(parentPlayer)
                     and not getElementData(parentPlayer, "auth.reauthProtection")
                 then
+                    addVictim(parentPlayer)
                     killPed(parentPlayer)
                 end
                 if parentVehicle and isElement(parentVehicle) then
+                    addVehicle(parentVehicle)
                     if exports.vehicles:isArmoured(parentVehicle) then
                         exports.vehicles:damageCarmour(parentVehicle, preset.itemDmg or 1) -- the panels take it
                     else
@@ -278,6 +342,7 @@ detonateItem = function(itemId)
                         if getElementInterior(p) == int and getElementDimension(p) == dim then
                             local px, py, pz = getElementPosition(p)
                             if logic.isItemInRange(px, py, pz, x, y, z, preset.size) then
+                                addVictim(p)
                                 exports.character:knockOutPlayer(p, logic.EMP_KNOCKOUT_MS)
                             end
                         end
@@ -286,6 +351,7 @@ detonateItem = function(itemId)
                         if getElementInterior(v) == int and getElementDimension(v) == dim then
                             local vx, vy, vz = getElementPosition(v)
                             if logic.isItemInRange(vx, vy, vz, x, y, z, preset.size) then
+                                addVehicle(v)
                                 setVehicleEngineState(v, false)
                                 exports.vehicles:flattenVehicleBattery(v)
                             end
@@ -297,9 +363,11 @@ detonateItem = function(itemId)
                         if getElementInterior(p) == int and getElementDimension(p) == dim and not isPedDead(p) then
                             local px, py, pz = getElementPosition(p)
                             if logic.isItemInRange(px, py, pz, x, y, z, preset.knockRange) then
+                                addVictim(p)
                                 exports.character:knockOutPlayer(p, preset.knockDurationMs)
                             end
                             if logic.isItemInRange(px, py, pz, x, y, z, preset.bleedRange) then
+                                addVictim(p)
                                 exports.character:applyWound(p, preset.bleedRate, preset.hpLoss, nil, "Explosion")
                             end
                         end
@@ -316,6 +384,7 @@ detonateItem = function(itemId)
                             local vx, vy, vz = getElementPosition(v)
                             local armourable = exports.vehicles:hasCarmourSlots(v)
                             if armourable and logic.isItemInRange(vx, vy, vz, x, y, z, preset.size) then
+                                addVehicle(v)
                                 exports.vehicles:damageCarmour(v, preset.itemDmg)
                             end
                         end
@@ -325,11 +394,11 @@ detonateItem = function(itemId)
                         .. "WHERE ST_Distance(p.pos, POINT(?, ?)) <= ? AND i.id != ?"
                     db.query(sql, { x, y, preset.size, row.id }, function(nearby)
                         if not nearby or #nearby == 0 then
-                            return
+                            return logDetonation(nearby ~= false, nearby == false and "DB_ERROR" or "OK", 0)
                         end
                         local inRange = logic.filterItemsInRange(nearby, x, y, z, preset.size, int, dim)
                         if #inRange == 0 then
-                            return
+                            return logDetonation(true, "OK", 0)
                         end
                         local isDefence = function(it)
                             return defenceState(decodeData(it.data)) ~= nil
@@ -337,7 +406,7 @@ detonateItem = function(itemId)
                         local batch = logic.spreadDamage(inRange, preset.itemDmg, x, y, z, isDefence)
                         db.call("explosion_damage", { toJSON(batch) }, function(res)
                             if not res or not res.payload then
-                                return
+                                return logDetonation(false, res and res.code or "DB_ERROR")
                             end
                             local payload = res.payload
                             -- the survivors' new hitpoints reach the clients' labels
@@ -353,6 +422,7 @@ detonateItem = function(itemId)
                                 local d = decodeData(it.data)
                                 local st = defenceState(d)
                                 if st then
+                                    defenceIds[#defenceIds + 1] = it.id
                                     outputServerLog(
                                         string.format(
                                             "[DESTRUCTION] Defence %d (%s) Object: (%d, %f, %f, %f, %f, %f, %f)",
@@ -369,8 +439,12 @@ detonateItem = function(itemId)
                                     )
                                 end
                             end
+                            logDetonation(true, "OK", #destroyed)
                         end)
                     end)
+                end
+                if not (preset.itemDmg and preset.itemDmg > 0) then
+                    logDetonation(true, "OK", 0)
                 end
             end
 
@@ -507,6 +581,13 @@ function linkPhoneBomb(player, itemA, itemB)
         end
     end
 
+    log.event("explosive.armed", {
+        player = player,
+        item_id = bomb.id,
+        uname = bomb.uname,
+        trigger = logic.TRIGGERS.RADIO,
+        phone_id = phone.id,
+    })
     setPedAnimation(player, "BOMBER", "BOM_PLANT_IN", -1, false, false, false, false)
     lastArmTick[player] = getTickCount()
     toast(player, "ARMEDRADIOB")
@@ -589,7 +670,16 @@ addEventHandler("itemUseAttempted", root, function(itemId, uname)
                     local d = decodeData(row.data)
                     local armed = (d.armed == 1) and 0 or 1
                     d.armed = armed
-                    db.exec("UPDATE items SET data = ? WHERE id = ?", { encodeData(d), itemId }, function()
+                    db.exec("UPDATE items SET data = ? WHERE id = ?", { encodeData(d), itemId }, function(wrote)
+                        log.event(armed == 1 and "explosive.armed" or "explosive.disarmed", {
+                            player = player,
+                            item_id = itemId,
+                            uname = uname,
+                            trigger = t.explosive.trigger,
+                            where = "container",
+                            ok = wrote,
+                            code = wrote and "OK" or "DB_ERROR",
+                        })
                         if not isElement(player) then
                             return
                         end

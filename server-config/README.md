@@ -20,7 +20,8 @@ and starts it. Every step is safe to run again. Stop the server first; the scrip
    loads `lib` modules with `loadstring`), `function.takePlayerScreenShot` (dev's `screenshot`), `function.kickPlayer`
    (auth kicks banned and non-whitelisted players, staff kicks on `/kick`, `/ban`, `/warn`) and
    `function.restartResource` (staff `/restart`), and adds `resource.dev` to the `Admin` group so `/rr` can restart
-   resources. A resource added to `resources.xml` only gets these rights on the next run (stopped server).
+   resources, and a second group, `ScavengeSurviveLogs`, holds only `resource.logs` with `function.fetchRemote` (the
+   push to Loki, `*logs.url`). A resource added to `resources.xml` only gets these rights on the next run (stopped server).
    **Security:** `function.loadstring` is a code-execution right. In production, grant it only to exactly these
    resources (as the script does) and review the grant.
 7. Starts `MTA Server.exe` (skip with `-NoStart`).

@@ -4,6 +4,7 @@
 -- Deviation: upstream duty logs the character out of the world; here the character stays loaded and the duty
 -- flag makes the staff member immune to player damage (weapons checks staff.duty) until character exposes a
 -- suspend/resume export.
+local log = loadstring(exports.lib:getModule("log"), "=lib/log.lua")()
 return function(ctx)
     local db, logic, state = ctx.db, ctx.logic, ctx.state
     local M = {}
@@ -45,6 +46,7 @@ return function(ctx)
         setNametags(p, true)
         ctx.say(p, " >  You are now on duty: immune to player damage, name tags on.")
         ctx.msgStaff(1, " >  %s went on duty", getPlayerName(p))
+        log.event("staff.dutyChanged", { player = p, on = true })
         ctx.log(p, "duty_on")
     end
 
@@ -60,6 +62,7 @@ return function(ctx)
             setElementModel(p, d.skin)
         end
         setNametags(p, false)
+        log.event("staff.dutyChanged", { player = p, on = false, silent = silent == true })
         if not silent then
             ctx.say(p, " >  You are off duty.")
             ctx.msgStaff(1, " >  %s went off duty", getPlayerName(p))

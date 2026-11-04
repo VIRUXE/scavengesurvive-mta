@@ -14,7 +14,16 @@
 return function(ctx)
     local net, state, hands, small = ctx.net, ctx.state, ctx.hands, ctx.small
     local charId, toast = ctx.charId, ctx.toast
+    local log = loadstring(exports.lib:getModule("log"), "=lib/log.lua")()
     local M = {}
+
+    -- one event per procedure callback: ok and code come from the db.call result (res == false: the query failed)
+    local function logProc(kind, player, res, fields)
+        fields.player = player
+        fields.ok = res and res.ok or false
+        fields.code = res and res.code or "DB_ERROR"
+        log.event(kind, fields)
+    end
 
     -- hands.setGear's "parachute" slot: the weapon follows the worn item (given once, never made the current weapon)
     function M.apply(player, item)
@@ -43,6 +52,12 @@ return function(ctx)
             return toast(player, "PARAWORN")
         end
         ctx.db.call("item_wear", { itemId, cid, "parachute", nil, n = 4 }, function(res, c)
+            logProc("item.worn", c.player, res, {
+                item_id = c.item.id,
+                uname = c.item.uname,
+                slot = "parachute",
+                character_id = cid,
+            })
             if not isElement(c.player) then
                 return
             end
@@ -66,7 +81,7 @@ return function(ctx)
             return
         end
         hands.setGear(player, "parachute", nil)
-        ctx.destroy(item.id, player)
+        ctx.destroy(item.id, player, nil, "used")
     end, { rate = 2 })
 
     return M

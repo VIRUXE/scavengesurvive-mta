@@ -12,7 +12,16 @@ return function(ctx)
         .. "AND JSON_VALUE(data, '$.pot.active') = 1"
     local REACH = 3.0
     local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")()
+    local log = loadstring(exports.lib:getModule("log"), "=lib/log.lua")()
     local M = {}
+
+    -- one event per procedure callback: ok and code come from the db.call result (res == false: the query failed)
+    local function logProc(kind, player, res, fields)
+        fields.player = player
+        fields.ok = res and res.ok or false
+        fields.code = res and res.code or "DB_ERROR"
+        log.event(kind, fields)
+    end
 
     local function encode(t)
         return toJSON(t, true):sub(2, -2)
@@ -72,6 +81,15 @@ return function(ctx)
                 if res and res.ok then
                     triggerEvent("itemCreated", resourceRoot, res.payload.item_id)
                 end
+                logProc("item.created", c.player, res, {
+                    item_id = res and res.ok and res.payload.item_id or nil,
+                    uname = crop,
+                    source = "harvest",
+                    pot_id = row.id,
+                    x = math.floor(row.x),
+                    y = math.floor(row.y),
+                    z = math.floor(row.z),
+                })
                 if isElement(c.player) then
                     ctx.world.syncPlayer(c.player)
                 end

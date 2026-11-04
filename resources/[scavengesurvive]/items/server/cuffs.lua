@@ -9,6 +9,7 @@ return function(ctx)
     local isPlayerCuffed, setPlayerCuffed = ctx.isPlayerCuffed, ctx.setPlayerCuffed
     local HOLD_MS, CHECK_MS, MAX_MOVE, REACH = 3000, 250, 0.8, 2.5
     local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")()
+    local log = loadstring(exports.lib:getModule("log"), "=lib/log.lua")()
     local active = {} -- player -> { target, cuffing, itemId, x, y, z, left, timer }
     local beingCuffed = {} -- target -> player
     local M = {}
@@ -63,7 +64,7 @@ return function(ctx)
                 if isElement(player) then
                     toast(player, "CUFFED")
                 end
-            end)
+            end, "used")
             return
         end
         local cid = charId(player)
@@ -71,6 +72,16 @@ return function(ctx)
             return
         end
         db.call("item_create_held", { "HandCuffs", cid }, function(res, c)
+            log.event("item.created", {
+                player = c.player,
+                item_id = res and res.ok and res.payload.item_id or nil,
+                uname = "HandCuffs",
+                source = "uncuff",
+                target = c.target,
+                ok = res and res.ok or false,
+                code = res and res.code or "DB_ERROR",
+                character_id = cid,
+            })
             if not isElement(c.player) or not res or not res.ok then
                 return
             end

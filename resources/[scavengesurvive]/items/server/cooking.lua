@@ -8,11 +8,20 @@
 return function(ctx)
     local db, state, world, hands, cooking = ctx.db, ctx.state, ctx.world, ctx.hands, ctx.cooking
     local itemType, toast = ctx.type, ctx.toast
+    local log = loadstring(exports.lib:getModule("log"), "=lib/log.lua")()
     local SWEEP_MS, PLACE_GUARD_MS, PENDING_MS = 2000, 1000, 5000
     local busy = {} -- food id -> true while a cooker cooks it (rebuilt by every sweep)
     local pending = {} -- food id -> tick: put on a cooker since the sweep's read was sent
     local lastPlaced = {} -- player -> tick of the last food put on a barbecue (bbq_PlaceFoodTick)
     local M = {}
+
+    -- one event per procedure callback: ok and code come from the db.call result (res == false: the query failed)
+    local function logProc(kind, player, res, fields)
+        fields.player = player
+        fields.ok = res and res.ok or false
+        fields.code = res and res.code or "DB_ERROR"
+        log.event(kind, fields)
+    end
 
     local function now()
         return getRealTime().timestamp
@@ -41,6 +50,16 @@ return function(ctx)
     local function putFood(player, cid, held, row, nextData, x, y, z, rz, code)
         local params = { cid, held.id, row.id, raw(row), cooking.encode(row.uname, nextData), x, y, z, rz }
         db.call("cooker_put_food", params, function(res, c)
+            logProc("cooker.foodPlaced", c.player, res, {
+                item_id = c.foodId,
+                uname = c.foodUname,
+                cooker_id = c.cookerId,
+                cooker_uname = c.uname,
+                character_id = cid,
+                x = math.floor(x),
+                y = math.floor(y),
+                z = math.floor(z),
+            })
             if not isElement(c.player) then
                 return
             end
@@ -56,7 +75,14 @@ return function(ctx)
             world.syncPlayer(c.player)
             triggerEvent("itemMoved", c.player, c.foodId, "held", "world")
             toast(c.player, c.code)
-        end, { player = player, foodId = held.id, uname = row.uname, code = code })
+        end, {
+            player = player,
+            foodId = held.id,
+            foodUname = held.uname,
+            cookerId = row.id,
+            uname = row.uname,
+            code = code,
+        })
     end
 
     -- empty hands at a campfire: the food lying on it (same x/y as the fire, so the nearest item is a tie)
@@ -232,6 +258,16 @@ return function(ctx)
             spots[i] = string.format('{"x":%.3f,"y":%.3f,"z":%.3f,"rz":%d}', s.x, s.y, s.z, s.rz)
         end
         db.call("campfire_burn_out", { row.id, logUname, idList(spots) }, function(res)
+            logProc("item.destroyed", nil, res, {
+                item_id = row.id,
+                uname = row.uname,
+                reason = "burned",
+                left_uname = logUname,
+                logs = res and res.ok and res.payload and res.payload.logs or nil,
+                x = math.floor(row.x),
+                y = math.floor(row.y),
+                z = math.floor(row.z),
+            })
             if res and res.ok then
                 world.forgetEverywhere(row.id)
                 triggerEvent("itemDestroyed", resourceRoot, row.id)
@@ -242,6 +278,12 @@ return function(ctx)
     local function cook(row, act)
         local params = { row.id, raw(row), cooking.encode(row.uname, act.data), idList(act.foods), cooking.NEAR }
         db.call("cooker_cook", params, function(res)
+            logProc("cooker.cooked", nil, res, {
+                cooker_id = row.id,
+                cooker_uname = row.uname,
+                foods = #act.foods,
+                food_ids = act.foods,
+            })
             if not res or not res.ok then
                 return
             end

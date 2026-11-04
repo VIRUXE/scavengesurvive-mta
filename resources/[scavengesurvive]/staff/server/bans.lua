@@ -19,18 +19,28 @@ return function(ctx)
             n = 8,
         }, function(res, c)
             if not res or not res.ok then
+                ctx.event(c.actor, "ban", c.name, c.accountId, c.reason, {
+                    ok = false,
+                    code = res and res.code or "DB_ERROR",
+                })
                 if c.online then
                     state.autoBanned[c.online] = nil
                 end
                 return ctx.say(c.actor, " >  Ban failed: %s", res and res.code or "db error")
             end
+            ctx.event(c.actor, "ban", c.name, c.accountId, c.reason, {
+                ok = true,
+                ban_id = res.payload.ban_id,
+                expires_at = res.payload.expires_at or nil,
+                duration_s = seconds,
+            })
             local until_ = seconds > 0 and ("until " .. tostring(res.payload.expires_at)) or "forever"
             ctx.msgStaff(1, " >  %s banned #33CCFF%s#FFFF00 (%s): %s", ctx.name(c.actor), c.name, until_, c.reason)
             if isElement(c.online) then
                 ctx.sayLang(c.online, "BANNEDMESSG", c.reason)
                 ctx.kick(c.online, c.actor, "Banned: " .. c.reason)
             end
-        end, { actor = actor, name = name, reason = reason, online = online })
+        end, { actor = actor, name = name, reason = reason, online = online, accountId = account and account.id })
     end
 
     -- anticheat: a permanent ban by the server itself, never against staff (upstream skipped admins on duty)
@@ -163,6 +173,11 @@ return function(ctx)
     -- Shared by /unban and the ban list's Unban row; done(actor) runs after the procedure answered.
     local function unbanNow(actor, name, done)
         db.call("staff_unban", { name, ctx.accountId(actor), ctx.name(actor), n = 3 }, function(res, c)
+            ctx.event(c.actor, "unban", c.name, nil, nil, {
+                ok = res and res.ok == true or false,
+                code = res and res.code or "DB_ERROR",
+                lifted = res and res.payload and res.payload.lifted or nil,
+            })
             if not res then
                 ctx.say(c.actor, " >  An error occurred.")
             elseif not res.ok then

@@ -7,6 +7,7 @@
 return function(ctx)
     local db, net, state, world, hands = ctx.db, ctx.net, ctx.state, ctx.world, ctx.hands
     local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")() -- machine titles in the player's language
+    local log = loadstring(exports.lib:getModule("log"), "=lib/log.lua")()
     local machines, liquids, itemType, toast, decodeData =
         ctx.machines, ctx.liquids, ctx.type, ctx.toast, ctx.decodeData
     local M = {}
@@ -104,9 +105,29 @@ return function(ctx)
                     for _, res in ipairs(results) do
                         res.data = res.data and encode(res.data) or "" -- a plain string for the procedure
                     end
+                    local inputs, outputs = {}, {}
+                    for i, it in ipairs(items) do
+                        inputs[i] = it.uname
+                    end
+                    for i, r in ipairs(results) do
+                        outputs[i] = r.uname
+                    end
                     local params = { row.id, raw(row), encode(machines.encode(decodeData(row.data), nextSt)), cRow.id }
                     params[5] = #results > 0 and encode(results) or "[]" -- a bare array: the procedure reads $[*]
                     db.call("machine_finish", params, function(res)
+                        log.event("machine.finished", {
+                            machine_id = row.id,
+                            machine_uname = row.uname,
+                            inputs = inputs,
+                            output_uname = outputs,
+                            items_in = res and res.ok and res.payload and res.payload.removed or nil,
+                            items_out = res and res.ok and res.payload and res.payload.created or nil,
+                            ok = res and res.ok or false,
+                            code = res and res.code or "DB_ERROR",
+                            x = math.floor(row.x),
+                            y = math.floor(row.y),
+                            z = math.floor(row.z),
+                        })
                         if res and res.ok then
                             world.resendEverywhere(row.id)
                             ctx.containers.refreshViewers(cRow.id) -- whoever has it open sees the cook's results

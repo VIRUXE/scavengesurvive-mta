@@ -3,6 +3,7 @@
 -- item. The slots per model are shared/logic/bodyparts.lua.
 return function(ctx)
     local bp = ctx.bp
+    local log, vehicleLine = ctx.log, ctx.vehicleLine
     local M, pending = {}, setmetatable({}, { __mode = "k" })
     local HOLD_MS = 4000
     local SECURE_MS = 3000
@@ -222,9 +223,13 @@ return function(ctx)
             args[#args + 1] = snapshotJson(vehicle, loose)
             ctx.db.call("vehicle_part_install", args, function(res)
                 finished(vehicle, player, action)
+                local line = { player = player, part = slot.name, item_id = held.id }
                 if not res or not res.ok then
+                    line.ok, line.code = false, res and res.code or "DB_ERROR"
+                    log.event("vehicle.partInstalled", vehicleLine(vehicle, line), "warn")
                     return isElement(player) and ctx.toast(player, "PART_FAILED")
                 end
+                log.event("vehicle.partInstalled", vehicleLine(vehicle, line))
                 if isElement(vehicle) and ctx.info[vehicle] == inf then
                     setState(vehicle, slot, tonumber(payloadOf(res).state))
                     inf.loose[slot.name] = true
@@ -291,7 +296,10 @@ return function(ctx)
             end
             ctx.db.call("vehicle_part_remove", args, function(res)
                 finished(vehicle, player, action)
+                local line = { player = player, part = slot.name }
                 if not res or not res.ok then
+                    line.ok, line.code = false, res and res.code or "DB_ERROR"
+                    log.event("vehicle.partRemoved", vehicleLine(vehicle, line), "warn")
                     return isElement(player) and ctx.toast(player, "PART_FAILED")
                 end
                 if isElement(vehicle) and ctx.info[vehicle] == inf then
@@ -301,6 +309,8 @@ return function(ctx)
                     inf.partMissing[slot.name] = true
                 end
                 local id = tonumber(payloadOf(res).id)
+                line.item_id = id
+                log.event("vehicle.partRemoved", vehicleLine(vehicle, line))
                 if id then
                     exports.items:resendWorldItem(id)
                 end
@@ -418,12 +428,18 @@ return function(ctx)
         inf.damage = M.snapshot(vehicle)
         publish(vehicle, inf)
         local items = toJSON(rows, true):sub(2, -2)
+        local parts = {}
+        for _, entry in ipairs(lost) do
+            parts[#parts + 1] = entry.slot.name
+        end
         ctx.db.call("vehicle_parts_detached", { inf.id, snapshotJson(vehicle), items }, function(res)
             if not res or not res.ok then
                 return ctx.util.log("vehicles", "error", "vehicle_parts_detached failed: %s", res and res.code or "db")
             end
             local p = payloadOf(res)
             local first, count = p and tonumber(p.first), p and tonumber(p.count) or 0
+            local line = { reason = "detached", parts = parts, count = count }
+            log.event("vehicle.partRemoved", vehicleLine(vehicle, line))
             for i = 0, count - 1 do
                 if first then
                     exports.items:resendWorldItem(first + i)

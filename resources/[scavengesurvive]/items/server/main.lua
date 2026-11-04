@@ -2,6 +2,7 @@ local db = loadstring(exports.lib:getModule("db"), "=lib/db.lua")()
 local net = loadstring(exports.lib:getModule("net"), "=lib/net.lua")()
 local util = loadstring(exports.lib:getModule("util"), "=lib/util.lua")()
 local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")()
+local log = loadstring(exports.lib:getModule("log"), "=lib/log.lua")()
 local function loadFile(path)
     local f = fileOpen(path, true)
     local src = fileRead(f, fileGetSize(f))
@@ -65,6 +66,19 @@ local function charId(player)
     return exports.character:getCharacterId(player)
 end
 
+-- one event per procedure callback: ok and code come from the db.call result (res == false: the query itself failed)
+local function logProc(kind, player, res, fields)
+    fields.player = player
+    fields.ok = res and res.ok or false
+    fields.code = res and res.code or "DB_ERROR"
+    log.event(kind, fields)
+end
+
+-- the resource that called an exported function, for the destroy events of exports with no reason of their own
+local function callerName()
+    return sourceResource and getResourceName(sourceResource) or nil
+end
+
 local function toast(player, code)
     if isElement(player) then
         triggerClientEvent(player, "toastShown", player, code)
@@ -83,13 +97,23 @@ local hands
 local armourDurability
 
 -- Deletes an item the player owns (held, in their inventory or worn bag). cb(ok) runs only while the player exists.
-local function destroy(itemId, player, cb)
+-- reason is the item.destroyed log reason (used, broken, ...); by names the calling resource of an export.
+local function destroy(itemId, player, cb, reason, by)
     local cid = charId(player)
     if not cid then
         return false
     end
+    local held = state.held[player]
+    local uname = held and held.id == itemId and held.uname or nil
     db.call("item_destroy", { itemId, cid }, function(res, ctx)
         local ok = res and res.ok or false
+        logProc("item.destroyed", ctx.player, res, {
+            item_id = ctx.itemId,
+            uname = ctx.uname,
+            reason = ctx.reason or "unknown",
+            by = ctx.by,
+            character_id = cid,
+        })
         if ok then
             world.forgetEverywhere(ctx.itemId)
             triggerEvent("itemDestroyed", resourceRoot, ctx.itemId)
@@ -103,7 +127,7 @@ local function destroy(itemId, player, cb)
         if ctx.cb then
             ctx.cb(ok, res and res.code or "DB_ERROR")
         end
-    end, { player = player, itemId = itemId, cb = cb })
+    end, { player = player, itemId = itemId, cb = cb, uname = uname, reason = reason, by = by })
     return true
 end
 
@@ -249,8 +273,8 @@ local smallItems = loadFile("server/smallitems.lua")({
     charId = charId,
     toast = toast,
     destroy = destroy,
-    destroyWorldItem = function(id)
-        return destroyWorldItem(id)
+    destroyWorldItem = function(id, reason)
+        return destroyWorldItem(id, reason)
     end,
     world = world,
     updateHeldData = function(player, data)
@@ -472,12 +496,19 @@ function createStartingItems(cid, unames)
             else
                 util.log("items", "warn", "starting item %s: %s", ctx.uname, res and res.code or "DB_ERROR")
             end
-        end, { uname = uname })
+            logProc("item.created", ctx.player, res, {
+                item_id = res and res.ok and res.payload.item_id or nil,
+                uname = ctx.uname,
+                source = "starting",
+                container_id = containerId,
+                character_id = cid,
+            })
+        end, { uname = uname, player = player })
     end
     return true
 end
 
-function destroyItem(itemId, player, cb)
+function destroyItem(itemId, player, cb, reason)
     itemId = tonumber(itemId)
     if not itemId or not isElement(player) then
         if cb then
@@ -485,7 +516,7 @@ function destroyItem(itemId, player, cb)
         end
         return false
     end
-    return destroy(itemId, player, cb)
+    return destroy(itemId, player, cb, reason or "external", callerName())
 end
 
 function sendInventory(player)
@@ -494,11 +525,12 @@ function sendInventory(player)
     end
 end
 
-function destroyWorldItem(itemId)
+function destroyWorldItem(itemId, reason)
     itemId = tonumber(itemId)
     if not itemId then
         return false
     end
+    local by = callerName()
     db.exec(
         "DELETE FROM items WHERE id = ? AND container_id IS NULL AND holder_char_id IS NULL",
         { itemId },
@@ -507,6 +539,14 @@ function destroyWorldItem(itemId)
                 world.forgetEverywhere(itemId)
                 triggerEvent("itemDestroyed", resourceRoot, itemId)
             end
+            log.event("item.destroyed", {
+                item_id = itemId,
+                reason = reason or "external",
+                by = by,
+                ok = ok,
+                code = ok and "OK" or "DB_ERROR",
+                where = "world",
+            })
         end
     )
     return true
@@ -519,6 +559,7 @@ function destroyWorldItemsNear(x, y, z, radius, interior, dimension, cb)
     if not x or not y or not z or not radius or radius <= 0 then
         return false
     end
+    local by = callerName()
     local sql = "SELECT id FROM items WHERE x IS NOT NULL AND interior <=> ? AND dimension <=> ?"
         .. " AND x BETWEEN ? AND ? AND y BETWEEN ? AND ? AND POW(x - ?, 2) + POW(y - ?, 2) + POW(z - ?, 2) <= ?"
     local box = { x - radius, x + radius, y - radius, y + radius, x, y, z, radius * radius }
@@ -543,6 +584,18 @@ function destroyWorldItemsNear(x, y, z, radius, interior, dimension, cb)
                 world.forgetEverywhere(id)
                 triggerEvent("itemDestroyed", resourceRoot, id)
             end
+            log.event("item.destroyed", {
+                count = #ids,
+                reason = "staff",
+                by = by,
+                x = math.floor(x),
+                y = math.floor(y),
+                z = math.floor(z),
+                radius = radius,
+                int = interior,
+                dim = dimension,
+                where = "world",
+            })
             if cb then
                 cb(#ids)
             end
@@ -564,17 +617,27 @@ function dropHeld(player)
     return false
 end
 
-function destroyContainerItem(itemId)
+function destroyContainerItem(itemId, reason)
     itemId = tonumber(itemId)
     if not itemId then
         return false
     end
+    local by = callerName()
     db.one("SELECT container_id, slot FROM items WHERE id = ?", { itemId }, function(row)
         if not row then
             return
         end
         local contId, slot = row.container_id, row.slot
         db.exec("DELETE FROM items WHERE id = ?", { itemId }, function(ok)
+            log.event("item.destroyed", {
+                item_id = itemId,
+                container_id = contId or nil,
+                reason = reason or "external",
+                by = by,
+                ok = ok,
+                code = ok and "OK" or "DB_ERROR",
+                where = "container",
+            })
             if ok and contId and slot then
                 db.exec(
                     "UPDATE items SET slot = slot - 1 WHERE container_id = ? AND slot > ? ORDER BY slot ASC",

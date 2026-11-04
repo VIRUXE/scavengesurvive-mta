@@ -6,9 +6,11 @@
 -- land a moment later (one item_create_many call), and the tree stands again world.tree_respawn_s later. Felled trees
 -- stay in the felled_trees table (kept over restarts, stood again at regrow_at, world.tree_respawn_s after the fell);
 -- half-cut health lives in memory only.
--- ctx = { db, net, util, logic = shared/logic/trees.lua, data = data/trees.lua, setting } built by server/main.lua.
+-- ctx = { db, net, util, log, logAt, logic = shared/logic/trees.lua, data = data/trees.lua, setting } built by
+-- server/main.lua.
 return function(ctx)
     local db, net, util, logic, data = ctx.db, ctx.net, ctx.util, ctx.logic, ctx.data
+    local log, logAt = ctx.log, ctx.logAt
     local index = logic.index(data)
     local felled, health = {}, {} -- tree -> true; tree -> health left
     local active = {} -- player -> { itemId, tree, x, y, z, perPointMs, timer }
@@ -95,7 +97,8 @@ return function(ctx)
             .. "ON DUPLICATE KEY UPDATE felled_at = NOW(), regrow_at = VALUES(regrow_at)"
         db.exec(sql, { keyOf(t), respawn })
         regrowIn(i, respawn)
-        util.log("world", "info", "tree %d (%d) felled, %d logs", i, t[1], species[4])
+        local line = { player = player, tree_id = i, model = t[1], logs = species[4] }
+        log.event("world.treeFelled", logAt(line, player))
     end
 
     local function tick(player)

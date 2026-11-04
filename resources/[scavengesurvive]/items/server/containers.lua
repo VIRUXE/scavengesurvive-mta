@@ -8,6 +8,7 @@ return function(ctx)
     local world = ctx.world
     local refreshPlayer = ctx.refreshPlayer
     local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")() -- titles in the player's language
+    local log = loadstring(exports.lib:getModule("log"), "=lib/log.lua")()
     local isIncapacitated = ctx.isIncapacitated
     local isBadInteract = ctx.isBadInteract or function()
         return false
@@ -18,6 +19,20 @@ return function(ctx)
     local lastHolster = {}
     state.lastHolster = lastHolster
     local M = {}
+
+    -- one event per procedure callback: ok and code come from the db.call result (res == false: the query failed);
+    -- withPos adds the player's position (x y z int dim) while the player is still there
+    local function logProc(kind, player, res, fields, withPos)
+        fields.player = player
+        fields.ok = res and res.ok or false
+        fields.code = res and res.code or "DB_ERROR"
+        if withPos and isElement(player) then
+            local x, y, z = getElementPosition(player)
+            fields.x, fields.y, fields.z = math.floor(x), math.floor(y), math.floor(z)
+            fields.int, fields.dim = getElementInterior(player), getElementDimension(player)
+        end
+        log.event(kind, fields)
+    end
 
     local CONTAINERS_SQL = "SELECT c.id, c.kind, c.size, owner.type_uname AS uname FROM containers c "
         .. "LEFT JOIN items owner ON owner.id = c.owner_item_id "
@@ -111,6 +126,12 @@ return function(ctx)
             end
         end
         db.call("container_put", { itemId, cid, containerId }, function(res, c)
+            logProc("item.putAway", c.player, res, {
+                item_id = c.itemId,
+                uname = c.uname,
+                container_id = containerId,
+                character_id = cid,
+            }, true)
             if not isElement(c.player) then
                 return
             end
@@ -126,7 +147,7 @@ return function(ctx)
                 return onFull()
             end
             toast(c.player, res and res.code or "DB_ERROR")
-        end, { player = player, itemId = itemId })
+        end, { player = player, itemId = itemId, uname = held and held.id == itemId and held.uname or nil })
     end
 
     local function wearBag(player, cid, item)
@@ -136,6 +157,12 @@ return function(ctx)
         end
         -- bag_wear refuses a second bag with BAG_SLOT_USED instead of tripping uq_items_holder_kind (1062 in the log)
         db.call("bag_wear", { item.id, cid }, function(res, c)
+            logProc("item.worn", c.player, res, {
+                item_id = c.item.id,
+                uname = c.item.uname,
+                slot = "bag",
+                character_id = cid,
+            })
             if not isElement(c.player) then
                 return
             end
@@ -186,6 +213,12 @@ return function(ctx)
                     return
                 end
                 db.call("item_unwear", { cid, "holster" }, function(res, c)
+                    logProc("item.unworn", c.player, res, {
+                        item_id = c.hItem.id,
+                        uname = c.hItem.uname,
+                        slot = "holster",
+                        character_id = cid,
+                    })
                     if not isElement(c.player) then
                         return
                     end
@@ -269,6 +302,13 @@ return function(ctx)
                 end
                 local openContainerId = M.openContainerId(pl)
                 db.call("item_wear", { heldItem.id, cid, "holster", openContainerId, n = 4 }, function(res, c)
+                    logProc("item.worn", c.player, res, {
+                        item_id = c.heldItem.id,
+                        uname = c.heldItem.uname,
+                        slot = "holster",
+                        swapped_id = res and res.ok and res.payload and res.payload.swapped_id or nil,
+                        character_id = cid,
+                    })
                     if not isElement(c.player) then
                         return
                     end
@@ -788,6 +828,11 @@ return function(ctx)
                 return toast(c.player, "CONTAINER_NOT_EMPTY")
             end
             db.call("item_pickup", { c.itemId, c.cid }, function(res, c2)
+                logProc("item.pickedUp", c2.player, res, {
+                    item_id = c2.itemId,
+                    source = "container",
+                    character_id = c2.cid,
+                }, true)
                 if not isElement(c2.player) then
                     return
                 end
@@ -1017,6 +1062,9 @@ return function(ctx)
 
     take = function(player, cid, itemId)
         db.call("container_take", { itemId, cid }, function(res, c)
+            if not res or not res.ok then
+                logProc("item.taken", c.player, res, { item_id = c.itemId, character_id = cid }, true)
+            end
             if not isElement(c.player) then
                 return
             end
@@ -1027,6 +1075,13 @@ return function(ctx)
                 "SELECT id, type_uname AS uname, hitpoints AS hp, data FROM items WHERE id = ?",
                 { c.itemId },
                 function(row, c2)
+                    -- the one event of a successful take waits for the row, which names the item type
+                    logProc("item.taken", c2.player, res, {
+                        item_id = c2.itemId,
+                        uname = row and row.uname or nil,
+                        container_id = res.payload and res.payload.container_id or nil,
+                        character_id = cid,
+                    }, true)
                     if not row or not isElement(c2.player) then
                         return
                     end
@@ -1050,12 +1105,20 @@ return function(ctx)
             return
         end
         local sideContId = M.openContainerId(player)
-        local function executeMove(dstContainerId)
+        local function executeMove(dstContainerId, uname)
             local allowedOpenId = sideContId
             if allowedOpenId and M.openContainerId(player) ~= allowedOpenId then
                 allowedOpenId = nil
             end
             db.call("container_move", { itemId, cid, dstContainerId, allowedOpenId, n = 4 }, function(res, c)
+                logProc("item.containerMoved", c.player, res, {
+                    item_id = itemId,
+                    uname = uname,
+                    container_id = dstContainerId,
+                    from_container_id = res and res.ok and res.payload and res.payload.from_container_id or nil,
+                    direction = target,
+                    character_id = cid,
+                })
                 if not isElement(c.player) then
                     return
                 end
@@ -1076,13 +1139,13 @@ return function(ctx)
                 end
                 if target == "inventory" then
                     local inv = exports.character:getInventoryContainerId(c.player)
-                    return inv and executeMove(inv)
+                    return inv and executeMove(inv, r.uname)
                 end
                 wornBag(cid, function(bag, c2)
                     if not isElement(c2.player) or not bag then
                         return
                     end
-                    executeMove(bag.id)
+                    executeMove(bag.id, r.uname)
                 end, { player = c.player })
             end, { player = player })
         end
@@ -1097,7 +1160,7 @@ return function(ctx)
                         return
                     end
                     if machineAccepts(c.player, sideContId, r.uname, hands.decodeData(r.data)) then
-                        executeMove(sideContId)
+                        executeMove(sideContId, r.uname)
                     end
                 end, { player = player })
             end
@@ -1147,6 +1210,13 @@ return function(ctx)
                     end
                 end
                 db.call("item_wear", { c.itemId, c.cid, slot, allowedOpenContainerId, n = 4 }, function(res, c2)
+                    logProc("item.worn", c2.player, res, {
+                        item_id = c2.row.id,
+                        uname = c2.row.uname,
+                        slot = slot,
+                        swapped_id = res and res.ok and res.payload and res.payload.swapped_id or nil,
+                        character_id = c.cid,
+                    })
                     if not isElement(c2.player) then
                         return
                     end
@@ -1194,7 +1264,18 @@ return function(ctx)
         if not cid or not slot or type(slot) ~= "string" then
             return
         end
+        local worn = state[slot] and state[slot][player]
+        if type(worn) ~= "table" then
+            worn = nil -- the slot name is the client's: state.lastHolster holds ticks, not items
+        end
         db.call("item_unwear", { cid, slot }, function(res, c)
+            logProc("item.unworn", c.player, res, {
+                item_id = res and res.ok and res.payload and res.payload.item_id or nil,
+                uname = worn and worn.uname,
+                slot = slot,
+                destination = res and res.ok and res.payload and res.payload.destination or nil,
+                character_id = cid,
+            })
             if not isElement(c.player) then
                 return
             end

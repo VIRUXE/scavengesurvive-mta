@@ -3,6 +3,7 @@
 -- off since, means nothing is created. ctx = { db, world, log } built by server/main.lua.
 return function(ctx)
     local db, world = ctx.db, ctx.world
+    local log = loadstring(exports.lib:getModule("log"), "=lib/log.lua")()
     local RADIUS = 2.0
     -- upstream item/heartshapedbox.pwn: CreateItem(item_HeartShapedBox, 2912.3301, 2910.2800, 29.7780); the loot
     -- boxes get their contents in loot/server/main.lua, this one stays empty
@@ -18,6 +19,16 @@ return function(ctx)
             local params = { spot.uname, nil, nil, spot.x, spot.y, spot.z, 0, 0, 0, nil, nil, n = 11 }
             db.call("item_create", params, function(res)
                 local ok = res and res.ok
+                log.event("item.created", {
+                    item_id = ok and res.payload.item_id or nil,
+                    uname = spot.uname,
+                    source = "fixed",
+                    ok = ok or false,
+                    code = res and res.code or "DB_ERROR",
+                    x = math.floor(spot.x),
+                    y = math.floor(spot.y),
+                    z = math.floor(spot.z),
+                })
                 local what = ok and "created" or (res and res.code or "db")
                 local at = string.format("%g, %g, %g", spot.x, spot.y, spot.z)
                 ctx.log("items", ok and "info" or "warn", "fixed %s at %s: %s", spot.uname, at, what)

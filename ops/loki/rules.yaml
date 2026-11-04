@@ -1,0 +1,39 @@
+# Loki ruler rules (LogQL). The dev compose mounts this as the "fake" tenant (auth disabled); on a real Loki upload it
+# with `lokitool rules sync` or place it in the ruler's rules directory for your tenant, and point the ruler's
+# alertmanager_url / Grafana contact point at the Discord staff channel.
+groups:
+  - name: scavengesurvive-ops
+    rules:
+      - alert: GameLogHeartbeatMissing
+        # the server down, or Loki unreachable from it (the game console prints "[logs] push to ... failed")
+        expr: absent_over_time({job="ss-game", kind="system.heartbeat"}[3m])
+        for: 1m
+        labels: { severity: critical }
+        annotations: { summary: "No system.heartbeat for 3 minutes" }
+      - alert: DatabaseQueryFailed
+        expr: sum(count_over_time({job="ss-game", kind="db.queryFailed"}[5m])) > 0
+        labels: { severity: critical }
+        annotations: { summary: "SQL errors in the last 5 minutes, see docs/runbooks/incident-db-down.md" }
+      - alert: SlowStoredProcedures
+        expr: max(quantile_over_time(0.95, {job="ss-game", kind="db.callFinished"} | json | unwrap ms [10m])) > 250
+        for: 10m
+        labels: { severity: warning }
+        annotations: { summary: "p95 of slow stored procedure calls above 250 ms for 10 minutes" }
+      - alert: ScriptErrorBurst
+        expr: sum(count_over_time({job="ss-game", kind="script.error"}[5m])) > 20
+        labels: { severity: warning }
+        annotations: { summary: "More than 20 script errors in 5 minutes" }
+      - alert: GameLogLinesDropped
+        expr: sum(count_over_time({job="ss-game", kind="system.logDropped"}[10m])) > 0
+        labels: { severity: warning }
+        annotations: { summary: "The game dropped log lines while Loki was unreachable" }
+  - name: scavengesurvive-moderation
+    rules:
+      - alert: AnticheatKickBurst
+        expr: sum(count_over_time({job="ss-game", kind="anticheat.kicked"}[10m])) > 5
+        labels: { severity: warning }
+        annotations: { summary: "More than 5 anticheat kicks in 10 minutes" }
+      - alert: CombatLogWave
+        expr: sum(count_over_time({job="ss-game", kind="character.combatLogged"}[1h])) > 10
+        labels: { severity: warning }
+        annotations: { summary: "More than 10 combat logs in an hour" }

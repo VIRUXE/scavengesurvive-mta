@@ -119,6 +119,16 @@ if ($httpUser) {
     [void]$root.InsertBefore($hg, $default)
     [void]$root.InsertBefore($ha, $default)
 }
+# (f3) logs: the only resource that may call fetchRemote (it pushes the game log to Loki, see *logs.url); a separate
+# group so no other resource gets an outbound HTTP right.
+foreach ($node in @($root.SelectNodes('group[@name="ScavengeSurviveLogs"] | acl[@name="ScavengeSurviveLogs"]'))) { [void]$root.RemoveChild($node) }
+$lg = New-AclElement "group" ([ordered]@{ name = "ScavengeSurviveLogs" })
+[void]$lg.AppendChild((New-AclElement "acl" ([ordered]@{ name = "ScavengeSurviveLogs" })))
+[void]$lg.AppendChild((New-AclElement "object" ([ordered]@{ name = "resource.logs" })))
+$la = New-AclElement "acl" ([ordered]@{ name = "ScavengeSurviveLogs" })
+[void]$la.AppendChild((New-AclElement "right" ([ordered]@{ name = "function.fetchRemote"; access = "true" })))
+[void]$root.InsertBefore($lg, $default)
+[void]$root.InsertBefore($la, $default)
 $admin = $root.SelectSingleNode('group[@name="Admin"]')
 if (-not $admin) { throw "acl.xml has no Admin group" }
 if (-not $admin.SelectSingleNode('object[@name="resource.dev"]')) {
