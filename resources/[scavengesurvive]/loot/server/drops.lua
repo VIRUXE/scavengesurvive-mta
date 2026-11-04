@@ -76,6 +76,10 @@ return function(ctx)
         end
         crates[kind] = nil
         destroyObjects(c.objects)
+        local itemsRes = getResourceFromName("items")
+        if itemsRes and getResourceState(itemsRes) == "running" then
+            exports.items:closeContainerViewers(c.containerId) -- whoever was looking into the old crate
+        end
         -- the container row cascades to its items and to the world_crates row
         db.exec("DELETE FROM containers WHERE id = ?", { c.containerId })
     end

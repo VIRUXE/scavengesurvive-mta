@@ -480,6 +480,45 @@ return function(ctx)
         end
     end
 
+    M.closeViewers = function(containerId)
+        containerId = tonumber(containerId)
+        if containerId then
+            closeViewers(function(cont)
+                return cont.containerId == containerId
+            end)
+        end
+    end
+
+    -- contents changed outside any viewer's own action (an explosive gone off inside, a workbench emptied by a
+    -- craft): everyone viewing it is refreshed once, 100 ms after the last change, not once per item
+    local changedSoon = {} -- container id -> timer
+    function M.containerChanged(containerId)
+        containerId = tonumber(containerId)
+        if not containerId then
+            return
+        end
+        if changedSoon[containerId] and isTimer(changedSoon[containerId]) then
+            killTimer(changedSoon[containerId])
+        end
+        changedSoon[containerId] = setTimer(function()
+            changedSoon[containerId] = nil
+            M.refreshViewers(containerId)
+        end, 100, 1)
+    end
+
+    -- a vehicle blown up or removed (wreck cleanup, abandoned, respawn): its trunk closes for whoever had it open
+    local function closeVehicle()
+        if getElementType(source) ~= "vehicle" then
+            return
+        end
+        local veh = source
+        closeViewers(function(cont)
+            return cont.vehicle == veh
+        end)
+    end
+    addEventHandler("onVehicleExplode", root, closeVehicle)
+    addEventHandler("onElementDestroy", root, closeVehicle)
+
     local function closeWorldItem(itemId)
         itemId = tonumber(itemId)
         if itemId then
