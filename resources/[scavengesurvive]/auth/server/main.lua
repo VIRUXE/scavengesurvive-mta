@@ -2,6 +2,7 @@ local db = loadstring(exports.lib:getModule("db"), "=lib/db.lua")()
 local net = loadstring(exports.lib:getModule("net"), "=lib/net.lua")()
 local util = loadstring(exports.lib:getModule("util"), "=lib/util.lua")()
 local log = loadstring(exports.lib:getModule("log"), "=lib/log.lua")()
+local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")()
 local function loadFile(path)
     local f = fileOpen(path, true)
     local src = fileRead(f, fileGetSize(f))
@@ -583,7 +584,7 @@ addCommandHandler("lang", function(player, _, code)
     end
     local account = session[player]
     if not account then
-        return outputChatBox(" >  Log in first.", player, 255, 255, 0)
+        return outputChatBox(" >  " .. lang.textFor(player, "Log in first."), player, 255, 255, 0)
     end
     local codes = exports.data:languages()
     local valid = {}
@@ -593,13 +594,14 @@ addCommandHandler("lang", function(player, _, code)
     code = type(code) == "string" and code:lower() or nil
     if not code or not valid[code] then
         local list = table.concat(codes, ", ")
-        return outputChatBox(string.format(" >  Usage: /lang <%s> (now %s)", list, account.lang), player, 255, 255, 0)
+        local usage = " >  " .. lang.formatFor(player, "Usage: /lang <%s> (now %s)", list, account.lang)
+        return outputChatBox(usage, player, 255, 255, 0)
     end
     account.lang = code
     account.langChosen = true
     setElementData(player, LANG_KEY, code, "local", "deny")
     db.exec("UPDATE accounts SET lang = ? WHERE id = ?", { code, account.id })
-    outputChatBox(string.format(" >  Language set to %s.", code), player, 255, 255, 0)
+    outputChatBox(" >  " .. lang.formatFor(player, "Language set to %s.", code), player, 255, 255, 0)
     log.event("session.languageSet", { player = player, account_id = account.id, lang = code, via = "command" })
 end)
 
@@ -628,12 +630,12 @@ addCommandHandler("changepass", function(player, _, oldPw, newPw)
         return
     end
     local account = session[player]
-    local lang = account and account.lang or "en"
+    local langCode = account and account.lang or "en"
     if not account then
-        return outputChatBox(exports.data:t(lang, "LOGGEDINREQ"), player, 255, 255, 0, true)
+        return outputChatBox(exports.data:t(langCode, "LOGGEDINREQ"), player, 255, 255, 0, true)
     end
     if not oldPw or not newPw then
-        return outputChatBox(exports.data:t(lang, "CHANGEPASSW"), player, 255, 255, 0, true)
+        return outputChatBox(exports.data:t(langCode, "CHANGEPASSW"), player, 255, 255, 0, true)
     end
     if changing[player] or not accounts then
         return
@@ -646,7 +648,7 @@ addCommandHandler("changepass", function(player, _, oldPw, newPw)
         end
         local reply = rules.changePasswordReply(code)
         local r, g, b = unpack(reply.color)
-        outputChatBox(exports.data:t(lang, reply.key, newPw), player, r, g, b, true)
+        outputChatBox(exports.data:t(langCode, reply.key, newPw), player, r, g, b, true)
         log.event("session.passwordChanged", {
             player = player,
             account_id = account.id,

@@ -14,6 +14,7 @@ local puzzles = loadFile("shared/logic/puzzles.lua", "=world/puzzles.lua")
 local area69 = loadFile("shared/logic/area69.lua", "=world/area69.lua")
 local data = loadFile("data/puzzles.lua", "=world/puzzles_data.lua")
 local models = loadstring(exports.lib:getModule("models"), "=lib/models.lua")()
+local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")()
 
 local reg = buttons.new()
 doors.register(reg, buttons)
@@ -133,8 +134,10 @@ addEventHandler("puzzleSparkShown", resourceRoot, function(x, y, z)
     end
 end)
 
+-- the server sends puzzles.SAY's English texts (and area69's code list); they are shown in the player's language
 addEventHandler("buttonMessageShown", localPlayer, function(title, body)
-    exports.ui:dialogOpen("world:button", "msgbox", title, body, "Close", "")
+    local L = lang.text
+    exports.ui:dialogOpen("world:button", "msgbox", L(title), L(body), L("Close"), "")
 end)
 
 -- ranch.pwn: a press on the working PC looks at its screen, the next one gives the camera back

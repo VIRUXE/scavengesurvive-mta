@@ -49,9 +49,10 @@ Scavenge & Survive ported to MTA:SA 1.6 (Lua 5.1) with MariaDB 13.0 (12.2 also v
   client, `lang.textFor(player, "…")` / `lang.formatFor(player, "…", ...)` on the server; a `shared/logic` module
   takes `M.tr` (identity, the client sets it to `lang.text`) and writes `tr("…")`. Tables of texts sit between
   `-- lang:begin` and `-- lang:end` lines. `python -m tools.lang_qa` collects every such literal, reports what each
-  language lacks (`--dump` lists the English), and the translations live in
-  `tools/convert/lang_port/strings/<code>.json` (→ `data/generated/strings_<code>.lua` by
-  `python -m tools.convert strings`). The client's language is auth's `auth.lang` element data.
+  language lacks (`--dump` lists the English), and the translations live only in
+  `data/generated/strings_<code>.lua`, edited by hand (one `["English"] = "translation",` line per text, sorted by key);
+  never edit or regenerate them from `tools/convert/lang_port/*.json` (port artifacts). The client's language is
+  auth's `auth.lang` element data.
 - Client never calls `setElementData`. Server-set element data uses `"deny"`. `elementdata_whitelisted=1`.
 - Pure logic lives in `shared/logic/*.lua` and never calls MTA functions at file scope.
 - No global tables used as static classes or singletons for a resource's state (`Maps = { stats = {}, … }`, `Character.byPlayer`): new code keeps state in file-local tables or closures, returns a module table, and passes state as arguments. The older `Character`/`Items`/`UI` globals are converted when their resource is reworked, not in passing.

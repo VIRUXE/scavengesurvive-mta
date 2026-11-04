@@ -195,13 +195,17 @@ local LISTS = {
     },
 }
 
+-- lang:begin
+M.CODE_LIST_TITLE = "Main Control"
+-- lang:end
+
 function M.codeList(state, n)
     local list = LISTS[n]
     local lines = { "#FFAA00Keycodes for security system. " .. list[1] .. ":", "" }
     for i = 2, #list do
         lines[#lines + 1] = string.format("    #FFFFFF%s:  #FFFF00%d", list[i][1], state.codes[list[i][2]])
     end
-    return "Main Control", table.concat(lines, "\n")
+    return M.CODE_LIST_TITLE, table.concat(lines, "\n")
 end
 
 -- A press on an Area 69 keypad button (OnButtonPress / OnPlayerActivateDoor -> PlayerActivateDoorButton). Returns

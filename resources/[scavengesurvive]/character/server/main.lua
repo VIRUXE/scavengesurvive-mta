@@ -222,16 +222,12 @@ local function createAndSpawn(player, accountId, stats)
             return
         end
         if not res or not res.ok then
-            return log.event(
-                "character.created",
-                {
-                    player = ctx.player,
-                    account_id = accountId,
-                    ok = false,
-                    code = res and res.code or "DB_ERROR",
-                },
-                "error"
-            )
+            return log.event("character.created", {
+                player = ctx.player,
+                account_id = accountId,
+                ok = false,
+                code = res and res.code or "DB_ERROR",
+            }, "error")
         end
         log.event("character.created", {
             player = ctx.player,
@@ -334,19 +330,18 @@ local function combatLogged(player, st, quitReason)
         return false
     end
     local now = getTickCount()
-    log.event(
-        "character.combatLogged",
-        {
-            player = player,
-            character_id = st.id,
-            attacker = attacker,
-            window_s = window,
-            since_damage_s = (now - (state.combat.lastDamage[player] or now)) / 1000,
-            msg = string.format("%s combat-logged (last hit by %s)", getPlayerName(player), getPlayerName(attacker)),
-        },
-        "warn"
-    )
-    outputChatBox(string.format("%s combat logged!", getPlayerName(player)), root, 255, 220, 0)
+    log.event("character.combatLogged", {
+        player = player,
+        character_id = st.id,
+        attacker = attacker,
+        window_s = window,
+        since_damage_s = (now - (state.combat.lastDamage[player] or now)) / 1000,
+        msg = string.format("%s combat-logged (last hit by %s)", getPlayerName(player), getPlayerName(attacker)),
+    }, "warn")
+    local L = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")()
+    for _, p in ipairs(getElementsByType("player")) do
+        outputChatBox(L.formatFor(p, "%s combat logged!", getPlayerName(player)), p, 255, 220, 0)
+    end
     return death.die(player, "combatlog", attacker, true)
 end
 

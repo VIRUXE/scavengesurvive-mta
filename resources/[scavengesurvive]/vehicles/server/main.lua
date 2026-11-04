@@ -218,7 +218,9 @@ local function updateWheelFreeze(v)
     if frontLeft == 2 and rearLeft == 2 and frontRight == 2 and rearRight == 2 then
         wheelFreezeTimers[v] = setTimer(function()
             wheelFreezeTimers[v] = nil
-            if not isElement(v) then return end
+            if not isElement(v) then
+                return
+            end
             local fl, rl, fr, rr = getVehicleWheelStates(v)
             if fl == 2 and rl == 2 and fr == 2 and rr == 2 then
                 setElementFrozen(v, true)
@@ -689,7 +691,7 @@ net.handler("fuelPumpInteractRequested", function(player)
     local transfer = math.min(CAN_CAPACITY - amount, pump.stock)
     local ms = math.max(500, math.ceil(transfer / PUMP_LITRES_PER_TICK) * PUMP_TICK_MS)
     setPedAnimation(player, "PED", "DRIVE_BOAT", -1, true, false, false, false)
-    triggerClientEvent(player, "vehicleHoldStarted", player, "Filling petrol can", ms)
+    triggerClientEvent(player, "vehicleHoldStarted", player, lang.textFor(player, "Filling petrol can"), ms)
     -- the pump comes in as an upvalue: a table passed as a setTimer argument arrives as a copy, and the stock
     -- taken from a copy never leaves the pump
     local canId, outlet = held.id, pump
@@ -1429,7 +1431,7 @@ end
 local function fitBattery(player, vehicle, held)
     cancelHoldAction(player)
     setPedAnimation(player, "COP_AMBIENT", "COPBROWSE_LOOP", -1, true, false, false, false)
-    triggerClientEvent(player, "vehicleHoldStarted", player, "Fitting battery", BATTERY_HOLD_MS)
+    triggerClientEvent(player, "vehicleHoldStarted", player, lang.textFor(player, "Fitting battery"), BATTERY_HOLD_MS)
     local timer = setTimer(function(p, veh, itemId)
         activeActions[p] = nil
         if not isElement(p) or not isElement(veh) then
@@ -1460,7 +1462,7 @@ end
 local function removeBattery(player, vehicle)
     cancelHoldAction(player)
     setPedAnimation(player, "COP_AMBIENT", "COPBROWSE_LOOP", -1, true, false, false, false)
-    triggerClientEvent(player, "vehicleHoldStarted", player, "Removing battery", BATTERY_HOLD_MS)
+    triggerClientEvent(player, "vehicleHoldStarted", player, lang.textFor(player, "Removing battery"), BATTERY_HOLD_MS)
     local timer = setTimer(function(p, veh)
         activeActions[p] = nil
         if not isElement(p) or not isElement(veh) then
@@ -1586,19 +1588,29 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
 
     -- Wheels need a tyre wrench in hand; a replacement wheel is laid beside the vehicle.
     if uname == "Wheel" then
-        outputChatBox("Lay the wheel beside the vehicle, then hold a Tyre Wrench to fit it.", player)
+        outputChatBox(
+            lang.textFor(player, "Lay the wheel beside the vehicle, then hold a Tyre Wrench to fit it."),
+            player
+        )
         return
     end
     if uname == "Wrench" and not vlogic.isFront(angle) and not vlogic.isRear(angle) then
-        if activeActions[player] or bodySrv.busy(vehicle) or inf.locked > 0
-            or getPedOccupiedVehicle(player) or getVehicleEngineState(vehicle) then
+        if
+            activeActions[player]
+            or bodySrv.busy(vehicle)
+            or inf.locked > 0
+            or getPedOccupiedVehicle(player)
+            or getVehicleEngineState(vehicle)
+        then
             return
         end
         local lx, ly = toLocal(getElementMatrix(vehicle), px, py, pz)
         local wheel = vlogic.nearestDamagedWheel(lx, ly, { 2, 2, 2, 2 })
         local positions = { { -1, 1 }, { -1, -1 }, { 1, 1 }, { 1, -1 } }
         local pos = positions[wheel]
-        if (lx - pos[1]) ^ 2 + (ly - pos[2]) ^ 2 > 2.25 then return end
+        if (lx - pos[1]) ^ 2 + (ly - pos[2]) ^ 2 > 2.25 then
+            return
+        end
         local tires = { getVehicleWheelStates(vehicle) }
         local removing = tires[wheel] ~= 2
         local action = { actionType = "wheel", vehicle = vehicle }
@@ -1606,27 +1618,39 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
         local count = vlogic.lugNutCount(getElementModel(vehicle))
         local duration = exports.character:skillTimeModifier(player, count * 1000, "Repair")
         local started = getTickCount()
-        triggerClientEvent(player, "vehicleHoldStarted", player,
-            (removing and "Removing wheel: " or "Installing wheel: ") .. count .. " lug nuts", duration)
+        local label = removing and lang.formatFor(player, "Removing wheel: %d lug nuts", count)
+            or lang.formatFor(player, "Installing wheel: %d lug nuts", count)
+        triggerClientEvent(player, "vehicleHoldStarted", player, label, duration)
         setPedAnimation(player, "BOMBER", "BOM_Plant_Loop", -1, true, false, false, false)
         action.timer = setTimer(function()
             local cur = isElement(player) and exports.items:getHeld(player)
-            if not isElement(vehicle) or not info[vehicle] or not cur or cur.id ~= held.id
-                or getPedOccupiedVehicle(player) or getVehicleEngineState(vehicle) or inf.locked > 0
+            if
+                not isElement(vehicle)
+                or not info[vehicle]
+                or not cur
+                or cur.id ~= held.id
+                or getPedOccupiedVehicle(player)
+                or getVehicleEngineState(vehicle)
+                or inf.locked > 0
                 or getElementDimension(player) ~= getElementDimension(vehicle)
-                or getElementInterior(player) ~= getElementInterior(vehicle) or isPedDead(player) then
+                or getElementInterior(player) ~= getElementInterior(vehicle)
+                or isPedDead(player)
+            then
                 return cancelHoldAction(player)
             end
             local x, y, z = getElementPosition(player)
             local vx1, vy1, vz1 = getElementVelocity(vehicle)
-            if getDistanceBetweenPoints3D(x, y, z, px, py, pz) > 0.8
-                or vx1 * vx1 + vy1 * vy1 + vz1 * vz1 > 0.0001 then
+            if getDistanceBetweenPoints3D(x, y, z, px, py, pz) > 0.8 or vx1 * vx1 + vy1 * vy1 + vz1 * vz1 > 0.0001 then
                 return cancelHoldAction(player)
             end
-            if getTickCount() - started < duration then return end
+            if getTickCount() - started < duration then
+                return
+            end
             cancelHoldAction(player)
             local current = { getVehicleWheelStates(vehicle) }
-            if current[wheel] ~= tires[wheel] then return end
+            if current[wheel] ~= tires[wheel] then
+                return
+            end
             local function fitted()
                 current[wheel] = removing and 2 or 0
                 setVehicleWheelStates(vehicle, unpack(current))
@@ -1640,26 +1664,37 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
                 exports.character:gainSkill(player, "Repair")
             end
             if removing then
-                db.exec("INSERT INTO items (type_uname, x, y, z, rz, interior, dimension) VALUES ('Wheel', ?, ?, ?, 0, ?, ?)",
+                db.exec(
+                    "INSERT INTO items (type_uname, x, y, z, rz, interior, dimension) VALUES ('Wheel', ?, ?, ?, 0, ?, ?)",
                     { x, y, z - 0.8, getElementInterior(player), getElementDimension(player) },
                     function(ok, _, _, id)
                         if ok and isElement(vehicle) then
                             fitted()
                             exports.items:resendWorldItem(tonumber(id))
                         end
-                    end)
+                    end
+                )
             else
-                db.query("SELECT id FROM items WHERE type_uname = 'Wheel' AND interior = ? AND dimension = ? AND POW(x - ?, 2) + POW(y - ?, 2) + POW(z - ?, 2) < 9 LIMIT 1",
-                    { getElementInterior(player), getElementDimension(player), x, y, z }, function(rows)
+                db.query(
+                    "SELECT id FROM items WHERE type_uname = 'Wheel' AND interior = ? AND dimension = ? AND POW(x - ?, 2) + POW(y - ?, 2) + POW(z - ?, 2) < 9 LIMIT 1",
+                    { getElementInterior(player), getElementDimension(player), x, y, z },
+                    function(rows)
                         if rows and rows[1] and isElement(vehicle) then
-                            db.exec("DELETE FROM items WHERE id = ? AND holder_char_id IS NULL AND container_id IS NULL", { rows[1].id }, function(ok, _, affected)
-                                if ok and tonumber(affected) == 1 then
-                                    exports.items:forgetWorldItem(tonumber(rows[1].id))
-                                    if isElement(vehicle) then fitted() end
+                            db.exec(
+                                "DELETE FROM items WHERE id = ? AND holder_char_id IS NULL AND container_id IS NULL",
+                                { rows[1].id },
+                                function(ok, _, affected)
+                                    if ok and tonumber(affected) == 1 then
+                                        exports.items:forgetWorldItem(tonumber(rows[1].id))
+                                        if isElement(vehicle) then
+                                            fitted()
+                                        end
+                                    end
                                 end
-                            end)
+                            )
                         end
-                    end)
+                    end
+                )
             end
         end, 100, 0)
         return
@@ -1731,7 +1766,7 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
         -- upstream repair.pwn ran the Repair skill through the per-tick health step, so skill made repairs slower;
         -- the port shortens the hold instead
         local ms = exports.character:skillTimeModifier(player, 3000, "Repair")
-        triggerClientEvent(player, "vehicleHoldStarted", player, "Repairing", ms)
+        triggerClientEvent(player, "vehicleHoldStarted", player, lang.textFor(player, "Repairing"), ms)
         local timer = setTimer(function(p, veh)
             activeActions[p] = nil
             if not isElement(p) or not isElement(veh) then
@@ -1783,7 +1818,7 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
             end
             cancelHoldAction(player)
             setPedAnimation(player, "COP_AMBIENT", "COPBROWSE_LOOP", -1, true, false, false, false)
-            triggerClientEvent(player, "vehicleHoldStarted", player, "Crafting key", 3000)
+            triggerClientEvent(player, "vehicleHoldStarted", player, lang.textFor(player, "Crafting key"), 3000)
             local timer = setTimer(function(p, veh, kitId)
                 activeActions[p] = nil
                 if not isElement(p) or not isElement(veh) then
@@ -1828,7 +1863,7 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
             cancelHoldAction(player)
             setPedAnimation(player, "COP_AMBIENT", "COPBROWSE_LOOP", -1, true, false, false, false)
             local ms = exports.character:skillTimeModifier(player, KEYPAD_HOLD_MS, "Construction")
-            triggerClientEvent(player, "vehicleHoldStarted", player, "Installing keypad", ms)
+            triggerClientEvent(player, "vehicleHoldStarted", player, lang.textFor(player, "Installing keypad"), ms)
             local timer = setTimer(function(p, veh, kitId)
                 activeActions[p] = nil
                 if not isElement(p) or not isElement(veh) then
@@ -1862,7 +1897,7 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
             end
             cancelHoldAction(player)
             setPedAnimation(player, "POLICE", "DOOR_KICK", -1, true, false, false, false)
-            triggerClientEvent(player, "vehicleHoldStarted", player, "Breaking lock", 3000)
+            triggerClientEvent(player, "vehicleHoldStarted", player, lang.textFor(player, "Breaking lock"), 3000)
             local timer = setTimer(function(p, veh)
                 activeActions[p] = nil
                 if not isElement(p) or not isElement(veh) then
@@ -1897,7 +1932,7 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
             end
             cancelHoldAction(player)
             setPedAnimation(player, "POLICE", "DOOR_KICK", -1, true, false, false, false)
-            triggerClientEvent(player, "vehicleHoldStarted", player, "Breaking trunk", 3000)
+            triggerClientEvent(player, "vehicleHoldStarted", player, lang.textFor(player, "Breaking trunk"), 3000)
             local timer = setTimer(function(p, veh)
                 activeActions[p] = nil
                 if not isElement(p) or not isElement(veh) then
@@ -1945,7 +1980,7 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
         end
         cancelHoldAction(player)
         setPedAnimation(player, "PED", "DRIVE_BOAT", -1, true, false, false, false)
-        triggerClientEvent(player, "vehicleHoldStarted", player, "Refuelling", 3000)
+        triggerClientEvent(player, "vehicleHoldStarted", player, lang.textFor(player, "Refuelling"), 3000)
         local timer = setTimer(function(p, veh, gcan)
             activeActions[p] = nil
             if not isElement(p) or not isElement(veh) then

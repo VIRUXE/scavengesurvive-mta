@@ -36,7 +36,7 @@ return function(ctx)
         end
         local previous = state
         state = { id = id, style = style, title = tostring(title or ""), body = tostring(body or ""), text = "" }
-        state.left = tostring(left or "Accept")
+        state.left = tostring(left or ctx.tr("Accept"))
         state.right = tostring(right or "")
         measure(state)
         if previous then
@@ -62,7 +62,7 @@ return function(ctx)
         if not state or state.id ~= id then
             return false
         end
-        state.left = tostring(left or "Accept")
+        state.left = tostring(left or ctx.tr("Accept"))
         state.right = tostring(right or "")
         return true
     end

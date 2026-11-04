@@ -9,16 +9,18 @@ do
     prompt = assert(loadstring(src, "=auth/prompt.lua"))()
 end
 
+local L = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")().text
 local welcomeLeft = 0
 
 addEventHandler("authPromptShown", root, function(mode, title, body)
     local id = "auth:" .. tostring(mode)
-    exports.ui:dialogOpen(id, "password", title, body, prompt.BUTTONS[1], prompt.BUTTONS[2])
+    exports.ui:dialogOpen(id, "password", title, body, L(prompt.BUTTONS[1]), L(prompt.BUTTONS[2]))
 end)
 
 local function showWelcome()
-    local label = prompt.welcomeButton(welcomeLeft)
-    exports.ui:dialogOpen("auth:welcome", "msgbox", prompt.WELCOME_TITLE, prompt.WELCOME_BODY, label, "")
+    local label = prompt.welcomeButton(welcomeLeft, L)
+    local body = prompt.welcomeBody(L)
+    exports.ui:dialogOpen("auth:welcome", "msgbox", L(prompt.WELCOME_TITLE), body, label, "")
 end
 
 addEventHandler("authWelcomeShown", root, function(countdown)
@@ -29,7 +31,7 @@ addEventHandler("authWelcomeShown", root, function(countdown)
     end
     setTimer(function()
         welcomeLeft = welcomeLeft - 1
-        exports.ui:dialogSetButtons("auth:welcome", prompt.welcomeButton(welcomeLeft), "")
+        exports.ui:dialogSetButtons("auth:welcome", prompt.welcomeButton(welcomeLeft, L), "")
     end, 1000, prompt.WELCOME_COUNTDOWN)
 end)
 

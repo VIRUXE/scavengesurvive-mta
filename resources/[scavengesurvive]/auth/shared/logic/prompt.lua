@@ -5,7 +5,9 @@
 local prompt = {}
 
 prompt.MAX_ATTEMPTS = 5
+-- lang:begin
 prompt.BUTTONS = { "Accept", "Leave" }
+-- lang:end
 
 -- The dialog for a mode ("login" | "register"); attempts > 0 is the "Incorrect password! N out of 5 tries" body.
 function prompt.dialog(mode, name, attempts)
@@ -43,11 +45,13 @@ end
 
 -- Welcome message (welcome-message.pwn): a message box whose only button counts down from 10 before it reads
 -- Accept; closing it earlier shows it again. Upstream hardcoded the English text; its closing pointer to
--- scavenge-survive.wikia.com is gone (the wiki no longer exists).
-prompt.WELCOME_TITLE = "Welcome to the Server"
+-- scavenge-survive.wikia.com is gone (the wiki no longer exists). The texts are English; welcomeBody(tr) and
+-- welcomeButton(n, tr) put them in the reader's language one paragraph at a time.
 prompt.WELCOME_COUNTDOWN = 10
-prompt.WELCOME_BODY = table.concat({
-    "#FFFFFFYou have to fight to survive in an apocalyptic wasteland.",
+-- lang:begin
+prompt.WELCOME_TITLE = "Welcome to the Server"
+prompt.WELCOME_LINES = {
+    "You have to fight to survive in an apocalyptic wasteland.",
     "",
     "You will have a better chance in a group, but be careful who you trust.",
     "",
@@ -58,13 +62,27 @@ prompt.WELCOME_BODY = table.concat({
     "",
     "#008080Please take some time to look at the #33CCFF/rules #008080and #33CCFF/help #008080before diving into the"
         .. " game.",
-}, "\n")
+}
+-- lang:end
 
-function prompt.welcomeButton(secondsLeft)
+local function identity(s)
+    return s
+end
+
+function prompt.welcomeBody(tr)
+    tr = tr or identity
+    local lines = {}
+    for i, line in ipairs(prompt.WELCOME_LINES) do
+        lines[i] = line ~= "" and tr(line) or line
+    end
+    return "#FFFFFF" .. table.concat(lines, "\n")
+end
+
+function prompt.welcomeButton(secondsLeft, tr)
     if (secondsLeft or 0) > 0 then
         return tostring(secondsLeft)
     end
-    return "Accept"
+    return (tr or identity)(prompt.BUTTONS[1])
 end
 
 return prompt

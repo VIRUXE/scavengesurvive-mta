@@ -82,7 +82,7 @@ M.BUTTONS = {
     { id = "right", label = ">", x = 604, y = 340, w = 20, h = 20 },
     { id = "back", label = "v", x = 580, y = 360, w = 20, h = 20 },
     { id = "toggle", label = "Move", x = 550, y = 390, w = 80, h = 20 },
-    { id = "done", label = "Done", x = 550, y = 420, w = 80, h = 20 },
+    { id = "done", label = "Done", x = 550, y = 420, w = 80, h = 20 }, -- the client shows it through lang.text
 }
 
 -- Pixel rectangles of the buttons for a canvas instance c (ui/shared/logic/canvas.lua).

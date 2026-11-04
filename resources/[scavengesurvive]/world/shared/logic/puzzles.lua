@@ -159,6 +159,7 @@ function M.hidden(state, b)
     return b.id == "chDoor" and state.shorted
 end
 
+-- lang:begin
 M.SAY = {
     broken = { "Door", "The keypad seems broken" },
     pcOff = {
@@ -175,6 +176,7 @@ M.SAY = {
     },
     quarryOpened = { "Door", "You have unlocked the mystery door!" },
 }
+-- lang:end
 
 local function say(out, key)
     out[#out + 1] = { "message", M.SAY[key][1], M.SAY[key][2] }

@@ -231,6 +231,15 @@ return function(ctx)
         end
     end)
 
+    -- an upstream language key (explosives' ARMEDBOMB, world's NEARBYKEYP...): data's line in the player's language
+    local function upstreamLine(code)
+        if type(code) ~= "string" or not code:match("^[A-Z][A-Z0-9_]+$") then
+            return nil
+        end
+        local line = exports.data:t(lang.code(), code)
+        return type(line) == "string" and line ~= "" and line ~= code and line:gsub("^ >  ", "") or nil
+    end
+
     addEventHandler("toastShown", root, function(code)
         local n = type(code) == "string" and code:match("^AMTRANS:(%d+)$")
         local dist = type(code) == "string" and code:match("^DISTANCE:([%d%.]+)$")
@@ -244,6 +253,7 @@ return function(ctx)
             or dist and lang.format("Distance: %.3f", tonumber(dist) or 0) -- upstream DISTANCEVAL
             or ground and lang.format("Grinding: %s of %s passes cut", ground, passes)
             or MESSAGES[code] and lang.text(MESSAGES[code])
+            or upstreamLine(code)
             or tostring(code)
         exports.ui:actionTextShow(msg, 3000)
     end)

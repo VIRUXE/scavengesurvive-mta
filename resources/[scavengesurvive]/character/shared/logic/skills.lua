@@ -12,6 +12,7 @@ M.MAX_TIME_CUT = 0.5
 
 -- Upstream skl_Levels: a skill shows the first level whose bound it is still under; at 0.9 and above upstream read
 -- past the end of the table (skl_Levels[5]), the port shows Master.
+-- lang:begin
 M.LEVELS = {
     { name = "Novice", bound = 0.1, colour = { 0xFF, 0xFF, 0x00 } },
     { name = "Adequate", bound = 0.2, colour = { 0x33, 0xAA, 0x33 } },
@@ -19,6 +20,7 @@ M.LEVELS = {
     { name = "Experienced", bound = 0.66, colour = { 0x33, 0xCC, 0xFF } },
     { name = "Master", bound = 0.9, colour = { 0xFF, 0xC0, 0xCB } },
 }
+-- lang:end
 
 local function clamp01(v)
     v = tonumber(v) or 0

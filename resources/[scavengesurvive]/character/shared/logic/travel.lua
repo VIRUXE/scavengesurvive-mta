@@ -89,6 +89,7 @@ function M.boost(endurance)
     return 1 + M.BOOST_PER_POINT * e
 end
 
+-- lang:begin
 M.LABELS = {
     walking = "Walking",
     running = "Running",
@@ -98,6 +99,7 @@ M.LABELS = {
     driving = "Driving",
     air = "Falling",
 }
+-- lang:end
 
 -- metres -> "850 m" / "1.25 km"
 function M.distance(metres)
@@ -120,16 +122,21 @@ function M.duration(ms)
     return string.format("%dh %02dm", math.floor(s / 3600), math.floor(s % 3600 / 60))
 end
 
--- The /mstats window (ui showInfo spec): one row per kind of movement, then jumps and time knocked out.
-function M.window(t)
+-- The /mstats window (ui showInfo spec): one row per kind of movement, then jumps and time knocked out. tr(text)
+-- puts the labels in the reader's language (the server passes lang.textFor for the player), identity by default.
+function M.window(t, tr)
+    tr = tr or function(s)
+        return s
+    end
     local rows = {}
     for _, kind in ipairs(M.KINDS) do
-        rows[#rows + 1] = { M.LABELS[kind], M.distance(t.dist[kind]), M.duration(t.time[kind]) }
+        rows[#rows + 1] = { tr(M.LABELS[kind]), M.distance(t.dist[kind]), M.duration(t.time[kind]) }
     end
-    rows[#rows + 1] = { "Jumps", tostring(t.jumps or 0), "", colour = "#33CCFF" }
-    rows[#rows + 1] = { "Knocked out", "", M.duration(t.knockedOutMs), colour = "#33CCFF" }
-    local header = "#FFFFFFMovement this session (resets when you log in)"
-    return { title = "Travel stats", header = header, columns = { "Activity", "Distance", "Time" }, rows = rows }
+    rows[#rows + 1] = { tr("Jumps"), tostring(t.jumps or 0), "", colour = "#33CCFF" }
+    rows[#rows + 1] = { tr("Knocked out"), "", M.duration(t.knockedOutMs), colour = "#33CCFF" }
+    local header = "#FFFFFF" .. tr("Movement this session (resets when you log in)")
+    local columns = { tr("Activity"), tr("Distance"), tr("Time") }
+    return { title = tr("Travel stats"), header = header, columns = columns, rows = rows }
 end
 
 return M

@@ -1,6 +1,7 @@
 -- The death screen (core/player/death.pwn): the camera slowly rises over the body while BrightnessUI (alpha 200)
 -- darkens the screen over two global boxed textdraws, "YOU ARE DEAD!" at 320,300 (font 1, 0.50/2.00) and the
 -- clickable ">Play Again<" at 320,323 (0.37/1.60), box colour 0x00000055. Measured on p52g-vd0syA @ 11:52.
+local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")()
 local showing, startTick = false, 0
 local deathPos = { x = 0, y = 0, z = 0, rz = 0 }
 local sw, sh = guiGetScreenSize()
@@ -51,14 +52,14 @@ end
 local function draw()
     updateCamera()
     dxDrawRectangle(sw / 2 + (box.x - 320) * s, box.y * s, box.w * s, box.h * s, BOX)
-    text("YOU ARE DEAD!", 325, 2.0, WHITE)
+    text(lang.text("YOU ARE DEAD!"), 325, 2.0, WHITE)
     local hover = isHovered()
     if not hover then
-        text(">Play Again<", 349, 1.6, WHITE)
+        text(">" .. lang.text("Play Again") .. "<", 349, 1.6, WHITE)
     end
     dxDrawRectangle(0, 0, sw, sh, OVERLAY)
     if hover then
-        text(">Play Again<", 349, 1.6, HOVER)
+        text(">" .. lang.text("Play Again") .. "<", 349, 1.6, HOVER)
     end
 end
 
@@ -98,7 +99,7 @@ addEventHandler("knockedOut", root, function(durationMs)
     end
     if (tonumber(durationMs) or 0) > 0 then
         exports.ui:listClose()
-        exports.ui:progressStart("Knocked out", durationMs)
+        exports.ui:progressStart(lang.text("Knocked out"), durationMs)
     else
         exports.ui:progressCancel()
     end

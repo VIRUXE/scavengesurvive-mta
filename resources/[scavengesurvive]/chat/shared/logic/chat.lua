@@ -47,7 +47,9 @@ end
 -- Voice (MTA built-in voice) follows the text modes: a speaker is always heard within the local range, and in a
 -- transmitting mode (global, radio, admin) also by that mode's text audience. The modes whose audiences are joined.
 chat.VOICE_REFRESH_MS = 500
-chat.VOICE_MUTED = " >  You are muted: nobody hears your voice until the mute ends."
+-- lang:begin
+chat.VOICE_MUTED = "You are muted: nobody hears your voice until the mute ends."
+-- lang:end
 
 function chat.voiceModes(mode)
     if mode == chat.MODE.LOCAL or not chat.isMode(mode) then
@@ -118,6 +120,11 @@ function chat.format(mode, name, text, freq, levelColour)
 end
 
 -- Radio panel: power "on" means the transmitter is in global or radio mode; "off" is local chat.
+-- the radio panel's labels (the client shows them through lang.text)
+-- lang:begin
+chat.PANEL_LABELS = { "off", "on", "global", "freq" }
+-- lang:end
+
 function chat.powerLabel(mode)
     return mode == chat.MODE.LOCAL and "off" or "on"
 end
@@ -181,7 +188,14 @@ chat.COPYRIGHT = 'Scavenge and Survive #33CCFF(Copyright (C) 2016 Barnaby "South
 function chat.joinLines(name, motd)
     local lines = {
         { text = chat.COPYRIGHT, r = 255, g = 170, b = 0 },
-        { text = string.format(" >  #B8B8B8%s#FFFFFF has joined", name), r = 255, g = 255, b = 255, toAll = true, localized = true },
+        {
+            text = string.format(" >  #B8B8B8%s#FFFFFF has joined", name),
+            r = 255,
+            g = 255,
+            b = 255,
+            toAll = true,
+            localized = true,
+        },
     }
     if type(motd) == "string" and motd ~= "" then
         lines[#lines + 1] = { text = " >  MoTD: #33CCFF" .. motd, r = 255, g = 255, b = 0 }
@@ -197,11 +211,19 @@ end
 chat.DROPPED_HELP = { restartinfo = true }
 
 -- Upstream's /help ends with "coded and owned by Southclaws ... all rights reserved"; the port credits both instead.
-chat.HELP_FOOTER = "#AFAFAFScavenge and Survive by Southclaws, ported to MTA:SA by VIRUXE."
+-- lang:begin
+chat.HELP_FOOTER = "Scavenge and Survive by Southclaws, ported to MTA:SA by VIRUXE."
+-- lang:end
+
+-- tr(text): the window's own labels in the reader's language (the server passes lang.textFor for the player)
+local function identity(s)
+    return s
+end
 
 -- The /help window: each "#RRGGBB/command - description" line becomes a row in its colour; upstream's other text
 -- (the ownership line) gives way to HELP_FOOTER.
-function chat.helpWindow(text)
+function chat.helpWindow(text, tr)
+    tr = tr or identity
     local rows = {}
     for line in (tostring(text or "") .. "\n"):gmatch("(.-)\n") do
         local colour, cmd, desc = line:match("^%s*(#%x%x%x%x%x%x)(/%S+)%s+%-%s+(.+)$")
@@ -209,8 +231,9 @@ function chat.helpWindow(text)
             rows[#rows + 1] = { cmd, desc, colour = colour }
         end
     end
-    local columns = { "Command", "Description" }
-    return { title = "General Information", columns = columns, rows = rows, footer = chat.HELP_FOOTER }
+    local columns = { tr("Command"), tr("Description") }
+    local footer = "#AFAFAF" .. tr(chat.HELP_FOOTER)
+    return { title = tr("General Information"), columns = columns, rows = rows, footer = footer }
 end
 
 -- /chatinfo: the text as coloured paragraphs.
@@ -219,35 +242,40 @@ function chat.textWindow(title, text)
 end
 
 -- /rules: a numbered list of the setting's entries.
-function chat.listWindow(title, items)
+function chat.listWindow(title, items, tr)
+    tr = tr or identity
     local rows = {}
     for i, item in ipairs(items) do
         rows[#rows + 1] = { tostring(i), item }
     end
-    local header = #items == 0 and "#AAAAAANothing listed yet." or nil
+    local header = #items == 0 and "#AAAAAA" .. tr("Nothing listed yet.") or nil
     return { title = title, header = header, columns = { "#", title }, rows = rows }
 end
 
 -- /admins: every staff account, highest rank first (the query orders them). staff = { { name, rank, colour, online } }
 -- with colour "#RRGGBB" of the rank.
-function chat.staffWindow(staff)
+function chat.staffWindow(staff, tr)
+    tr = tr or identity
     local rows = {}
     for _, s in ipairs(staff) do
-        rows[#rows + 1] = { s.name, s.rank, s.online and "online" or "", colour = s.colour }
+        rows[#rows + 1] = { s.name, s.rank, s.online and tr("online") or "", colour = s.colour }
     end
-    local header = #staff == 0 and "#AAAAAANo staff yet." or nil
-    return { title = "Staff", header = header, columns = { "Name", "Rank", "Status" }, rows = rows }
+    local header = #staff == 0 and "#AAAAAA" .. tr("No staff yet.") or nil
+    local columns = { tr("Name"), tr("Rank"), tr("Status") }
+    return { title = tr("Staff"), header = header, columns = columns, rows = rows }
 end
 
 -- /credits: the opening line, then one row per contributor.
-function chat.creditsWindow()
+function chat.creditsWindow(tr)
+    tr = tr or identity
     local rows = {}
     for i = 2, #chat.CREDITS do
         local name, what = chat.CREDITS[i]:match("^(.-) %- (.+)$")
         rows[#rows + 1] = { name, what }
     end
     local header = "#FFFF00" .. chat.CREDITS[1]
-    return { title = "Credits", header = header, columns = { "Contributor", "Contribution" }, rows = rows }
+    local columns = { tr("Contributor"), tr("Contribution") }
+    return { title = tr("Credits"), header = header, columns = columns, rows = rows }
 end
 
 -- server.rules (upstream settings.ini array): entries separated by "|", blanks dropped.

@@ -10,19 +10,19 @@ end)
 
 local function displayName(name)
     local t = lang.itemType(name)
-    return t and t.name or name
+    return t and t.name or lang.text(name)
 end
 
 function skillsOpen()
     local list = {}
     for i, r in ipairs(rows) do
-        local label = string.format("%s (%s)", displayName(r.name), r.level)
+        local label = string.format("%s (%s)", displayName(r.name), lang.text(r.level))
         list[i] = { id = "skill:" .. r.name, label = label, colour = r.colour }
     end
     if #list == 0 then
-        list[1] = { id = "skill:none", label = "No skills yet" }
+        list[1] = { id = "skill:none", label = lang.text("No skills yet") }
     end
-    return exports.ui:listOpen("skills", "Skills", list, { "Back", "Close" })
+    return exports.ui:listOpen("skills", lang.text("Skills"), list, { lang.text("Back"), lang.text("Close") })
 end
 
 addEventHandler("uiListActionSelected", root, function(listId)

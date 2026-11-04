@@ -1,6 +1,7 @@
 -- Removable body parts (doors, bonnet, boot, bumpers). A part fitted by hand sits loose and is shaken off by driving;
 -- a Wrench secures it, and a Wrench takes a secured one off. A part a crash knocked off lands on the ground as a Bad
 -- item. The slots per model are shared/logic/bodyparts.lua.
+local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")()
 return function(ctx)
     local bp = ctx.bp
     local log, vehicleLine = ctx.log, ctx.vehicleLine
@@ -249,7 +250,7 @@ return function(ctx)
                 end
             end)
         end
-        hold(player, vehicle, slot, held, "Fitting body part", HOLD_MS, nil, ready, commit)
+        hold(player, vehicle, slot, held, lang.textFor(player, "Fitting body part"), HOLD_MS, nil, ready, commit)
     end
 
     -- Wrench on a loose part: tighten it, it no longer shakes off.
@@ -271,7 +272,17 @@ return function(ctx)
             exports.character:gainSkill(player, "Repair")
             ctx.toast(player, "PART_SECURED")
         end
-        hold(player, vehicle, slot, held, "Tightening body part", SECURE_MS, WRENCH_ANIM, ready, commit)
+        hold(
+            player,
+            vehicle,
+            slot,
+            held,
+            lang.textFor(player, "Tightening body part"),
+            SECURE_MS,
+            WRENCH_ANIM,
+            ready,
+            commit
+        )
     end
 
     -- Wrench on a secured part: unbolt it, it lands beside the slot as a Good or a Bad part item.
@@ -320,7 +331,17 @@ return function(ctx)
                 end
             end)
         end
-        hold(player, vehicle, slot, held, "Removing body part", HOLD_MS, WRENCH_ANIM, ready, commit)
+        hold(
+            player,
+            vehicle,
+            slot,
+            held,
+            lang.textFor(player, "Removing body part"),
+            HOLD_MS,
+            WRENCH_ANIM,
+            ready,
+            commit
+        )
     end
 
     -- Hold F with a Wrench at a part: a loose one is tightened, a secured one is taken off.

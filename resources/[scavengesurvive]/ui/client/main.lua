@@ -10,6 +10,8 @@ local canvas = loadModule("shared/logic/canvas.lua")
 local dialog = loadModule("shared/logic/dialog.lua")
 local sw, sh = guiGetScreenSize()
 local ctx = { canvas = canvas, dialog = dialog, info = loadModule("shared/logic/info.lua"), c = canvas.new(sw, sh) }
+-- the widgets' own labels (default buttons) in the player's language; callers translate the texts they pass
+ctx.tr = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")().text
 ctx.draw = loadModule("client/draw.lua")(ctx)
 local actionText = loadModule("client/actiontext.lua")(ctx)
 local tip = loadModule("client/tip.lua")(ctx)
