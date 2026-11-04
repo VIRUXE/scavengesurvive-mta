@@ -23,6 +23,7 @@ addEvent("weldCylinderHookRequested", true)
 -- server to client / client-local
 addEvent("vehicleHoldStarted", true)
 addEvent("vehicleHoldStopped", true)
+addEvent("vehicleWheelInstalled", true)
 addEvent("toastShown", true)
 addEvent("overheatChanged", true)
 addEvent("overheatEnded", true)

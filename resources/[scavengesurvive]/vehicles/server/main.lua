@@ -1572,6 +1572,10 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
             local function fitted()
                 current[wheel] = removing and 2 or 0
                 setVehicleWheelStates(vehicle, unpack(current))
+                if not removing then
+                    -- Reassert the wheel dummy's visibility client-side as well as repairing its MTA wheel state.
+                    triggerClientEvent(root, "vehicleWheelInstalled", vehicle, wheel)
+                end
                 updateWheelFreeze(vehicle)
                 inf.damage = bodySrv.snapshot(vehicle)
                 db.exec("UPDATE vehicles SET damage = ? WHERE id = ?", { toJSON(inf.damage), inf.id })

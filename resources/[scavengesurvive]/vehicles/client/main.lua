@@ -40,6 +40,17 @@ addEventHandler("vehicleHoldStopped", root, function()
     exports.ui:progressCancel()
 end)
 
+-- MTA's wheel state RPC marks a repaired wheel intact, but SetWheelStatus preserves a wheel component's
+-- explicit visibility flag. Re-enable the matching dummy after fitting so a previously hidden wheel renders.
+local WHEEL_COMPONENTS = { "wheel_lf_dummy", "wheel_lb_dummy", "wheel_rf_dummy", "wheel_rb_dummy" }
+addEventHandler("vehicleWheelInstalled", root, function(wheel)
+    if not isElement(source) or getElementType(source) ~= "vehicle" then return end
+    local component = WHEEL_COMPONENTS[tonumber(wheel)]
+    if component then
+        setVehicleComponentVisible(source, component, true)
+    end
+end)
+
 -- Cancel if the player moves or dies while performing a hold-action
 addEventHandler("onClientRender", root, function()
     if not activeAction or not lastPos then
