@@ -545,6 +545,7 @@ return {
     ["The panel's welds are cut through and it comes off"] = "Сварные швы панели срезаны, она отваливается",
     ["The plant has not fully grown yet."] = "Растение ещё не выросло.",
     ["The tent must be empty to pack it away"] = "Чтобы свернуть палатку, она должна быть пуста",
+    ["Someone is packing this tent"] = "Кто-то сворачивает эту палатку",
     ["The torch went back on the Welder"] = "Горелка вернулась на Сварочный аппарат",
     ["Their hands are full"] = "У них заняты руки",
     ["There are no items inside."] = "Внутри нет предметов.",

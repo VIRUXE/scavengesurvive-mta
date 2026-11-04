@@ -147,6 +147,7 @@ return function(ctx)
         TENT_PITCHED = "Pitched tent",
         TENT_PACKED = "Packed tent",
         TENT_NOT_EMPTY = "The tent must be empty to pack it away",
+        TENT_PACKING = "Someone is packing this tent",
         PICKED_UP = "Picked up",
         CRAFTED = "Crafted",
         DECONSTRUCTED = "Deconstructed",
@@ -307,7 +308,8 @@ return function(ctx)
     end
 
     -- "[%02d]%s": the type size then the name, one "<Empty>" per free slot
-    local function rowsFor(list, cap, moveActions, emptyAction)
+    -- side: the side container (trunk, box, crate): Combine only works on the player's own inventory and bag
+    local function rowsFor(list, cap, moveActions, emptyAction, side)
         local rows = {}
         for _, it in ipairs(list or {}) do
             local t = itemType(it.uname)
@@ -327,7 +329,7 @@ return function(ctx)
                     end
                 end
             end
-            if last and last.held then
+            if last and last.held and not side then
                 actions[#actions + 1] = { id = "combine", label = lang.text("Combine") }
             end
             rows[#rows + 1] = {
@@ -372,7 +374,7 @@ return function(ctx)
                     and last.held
                     and { id = "put_held:trunk", label = lang.format("Store in %s", tname) }
                 or nil
-            rows = rowsFor(p.trunk, p.capacity.trunk, moveActions, emptyAction)
+            rows = rowsFor(p.trunk, p.capacity.trunk, moveActions, emptyAction, true)
             rows[#rows + 1] = { id = "nav:inventory", label = lang.text("My Inventory") .. " >" }
             if p.bag then
                 rows[#rows + 1] = { id = "nav:bag", label = bname .. " >" }

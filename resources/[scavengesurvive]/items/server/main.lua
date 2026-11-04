@@ -190,7 +190,10 @@ local containers = loadFile("server/containers.lua")({
     hands = hands,
     apparel = apparel,
     world = world,
-    refreshPlayer = refreshPlayer,
+    -- refreshPlayer is defined further down: looked up when called, not now (it was always nil here)
+    refreshPlayer = function(player)
+        return refreshPlayer(player)
+    end,
     isIncapacitated = isIncapacitated,
     isBadInteract = isBadInteract,
 })
@@ -623,31 +626,22 @@ function destroyContainerItem(itemId, reason)
         return false
     end
     local by = callerName()
-    db.one("SELECT container_id, slot FROM items WHERE id = ?", { itemId }, function(row)
-        if not row then
-            return
+    -- container_item_destroy: only while it still lies in a container (a viewer who took it meanwhile keeps it),
+    -- and the slots after it close up, in one transaction
+    db.call("container_item_destroy", { itemId }, function(res)
+        local contId = res and res.ok and res.payload and res.payload.container_id
+        log.event("item.destroyed", {
+            item_id = itemId,
+            container_id = contId or nil,
+            reason = reason or "external",
+            by = by,
+            ok = res and res.ok or false,
+            code = res and res.code or "DB_ERROR",
+            where = "container",
+        })
+        if contId then
+            containers.containerChanged(contId) -- whoever has it open sees it gone
         end
-        local contId, slot = row.container_id, row.slot
-        db.exec("DELETE FROM items WHERE id = ?", { itemId }, function(ok)
-            log.event("item.destroyed", {
-                item_id = itemId,
-                container_id = contId or nil,
-                reason = reason or "external",
-                by = by,
-                ok = ok,
-                code = ok and "OK" or "DB_ERROR",
-                where = "container",
-            })
-            if ok and contId and slot then
-                db.exec(
-                    "UPDATE items SET slot = slot - 1 WHERE container_id = ? AND slot > ? ORDER BY slot ASC",
-                    { contId, slot },
-                    function()
-                        containers.containerChanged(contId) -- whoever has it open sees it gone
-                    end
-                )
-            end
-        end)
     end)
     return true
 end
@@ -711,6 +705,12 @@ function openWorldContainer(player, itemRow)
         return false
     end
     containers.openWorldContainer(player, itemRow)
+    return true
+end
+
+-- export: something outside the players' own actions changed this container's contents: its viewers are refreshed
+function containerChanged(containerId)
+    containers.containerChanged(containerId)
     return true
 end
 

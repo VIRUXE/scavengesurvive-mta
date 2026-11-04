@@ -529,6 +529,7 @@ return {
     ["The panel's welds are cut through and it comes off"] = "As soldas do painel foram cortadas e ele se solta",
     ["The plant has not fully grown yet."] = "A planta ainda não terminou de crescer.",
     ["The tent must be empty to pack it away"] = "A barraca precisa estar vazia para ser desmontada",
+    ["Someone is packing this tent"] = "Alguém está desmontando esta barraca",
     ["The torch went back on the Welder"] = "O maçarico voltou para a Máquina de solda",
     ["Their hands are full"] = "As mãos dela estão cheias",
     ["There are no items inside."] = "Não há itens dentro.",

@@ -34,9 +34,21 @@ return function(ctx)
         log.event(kind, fields)
     end
 
-    local CONTAINERS_SQL = "SELECT c.id, c.kind, c.size, owner.type_uname AS uname FROM containers c "
+    -- Everything the inventory dialog shows in one read: the character's inventory, their worn bag and the side
+    -- container they have open (-1 for none), each with its items in slot order (an empty one as a row of NULLs).
+    -- The ids are gathered first so every join is an index lookup: an OR across the owner join read every
+    -- container on the server (15 ms at 20 000 containers, against under 1 ms for this).
+    local INVENTORY_SQL = "SELECT c.id AS cont_id, c.kind, c.size, owner.type_uname AS cont_uname, "
+        .. "i.id, i.type_uname AS uname, i.hitpoints AS hp, i.data, t.size AS isize, t.category FROM ("
+        .. "SELECT id FROM containers WHERE owner_char_id = ? "
+        .. "UNION SELECT bc.id FROM items b JOIN containers bc ON bc.owner_item_id = b.id "
+        .. "WHERE b.holder_char_id = ? AND b.holder_kind = 'bag' "
+        .. "UNION SELECT ?) ids "
+        .. "JOIN containers c ON c.id = ids.id "
         .. "LEFT JOIN items owner ON owner.id = c.owner_item_id "
-        .. "WHERE c.owner_char_id = ? OR (owner.holder_char_id = ? AND owner.holder_kind = 'bag')"
+        .. "LEFT JOIN items i ON i.container_id = c.id "
+        .. "LEFT JOIN item_types t ON t.uname = i.type_uname "
+        .. "ORDER BY c.id, i.slot"
 
     local function wornBag(cid, cb, c)
         db.one(
@@ -66,27 +78,46 @@ return function(ctx)
         parachuteRef = p
     end
 
+    -- a trunk stays open within this of the vehicle's centre (its rear is ~6 m from it on the longest vehicles)
+    local TRUNK_REACH = 10.0
+
+    -- true while the player can still reach the side container they opened: the bag still in hand, within 4 m of
+    -- the box, tent or crate, within TRUNK_REACH of the vehicle in its interior and dimension
+    local function inReach(player, cont)
+        if cont.vehicle then
+            local veh = cont.vehicle
+            if not isElement(veh) then
+                return false
+            end
+            if
+                getElementInterior(veh) ~= getElementInterior(player)
+                or getElementDimension(veh) ~= getElementDimension(player)
+            then
+                return false
+            end
+            local px, py, pz = getElementPosition(player)
+            local vx, vy, vz = getElementPosition(veh)
+            return getDistanceBetweenPoints3D(px, py, pz, vx, vy, vz) <= TRUNK_REACH
+        end
+        if cont.heldItemId then
+            local held = state.held[player]
+            return held ~= nil and held.id == cont.heldItemId
+        end
+        if cont.pos then
+            local px, py, pz = getElementPosition(player)
+            return getDistanceBetweenPoints3D(px, py, pz, cont.pos.x, cont.pos.y, cont.pos.z) <= 4.0
+        end
+        return true
+    end
+
     function M.openContainerId(player)
         local cont = activeContainer[player]
         if not cont then
             return nil
         end
-        if cont.vehicle and not isElement(cont.vehicle) then
+        if not inReach(player, cont) then
             activeContainer[player] = nil
             return nil
-        end
-        if cont.heldItemId then
-            local held = state.held[player]
-            if not held or held.id ~= cont.heldItemId then
-                activeContainer[player] = nil
-                return nil
-            end
-        elseif cont.pos then
-            local px, py, pz = getElementPosition(player)
-            if getDistanceBetweenPoints3D(px, py, pz, cont.pos.x, cont.pos.y, cont.pos.z) > 4.0 then
-                activeContainer[player] = nil
-                return nil
-            end
         end
         return cont.containerId
     end
@@ -373,8 +404,15 @@ return function(ctx)
         if not cid then
             return
         end
-        db.query(CONTAINERS_SQL, { cid, cid }, function(conts, c)
-            if not conts or not isElement(c.player) then
+        -- the side container is checked for reach before the read, so one query brings everything
+        local tr = activeContainer[player]
+        if tr and tr.containerId and not inReach(player, tr) then
+            activeContainer[player] = nil
+            tr = nil
+        end
+        local sideId = tr and tr.containerId or -1
+        db.query(INVENTORY_SQL, { cid, cid, sideId }, function(rows, c)
+            if not rows or not isElement(c.player) then
                 return
             end
             local payload = {
@@ -382,91 +420,52 @@ return function(ctx)
                 bag = false,
                 trunk = false,
                 capacity = { inv = { used = 0, size = 0 }, bag = false, trunk = false },
+                refresh = c.how == "viewer" or nil,
             }
-            local byId, ids = {}, {}
-            for _, cont in ipairs(conts) do
-                if cont.kind == "inventory" then
-                    byId[cont.id] = { rows = payload.inventory, cap = payload.capacity.inv }
-                    payload.capacity.inv.size = cont.size
+            local side = c.side
+            if side then
+                payload.trunk = {}
+                payload.capacity.trunk = { used = 0, size = side.size or 40, uname = side.title or "Container" }
+                payload.trunkContainerId = side.containerId
+                payload.containerWorldItemId = not side.carryable and side.worldItemId or false
+            end
+            local byId = {}
+            local function target(r)
+                local t = byId[r.cont_id]
+                if t then
+                    return t
+                end
+                if side and r.cont_id == side.containerId then
+                    t = { rows = payload.trunk, cap = payload.capacity.trunk }
+                elseif r.kind == "inventory" then
+                    payload.capacity.inv.size = r.size
+                    t = { rows = payload.inventory, cap = payload.capacity.inv }
                 else
                     payload.bag = {}
-                    payload.capacity.bag = { used = 0, size = cont.size, uname = cont.uname }
-                    byId[cont.id] = { rows = payload.bag, cap = payload.capacity.bag }
+                    payload.capacity.bag = { used = 0, size = r.size, uname = r.cont_uname }
+                    t = { rows = payload.bag, cap = payload.capacity.bag }
                 end
-                ids[#ids + 1] = string.format("%d", cont.id)
+                byId[r.cont_id] = t
+                return t
             end
-            local tr = activeContainer[c.player]
-            if tr and tr.containerId then
-                local valid = true
-                if tr.vehicle and not isElement(tr.vehicle) then
-                    valid = false
-                elseif tr.heldItemId then
-                    local h = state.held[c.player]
-                    valid = h ~= nil and h.id == tr.heldItemId
-                elseif tr.pos then
-                    local px, py, pz = getElementPosition(c.player)
-                    local d = getDistanceBetweenPoints3D(px, py, pz, tr.pos.x, tr.pos.y, tr.pos.z)
-                    if d > 4.0 then
-                        valid = false
-                    end
-                end
-                if not valid then
-                    activeContainer[c.player] = nil
-                else
-                    payload.trunk = {}
-                    payload.capacity.trunk = { used = 0, size = tr.size or 40, uname = tr.title or "Container" }
-                    payload.trunkContainerId = tr.containerId
-                    payload.containerWorldItemId = not tr.carryable and tr.worldItemId or false
-                    byId[tr.containerId] = { rows = payload.trunk, cap = payload.capacity.trunk }
-                    ids[#ids + 1] = string.format("%d", tr.containerId)
-                end
-            end
-            local function attachGearAndHeld(p, pl)
-                p.gear = {
-                    hat = state.hat and state.hat[pl] or false,
-                    mask = state.mask and state.mask[pl] or false,
-                    armour = state.armour and state.armour[pl] or false,
-                    holster = state.holster and state.holster[pl] or false,
-                }
-                p.held = state.held and state.held[pl] or false
-            end
-            payload.refresh = c.how == "viewer" or nil
-            if #ids == 0 then
-                attachGearAndHeld(payload, c.player)
-                return triggerClientEvent(c.player, "inventoryOpened", c.player, payload)
-            end
-            local sql = "SELECT i.id, i.type_uname AS uname, i.hitpoints AS hp, i.data, i.container_id AS cid, "
-                .. "t.size AS isize, t.category FROM items i JOIN item_types t ON t.uname = i.type_uname "
-                .. "WHERE i.container_id IN ("
-                .. table.concat(ids, ",")
-                .. ") ORDER BY i.container_id, i.slot"
-            db.query(sql, {}, function(rows, c2)
-                if not rows or not isElement(c2.player) then
-                    return
-                end
-                local triggered = false
-                local expRes = getResourceFromName("explosives")
-                local hasExplosives = expRes and getResourceState(expRes) == "running"
-                for _, r in ipairs(rows) do
-                    local target = byId[r.cid]
+            local triggered = false
+            local expRes = getResourceFromName("explosives")
+            local hasExplosives = expRes and getResourceState(expRes) == "running"
+            for _, r in ipairs(rows) do
+                local into = target(r)
+                if r.id then -- false: the container is empty (LEFT JOIN)
                     local itData = hands.decodeData(r.data)
-                    if target then
-                        target.rows[#target.rows + 1] = {
-                            id = r.id,
-                            uname = r.uname,
-                            hp = r.hp,
-                            category = r.category,
-                            data = itData,
-                        }
-                        target.cap.used = target.cap.used + (tonumber(r.isize) or 1)
-                    end
-                    if
-                        hasExplosives
-                        and c2.how ~= "viewer"
-                        and not triggered
-                        and target
-                        and target.rows ~= payload.inventory
-                    then
+                    into.rows[#into.rows + 1] = {
+                        id = r.id,
+                        uname = r.uname,
+                        hp = r.hp,
+                        category = r.category,
+                        data = itData,
+                    }
+                    into.cap.used = into.cap.used + (tonumber(r.isize) or 1)
+                    -- an armed motion mine goes off when the bag, box or trunk it lies in is opened (not on a refresh
+                    -- someone else's change pushed)
+                    if hasExplosives and c.how ~= "viewer" and not triggered and into.rows ~= payload.inventory then
                         local rType = itemType(r.uname)
                         if rType and rType.explosive and rType.explosive.trigger == "MOTION" then
                             if itData and itData.armed == 1 then
@@ -476,16 +475,22 @@ return function(ctx)
                         end
                     end
                 end
-                if triggered then
-                    return
-                end
-                attachGearAndHeld(payload, c2.player)
-                triggerClientEvent(c2.player, "inventoryOpened", c2.player, payload)
-                if not c2.how and payload.trunkContainerId then
-                    M.refreshViewers(payload.trunkContainerId, c2.player)
-                end
-            end, { player = c.player, how = c.how })
-        end, { player = player, how = how })
+            end
+            if triggered then
+                return
+            end
+            payload.gear = {
+                hat = state.hat and state.hat[c.player] or false,
+                mask = state.mask and state.mask[c.player] or false,
+                armour = state.armour and state.armour[c.player] or false,
+                holster = state.holster and state.holster[c.player] or false,
+            }
+            payload.held = state.held and state.held[c.player] or false
+            triggerClientEvent(c.player, "inventoryOpened", c.player, payload)
+            if not c.how and payload.trunkContainerId then
+                M.refreshViewers(payload.trunkContainerId, c.player)
+            end
+        end, { player = player, how = how, side = tr })
     end
     M.sendInventory = function(player)
         return sendInventory(player)
@@ -578,7 +583,7 @@ return function(ctx)
     function M.trunkViewers(vehicle)
         local n = 0
         for p, cont in pairs(activeContainer) do
-            if cont.vehicle == vehicle and isElement(p) then
+            if cont.vehicle == vehicle and isElement(p) and inReach(p, cont) then
                 n = n + 1
             end
         end
@@ -653,6 +658,9 @@ return function(ctx)
             return
         end
         local uname = itemRow.uname
+        if uname == "TentPack" and M.isPacking(itemRow.id) then
+            return toast(player, "TENT_PACKING")
+        end
         if uname == LOCKER and itemRow.x then
             -- port deviation (#143): the door has to face the player; one already counted in keeps it open
             if lockerBy[player] ~= itemRow.id then
@@ -817,53 +825,36 @@ return function(ctx)
         if not cont or cont.worldItemId ~= itemId or not M.openContainerId(player) then
             return
         end
-        -- the emptiness check and the delete are one statement: another viewer putting something in at the same
-        -- moment either lands first (nothing is deleted) or finds the container gone, never cascaded away with it
-        local sql = "DELETE FROM containers WHERE id = ? AND NOT EXISTS (SELECT 1 FROM items WHERE container_id = ?)"
-        db.exec(sql, { cont.containerId, cont.containerId }, function(ok, c, affected)
+        -- container_pickup: the container goes only while empty and the box comes into the hand in the same
+        -- transaction, so an item another viewer puts in at that moment is never cascaded away with it, and a box
+        -- someone else got to first leaves its container where it was
+        db.call("container_pickup", { itemId, cid, cont.containerId }, function(res, c)
+            logProc("item.pickedUp", c.player, res, {
+                item_id = c.itemId,
+                source = "container",
+                character_id = cid,
+            }, true)
             if not isElement(c.player) then
                 return
             end
-            if not ok or (tonumber(affected) or 0) == 0 then
-                return toast(c.player, "CONTAINER_NOT_EMPTY")
+            if not res or not res.ok then
+                return toast(c.player, res and res.code or "DB_ERROR")
             end
-            db.call("item_pickup", { c.itemId, c.cid }, function(res, c2)
-                logProc("item.pickedUp", c2.player, res, {
-                    item_id = c2.itemId,
-                    source = "container",
-                    character_id = c2.cid,
-                }, true)
-                if not isElement(c2.player) then
-                    return
-                end
-                if res and res.ok then
-                    if world then
-                        world.forgetEverywhere(c2.itemId)
-                    end
-                    activeContainer[c2.player] = nil
-                    db.one(
-                        "SELECT id, type_uname AS uname, hitpoints AS hp, data FROM items WHERE id = ?",
-                        { c2.itemId },
-                        function(iRow, c3)
-                            if iRow and isElement(c3.player) then
-                                hands.setHeld(c3.player, {
-                                    id = iRow.id,
-                                    uname = iRow.uname,
-                                    hp = iRow.hp,
-                                    data = hands.decodeData(iRow.data),
-                                })
-                                triggerEvent("itemMoved", c3.player, iRow.id, "world", "held")
-                                sendInventory(c3.player)
-                            end
-                        end,
-                        { player = c2.player }
-                    )
-                    toast(c2.player, "PICKED_UP")
-                else
-                    toast(c2.player, res and res.code or "DB_ERROR")
-                end
-            end, { player = c.player, itemId = c.itemId, cid = c.cid })
-        end, { player = player, itemId = itemId, cid = cid })
+            if world then
+                world.forgetEverywhere(c.itemId)
+            end
+            activeContainer[c.player] = nil
+            local p = res.payload or {}
+            hands.setHeld(c.player, {
+                id = tonumber(p.item_id) or c.itemId,
+                uname = p.uname,
+                hp = tonumber(p.hp),
+                data = hands.decodeData(p.data),
+            })
+            triggerEvent("itemMoved", c.player, c.itemId, "world", "held")
+            sendInventory(c.player)
+            toast(c.player, "PICKED_UP")
+        end, { player = player, itemId = itemId })
     end, { rate = 3 })
 
     -- Pitching and packing a TentPack. Reached from hands.lua (interact on the world item while holding a
@@ -906,23 +897,38 @@ return function(ctx)
                     if getDistanceBetweenPoints3D(curPx, curPy, curPz, rx, ry, rz) > 3.5 then
                         return
                     end
-                    db.exec("UPDATE items SET data = '{\"pitched\":true}' WHERE id = ?", { itId })
-                    db.exec(
-                        "INSERT INTO containers (kind, size, owner_item_id) VALUES ('tent', 16, ?) "
-                            .. "ON DUPLICATE KEY UPDATE size = 16",
-                        { itId }
-                    )
-                    if world then
-                        world.resendEverywhere(itId)
-                    end
-                    if refreshPlayer then
-                        refreshPlayer(pl)
-                    end
-                    toast(pl, "TENT_PITCHED")
+                    -- the pitched data and the tent's container in one transaction (tent_pitch), while it still lies
+                    -- in the world
+                    db.call("tent_pitch", { itId }, function(res, c2)
+                        if not res or not res.ok then
+                            return isElement(c2.player) and toast(c2.player, res and res.code or "DB_ERROR")
+                        end
+                        if world then
+                            world.resendEverywhere(c2.itemId)
+                        end
+                        if isElement(c2.player) then
+                            if refreshPlayer then
+                                refreshPlayer(c2.player)
+                            end
+                            toast(c2.player, "TENT_PITCHED")
+                        end
+                    end, { player = pl, itemId = itId })
                 end, 3000, 1, c.player, row.id, row.x, row.y, row.z)
             end,
             { player = player }
         )
+    end
+
+    -- tent item id -> the player packing it, from the start of the 3 s hold until it is packed or the pack fails:
+    -- nobody opens it meanwhile (an open would make a fresh container that the pack then hides inside the tent)
+    local packing = {}
+    M.isPacking = function(itemId)
+        local p = packing[itemId]
+        if p and not isElement(p) then
+            packing[itemId] = nil
+            return false
+        end
+        return p ~= nil
     end
 
     local function dismantleTent(player, itemId)
@@ -950,50 +956,49 @@ return function(ctx)
                     return
                 end
                 local function startDismantle()
+                    if M.isPacking(row.id) then
+                        return toast(c.player, "TENT_PACKING")
+                    end
+                    packing[row.id] = c.player
                     local label = lang.textFor(c.player, "Packing tent")
                     triggerClientEvent(c.player, "vehicleHoldStarted", c.player, label, 3000)
                     setTimer(function(pl, itId, cId, rx, ry, rz)
+                        local function abort()
+                            if packing[itId] == pl then
+                                packing[itId] = nil
+                            end
+                        end
                         if not isElement(pl) then
-                            return
+                            return abort()
                         end
                         local curHeld = state.held[pl]
                         if not curHeld or curHeld.uname ~= "Crowbar" then
-                            return
+                            return abort()
                         end
                         local curPx, curPy, curPz = getElementPosition(pl)
                         if getDistanceBetweenPoints3D(curPx, curPy, curPz, rx, ry, rz) > 3.5 then
-                            return
+                            return abort()
                         end
-                        -- someone may have opened it or put something in during the hold: the container (whatever
-                        -- its id by now) goes only while empty, and a tent that still holds something stays up
-                        db.exec(
-                            "DELETE FROM containers WHERE owner_item_id = ? "
-                                .. "AND NOT EXISTS (SELECT 1 FROM items i WHERE i.container_id = containers.id)",
-                            { itId },
-                            function(ok)
-                                if not ok then
-                                    return
-                                end
-                                db.one("SELECT id FROM containers WHERE owner_item_id = ?", { itId }, function(left, c3)
-                                    if left then
-                                        return isElement(c3.player) and toast(c3.player, "TENT_NOT_EMPTY")
-                                    end
-                                    db.exec("UPDATE items SET data = NULL WHERE id = ?", { itId })
-                                    closeViewers(function(cont)
-                                        return cont.worldItemId == itId or (cId and cont.containerId == cId)
-                                    end)
-                                    if world then
-                                        world.resendEverywhere(itId)
-                                    end
-                                    if isElement(c3.player) then
-                                        if refreshPlayer then
-                                            refreshPlayer(c3.player)
-                                        end
-                                        toast(c3.player, "TENT_PACKED")
-                                    end
-                                end, { player = pl })
+                        -- tent_pack: its container goes only while empty (someone may have put something in during
+                        -- the hold: the tent then stays up) and the tent reads as packed, in one transaction
+                        db.call("tent_pack", { itId }, function(res, c3)
+                            abort()
+                            if not res or not res.ok then
+                                return isElement(c3.player) and toast(c3.player, res and res.code or "DB_ERROR")
                             end
-                        )
+                            closeViewers(function(cont)
+                                return cont.worldItemId == itId or (cId and cont.containerId == cId)
+                            end)
+                            if world then
+                                world.resendEverywhere(itId)
+                            end
+                            if isElement(c3.player) then
+                                if refreshPlayer then
+                                    refreshPlayer(c3.player)
+                                end
+                                toast(c3.player, "TENT_PACKED")
+                            end
+                        end, { player = pl })
                     end, 3000, 1, c.player, row.id, row.cont_id, row.x, row.y, row.z)
                 end
                 if row.cont_id then
@@ -1026,6 +1031,10 @@ return function(ctx)
     addEventHandler("onPlayerQuit", root, function()
         activeContainer[source] = nil
     end)
+    -- a death leaves the side container behind: the next character does not inherit it
+    addEventHandler("characterDied", root, function()
+        activeContainer[source] = nil
+    end)
 
     net.handler("inventoryOpenRequested", function(player)
         if isBadInteract(player) then
@@ -1034,11 +1043,8 @@ return function(ctx)
         sendInventory(player, "opened")
     end, { rate = 3 })
 
-    -- an item in the character's inventory or worn bag, or in the side container they have open
-    local TAKE_REACH_SQL = "SELECT i.id FROM items i JOIN containers c ON c.id = i.container_id "
-        .. "LEFT JOIN items owner ON owner.id = c.owner_item_id "
-        .. "WHERE i.id = ? AND (c.owner_char_id = ? OR owner.holder_char_id = ? OR i.container_id = ?)"
-    local take
+    -- container_take checks the reach itself (the character's inventory, worn or held bag, or the side container
+    -- they have open, while nobody carries it) and hands back the item row: one round trip
     net.handler("itemTakeRequested", function(player, itemId)
         local cid = charId(player)
         itemId = tonumber(itemId)
@@ -1049,19 +1055,7 @@ return function(ctx)
             return toast(player, "HANDS_FULL")
         end
         local openId = M.openContainerId(player)
-        db.one(TAKE_REACH_SQL, { itemId, cid, cid, openId or -1 }, function(reach, c0)
-            if not isElement(c0.player) then
-                return
-            end
-            if not reach then
-                return toast(c0.player, "NOT_IN_CONTAINER")
-            end
-            take(c0.player, cid, itemId)
-        end, { player = player })
-    end, { rate = 5 })
-
-    take = function(player, cid, itemId)
-        db.call("container_take", { itemId, cid }, function(res, c)
+        db.call("container_take", { itemId, cid, openId, n = 3 }, function(res, c)
             if not res or not res.ok then
                 logProc("item.taken", c.player, res, { item_id = c.itemId, character_id = cid }, true)
             end
@@ -1069,31 +1063,26 @@ return function(ctx)
                 return
             end
             if not res or not res.ok then
-                return toast(c.player, res and res.code or "DB_ERROR")
+                local code = res and res.code or "DB_ERROR"
+                return toast(c.player, code == "NOT_OWNER" and "NOT_IN_CONTAINER" or code)
             end
-            db.one(
-                "SELECT id, type_uname AS uname, hitpoints AS hp, data FROM items WHERE id = ?",
-                { c.itemId },
-                function(row, c2)
-                    -- the one event of a successful take waits for the row, which names the item type
-                    logProc("item.taken", c2.player, res, {
-                        item_id = c2.itemId,
-                        uname = row and row.uname or nil,
-                        container_id = res.payload and res.payload.container_id or nil,
-                        character_id = cid,
-                    }, true)
-                    if not row or not isElement(c2.player) then
-                        return
-                    end
-                    row.data = hands.decodeData(row.data)
-                    hands.setHeld(c2.player, row)
-                    triggerEvent("itemMoved", c2.player, c2.itemId, "container", "held")
-                    sendInventory(c2.player)
-                end,
-                { player = c.player, itemId = c.itemId }
-            )
+            local p = res.payload or {}
+            logProc("item.taken", c.player, res, {
+                item_id = c.itemId,
+                uname = p.uname,
+                container_id = p.container_id,
+                character_id = cid,
+            }, true)
+            hands.setHeld(c.player, {
+                id = tonumber(p.item_id) or c.itemId,
+                uname = p.uname,
+                hp = tonumber(p.hp),
+                data = hands.decodeData(p.data),
+            })
+            triggerEvent("itemMoved", c.player, c.itemId, "container", "held")
+            sendInventory(c.player)
         end, { player = player, itemId = itemId })
-    end
+    end, { rate = 5 })
 
     net.handler("itemContainerMoveRequested", function(player, itemId, target)
         local cid = charId(player)

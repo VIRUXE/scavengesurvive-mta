@@ -526,6 +526,7 @@ return {
     ["The panel's welds are cut through and it comes off"] = "Zavari ploče su probrušeni i ona otpada",
     ["The plant has not fully grown yet."] = "Biljka još nije potpuno izrasla.",
     ["The tent must be empty to pack it away"] = "Šator mora biti prazan da bi ga spakirao",
+    ["Someone is packing this tent"] = "Neko pakuje ovaj šator",
     ["The torch went back on the Welder"] = "Plamenik se vratio na aparat za varenje",
     ["Their hands are full"] = "Ruke su mu pune",
     ["There are no items inside."] = "Unutra nema predmeta.",

@@ -529,6 +529,7 @@ return {
     ["The panel's welds are cut through and it comes off"] = "Svary panelu jsou proříznuté a panel odpadl",
     ["The plant has not fully grown yet."] = "Rostlina ještě není plně vzrostlá.",
     ["The tent must be empty to pack it away"] = "Stan musí být prázdný, aby šel sbalit",
+    ["Someone is packing this tent"] = "Někdo tento stan právě balí",
     ["The torch went back on the Welder"] = "Hořák se vrátil na Svářečku",
     ["Their hands are full"] = "Má plné ruce",
     ["There are no items inside."] = "Uvnitř nejsou žádné předměty.",

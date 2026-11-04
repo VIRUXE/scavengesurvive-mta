@@ -150,14 +150,13 @@ net.handler("combineRequested", function(player, invItemId)
     if not held then
         return toast(player, "NOT_HELD")
     end
-    -- only an item the character can reach: their inventory, their worn bag, or the side container they have open
-    -- (a stale list, or a forged id, must not consume an item in someone else's inventory or a trunk across the map)
-    local openId = exports.items:getOpenContainerId(player) or -1
+    -- only an item in the character's own inventory or worn bag: item_destroy cannot consume one from a trunk, box
+    -- or crate (the result was made and the item stayed), and a stale list or forged id must not reach anyone else's
     db.one(
         "SELECT i.id, i.type_uname AS uname, i.container_id, i.data FROM items i "
             .. "JOIN containers c ON c.id = i.container_id LEFT JOIN items owner ON owner.id = c.owner_item_id "
-            .. "WHERE i.id = ? AND (c.owner_char_id = ? OR owner.holder_char_id = ? OR i.container_id = ?)",
-        { invItemId, cid, cid, openId },
+            .. "WHERE i.id = ? AND (c.owner_char_id = ? OR owner.holder_char_id = ?)",
+        { invItemId, cid, cid },
         function(row, c)
             if not isElement(c.player) or not row then
                 return
@@ -605,38 +604,61 @@ local function tryWorkbenchCraft(player, _cid, held, px, py, onMiss)
                         return
                     end
                     -- upstream _wb_ClearWorkbench + _wb_CreateResult: the bench is emptied and the result lies on top
-                    -- of it, z + 0.95, turned rz - 95 give or take 5 degrees
                     local inputNames, inputIds = {}, {}
                     for i, it in ipairs(now) do
                         inputNames[i], inputIds[i] = it.type_uname, it.id
-                        exports.items:destroyContainerItem(it.id, "crafted")
                     end
-                    local rot = ((tonumber(wb.rz) or 0) - 95 + math.random() * 10) % 360
-                    local args = { recipe.result.uname, nil, nil, bx, by, bz + 0.95, rot, int, dim, nil, nil, n = 11 }
-                    db.call("item_create", args, function(res, c4)
-                        logCraft(c4.player, res, {
-                            recipe = recipe.name,
-                            mode = "workbench",
-                            inputs = inputNames,
-                            input_ids = inputIds,
-                            output_uname = recipe.result.uname,
-                            workbench_id = wb.id,
-                            x = math.floor(bx),
-                            y = math.floor(by),
-                            z = math.floor(bz + 0.95),
-                            int = int,
-                            dim = dim,
-                        })
+                    -- of it, z + 0.95, turned rz - 95 give or take 5 degrees. All or nothing in one statement: another
+                    -- player with the bench open taking one of these meanwhile cancels the craft instead of keeping
+                    -- their item and getting the result made as well
+                    local ids = {}
+                    for i, it in ipairs(now) do
+                        ids[i] = string.format("%d", it.id)
+                    end
+                    -- a bare JSON array (toJSON would wrap it in another): container_items_destroy reads $[*]
+                    local idsJson = "[" .. table.concat(ids, ",") .. "]"
+                    db.call("container_items_destroy", { contId, idsJson }, function(cleared, c4)
                         if not isElement(c4.player) then
                             return
                         end
-                        if res and res.ok then
-                            exports.items:refreshPlayer(c4.player)
-                            exports.character:gainSkill(c4.player, recipe.result.uname)
-                            toast(c4.player, "CRAFTED")
-                        else
-                            toast(c4.player, res and res.code or "DB_ERROR")
+                        if not cleared or not cleared.ok then
+                            logCraftRefused(c4.player, cleared and cleared.code or "DB_ERROR", {
+                                recipe = recipe.name,
+                                mode = "workbench",
+                                workbench_id = wb.id,
+                                output_uname = recipe.result.uname,
+                            })
+                            return toast(c4.player, "NO_RECIPE")
                         end
+                        exports.items:containerChanged(contId) -- whoever else has the bench open sees it empty
+                        local rot = ((tonumber(wb.rz) or 0) - 95 + math.random() * 10) % 360
+                        local args =
+                            { recipe.result.uname, nil, nil, bx, by, bz + 0.95, rot, int, dim, nil, nil, n = 11 }
+                        db.call("item_create", args, function(res, c5)
+                            logCraft(c5.player, res, {
+                                recipe = recipe.name,
+                                mode = "workbench",
+                                inputs = inputNames,
+                                input_ids = inputIds,
+                                output_uname = recipe.result.uname,
+                                workbench_id = wb.id,
+                                x = math.floor(bx),
+                                y = math.floor(by),
+                                z = math.floor(bz + 0.95),
+                                int = int,
+                                dim = dim,
+                            })
+                            if not isElement(c5.player) then
+                                return
+                            end
+                            if res and res.ok then
+                                exports.items:refreshPlayer(c5.player)
+                                exports.character:gainSkill(c5.player, recipe.result.uname)
+                                toast(c5.player, "CRAFTED")
+                            else
+                                toast(c5.player, res and res.code or "DB_ERROR")
+                            end
+                        end, { player = c4.player })
                     end, { player = c3.player })
                 end, { player = pl })
             end, ms, 1, c2.player)
