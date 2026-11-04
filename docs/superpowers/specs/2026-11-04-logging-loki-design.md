@@ -1,6 +1,7 @@
 # Structured game logging to Loki — design and rollout plan
 
-Status: proposed (2026-11-04). Companion to the port design spec; this document only covers observability.
+Status: proposed (2026-11-04, transport decided the same day: direct push from the server, no agent). Companion to
+the port design spec; this document only covers observability.
 
 ## 1. Why, and what the logs must answer
 
@@ -20,33 +21,40 @@ The logging has to answer, from one Grafana Explore window, within a minute:
 | Did a staff member abuse a command? | `staff.*`, `dev.*` by `actor` |
 | Is a serial / IP evading a ban? | `session.*` with `serial`, `ip`, `account_id` |
 | Did anticheat fire, and on whom, before a ban appeal? | `anticheat.*` |
-| Is the server healthy right now: DB errors, slow procedures, resource restarts, players online? | `db.*`, `system.*`, raw MTA logs |
+| Is the server healthy right now: DB errors, slow procedures, resource restarts, players online? | `db.*`, `system.*`, `script.*` |
 | Is the economy drifting (loot rolled vs picked, vehicles spawned vs abandoned, deaths/hour)? | LogQL aggregates over `loot.*`, `vehicle.*`, `character.died` |
 
 ## 2. Architecture
 
 ```
-resources ──exports.logs:write()──> logs resource ──> logs/game-YYYY-MM-DD.jsonl ─┐
-MTA server ───────────────────────> logs/server.log, logs/scripts.log            ├─> Grafana Alloy ──> Loki ──> Grafana
-MariaDB ──────────────────────────> mariadb error log                             │
-mta-discord-relay ────────────────> journald                                      ┘
+resources ──exports.logs:write()──> logs resource ──batches, fetchRemote POST──> Loki /loki/api/v1/push ──> Grafana
+MTA script errors/warnings ──onDebugMessage──┘
 ```
 
-**File + agent, not direct push.** The game writes newline-delimited JSON to a file and Grafana Alloy ships it.
-Reasons, in order: a Loki outage or a slow link never touches the game (the disk is the buffer, Alloy retries with
-backoff); the Loki URL and tenant token live in Alloy's config, not in an MTA setting; one agent also ships the
-three logs the game cannot produce (`server.log`, `scripts.log` with MTA's own script errors, the MariaDB error
-log) and the relay's journal, so an incident is read in one place; no HTTP work on the MTA main thread.
-`fetchRemote` push stays out of scope (it would need batching, retry, backoff and a token in `settings.xml`;
-Alloy already does all of that and has a Windows build for dev boxes). Promtail is end-of-life since 2026-03;
-Alloy is the supported agent.
+**Direct push, no agent, no file.** The game resources hand every event to one resource, `logs`, which batches
+lines in memory and POSTs them to Loki's push API from the server itself (user decision 2026-11-04). Nothing is
+installed on the host beside MTA and MariaDB, and a dev box only needs the Loki URL in `local.settings.xml`.
+The costs of that choice, and how the design pays them:
 
-**One writer.** MTA file functions are sandboxed per resource and nothing serialises writes across resources, so
-a single resource owns the file. New resource `logs` (`resources/[scavengesurvive]/logs/`, no prefix, like the
-others): opens today's file at start, seeks to the end (MTA has no append mode), buffers lines, flushes on a 1 s
-timer and on `onResourceStop`, rolls the file at midnight UTC, deletes files older than `*logs.retain_days`
-(default 7; Loki keeps the history). The directory `resources/[scavengesurvive]/logs/logs/` is git-ignored like
-`dev/screenshots/` (prod resources are a symlink into the clone).
+- *Loki down or slow*: the batch stays in memory and is retried with backoff; the buffer is bounded
+  (`*logs.max_lines`, default 20 000 ≈ 10 MB), the oldest lines are dropped beyond it and the drop is counted and
+  reported as `system.logDropped` once the push works again. A `shutdown` loses the lines of the last flush
+  interval that were not yet acknowledged (1 s); the console still shows every `warn`/`error`, so an incident
+  is never silent even when Loki is unreachable.
+- *Secrets on the game host*: the URL, tenant and token live in `local.settings.xml`, which is git-ignored and
+  already holds the DB password (`*lib.db_pass`), under `*logs.url`, `*logs.tenant`, `*logs.user`, `*logs.pass`.
+- *MTA's own logs*: `server.log` and `scripts.log` live outside the resource sandbox, so they cannot be read and
+  pushed. Script errors and warnings are captured instead through the server event `onDebugMessage`, which
+  fires for every `scripts.log` line (`script.error` / `script.warning` kinds below). The MariaDB error log and
+  the Discord relay journal are not shipped; if they are ever wanted, a Grafana Alloy install on the host is
+  the add-on, not a change to this design.
+- *Main-thread cost*: `fetchRemote` runs the request on MTA's HTTP worker and calls back on the main thread; the
+  only main-thread work is building one JSON body per flush (string concatenation of already-serialised lines).
+
+**One sender.** New resource `logs` (`resources/[scavengesurvive]/logs/`, no prefix): exports `write(line)` and
+keeps the buffer, the flush timer, the retry state and the heartbeat. Other resources never call `fetchRemote`.
+When `logs` is not running, the `lib` module falls back to `outputServerLog`, so a dev box that has not started
+it loses nothing on the console.
 
 **Thin API in `lib`.** New module `lib/modules/log.lua`, loaded like `db`:
 
@@ -59,12 +67,11 @@ log.warn("loot", "no spawn rows for zone %s", zone)   -- util.log keeps working;
 `log.event(kind, fields, level)` adds `ts`, `level` (`info` unless given), `resource` (the caller's resource
 name), and, when `fields.player` is a player element, replaces it with `player` (name), `account_id`
 (`exports.auth:getAccountId`), `character_id` (`exports.character:getCharacterId`) and drops the element. It
-calls `exports.logs:write(line)`; when `logs` is not running it falls back to `outputServerLog(line)` so nothing
-is lost on a dev box that has not started it. Levels: `debug` (dropped unless `*logs.level=debug`), `info`,
-`warn`, `error`. `warn` and `error` are echoed to the server console through `outputServerLog` as today, so the
-console stays the quick look and the file is the record.
+serialises the line once and calls `exports.logs:write(line, labels)`. Levels: `debug` (dropped unless
+`*logs.level=debug`), `info`, `warn`, `error`. `warn` and `error` are echoed to the server console through
+`outputServerLog` as today, so the console stays the quick look and Loki is the record.
 
-**Line format** (one object per line, flat, numbers unquoted, no nesting beyond one level):
+**Line format** (one object per entry, flat, numbers unquoted, no nesting beyond one level):
 
 ```json
 {"ts":"2026-11-04T20:03:11.412Z","level":"info","resource":"items","kind":"item.pickedUp",
@@ -74,18 +81,18 @@ console stays the quick look and the file is the record.
 
 - `kind` is `<domain>.<pastTenseVerb>` camelCase, the same convention as event names (`itemPickedUp` the event,
   `item.pickedUp` the log kind), so a reader of `shared/events.lua` recognises them. Domains are the resource
-  names plus `session`, `combat`, `db`, `system`.
+  names plus `session`, `combat`, `db`, `system`, `script`.
 - `msg` is optional, English, for the Explore view; every fact in it is also a field.
 - `ts` is UTC RFC 3339 with milliseconds, derived from `getRealTime().timestamp` at resource start plus
-  `getTickCount()` deltas (re-synced hourly). Alloy uses it as the entry timestamp, so a late flush keeps the real
-  order.
+  `getTickCount()` deltas (re-synced hourly). The same clock gives the push timestamp (next section), so a late
+  retry keeps the real order.
 - Built with `toJSON(fields, true)` and the outer `[ ]` stripped (as `death.lua` already does). Strings are
   truncated at 512 characters; chat text at 256.
 - `serial` and `ip` appear only in `session.*` kinds; nothing else carries them.
 
-**Loki labels** (index) stay small: `job` (`ss-game`, `ss-server`, `ss-scripts`, `mariadb`, `discord-relay`),
-`host`, `level`, `resource`, `kind` (~70 values). `player`, `account_id`, `character_id`, `item_id`, `vehicle_id`
-go to structured metadata (Loki 3.x) so `{job="ss-game"} | player="Bob"` is fast without indexing names.
+**Loki labels** (index) stay small: `job="ss-game"`, `host` (`*logs.host`), `env` (`*logs.env`: `prod`/`dev`),
+`level`, `resource`, `kind` (~70 values). `player`, `account_id`, `character_id`, `item_id`, `vehicle_id` go to
+structured metadata (Loki 3.x) so `{job="ss-game"} | player="Bob"` is fast without indexing names.
 
 ## 3. Event catalogue
 
@@ -102,6 +109,9 @@ common ones; `pos` means `x y z int dim zone`.
 | `db.queryFailed` | error | `db.lua` `poll` | `tag`, `errno`, `error`, `sql` (first 200 chars), `ms` |
 | `db.callFinished` | debug (info when `ms` > `*logs.slow_ms`, default 50) | `db.call` wrapper: every stored procedure, success or not | `proc`, `ok`, `code`, `ms`; the wrapper measures from `dbQuery` to callback, so queue wait is included |
 | `log.message` | as given | `util.log` | `tag`, `msg` (the 70 existing lines keep working unchanged; they are converted to real kinds domain by domain) |
+| `script.error` / `script.warning` | error / warn | `logs` listens to `onDebugMessage` (every `scripts.log` line) | `file`, `line`, `msg`; `outputDebugString` info lines are ignored |
+| `system.logDropped` | warn | `logs`, after a push succeeds following drops | `dropped`, `outage_s` |
+| `system.pushFailed` | error (console only, never pushed) | `logs`, on the first failure and then once a minute | `status`, `error`, `queued` |
 
 ### session (resource `auth`)
 
@@ -184,54 +194,82 @@ refused action (`code="NOT_NEAR"`, `"FULL"`) is logged at `info` with `ok=false`
 
 Voice start/stop, HUD, UI and client-only events are not logged.
 
-## 4. Alloy and Loki configuration
+## 4. The push, and the Loki side
 
-`ops/alloy/config.alloy` (new directory in the repo; the host copies it to `/etc/alloy/`):
+**Push mechanics** (`logs/server/push.lua`, pure parts in `logs/shared/logic/batch.lua`):
 
-- `local.file_match` + `loki.source.file` for `<resources>/logs/logs/game-*.jsonl` (`job="ss-game"`),
-  `$DM/logs/server.log` (`ss-server`), `$DM/logs/scripts.log` (`ss-scripts`), the MariaDB error log (`mariadb`);
-  `loki.source.journal` with `_SYSTEMD_UNIT=mta-discord-relay.service`.
-- `loki.process` for `ss-game`: `stage.json` → `stage.timestamp` (`ts`, RFC3339) → `stage.labels`
-  (`level`, `resource`, `kind`) → `stage.structured_metadata` (`player`, `account_id`, `character_id`, `item_id`,
-  `vehicle_id`). For `ss-scripts`: `stage.regex` on `^\[(?P<ts>[^\]]+)\] (?P<level>ERROR|WARNING|INFO)` → label
-  `level`; for `ss-server`: timestamp only.
-- `loki.write` to the Loki endpoint with `tenant_id` / basic auth from `/etc/alloy/env` (never in git).
-- `$DM/logs/*.log` are never rotated by MTA: add a `logrotate` rule with `copytruncate` (Alloy follows
-  truncation) and keep `game-*.jsonl` rotation inside the `logs` resource.
+- `write(line, labels)` appends `{ ts_ns, line, labels, meta }` to the buffer. Entries are grouped per label set
+  at flush time into Loki's `streams` array: `{"stream":{"job":"ss-game","host":…,"level":…,"resource":…,
+  "kind":…},"values":[["<ns>","<line>",{"player":"Bob","item_id":"123"}]]}`. The third element of a value is
+  the structured metadata (Loki ≥ 3.0, schema v13 / TSDB); string values only.
+- The nanosecond timestamp is a **string built by concatenation** (`seconds .. ("%03d"):format(ms) ..
+  "000000"`): a Lua 5.1 double cannot hold 1.7e18 exactly.
+- Flush every `*logs.flush_ms` (1000) or when 500 entries are waiting, whichever first; a batch is at most 500
+  entries / ~1 MB (Loki's default request limit is larger, but a smaller body retries cheaply).
+- `fetchRemote(url .. "/loki/api/v1/push", { method = "POST", headers = { ["Content-Type"] =
+  "application/json", ["X-Scope-OrgID"] = tenant }, username = user, password = pass, postData = body,
+  queueName = "loki", connectionAttempts = 1, connectTimeout = 5000 }, cb)`: `queueName` serialises the
+  pushes so batches arrive in order; retries are ours, not MTA's. Verify the option names against the
+  `mta-wiki` MCP before coding (the table form of `fetchRemote` is the 1.5.7+ signature; the callback receives
+  `data, info` with `info.success` and `info.statusCode`).
+- Response handling: `204` → done, send the next batch at once if one is waiting. `429` or `5xx` or
+  `success=false` → keep the batch at the front of the queue, back off 2 s → 4 s → … → 60 s, console
+  `system.pushFailed` once, then once a minute while it lasts. `400` → the batch is malformed or too old
+  (`too far behind` after a long outage with a small `reject_old_samples_max_age`): log the body's first 300
+  characters to the console, drop that batch, continue; the design keeps lines small enough that the only
+  realistic `400` is age. Any other `4xx` (401/403/404) → configuration: drop nothing, back off at 60 s and
+  console once a minute.
+- Buffer bound: `*logs.max_lines` entries (20 000); beyond it the oldest entries are dropped and counted;
+  `system.logDropped` goes out with the first successful push afterwards.
+- `onResourceStop` of `logs`: one last flush is sent; its callback may never run, which is the accepted 1 s loss
+  on `shutdown`. `onResourceStart` of any other resource re-attaches nothing: `write` is an export, so
+  `rr items` keeps logging without `rr logs`.
+- ACL: the stock `Default` ACL allows `function.fetchRemote`; if a host's ACL was hardened, `run-local.ps1` adds
+  it to the `ScavengeSurvive` group like `function.loadstring`.
 
-Loki: `retention_enabled` with per-stream retention: `ss-game` 90 days, `ss-server`/`ss-scripts` 14 days,
-`mariadb`/`discord-relay` 14 days. `session.*` carries IPs and serials; if a shorter retention is wanted for
-those it is one more `retention_stream` selector on `kind=~"session\\..*"`. Structured metadata requires Loki
-≥ 3.0 and schema v13 / TSDB.
+**Settings** (`logs/meta.xml`, overridden in `local.settings.xml` as `*logs.<name>`): `url` (empty = pushing
+off, console only), `tenant` (empty = header omitted), `user`, `pass`, `host`, `env`, `level` (`info`),
+`slow_ms` (50), `flush_ms` (1000), `max_lines` (20000). `run-local.ps1` adds the `logs` lines to the example
+settings file it creates. Grafana Cloud takes `user` = the stack's numeric user id and `pass` = an access policy
+token with `logs:write`; a self-hosted Loki behind basic auth works the same, and an open local Loki needs only
+`url`.
 
-Grafana: three dashboards built from LogQL, no Prometheus needed in v1.
+**Loki**: `retention_enabled` with `retention_period` 90 days for `ss-game`; `session.*` carries IPs and
+serials, so a shorter period is one `retention_stream` selector on `kind=~"session\\..*"`. Set
+`reject_old_samples_max_age` to at least 24 h so a long outage's buffer is accepted when the server
+reconnects. Structured metadata requires Loki ≥ 3.0 and schema v13 / TSDB.
+
+**Grafana**: three dashboards built from LogQL, no Prometheus needed in v1.
 
 - **Ops**: `rate({job="ss-game", level="error"}[5m])`, `db.callFinished` p95 `ms` by `proc`
-  (`quantile_over_time`), players from `system.heartbeat` (`unwrap players`), resource restarts, `ss-scripts`
-  ERROR lines.
+  (`quantile_over_time`), players from `system.heartbeat` (`unwrap players`), resource restarts,
+  `script.error` lines, `system.logDropped`.
 - **Moderation**: last 200 `staff.*`, `anticheat.*`, `combat.hitRejected`, `chat.messageSent` with a `player`
   variable; a "player timeline" panel: `{job="ss-game"} | player="$player" or killer="$player" or to="$player"`.
 - **Economy**: deaths/hour, `item.created` by `source`, `loot.refillTicked` cap vs alive by zone, vehicles
   spawned vs removed.
 
-Alerts (Loki ruler, Grafana contact point to the Discord staff channel, so it complements `sendStaffLog`):
-no `system.heartbeat` for 3 min; `db.queryFailed` > 0 in 5 min; `anticheat.kicked` > 5 in 10 min;
-`character.combatLogged` > 10 in 1 h; `db.callFinished` p95 > 250 ms for 10 min.
+**Alerts** (Loki ruler, Grafana contact point to the Discord staff channel, so it complements `sendStaffLog`):
+no `system.heartbeat` for 3 min (server down **or** Loki unreachable from it; the console `system.pushFailed`
+tells which); `db.queryFailed` > 0 in 5 min; `anticheat.kicked` > 5 in 10 min; `character.combatLogged` > 10
+in 1 h; `db.callFinished` p95 > 250 ms for 10 min; any `system.logDropped`.
 
 ## 5. Rollout, in commits
 
 Each step is one conventional commit, `luacheck` and `stylua` clean, `rr <resource>` on the dev server, a line in
 `docs/reviews/<date>-live-checks.md` when it touches play.
 
-1. **`feat(logs): structured game log file and lib log module`** — the `logs` resource (writer, rotation,
-   heartbeat, resource start/stop), `lib/modules/log.lua`, `util.log` delegating to it, `.gitignore` entry,
-   `server-config/resources.xml` entry (and a `run-local.ps1` run for the ACL). `db.lua` gets `db.queryFailed`
-   and the `db.call` timing wrapper. Deliverable: every existing log line arrives in Loki as JSON with level and
-   resource, DB failures and slow procedures are visible.
-2. **`chore(ops): Alloy config, logrotate rule, runbook`** — `ops/alloy/config.alloy`, `ops/logrotate/mta`,
-   `docs/runbooks/logging-loki.md` (install Alloy, where the token lives, how to check a line reaches Loki, how
-   to switch `*logs.level` to `debug` for an evening, what to do when the disk fills), and the
-   `incident-db-down.md` step 1 pointing at the Grafana Ops dashboard instead of grepping `scripts.log`.
+1. **`feat(logs): push structured game logs to Loki`** — the `logs` resource (buffer, batching, push with
+   retry and backoff, heartbeat, `onDebugMessage`, resource start/stop), `lib/modules/log.lua`, `util.log`
+   delegating to it, `server-config/resources.xml` entry and the settings in `local.settings.example.xml` (a
+   `run-local.ps1` run for the ACL). `db.lua` gets `db.queryFailed` and the `db.call` timing wrapper. Proven
+   on the dev box against a local Loki in Docker (`grafana/loki` + `grafana/grafana`, one `docker compose`
+   file under `ops/loki/` for dev only). Deliverable: every existing log line and every script error arrives
+   in Loki with level and resource, DB failures and slow procedures are visible.
+2. **`docs(runbooks): logging-loki`** — `docs/runbooks/logging-loki.md` (the settings, how to check a line
+   reaches Loki with `rcon.ps1 lua`, what `system.pushFailed` on the console means and the backoff, how to
+   switch `*logs.level` to `debug` for an evening, token rotation), and the `incident-db-down.md` step 1
+   pointing at the Grafana Ops dashboard instead of grepping `scripts.log`.
 3. **`feat(auth): session log kinds`** — replace the 13 `util.log` lines with `session.*`; `connection_log` stays
    (the in-game `/aliases`-style commands read it).
 4. **`feat(staff): staff, dev and anticheat log kinds`** — `ctx.log`, the three ban/warn callbacks, duty, reports,
@@ -267,13 +305,15 @@ carry the highest moderation value; step 6 is the largest surface and benefits f
 ## 7. Volume and cost
 
 At 50 players: ~2 item events/s, ~1 chat line/s, `combat.hit` off, heartbeat 1/min, `db.callFinished` at debug
-off ⇒ under 1 MB/min, ~1 GB/day uncompressed, ~150 MB/day in Loki chunks; 90 days ≈ 15 GB. Writing is one
-`fileWrite` + `fileFlush` per second on the main thread (sub-millisecond on an SSD). `combat.hit` on adds up to
-10 lines/s in a fight; `*logs.level=debug` is for a session, not a default.
+off ⇒ under 1 MB/min, ~1 GB/day uncompressed, ~150 MB/day in Loki chunks; 90 days ≈ 15 GB. The push is one
+POST per second of a few KB; building the body is one `table.concat` on the main thread. A 20 000-line buffer
+is about 10 MB of Lua memory and covers a 1–2 h Loki outage at that rate. `combat.hit` on adds up to 10
+lines/s in a fight; `*logs.level=debug` is for a session, not a default.
 
 ## 8. Out of scope
 
-Metrics (Prometheus exporters, `prometheus.exporter.unix`) and traces; shipping MariaDB's general or slow query
-log (enable the slow log on the host and add one more `loki.source.file` if a procedure needs it); replacing the
-DB audit tables, which the in-game staff commands read; the Discord relay staff channel, which stays as the
-push notification path and gains Grafana alerts beside it.
+Metrics (Prometheus exporters) and traces; any host-side agent (Grafana Alloy) and with it `server.log`,
+the MariaDB error or slow log and the Discord relay journal (an Alloy install would add them later without
+touching this design); a disk spill for the buffer during a Loki outage (bounded memory and a drop counter
+are the accepted trade-off); replacing the DB audit tables, which the in-game staff commands read; the Discord
+relay staff channel, which stays as the push notification path and gains Grafana alerts beside it.
