@@ -197,6 +197,34 @@ local function toast(player, code)
     end
 end
 
+-- The battery's whole percent for the driver's dashboard (hud), false with none fitted; sent only when it changes.
+local function publishBattery(v, inf)
+    if not isElement(v) or not inf then
+        return
+    end
+    local level = inf.bay and batteryLevel(inf)
+    local shown = level and math.floor(level + 0.5) or false
+    if inf.batteryShown ~= shown then
+        inf.batteryShown = shown
+        setElementData(v, "vehicles.battery", shown, "broadcast", "deny")
+    end
+end
+
+-- The dashboard's performances (hud/client/dashboard.lua): the key turned (code false: it started, else why not) or
+-- the engine died under the driver (NO_FUEL, DAMAGED, STALL, BATTERY_FLAT, NO_BATTERY).
+local function engineCranked(player, v, code)
+    if isElement(player) then
+        triggerClientEvent(player, "engineCranked", v, code or false)
+    end
+end
+
+local function engineStalled(v, code)
+    local driver = getVehicleController(v)
+    if driver then
+        triggerClientEvent(driver, "engineStalled", v, code)
+    end
+end
+
 local function charId(player)
     return exports.character:getCharacterId(player)
 end
@@ -302,6 +330,7 @@ local function create(row)
     local bayType = exports.data:vehicleType(row.type_uname)
     info[v].bay = battery.hasBay(row.model, bayType, vlogic.DOORLESS_MODELS)
     setElementData(v, "vehicles.bay", info[v].bay, "broadcast", "deny")
+    publishBattery(v, info[v])
 
     carmourSrv.load(v, row.carmour)
     gasSrv.load(v, row.gas_bottles)
@@ -623,6 +652,7 @@ local function tickSimulation()
                 local driver = getVehicleController(v)
                 if newFuel <= 0 then
                     setVehicleEngineState(v, false)
+                    engineStalled(v, "NO_FUEL")
                     if driver then
                         toast(driver, "NO_FUEL")
                     end
@@ -630,12 +660,14 @@ local function tickSimulation()
                     local hp = getElementHealth(v)
                     if hp <= vlogic.HEALTH_CHUNK_1 then
                         setVehicleEngineState(v, false)
+                        engineStalled(v, "DAMAGED")
                         if driver then
                             toast(driver, "ENGINE_BROKEN")
                         end
                     elseif hp <= vlogic.HEALTH_CHUNK_2 and speedKmh > 30 then
                         if vlogic.checkStall(hp, speedKmh, math.random) then
                             setVehicleEngineState(v, false)
+                            engineStalled(v, "STALL")
                             if driver then
                                 toast(driver, "ENGINE_STALL")
                             end
@@ -644,6 +676,7 @@ local function tickSimulation()
                 end
             end
         end
+        publishBattery(v, inf)
     end
 end
 
@@ -756,8 +789,17 @@ net.handler("engineToggleRequested", function(player)
     local hp = getElementHealth(v)
     local curr = getVehicleEngineState(v)
     if not curr then
+        -- the battery first: without one, or with a flat one, the starter never turns and nothing else shows
+        if inf.bay then
+            local started, why = battery.canStart(batteryLevel(inf))
+            if not started then
+                engineCranked(player, v, why)
+                return toast(player, why)
+            end
+        end
         local ok, err = vlogic.canStartEngine(hp, inf.fuel, vt and vt.noEngine, vt and vt.maxFuel)
         if not ok then
+            engineCranked(player, v, err)
             if err == "DAMAGED" then
                 toast(player, "ENGINE_BROKEN")
             elseif err == "NO_FUEL" then
@@ -765,13 +807,8 @@ net.handler("engineToggleRequested", function(player)
             end
             return
         end
-        if inf.bay then
-            local started, why = battery.canStart(batteryLevel(inf))
-            if not started then
-                return toast(player, why)
-            end
-        end
         setVehicleEngineState(v, true)
+        engineCranked(player, v, false)
     else
         setVehicleEngineState(v, false)
     end
@@ -1414,8 +1451,12 @@ function flattenVehicleBattery(vehicle)
         return false
     end
     inf.battery, inf.batterySince = 0, unixNow()
+    if getVehicleEngineState(vehicle) then
+        engineStalled(vehicle, "BATTERY_FLAT")
+    end
     setVehicleEngineState(vehicle, false)
     setVehicleOverrideLights(vehicle, 1)
+    publishBattery(vehicle, inf)
     -- The normal vehicle flush persists this charge, including on a clean resource/server stop.
     return true
 end
@@ -1466,6 +1507,7 @@ local function fitBattery(player, vehicle, held)
         vinf.batterySince = unixNow()
         local args = { vinf.battery, vinf.batterySince, vinf.id }
         db.exec(FIT_BATTERY_SQL, args)
+        publishBattery(veh, vinf)
         exports.items:destroyItem(itemId, p)
         toast(p, "BATTERY_FITTED")
         log.event("vehicle.partInstalled", vehicleLine(veh, { player = p, part = "battery", item_id = itemId }))
@@ -1495,7 +1537,9 @@ local function removeBattery(player, vehicle)
         local level = batteryLevel(vinf)
         vinf.battery, vinf.batterySince = nil, unixNow()
         db.exec("UPDATE vehicles SET battery = NULL WHERE id = ?", { vinf.id })
+        publishBattery(veh, vinf)
         if getVehicleEngineState(veh) then
+            engineStalled(veh, "NO_BATTERY")
             setVehicleEngineState(veh, false)
         end
         db.call("item_create_held", { "Battery", cid }, function(res, c)
@@ -2054,6 +2098,7 @@ end, { rate = 3 })
 
 addEventHandler("onVehicleEnter", resourceRoot, function(player, seat)
     markUsed(source)
+    publishBattery(source, info[source]) -- a parked battery drains unseen: the dashboard gets today's level
     local key = seat == 0 and vlogic.repairTipKey(getElementHealth(source))
     if key then
         exports.ui:showTip(player, exports.data:t(exports.auth:getLanguage(player), key), false, 20000)

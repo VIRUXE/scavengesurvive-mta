@@ -1,0 +1,213 @@
+-- The driver's dashboard, bottom centre (rules in hud/shared/logic/dashboard.lua): a translucent black strip in the
+-- HUD's style, the warning lamps in Bank Gothic as the vehicle panel's rows, a segmented tachometer and a voltmeter.
+-- It sits under the skill notice (y 430) and the overheat bar (380..400), clear of the action text and tips.
+-- ctx = { canvas, c, logic }.
+return function(ctx)
+    local canvas, c, logic = ctx.canvas, ctx.c, ctx.logic
+    local M = {}
+
+    -- canvas units, anchored on the screen's centre
+    local X, Y, W, H = 236, 445, 168, 30
+    local PAD = 4
+    local LAMP_Y, LAMP_H = Y + 4, 11
+    local GAUGE_Y, GAUGE_H = Y + 19, 7
+    local TACHO_X, TACHO_W, SEGMENTS = X + 26, 88, 22
+
+    local BACK = tocolor(0, 0, 0, 170)
+    local FRAME = tocolor(70, 70, 70, 200)
+    local UNLIT_BOX = tocolor(28, 28, 28, 220)
+    local UNLIT_TEXT = tocolor(75, 75, 75, 255)
+    local UNLIT_SEGMENT = tocolor(50, 50, 50, 220)
+    local AMBER = { 0xFF, 0xA8, 0x00 }
+
+    local performance = nil -- { kind = "crank" | "stall", code, vehicle, start }
+    local preview = nil -- dashboardPreview overrides of the vehicle's state
+    local needle, lastTick, lastVehicle, handling = 0, nil, nil, nil
+
+    local function px(x)
+        return canvas.x(c, x, "center")
+    end
+
+    local function label(text, x, y, w, h, colour, ly, align)
+        local scaleY = canvas.textScale(c, ly, 2)
+        local scaleX = scaleY * canvas.xScale(2, ly * 0.2, ly)
+        local top, bottom = canvas.y(c, y), canvas.y(c, y + h)
+        dxDrawText(text, px(x), top, px(x + w), bottom, colour, scaleX, scaleY, "bankgothic", align, "center")
+    end
+
+    local function rgba(rgb, a)
+        return tocolor(rgb[1], rgb[2], rgb[3], math.floor(math.max(0, math.min(255, a)) + 0.5))
+    end
+
+    local function perform(kind, vehicle, code)
+        if not isElement(vehicle) or vehicle ~= getPedOccupiedVehicle(localPlayer) then
+            return
+        end
+        performance = { kind = kind, code = code or nil, vehicle = vehicle, start = getTickCount() }
+    end
+
+    -- vehicles: the driver turned the key (code false: it started) or the engine died under them
+    addEventHandler("engineCranked", root, function(code)
+        perform("crank", source, code)
+    end)
+    addEventHandler("engineStalled", root, function(code)
+        perform("stall", source, code)
+    end)
+
+    local function stateOf(vehicle, vt)
+        local s = {
+            bay = getElementData(vehicle, "vehicles.bay") == true,
+            battery = tonumber(getElementData(vehicle, "vehicles.battery")),
+            engine = getVehicleEngineState(vehicle),
+            lights = getVehicleOverrideLights(vehicle) == 2,
+            health = getElementHealth(vehicle),
+            fuel = tonumber(getElementData(vehicle, "vehicles.fuel")) or 0,
+            maxFuel = vt and vt.maxFuel or 0,
+            tyres = { getVehicleWheelStates(vehicle) },
+        }
+        for k, v in pairs(preview or {}) do
+            s[k] = v
+        end
+        return s
+    end
+
+    local function targetRpm(vehicle, s)
+        if not s.engine then
+            return 0
+        end
+        if vehicle ~= lastVehicle then
+            lastVehicle, handling, needle = vehicle, getVehicleHandling(vehicle), 0
+        end
+        local vx, vy, vz = getElementVelocity(vehicle)
+        local kmh = math.sqrt(vx * vx + vy * vy + vz * vz) * 180
+        local throttle = getPedControlState(localPlayer, "accelerate")
+        local gear = getVehicleCurrentGear(vehicle)
+        return logic.rpm(kmh, gear, handling and handling.maxVelocity, handling and handling.numberOfGears, throttle)
+    end
+
+    local function drawLamps(s, shot, powered, glow, now)
+        local lamps = logic.lamps(s)
+        local cell = (W - 2 * PAD) / #logic.LAMPS
+        for i, lamp in ipairs(logic.LAMPS) do
+            local st = lamps[lamp.key]
+            local on = logic.lit(st.mode, now)
+            local rgb = st.colour or lamp.colour
+            if shot then
+                if shot.bulb or (shot.solid and shot.solid[lamp.key]) then
+                    on = true
+                end
+                if shot.flash == lamp.key then
+                    on, rgb = logic.lit("fast", now), logic.RED
+                end
+            end
+            on = on and powered and glow > 0
+            local x = X + PAD + (i - 1) * cell + 1
+            local w = cell - 2
+            if on then
+                dxDrawRectangle(
+                    px(x),
+                    canvas.y(c, LAMP_Y),
+                    canvas.len(c, w),
+                    canvas.len(c, LAMP_H),
+                    rgba(rgb, 70 * glow)
+                )
+                label(lamp.label, x, LAMP_Y, w, LAMP_H, rgba(rgb, 255 * glow), 0.95, "center")
+            else
+                dxDrawRectangle(px(x), canvas.y(c, LAMP_Y), canvas.len(c, w), canvas.len(c, LAMP_H), UNLIT_BOX)
+                label(lamp.label, x, LAMP_Y, w, LAMP_H, UNLIT_TEXT, 0.95, "center")
+            end
+        end
+    end
+
+    local function drawTacho(powered, glow)
+        label("RPM", X + PAD, GAUGE_Y, 22, GAUGE_H, powered and rgba({ 200, 200, 200 }, 255 * glow) or UNLIT_TEXT, 0.8)
+        local frac = math.max(0, math.min(1, needle / logic.MAX_RPM))
+        local lit = powered and math.floor(frac * SEGMENTS + 0.5) or 0
+        local step = TACHO_W / SEGMENTS
+        for i = 1, SEGMENTS do
+            local share = i / SEGMENTS
+            local h = 2.5 + (GAUGE_H - 2.5) * share
+            local colour = UNLIT_SEGMENT
+            if i <= lit then
+                local rgb = share > logic.REDLINE and logic.RED or share > 0.65 and AMBER or { 235, 235, 235 }
+                colour = rgba(rgb, 255 * glow)
+            end
+            local x = TACHO_X + (i - 1) * step
+            dxDrawRectangle(
+                px(x),
+                canvas.y(c, GAUGE_Y + GAUGE_H - h),
+                canvas.len(c, step - 1),
+                canvas.len(c, h),
+                colour
+            )
+        end
+    end
+
+    local function drawVolts(volts, powered, glow)
+        local x = TACHO_X + TACHO_W + 2
+        local w = X + W - PAD - x
+        if not powered then
+            return label("--.-V", x, GAUGE_Y, w, GAUGE_H, UNLIT_TEXT, 1.0, "right")
+        end
+        local rgb = volts < 11.0 and logic.RED or volts < 11.9 and AMBER or { 255, 255, 255 }
+        label(string.format("%.1fV", volts), x, GAUGE_Y, w, GAUGE_H, rgba(rgb, 255 * glow), 1.0, "right")
+    end
+
+    -- the dashboard of `vehicle` (vt: its data vehicle type) for its driver; every frame
+    function M.draw(vehicle, vt)
+        local now = getTickCount()
+        local dt = lastTick and math.max(0, math.min(100, now - lastTick)) or 0
+        lastTick = now
+        local s = stateOf(vehicle, vt)
+        local powered = logic.powered(s)
+        local shot = nil
+        if performance and performance.vehicle == vehicle then
+            shot = logic.sample(performance, now - performance.start, math.random)
+        end
+        if not shot then
+            performance = nil
+        end
+        local glow = powered and (s.engine and 1 or 0.6) or 0
+        if shot and (shot.bulb or shot.rpm) then
+            glow = powered and 1 or 0 -- the key is turned: full backlight while the starter runs
+        end
+        if shot and shot.glow then
+            glow = powered and shot.glow or 0
+        end
+        local target = targetRpm(vehicle, s)
+        if shot and shot.rpm then
+            needle = shot.rpm
+        else
+            needle = logic.needle(needle, target, dt)
+        end
+        local volts = shot and shot.volts or logic.volts(s)
+
+        local x0, y0 = px(X), canvas.y(c, Y)
+        local w, h = canvas.len(c, W), canvas.len(c, H)
+        dxDrawRectangle(x0, y0, w, h, BACK)
+        dxDrawLine(x0, y0, x0 + w, y0, FRAME)
+        dxDrawLine(x0, y0 + h, x0 + w, y0 + h, FRAME)
+        dxDrawLine(x0, y0, x0, y0 + h, FRAME)
+        dxDrawLine(x0 + w, y0, x0 + w, y0 + h, FRAME)
+        drawLamps(s, shot, powered, glow, now)
+        drawTacho(powered, glow)
+        drawVolts(volts, powered, glow)
+    end
+
+    -- dev preview: overrides (a table of state fields: battery, bay, engine, lights, health, fuel, maxFuel, tyres)
+    -- replace the vehicle's own until cleared with false (nil keeps them); kind "crank" | "stall" with a code plays
+    -- that performance on the vehicle driven, as if vehicles had sent it
+    function M.preview(overrides, kind, code)
+        if overrides == false then
+            preview = nil
+        elseif type(overrides) == "table" then
+            preview = overrides
+        end
+        if kind == "crank" or kind == "stall" then
+            perform(kind, getPedOccupiedVehicle(localPlayer), code)
+        end
+        return true
+    end
+
+    return M
+end
