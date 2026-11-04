@@ -1,7 +1,10 @@
 <meta>
     <info author="scavengesurvive-mta" type="script" name="logs" description="Structured game log, batched and pushed to Loki" version="0.1.0"/>
     <min_mta_version server="1.6.0"/>
+    <script src="shared/events.lua" type="shared"/>
     <script src="server/main.lua" type="server"/>
+    <script src="server/client.lua" type="server"/>
+    <script src="client/main.lua" type="client"/>
     <file src="shared/logic/batch.lua"/>
     <export function="write" type="server"/>
     <settings>
