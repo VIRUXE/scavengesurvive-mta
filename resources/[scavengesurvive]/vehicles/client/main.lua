@@ -166,6 +166,28 @@ function isBodyPart(uname)
     return bodyparts.partOf(uname) ~= nil
 end
 
+-- A held part can be fitted only at its own empty slot, within the same reach as the server action.
+function canInstallBodyPart(vehicle, uname)
+    if not isElement(vehicle) then
+        return false
+    end
+    local model, slot = bodyparts.partOf(uname)
+    if model ~= getElementModel(vehicle) or not slot then
+        return false
+    end
+    local px, py, pz = getElementPosition(localPlayer)
+    local m = getElementMatrix(vehicle)
+    local dx, dy, dz = px - m[4][1], py - m[4][2], pz - m[4][3]
+    local lx = dx * m[1][1] + dy * m[1][2] + dz * m[1][3]
+    local ly = dx * m[2][1] + dy * m[2][2] + dz * m[2][3]
+    local lz = dx * m[3][1] + dy * m[3][2] + dz * m[3][3]
+    if math.abs(lz) >= 2 or (lx - slot.x) ^ 2 + (ly - slot.y) ^ 2 > bodyparts.REACH ^ 2 then
+        return false
+    end
+    local value = slot.door and getVehicleDoorState(vehicle, slot.door) or getVehiclePanelState(vehicle, slot.panel)
+    return bodyparts.condition(slot, value) == "missing"
+end
+
 -- export: the body-part slot of `vehicle` nearest the local player within reach, its condition
 -- ("good" | "bad" | "missing") and whether it is only fitted loose; nil when the model has no slots or none is in reach
 function bodyPartSlot(vehicle)

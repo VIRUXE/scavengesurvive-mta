@@ -346,6 +346,22 @@ local function bodyPartHint(held)
     return nil
 end
 
+local function installPartHint(held)
+    if not held or not exports.vehicles:isBodyPart(held.uname) then
+        return false
+    end
+    local px, py, pz = getElementPosition(localPlayer)
+    local nearVeh, nearDist = nil, 5.5
+    for _, veh in ipairs(getElementsByType("vehicle", root, true)) do
+        local vx, vy, vz = getElementPosition(veh)
+        local dist = getDistanceBetweenPoints3D(px, py, pz, vx, vy, vz)
+        if dist < nearDist then
+            nearVeh, nearDist = veh, dist
+        end
+    end
+    return nearVeh and exports.vehicles:canInstallBodyPart(nearVeh, held.uname) or false
+end
+
 local function drawKeyActions(driver)
     local held = state.held
     local isCalibreWep = held and held.category == "weapon" and held.calibre ~= nil and not held.liquid or false
@@ -365,6 +381,7 @@ local function drawKeyActions(driver)
         nearContainer = exports.items:nearbyContainerItem() ~= false,
         carmour = carmourHint(held),
         bodyPart = bodyPartHint(held),
+        installPart = installPartHint(held),
         cuffedNearby = not held and hasCuffedPlayerNearby() or false,
         hasHolster = getElementData(localPlayer, "items.holster") ~= false,
         supports = SUPPORTS,

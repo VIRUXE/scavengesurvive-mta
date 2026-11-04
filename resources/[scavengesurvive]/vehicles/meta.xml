@@ -53,4 +53,5 @@
     <export function="nearbyGas" type="client"/>
     <export function="bodyPartSlot" type="client"/>
     <export function="isBodyPart" type="client"/>
+    <export function="canInstallBodyPart" type="client"/>
 </meta>

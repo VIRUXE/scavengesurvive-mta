@@ -18,9 +18,12 @@ M.SPECIAL = {
     FishRod = "Cast line", -- #141
 }
 
+M.BODY_PARTS = {}
 for _, part in ipairs({ "Tailgate", "LeftDoor", "RightDoor", "Hood", "FrontBumper", "RearBumper" }) do
     M.SPECIAL["Bobcat" .. part .. "Good"] = "Install Bobcat body part"
     M.SPECIAL["Bobcat" .. part .. "Bad"] = "Install Bobcat body part"
+    M.BODY_PARTS["Bobcat" .. part .. "Good"] = true
+    M.BODY_PARTS["Bobcat" .. part .. "Bad"] = true
 end
 
 -- The interact verb next to a landed crate, by the loot resource's crate kind.
@@ -32,6 +35,7 @@ M.CRATES = { supply = "Open supply crate", cache = "Open weapon cache" }
 --   nearFeature ("ladder" / "zipline" / "ladder_on" / "zipline_on" / "button:<label>"), nearCrate ("supply" / "cache"),
 --   nearDoor ("open" / "closed" / "locked": a walk-in vehicle door in reach, the towable Airstream's),
 --   bodyPart ("Remove Left Door" / "Tighten Left Door": a Wrench in hand at a vehicle body part that is still on),
+--   installPart (a held body part is at its matching empty vehicle slot),
 --   held = false | { uname, category, isWeapon },
 --   nearCooker,                           -- uncooked food in hand next to a campfire or barbecue (#95): "Cook"
 --   nearMachine,                          -- a machine in reach (#145): "Access machine" / "(Hold) Machine menu"
@@ -147,7 +151,7 @@ function M.lines(ctx, keys)
         end
         return out
     end
-    if M.SPECIAL[h.uname] then
+    if M.SPECIAL[h.uname] and (not M.BODY_PARTS[h.uname] or ctx.installPart) then
         add("interact", M.SPECIAL[h.uname], "special")
     elseif h.category == "food" then
         add("interact", ctx.nearCooker and "Cook" or "Eat", "eat")
