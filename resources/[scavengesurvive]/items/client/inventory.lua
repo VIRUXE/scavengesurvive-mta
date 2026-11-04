@@ -424,6 +424,11 @@ return function(ctx)
         exports.ui:listOpen("inventory", title, rows)
     end
 
+    -- Equip and Use close the dialog; the server answers each with a refreshed inventory (inventoryOpened), which would
+    -- reopen it, so refreshes inside this window only update `last`.
+    local CLOSE_QUIET_MS = 1500
+    local quietUntil = 0
+
     addEventHandler("inventoryOpened", root, function(p)
         if p.trunk and (not last or p.trunkContainerId ~= last.trunkContainerId) then
             view = "trunk"
@@ -431,6 +436,9 @@ return function(ctx)
         last = p
         if not p.trunk and view == "trunk" then
             view = "inventory"
+        end
+        if getTickCount() < quietUntil then
+            return
         end
         open(p)
     end)
@@ -462,8 +470,12 @@ return function(ctx)
             end
         elseif actionId == "take" then
             triggerServerEvent("itemTakeRequested", localPlayer, rowId)
+            quietUntil = getTickCount() + CLOSE_QUIET_MS
+            exports.ui:listClose()
         elseif actionId == "use" then
             triggerServerEvent("itemUseRequested", localPlayer, rowId)
+            quietUntil = getTickCount() + CLOSE_QUIET_MS
+            exports.ui:listClose()
         elseif actionId == "wear" then
             triggerServerEvent("itemWearRequested", localPlayer, rowId)
         elseif actionId == "move:bag" then
