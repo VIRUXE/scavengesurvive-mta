@@ -1,5 +1,6 @@
 local db = loadstring(exports.lib:getModule("db"), "=lib/db.lua")()
 local net = loadstring(exports.lib:getModule("net"), "=lib/net.lua")()
+local log = loadstring(exports.lib:getModule("log"), "=lib/log.lua")()
 local ready = false
 
 local function loadFile(path, chunkName)
@@ -49,14 +50,30 @@ local function allowed(p)
     return ok and (tonumber(level) or 0) > 0
 end
 
+-- Every dev command is an unaudited state change on a shared server (the item-dupe path), so each use is a warn line;
+-- a refused one carries ok = false.
+local function logCommand(p, name, args, denied, via)
+    log.event("dev.commandUsed", {
+        actor = isElement(p) and getElementType(p) == "player" and p or "Console",
+        command = name,
+        args = args ~= "" and args or nil,
+        via = via,
+        ok = not denied,
+        code = denied and "NOT_ALLOWED" or nil,
+    }, "warn")
+end
+
 local function command(name, fn, consoleOk)
     addCommandHandler(name, function(p, _, ...)
         if getElementType(p) ~= "player" and not consoleOk then
             return say(p, "/%s is player-only", name)
         end
+        local args = table.concat({ ... }, " ")
         if not allowed(p) then
+            logCommand(p, name, args, true)
             return say(p, "not allowed")
         end
+        logCommand(p, name, args, false)
         fn(p, ...)
     end)
 end
@@ -167,9 +184,12 @@ local function itemCommand(name, fn)
         if getElementType(p) ~= "player" then
             return say(p, "/%s is player-only", name)
         end
+        local args = table.concat({ ... }, " ")
         if not isItemSpawnAllowed(p) then
+            logCommand(p, name, args, true)
             return say(p, "not allowed")
         end
+        logCommand(p, name, args, false)
         fn(p, ...)
     end)
 end
@@ -248,9 +268,12 @@ net.handler("devItemSpawnRequested", function(player, uname, spec, values)
     local function refuse(text)
         triggerClientEvent(player, "devItemSpawnAnswered", player, false, text)
     end
+    local pickerArgs = tostring(uname) .. (type(spec) == "string" and spec ~= "" and (" " .. spec) or "")
     if not isItemSpawnAllowed(player) then
+        logCommand(player, "additem", pickerArgs, true, "picker")
         return refuse("not allowed")
     end
+    logCommand(player, "additem", pickerArgs, false, "picker")
     if not ready then
         return refuse("db not connected")
     end
@@ -460,6 +483,7 @@ end
 
 function rcon(line)
     local verb, rest = tostring(line or ""):match("^%s*(%S+)%s*(.-)%s*$")
+    log.event("dev.commandUsed", { actor = "rcon", command = "rcon", verb = verb, args = tostring(line or "") }, "warn")
     local out, ok = {}, true
     local function put(fmt, ...)
         out[#out + 1] = string.format(fmt, ...)

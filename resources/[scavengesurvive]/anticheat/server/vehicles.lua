@@ -68,7 +68,7 @@ return function(ctx)
         local reason = string.format("Teleported a %s %.0fm", name, jump)
         local info = string.format("%.1f, %.1f, %.1f", x, y, z)
         ctx.report(culprit, "VTP", reason, info)
-        ctx.kick(culprit, reason)
+        ctx.kick(culprit, reason, "VTP")
     end
 
     function M.update()
