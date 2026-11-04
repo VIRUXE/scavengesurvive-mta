@@ -826,6 +826,66 @@ BEGIN
   END IF;
 END//
 
+CREATE OR REPLACE PROCEDURE `container_items_destroy`(IN p_container_id INT, IN p_item_ids JSON)
+BEGIN
+  
+  
+  
+  DECLARE v_lock INT DEFAULT NULL;
+  DECLARE v_want INT DEFAULT 0;
+  DECLARE v_have INT DEFAULT 0;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
+  SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+  START TRANSACTION;
+  
+  SELECT COUNT(DISTINCT j.id) INTO v_want FROM JSON_TABLE(p_item_ids, '$[*]' COLUMNS (id INT PATH '$')) j;
+  SELECT COUNT(*) INTO v_have FROM items
+    WHERE container_id = p_container_id
+      AND id IN (SELECT j.id FROM JSON_TABLE(p_item_ids, '$[*]' COLUMNS (id INT PATH '$')) j)
+    FOR UPDATE;
+  SELECT id INTO v_lock FROM containers WHERE id = p_container_id FOR UPDATE;
+  IF v_lock IS NULL OR v_want = 0 OR v_have <> v_want THEN
+    ROLLBACK;
+    SELECT 0 AS ok, 'CHANGED' AS code, NULL AS payload;
+  ELSE
+    DELETE FROM items
+      WHERE container_id = p_container_id
+        AND id IN (SELECT j.id FROM JSON_TABLE(p_item_ids, '$[*]' COLUMNS (id INT PATH '$')) j);
+    
+    SET @container_items_destroy_slot = -1;
+    UPDATE items SET slot = (@container_items_destroy_slot := @container_items_destroy_slot + 1)
+      WHERE container_id = p_container_id ORDER BY slot ASC;
+    COMMIT;
+    SELECT 1 AS ok, 'OK' AS code, JSON_OBJECT('destroyed', CAST(v_have AS SIGNED)) AS payload;
+  END IF;
+END//
+
+CREATE OR REPLACE PROCEDURE `container_item_destroy`(IN p_item_id INT)
+BEGIN
+  
+  
+  DECLARE v_cont INT DEFAULT NULL;
+  DECLARE v_slot INT DEFAULT NULL;
+  DECLARE v_lock INT DEFAULT NULL;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
+  SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+  START TRANSACTION;
+  
+  SELECT container_id, slot INTO v_cont, v_slot FROM items WHERE id = p_item_id FOR UPDATE;
+  IF v_cont IS NOT NULL THEN
+    SELECT id INTO v_lock FROM containers WHERE id = v_cont FOR UPDATE;
+  END IF;
+  IF v_cont IS NULL THEN
+    ROLLBACK;
+    SELECT 0 AS ok, 'NOT_IN_CONTAINER' AS code, NULL AS payload;
+  ELSE
+    DELETE FROM items WHERE id = p_item_id;
+    UPDATE items SET slot = slot - 1 WHERE container_id = v_cont AND slot > v_slot ORDER BY slot ASC;
+    COMMIT;
+    SELECT 1 AS ok, 'OK' AS code, JSON_OBJECT('container_id', CAST(v_cont AS SIGNED)) AS payload;
+  END IF;
+END//
+
 CREATE OR REPLACE PROCEDURE `container_move`(
   IN p_item_id INT,
   IN p_char_id INT,
@@ -938,8 +998,63 @@ BEGIN
   END IF;
 END//
 
+CREATE OR REPLACE PROCEDURE `container_pickup`(IN p_item_id INT, IN p_char_id INT, IN p_container_id INT)
+BEGIN
+  
+  
+  DECLARE v_alive INT DEFAULT 0;
+  DECLARE v_held INT DEFAULT 0;
+  DECLARE v_owner_item INT DEFAULT NULL;
+  DECLARE v_inside INT DEFAULT 0;
+  DECLARE v_lock INT DEFAULT NULL;
+  DECLARE v_rows INT DEFAULT 0;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
+  SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+  START TRANSACTION;
+  SELECT COUNT(*) INTO v_alive FROM characters WHERE id = p_char_id AND alive = 1 FOR UPDATE;
+  SELECT COUNT(*) INTO v_held FROM items WHERE holder_char_id = p_char_id AND holder_kind = 'held' FOR UPDATE;
+  
+  SELECT id INTO v_lock FROM items WHERE id = p_item_id AND x IS NOT NULL FOR UPDATE;
+  SELECT owner_item_id INTO v_owner_item FROM containers WHERE id = p_container_id FOR UPDATE;
+  SELECT COUNT(*) INTO v_inside FROM items WHERE container_id = p_container_id FOR UPDATE;
+  IF v_alive = 0 THEN
+    ROLLBACK;
+    SELECT 0 AS ok, 'NO_CHARACTER' AS code, NULL AS payload;
+  ELSEIF v_held > 0 THEN
+    ROLLBACK;
+    SELECT 0 AS ok, 'HANDS_FULL' AS code, NULL AS payload;
+  ELSEIF NOT (v_owner_item <=> p_item_id) THEN
+    ROLLBACK;
+    SELECT 0 AS ok, 'NOT_IN_WORLD' AS code, NULL AS payload;
+  ELSEIF v_inside > 0 THEN
+    ROLLBACK;
+    SELECT 0 AS ok, 'CONTAINER_NOT_EMPTY' AS code, NULL AS payload;
+  ELSE
+    UPDATE items SET holder_char_id = p_char_id, holder_kind = 'held', x = NULL, y = NULL, z = NULL, rz = NULL,
+      interior = NULL, dimension = NULL, loot_spawn_id = NULL, despawn_at = NULL
+      WHERE id = p_item_id AND x IS NOT NULL;
+    SET v_rows = ROW_COUNT();
+    IF v_rows = 0 THEN
+      ROLLBACK;
+      SELECT 0 AS ok, 'NOT_IN_WORLD' AS code, NULL AS payload;
+    ELSE
+      DELETE FROM containers WHERE id = p_container_id;
+      COMMIT;
+      SELECT 1 AS ok, 'OK' AS code,
+        (SELECT JSON_OBJECT(
+          'item_id', CAST(i.id AS SIGNED),
+          'uname', i.type_uname,
+          'hp', CAST(i.hitpoints AS SIGNED),
+          'data', CONCAT('', i.data)
+        ) FROM items i WHERE i.id = p_item_id) AS payload;
+    END IF;
+  END IF;
+END//
+
 CREATE OR REPLACE PROCEDURE `container_put`(IN p_item_id INT, IN p_char_id INT, IN p_container_id INT)
 BEGIN
+  
+  
   DECLARE v_owner_char INT DEFAULT NULL;
   DECLARE v_owner_item INT DEFAULT NULL;
   DECLARE v_owner_vehicle INT DEFAULT NULL;
@@ -968,7 +1083,13 @@ BEGIN
   ELSEIF v_owner_item = p_item_id THEN
     ROLLBACK;
     SELECT 0 AS ok, 'SELF_CONTAINMENT' AS code, NULL AS payload;
-  ELSEIF NOT (v_owner_char <=> p_char_id OR v_owner_holder <=> p_char_id OR v_owner_vehicle IS NOT NULL OR v_kind IN ('safebox', 'tent', 'supply') OR (v_kind = 'bag' AND v_owner_item IS NOT NULL AND v_owner_holder IS NULL AND v_owner_container IS NULL)) THEN
+  ELSEIF NOT (
+    v_owner_char <=> p_char_id
+    OR v_owner_holder <=> p_char_id
+    OR v_owner_vehicle IS NOT NULL
+    OR v_kind = 'supply'
+    OR (v_kind IN ('safebox', 'tent', 'bag') AND v_owner_item IS NOT NULL AND v_owner_holder IS NULL AND v_owner_container IS NULL)
+  ) THEN
     ROLLBACK;
     SELECT 0 AS ok, 'NOT_OWNER' AS code, NULL AS payload;
   ELSE
@@ -985,33 +1106,41 @@ BEGIN
   END IF;
 END//
 
-CREATE OR REPLACE PROCEDURE `container_take`(IN p_item_id INT, IN p_char_id INT)
+CREATE OR REPLACE PROCEDURE `container_take`(IN p_item_id INT, IN p_char_id INT, IN p_open_container_id INT DEFAULT NULL)
 BEGIN
+  
+  
+  
+  
   DECLARE v_cont INT DEFAULT NULL;
   DECLARE v_slot INT DEFAULT NULL;
   DECLARE v_owner_char INT DEFAULT NULL;
   DECLARE v_owner_item INT DEFAULT NULL;
-  DECLARE v_owner_vehicle INT DEFAULT NULL;
   DECLARE v_owner_holder INT DEFAULT NULL;
-  DECLARE v_owner_container INT DEFAULT NULL;
-  DECLARE v_kind VARCHAR(16) DEFAULT NULL;
   DECLARE v_held INT DEFAULT 0;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
   SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
   START TRANSACTION;
+  
   SELECT container_id, slot INTO v_cont, v_slot FROM items WHERE id = p_item_id FOR UPDATE;
+  IF v_cont IS NOT NULL THEN
+    SELECT owner_char_id, owner_item_id INTO v_owner_char, v_owner_item FROM containers WHERE id = v_cont FOR UPDATE;
+  END IF;
   IF v_cont IS NULL THEN
     ROLLBACK;
     SELECT 0 AS ok, 'NOT_IN_CONTAINER' AS code, NULL AS payload;
   ELSE
-    SELECT owner_char_id, owner_item_id, owner_vehicle_id, kind
-      INTO v_owner_char, v_owner_item, v_owner_vehicle, v_kind
-      FROM containers WHERE id = v_cont FOR UPDATE;
     IF v_owner_item IS NOT NULL THEN
-      SELECT holder_char_id, container_id INTO v_owner_holder, v_owner_container FROM items WHERE id = v_owner_item;
+      SELECT holder_char_id INTO v_owner_holder FROM items WHERE id = v_owner_item;
     END IF;
     SELECT COUNT(*) INTO v_held FROM items WHERE holder_char_id = p_char_id AND holder_kind = 'held' FOR UPDATE;
-    IF NOT (v_owner_char <=> p_char_id OR v_owner_holder <=> p_char_id OR v_owner_vehicle IS NOT NULL OR v_kind IN ('safebox', 'tent', 'supply') OR (v_kind = 'bag' AND v_owner_item IS NOT NULL AND v_owner_holder IS NULL AND v_owner_container IS NULL)) THEN
+    IF NOT (
+      p_char_id IS NOT NULL AND (
+        v_owner_char <=> p_char_id
+        OR v_owner_holder <=> p_char_id
+        OR (p_open_container_id IS NOT NULL AND v_cont <=> p_open_container_id AND v_owner_holder IS NULL)
+      )
+    ) THEN
       ROLLBACK;
       SELECT 0 AS ok, 'NOT_OWNER' AS code, NULL AS payload;
     ELSEIF v_held > 0 THEN
@@ -1021,7 +1150,14 @@ BEGIN
       UPDATE items SET container_id = NULL, slot = NULL, holder_char_id = p_char_id, holder_kind = 'held' WHERE id = p_item_id;
       UPDATE items SET slot = slot - 1 WHERE container_id = v_cont AND slot > v_slot ORDER BY slot ASC;
       COMMIT;
-      SELECT 1 AS ok, 'OK' AS code, JSON_OBJECT('item_id', CAST(p_item_id AS SIGNED), 'container_id', CAST(v_cont AS SIGNED)) AS payload;
+      SELECT 1 AS ok, 'OK' AS code,
+        (SELECT JSON_OBJECT(
+          'item_id', CAST(i.id AS SIGNED),
+          'container_id', CAST(v_cont AS SIGNED),
+          'uname', i.type_uname,
+          'hp', CAST(i.hitpoints AS SIGNED),
+          'data', CONCAT('', i.data)
+        ) FROM items i WHERE i.id = p_item_id) AS payload;
     END IF;
   END IF;
 END//
@@ -2015,6 +2151,58 @@ BEGIN
     SELECT 1 AS ok, 'OK' AS code,
            JSON_OBJECT('warnings', CAST(v_warnings AS SIGNED), 'banned', CAST(v_ban_id > 0 AS SIGNED),
                        'ban_id', CAST(v_ban_id AS SIGNED)) AS payload;
+  END IF;
+END//
+
+CREATE OR REPLACE PROCEDURE `tent_pack`(IN p_item_id INT)
+BEGIN
+  
+  
+  DECLARE v_type VARCHAR(32) DEFAULT NULL;
+  DECLARE v_cont INT DEFAULT NULL;
+  DECLARE v_inside INT DEFAULT 0;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
+  SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+  START TRANSACTION;
+  
+  SELECT type_uname INTO v_type FROM items WHERE id = p_item_id AND x IS NOT NULL FOR UPDATE;
+  SELECT id INTO v_cont FROM containers WHERE owner_item_id = p_item_id FOR UPDATE;
+  IF v_cont IS NOT NULL THEN
+    SELECT COUNT(*) INTO v_inside FROM items WHERE container_id = v_cont FOR UPDATE;
+  END IF;
+  IF NOT (v_type <=> 'TentPack') THEN
+    ROLLBACK;
+    SELECT 0 AS ok, 'NOT_IN_WORLD' AS code, NULL AS payload;
+  ELSEIF v_inside > 0 THEN
+    ROLLBACK;
+    SELECT 0 AS ok, 'TENT_NOT_EMPTY' AS code, NULL AS payload;
+  ELSE
+    IF v_cont IS NOT NULL THEN
+      DELETE FROM containers WHERE id = v_cont;
+    END IF;
+    UPDATE items SET data = NULL WHERE id = p_item_id;
+    COMMIT;
+    SELECT 1 AS ok, 'OK' AS code, JSON_OBJECT('container_id', CAST(v_cont AS SIGNED)) AS payload;
+  END IF;
+END//
+
+CREATE OR REPLACE PROCEDURE `tent_pitch`(IN p_item_id INT)
+BEGIN
+  
+  DECLARE v_type VARCHAR(32) DEFAULT NULL;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
+  SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+  START TRANSACTION;
+  SELECT type_uname INTO v_type FROM items WHERE id = p_item_id AND x IS NOT NULL FOR UPDATE;
+  IF NOT (v_type <=> 'TentPack') THEN
+    ROLLBACK;
+    SELECT 0 AS ok, 'NOT_IN_WORLD' AS code, NULL AS payload;
+  ELSE
+    UPDATE items SET data = '{"pitched":true}' WHERE id = p_item_id;
+    INSERT INTO containers (kind, size, owner_item_id) VALUES ('tent', 16, p_item_id)
+      ON DUPLICATE KEY UPDATE size = 16;
+    COMMIT;
+    SELECT 1 AS ok, 'OK' AS code, NULL AS payload;
   END IF;
 END//
 

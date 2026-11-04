@@ -490,17 +490,13 @@ local function tryWorkbenchCraft(player, _cid, held, px, py, onMiss)
                     for i, it in ipairs(now) do
                         ids[i] = string.format("%d", it.id)
                     end
-                    local list = table.concat(ids, ",")
-                    local clear = "DELETE FROM items WHERE container_id = ? AND id IN ("
-                        .. list
-                        .. ") AND (SELECT COUNT(*) FROM items b WHERE b.container_id = ? AND b.id IN ("
-                        .. list
-                        .. ")) = ?"
-                    db.exec(clear, { contId, contId, #ids }, function(ok, c4, affected)
+                    -- a bare JSON array (toJSON would wrap it in another): container_items_destroy reads $[*]
+                    local idsJson = "[" .. table.concat(ids, ",") .. "]"
+                    db.call("container_items_destroy", { contId, idsJson }, function(cleared, c4)
                         if not isElement(c4.player) then
                             return
                         end
-                        if not ok or (tonumber(affected) or 0) ~= #ids then
+                        if not cleared or not cleared.ok then
                             return toast(c4.player, "NO_RECIPE")
                         end
                         exports.items:containerChanged(contId) -- whoever else has the bench open sees it empty

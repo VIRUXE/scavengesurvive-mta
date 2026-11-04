@@ -572,24 +572,13 @@ function destroyContainerItem(itemId)
     if not itemId then
         return false
     end
-    db.one("SELECT container_id, slot FROM items WHERE id = ?", { itemId }, function(row)
-        if not row or not row.container_id then
-            return -- taken out meanwhile (another viewer): it is someone's held item now, not ours to delete
+    -- container_item_destroy: only while it still lies in a container (a viewer who took it meanwhile keeps it),
+    -- and the slots after it close up, in one transaction
+    db.call("container_item_destroy", { itemId }, function(res)
+        local contId = res and res.ok and res.payload and res.payload.container_id
+        if contId then
+            containers.containerChanged(contId) -- whoever has it open sees it gone
         end
-        local contId, slot = row.container_id, row.slot
-        -- only while it still lies in that container: a take queued between the read and here keeps its item
-        local sql = "DELETE FROM items WHERE id = ? AND container_id = ?"
-        db.exec(sql, { itemId, contId }, function(ok, _, affected)
-            if ok and (tonumber(affected) or 0) > 0 and slot then
-                db.exec(
-                    "UPDATE items SET slot = slot - 1 WHERE container_id = ? AND slot > ? ORDER BY slot ASC",
-                    { contId, slot },
-                    function()
-                        containers.containerChanged(contId) -- whoever has it open sees it gone
-                    end
-                )
-            end
-        end)
     end)
     return true
 end
