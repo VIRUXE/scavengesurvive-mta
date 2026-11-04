@@ -62,6 +62,7 @@
     <export function="closeTrunk" type="server"/>
     <export function="trunkViewers" type="server"/>
     <export function="closeContainerViewers" type="server"/>
+    <export function="getOpenContainerId" type="server"/>
     <export function="openWorldContainer" type="server"/>
     <export function="openSupplyContainer" type="server"/>
     <export function="closeContainer" type="server"/>

@@ -651,6 +651,11 @@ function openWorldContainer(player, itemRow)
     return true
 end
 
+-- export: the side container the player has open and still in reach (trunk, box, tent, crate), or false
+function getOpenContainerId(player)
+    return isElement(player) and containers.openContainerId(player) or false
+end
+
 -- export: the container is about to go (a supply crate replaced by the next drop): closes it for whoever has it open
 function closeContainerViewers(containerId)
     containers.closeViewers(containerId)

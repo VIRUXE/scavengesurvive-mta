@@ -217,9 +217,9 @@ return function(ctx)
                 end)
             end, { player = player })
         elseif target == "trunk" then
-            local cont = activeContainer[player]
-            if cont and cont.containerId then
-                return put(player, cid, item.id, cont.containerId, function()
+            local openId = M.openContainerId(player)
+            if openId then
+                return put(player, cid, item.id, openId, function()
                     toast(player, "CONTAINER_FULL")
                 end)
             end
@@ -242,9 +242,9 @@ return function(ctx)
             return parachuteRef.equip(player, item.id)
         end
 
-        local cont = activeContainer[player]
-        if cont and cont.containerId then
-            return put(player, cid, item.id, cont.containerId, function()
+        local openId = M.openContainerId(player)
+        if openId then
+            return put(player, cid, item.id, openId, function()
                 toast(player, "CONTAINER_FULL")
             end)
         end
@@ -774,17 +774,19 @@ return function(ctx)
             return toast(player, "HANDS_FULL")
         end
         local cont = activeContainer[player]
-        if not cont or cont.worldItemId ~= itemId then
+        if not cont or cont.worldItemId ~= itemId or not M.openContainerId(player) then
             return
         end
-        db.one("SELECT COUNT(*) AS cnt FROM items WHERE container_id = ?", { cont.containerId }, function(cntRow, c)
+        -- the emptiness check and the delete are one statement: another viewer putting something in at the same
+        -- moment either lands first (nothing is deleted) or finds the container gone, never cascaded away with it
+        local sql = "DELETE FROM containers WHERE id = ? AND NOT EXISTS (SELECT 1 FROM items WHERE container_id = ?)"
+        db.exec(sql, { cont.containerId, cont.containerId }, function(ok, c, affected)
             if not isElement(c.player) then
                 return
             end
-            if cntRow and (cntRow.cnt or 0) > 0 then
+            if not ok or (tonumber(affected) or 0) == 0 then
                 return toast(c.player, "CONTAINER_NOT_EMPTY")
             end
-            db.exec("DELETE FROM containers WHERE id = ?", { c.cont.containerId })
             db.call("item_pickup", { c.itemId, c.cid }, function(res, c2)
                 if not isElement(c2.player) then
                     return
@@ -816,7 +818,7 @@ return function(ctx)
                     toast(c2.player, res and res.code or "DB_ERROR")
                 end
             end, { player = c.player, itemId = c.itemId, cid = c.cid })
-        end, { player = player, cont = cont, itemId = itemId, cid = cid })
+        end, { player = player, itemId = itemId, cid = cid })
     end, { rate = 3 })
 
     -- Pitching and packing a TentPack. Reached from hands.lua (interact on the world item while holding a
@@ -917,20 +919,36 @@ return function(ctx)
                         if getDistanceBetweenPoints3D(curPx, curPy, curPz, rx, ry, rz) > 3.5 then
                             return
                         end
-                        db.exec("UPDATE items SET data = NULL WHERE id = ?", { itId })
-                        if cId then
-                            db.exec("DELETE FROM containers WHERE id = ?", { cId })
-                            closeViewers(function(cont)
-                                return cont.containerId == cId
-                            end)
-                        end
-                        if world then
-                            world.resendEverywhere(itId)
-                        end
-                        if refreshPlayer then
-                            refreshPlayer(pl)
-                        end
-                        toast(pl, "TENT_PACKED")
+                        -- someone may have opened it or put something in during the hold: the container (whatever
+                        -- its id by now) goes only while empty, and a tent that still holds something stays up
+                        db.exec(
+                            "DELETE FROM containers WHERE owner_item_id = ? "
+                                .. "AND NOT EXISTS (SELECT 1 FROM items i WHERE i.container_id = containers.id)",
+                            { itId },
+                            function(ok)
+                                if not ok then
+                                    return
+                                end
+                                db.one("SELECT id FROM containers WHERE owner_item_id = ?", { itId }, function(left, c3)
+                                    if left then
+                                        return isElement(c3.player) and toast(c3.player, "TENT_NOT_EMPTY")
+                                    end
+                                    db.exec("UPDATE items SET data = NULL WHERE id = ?", { itId })
+                                    closeViewers(function(cont)
+                                        return cont.worldItemId == itId or (cId and cont.containerId == cId)
+                                    end)
+                                    if world then
+                                        world.resendEverywhere(itId)
+                                    end
+                                    if isElement(c3.player) then
+                                        if refreshPlayer then
+                                            refreshPlayer(c3.player)
+                                        end
+                                        toast(c3.player, "TENT_PACKED")
+                                    end
+                                end, { player = pl })
+                            end
+                        )
                     end, 3000, 1, c.player, row.id, row.cont_id, row.x, row.y, row.z)
                 end
                 if row.cont_id then
@@ -971,6 +989,11 @@ return function(ctx)
         sendInventory(player, "opened")
     end, { rate = 3 })
 
+    -- an item in the character's inventory or worn bag, or in the side container they have open
+    local TAKE_REACH_SQL = "SELECT i.id FROM items i JOIN containers c ON c.id = i.container_id "
+        .. "LEFT JOIN items owner ON owner.id = c.owner_item_id "
+        .. "WHERE i.id = ? AND (c.owner_char_id = ? OR owner.holder_char_id = ? OR i.container_id = ?)"
+    local take
     net.handler("itemTakeRequested", function(player, itemId)
         local cid = charId(player)
         itemId = tonumber(itemId)
@@ -980,6 +1003,19 @@ return function(ctx)
         if state.held[player] then
             return toast(player, "HANDS_FULL")
         end
+        local openId = M.openContainerId(player)
+        db.one(TAKE_REACH_SQL, { itemId, cid, cid, openId or -1 }, function(reach, c0)
+            if not isElement(c0.player) then
+                return
+            end
+            if not reach then
+                return toast(c0.player, "NOT_IN_CONTAINER")
+            end
+            take(c0.player, cid, itemId)
+        end, { player = player })
+    end, { rate = 5 })
+
+    take = function(player, cid, itemId)
         db.call("container_take", { itemId, cid }, function(res, c)
             if not isElement(c.player) then
                 return
@@ -1002,7 +1038,7 @@ return function(ctx)
                 { player = c.player, itemId = c.itemId }
             )
         end, { player = player, itemId = itemId })
-    end, { rate = 5 })
+    end
 
     net.handler("itemContainerMoveRequested", function(player, itemId, target)
         local cid = charId(player)
