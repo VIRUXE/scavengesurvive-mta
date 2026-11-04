@@ -248,7 +248,7 @@ addEventHandler("onResourceStart", resourceRoot, function()
             })
             promptLang[p] = saved.account.lang or "en"
             resumedCountdowns[p] = tonumber(saved.whitelistEnds)
-            setElementData(p, LANG_KEY, saved.account.lang or "en", "local", "deny")
+            setElementData(p, LANG_KEY, saved.account.lang or "en", "broadcast", "deny")
             finishReauth(p)
         else
             setElementData(p, SESSION_KEY, false, "local", "deny")
@@ -433,7 +433,7 @@ local function admit(player, account, isNew, method)
     end
     session[player] = account
     saveSession(player)
-    setElementData(player, LANG_KEY, account.lang or "en", "local", "deny")
+    setElementData(player, LANG_KEY, account.lang or "en", "broadcast", "deny")
     promptMode[player] = nil
     applyAutoWhitelist(nil, player)
     local sql = "INSERT INTO connection_log (account_id, name, serial, ip) VALUES (?, ?, ?, ?)"
@@ -597,7 +597,7 @@ addCommandHandler("lang", function(player, _, code)
     end
     account.lang = code
     account.langChosen = true
-    setElementData(player, LANG_KEY, code, "local", "deny")
+    setElementData(player, LANG_KEY, code, "broadcast", "deny")
     db.exec("UPDATE accounts SET lang = ? WHERE id = ?", { code, account.id })
     outputChatBox(string.format(" >  Language set to %s.", code), player, 255, 255, 0)
     log.event("session.languageSet", { player = player, account_id = account.id, lang = code, via = "command" })
