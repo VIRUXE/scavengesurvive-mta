@@ -219,13 +219,18 @@ local function emit(kind, fields, level, quiet)
     if rank < cache.level then
         return
     end
-    local line, meta = log.build(level, resourceName, kind, fields)
+    -- a logging fault must never reach gameplay: build and send under pcall, the console gets the fault instead
+    local built, line, meta = pcall(log.build, level, resourceName, kind, fields)
+    if not built then
+        outputServerLog(string.format("[%s] log.build failed for %s: %s", resourceName, tostring(kind), tostring(line)))
+        return
+    end
     local running = sinkRunning()
     if not quiet and (rank >= LEVELS.warn or not running) then
         outputServerLog(string.format("[%s] %s %s", resourceName, kind, fields and fields.msg or line))
     end
     if running then
-        call(sink, "write", level, resourceName, kind, line, meta)
+        pcall(call, sink, "write", level, resourceName, kind, line, meta)
     end
 end
 
