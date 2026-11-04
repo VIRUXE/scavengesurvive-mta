@@ -579,7 +579,9 @@ function destroyContainerItem(itemId)
                 db.exec(
                     "UPDATE items SET slot = slot - 1 WHERE container_id = ? AND slot > ? ORDER BY slot ASC",
                     { contId, slot },
-                    function() end
+                    function()
+                        containers.containerChanged(contId) -- whoever has it open sees it gone
+                    end
                 )
             end
         end)
@@ -636,11 +638,27 @@ function closeTrunk(player)
     return true
 end
 
+-- export: how many players have this vehicle's trunk open (vehicles resource shuts the lid when none is left)
+function trunkViewers(vehicle)
+    return isElement(vehicle) and containers.trunkViewers(vehicle) or 0
+end
+
 function openWorldContainer(player, itemRow)
     if not isElement(player) or not itemRow then
         return false
     end
     containers.openWorldContainer(player, itemRow)
+    return true
+end
+
+-- export: the side container the player has open and still in reach (trunk, box, tent, crate), or false
+function getOpenContainerId(player)
+    return isElement(player) and containers.openContainerId(player) or false
+end
+
+-- export: the container is about to go (a supply crate replaced by the next drop): closes it for whoever has it open
+function closeContainerViewers(containerId)
+    containers.closeViewers(containerId)
     return true
 end
 

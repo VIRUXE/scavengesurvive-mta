@@ -1910,12 +1910,12 @@ end, { rate = 5 })
 
 net.handler("trunkCloseRequested", function(player)
     exports.items:closeTrunk(player)
-    -- find any vehicle near player whose trunk is open and close it
+    -- find any vehicle near player whose trunk is open and close it, unless someone else still has it open
     local px, py, pz = getElementPosition(player)
     for v in pairs(info) do
         if isElement(v) then
             local vx, vy, vz = getElementPosition(v)
-            if getDistanceBetweenPoints3D(px, py, pz, vx, vy, vz) < 7.0 then
+            if getDistanceBetweenPoints3D(px, py, pz, vx, vy, vz) < 7.0 and exports.items:trunkViewers(v) == 0 then
                 setVehicleDoorOpenRatio(v, 1, 0, 500)
             end
         end

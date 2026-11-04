@@ -115,9 +115,14 @@ net.handler("combineRequested", function(player, invItemId)
     if not held then
         return toast(player, "NOT_HELD")
     end
+    -- only an item the character can reach: their inventory, their worn bag, or the side container they have open
+    -- (a stale list, or a forged id, must not consume an item in someone else's inventory or a trunk across the map)
+    local openId = exports.items:getOpenContainerId(player) or -1
     db.one(
-        "SELECT id, type_uname AS uname, container_id, data FROM items WHERE id = ? AND container_id IS NOT NULL",
-        { invItemId },
+        "SELECT i.id, i.type_uname AS uname, i.container_id, i.data FROM items i "
+            .. "JOIN containers c ON c.id = i.container_id LEFT JOIN items owner ON owner.id = c.owner_item_id "
+            .. "WHERE i.id = ? AND (c.owner_char_id = ? OR owner.holder_char_id = ? OR i.container_id = ?)",
+        { invItemId, cid, cid, openId },
         function(row, c)
             if not isElement(c.player) or not row then
                 return

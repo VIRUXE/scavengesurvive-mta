@@ -74,8 +74,8 @@ function listOpen(listId, title, rows, buttons)
     return list.open(listId, title, rows, buttons)
 end
 
-function listUpdate(listId, rows)
-    return list.update(listId, rows)
+function listUpdate(listId, rows, title)
+    return list.update(listId, rows, title)
 end
 
 function listClose()

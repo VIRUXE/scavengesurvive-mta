@@ -30,12 +30,45 @@ return function(ctx)
         return true
     end
 
-    function M.update(listId, rows)
+    -- new rows (and title) for the list already open, keeping the selection and scroll; the actions dialog stays
+    -- open while its row is still there. false when listId is not the open list.
+    function M.update(listId, rows, title)
         if not state or state.base.id ~= listId then
             return false
         end
-        dialog.setRows(state.base, rows)
-        state.options = nil
+        local base = state.base
+        local selectedId = base.rows[base.selected] and base.rows[base.selected].id
+        if title then
+            base.title = title
+        end
+        dialog.setRows(base, rows)
+        if selectedId ~= nil and base.rows[base.selected] and base.rows[base.selected].id ~= selectedId then
+            for i, r in ipairs(base.rows) do
+                if r.id == selectedId and not r.empty then
+                    base.selected = i
+                    break
+                end
+            end
+        end
+        local opts = state.options
+        if opts then
+            local row
+            for _, r in ipairs(base.rows) do
+                if r.id == opts.rowId then
+                    row = r
+                    break
+                end
+            end
+            if row and row.actions and #row.actions > 0 then
+                local optRows = {}
+                for _, a in ipairs(row.actions) do
+                    optRows[#optRows + 1] = { id = a.id, label = a.label }
+                end
+                dialog.setRows(opts, optRows)
+            else
+                state.options = nil
+            end
+        end
         return true
     end
 
