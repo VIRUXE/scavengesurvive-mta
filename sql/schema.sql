@@ -515,8 +515,8 @@ END//
 
 CREATE OR REPLACE PROCEDURE `carmour_attach`(IN p_vehicle_id INT, IN p_item_id INT, IN p_char_id INT, IN p_carmour LONGTEXT)
 BEGIN
-  
-  
+
+
   DECLARE v_item INT DEFAULT NULL;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
   SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
@@ -538,9 +538,9 @@ END//
 
 CREATE OR REPLACE PROCEDURE `carmour_detach`(IN p_vehicle_id INT, IN p_carmour LONGTEXT, IN p_items JSON)
 BEGIN
-  
-  
-  
+
+
+
   DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
   SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
   START TRANSACTION;
@@ -605,9 +605,9 @@ END//
 
 CREATE OR REPLACE PROCEDURE `carmour_weld`(IN p_vehicle_id INT, IN p_tank_id INT, IN p_carmour LONGTEXT, IN p_kg DECIMAL(4,1))
 BEGIN
-  
-  
-  
+
+
+
   DECLARE v_tank_data LONGTEXT DEFAULT NULL;
   DECLARE v_found INT DEFAULT 0;
   DECLARE v_gas DECIMAL(5,1) DEFAULT 0;
@@ -619,7 +619,7 @@ BEGIN
     WHERE id = p_tank_id AND type_uname IN ('Canister', 'GasBottle') AND x IS NOT NULL AND container_id IS NULL
       AND holder_char_id IS NULL
     FOR UPDATE;
-  
+
   SET v_gas = IFNULL(CAST(COALESCE(JSON_VALUE(v_tank_data, '$.gas'), JSON_VALUE(v_tank_data, '$[0].gas')) AS DECIMAL(5,1)),
     IF(v_type = 'GasBottle', 11.0, 20.0));
   IF v_found = 0 OR v_gas < p_kg THEN
@@ -813,7 +813,7 @@ BEGIN
     ROLLBACK;
     SELECT 0 AS ok, 'NOT_OWNED' AS code, NULL AS payload;
   ELSE
-    
+
     UPDATE items SET data = JSON_OBJECT('skin', CAST(v_old AS SIGNED)) WHERE id = p_item_id;
     UPDATE characters SET skin = p_new_skin WHERE id = p_char_id;
     COMMIT;
@@ -828,16 +828,16 @@ END//
 
 CREATE OR REPLACE PROCEDURE `container_items_destroy`(IN p_container_id INT, IN p_item_ids JSON)
 BEGIN
-  
-  
-  
+
+
+
   DECLARE v_lock INT DEFAULT NULL;
   DECLARE v_want INT DEFAULT 0;
   DECLARE v_have INT DEFAULT 0;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
   SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
   START TRANSACTION;
-  
+
   SELECT COUNT(DISTINCT j.id) INTO v_want FROM JSON_TABLE(p_item_ids, '$[*]' COLUMNS (id INT PATH '$')) j;
   SELECT COUNT(*) INTO v_have FROM items
     WHERE container_id = p_container_id
@@ -851,7 +851,7 @@ BEGIN
     DELETE FROM items
       WHERE container_id = p_container_id
         AND id IN (SELECT j.id FROM JSON_TABLE(p_item_ids, '$[*]' COLUMNS (id INT PATH '$')) j);
-    
+
     SET @container_items_destroy_slot = -1;
     UPDATE items SET slot = (@container_items_destroy_slot := @container_items_destroy_slot + 1)
       WHERE container_id = p_container_id ORDER BY slot ASC;
@@ -862,15 +862,15 @@ END//
 
 CREATE OR REPLACE PROCEDURE `container_item_destroy`(IN p_item_id INT)
 BEGIN
-  
-  
+
+
   DECLARE v_cont INT DEFAULT NULL;
   DECLARE v_slot INT DEFAULT NULL;
   DECLARE v_lock INT DEFAULT NULL;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
   SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
   START TRANSACTION;
-  
+
   SELECT container_id, slot INTO v_cont, v_slot FROM items WHERE id = p_item_id FOR UPDATE;
   IF v_cont IS NOT NULL THEN
     SELECT id INTO v_lock FROM containers WHERE id = v_cont FOR UPDATE;
@@ -1005,8 +1005,8 @@ END//
 
 CREATE OR REPLACE PROCEDURE `container_pickup`(IN p_item_id INT, IN p_char_id INT, IN p_container_id INT)
 BEGIN
-  
-  
+
+
   DECLARE v_alive INT DEFAULT 0;
   DECLARE v_held INT DEFAULT 0;
   DECLARE v_owner_item INT DEFAULT NULL;
@@ -1018,7 +1018,7 @@ BEGIN
   START TRANSACTION;
   SELECT COUNT(*) INTO v_alive FROM characters WHERE id = p_char_id AND alive = 1 FOR UPDATE;
   SELECT COUNT(*) INTO v_held FROM items WHERE holder_char_id = p_char_id AND holder_kind = 'held' FOR UPDATE;
-  
+
   SELECT id INTO v_lock FROM items WHERE id = p_item_id AND x IS NOT NULL FOR UPDATE;
   SELECT owner_item_id INTO v_owner_item FROM containers WHERE id = p_container_id FOR UPDATE;
   SELECT COUNT(*) INTO v_inside FROM items WHERE container_id = p_container_id FOR UPDATE;
@@ -1058,8 +1058,8 @@ END//
 
 CREATE OR REPLACE PROCEDURE `container_put`(IN p_item_id INT, IN p_char_id INT, IN p_container_id INT)
 BEGIN
-  
-  
+
+
   DECLARE v_owner_char INT DEFAULT NULL;
   DECLARE v_owner_item INT DEFAULT NULL;
   DECLARE v_owner_vehicle INT DEFAULT NULL;
@@ -1121,10 +1121,10 @@ END//
 
 CREATE OR REPLACE PROCEDURE `container_take`(IN p_item_id INT, IN p_char_id INT, IN p_open_container_id INT DEFAULT NULL)
 BEGIN
-  
-  
-  
-  
+
+
+
+
   DECLARE v_cont INT DEFAULT NULL;
   DECLARE v_slot INT DEFAULT NULL;
   DECLARE v_owner_char INT DEFAULT NULL;
@@ -1134,7 +1134,7 @@ BEGIN
   DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
   SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
   START TRANSACTION;
-  
+
   SELECT container_id, slot INTO v_cont, v_slot FROM items WHERE id = p_item_id FOR UPDATE;
   IF v_cont IS NOT NULL THEN
     SELECT owner_char_id, owner_item_id INTO v_owner_char, v_owner_item FROM containers WHERE id = v_cont FOR UPDATE;
@@ -2421,15 +2421,15 @@ END//
 
 CREATE OR REPLACE PROCEDURE `tent_pack`(IN p_item_id INT)
 BEGIN
-  
-  
+
+
   DECLARE v_type VARCHAR(32) DEFAULT NULL;
   DECLARE v_cont INT DEFAULT NULL;
   DECLARE v_inside INT DEFAULT 0;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
   SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
   START TRANSACTION;
-  
+
   SELECT type_uname INTO v_type FROM items WHERE id = p_item_id AND x IS NOT NULL FOR UPDATE;
   SELECT id INTO v_cont FROM containers WHERE owner_item_id = p_item_id FOR UPDATE;
   IF v_cont IS NOT NULL THEN
@@ -2453,7 +2453,7 @@ END//
 
 CREATE OR REPLACE PROCEDURE `tent_pitch`(IN p_item_id INT)
 BEGIN
-  
+
   DECLARE v_type VARCHAR(32) DEFAULT NULL;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
   SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
