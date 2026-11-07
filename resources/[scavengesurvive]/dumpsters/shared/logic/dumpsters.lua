@@ -72,8 +72,70 @@ M.FILL = {
     { "Pills", 1 },
 }
 
--- rolls of FILL that fit M.CAPACITY together; sizeOf(uname) is the item size, rng(a, b) an integer in [a, b]
+-- Now and then somebody threw out something good: M.GOOD_PERCENT of dumpsters hold one item of GOOD, and one of
+-- those in M.GREAT_PERCENT holds one of GREAT instead.
+M.GOOD_PERCENT = 22
+M.GREAT_PERCENT = 20
+M.GOOD = {
+    { "Medkit", 10 },
+    { "AntiSepBandage", 14 },
+    { "Pills", 12 },
+    { "Ammo9mm", 12 },
+    { "Flashlight", 12 },
+    { "Radio", 8 },
+    { "Crowbar", 8 },
+    { "Knife", 8 },
+    { "Daypack", 6 },
+    { "Fusebox", 6 },
+    { "Headlight", 6 },
+    { "Burger", 10 },
+    { "Pizza", 10 },
+}
+M.GREAT = {
+    { "M9Pistol", 8 },
+    { "Armour", 8 },
+    { "DoctorBag", 8 },
+    { "Ammo556", 6 },
+    { "AmmoBuck", 6 },
+    { "PumpShotgun", 3 },
+    { "MP5", 2 },
+    { "Keycard", 3 },
+    { "LargeBackpack", 4 },
+}
+
+local function weighted(list, rng)
+    local total = 0
+    for _, t in ipairs(list) do
+        total = total + t[2]
+    end
+    local r = rng(1, total)
+    for _, t in ipairs(list) do
+        r = r - t[2]
+        if r <= 0 then
+            return t[1]
+        end
+    end
+end
+
+-- rolls of FILL that fit M.CAPACITY together, then maybe something good; sizeOf(uname) is the item size, rng(a, b)
+-- an integer in [a, b]
 function M.fill(sizeOf, rng)
+    local out = M.junk(sizeOf, rng)
+    if rng(1, 100) <= M.GOOD_PERCENT then
+        local pick = weighted(rng(1, 100) <= M.GREAT_PERCENT and M.GREAT or M.GOOD, rng)
+        local used = 0
+        for _, u in ipairs(out) do
+            used = used + (sizeOf(u) or 1)
+        end
+        while #out > 0 and used + (sizeOf(pick) or 1) > M.CAPACITY do
+            used = used - (sizeOf(table.remove(out)) or 1) -- the good find displaces rubbish
+        end
+        table.insert(out, rng(1, #out + 1), pick)
+    end
+    return out
+end
+
+function M.junk(sizeOf, rng)
     local total = 0
     for _, t in ipairs(M.FILL) do
         total = total + t[2]
