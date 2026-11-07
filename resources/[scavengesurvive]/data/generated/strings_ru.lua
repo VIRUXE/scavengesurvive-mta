@@ -533,6 +533,7 @@ return {
     ["Open Trunk"] = "Открыть багажник",
     ["Open door"] = "Открыть дверь",
     ["Open dumpster"] = "Открыть мусорный контейнер",
+    ["Open glovebox"] = "Открыть бардачок",
     ["Open inventory"] = "Открыть инвентарь",
     ["Open radio"] = "Открыть радио",
     ["Open satchel"] = "Открыть сумку",

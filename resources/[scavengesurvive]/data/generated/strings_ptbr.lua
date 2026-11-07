@@ -521,6 +521,7 @@ return {
     ["Open Trunk"] = "Abrir porta-malas",
     ["Open door"] = "Abrir porta",
     ["Open dumpster"] = "Abrir caçamba de lixo",
+    ["Open glovebox"] = "Abrir porta-luvas",
     ["Open inventory"] = "Abrir inventário",
     ["Open radio"] = "Abrir rádio",
     ["Open satchel"] = "Abrir bolsa transversal",

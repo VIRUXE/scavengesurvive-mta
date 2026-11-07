@@ -520,6 +520,7 @@ return {
     ["Open Trunk"] = "Buka bagasi",
     ["Open door"] = "Buka pintu",
     ["Open dumpster"] = "Buka bak sampah",
+    ["Open glovebox"] = "Buka laci dasbor",
     ["Open inventory"] = "Buka inventaris",
     ["Open radio"] = "Buka radio",
     ["Open satchel"] = "Buka tas selempang",

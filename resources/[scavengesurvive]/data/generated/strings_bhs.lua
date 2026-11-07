@@ -522,6 +522,7 @@ return {
     ["Open Trunk"] = "Otvori gepek",
     ["Open door"] = "Otvori vrata",
     ["Open dumpster"] = "Otvori kontejner za smeće",
+    ["Open glovebox"] = "Otvori pretinac",
     ["Open inventory"] = "Otvori inventar",
     ["Open radio"] = "Otvori radio",
     ["Open satchel"] = "Otvori torbu",

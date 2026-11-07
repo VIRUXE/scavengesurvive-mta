@@ -34,26 +34,30 @@ None: the converter replaced every `~x~`, `{C_*}`, `~k~` and `%P` token.
 
 Item type, ammo kind, calibre, liquid and seed kind names, and the item UI's labels, messages and format templates, are English in the data and the code; lib's `lang` module shows them in the player's language from the hand-edited `data/generated/strings_<code>.lua` tables. The English texts are collected from the item data and the code (`tr("…")`, `L("…")`, `lang.text/format("…")`, `lang.textFor/formatFor(player, "…")` and `-- lang:begin` … `-- lang:end` blocks). A text a language lacks shows in English; one whose placeholders differ from English is formatted in English. Texts kept identical to English are model names, brands, acronyms and the like.
 
-English has 957 texts.
+English has 962 texts.
 
 | Code | Language | Missing (shown in English) | Kept as in English | Placeholder mismatches | Not in English (stale) |
 | --- | --- | ---: | ---: | ---: | ---: |
-| `es` | Español | 32 | 7 | 0 | 0 |
-| `fr` | Français | 57 | 1 | 0 | 0 |
-| `pt` | Português | 31 | 4 | 0 | 0 |
-| `ptbr` | Português do Brasil | 34 | 5 | 0 | 0 |
-| `ru` | Russian | 16 | 0 | 0 | 0 |
-| `ro` | Romanian | 44 | 0 | 0 | 0 |
-| `id` | Indonesian | 41 | 0 | 0 | 0 |
-| `bhs` | Bosanski-Hrvatski-Srpski | 35 | 0 | 0 | 0 |
-| `cs` | Čeština | 36 | 0 | 0 | 0 |
+| `es` | Español | 33 | 7 | 0 | 1 |
+| `fr` | Français | 58 | 1 | 0 | 1 |
+| `pt` | Português | 32 | 4 | 0 | 1 |
+| `ptbr` | Português do Brasil | 35 | 5 | 0 | 1 |
+| `ru` | Russian | 17 | 0 | 0 | 0 |
+| `ro` | Romanian | 45 | 0 | 0 | 0 |
+| `id` | Indonesian | 42 | 0 | 0 | 0 |
+| `bhs` | Bosanski-Hrvatski-Srpski | 36 | 0 | 0 | 0 |
+| `cs` | Čeština | 37 | 0 | 0 | 0 |
 
-- `es` lacks: `M9`, `M9 SD`, `Desert Eagle`, `Spas 12`, `Mac 10`, `MP5`, `WASR-3`, `M16`, `Tec 9`, `TNT`, `Pizza`, `Taco`, `Torso`, `Action Express`, `FMJ`, `Sebastian`, `Motor`, `AK-47`, `M77-RM`, `BMG`, `Model 70`, `The Len-Knocks`, `Whisky`, `Radio`, `LSD`, `Chat`, `Herp-a-derp`, `TORSO`, `S.W.A.T.`, `Southclaws`, `Morgan Freeman`, `no`
+- `es` lacks: `M9`, `M9 SD`, `Desert Eagle`, `Spas 12`, `Mac 10`, `MP5`, `WASR-3`, `M16`, `Tec 9`, `TNT`, `Pizza`, `Taco`, `Torso`, `Action Express`, `FMJ`, `Sebastian`, `Motor`, `AK-47`, `M77-RM`, `BMG`, `Model 70`, `The Len-Knocks`, `Whisky`, `Radio`, `LSD`, `Chat`, `Herp-a-derp`, `Open the trunk first`, `TORSO`, `S.W.A.T.`, `Southclaws`, `Morgan Freeman`, `no`
+- `es` has texts no longer in English: `You cannot drop that inside a vehicle`
 - `fr` lacks: `Grenade`, `M9`, `M9 SD`, `Desert Eagle`, `Spas 12`, `Mac 10`, `MP5`, `WASR-3`, `M16`, `Tec 9`, `Parachute`, `TNT`, `Pizza`, `Burger`, `Taco`, `Capsule`, `Dynamite`, `Action Express`, `FMJ`, `Sebastian`, `Code`, `AK-47`, `M77-RM`, `BMG`, `Model 70`, `The Len-Knocks`, `Note`, `Microphone`, `Orange`, `Ketchup`, `Whisky`, `Champagne`, `Steak`, `Radio`, `Table`, `Bandana`, `Carton`, `Orangeade`, `Morphine`, `LSD` …
-- `pt` lacks: `Molotov`, `M9`, `M9 SD`, `Desert Eagle`, `Spas 12`, `Mac 10`, `MP5`, `WASR-3`, `M16`, `Tec 9`, `RPG`, `TNT`, `Pager`, `IED`, `Action Express`, `FMJ`, `Sebastian`, `Motor`, `AK-47`, `M77-RM`, `BMG`, `Model 70`, `The Len-Knocks`, `Banana`, `Ketchup`, `LSD`, `Chat`, `Herp-a-derp`, `S.W.A.T.`, `Southclaws`, `Morgan Freeman`
-- `ptbr` lacks: `M9`, `M9 SD`, `Desert Eagle`, `Spas 12`, `Mac 10`, `MP5`, `WASR-3`, `M16`, `Tec 9`, `RPG`, `TNT`, `IED`, `Pizza`, `Taco`, `Action Express`, `FMJ`, `Sebastian`, `Motor`, `AK-47`, `M77-RM`, `BMG`, `Model 70`, `The Len-Knocks`, `Banana`, `Cereal`, `Ketchup`, `Bandana`, `Diesel`, `LSD`, `Chat`, `Herp-a-derp`, `S.W.A.T.`, `Southclaws`, `Morgan Freeman`
-- `ru` lacks: `M9`, `M9 SD`, `Desert Eagle`, `Spas 12`, `Mac 10`, `MP5`, `WASR-3`, `M16`, `Tec 9`, `Action Express`, `AK-47`, `M77-RM`, `BMG`, `Model 70`, `The Len-Knocks`, `Southclaws`
+- `fr` has texts no longer in English: `You cannot drop that inside a vehicle`
+- `pt` lacks: `Molotov`, `M9`, `M9 SD`, `Desert Eagle`, `Spas 12`, `Mac 10`, `MP5`, `WASR-3`, `M16`, `Tec 9`, `RPG`, `TNT`, `Pager`, `IED`, `Action Express`, `FMJ`, `Sebastian`, `Motor`, `AK-47`, `M77-RM`, `BMG`, `Model 70`, `The Len-Knocks`, `Banana`, `Ketchup`, `LSD`, `Chat`, `Herp-a-derp`, `Open the trunk first`, `S.W.A.T.`, `Southclaws`, `Morgan Freeman`
+- `pt` has texts no longer in English: `You cannot drop that inside a vehicle`
+- `ptbr` lacks: `M9`, `M9 SD`, `Desert Eagle`, `Spas 12`, `Mac 10`, `MP5`, `WASR-3`, `M16`, `Tec 9`, `RPG`, `TNT`, `IED`, `Pizza`, `Taco`, `Action Express`, `FMJ`, `Sebastian`, `Motor`, `AK-47`, `M77-RM`, `BMG`, `Model 70`, `The Len-Knocks`, `Banana`, `Cereal`, `Ketchup`, `Bandana`, `Diesel`, `LSD`, `Chat`, `Herp-a-derp`, `Open the trunk first`, `S.W.A.T.`, `Southclaws`, `Morgan Freeman`
+- `ptbr` has texts no longer in English: `You cannot drop that inside a vehicle`
+- `ru` lacks: `M9`, `M9 SD`, `Desert Eagle`, `Spas 12`, `Mac 10`, `MP5`, `WASR-3`, `M16`, `Tec 9`, `Action Express`, `AK-47`, `M77-RM`, `BMG`, `Model 70`, `The Len-Knocks`, `Open the trunk first`, `Southclaws`
 - `ro` lacks: `M9`, `M9 SD`, `Desert Eagle`, `Spas 12`, `Mac 10`, `MP5`, `WASR-3`, `M16`, `Tec 9`, `RPG`, `Detonator`, `TNT`, `Pager`, `Pizza`, `Burger`, `Taco`, `Injector`, `Detergent`, `Action Express`, `FMJ`, `Sebastian`, `Motor`, `AK-47`, `M77-RM`, `BMG`, `Model 70`, `The Len-Knocks`, `Ketchup`, `Whisky`, `Radio`, `Generator`, `Film`, `Antibiotic`, `LSD`, `RADIO`, `Chat`, `online`, `Staff`, `global`, `Herp-a-derp` …
-- `id` lacks: `Dildo`, `M9`, `M9 SD`, `Desert Eagle`, `Spas 12`, `Mac 10`, `MP5`, `WASR-3`, `M16`, `Tec 9`, `RPG`, `Detonator`, `TNT`, `Burger`, `Taco`, `Action Express`, `No. 1`, `FMJ`, `Sebastian`, `AK-47`, `M77-RM`, `BMG`, `Model 70`, `The Len-Knocks`, `Radio`, `Bandana`, `Generator`, `Film`, `Magnesium`, `Unban: %s`, `LSD`, `Heroin`, `RADIO`, `Chat`, `Status`, `global`, `S.W.A.T.`, `Triad`, `Southclaws`, `Morgan Freeman` …
-- `bhs` lacks: `Dildo`, `M9`, `M9 SD`, `Desert Eagle`, `Spas 12`, `Mac 10`, `MP5`, `WASR-3`, `M16`, `Tec 9`, `RPG`, `Minigun`, `Detonator`, `TNT`, `IED`, `Action Express`, `FMJ`, `Sebastian`, `AK-47`, `M77-RM`, `BMG`, `Model 70`, `The Len-Knocks`, `Banana`, `Radio`, `Bandana`, `Film`, `Unban: %s`, `LSD`, `Heroin`, `RADIO`, `Status`, `S.W.A.T.`, `Southclaws`, `Morgan Freeman`
-- `cs` lacks: `Dildo`, `M9`, `M9 SD`, `Desert Eagle`, `Spas 12`, `Mac 10`, `MP5`, `WASR-3`, `M16`, `Tec 9`, `RPG`, `TNT`, `Pager`, `IED`, `Pizza`, `Taco`, `Action Express`, `FMJ`, `Sebastian`, `Motor`, `AK-47`, `M77-RM`, `BMG`, `Model 70`, `The Len-Knocks`, `Pissh Box`, `Whisky`, `Film`, `LSD`, `Heroin`, `Chat`, `online`, `Herp-a-derp`, `S.W.A.T.`, `Southclaws`, `Morgan Freeman`
+- `id` lacks: `Dildo`, `M9`, `M9 SD`, `Desert Eagle`, `Spas 12`, `Mac 10`, `MP5`, `WASR-3`, `M16`, `Tec 9`, `RPG`, `Detonator`, `TNT`, `Burger`, `Taco`, `Action Express`, `No. 1`, `FMJ`, `Sebastian`, `AK-47`, `M77-RM`, `BMG`, `Model 70`, `The Len-Knocks`, `Radio`, `Bandana`, `Generator`, `Film`, `Magnesium`, `Unban: %s`, `LSD`, `Heroin`, `RADIO`, `Chat`, `Status`, `global`, `Open the trunk first`, `S.W.A.T.`, `Triad`, `Southclaws` …
+- `bhs` lacks: `Dildo`, `M9`, `M9 SD`, `Desert Eagle`, `Spas 12`, `Mac 10`, `MP5`, `WASR-3`, `M16`, `Tec 9`, `RPG`, `Minigun`, `Detonator`, `TNT`, `IED`, `Action Express`, `FMJ`, `Sebastian`, `AK-47`, `M77-RM`, `BMG`, `Model 70`, `The Len-Knocks`, `Banana`, `Radio`, `Bandana`, `Film`, `Unban: %s`, `LSD`, `Heroin`, `RADIO`, `Status`, `Open the trunk first`, `S.W.A.T.`, `Southclaws`, `Morgan Freeman`
+- `cs` lacks: `Dildo`, `M9`, `M9 SD`, `Desert Eagle`, `Spas 12`, `Mac 10`, `MP5`, `WASR-3`, `M16`, `Tec 9`, `RPG`, `TNT`, `Pager`, `IED`, `Pizza`, `Taco`, `Action Express`, `FMJ`, `Sebastian`, `Motor`, `AK-47`, `M77-RM`, `BMG`, `Model 70`, `The Len-Knocks`, `Pissh Box`, `Whisky`, `Film`, `LSD`, `Heroin`, `Chat`, `online`, `Herp-a-derp`, `Open the trunk first`, `S.W.A.T.`, `Southclaws`, `Morgan Freeman`

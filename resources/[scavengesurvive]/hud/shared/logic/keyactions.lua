@@ -27,6 +27,7 @@ M.SPECIAL = {
     FishRod = "Cast line", -- #141
 }
 M.BODY_PART_VERB = "Install Bobcat body part"
+M.GLOVEBOX_VERB = "Open glovebox" -- listed so tools/lang_qa collects it
 -- lang:end
 
 M.BODY_PARTS = {}
@@ -63,6 +64,7 @@ M.BUTTON_LABELS = {
 --   nearItem (a loose world item in pickup reach),
 --   nearInspectable (the uname of a nearby sign, plant pot or body),
 --   cuffedNearby, hasBag,
+--   glovebox (seated in a front seat of a vehicle with a glovebox: "Open glovebox"),
 --   nearFeature ("ladder" / "zipline" / "ladder_on" / "zipline_on" / "button:<label>"), nearCrate ("supply" / "cache" / "dumpster"),
 --   nearDoor ("open" / "closed" / "locked": a walk-in vehicle door in reach, the towable Airstream's),
 --   bodyPart ("(Hold) Remove Left Door" / "(Hold) Tighten Left Door", already in the reader's language: a Wrench in
@@ -81,7 +83,7 @@ M.BUTTON_LABELS = {
 --   supports = { [capability] = true },   -- eat, drink, openbag, wearbag, special, holster, reload, unload, give,
 --                                         -- removebag, uncuff, trunk, repair, engine, lights, doors, radio
 -- }
--- keys = { interact, putaway, drop, inventory, reload, engine, lights, doors, radio, hitch } (display names)
+-- keys = { interact, putaway, drop, inventory, reload, engine, lights, doors, radio, hitch, glovebox } (display names)
 -- Returns { { key = "F", text = "Open Trunk" }, ... } in upstream order.
 function M.lines(ctx, keys)
     local out = {}
@@ -103,6 +105,17 @@ function M.lines(ctx, keys)
         if ctx.hitch then
             add("hitch", ctx.hitch == "unhitch" and tr("Unhitch trailer") or tr("Hitch trailer"))
         end
+        -- not an upstream line either: the glovebox in the dash (E)
+        if ctx.glovebox then
+            add("glovebox", tr("Open glovebox"))
+        end
+        add("inventory", tr("Open inventory"))
+        return out
+    end
+    -- a front passenger has the glovebox in reach too
+    if ctx.glovebox then
+        add("glovebox", tr("Open glovebox"))
+        add("inventory", tr("Open inventory"))
         return out
     end
     -- A reachable world item consumes F before nearby world, crate or vehicle actions.

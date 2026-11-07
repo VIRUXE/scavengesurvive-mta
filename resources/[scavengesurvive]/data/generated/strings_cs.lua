@@ -523,6 +523,7 @@ return {
     ["Open Trunk"] = "Otevřít kufr",
     ["Open door"] = "Otevřít dveře",
     ["Open dumpster"] = "Otevřít kontejner na odpadky",
+    ["Open glovebox"] = "Otevřít přihrádku",
     ["Open inventory"] = "Otevřít inventář",
     ["Open radio"] = "Otevřít rádio",
     ["Open satchel"] = "Otevřít brašnu",

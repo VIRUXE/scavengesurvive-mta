@@ -53,6 +53,9 @@ local SUPPORTS = {
     wearbag = true,
     drink = true,
     give = true,
+    engine = true, -- Y in the driver seat (engineToggleRequested)
+    lights = true, -- N (lightsToggleRequested)
+    doors = true, -- 2 (lockToggleRequested)
 }
 
 local state = {
@@ -122,18 +125,28 @@ local function keyName(cmd, default)
     return string.upper(getKeyBoundToCommand(cmd) or default)
 end
 
+-- the display name of a control's key: the preferred key when it is bound, else the first bound one (getBoundKeys
+-- is an unordered set: sub_mission is both "2" and "num_add"); keypad names read as "NUM+"
+local PRETTY = { num_add = "NUM+", num_sub = "NUM-", num_mul = "NUM*", num_div = "NUM/", num_dec = "NUM." }
+local function controlKey(control, preferred, default)
+    local bound = getBoundKeys(control) or {}
+    local key = bound[preferred] and preferred or next(bound) or default
+    return PRETTY[key] or string.upper(key):gsub("^NUM_", "NUM")
+end
+
 local function refreshKeys()
     state.keys = {
         interact = keyName("interact", "f"),
         putaway = keyName("putaway", "y"),
         drop = keyName("dropitem", "n"),
         inventory = keyName("inventory", "h"),
+        glovebox = keyName("glovebox", "e"),
         reload = keyName("reloadweapon", "r"),
         engine = "Y",
         lights = "N",
-        doors = string.upper(next(getBoundKeys("sub_mission") or {}) or "2"),
+        doors = controlKey("sub_mission", "2", "2"),
         radio = "R",
-        hitch = string.upper(next(getBoundKeys("vehicle_secondary_fire") or {}) or "lctrl"),
+        hitch = controlKey("vehicle_secondary_fire", "lctrl", "lctrl"),
     }
 end
 
@@ -447,6 +460,14 @@ local function nearContainerHint()
     return category == "fixed" and "fixed" or true
 end
 
+-- seated in a front seat of a vehicle with a glovebox in its dash
+local function vehicleHasFrontGlovebox()
+    local vehicle = getPedOccupiedVehicle(localPlayer)
+    return vehicle ~= false
+        and getPedOccupiedVehicleSeat(localPlayer) <= 1
+        and exports.vehicles:hasGlovebox(vehicle) == true
+end
+
 local function drawKeyActions(driver)
     local held = state.held
     local isCalibreWep = held and held.category == "weapon" and held.calibre ~= nil and not held.liquid or false
@@ -459,6 +480,7 @@ local function drawKeyActions(driver)
         knockedOut = getElementData(localPlayer, "character.knockedOut") == true,
         driver = driver,
         hitch = driver and state.hitch or false,
+        glovebox = vehicleHasFrontGlovebox(),
         held = held and { uname = held.uname, category = held.category, isWeapon = isCalibreWep },
         nearPlayer = held and hasPlayerNearby() or false,
         nearFeature = nearFeature(),

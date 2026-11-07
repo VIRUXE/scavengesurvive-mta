@@ -518,6 +518,7 @@ return {
     ["Open Trunk"] = "Deschide portbagajul",
     ["Open door"] = "Deschide ușa",
     ["Open dumpster"] = "Deschide containerul de gunoi",
+    ["Open glovebox"] = "Deschide torpedoul",
     ["Open inventory"] = "Deschide inventarul",
     ["Open radio"] = "Deschide radioul",
     ["Open satchel"] = "Deschide geanta",

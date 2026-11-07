@@ -125,16 +125,26 @@ return function(ctx)
         end
     end)
 
+    -- from a front seat the glovebox key (E) or the interact key opens the glovebox in the dash
+    local function openGlovebox(seatedIn)
+        if getPedOccupiedVehicleSeat(localPlayer) <= 1 and exports.vehicles:hasGlovebox(seatedIn) then
+            triggerServerEvent("gloveboxOpenRequested", localPlayer)
+        end
+    end
+    addCommandHandler("glovebox", function()
+        local seatedIn = getPedOccupiedVehicle(localPlayer)
+        if seatedIn and guard() and not listIsOpen() then
+            openGlovebox(seatedIn)
+        end
+    end)
+
     addCommandHandler("interact", function()
         if not guard() or listIsOpen() then
             return
         end
-        -- from a front seat the interact key opens the glovebox in the dash
         local seatedIn = getPedOccupiedVehicle(localPlayer)
         if seatedIn then
-            if getPedOccupiedVehicleSeat(localPlayer) <= 1 and exports.vehicles:hasGlovebox(seatedIn) then
-                triggerServerEvent("gloveboxOpenRequested", localPlayer)
-            end
+            openGlovebox(seatedIn)
             return
         end
         if tweaking() then
@@ -533,7 +543,7 @@ return function(ctx)
         triggerServerEvent("inventoryOpenRequested", localPlayer)
     end)
 
-    local DEFAULTS = { interact = "f", dropitem = "n", inventory = "h", reloadweapon = "r" }
+    local DEFAULTS = { interact = "f", dropitem = "n", inventory = "h", reloadweapon = "r", glovebox = "e" }
     -- MTA binds Y to team chat in the core, which unbindKey cannot remove (it only touches this resource's binds);
     -- the gamemode has no teams, so an unbound putaway answers Y itself and swallows the key before the chat sees it
     addEventHandler("onClientKey", root, function(key, press)
