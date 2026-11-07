@@ -1519,7 +1519,7 @@ local function fitBattery(player, vehicle, held)
         setPedAnimation(p, nil)
         local vinf = info[veh]
         local cur = exports.items:getHeld(p)
-        local open = getVehicleDoorOpenRatio(veh, 0) > 0.5
+        local open = engineReachable(veh)
         if not vinf or vinf.battery or vinf.locked > 0 or not open or not cur or cur.id ~= itemId then
             return
         end
@@ -1550,7 +1550,7 @@ local function removeBattery(player, vehicle)
         end
         setPedAnimation(p, nil)
         local vinf = info[veh]
-        local open = getVehicleDoorOpenRatio(veh, 0) > 0.5
+        local open = engineReachable(veh)
         local cid = charId(p)
         if not vinf or not vinf.battery or vinf.locked > 0 or not open or not cid or exports.items:getHeld(p) then
             return
@@ -1602,7 +1602,7 @@ local function replaceStarter(player, vehicle, held)
         setPedAnimation(p, nil)
         local vinf = info[veh]
         local cur = exports.items:getHeld(p)
-        local open = getVehicleDoorOpenRatio(veh, 0) > 0.5
+        local open = engineReachable(veh)
         if not vinf or vinf.locked > 0 or not open or not cur or cur.id ~= itemId then
             return
         end
@@ -1640,7 +1640,7 @@ net.handler("vehicleBatteryRequested", function(player, vehicle)
     if inf.locked > 0 then
         return toast(player, "BONNET_LOCKED")
     end
-    if getVehicleDoorOpenRatio(vehicle, 0) < 0.5 then
+    if not engineReachable(vehicle) then
         return toast(player, "BONNET_SHUT")
     end
     if not inf.battery then
@@ -1850,19 +1850,17 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
 
     -- Case 1c: the bonnet of an unlocked car opens and shuts with empty hands; a Car Battery in hand is fitted while
     -- it is open (taking one out is the hold, vehicleBatteryRequested)
-    -- (a bonnet taken off, door state 4, leaves nothing to open or shut)
-    if
-        vlogic.isFront(angle)
-        and inf.bay
-        and getVehicleDoorState(vehicle, 0) ~= 4
-        and (not held or uname == "Battery")
-    then
+    if vlogic.isFront(angle) and inf.bay and (not held or uname == "Battery") then
         if inf.locked > 0 then
             return toast(player, "BONNET_LOCKED")
         end
-        local open = getVehicleDoorOpenRatio(vehicle, 0) > 0.5
+        local gone = getVehicleDoorState(vehicle, 0) == 4 -- bonnet taken off: nothing to open or shut
+        local open = engineReachable(vehicle)
         if not held then
             if not open then
+            if gone then
+                return
+            end
                 local _, _, prz = getElementRotation(player)
                 if not vlogic.facingVehicle(px, py, prz, vx, vy) then
                     return
@@ -1886,7 +1884,7 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
         if inf.locked > 0 then
             return toast(player, "BONNET_LOCKED")
         end
-        if getVehicleDoorOpenRatio(vehicle, 0) <= 0.5 then
+        if not engineReachable(vehicle) then
             return toast(player, "BONNET_SHUT")
         end
         if getVehicleEngineState(vehicle) then

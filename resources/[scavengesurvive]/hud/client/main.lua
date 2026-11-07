@@ -420,6 +420,10 @@ local function nearBonnetHint(held)
     if not nearVeh or not exports.vehicles:hasBatteryBay(nearVeh) then
         return nil
     end
+    -- the bonnet was taken off (door state 4): nothing left to open or close
+    if getVehicleDoorState(nearVeh, 0) == 4 then
+        return nil
+    end
     local vx, vy = getElementPosition(nearVeh)
     local _, _, vrz = getElementRotation(nearVeh)
     local rad = math.rad(vrz or 0)
