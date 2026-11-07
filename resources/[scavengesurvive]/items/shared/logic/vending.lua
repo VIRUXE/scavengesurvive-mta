@@ -11,6 +11,8 @@ M.GLASS_HP = 3
 M.ROWS, M.COLS = 5, 4
 M.SLOTS = M.ROWS * M.COLS
 M.MODEL_GLASS, M.MODEL_BROKEN = 20234, 20235
+-- the pane giving way: a GTA sound (container, bank, sound), picked with the sfx resource's /sfx glass list
+M.BREAK_SFX = { "genrl", 32, 56 }
 
 -- tools/make_vending.py WINDOW, GLASS_Y, TRAY_TOPS (bottom tray first), COLUMNS, SLOT_Y
 M.WINDOW = { x0 = -0.52, x1 = 0.24, z0 = 0.56, z1 = 1.99 }

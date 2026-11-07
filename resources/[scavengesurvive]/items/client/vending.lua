@@ -45,7 +45,8 @@ return function(ctx)
         end
     )
 
-    -- a pane gave: glass bursts out of the whole window and rains onto the pavement
+    -- a pane gave: it shatters (vending.BREAK_SFX at the window's middle), glass bursts out of the whole window and
+    -- rains onto the pavement
     addEventHandler("vendingGlassBroken", resourceRoot, function(id)
         local x, y, z, rz = world.machineAt(id)
         if not x then
@@ -54,6 +55,21 @@ return function(ctx)
         local w = vending.WINDOW
         local a = math.rad(rz)
         local ly = vending.GLASS_Y - 0.03
+        local mx, mz = (w.x0 + w.x1) / 2, (w.z0 + w.z1) / 2
+        local sfx = vending.BREAK_SFX
+        local sound = playSFX3D(
+            sfx[1],
+            sfx[2],
+            sfx[3],
+            x + mx * math.cos(a) - ly * math.sin(a),
+            y + mx * math.sin(a) + ly * math.cos(a),
+            z + mz,
+            false
+        )
+        if sound then
+            setElementInterior(sound, getElementInterior(localPlayer))
+            setElementDimension(sound, getElementDimension(localPlayer))
+        end
         for i = 0, 3 do
             for k = 0, 5 do
                 local lx = w.x0 + (w.x1 - w.x0) * (0.12 + 0.25 * i)
