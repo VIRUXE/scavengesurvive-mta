@@ -4,7 +4,7 @@
 -- interact key at a world item uses the held item with it); cooked food, or food that cannot be cooked, is eaten even
 -- there (upstream's campfire took any food back onto the fire).
 -- ctx = { medical, drinking, db, net, state, type, charId, toast, destroy, sendInventory, decodeData, cooking,
--- cookers, world, clothes, small, parachute, garden, ownedSql, apparel, wear } built by server/main.lua.
+-- cookers, world, clothes, small, parachute, garden, ownedSql, apparel, wear, openSide } built by server/main.lua.
 return function(ctx)
     local db, net, state = ctx.db, ctx.net, ctx.state
     local itemType, charId, toast = ctx.type, ctx.charId, ctx.toast
@@ -35,6 +35,43 @@ return function(ctx)
                 ctx.sendInventory(player)
             end
         end, "used")
+    end
+
+    -- Food used straight out of an open box, bag or snack machine: grabbed and eaten in one go. item_destroy only
+    -- deletes what the character carries, so it comes out first (container_take into an empty hand, else
+    -- container_move into the inventory), and the container's owner hears of the take (a machine empties its coil).
+    -- Food the character already carries (inventory, worn bag) is eaten where it is.
+    local function eatFromSide(player, itemId, t, data, openContainerId)
+        local cid = charId(player)
+        local side = ctx.openSide(player)
+        local function eaten(res, c)
+            if not isElement(c.player) then
+                return
+            end
+            if not res or not res.ok then
+                return toast(c.player, res and res.code or "DB_ERROR")
+            end
+            if side and side.onChange and side.containerId == openContainerId then
+                side.onChange()
+            end
+            eat(c.player, itemId, t, false, data)
+        end
+        db.one("SELECT container_id FROM items WHERE id = ?", { itemId }, function(row, c)
+            if not isElement(c.player) or not row then
+                return
+            end
+            if tonumber(row.container_id) ~= tonumber(openContainerId) then
+                return eat(c.player, itemId, t, false, data) -- in the inventory or bag already
+            end
+            if not state.held[c.player] then
+                return db.call("container_take", { itemId, cid, openContainerId, n = 3 }, eaten, c)
+            end
+            local inv = exports.character:getInventoryContainerId(c.player)
+            if not inv then
+                return toast(c.player, "HANDS_FULL")
+            end
+            db.call("container_move", { itemId, cid, inv, openContainerId, n = 4 }, eaten, c)
+        end, { player = player })
     end
 
     local function use(player, itemId, uname, fromHand, data, openContainerId)
@@ -87,6 +124,9 @@ return function(ctx)
         end
         if not t or t.category ~= "food" then
             return
+        end
+        if not fromHand and openContainerId then
+            return eatFromSide(player, itemId, t, data, openContainerId)
         end
         if not fromHand or not ctx.cooking.isRaw(t, data) then
             return eat(player, itemId, t, fromHand, data)

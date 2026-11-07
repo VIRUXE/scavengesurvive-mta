@@ -255,7 +255,7 @@ return function(ctx)
                     else
                         killTimer(interactHoldTimer)
                         interactHoldTimer = nil
-                        if bagId then
+                        if bagId and bagCategory ~= "fixed" then -- a snack machine opens on a hold too
                             triggerServerEvent("itemLongPickupRequested", localPlayer, bagId)
                         else
                             triggerServerEvent("itemPickupRequested", localPlayer, exports.items:blockedItemsNear())

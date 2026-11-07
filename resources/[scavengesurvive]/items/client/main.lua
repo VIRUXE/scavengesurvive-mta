@@ -68,6 +68,8 @@ function nearbyContainerItem()
     return id or false, category or false
 end
 
+-- (nearbyContainerItem's category is "fixed" for a take-only container such as the snack machine: no hold pickup)
+
 -- client export for the hud: a Sign or a body lying within reach (a tap of F edits or investigates it, a held F
 -- picks it up): its id and uname, else false
 function nearbyInspectable()

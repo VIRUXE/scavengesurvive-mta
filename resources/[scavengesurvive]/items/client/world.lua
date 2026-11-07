@@ -888,7 +888,9 @@ return function(ctx)
                 local dist = dx * dx + dy * dy + dz * dz
                 local same = (r.dimension or 0) == dim and (r.interior or 0) == int
                 if same and math.abs(dz) < 3 and dist < nearestDist and reachable(id, e) then
-                    nearest, nearestDist, nearestCategory = id, dist, t.category
+                    -- a take-only one (the snack machine) stands where it is: "fixed", opened but never picked up
+                    local fixed = t.categoryData and t.categoryData.takeOnly
+                    nearest, nearestDist, nearestCategory = id, dist, fixed and "fixed" or t.category
                 end
             end
         end

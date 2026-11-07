@@ -437,6 +437,15 @@ local function nearBonnetHint(held)
     return getVehicleDoorOpenRatio(nearVeh, 0) > 0.5 and "open" or "closed"
 end
 
+-- a bag or box in reach: true, or "fixed" for one that is never picked up (the snack machine), else false
+local function nearContainerHint()
+    local id, category = exports.items:nearbyContainerItem()
+    if not id then
+        return false
+    end
+    return category == "fixed" and "fixed" or true
+end
+
 local function drawKeyActions(driver)
     local held = state.held
     local isCalibreWep = held and held.category == "weapon" and held.calibre ~= nil and not held.liquid or false
@@ -459,7 +468,7 @@ local function drawKeyActions(driver)
         nearInspectable = not held and inspectUname or false,
         nearCooker = nearCooker(held),
         nearMachine = exports.items:nearbyMachine() ~= false,
-        nearContainer = exports.items:nearbyContainerItem() ~= false,
+        nearContainer = nearContainerHint(),
         carmour = carmourHint(held),
         bodyPart = bodyPartHint(held),
         installPart = installPartHint(held),

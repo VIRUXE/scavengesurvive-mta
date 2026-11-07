@@ -374,6 +374,7 @@ loadFile("server/use.lua")({
     ownedSql = OWNED_SQL,
     apparel = apparel,
     wear = containers.wear,
+    openSide = containers.openSide,
 })
 
 addEventHandler("onResourceStart", resourceRoot, function()

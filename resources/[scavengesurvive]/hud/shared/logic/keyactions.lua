@@ -71,7 +71,8 @@ M.BUTTON_LABELS = {
 --   held = false | { uname, category, isWeapon },
 --   nearCooker,                           -- uncooked food in hand next to a campfire or barbecue (#95): "Cook"
 --   nearMachine,                          -- a machine in reach (#145): "Access machine" / "(Hold) Machine menu"
---   nearContainer,                        -- a bag or box lying in reach: "Open" / "(Hold) Pick up"
+--   nearContainer,                        -- a bag or box lying in reach: "Open" / "(Hold) Pick up"; "fixed" (the
+--                                         -- snack machine): "Open" only
 --   carmour,                              -- vehicles carmour: "attach" (placing a defence), "weld" (the Welder's
 --                                         -- torch at a trailer), "torch" (it anywhere else), "defence" (one in hand
 --                                         -- at a trailer), "grind" (an Angle Grinder at a trailer), "welder" (empty
@@ -115,7 +116,9 @@ function M.lines(ctx, keys)
             add("interact", tr("(Hold) Pick up"))
         elseif ctx.nearContainer then
             add("interact", tr("Open"))
-            add("interact", tr("(Hold) Pick up"))
+            if ctx.nearContainer ~= "fixed" then -- the snack machine opens but is never carried off
+                add("interact", tr("(Hold) Pick up"))
+            end
         elseif ctx.nearInspectable then
             local inspectText = { Sign = tr("Edit sign"), PlantPot = tr("Inspect plant pot") }
             add("interact", inspectText[ctx.nearInspectable] or tr("Investigate"))

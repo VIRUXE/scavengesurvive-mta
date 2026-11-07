@@ -110,6 +110,11 @@ return function(ctx)
         return true
     end
 
+    -- the side container the player has open, as kept (its onChange among the rest), or nil
+    function M.openSide(player)
+        return M.openContainerId(player) and activeContainer[player] or nil
+    end
+
     function M.openContainerId(player)
         local cont = activeContainer[player]
         if not cont then
