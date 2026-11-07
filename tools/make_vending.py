@@ -261,19 +261,18 @@ def build_in_blender(gta: Path, out: Path, preview: Path | None) -> None:
         labels[key] = (w, h, px)
         print(f"make_vending: label {key} {w}x{h}")
 
-    # the glass: pale and see-through, lighter toward the top, one wide reflection band, finger smudges
+    # the glass: an even grey-blue tint you see the snacks through, a little lighter toward the top where it catches the
+    # sky, and one soft wide reflection band; smooth, so no patch of it reads as a shard
     def glass_pixels(w=64, h=128):
         yy, xx = np.mgrid[0:h, 0:w]
-        u, v = xx / w, yy / h
+        u, v = xx / w, yy / h  # v: 0 at the bottom row of the image as Blender stores it, 1 at the top
         px = np.zeros((h, w, 4), dtype=np.float32)
-        base = 0.55 + 0.25 * v
-        band = 0.25 * np.exp(-(((u * 0.55 - v * 0.9) + 0.25) / 0.09) ** 2)
-        smudge = np.clip(rng.normal(0, 1, (h // 8, w // 8)), 0, None)
-        smudge = np.kron(smudge, np.ones((8, 8)))[:h, :w] * 0.05
-        px[..., 0] = base * 0.82 + band + smudge
-        px[..., 1] = base * 0.9 + band + smudge
-        px[..., 2] = base * 0.95 + band + smudge
-        px[..., 3] = 0.22 + 0.12 * v + band * 0.8 + smudge * 2
+        band = 0.12 * np.exp(-(((u * 0.6 - v * 0.8) + 0.2) / 0.18) ** 2)
+        tint = 0.62 + 0.12 * v
+        px[..., 0] = tint * 0.86 + band
+        px[..., 1] = tint * 0.93 + band
+        px[..., 2] = tint * 1.0 + band
+        px[..., 3] = 0.30 + 0.08 * v + band * 0.6
         return np.clip(px, 0, 1)
 
     glass_px = glass_pixels()
