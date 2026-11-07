@@ -823,6 +823,7 @@ net.handler("engineToggleRequested", function(player)
             -- every start wears the starter motor; once its life is spent it only clicks
             local cranked, left, bad = starter.crank(inf.starter)
             if not cranked then
+                engineCranked(player, v, bad)
                 return toast(player, bad)
             end
             inf.starter = left

@@ -40,6 +40,9 @@ M.CRANKS = {
     OK = { bulb = 700, crank = "catch", ms = 1400 },
     NO_BATTERY = { ms = 0 }, -- nothing at all: the dash stays dark
     BATTERY_FLAT = { crank = "click", ms = 1300, flash = "bat", flicker = true },
+    -- a dead starter motor: the solenoid clicks on a healthy battery, so BAT just stays lit (no flash, the battery
+    -- is fine)
+    STARTER_BAD = { bulb = 700, crank = "dead", ms = 1300, steady = "bat" },
     DAMAGED = { bulb = 700, crank = "grind", ms = 2200, flash = "chk" },
     NO_FUEL = { bulb = 700, crank = "steady", ms = 2200, flash = "fuel" },
 }
@@ -159,13 +162,14 @@ function M.sample(p, elapsed, rng)
         return out
     end
     local spec = M.CRANKS[p.code or "OK"] or M.CRANKS.OK
-    local total = (spec.ms or 0) + (spec.flash and M.FLASH_MS or 0)
+    local total = (spec.ms or 0) + ((spec.flash or spec.steady) and M.FLASH_MS or 0)
     if elapsed > total then
         return nil
     end
     local out = { bulb = spec.bulb and elapsed < spec.bulb or false }
     if elapsed >= (spec.ms or 0) then
         out.flash = spec.flash
+        out.solid = spec.steady and { [spec.steady] = true } or nil
         return out
     end
     local t = elapsed
@@ -182,6 +186,11 @@ function M.sample(p, elapsed, rng)
         local click = t % 220 < 60
         out.rpm = click and 30 + 30 * rng() or 0
         out.volts = (click and 6.2 or 8.4) + 0.6 * rng()
+    elseif spec.crank == "dead" then
+        -- the same solenoid click, but the battery holds up: only a small sag on each click
+        local click = t % 220 < 60
+        out.rpm = click and 30 + 30 * rng() or 0
+        out.volts = (click and 10.8 or 11.8) + 0.3 * rng()
     elseif spec.crank == "grind" then
         -- a starter that binds: uneven, catching and dropping
         local bind = math.floor(t / 170) % 3 == 0
