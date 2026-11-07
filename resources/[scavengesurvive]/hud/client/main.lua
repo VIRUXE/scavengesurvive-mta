@@ -173,7 +173,8 @@ addEventHandler("skillGained", root, function(name)
     state.skillNotice = { text = "+" .. (t and t.name or tostring(name)), untilTick = getTickCount() + SKILL_NOTICE_MS }
 end)
 
-local function drawSkillNotice()
+-- y: 430, or above the dashboard while it shows
+local function drawSkillNotice(y)
     local n = state.skillNotice
     if not n then
         return
@@ -185,7 +186,7 @@ local function drawSkillNotice()
     draw.text({
         text = n.text,
         x = 320,
-        y = 430,
+        y = y or 430,
         font = 1,
         lx = 0.4,
         ly = 1.4,
@@ -542,36 +543,15 @@ local function drawWatch(vehicle)
 end
 
 local function drawVehiclePanel(vehicle)
-    local R = vehiclepanel.ROWS
     local vt = vehicleType(getElementData(vehicle, "vehicles.type"))
-    local fuel = tonumber(getElementData(vehicle, "vehicles.fuel")) or 0
-    local locked = tonumber(getElementData(vehicle, "vehicles.locked")) or 0
-    local vx, vy, vz = getElementVelocity(vehicle)
-    local function row(text, y, rgb, ly)
-        draw.text({
-            text = text,
-            x = 620,
-            y = y,
-            font = 2,
-            lx = 0.25,
-            ly = ly or 1.6,
-            colour = tocolor(rgb[1], rgb[2], rgb[3], 255),
-            align = "right",
-            outline = 1,
-        })
-    end
-    row("DOR", R.doors, vehiclepanel.stateColour(locked == 0))
-    row("ENG", R.engine, vehiclepanel.stateColour(getVehicleEngineState(vehicle)))
-    row("DMG", R.damage, vehiclepanel.damageColour(getElementHealth(vehicle) or 0))
-    row(vehiclepanel.fuelText(fuel, vt and vt.maxFuel or 0), R.fuel, { 255, 255, 255 })
-    row(vehiclepanel.speedText(vx, vy, vz), R.speed, { 255, 255, 255 })
+    local N = vehiclepanel.NAME
     draw.text({
         text = vt and vt.name or getVehicleName(vehicle),
-        x = 621,
-        y = R.name,
+        x = N.x,
+        y = N.y,
         font = 2,
-        lx = 0.35,
-        ly = 1.8,
+        lx = N.lx,
+        ly = N.ly,
         colour = WHITE,
         align = "right",
         outline = 1,
@@ -597,11 +577,12 @@ addEventHandler("onClientRender", root, function()
     if not onDuty then
         drawWatch(vehicle)
     end
-    drawSkillNotice()
+    local vt = driver and vehicleType(getElementData(vehicle, "vehicles.type")) or nil
+    local dash = vt and not vt.noEngine and (vt.maxFuel or 0) > 0
+    drawSkillNotice(dash and dashboard.TOP - 16 or nil)
     if driver then
         drawVehiclePanel(vehicle)
-        local vt = vehicleType(getElementData(vehicle, "vehicles.type"))
-        if vt and not vt.noEngine and (vt.maxFuel or 0) > 0 then
+        if dash then
             dashboard.draw(vehicle, vt)
         end
     end

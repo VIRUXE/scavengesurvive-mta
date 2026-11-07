@@ -1,6 +1,7 @@
--- The driver's dashboard, bottom centre: a strip of warning lamps over a tachometer and a voltmeter, lit from the
--- vehicle's state (battery, damage, fuel, headlights) and playing a short "performance" when the engine is
--- cranked or stalls, so each way a start can fail looks different (vehicles' engineCranked / engineStalled).
+-- The driver's dashboard, bottom centre: an analog cluster (speedometer, tachometer, fuel gauge, voltmeter and a row
+-- of tell-tale lamps), lit from the vehicle's state (battery, damage, fuel, headlights) and playing a short
+-- "performance" when the engine is cranked or stalls, so each way a start can fail looks different (vehicles'
+-- engineCranked / engineStalled).
 -- Pure logic: no MTA calls at file scope. Levels are percent, times are milliseconds.
 local M = {}
 
@@ -8,7 +9,7 @@ local M = {}
 M.BATTERY_FLAT = 10
 M.BATTERY_LOW = 25
 M.FUEL_LOW = 0.15 -- share of the tank: the lamp comes on
-M.FUEL_RESERVE = 0.05 -- the lamp flashes
+M.FUEL_RESERVE = 0.05 -- the lamp goes red
 -- vehicles/shared/logic/vehicle.lua HEALTH_CHUNK_1..3: wrecked (no start), broken (stalls), a bit broken
 M.HEALTH_WRECKED, M.HEALTH_BROKEN, M.HEALTH_WORN = 300, 450, 650
 
@@ -24,32 +25,66 @@ local GREEN = { 0x33, 0xFF, 0x33 }
 M.LAMPS = {
     { key = "bat", label = "BAT", colour = RED },
     { key = "chk", label = "CHK", colour = AMBER },
-    { key = "fuel", label = "FUEL", colour = AMBER },
     { key = "lgt", label = "LGT", colour = GREEN },
+    { key = "dor", label = "DOR", colour = GREEN },
 }
 M.RED = RED
+-- the low-fuel lamp: the pump tell-tale in the middle of the row
+M.FUEL_LAMP = { key = "fuel", colour = AMBER }
+
+-- Speed in km/h from an element velocity (the same scale the tachometer's gear bands use).
+function M.kmh(vx, vy, vz)
+    return math.sqrt((vx or 0) ^ 2 + (vy or 0) ^ 2 + (vz or 0) ^ 2) * 180
+end
+
+-- The speedometer's full scale for a handling top speed: rounded up to a step, never under 120 or over 320.
+function M.speedScale(maxKmh)
+    local top = math.max(120, math.min(320, (maxKmh or 160) * 1.1))
+    local step = top > 160 and 40 or 20
+    return math.ceil(top / step) * step
+end
+
+-- The numbered step on a speedometer of full scale `top`.
+function M.speedStep(top)
+    return top > 160 and 40 or 20
+end
+
+-- The voltmeter: 8 .. 16 V, red under VOLTS_LOW. Returns the needle's share 0 .. 1.
+M.VOLTS_MIN, M.VOLTS_MAX, M.VOLTS_LOW = 8, 16, 10.5
+function M.voltShare(v)
+    return math.max(0, math.min(1, ((v or 0) - M.VOLTS_MIN) / (M.VOLTS_MAX - M.VOLTS_MIN)))
+end
+
+-- The needle's position on the fuel gauge: 0 (E) .. 1 (F).
+function M.fuelShare(fuel, maxFuel)
+    if (maxFuel or 0) <= 0 then
+        return 0
+    end
+    return math.max(0, math.min(1, (fuel or 0) / maxFuel))
+end
 
 -- What each crank outcome looks like (the code vehicles sends; false: it started):
 --   bulb  every lamp lit for its first ms, as a real dash checks its bulbs when the key turns
 --   crank how the needle moves while the starter turns: "catch" fires up, "click" a solenoid clicking on a flat
 --         battery, "grind" a starter fighting a wrecked engine, "steady" an even crank that never catches
---   ms    how long the starter turns; flash = the lamp that then flashes fast for FLASH_MS
+--   ms    how long the starter turns; steady = the lamp that then stays lit for FLASH_MS (a lamp never flashes on a
+--         failed start)
 --   sound the file in hud/sounds (without .wav) played with it, cut to the same beats (tools/make_ignition_sounds.py)
 M.FLASH_MS = 4000
 M.CRANKS = {
     OK = { bulb = 700, crank = "catch", ms = 1400, sound = "crank_start" },
     ACC = { bulb = 700, ms = 700, sound = "acc_on" }, -- the key turned to ACC: only the bulb check, no starter
     NO_BATTERY = { ms = 0 }, -- nothing at all: the dash stays dark and silent
-    BATTERY_FLAT = { crank = "click", ms = 1300, flash = "bat", flicker = true, sound = "crank_flat" },
-    -- a dead starter motor: the solenoid clicks on a healthy battery, so BAT just stays lit (no flash, the battery
-    -- is fine)
-    STARTER_BAD = { bulb = 700, crank = "dead", ms = 1300, steady = "bat", sound = "crank_dead" },
-    DAMAGED = { bulb = 700, crank = "grind", ms = 2200, flash = "chk", sound = "crank_grind" },
-    NO_FUEL = { bulb = 700, crank = "steady", ms = 2200, flash = "fuel", sound = "crank_steady" },
+    BATTERY_FLAT = { crank = "click", ms = 1300, flicker = true, sound = "crank_flat" },
+    -- a dead starter motor: the solenoid clicks on a healthy battery (no lamp: the charge lamp is the alternator's)
+    STARTER_BAD = { bulb = 700, crank = "dead", ms = 1300, sound = "crank_dead" },
+    DAMAGED = { bulb = 700, crank = "grind", ms = 2200, steady = "chk", sound = "crank_grind" },
+    NO_FUEL = { bulb = 700, crank = "steady", ms = 2200, steady = "fuel", sound = "crank_steady" },
 }
--- A stall: the needle drops, BAT and CHK come on as the alternator stops (STALL_MS), the cause flashes.
+-- A stall: the needle drops, CHK (bar an empty tank) comes on (STALL_MS), the cause
+-- flashes.
 M.STALL_MS = 1500
-M.STALLS = { NO_FUEL = "fuel", DAMAGED = "chk", STALL = "chk", BATTERY_FLAT = "bat", NO_BATTERY = "bat" }
+M.STALLS = { NO_FUEL = "fuel", DAMAGED = "chk", STALL = "chk", BATTERY_FLAT = "chk", NO_BATTERY = "chk" }
 M.STALL_SOUND = "engine_stall"
 
 -- The sound file (hud/sounds, no extension) a performance plays, or nil for a silent one: p = { kind, code } as in
@@ -99,36 +134,33 @@ function M.lit(mode, now)
     return false
 end
 
--- The lamps for a vehicle state: s = { bay, battery (percent, nil: none fitted), engine, lights, health, fuel,
--- maxFuel }. Returns key -> { mode, colour (nil: the lamp's own) }.
+-- The lamps for a vehicle state: s = { bay, battery (percent, nil: none fitted), alternator (false: bad), engine,
+-- lights, health, fuel, maxFuel, locked }. Returns key -> { mode, colour (nil: the lamp's own) }.
 function M.lamps(s)
-    local out = {}
+    local out = { fuel = { mode = "off" } }
     for _, lamp in ipairs(M.LAMPS) do
         out[lamp.key] = { mode = "off" }
     end
-    if s.bay and type(s.battery) == "number" then
-        if s.battery < M.BATTERY_FLAT then
-            out.bat.mode = "fast"
-        elseif s.battery < M.BATTERY_LOW then
-            out.bat.mode = "slow"
-        elseif s.lights and not s.engine then
-            out.bat.mode = "on" -- headlights running the battery down
-        end
+    -- BAT is the charge lamp: it means the alternator is not charging (s.alternator == false, with the engine
+    -- running). A low, flat or missing battery or the key in ACC do not light it, and nothing in vehicles fails an
+    -- alternator yet, so it stays dark until something sets that.
+    if s.alternator == false and s.engine then
+        out.bat.mode = "on"
     end
     local hp = s.health or 1000
     if hp <= M.HEALTH_WRECKED then
-        out.chk = { mode = "fast", colour = RED }
+        out.chk = { mode = "on", colour = RED }
     elseif hp <= M.HEALTH_BROKEN then
-        out.chk.mode = "slow"
+        out.chk.mode = "on"
     elseif hp <= M.HEALTH_WORN then
         out.chk.mode = "on"
     end
     if (s.maxFuel or 0) > 0 then
         local share = (s.fuel or 0) / s.maxFuel
         if (s.fuel or 0) <= 0 then
-            out.fuel = { mode = "fast", colour = RED }
+            out.fuel = { mode = "on", colour = RED }
         elseif share <= M.FUEL_RESERVE then
-            out.fuel.mode = "slow"
+            out.fuel = { mode = "on", colour = RED }
         elseif share <= M.FUEL_LOW then
             out.fuel.mode = "on"
         end
@@ -136,6 +168,8 @@ function M.lamps(s)
     if s.lights then
         out.lgt.mode = "on"
     end
+    -- DOR is the door lock: lit green while the doors are open to anyone, red while they are locked
+    out.dor = { mode = "on", colour = s.locked and RED or GREEN }
     return out
 end
 
@@ -191,7 +225,8 @@ function M.sample(p, elapsed, rng)
         end
         local out = { flash = flash }
         if elapsed < M.STALL_MS then
-            out.solid = { bat = true, chk = true }
+            -- the engine cutting out: CHK comes on unless the cause is plain (an empty tank is no fault)
+            out.solid = { chk = p.code ~= "NO_FUEL" or nil }
         end
         return out
     end

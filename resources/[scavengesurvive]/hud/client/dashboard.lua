@@ -1,47 +1,87 @@
--- The driver's dashboard, bottom centre (rules in hud/shared/logic/dashboard.lua): a translucent black strip in the
--- HUD's style, the warning lamps in Bank Gothic as the vehicle panel's rows, a segmented tachometer and a voltmeter.
--- It sits under the skill notice (y 430) and the overheat bar (380..400), clear of the action text and tips.
+-- The driver's dashboard, bottom centre (rules in hud/shared/logic/dashboard.lua): an analog instrument cluster in a
+-- dark binnacle. A speedometer dial (with a digital readout) on the left, a tachometer on the right, a fuel gauge and
+-- a voltmeter between them over a row of tell-tale lamps, and the ignition barrel outside the hood's left end. The
+-- markings are lit by the backlight only while the panel has power; the needles rest at their stops otherwise.
+-- It spans y 430..478, under the overheat bar (380..400); the skill notice moves above it while it shows.
 -- ctx = { canvas, c, logic }.
 return function(ctx)
     local canvas, c, logic = ctx.canvas, ctx.c, ctx.logic
     local M = {}
 
     -- canvas units, anchored on the screen's centre
-    local X, Y, W, H = 236, 445, 168, 30
-    local PAD = 4
-    local LAMP_Y, LAMP_H = Y + 4, 11
-    local GAUGE_Y, GAUGE_H = Y + 19, 7
-    local TACHO_X, TACHO_W, SEGMENTS = X + 26, 88, 22
+    M.TOP = 430
+    local X, Y, W, H = 214, M.TOP, 212, 48
+    local DIAL_R, DIAL_CY = 21, Y + 25
+    local SPEEDO_CX, TACHO_CX = X + 38, X + W - 38
+    local DIAL_SWEEP = 120 -- degrees either side of straight up
+    local SMALL_R, SMALL_CY, SMALL_SWEEP = 12, Y + 27, 55
+    local FUEL_CX, VOLT_CX = 302, 338
+    local TELL_Y = Y + 40
+    local TELL_X = { 287, 303.5, 320, 336.5, 353 }
 
-    -- the ignition switch: a square cell of its own to the left of the strip, the key turning through four positions
-    local IGN_X = X - H - 4
-    local IGN_R, IGN_TICK_R = 8, 12
+    -- the ignition switch: a chrome barrel on its own plate left of the hood, the key turning through its positions
+    local IGN_CX, IGN_CY = X - 15, Y + H - 16
+    local IGN_R, IGN_TICK_R = 7, 10.5
 
-    local BACK = tocolor(0, 0, 0, 170)
-    local FRAME = tocolor(70, 70, 70, 200)
-    local UNLIT_BOX = tocolor(28, 28, 28, 220)
-    local UNLIT_TEXT = tocolor(75, 75, 75, 255)
-    local UNLIT_SEGMENT = tocolor(50, 50, 50, 220)
+    local HOOD = tocolor(14, 14, 16, 250)
+    local HOOD_RIM = tocolor(58, 58, 62, 250)
+    local HOOD_EDGE = tocolor(90, 90, 96, 255)
+    local FACE = tocolor(6, 6, 8, 255)
+    local CHROME, CHROME_DARK = tocolor(150, 150, 156, 255), tocolor(48, 48, 52, 255)
+    local UNLIT_LAMP = tocolor(38, 38, 40, 255)
+    local UNLIT_INK = { 70, 70, 72 } -- printed markings with the backlight off
+    local LIT_INK = { 236, 232, 220 } -- warm white backlight
+    local NEEDLE_LIT, NEEDLE_DARK = { 255, 72, 30 }, { 120, 50, 30 }
+    local LCD_BACK = tocolor(10, 16, 12, 255)
+    local LCD_INK = { 120, 255, 170 }
     local AMBER = { 0xFF, 0xA8, 0x00 }
 
     local performance = nil -- { kind = "crank" | "stall", code, vehicle, start }
     local preview = nil -- dashboardPreview overrides of the vehicle's state
     local needle, lastTick, lastVehicle, handling = 0, nil, nil, nil
     local keyAngle, keyVehicle = 0, nil -- the key's shown angle and the vehicle it was set for
+    local shown = { speed = 0, fuel = 0, volts = 0 } -- the eased needles of the speedometer and the small gauges
+    local speedTop = 160
 
     local function px(x)
         return canvas.x(c, x, "center")
     end
 
-    local function label(text, x, y, w, h, colour, ly, align)
-        local scaleY = canvas.textScale(c, ly, 2)
-        local scaleX = scaleY * canvas.xScale(2, ly * 0.2, ly)
-        local top, bottom = canvas.y(c, y), canvas.y(c, y + h)
-        dxDrawText(text, px(x), top, px(x + w), bottom, colour, scaleX, scaleY, "bankgothic", align, "center")
-    end
-
     local function rgba(rgb, a)
         return tocolor(rgb[1], rgb[2], rgb[3], math.floor(math.max(0, math.min(255, a)) + 0.5))
+    end
+
+    -- the backlit ink: the unlit print blended up to the warm backlight by glow 0..1
+    local function ink(glow, rgb)
+        local to = rgb or LIT_INK
+        local g = math.max(0, math.min(1, glow))
+        return tocolor(
+            UNLIT_INK[1] + (to[1] - UNLIT_INK[1]) * g,
+            UNLIT_INK[2] + (to[2] - UNLIT_INK[2]) * g,
+            UNLIT_INK[3] + (to[3] - UNLIT_INK[3]) * g,
+            255
+        )
+    end
+
+    -- text centred on canvas (x, y), letter height ly; font 1 (Tahoma Bold) for the numerals, 2 for the labels
+    local function text(s, x, y, colour, ly, font)
+        font = font or 1
+        local scaleY = canvas.textScale(c, ly, font)
+        local scaleX = scaleY * canvas.xScale(font, ly * 0.22, ly)
+        local h = ly * 10
+        dxDrawText(
+            s,
+            px(x - 20),
+            canvas.y(c, y - h / 2),
+            px(x + 20),
+            canvas.y(c, y + h / 2),
+            colour,
+            scaleX,
+            scaleY,
+            canvas.font(font),
+            "center",
+            "center"
+        )
     end
 
     local SOUND_VOLUME = 0.8
@@ -87,6 +127,7 @@ return function(ctx)
             engine = getVehicleEngineState(vehicle),
             acc = getElementData(vehicle, "vehicles.acc") == true,
             lights = getVehicleOverrideLights(vehicle) == 2,
+            locked = (tonumber(getElementData(vehicle, "vehicles.locked")) or 0) ~= 0,
             health = getElementHealth(vehicle),
             fuel = tonumber(getElementData(vehicle, "vehicles.fuel")) or 0,
             maxFuel = vt and vt.maxFuel or 0,
@@ -97,138 +138,310 @@ return function(ctx)
         return s
     end
 
-    local function targetRpm(vehicle, s)
+    -- a new vehicle under the driver: its handling (gears, top speed) and the needles back at rest
+    local function track(vehicle)
+        if vehicle ~= lastVehicle then
+            lastVehicle, handling, needle = vehicle, getVehicleHandling(vehicle), 0
+            speedTop = logic.speedScale(handling and handling.maxVelocity)
+            shown.speed, shown.fuel, shown.volts = 0, 0, 0
+        end
+    end
+
+    local function targetRpm(vehicle, s, kmh)
         if not s.engine then
             return 0
         end
-        if vehicle ~= lastVehicle then
-            lastVehicle, handling, needle = vehicle, getVehicleHandling(vehicle), 0
-        end
-        local vx, vy, vz = getElementVelocity(vehicle)
-        local kmh = math.sqrt(vx * vx + vy * vy + vz * vz) * 180
         local throttle = getPedControlState(localPlayer, "accelerate")
         local gear = getVehicleCurrentGear(vehicle)
         return logic.rpm(kmh, gear, handling and handling.maxVelocity, handling and handling.numberOfGears, throttle)
     end
 
-    local function drawLamps(s, shot, powered, glow, now)
+    -- canvas-unit primitives
+    local function rect(x, y, w, h, colour)
+        dxDrawRectangle(px(x), canvas.y(c, y), canvas.len(c, w), canvas.len(c, h), colour)
+    end
+
+    local function stroke(x1, y1, x2, y2, colour, width)
+        dxDrawLine(px(x1), canvas.y(c, y1), px(x2), canvas.y(c, y2), colour, math.max(1, canvas.len(c, width)))
+    end
+
+    local function disc(x, y, r, colour)
+        dxDrawCircle(px(x), canvas.y(c, y), canvas.len(c, r), 0, 360, colour, colour, 32)
+    end
+
+    local function frame(x, y, w, h, col, t)
+        rect(x, y, w, t, col)
+        rect(x, y + h - t, w, t, col)
+        rect(x, y, t, h, col)
+        rect(x + w - t, y, t, h, col)
+    end
+
+    -- a dial's geometry: the point at `frac` (0 .. 1 along a sweep of +-`sweep` degrees from straight up), `r` out
+    local function polar(cx, cy, sweep, frac, r)
+        local a = math.rad(-sweep + 2 * sweep * frac)
+        return cx + math.sin(a) * r, cy - math.cos(a) * r
+    end
+
+    local function tick(cx, cy, sweep, frac, r1, r2, colour, width)
+        local ax, ay = polar(cx, cy, sweep, frac, r1)
+        local bx, by = polar(cx, cy, sweep, frac, r2)
+        stroke(ax, ay, bx, by, colour, width)
+    end
+
+    -- an arc band from f1 to f2 at radius r
+    local function arc(cx, cy, sweep, f1, f2, r, colour, width)
+        local steps = math.max(2, math.ceil((f2 - f1) * sweep / 6))
+        for i = 0, steps - 1 do
+            local a, b = f1 + (f2 - f1) * i / steps, f1 + (f2 - f1) * (i + 1) / steps
+            local ax, ay = polar(cx, cy, sweep, a, r)
+            local bx, by = polar(cx, cy, sweep, b, r)
+            stroke(ax, ay, bx, by, colour, width)
+        end
+    end
+
+    local function needleAt(cx, cy, sweep, frac, len, tail, width, powered)
+        local tx, ty = polar(cx, cy, sweep, frac, len)
+        local sx, sy = polar(cx, cy, sweep, frac, -tail)
+        local rgb = powered and NEEDLE_LIT or NEEDLE_DARK
+        stroke(sx, sy, tx, ty, rgba(rgb, 255), width)
+    end
+
+    local function hub(cx, cy, r)
+        disc(cx, cy, r, CHROME_DARK)
+        disc(cx, cy, r * 0.55, CHROME)
+    end
+
+    -- a big dial's bezel and face
+    local function bezel(cx, cy, r)
+        disc(cx, cy, r + 1.8, CHROME_DARK)
+        disc(cx, cy, r + 1.1, CHROME)
+        disc(cx, cy, r + 0.4, CHROME_DARK)
+        disc(cx, cy, r, FACE)
+    end
+
+    -- a car battery: the case outline, two terminal posts on top, a + and a - on its face
+    local function batteryIcon(cx, cy, col)
+        local x, y, w, h, t = cx - 5.5, cy - 2.2, 11, 6.6, 0.9
+        frame(x, y, w, h, col, t)
+        rect(x + 1.6, y - 1.5, 2.2, 1.5, col)
+        rect(x + w - 3.8, y - 1.5, 2.2, 1.5, col)
+        rect(x + 2, y + 3.0, 2.4, 0.8, col) -- the minus
+        rect(x + w - 4.4, y + 3.0, 2.4, 0.8, col) -- the plus: bar and upright
+        rect(x + w - 3.6, y + 2.2, 0.8, 2.4, col)
+    end
+
+    -- the check-engine symbol: an engine seen from the side in outline, the air cleaner on its stem over the intake,
+    -- the block with two cylinders, the fan end on the left, the exhaust end on the right, the oil pan under it
+    local function engineIcon(cx, cy, col)
+        local t = 0.8
+        rect(cx - 2.6, cy - 4.8, 3.6, t, col) -- air cleaner
+        rect(cx - 0.9, cy - 4.0, t, 1.2, col) -- its stem
+        frame(cx - 3.2, cy - 2.9, 5.6, 2.3, col, t) -- intake manifold
+        frame(cx - 4.2, cy - 1.0, 8.4, 4.6, col, t) -- block
+        rect(cx - 1.5, cy + 0.2, t, 2.4, col) -- cylinders
+        rect(cx + 1.2, cy + 0.2, t, 2.4, col)
+        frame(cx - 6.4, cy + 0.2, 2.2, 2.8, col, t) -- fan end
+        rect(cx - 7.4, cy + 1.2, 1.0, t, col) -- its shaft
+        frame(cx + 4.2, cy + 0.6, 2.0, 3.0, col, t) -- exhaust end
+        frame(cx - 3.0, cy + 3.6, 6.0, 1.3, col, t) -- oil pan
+    end
+
+    -- a headlamp: the rounded lens on the right, three beams streaming left
+    local function lightIcon(cx, cy, col)
+        local rx, ry, steps = 3.6, 4.2, 10
+        for i = 0, steps - 1 do
+            local u = (i + 0.5) / steps
+            local half = ry * math.sqrt(1 - u * u)
+            rect(cx - 0.6 + u * rx, cy - half, rx / steps + 0.15, half * 2, col)
+        end
+        rect(cx - 1.3, cy - ry, 0.8, ry * 2, col) -- the flat back of the lens
+        for k = -1, 1 do
+            stroke(cx - 2.4, cy + k * 2.6, cx - 6.4, cy + k * 2.6 + 0.9, col, 0.8)
+        end
+    end
+
+    -- a side-on car door: the roofline, the stepped A-pillar over the window, the sill, the lower panel and a handle
+    local function doorIcon(cx, cy, col)
+        local x, y, t = cx - 4.2, cy - 4.5, 0.8
+        rect(x + 2.2, y, 6.2, t, col)
+        rect(x + 7.6, y, t, 9, col)
+        rect(x, y + 8.2, 8.4, t, col)
+        rect(x, y + 2.8, t, 6.4, col)
+        rect(x, y + 3.6, 8.4, t, col)
+        rect(x + 1.7, y + 0.8, t, 1.1, col)
+        rect(x + 0.9, y + 1.9, t, 1.0, col)
+        rect(x + 2.0, y + 5.8, 2.8, t, col)
+    end
+
+    -- a fuel pump: the column with its window, the base, the hose hooked over the side to the nozzle
+    local function fuelIcon(cx, cy, col)
+        local t = 0.8
+        frame(cx - 3.6, cy - 4.4, 5.2, 8.6, col, t)
+        rect(cx - 2.8, cy - 3.6, 3.6, 2.4, col) -- the window
+        rect(cx - 4.6, cy + 4.2, 7.2, t, col) -- the base
+        rect(cx + 1.6, cy - 1.6, 1.6, t, col) -- the hose out of the column
+        rect(cx + 2.8, cy - 1.6, t, 4.2, col) -- down the side
+        rect(cx + 2.8, cy - 3.8, t, 1.6, col) -- the nozzle hung up top
+        rect(cx + 1.8, cy - 4.4, 1.8, t, col)
+    end
+
+    local ICONS = { bat = batteryIcon, chk = engineIcon, lgt = lightIcon, dor = doorIcon, fuel = fuelIcon }
+    -- the tell-tale row, left to right
+    local TELLTALES = { logic.LAMPS[1], logic.LAMPS[2], logic.FUEL_LAMP, logic.LAMPS[3], logic.LAMPS[4] }
+
+    -- whether a lamp shows lit now and in which colour, with a performance's `shot` (or nil) laid over its state
+    local function lampShows(lamp, st, shot, powered, glow, now)
+        local on = logic.lit(st.mode, now)
+        local rgb = st.colour or lamp.colour
+        if shot then
+            if shot.bulb or (shot.solid and shot.solid[lamp.key]) then
+                on = true
+            end
+            if shot.flash == lamp.key then
+                on, rgb = logic.lit("fast", now), logic.RED
+            end
+        end
+        return on and powered and glow > 0, rgb
+    end
+
+    local function drawTelltales(s, shot, powered, glow, now)
         local lamps = logic.lamps(s)
-        local cell = (W - 2 * PAD) / #logic.LAMPS
-        for i, lamp in ipairs(logic.LAMPS) do
-            local st = lamps[lamp.key]
-            local on = logic.lit(st.mode, now)
-            local rgb = st.colour or lamp.colour
-            if shot then
-                if shot.bulb or (shot.solid and shot.solid[lamp.key]) then
-                    on = true
-                end
-                if shot.flash == lamp.key then
-                    on, rgb = logic.lit("fast", now), logic.RED
-                end
-            end
-            on = on and powered and glow > 0
-            local x = X + PAD + (i - 1) * cell + 1
-            local w = cell - 2
+        for i, lamp in ipairs(TELLTALES) do
+            local on, rgb = lampShows(lamp, lamps[lamp.key], shot, powered, glow, now)
+            local x = TELL_X[i]
             if on then
-                dxDrawRectangle(
-                    px(x),
-                    canvas.y(c, LAMP_Y),
-                    canvas.len(c, w),
-                    canvas.len(c, LAMP_H),
-                    rgba(rgb, 70 * glow)
-                )
-                label(lamp.label, x, LAMP_Y, w, LAMP_H, rgba(rgb, 255 * glow), 0.95, "center")
+                disc(x, TELL_Y, 6, rgba(rgb, 40 * glow)) -- the glow bleeding round the symbol
+                ICONS[lamp.key](x, TELL_Y, rgba(rgb, 255 * math.max(0.5, glow)))
             else
-                dxDrawRectangle(px(x), canvas.y(c, LAMP_Y), canvas.len(c, w), canvas.len(c, LAMP_H), UNLIT_BOX)
-                label(lamp.label, x, LAMP_Y, w, LAMP_H, UNLIT_TEXT, 0.95, "center")
+                ICONS[lamp.key](x, TELL_Y, UNLIT_LAMP)
             end
         end
     end
 
+    -- the binnacle: a stadium-shaped hood with a lighter rim and a bright lip along its top edge
+    local function drawHood()
+        local r = H / 2
+        disc(X + r, Y + r, r + 1, HOOD_RIM)
+        disc(X + W - r, Y + r, r + 1, HOOD_RIM)
+        rect(X + r, Y - 1, W - 2 * r, H + 2, HOOD_RIM)
+        disc(X + r, Y + r, r, HOOD)
+        disc(X + W - r, Y + r, r, HOOD)
+        rect(X + r, Y, W - 2 * r, H, HOOD)
+        rect(X + r, Y - 1, W - 2 * r, 0.5, HOOD_EDGE)
+    end
+
+    -- the speedometer: 0 .. speedTop km/h over 240 degrees, numbered every major step, with an LCD under the pivot
+    local function drawSpeedo(kmh, powered, glow)
+        local cx, cy, r = SPEEDO_CX, DIAL_CY, DIAL_R
+        bezel(cx, cy, r)
+        local major = logic.speedStep(speedTop)
+        local col = ink(glow)
+        local steps = speedTop / (major / 4)
+        for i = 0, steps do
+            local frac = i / steps
+            if i % 4 == 0 then
+                tick(cx, cy, DIAL_SWEEP, frac, r - 0.8, r - 4, col, 0.8)
+                local lx, ly = polar(cx, cy, DIAL_SWEEP, frac, r - 7.6)
+                text(tostring(math.floor(frac * speedTop + 0.5)), lx, ly, col, 0.42)
+            elseif i % 2 == 0 then
+                tick(cx, cy, DIAL_SWEEP, frac, r - 0.8, r - 2.8, col, 0.5)
+            else
+                tick(cx, cy, DIAL_SWEEP, frac, r - 0.8, r - 2, col, 0.4)
+            end
+        end
+        text("km/h", cx, cy - 5.5, col, 0.36, 2)
+        -- the LCD: the speed in digits, dark with the panel off
+        rect(cx - 6.5, cy + 6, 13, 5.6, LCD_BACK)
+        if powered then
+            text(string.format("%d", math.floor(kmh + 0.5)), cx, cy + 8.9, rgba(LCD_INK, 255 * glow), 0.46)
+        end
+        needleAt(cx, cy, DIAL_SWEEP, shown.speed / speedTop, r - 2, 3.5, 1.1, powered)
+        hub(cx, cy, 2.4)
+    end
+
+    -- the tachometer: 0 .. MAX_RPM, a number every thousand, the red zone from the redline
     local function drawTacho(powered, glow)
-        label("RPM", X + PAD, GAUGE_Y, 22, GAUGE_H, powered and rgba({ 200, 200, 200 }, 255 * glow) or UNLIT_TEXT, 0.8)
-        local frac = math.max(0, math.min(1, needle / logic.MAX_RPM))
-        local lit = powered and math.floor(frac * SEGMENTS + 0.5) or 0
-        local step = TACHO_W / SEGMENTS
-        for i = 1, SEGMENTS do
-            local share = i / SEGMENTS
-            local h = 2.5 + (GAUGE_H - 2.5) * share
-            local colour = UNLIT_SEGMENT
-            if i <= lit then
-                local rgb = share > logic.REDLINE and logic.RED or share > 0.65 and AMBER or { 235, 235, 235 }
-                colour = rgba(rgb, 255 * glow)
+        local cx, cy, r = TACHO_CX, DIAL_CY, DIAL_R
+        bezel(cx, cy, r)
+        local col = ink(glow)
+        arc(cx, cy, DIAL_SWEEP, logic.REDLINE, 1, r - 1.6, ink(glow, logic.RED), 1.8)
+        local thousands = logic.MAX_RPM / 1000
+        for i = 0, thousands * 4 do
+            local frac = i / (thousands * 4)
+            local red = frac >= logic.REDLINE
+            local tc = red and ink(glow, logic.RED) or col
+            if i % 4 == 0 then
+                tick(cx, cy, DIAL_SWEEP, frac, r - 0.8, r - 4, tc, 0.8)
+                local lx, ly = polar(cx, cy, DIAL_SWEEP, frac, r - 7.6)
+                text(tostring(i / 4), lx, ly, tc, 0.5)
+            elseif i % 2 == 0 then
+                tick(cx, cy, DIAL_SWEEP, frac, r - 0.8, r - 2.8, tc, 0.5)
             end
-            local x = TACHO_X + (i - 1) * step
-            dxDrawRectangle(
-                px(x),
-                canvas.y(c, GAUGE_Y + GAUGE_H - h),
-                canvas.len(c, step - 1),
-                canvas.len(c, h),
-                colour
-            )
         end
+        text("x1000", cx, cy - 6.2, col, 0.32, 2)
+        text("r/min", cx, cy - 2.8, col, 0.32, 2)
+        text("RPM", cx, cy + 9, col, 0.4, 2)
+        local frac = math.max(0, math.min(1, needle / logic.MAX_RPM))
+        needleAt(cx, cy, DIAL_SWEEP, powered and frac or 0, r - 2, 3.5, 1.1, powered)
+        hub(cx, cy, 2.4)
     end
 
-    local function drawVolts(volts, powered, glow)
-        local x = TACHO_X + TACHO_W + 2
-        local w = X + W - PAD - x
-        if not powered then
-            return label("--.-V", x, GAUGE_Y, w, GAUGE_H, UNLIT_TEXT, 1.0, "right")
+    -- a small gauge between the dials: a 110 degree scale, its low end red over `redTo`, labels at both ends
+    local function drawSmall(cx, frac, lowLabel, highLabel, name, redTo, powered, glow)
+        local cy, r = SMALL_CY, SMALL_R
+        local col, red = ink(glow), ink(glow, logic.RED)
+        arc(cx, cy, SMALL_SWEEP, 0, redTo, r, red, 0.6)
+        arc(cx, cy, SMALL_SWEEP, redTo, 1, r, col, 0.6)
+        for i = 0, 4 do
+            local f = i / 4
+            tick(cx, cy, SMALL_SWEEP, f, r, r - (i % 2 == 0 and 3 or 1.8), f < redTo and red or col, 0.6)
         end
-        local rgb = volts < 11.0 and logic.RED or volts < 11.9 and AMBER or { 255, 255, 255 }
-        label(string.format("%.1fV", volts), x, GAUGE_Y, w, GAUGE_H, rgba(rgb, 255 * glow), 1.0, "right")
+        -- the end labels just under the arc's ends and the name under the pivot, clear of the needle's sweep
+        local lx, ly = polar(cx, cy, SMALL_SWEEP, 0, r)
+        text(lowLabel, lx - 0.6, ly + 4, red, 0.36, 2)
+        local hx, hy = polar(cx, cy, SMALL_SWEEP, 1, r)
+        text(highLabel, hx + 0.6, hy + 4, col, 0.36, 2)
+        text(name, cx, cy + 4.2, col, 0.26, 2)
+        needleAt(cx, cy, SMALL_SWEEP, frac, r - 1.5, 2, 0.8, powered)
+        hub(cx, cy, 1.5)
     end
 
+    -- the ignition cylinder: the three positions as ticks (the one the key is in lit, green for ACC with the engine
+    -- running), the key pointing at the angle
     local TICK = {
         off = { 170, 170, 170 },
         acc = AMBER,
         start = { 0xFF, 0x22, 0x22 },
     }
     local RUNNING = { 0x33, 0xFF, 0x33 } -- the ACC tick while the engine runs
-    local METAL, METAL_INNER = tocolor(95, 95, 95, 230), tocolor(30, 30, 30, 240)
     local KEY, KEY_TAIL = tocolor(228, 205, 130, 255), tocolor(150, 135, 85, 255)
 
-    -- a little circle at canvas (x, y) with radius r canvas units
-    local function disc(x, y, r, colour)
-        dxDrawCircle(px(x), canvas.y(c, y), canvas.len(c, r), 0, 360, colour, colour, 24)
-    end
-
-    -- the ignition cylinder: the three positions as ticks (the one the key is in lit, green for ACC with the engine
-    -- running), the key pointing at the angle
     local function drawIgnition(pos, angle, running)
-        local cx, cy = IGN_X + H / 2, Y + H / 2
-        local x0, y0 = px(IGN_X), canvas.y(c, Y)
-        local w, h = canvas.len(c, H), canvas.len(c, H)
-        dxDrawRectangle(x0, y0, w, h, BACK)
-        dxDrawLine(x0, y0, x0 + w, y0, FRAME)
-        dxDrawLine(x0, y0 + h, x0 + w, y0 + h, FRAME)
-        dxDrawLine(x0, y0, x0, y0 + h, FRAME)
-        dxDrawLine(x0 + w, y0, x0 + w, y0 + h, FRAME)
+        local cx, cy = IGN_CX, IGN_CY
+        disc(cx, cy, IGN_TICK_R + 3, HOOD_RIM)
+        disc(cx, cy, IGN_TICK_R + 2.4, HOOD)
         for _, name in ipairs(logic.KEY_ORDER) do
             local a = math.rad(logic.KEY_ANGLES[name])
             local lit = name == pos
             disc(
                 cx + math.sin(a) * IGN_TICK_R,
                 cy - math.cos(a) * IGN_TICK_R,
-                lit and 1.7 or 1.2,
-                lit and rgba(running and name == "acc" and RUNNING or TICK[name], 255) or UNLIT_SEGMENT
+                lit and 1.5 or 1.1,
+                lit and rgba(running and name == "acc" and RUNNING or TICK[name], 255) or UNLIT_LAMP
             )
         end
-        disc(cx, cy, IGN_R, METAL)
-        disc(cx, cy, IGN_R - 1.3, METAL_INNER)
+        disc(cx, cy, IGN_R + 0.6, CHROME_DARK)
+        disc(cx, cy, IGN_R, CHROME)
+        disc(cx, cy, IGN_R - 1.4, CHROME_DARK)
         local a = math.rad(angle)
         local dx, dy = math.sin(a), -math.cos(a)
-        local width = math.max(1, canvas.len(c, 2.2))
-        dxDrawLine(px(cx), canvas.y(c, cy), px(cx - dx * 3), canvas.y(c, cy - dy * 3), KEY_TAIL, width)
-        dxDrawLine(
-            px(cx),
-            canvas.y(c, cy),
-            px(cx + dx * (IGN_R - 1.8)),
-            canvas.y(c, cy + dy * (IGN_R - 1.8)),
-            KEY,
-            width
-        )
-        disc(cx, cy, 1.3, METAL)
+        stroke(cx, cy, cx - dx * 3, cy - dy * 3, KEY_TAIL, 2)
+        stroke(cx, cy, cx + dx * (IGN_R - 1.6), cy + dy * (IGN_R - 1.6), KEY, 2)
+        disc(cx, cy, 1.2, CHROME)
+    end
+
+    local function ease(current, target, dt, ms)
+        return current + (target - current) * math.min(1, dt / ms)
     end
 
     -- the dashboard of `vehicle` (vt: its data vehicle type) for its driver; every frame
@@ -236,6 +449,7 @@ return function(ctx)
         local now = getTickCount()
         local dt = lastTick and math.max(0, math.min(100, now - lastTick)) or 0
         lastTick = now
+        track(vehicle)
         local s = stateOf(vehicle, vt)
         local powered = logic.powered(s)
         local shot = nil
@@ -245,31 +459,31 @@ return function(ctx)
         if not shot then
             performance = nil
         end
-        local glow = powered and (s.engine and 1 or 0.6) or 0
+        local glow = powered and (s.engine and 1 or 0.75) or 0
         if shot and (shot.bulb or shot.rpm) then
             glow = powered and 1 or 0 -- the key is turned: full backlight while the starter runs
         end
         if shot and shot.glow then
             glow = powered and shot.glow or 0
         end
-        local target = targetRpm(vehicle, s)
+        local kmh = logic.kmh(getElementVelocity(vehicle))
+        local target = targetRpm(vehicle, s, kmh)
         if shot and shot.rpm then
             needle = shot.rpm
         else
             needle = logic.needle(needle, target, dt)
         end
         local volts = shot and shot.volts or logic.volts(s)
+        shown.speed = ease(shown.speed, powered and math.min(kmh, speedTop) or 0, dt, 120)
+        shown.fuel = ease(shown.fuel, powered and logic.fuelShare(s.fuel, s.maxFuel) or 0, dt, 350)
+        shown.volts = ease(shown.volts, logic.voltShare(volts), dt, shot and 60 or 250)
 
-        local x0, y0 = px(X), canvas.y(c, Y)
-        local w, h = canvas.len(c, W), canvas.len(c, H)
-        dxDrawRectangle(x0, y0, w, h, BACK)
-        dxDrawLine(x0, y0, x0 + w, y0, FRAME)
-        dxDrawLine(x0, y0 + h, x0 + w, y0 + h, FRAME)
-        dxDrawLine(x0, y0, x0, y0 + h, FRAME)
-        dxDrawLine(x0 + w, y0, x0 + w, y0 + h, FRAME)
-        drawLamps(s, shot, powered, glow, now)
+        drawHood()
+        drawSpeedo(kmh, powered, glow)
         drawTacho(powered, glow)
-        drawVolts(volts, powered, glow)
+        drawSmall(FUEL_CX, shown.fuel, "E", "F", "FUEL", 0.125, powered, glow)
+        drawSmall(VOLT_CX, shown.volts, "8", "16", "VOLT", logic.voltShare(logic.VOLTS_LOW), powered, glow)
+        drawTelltales(s, shot, powered, glow, now)
 
         local pos = logic.keyPosition(s, shot)
         local keyTarget = logic.KEY_ANGLES[pos]
@@ -280,9 +494,9 @@ return function(ctx)
         drawIgnition(pos, keyAngle, s.engine)
     end
 
-    -- dev preview: overrides (a table of state fields: battery, bay, engine, acc, lights, health, fuel, maxFuel)
-    -- replace the vehicle's own until cleared with false (nil keeps them); kind "crank" | "stall" with a code plays
-    -- that performance on the vehicle driven, as if vehicles had sent it
+    -- dev preview: overrides (a table of state fields: battery, bay, engine, acc, lights, locked, health, fuel,
+    -- maxFuel) replace the vehicle's own until cleared with false (nil keeps them); kind "crank" | "stall" with a
+    -- code plays that performance on the vehicle driven, as if vehicles had sent it
     function M.preview(overrides, kind, code)
         if overrides == false then
             preview = nil

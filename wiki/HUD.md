@@ -33,27 +33,16 @@ The list is hidden while a dialog is open and while you are knocked out.
 
 Bearing, time and radio frequency on a black oval; see [Watch](Watch).
 
-## Bottom right: the vehicle panel
+## Bottom right: the vehicle's name
 
-While you drive, six rows in the corner:
-
-| Row | Meaning |
-|:--|:--|
-| `DOR` | doors: olive when unlocked, red when locked |
-| `ENG` | engine: olive when running, red when off |
-| `DMG` | damage: red when wrecked (300 health or less), orange when broken (up to 450), yellow when a bit broken (up to 650), olive above that |
-| `12.34L/60.00` | fuel in the tank and the tank's size |
-| `45km/h` | speed |
-| name | the vehicle's name |
-
-See [Vehicles](Vehicles), [Fuel](Fuel) and [Repairing & Locks](Repairing-and-Locks).
+While you drive, the vehicle's name sits in the bottom right corner. The doors, engine, fuel and speed are on the [Driver's Dashboard](Drivers-Dashboard) at the bottom centre; damage shows on the vehicle itself, as engine smoke and body damage. See [Vehicles](Vehicles), [Fuel](Fuel) and [Repairing & Locks](Repairing-and-Locks).
 
 ## Centre of the screen
 
 - **Action text**: one white line at about three quarters of the way down, replaced by each new message and gone after 3 seconds: `Equipped`, `Trunk locked`, `Extra 2 slots required`, `Engine stalled`, `Wounded: head  -12 hp  (bleeding)`, `Healed 2 wounds`...
 - **Progress bar**: a small grey bar above the action text while a held action runs (repairing, refuelling, a treatment, welding, casting a line...). It is cancelled when you move or let go of the key. The same bar reads out a knockout while you are unconscious.
 - **Help tips**: green text to the left of the centre with a tip for what you are doing, sometimes with a blue line under it. The tip on getting into a damaged vehicle stays 20 seconds. `/tooltips` turns them off and on; the choice is saved on your account.
-- **Skill notice**: `+Repair` and the like in green at the bottom for 5 seconds after an action trains a [skill](Skills).
+- **Skill notice**: `+Repair` and the like in green at the bottom for 5 seconds after an action trains a [skill](Skills); while you drive it sits just above the dashboard.
 - **Heat bar**: a red bar with `Overheating!` while you drive an armed vehicle and fire its gun, see [Vehicles](Vehicles).
 - **Darkness**: the screen darkens more and more below 40 health. Painkillers and Adrenaline hide it, see [Drugs](Drugs).
 - **Whitelist countdown**: `Not whitelisted / Time remaining mm:ss` at the top of the screen when the server's whitelist turns on and you are not on it, see [Account & Login](Account-and-Login).
