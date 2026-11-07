@@ -778,6 +778,14 @@ return function(ctx)
     -- A campfire or barbecue within reach of the local player (the hud's "Cook" hint), nil when none.
     local M = {}
 
+    -- true when no wall or map object lies between the player's chest and a drop spot at ground height z (items and
+    -- carried objects do not count, as for a pickup)
+    function M.dropSpotReachable(x, y, z)
+        local sx, sy, sz = getElementPosition(localPlayer)
+        sz = sz + 0.5
+        return rayClear(sx, sy, sz, x, y, z + 0.15) or rayClear(sx, sy, sz, x, y, z + 0.6)
+    end
+
     -- the snack machines this client draws whose glass still holds: { { id, x, y, z, rz, int, dim } }
     function M.intactMachines()
         local out = {}

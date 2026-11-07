@@ -45,10 +45,13 @@ function geometry.insideBox(lx, ly, lz, minX, minY, minZ, maxX, maxY, maxZ, marg
         and lz <= maxZ + margin
 end
 
--- The first free drop spot around (x, y): the heading first, then 30 degrees to either side in turn, at the asked
--- distance and then farther out. blocked(cx, cy) says whether a spot is taken; nil when nothing is free.
+-- The drop spots around (x, y), in the order they are tried: the heading first, then 30 degrees to either side in
+-- turn, at the asked distance and then farther out
+geometry.DROP_SCALES = { 1, 1.6, 2.2 }
+
+-- The first free drop spot around (x, y); blocked(cx, cy) says whether a spot is taken; nil when nothing is free
 function geometry.freeSpot(x, y, rz, ahead, blocked)
-    for _, scale in ipairs({ 1, 1.6, 2.2 }) do
+    for _, scale in ipairs(geometry.DROP_SCALES) do
         for step = 0, 12 do
             local turn = math.ceil(step / 2) * 30 * (step % 2 == 1 and 1 or -1)
             local cx, cy = geometry.dropPosition(x, y, rz + turn, ahead * scale)
@@ -57,6 +60,26 @@ function geometry.freeSpot(x, y, rz, ahead, blocked)
             end
         end
     end
+end
+
+-- Whether (cx, cy) is one of freeSpot's spots around (x, y): its distance within tol metres of a ring and its bearing
+-- within tolDeg of a 30 degree step from the heading rz (the server's position and heading lag the client's a little)
+function geometry.isDropSpot(x, y, rz, ahead, cx, cy, tol, tolDeg)
+    local ox, oy = cx - x, cy - y
+    local d = math.sqrt(ox * ox + oy * oy)
+    local ring = false
+    for _, scale in ipairs(geometry.DROP_SCALES) do
+        if math.abs(d - ahead * scale) <= tol then
+            ring = true
+        end
+    end
+    if not ring then
+        return false
+    end
+    -- forward (-sin rz, cos rz): the bearing of (ox, oy) in the same convention
+    local bearing = math.deg(math.atan2(-ox, oy))
+    local off = (bearing - rz) % 30
+    return off <= tolDeg or off >= 30 - tolDeg
 end
 
 function geometry.polygonWKT(minx, miny, maxx, maxy)

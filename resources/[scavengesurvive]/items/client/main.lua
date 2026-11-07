@@ -163,7 +163,8 @@ addEventHandler("treatmentStopped", localPlayer, function()
 end)
 
 -- A drop: the server has no bounding boxes, so it asks here for the first spot around the player that no vehicle's
--- box and no other world item's box (each plus a margin) holds, and drops there (server/hands.lua, itemDropSpotChosen)
+-- box and no other world item's box (each plus a margin) holds and no wall hides, and drops there
+-- (server/hands.lua, itemDropSpotChosen)
 local function insideElement(el, px, py, pz, margin)
     local minX, minY, minZ, maxX, maxY, maxZ = getElementBoundingBox(el)
     if not minX then
@@ -201,7 +202,7 @@ addEventHandler("itemDropSpotRequested", localPlayer, function()
                 return true
             end
         end
-        return false
+        return not world.dropSpotReachable(cx, cy, dz)
     end
     local cx, cy = geometry.freeSpot(x, y, rz, 1.0, blocked)
     triggerServerEvent("itemDropSpotChosen", localPlayer, cx, cy)

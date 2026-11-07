@@ -1284,10 +1284,12 @@ return function(ctx)
         end
         killTimer(timer)
         dropSpotPending[player] = nil
+        -- only one of the spots the client may pick (geometry.freeSpot), never one of its own choosing
         local px, py = getElementPosition(player)
+        local _, _, rz = getElementRotation(player)
         local spot
         if type(x) == "number" and type(y) == "number" and x == x and y == y then
-            if (x - px) ^ 2 + (y - py) ^ 2 <= 12 then
+            if geometry.isDropSpot(px, py, rz, 1.0, x, y, 0.35, 10) then
                 spot = { x, y }
             end
         end
