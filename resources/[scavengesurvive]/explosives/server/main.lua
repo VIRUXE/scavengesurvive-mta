@@ -304,6 +304,7 @@ detonateItem = function(itemId)
                     parentPlayer
                     and isElement(parentPlayer)
                     and not getElementData(parentPlayer, "auth.reauthProtection")
+                    and getElementData(parentPlayer, "staff.duty") ~= true
                 then
                     addVictim(parentPlayer)
                     killPed(parentPlayer)

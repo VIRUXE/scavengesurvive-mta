@@ -67,6 +67,10 @@ local function clearStatuses(player, restoreControls)
     end
 end
 state.clearStatuses = clearStatuses
+-- staff on duty (staff resource) are out of the game: their stats are frozen and nothing harms or kills them
+local function onDuty(p)
+    return isElement(p) and getElementData(p, "staff.duty") == true
+end
 local death = loadFile("server/death.lua")({
     db = db,
     net = net,
@@ -75,8 +79,10 @@ local death = loadFile("server/death.lua")({
     drop = drop,
     state = state,
     bodies = bodies,
+    onDuty = onDuty,
 })
 local tickCtx = { db = db, util = util, survival = survival, skills = skills, medical = medical, state = state }
+tickCtx.onDuty = onDuty
 tickCtx.bleeding = bleeding
 tickCtx.blood = loadFile("server/blood.lua")({ bleeding = bleeding, net = net })
 tickCtx.die = death.die
@@ -419,6 +425,9 @@ end
 
 function setInfection(player, kind, on)
     local st = state.byPlayer[player]
+    if on == true and onDuty(player) then
+        return false
+    end
     return st and not st.dead and treatment.setInfection(player, st, kind, on) or false
 end
 
@@ -438,6 +447,10 @@ function modifyStat(player, key, delta)
         return false
     end
     if getElementData(player, "auth.reauthProtection") then
+        return st[key]
+    end
+    -- on duty only healing goes through: less bleed, more hp or food
+    if onDuty(player) and ((key == "bleed" and delta > 0) or (key ~= "bleed" and delta < 0)) then
         return st[key]
     end
     local hi = key == "bleed" and 1 or 100
@@ -499,7 +512,7 @@ end
 
 function applyWound(player, bleedAdd, hpLoss, killer, cause)
     local st = state.byPlayer[player]
-    if not st or st.dead or getElementData(player, "auth.reauthProtection") then
+    if not st or st.dead or getElementData(player, "auth.reauthProtection") or onDuty(player) then
         return false
     end
     bleedAdd = math.max(0, tonumber(bleedAdd) or 0)
@@ -553,7 +566,12 @@ end
 
 -- by: the player who caused it (optional, only logged)
 function knockOutPlayer(player, durationMs, by)
-    if not isElement(player) or isPedDead(player) or getElementData(player, "auth.reauthProtection") then
+    if
+        not isElement(player)
+        or isPedDead(player)
+        or getElementData(player, "auth.reauthProtection")
+        or onDuty(player)
+    then
         return false
     end
     local st = state.byPlayer[player]

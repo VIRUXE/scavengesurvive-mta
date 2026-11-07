@@ -68,7 +68,7 @@ return function(ctx)
     -- silent: the player is leaving (combat log); no kill animation and no death screen, only the drop
     function M.die(player, cause, killer, silent)
         local st = state.byPlayer[player]
-        if not st or st.dead or getElementData(player, "auth.reauthProtection") then
+        if not st or st.dead or getElementData(player, "auth.reauthProtection") or ctx.onDuty(player) then
             return false
         end
         st.dead, st.hp = true, 0
@@ -87,7 +87,13 @@ return function(ctx)
         end
         local c = { player = player, st = st, charId = st.id, cause = cause, killer = killer, silent = silent }
         c.name = getPlayerName(player)
-        triggerEvent("characterDeathLogged", player, c.name, cause, isElement(killer) and getElementType(killer) == "player" and getPlayerName(killer) or false)
+        triggerEvent(
+            "characterDeathLogged",
+            player,
+            c.name,
+            cause,
+            isElement(killer) and getElementType(killer) == "player" and getPlayerName(killer) or false
+        )
         local _, _, rz = getElementRotation(player)
         groundSpots(player, x, y, z, measure, function(spots)
             local ring, clothes = drop.split(spots)
@@ -95,28 +101,24 @@ return function(ctx)
             db.call("character_death_drop", params, function(res)
                 -- logged before the element check: a combat logger's element is gone by the time the drop commits
                 local ok = res and res.ok
-                log.event(
-                    "character.died",
-                    {
-                        player = isElement(c.player) and c.player or nil,
-                        name = c.name,
-                        account_id = c.st.accountId,
-                        character_id = c.charId,
-                        ok = ok and true or false,
-                        code = not ok and (res and res.code or "DB_ERROR") or nil,
-                        cause = c.cause,
-                        killer = isElement(c.killer) and c.killer or nil,
-                        silent = c.silent and true or nil,
-                        x = x,
-                        y = y,
-                        z = z,
-                        int = int,
-                        dim = dim,
-                        age_s = c.st.born and math.max(0, getRealTime().timestamp - c.st.born) or nil,
-                        items_dropped = ok and tonumber(res.payload.dropped) or nil,
-                    },
-                    ok and "info" or "error"
-                )
+                log.event("character.died", {
+                    player = isElement(c.player) and c.player or nil,
+                    name = c.name,
+                    account_id = c.st.accountId,
+                    character_id = c.charId,
+                    ok = ok and true or false,
+                    code = not ok and (res and res.code or "DB_ERROR") or nil,
+                    cause = c.cause,
+                    killer = isElement(c.killer) and c.killer or nil,
+                    silent = c.silent and true or nil,
+                    x = x,
+                    y = y,
+                    z = z,
+                    int = int,
+                    dim = dim,
+                    age_s = c.st.born and math.max(0, getRealTime().timestamp - c.st.born) or nil,
+                    items_dropped = ok and tonumber(res.payload.dropped) or nil,
+                }, ok and "info" or "error")
                 if not isElement(c.player) then
                     return
                 end
@@ -156,6 +158,24 @@ return function(ctx)
         if not st or st.dead then
             return
         end
+        if ctx.onDuty(source) then
+            -- a native death (a killPed, a fall) must not end a staff member on duty: stand them up where they fell
+            local x, y, z = getElementPosition(source)
+            local _, _, rz = getElementRotation(source)
+            spawnPlayer(
+                source,
+                x,
+                y,
+                z,
+                rz,
+                getElementModel(source),
+                getElementInterior(source),
+                getElementDimension(source)
+            )
+            setElementHealth(source, math.max(1, st.hp))
+            exports.staff:reapplyDutySkin(source)
+            return
+        end
         local cause = weapon == 53 and "drowned" or weapon == 54 and "fall" or weapon == 37 and "burned" or "killed"
         M.die(source, cause, isElement(killer) and getElementType(killer) == "player" and killer or false)
     end)
@@ -176,16 +196,12 @@ return function(ctx)
                     return
                 end
                 if not res or not res.ok then
-                    log.event(
-                        "character.dropAll",
-                        {
-                            player = player,
-                            character_id = st.id,
-                            ok = false,
-                            code = res and res.code or "DB_ERROR",
-                        },
-                        res and res.code == "NOT_ALIVE" and "info" or "warn"
-                    )
+                    log.event("character.dropAll", {
+                        player = player,
+                        character_id = st.id,
+                        ok = false,
+                        code = res and res.code or "DB_ERROR",
+                    }, res and res.code == "NOT_ALIVE" and "info" or "warn")
                     return
                 end
                 log.event("character.dropAll", {

@@ -2,8 +2,8 @@
 -- setmotd, acmds, restart). Upstream: admin/admin.pwn (duty, acmds, adminlist), level2.pwn (goto/get/gotopos,
 -- setmotd), level3.pwn (spec/free), level4.pwn (setadmin, players), spectate.pwn, name-tags.pwn.
 -- Deviation: upstream duty logs the character out of the world; here the character stays loaded and the duty
--- flag makes the staff member immune to player damage (weapons checks staff.duty) until character exposes a
--- suspend/resume export.
+-- flag freezes its stats and makes it immune to all damage (character and weapons check staff.duty) until
+-- character exposes a suspend/resume export.
 local log = loadstring(exports.lib:getModule("log"), "=lib/log.lua")()
 return function(ctx)
     local db, logic, state = ctx.db, ctx.logic, ctx.state
@@ -44,7 +44,7 @@ return function(ctx)
         setDutyWeather(p, true)
         setElementModel(p, logic.dutySkin(exports.items:isFemaleSkin(skin)))
         setNametags(p, true)
-        ctx.say(p, " >  You are now on duty: immune to player damage, name tags on.")
+        ctx.say(p, " >  You are now on duty: immune to all damage, survival stats frozen, name tags on.")
         ctx.msgStaff(1, " >  %s went on duty", getPlayerName(p))
         log.event("staff.dutyChanged", { player = p, on = true })
         ctx.log(p, "duty_on")
@@ -75,7 +75,7 @@ return function(ctx)
         level = 2,
         playerOnly = true,
         usage = "/duty",
-        help = "Toggle staff duty (immune to players, name tags, duty skin)",
+        help = "Toggle staff duty (immune to all damage, stats frozen, name tags, duty skin)",
         needsDb = false,
         fn = function(p)
             if state.spectating[p] then

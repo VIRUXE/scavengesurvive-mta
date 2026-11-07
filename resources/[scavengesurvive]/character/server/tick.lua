@@ -34,6 +34,19 @@ return function(ctx)
                 and st.hp > 0
                 and not st.dead
                 and not getElementData(player, "auth.reauthProtection")
+                and ctx.onDuty(player)
+            then
+                -- staff on duty: stats frozen where they were (no hunger, bleeding or drug timers), no blood spray
+                if st.bleedShown then
+                    st.bleedShown = false
+                    setElementData(player, "character.bleeding", false, "broadcast", "deny")
+                end
+                setElementHealth(player, math.max(1, st.hp))
+            elseif
+                isElement(player)
+                and st.hp > 0
+                and not st.dead
+                and not getElementData(player, "auth.reauthProtection")
             then
                 local vx, vy, vz = getElementVelocity(player)
                 local speed = math.sqrt(vx * vx + vy * vy + vz * vz)
@@ -43,7 +56,7 @@ return function(ctx)
                 local s, events = survival.tick(st, mult, math.random)
                 st.hp, st.food, st.bleed, st.dirty = s.hp, s.food, s.bleed, true
                 -- the spray every client draws (client/blood.lua) and the pool trail (server/blood.lua)
-                local blocked = inVehicle or exports.staff:isOnDuty(player)
+                local blocked = inVehicle
                 local shown = bleeding.visible(st.bleedShown, st.bleed, blocked, math.random)
                 if shown ~= (st.bleedShown or false) then
                     st.bleedShown = shown
