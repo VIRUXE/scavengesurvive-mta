@@ -162,28 +162,43 @@ addEventHandler("treatmentStopped", localPlayer, function()
     end
 end)
 
--- A drop beside a vehicle: the server has no bounding boxes, so it asks here for the first spot around the player
--- that no vehicle's box (plus a margin) holds, and drops there (server/hands.lua, itemDropSpotChosen)
+-- A drop: the server has no bounding boxes, so it asks here for the first spot around the player that no vehicle's
+-- box and no other world item's box (each plus a margin) holds, and drops there (server/hands.lua, itemDropSpotChosen)
+local function insideElement(el, px, py, pz, margin)
+    local minX, minY, minZ, maxX, maxY, maxZ = getElementBoundingBox(el)
+    if not minX then
+        return false
+    end
+    local ex, ey, ez = getElementPosition(el)
+    local ox, oy, oz = px - ex, py - ey, pz - ez
+    local m = getElementMatrix(el)
+    local lx = ox * m[1][1] + oy * m[1][2] + oz * m[1][3]
+    local ly = ox * m[2][1] + oy * m[2][2] + oz * m[2][3]
+    local lz = ox * m[3][1] + oy * m[3][2] + oz * m[3][3]
+    return geometry.insideBox(lx, ly, lz, minX, minY, minZ, maxX, maxY, maxZ, margin)
+end
+
 addEventHandler("itemDropSpotRequested", localPlayer, function()
     local x, y, z = getElementPosition(localPlayer)
     local _, _, rz = getElementRotation(localPlayer)
     local dz = z - 0.9
-    local vehicles = getElementsByType("vehicle", root, true)
+    local vehicles = {}
+    for _, veh in ipairs(getElementsByType("vehicle", root, true)) do
+        local vx, vy, vz = getElementPosition(veh)
+        if (vx - x) ^ 2 + (vy - y) ^ 2 + (vz - z) ^ 2 <= 225 then
+            vehicles[#vehicles + 1] = veh
+        end
+    end
+    local items = world.itemObjectsNear(x, y, dz, 5)
     local function blocked(cx, cy)
         for _, veh in ipairs(vehicles) do
-            local vx, vy, vz = getElementPosition(veh)
-            local ox, oy, oz = cx - vx, cy - vy, dz - vz
-            if ox * ox + oy * oy + oz * oz <= 100 then
-                local minX, minY, minZ, maxX, maxY, maxZ = getElementBoundingBox(veh)
-                if minX then
-                    local m = getElementMatrix(veh)
-                    local lx = ox * m[1][1] + oy * m[1][2] + oz * m[1][3]
-                    local ly = ox * m[2][1] + oy * m[2][2] + oz * m[2][3]
-                    local lz = ox * m[3][1] + oy * m[3][2] + oz * m[3][3]
-                    if geometry.insideBox(lx, ly, lz, minX, minY, minZ, maxX, maxY, maxZ, 0.3) then
-                        return true
-                    end
-                end
+            if insideElement(veh, cx, cy, dz, 0.3) then
+                return true
+            end
+        end
+        for _, obj in ipairs(items) do
+            if insideElement(obj, cx, cy, dz, 0.2) then
+                return true
             end
         end
         return false

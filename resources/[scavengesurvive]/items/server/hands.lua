@@ -1059,7 +1059,7 @@ return function(ctx)
     end, { rate = 5 })
 
     -- opts (placing an item, server/smallitems.lua's shield): { ahead, below, turn, data }, spot = { x, y } (a free
-    -- spot beside a vehicle, chosen by the client), or at = { x, y, z, rz }
+    -- spot clear of vehicles and items, chosen by the client), or at = { x, y, z, rz }
     -- for a spot of the server's (on a table, server/furniture.lua); a plain drop lands 1 m ahead at the feet with
     -- the player's heading, and clears a placed item's standing pose
     function M.dropHeld(player, opts)
@@ -1253,8 +1253,8 @@ return function(ctx)
         return true
     end
 
-    -- The server has no bounding boxes for vehicles, so with one near the drop the client picks the free spot beside
-    -- it (client/main.lua) and answers; no answer within a second drops at the default spot
+    -- The server has no bounding boxes, so the client picks the first spot clear of vehicles and other world items
+    -- (client/main.lua) and answers; no answer within a second drops at the default spot
     local dropSpotPending = {}
 
     local function dropAt(player, spot)
@@ -1264,26 +1264,9 @@ return function(ctx)
         end
     end
 
-    local function vehicleNear(player)
-        local x, y, z = getElementPosition(player)
-        local int, dim = getElementInterior(player), getElementDimension(player)
-        for _, veh in ipairs(getElementsByType("vehicle")) do
-            if getElementInterior(veh) == int and getElementDimension(veh) == dim then
-                local vx, vy, vz = getElementPosition(veh)
-                if (vx - x) ^ 2 + (vy - y) ^ 2 + (vz - z) ^ 2 <= 100 then
-                    return true
-                end
-            end
-        end
-        return false
-    end
-
     net.handler("itemDropRequested", function(player)
         if dropSpotPending[player] then
             return
-        end
-        if not vehicleNear(player) then
-            return dropAt(player)
         end
         dropSpotPending[player] = setTimer(function()
             dropSpotPending[player] = nil

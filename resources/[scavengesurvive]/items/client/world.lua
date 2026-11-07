@@ -934,6 +934,28 @@ return function(ctx)
         end
         return blocked
     end
+    -- the objects (a pitched tent's every part) of the world items within radius of (x, y, z) in the player's world
+    function M.itemObjectsNear(x, y, z, radius)
+        local dim, int = getElementDimension(localPlayer), getElementInterior(localPlayer)
+        local out = {}
+        for _, e in pairs(objects) do
+            local r = e.row
+            local dx, dy, dz = e.x - x, e.y - y, e.z - z
+            local same = (r.dimension or 0) == dim and (r.interior or 0) == int
+            if same and dx * dx + dy * dy + dz * dz <= radius * radius then
+                if isElement(e.obj) then
+                    out[#out + 1] = e.obj
+                end
+                for _, part in ipairs(e.parts or {}) do
+                    if isElement(part) then
+                        out[#out + 1] = part
+                    end
+                end
+            end
+        end
+        return out
+    end
+
     for _, vehicle in ipairs(getElementsByType("vehicle")) do
         if getElementData(vehicle, "vehicles.cargo") then
             applyCargo(vehicle)
