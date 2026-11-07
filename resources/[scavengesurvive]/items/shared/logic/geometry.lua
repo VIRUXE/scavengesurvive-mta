@@ -34,6 +34,17 @@ function geometry.box(x, y, r)
     return x - r, y - r, x + r, y + r
 end
 
+-- A point already in a vehicle's local space (right, forward, up from its centre) against its bounding box
+-- (getElementBoundingBox: minX, minY, minZ, maxX, maxY, maxZ) grown by margin on every side
+function geometry.insideBox(lx, ly, lz, minX, minY, minZ, maxX, maxY, maxZ, margin)
+    return lx >= minX - margin
+        and lx <= maxX + margin
+        and ly >= minY - margin
+        and ly <= maxY + margin
+        and lz >= minZ - margin
+        and lz <= maxZ + margin
+end
+
 function geometry.polygonWKT(minx, miny, maxx, maxy)
     return string.format(
         "POLYGON((%g %g,%g %g,%g %g,%g %g,%g %g))",

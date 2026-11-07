@@ -24,6 +24,7 @@ return function(ctx)
         BAG_WORN = "You put on the bag",
         BAG_SLOT_USED = "You already wear a bag",
         NOT_HELD = "Nothing in hand",
+        DROP_BLOCKED_VEHICLE = "You cannot drop that inside a vehicle",
         NOBODY_NEAR = "Nobody is close enough",
         TARGET_BUSY = "They cannot take it right now",
         TARGET_HANDS_FULL = "Their hands are full",

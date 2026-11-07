@@ -885,6 +885,7 @@ return {
     ["You can only remove a defence from the inside"] = "Só podes remover uma defesa por dentro",
     ["You can't wear a bag while you are wearing a parachute"] = "Não podes vestir uma mochila com um paraquedas vestido",
     ["You can't wear a parachute while you are wearing a bag"] = "Não podes vestir um paraquedas com uma mochila vestida",
+    ["You cannot drop that inside a vehicle"] = "Não podes largar isso dentro de um veículo",
     ["You cannot install a motor on that type of defence"] = "Não podes instalar um motor nesse tipo de defesa",
     ["You cannot mix two ammo types in one tin"] = "Não podes misturar dois tipos de munição na mesma caixa",
     ["You handed it over"] = "Entregaste",

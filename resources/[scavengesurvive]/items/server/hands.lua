@@ -1058,6 +1058,28 @@ return function(ctx)
         end, { player = player, charId = cid, radius = radius })
     end, { rate = 5 })
 
+    -- The vehicle whose bounding box (plus a margin) holds the world point, or nil
+    function M.vehicleAt(x, y, z, int, dim)
+        for _, veh in ipairs(getElementsByType("vehicle")) do
+            if getElementInterior(veh) == int and getElementDimension(veh) == dim then
+                local vx, vy, vz = getElementPosition(veh)
+                local ox, oy, oz = x - vx, y - vy, z - vz
+                if ox * ox + oy * oy + oz * oz <= 64 then
+                    local minX, minY, minZ, maxX, maxY, maxZ = getElementBoundingBox(veh)
+                    if minX then
+                        local m = getElementMatrix(veh)
+                        local lx = ox * m[1][1] + oy * m[1][2] + oz * m[1][3]
+                        local ly = ox * m[2][1] + oy * m[2][2] + oz * m[2][3]
+                        local lz = ox * m[3][1] + oy * m[3][2] + oz * m[3][3]
+                        if geometry.insideBox(lx, ly, lz, minX, minY, minZ, maxX, maxY, maxZ, 0.3) then
+                            return veh
+                        end
+                    end
+                end
+            end
+        end
+    end
+
     -- opts (placing an item, server/smallitems.lua's shield): { ahead, below, turn, data }, or at = { x, y, z, rz }
     -- for a spot of the server's (on a table, server/furniture.lua); a plain drop lands 1 m ahead at the feet with
     -- the player's heading, and clears a placed item's standing pose
@@ -1070,6 +1092,19 @@ return function(ctx)
             return false, "NOT_HELD"
         end
         opts = opts or {}
+        local x, y, z = getElementPosition(player)
+        local _, _, rz = getElementRotation(player)
+        local dx, dy = geometry.dropPosition(x, y, rz, opts.ahead or 1.0)
+        local dz, drz = z - (opts.below or 0.9), (rz + (opts.turn or 0)) % 360
+        if opts.at then
+            dx, dy, dz, drz = opts.at.x, opts.at.y, opts.at.z, opts.at.rz % 360
+        elseif M.vehicleAt(dx, dy, dz, getElementInterior(player), getElementDimension(player)) then
+            log.event(
+                "item.dropRefused",
+                { player = player, item_id = item.id, ok = false, code = "DROP_BLOCKED_VEHICLE" }
+            )
+            return false, "DROP_BLOCKED_VEHICLE"
+        end
         if opts.data then
             item.data = opts.data
         elseif type(item.data) == "table" and item.data.placed then
@@ -1081,13 +1116,6 @@ return function(ctx)
             M.queueData(item)
         end
         M.flushData(item.id)
-        local x, y, z = getElementPosition(player)
-        local _, _, rz = getElementRotation(player)
-        local dx, dy = geometry.dropPosition(x, y, rz, opts.ahead or 1.0)
-        local dz, drz = z - (opts.below or 0.9), (rz + (opts.turn or 0)) % 360
-        if opts.at then
-            dx, dy, dz, drz = opts.at.x, opts.at.y, opts.at.z, opts.at.rz % 360
-        end
         local params = { item.id, cid, dx, dy, dz, drz, getElementInterior(player), getElementDimension(player) }
         db.call("item_drop", params, function(res, c)
             logProc("item.dropped", c.player, res, {
