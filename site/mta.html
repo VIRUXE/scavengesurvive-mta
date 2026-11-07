@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Why Multi Theft Auto — Scavenge &amp; Survive Reborn</title>
+<meta name="description" content="What MTA:SA gives a survival server that SA-MP could not: Lua on both sides, custom models, a client that draws, honest sync, an engine that is still released. Each claim paired with the feature in Reborn that proves it.">
+<meta name="theme-color" content="#0b0b0b">
+<link rel="icon" href="assets/img/brand/logo-64.webp" type="image/webp">
+<link rel="preload" href="assets/fonts/bebas-neue-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/css/site.css">
+</head>
+<body>
+
+<header class="nav is-solid">
+  <div class="container">
+    <a class="brand" href="index.html"><img src="assets/img/brand/logo-64.webp" alt="" width="36" height="36">Scavenge &amp; Survive <small>REBORN</small></a>
+    <button class="nav-toggle" aria-label="Menu" aria-expanded="false"><span></span><span></span><span></span></button>
+    <nav class="nav-links" aria-label="Site">
+      <a href="index.html" data-i18n="nav.home">Home</a>
+      <a href="changes.html" data-i18n="nav.changes">What changed</a>
+      <a href="mta.html" data-i18n="nav.mta">Why MTA</a>
+      <a href="media.html" data-i18n="nav.media">Media</a>
+      <a href="servers.html" data-i18n="nav.servers">Servers</a>
+      <a href="https://github.com/VIRUXE/scavengesurvive-mta/wiki" rel="noopener" data-i18n="nav.wiki">Wiki</a>
+      <a href="https://github.com/VIRUXE/scavengesurvive-mta" rel="noopener">GitHub</a>
+      <div class="lang-switch" role="group" aria-label="Language"><button data-lang="en" aria-pressed="true">EN</button><button data-lang="pt" aria-pressed="false">PT</button></div>
+    </nav>
+  </div>
+</header>
+
+<main>
+<section class="page-head">
+  <div class="container">
+    <p class="eyebrow" data-i18n="why.eyebrow">Why Multi Theft Auto</p>
+    <h1 data-i18n="why.title">The game was always bigger than SA-MP</h1>
+    <p class="lead" data-i18n="why.lead">Scavenge &amp; Survive spent a decade working around its platform: tracers built from objects, ziplines made of dozens of poles, hats that fit seventeen skins, a world that had to be re-rolled every five hours. Multi Theft Auto removes the workarounds. Here is what the engine gives a survival server, each point paired with the thing in Reborn that only exists because of it.</p>
+  </div>
+</section>
+
+<section class="section section--tight">
+  <div class="container">
+    <div class="grid grid-2">
+      <div class="fcard" data-reveal>
+        <span class="src"><a href="https://wiki.multitheftauto.com/wiki/Main_Page" rel="noopener">wiki.multitheftauto.com</a></span>
+        <h3 data-i18n="why.1.t">Open source and still released</h3>
+        <p data-i18n="why.1.p">MTA:SA has been open source since 2008 and the project is still releasing: 1.6.0 shipped in June 2023 and nightly builds keep adding functions. SA-MP's last client, 0.3.7, dates from 2015; open.mp keeps those servers running but is bound to that client's feature set.</p>
+        <p class="proof" data-label="In Reborn" data-i18n-attr="data-label:why.proof" data-i18n="why.1.x">Client-side buildings, 3D models drawn in the UI with real lighting, and the bone-attachment hook this port's apparel uses all arrived in 2023 or later. The port targets what the engine does today, not what it did in 2015.</p>
+      </div>
+      <div class="fcard" data-reveal style="--d:60ms">
+        <span class="src"><a href="https://wiki.multitheftauto.com/wiki/Scripting_Introduction" rel="noopener">Scripting introduction</a></span>
+        <h3 data-i18n="why.2.t">Lua on both sides, in resources</h3>
+        <p data-i18n="why.2.p">Server and client are both scripted in Lua and organised in resources that start, stop and talk to each other independently. Pawn runs only on the server and compiles to one gamemode.</p>
+        <p class="proof" data-label="In Reborn" data-i18n-attr="data-label:why.proof" data-i18n="why.2.x">32 resources, one per domain, that share state only through MariaDB: any one of them restarts on its own and rebuilds from the database. Pure game logic lives in shared files the client and server both run.</p>
+      </div>
+      <div class="fcard" data-reveal>
+        <span class="src"><a href="https://wiki.multitheftauto.com/wiki/EngineLoadDFF" rel="noopener">engineLoadDFF</a></span>
+        <h3 data-i18n="why.3.t">Your own models</h3>
+        <p data-i18n="why.3.p">A script can load DFF, TXD and COL files and replace or allocate models on the client, with custom IMG containers since 1.6. SA-MP 0.3.DL added model downloads late and few servers used them.</p>
+        <p class="proof" data-label="In Reborn" data-i18n-attr="data-label:why.proof" data-i18n="why.3.x">The towable Airstream, twelve Bobcat salvage parts, nine cut hats, 22 hatless skin twins, fitted house doors, glazed windows, enterable trailers and cabins, the camper stove, GTA's own boxes as items: all built in Blender and shipped as resources.</p>
+      </div>
+      <div class="fcard" data-reveal style="--d:60ms">
+        <span class="src"><a href="https://wiki.multitheftauto.com/wiki/CreateBuilding" rel="noopener">createBuilding</a></span>
+        <h3 data-i18n="why.4.t">The world is built on the client</h3>
+        <p data-i18n="why.4.p">Buildings are created client-side with shadows and glass, more cheaply than objects, and the streamer handles a thousand objects at once. SA-MP needed a streamer plugin on the server for everything.</p>
+        <p class="proof" data-label="In Reborn" data-i18n-attr="data-label:why.proof" data-i18n="why.4.x">221 upstream maps, 23,211 objects, become buildings on each client in about 1.3 s on join, spread over frames so nothing stutters, with the 209 SA-MP-only models shipped alongside.</p>
+      </div>
+      <div class="fcard" data-reveal>
+        <span class="src"><a href="https://wiki.multitheftauto.com/wiki/DxDrawModel3D" rel="noopener">dxDrawModel3D</a></span>
+        <h3 data-i18n="why.5.t">A client that can draw</h3>
+        <p data-i18n="why.5.p">Immediate-mode dx drawing, render targets, fonts, SVG, shaders, 3D models in the UI, and a CEF browser and CEGUI for forms. SA-MP had textdraws and fixed dialogs.</p>
+        <p class="proof" data-label="In Reborn" data-i18n-attr="data-label:why.proof" data-i18n="why.5.x">The HUD, inventory, keypad, radio panel, watch, death screen and driver's dashboard were measured from 18 videos of the original and rebuilt to look like home, with live 3D previews of the items you wear and animated flames on the stove from a shader.</p>
+      </div>
+      <div class="fcard" data-reveal style="--d:60ms">
+        <span class="src"><a href="https://wiki.multitheftauto.com/wiki/OnClientPlayerDamage" rel="noopener">onClientPlayerDamage</a></span>
+        <h3 data-i18n="why.6.t">Sync you can build rules on</h3>
+        <p data-i18n="why.6.p">Hits are reported per limb, client damage can be cancelled and re-decided, and health set by the server cannot be overwritten by a stale client packet. MTA calls it the best GTA synchronisation there is.</p>
+        <p class="proof" data-label="In Reborn" data-i18n-attr="data-label:why.proof" data-i18n="why.6.x">The victim's client reports a hit, the server matches it against the shooter's recent shots, checks range and rate, and computes the wound from calibre, ammo type, distance and body part. No client decides its own health.</p>
+      </div>
+      <div class="fcard" data-reveal>
+        <span class="src"><a href="https://wiki.multitheftauto.com/wiki/Anti-cheat_guide" rel="noopener">Anti-cheat guide</a></span>
+        <h3 data-i18n="why.7.t">Anti-cheat and serials</h3>
+        <p data-i18n="why.7.p">A built-in anti-cheat blocks trainers, injected code and speed or health tools; every client has a serial; element data can be locked so a client cannot forge it.</p>
+        <p class="proof" data-label="In Reborn" data-i18n-attr="data-label:why.proof" data-i18n="why.7.x">Fourteen server checks on gameplay values on top, 31 hacker traps, bans by name, IP and serial that persist in the database, and a client that never sets element data at all.</p>
+      </div>
+      <div class="fcard" data-reveal style="--d:60ms">
+        <span class="src"><a href="https://wiki.multitheftauto.com/wiki/BindKey" rel="noopener">bindKey</a></span>
+        <h3 data-i18n="why.8.t">Keys, voice, effects, trailers</h3>
+        <p data-i18n="why.8.p">Every action is a bind the player can change in the client's settings. Built-in voice chat. Engine particle effects. Native trailer hitching. Dimensions and interiors.</p>
+        <p class="proof" data-label="In Reborn" data-i18n-attr="data-label:why.proof" data-i18n="why.8.x">Rebind <kbd>F</kbd>, <kbd>N</kbd>, <kbd>H</kbd> or <kbd>R</kbd> in MTA Settings. Proximity voice with a talking indicator. Crate smoke and flares as real effects. A zipline rope that is one line, not forty poles. The Airstream hitches with the game's own physics.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container split">
+    <div data-reveal>
+      <p class="eyebrow" data-i18n="why.today.eyebrow">The landscape, fairly</p>
+      <h2 data-i18n="why.today.title">SA-MP, open.mp and MTA in 2026</h2>
+      <p data-i18n="why.today.p1">SA-MP's codebase is frozen; its network is alive and niche, and mostly roleplay. open.mp is the community continuation: fully backwards-compatible, running the existing servers and Pawn scripts, and still in development. Multi Theft Auto never depended on either and has its own master list, its own client and a GPL source tree on GitHub.</p>
+      <p data-i18n="why.today.p2">In December 2025 Take-Two filed a DMCA takedown against MTA's repository; the team filed a counter-notice and the repository was restored. Tolerated is not the same as sanctioned, and that is true of every San Andreas multiplayer.</p>
+      <p data-i18n="why.today.p3">All three need the original PC release of GTA: San Andreas. None works with the Definitive Edition.</p>
+      <p class="small muted" data-i18n="why.today.src">Sources: <a href="https://gtaintel.com/news/san-andreas-multiplayer-in-2026" rel="noopener">GTA Intel, "San Andreas multiplayer in 2026"</a>, <a href="https://en.wikipedia.org/wiki/Multi_Theft_Auto" rel="noopener">Wikipedia</a>, <a href="https://multitheftauto.com" rel="noopener">multitheftauto.com</a>.</p>
+    </div>
+    <div data-reveal>
+      <p class="eyebrow" data-i18n="why.from.eyebrow">Coming from SA-MP?</p>
+      <h2 data-i18n="why.from.title">Same game, second client</h2>
+      <div class="steps">
+        <div class="step"><h3 data-i18n="why.from.1.t">Keep your GTA</h3><p class="muted" data-i18n="why.from.1.p">MTA installs next to SA-MP and uses the same San Andreas 1.0. Nothing about SA-MP breaks.</p></div>
+        <div class="step"><h3 data-i18n="why.from.2.t">Get MTA 1.6</h3><p class="muted" data-i18n="why.from.2.p">One installer from <a href="https://multitheftauto.com" rel="noopener">multitheftauto.com</a>. No account, no launcher login.</p></div>
+        <div class="step"><h3 data-i18n="why.from.3.t">Connect</h3><p class="muted" data-i18n="why.from.3.p">Paste <code>185.103.74.67:22003</code> into Quick Connect, or click Join on this site. The resources download the first time and are cached.</p></div>
+        <div class="step"><h3 data-i18n="why.from.4.t">Nothing to relearn</h3><p class="muted" data-i18n="why.from.4.p">Same keys, same HUD, same inventory, same rules. The things that changed are listed on <a href="changes.html">What changed</a>, with reasons.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer class="footer">
+  <div class="container">
+    <div><h4 data-i18n="foot.play">Play</h4><ul><li><a href="mtasa://185.103.74.67:22003" data-i18n="foot.join">Join the server</a></li><li><a href="servers.html" data-i18n="nav.servers">Servers</a></li><li><a href="https://github.com/VIRUXE/scavengesurvive-mta/wiki/Getting-Started" rel="noopener" data-i18n="foot.start">Getting Started</a></li><li><a href="https://github.com/VIRUXE/scavengesurvive-mta/wiki/Fair-Play" rel="noopener" data-i18n="foot.rules">Fair Play</a></li><li><a href="https://github.com/VIRUXE/scavengesurvive-mta/wiki" rel="noopener" data-i18n="foot.wiki">The wiki</a></li></ul></div>
+    <div><h4 data-i18n="foot.project">Project</h4><ul><li><a href="https://github.com/VIRUXE/scavengesurvive-mta" rel="noopener" data-i18n="foot.source">Source on GitHub</a></li><li><a href="https://github.com/VIRUXE/scavengesurvive-mta/issues" rel="noopener" data-i18n="foot.issues">Issues and roadmap</a></li><li><a href="changes.html" data-i18n="nav.changes">What changed</a></li><li><a href="mta.html" data-i18n="nav.mta">Why MTA</a></li><li><a href="media.html" data-i18n="nav.media">Media</a></li></ul></div>
+    <div><h4 data-i18n="foot.credits">Credits</h4><ul><li><a href="https://github.com/Southclaws/ScavengeSurvive" rel="noopener" data-i18n="foot.upstream">Scavenge &amp; Survive by Southclaws</a></li><li><a href="https://scavengesurvive.com" rel="noopener" data-i18n="foot.upstream-site">The original site</a></li><li><a href="https://multitheftauto.com" rel="noopener">Multi Theft Auto</a></li></ul></div>
+    <p class="footer__note" data-i18n="foot.note">Scavenge &amp; Survive is Copyright © Barnaby "Southclaws" Keene and the community that built its maps from 2008 to 2017. New code in this port is released under the Unlicense; converted upstream data stays MPL-2.0, the map placements CC BY-SA 4.0, and the SA-MP object models belong to the SA-MP team. Grand Theft Auto is a trademark of Take-Two Interactive; this project is not affiliated with Rockstar Games, Take-Two, SA-MP or the MTA team. © <span data-year>2026</span> the Reborn contributors.</p>
+  </div>
+</footer>
+
+<script src="assets/js/site.js" defer></script>
+</body>
+</html>

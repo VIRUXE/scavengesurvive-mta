@@ -1,0 +1,14 @@
+{
+  "_readme": "The server list. `status_url` is optional: a JSON document {\"players\": n, \"max\": n} that the site reads for the live count (not configured yet).",
+  "servers": [
+    {
+      "name": "Scavenge & Survive Reborn",
+      "address": "185.103.74.67:22003",
+      "language": { "en": "English, with ten interface languages", "pt": "Inglês, com dez idiomas de interface" },
+      "region": { "en": "Europe", "pt": "Europa" },
+      "discord": "",
+      "rules": "https://github.com/VIRUXE/scavengesurvive-mta/wiki/Fair-Play",
+      "status_url": ""
+    }
+  ]
+}

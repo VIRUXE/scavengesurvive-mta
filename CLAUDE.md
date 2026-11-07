@@ -14,6 +14,16 @@ Scavenge & Survive ported to MTA:SA 1.6 (Lua 5.1) with MariaDB 13.1.1+ (`item_cr
   and `docs/maps-census.md` are ordinary source files now: edit them directly (a new item type, loot row or map object is
   a hand edit to those files and the live DB). `tools/convert/*.py` is a port artifact (it did the one-off conversion and is not tooling); never run it, it would
   overwrite hand edits.
+- `site/` is the public website (GitHub Pages, `https://viruxe.github.io/scavengesurvive-mta/`): plain HTML, CSS and JS, no build step,
+  deployed by `.github/workflows/pages.yml` on every push to `main`. Images are WebP copies made by `python -m tools.site_assets`
+  from `docs/images` (never link the site into `docs/` or the wiki). Texts are English in the HTML with `data-i18n` keys;
+  `site/lang/pt.json` holds the Portuguese, `python -m tools.site_i18n` reports what a language lacks (`--dump` prints the
+  English). `site/data/changes.json` is the census of differences from upstream (every entry with its source), `placeholders.json`
+  the screenshots, renders and films still to be made (`site/PLACEHOLDERS.md` has the briefs; set `file` to fill one),
+  `servers.json` the server list. A feature that lands also lands as a `changes.json` entry.
+- `wiki/` is the source of the GitHub wiki (one `.md` per page, GitHub-wiki link syntax): the same workflow mirrors it to the wiki
+  repository on push and leaves the wiki's `images/` alone, so edit pages here, never in the wiki UI. `python -m tools.wiki_tables`
+  regenerates the data tables and item pages into it. `<!-- shot:<id> -->` markers are screenshot slots sharing ids with the site.
 - No tests: the project has none and none are ever to be created (user decision 2026-10-31).
 - `ops/` (dev Loki + Grafana compose, dashboards, alert rules), `docs/runbooks/` (operations), `docs/staff-commands.md` (staff parity table), `docs/reviews/<date>-*.md` (live checks).
 
@@ -89,6 +99,7 @@ Scavenge & Survive ported to MTA:SA 1.6 (Lua 5.1) with MariaDB 13.1.1+ (`item_cr
 
 - `pwsh tools/setup-dev.ps1` — hererocks Lua 5.1 + luacheck, stylua, Python deps.
 - `.lua/bin/luacheck.bat resources` · `stylua --check resources`
+- `python -m tools.site_assets` (WebP assets for `site/`) · `python -m tools.site_i18n` (translation coverage) · `python -m tools.wiki_tables` (wiki tables and item pages into `wiki/`)
 - `pwsh server-config/run-local.ps1` — create DB, apply `sql/schema.sql` and seeds, link resources into the MTA server, start it.
 - `pwsh server-config/rcon.ps1 <command>` — drive the running server over its HTTP port (`help`, `players`, `rr items`,
   `cmd <player> additem M9Pistol`, `key <player> interact|inventory|arrow_d|enter|escape`, `lua return …`, `clua <player> <code>` (runs on that client, read the result with `chat`),

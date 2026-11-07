@@ -1,0 +1,60 @@
+# Publishes site/ to GitHub Pages and mirrors wiki/ to the repository's wiki.
+#
+# One-time setup in the repository settings: Pages → Build and deployment → Source: "GitHub Actions". The wiki job
+# needs the wiki to exist (create any page once in the UI); it pushes with the workflow's own token.
+name: pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "site/**"
+      - "wiki/**"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  site:
+    name: Deploy the website
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deploy
+        uses: actions/deploy-pages@v4
+
+  wiki:
+    name: Mirror wiki/ to the GitHub wiki
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Clone the wiki
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: git clone "https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.wiki.git" /tmp/wiki
+      - name: Replace every page, keep images/
+        run: |
+          cd /tmp/wiki
+          find . -maxdepth 1 -name '*.md' -delete
+          cp "$GITHUB_WORKSPACE"/wiki/*.md .
+          git add -A
+          if git diff --cached --quiet; then echo "wiki unchanged"; exit 0; fi
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -m "docs(wiki): mirror wiki/ from ${GITHUB_SHA::7}"
+          git push
