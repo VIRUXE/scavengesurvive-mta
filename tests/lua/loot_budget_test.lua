@@ -16,7 +16,7 @@ function db.settings(cb)
 end
 function db.exec(sql, params, cb)
     if sql:find("SET remainder", 1, true) then
-        row.remainder, row.allowance = params[1], math.min(params[2], row.cap - params[3])
+        row.remainder, row.allowance = params[1], math.min(params[2], params[3] - params[4])
     elseif sql:find("SET allowance = LEAST", 1, true) then
         row.allowance = math.min(row.allowance, params[1])
     end
@@ -53,6 +53,7 @@ local modules = {
     net = {},
     util = { log = function() end },
     budget = budget,
+    log = { event = function() end },
 }
 exports = {
     lib = {

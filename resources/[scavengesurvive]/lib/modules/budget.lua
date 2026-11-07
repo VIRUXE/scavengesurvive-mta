@@ -8,6 +8,13 @@ function budget.cap(initial, multiplier)
     return math.max(0, math.floor((tonumber(initial) or 0) * m + 0.5))
 end
 
+-- Capacity multiplier for the players online: 1 with one player or none, plus `perPlayer` for each player after the
+-- first, so a full server earns more loot than a solo one without every player getting a solo share.
+function budget.playerScale(players, perPlayer)
+    local extra = math.max(0, math.floor(tonumber(players) or 0) - 1)
+    return 1 + extra * math.max(0, tonumber(perPlayer) or 0)
+end
+
 -- Spawns owed after one interval of `intervalS` seconds. Nothing accrues at or above capacity, the fractional part
 -- carries over in `remainder`, and the result never exceeds the deficit. Returns spawns, remainder.
 function budget.refill(cap, alive, remainder, ratePerHour, floorPerHour, intervalS)

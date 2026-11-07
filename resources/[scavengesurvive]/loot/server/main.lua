@@ -33,11 +33,28 @@ local SELECT_BUDGETS = "SELECT b.zone, b.cap, b.remainder, b.allowance, (SELECT 
     .. "WHERE i.loot_zone = b.zone AND (? = 1 OR i.holder_char_id IS NULL)) AS alive "
     .. "FROM world_budget b WHERE b.category = 'loot'"
 
+-- The cap is passed in: the stored cap scaled for the players online.
 local UPDATE_BUDGET = "UPDATE world_budget SET remainder = ?, "
-    .. "allowance = LEAST(?, GREATEST(cap - ?, 0)) WHERE category = 'loot' AND zone = ?"
+    .. "allowance = LEAST(?, GREATEST(? - ?, 0)) WHERE category = 'loot' AND zone = ?"
 
 local function setting(key, default)
     return tonumber(settings[key]) or default
+end
+
+-- Players with a character in the world, for loot.player_scale.
+local function onlinePlayers()
+    local n = 0
+    for _, p in ipairs(getElementsByType("player")) do
+        if exports.character:getCharacterId(p) then
+            n = n + 1
+        end
+    end
+    return n
+end
+
+-- The stored zone cap scaled for the players online (budget.playerScale with loot.player_scale).
+local function scaledCap(cap, scale)
+    return math.floor((tonumber(cap) or 0) * scale + 0.5)
 end
 
 -- Unspent refill expires at the next tick. Banking it lets an unexplored area release hours of
@@ -49,9 +66,10 @@ local function loadAllowances(cb)
             budgetBusy = false
             return
         end
+        local scale = budget.playerScale(onlinePlayers(), setting("loot.player_scale", 0.25))
         for _, r in ipairs(rows) do
             local quota = budget.refill(
-                tonumber(r.cap),
+                scaledCap(r.cap, scale),
                 tonumber(r.alive),
                 0.999999,
                 setting("loot.refill_rate", 0.10),
@@ -88,11 +106,13 @@ local function refillTick()
             budgetBusy = false
             return
         end
+        local players = onlinePlayers()
+        local scale = budget.playerScale(players, setting("loot.player_scale", 0.25))
         local zones, added, totalCap, totalAlive, totalAllow = 0, 0, 0, 0, 0
         for _, b in ipairs(rows) do
-            local cap, alive = tonumber(b.cap) or 0, tonumber(b.alive) or 0
+            local cap, alive = scaledCap(b.cap, scale), tonumber(b.alive) or 0
             local spawns, remainder = budget.refill(cap, alive, tonumber(b.remainder) or 0, rate, floor, interval)
-            db.exec(UPDATE_BUDGET, { remainder, spawns, alive, b.zone })
+            db.exec(UPDATE_BUDGET, { remainder, spawns, cap, alive, b.zone })
             allowance[b.zone] = spawns
             zones, added = zones + 1, added + spawns
             totalCap, totalAlive, totalAllow = totalCap + cap, totalAlive + alive, totalAllow + spawns
@@ -112,7 +132,13 @@ local function refillTick()
             budgetBusy = false
         end)
         log.event("loot.refillSummary", {
-            zones = zones, alive = totalAlive, capacity = totalCap, allowance = totalAllow, added = added
+            zones = zones,
+            alive = totalAlive,
+            capacity = totalCap,
+            allowance = totalAllow,
+            added = added,
+            players = players,
+            scale = scale,
         })
     end)
 end
@@ -202,7 +228,7 @@ local function rollSpawn(s)
         end
     end
     -- the point cools down from the roll: loot.cooldown_minutes ± jitter before it may roll again
-    local base = setting("loot.cooldown_minutes", 60) * 60
+    local base = setting("loot.cooldown_minutes", 360) * 60
     local secs = budget.cooldown(base, setting("loot.cooldown_jitter", 0.5), math.random)
     return { s = s.id, cd = secs, items = items }
 end
@@ -356,7 +382,7 @@ addEventHandler("onResourceStart", resourceRoot, function()
     db.settings(function(map)
         settings = map
         drops.start()
-        local perPoint, mult = setting("loot.items_per_point", 2.0), setting("loot.cap_multiplier", 1.0)
+        local perPoint, mult = setting("loot.items_per_point", 2.0), setting("loot.cap_multiplier", 0.05)
         db.exec(UPSERT_BUDGETS, { perPoint, mult }, function()
             loadAllowances()
         end)
