@@ -61,8 +61,13 @@ paint = material("Metal4_256", METAL_PNG)
 bagmat = material("Gen_Bin_Bag", BAG_PNG, 0.35, 0.0)
 
 
+BOUNDS = None  # ((x0, y0, z0), (x1, y1, z1)): the part's whole box, so a face maps the way dump1's did
+
+
 def planar_uv(o, scale):
-    """world-scale box mapping: each face is projected along its dominant normal axis"""
+    """dump1's mapping: the whole 256 px paint (dark rim band on top, padlock at the middle) spans each big face of
+    the box, so each face is projected along its dominant normal axis onto the part's whole bounds; with no BOUNDS
+    (the bags) it is world-scale instead"""
     me = o.data
     bm = bmesh.new()
     bm.from_mesh(me)
@@ -71,9 +76,23 @@ def planar_uv(o, scale):
         n = f.normal
         ax = max(range(3), key=lambda i: abs(n[i]))
         a, b = [i for i in range(3) if i != ax]
+        if ax == 2:  # top and bottom: x across, y along
+            a, b = 0, 1
+        elif ax == 0:  # ends: y across, z up
+            a, b = 1, 2
+        else:  # fronts and backs: x across, z up
+            a, b = 0, 2
         for lp in f.loops:
-            c = lp.vert.co
-            lp[uv].uv = (c[a] / scale, c[b] / scale)
+            c = o.matrix_world @ lp.vert.co
+            if BOUNDS:
+                lo, hi = BOUNDS
+                u = (c[a] - lo[a]) / (hi[a] - lo[a])
+                v = (c[b] - lo[b]) / (hi[b] - lo[b])
+                if ax == 1 and n[1] > 0:
+                    u = 1 - u  # the back reads the same way round seen from behind
+                lp[uv].uv = (u, v)
+            else:
+                lp[uv].uv = (c[a] / scale, c[b] / scale)
     bm.to_mesh(me)
     bm.free()
 
@@ -107,6 +126,7 @@ def join(objs, name, origin):
     return o
 
 
+BOUNDS = ((-W / 2, -D / 2, 0), (W / 2, D / 2, H))
 # --- body: floor, four walls, front posts that make the three panels, a rim, the lock hasp -------------------------
 parts = [
     box("floor", (0, 0, T / 2), (W, D, T)),
@@ -119,11 +139,9 @@ for x in (-0.39, 0.39):  # the posts between the three front panels
     parts.append(box("post", (x, -D / 2 - 0.012, H / 2), (0.07, 0.03, H - 0.06), bevel=0.01))
 for x in (-W / 2 + 0.03, W / 2 - 0.03):
     parts.append(box("post_end", (x, -D / 2 - 0.012, H / 2), (0.07, 0.03, H - 0.06), bevel=0.01))
-for z in (0.04, H - 0.05):  # base and top rails
+for z in (0.04,):  # the base rail; no top rail, it would cover the padlock painted there
     parts.append(box("rail", (0, -D / 2 - 0.012, z), (W, 0.03, 0.09), bevel=0.01))
 parts.append(box("rim_back", (0, D / 2 + 0.012, H - 0.04), (W, 0.03, 0.08), bevel=0.01))
-parts.append(box("hasp", (0, -D / 2 - 0.035, H - 0.14), (0.1, 0.02, 0.13), bevel=0.004))
-parts.append(box("lock", (0, -D / 2 - 0.055, H - 0.17), (0.05, 0.03, 0.06), bevel=0.008))
 
 # --- the mound of bin bags: squashed lumpy spheres with a tie knot, three layers, the top one well in view ---------
 rng = random.Random(1227)
@@ -150,6 +168,7 @@ def bag(name, loc, rot):
 
 
 inner_x, inner_y = W / 2 - T - 0.3, D / 2 - T - 0.27
+BOUNDS = None
 bags = []
 for layer, (z0, nx, ny) in enumerate([(T + 0.25, 5, 2), (T + 0.55, 4, 2), (T + 0.84, 3, 2)]):
     for ix in range(nx):
@@ -167,11 +186,12 @@ body = join(parts + bags, "dumpster_body", (0, 0, 0))
 
 # --- lid: origin at the hinge (top of the back wall); slab, edge lips, three raised panels, a handle -------------
 LW, LD = W + 0.04, D + 0.08
+BOUNDS = ((-LW / 2, -LD + 0.02, -0.04), (LW / 2, 0.02, 0.05))
 lp = [
     box("slab", (0, -LD / 2 + 0.02, 0.025), (LW, LD, 0.05), bevel=0.012),
-    box("lip_front", (0, -LD + 0.02, -0.03), (LW, 0.04, 0.12), bevel=0.01),
-    box("lip_l", (-LW / 2 + 0.02, -LD / 2 + 0.02, -0.03), (0.04, LD, 0.12), bevel=0.01),
-    box("lip_r", (LW / 2 - 0.02, -LD / 2 + 0.02, -0.03), (0.04, LD, 0.12), bevel=0.01),
+    box("lip_front", (0, -LD + 0.02, -0.005), (LW, 0.04, 0.07), bevel=0.01),
+    box("lip_l", (-LW / 2 + 0.02, -LD / 2 + 0.02, -0.005), (0.04, LD, 0.07), bevel=0.01),
+    box("lip_r", (LW / 2 - 0.02, -LD / 2 + 0.02, -0.005), (0.04, LD, 0.07), bevel=0.01),
     box("hinge_barrel", (0, 0.0, 0.02), (LW - 0.1, 0.06, 0.07), bevel=0.02),
     box("handle", (0, -LD + 0.07, 0.085), (0.5, 0.05, 0.06), bevel=0.015),
 ]
