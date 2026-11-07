@@ -116,6 +116,7 @@ class Shell:
         self.openings = []
         self.rooms = []
         self.cols = self._vanilla_cols()
+        self.col_mesh = None  # the vanilla COL's triangle mesh, when keep_col_mesh() asks for it
         self.mats = {}
         self.leaf = None
         self.leaf_box = None  # the leaf's collision box in its own frame, when it is not the flat slab
@@ -483,6 +484,21 @@ class Shell:
             bpy.data.objects.remove(o)
         return boxes
 
+    def keep_col_mesh(self):
+        """Keeps the vanilla COL's triangle mesh (lot ground, porches, steps, roofs) in the export, beside the boxes;
+        only for models whose mesh stays clear of the rooms."""
+        path = os.path.join(VANILLA, self.name + ".col")
+        before = set(bpy.data.objects)
+        bpy.ops.import_scene.dff(filepath=path)
+        for o in [o for o in bpy.data.objects if o not in before]:
+            if o.type == "MESH" and self.col_mesh is None:
+                o.name = self.name + "_colmesh"
+                o.hide_render = True
+                self.col_mesh = o
+            else:
+                bpy.data.objects.remove(o)
+        return self.col_mesh
+
     def col_box(self, lo, hi):
         self.cols.append([lo[0], lo[1], lo[2], hi[0], hi[1], hi[2]])
 
@@ -628,12 +644,16 @@ class Shell:
         if self.rooms:
             r = self.rooms[0]
             bpy.data.objects["lamp"].location = ((r[0] + r[1]) / 2, (r[2] + r[3]) / 2, r[5] - 0.3)
-        for engine in ("BLENDER_EEVEE_NEXT", "BLENDER_EEVEE", "BLENDER_WORKBENCH"):
+        # SHELL_ENGINE=CYCLES on a headless box without a GPU context, where EEVEE aborts Blender
+        engines = (os.environ["SHELL_ENGINE"],) if os.environ.get("SHELL_ENGINE") else ("BLENDER_EEVEE_NEXT", "BLENDER_EEVEE", "BLENDER_WORKBENCH")
+        for engine in engines:
             try:
                 scene.render.engine = engine
                 break
             except TypeError:
                 continue
+        if scene.render.engine == "CYCLES":
+            scene.cycles.device, scene.cycles.samples = "CPU", int(os.environ.get("SHELL_SAMPLES", "24"))
         scene.render.resolution_x, scene.render.resolution_y = size
         scene.render.film_transparent = False
         path = os.path.join(RENDERS, self.name, view + ".png")
@@ -654,7 +674,7 @@ class Shell:
                 bpy.data.objects.remove(bpy.data.objects[o])
         os.makedirs(OUT, exist_ok=True)
         d = next((o.door for o in self.openings if o.door), None)
-        self._export_one(self.name, self.obj, self.cols)
+        self._export_one(self.name, self.obj, self.cols, self.col_mesh)
         if self.leaf and d:
             self.leaf.location, self.leaf.rotation_euler = (0, 0, 0), (0, 0, 0)
             w, h, t = d["width"], d["height"], DOOR_THICK
@@ -676,7 +696,7 @@ class Shell:
             json.dump(dict(sorted(rooms.items())), f, indent=1)
         print(f"export: {self.name} ({len(self.obj.data.polygons)} faces, {len(self.cols)} collision boxes)")
 
-    def _export_one(self, name, obj, boxes):
+    def _export_one(self, name, obj, boxes, mesh=None):
         coll = bpy.data.collections.get(name) or bpy.data.collections.new(name)
         if coll.name not in bpy.context.scene.collection.children:
             bpy.context.scene.collection.children.link(coll)
@@ -706,6 +726,11 @@ class Shell:
         for o in bpy.context.view_layer.objects:
             if o:
                 o.select_set(False)
+        if mesh is not None:
+            for c in mesh.users_collection:
+                c.objects.unlink(mesh)
+            coll.objects.link(mesh)
+            empties.append(mesh)
         for e in empties:
             e.select_set(True)
         bpy.ops.export_col.scene(filepath=os.path.join(OUT, name + ".col"), export_version="3", only_selected=True)

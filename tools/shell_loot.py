@@ -1,4 +1,5 @@
-"""Loot points inside the enterable trailers (house_shell models 3167-3175) and the log cabin row (17067).
+"""Loot points inside the enterable trailers (house_shell models 3167-3175), the log cabin row (17067) and the houses
+(house_shell/houses.lua: des_bighus01, 3305).
 
 Rooms come from tools/shell_rooms.json (written by Shell.export(): [x0, x1, y0, y1, floor z, ceiling z] per room, in
 the model's frame). A point is (x, y, room index); its z is the room's floor + FLOOR_LIFT, so it follows the model.
@@ -55,3 +56,15 @@ def cabin_points() -> list[tuple[float, float, float]]:
         cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
         out += [inside(CABIN_SHELL, i, round(cx + dx, 4), round(cy + dy, 4)) for dx, dy in CABIN_POINTS]
     return out
+
+
+# model -> (shell, [(x, y, room)]): des_bighus01's rooms are the living room, kitchen, bedroom and garage; the points keep
+# clear of the front, porch and garage doors' swing
+HOUSES = {
+    3305: ("des_bighus01", [(-2.5, -2.0, 0), (1.0, -0.2, 0), (4.75, -1.8, 1), (8.2, -2.0, 2), (6.5, 8.0, 3), (2.6, 8.6, 3)]),
+}
+
+
+def house_points(model: int) -> list[tuple[float, float, float]]:
+    shell, pts = HOUSES[model]
+    return [inside(shell, room, x, y) for x, y, room in pts]

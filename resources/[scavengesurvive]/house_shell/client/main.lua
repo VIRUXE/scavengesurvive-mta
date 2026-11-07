@@ -8,6 +8,8 @@
 -- * the trailers (models 3167-3175, trailers.lua, tools/trailer_shells): panelled rooms, glazed windows and the
 --   vanilla door cut out as a leaf of its own that swings, hung in every trailer of the world (the upright vanilla
 --   placements listed in trailers.lua, and the ones the maps resource builds, found once it has built them).
+-- * the houses (houses.lua, tools/house_shells): the Fort Carson weatherboard house des_bighus01 (model 3305), rooms
+--   behind its front and porch doors and its garage's side door, each door a leaf of its own that swings.
 local function readLua(path)
     local f = fileOpen(path, true)
     local src = fileRead(f, fileGetSize(f))
@@ -17,6 +19,7 @@ end
 
 local trailers = readLua("trailers.lua")
 local cabins = readLua("cabins.lua")
+local houses = readLua("houses.lua")
 local DOOR_PHYSICS = 1491 -- Gen_doorINT01: its object.dat group makes a requested door model swing
 local UPRIGHT = 0.999
 
@@ -77,6 +80,18 @@ local function hangCabinDoors(id, x, y, z, rz)
     for _, h in ipairs(cabins.hinges) do
         local obj =
             createObject(id, x + h[1] * c - h[2] * s, y + h[1] * s + h[2] * c, z + h[3], 0, 0, rz + cabins.door.rz)
+        if obj then
+            doors[#doors + 1] = obj
+        end
+    end
+end
+
+-- A house's doors: one leaf model, hung at each of its hinges (x, y, z, rz in the model's frame).
+local function hangHouseDoors(id, house, x, y, z, rz)
+    local a = math.rad(rz)
+    local c, s = math.cos(a), math.sin(a)
+    for _, h in ipairs(house.hinges) do
+        local obj = createObject(id, x + h[1] * c - h[2] * s, y + h[1] * s + h[2] * c, z + h[3], 0, 0, rz + h[4])
         if obj then
             doors[#doors + 1] = obj
         end
@@ -152,6 +167,21 @@ addEventHandler("onClientResourceStart", resourceRoot, function()
         end
     else
         outputDebugString("house_shell: failed to load the log cabins", 1)
+    end
+    for _, house in ipairs(houses) do
+        local houseTxd = engineLoadTXD("files/" .. house.dff .. ".txd", true)
+        if houseTxd and replaceModel(house.model, house.dff, houseTxd, house.dff) then
+            keep[#keep + 1] = houseTxd
+            engineSetModelFlag(house.model, "draw_last", true)
+            local id = requestDoor(house.door, houseTxd)
+            for _, p in ipairs(house.placements) do
+                if id then
+                    hangHouseDoors(id, house, p[1], p[2], p[3], p[4])
+                end
+            end
+        else
+            outputDebugString("house_shell: failed to load house " .. house.dff, 1)
+        end
     end
     local fromMaps = hangMapDoors()
     local fmt = "house_shell: %d trailers enterable, %d doors hung (%d in map trailers)"
