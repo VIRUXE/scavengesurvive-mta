@@ -124,8 +124,10 @@ def props_rows() -> list[dict]:
     rows = [{"id": s["id"], "name": "snack_" + s["uname"].lower(), "dist": 40} for s in SNACKS]
     rows += [
         {"id": MACHINE_ID, "name": "snack_machine", "dist": 150},
-        {"id": GLASS_ID, "name": "snack_glass", "dist": 100},
-        {"id": BROKEN_ID, "name": "snack_glass_broken", "dist": 100},
+        # the pane is glass as GTA's own shop windows are (wglasssmash 1649): its physical properties, IDE flags 1028
+        # (4 drawn last with its alpha, 1024 glass); without them its see-through texture draws as nothing
+        {"id": GLASS_ID, "name": "snack_glass", "dist": 100, "parent": 1649, "ideFlags": 1028},
+        {"id": BROKEN_ID, "name": "snack_glass_broken", "dist": 100, "ideFlags": 4},
     ]
     return rows
 

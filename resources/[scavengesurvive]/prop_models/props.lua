@@ -34,6 +34,6 @@ return {
     [20231] = { dff = "snack_fruitcandy", txd = "snack_fruitcandy", dist = 40 },
     [20232] = { dff = "snack_cookies", txd = "snack_cookies", dist = 40 },
     [20233] = { dff = "snack_machine", txd = "snack_machine", dist = 150 },
-    [20234] = { dff = "snack_glass", txd = "snack_glass", dist = 100 },
-    [20235] = { dff = "snack_glass_broken", txd = "snack_glass_broken", dist = 100 },
+    [20234] = { dff = "snack_glass", txd = "snack_glass", dist = 100, parent = 1649, ideFlags = 1028 },
+    [20235] = { dff = "snack_glass_broken", txd = "snack_glass_broken", dist = 100, ideFlags = 4 },
 }

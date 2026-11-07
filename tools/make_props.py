@@ -387,7 +387,10 @@ def render_props() -> str:
     from tools.make_vending import props_rows
     from tools.vanilla_props import COPIES
     entries = PROPS_TABLE + [dict(id=p["model"], name=p["asset"], dist=80) for p in PARTS] + COPIES + props_rows()
-    lines += [f'    [{p["id"]}] = {{ dff = "{p["name"]}", txd = "{p["name"]}", dist = {p["dist"]} }},' for p in entries]
+    def extra(p):  # a vanilla model whose physical properties it takes, IDE flags it is drawn with
+        return "".join(f", {k} = {p[k]}" for k in ("parent", "ideFlags") if p.get(k) is not None)
+
+    lines += [f'    [{p["id"]}] = {{ dff = "{p["name"]}", txd = "{p["name"]}", dist = {p["dist"]}{extra(p)} }},' for p in entries]
     return "\n".join(lines + ["}", ""])
 
 

@@ -12,6 +12,9 @@ addEventHandler("onClientResourceStart", resourceRoot, function()
     local manifest = loader.loadLuaFile("props.lua", "=prop_models/props.lua")
     for propModel, e in pairs(manifest) do
         local id, err = ldr.loadModel(e)
+        if id and e.ideFlags then -- drawn as its IDE flags say (the snack machine's glass: alpha, glass)
+            engineSetModelFlags(id, e.ideFlags, true)
+        end
         if id then
             ids[propModel] = id
             count = count + 1
