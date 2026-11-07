@@ -1717,12 +1717,9 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
     end
 
     -- Wheels need a tyre wrench in hand; a replacement wheel is laid beside the vehicle.
-    if uname == "Wheel" then
-        outputChatBox(
-            lang.textFor(player, "Lay the wheel beside the vehicle, then hold a Tyre Wrench to fit it."),
-            player
-        )
-        return
+    -- (at the rear it falls through to the trunk, Case 3)
+    if uname == "Wheel" and not vlogic.isRear(angle) then
+        return toast(player, "WHEEL_LAY")
     end
     if uname == "Wrench" and not vlogic.isFront(angle) and not vlogic.isRear(angle) then
         if

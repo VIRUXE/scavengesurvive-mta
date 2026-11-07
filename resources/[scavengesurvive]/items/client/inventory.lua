@@ -17,6 +17,7 @@ return function(ctx)
         HANDS_FULL = "You are already holding an item",
         LIQUID_EMPTY = "It is empty",
         CARRY_NO_VEHICLE = "Put that down before getting in",
+        WHEEL_LAY = "Lay the wheel beside the vehicle, then hold a Tyre Wrench to fit it.",
         NOT_IN_WORLD = "It is gone",
         CONTAINER_FULL = "Extra slots required",
         PUT_AWAY = "Put away",
