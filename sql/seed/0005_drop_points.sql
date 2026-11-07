@@ -1,5 +1,5 @@
 -- Derived from Southclaws/ScavengeSurvive (MPL-2.0). See THIRD_PARTY_NOTICES.md
--- GENERATED FILE - do not edit; run: python -m tools.convert all
+-- Ported once from upstream by tools/convert, which is retired: edit this file by hand, never regenerate it.
 
 DELETE FROM supply_drop_points;
 DELETE FROM weapon_cache_points;

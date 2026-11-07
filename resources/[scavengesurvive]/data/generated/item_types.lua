@@ -1,5 +1,5 @@
 -- Derived from Southclaws/ScavengeSurvive (MPL-2.0). See THIRD_PARTY_NOTICES.md
--- GENERATED FILE - do not edit; run: python -m tools.convert all
+-- Ported once from upstream by tools/convert, which is retired: edit this file by hand, never regenerate it.
 
 local M = { byUname = {}, order = {}, calibres = {}, calibreNames = {} }
 M.byUname.NULL = { attrx = 0.0, attry = 0.0, attrz = 0.0, attx = 0.0, atty = 0.0, attz = 0.0, boneid = 6, buttonz = 0.96, category = "generic", categoryData = nil, colour = -1, longPickup = false, maxHitpoints = 0, model = 0, modelz = 0.0, name = "NULL", price = 1, rotx = 0.0, roty = 0.0, rotz = 0.0, size = 1, uname = "NULL", useCarryAnim = false }

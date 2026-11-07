@@ -303,20 +303,6 @@ def add_port_tools(types: dict[str, dict]) -> None:
         types[w["uname"]] = fields
 
 
-# upstream types the port lays on the ground differently: uname -> (rotx, roty, rotz, modelz)
-REST_OVERRIDES = {
-    # upstream stands the wheel on its tread; it lies flat on its side instead. wheel_sr1.dff's axle is X, its tyre
-    # spans x -0.14 (inner) to 0.181 (hub face): roty 270 turns the hub face up and modelz lifts the inner side onto
-    # the ground
-    "Wheel": (0.0, 270.0, 0.0, 0.14),
-}
-
-
-def apply_rest_overrides(types: dict[str, dict]) -> None:
-    for uname, (rx, ry, rz, z) in REST_OVERRIDES.items():
-        types[uname].update(rotx=rx, roty=ry, rotz=rz, modelz=z)
-
-
 def apply_port_defences(types: dict[str, dict]) -> None:
     """The hinged defence doors (tools/port_defences.py, #149) use their re-pivoted copies; the pivot goes with the
     defence, so building/shared/logic/defences.lua can put a built door where upstream's stood."""
@@ -395,7 +381,6 @@ def convert(src_root, out_data, out_seed) -> dict:
     add_world_boxes(types)
     add_port_tools(types)
     apply_port_defences(types)
-    apply_rest_overrides(types)
     write_text(Path(out_data) / "item_types.lua", render_lua(types))
     write_text(Path(out_seed) / "0001_item_types.sql", render_sql(types))
     return types

@@ -1,5 +1,5 @@
 -- Derived from Southclaws/ScavengeSurvive (MPL-2.0). See THIRD_PARTY_NOTICES.md
--- GENERATED FILE - do not edit; run: python -m tools.convert trees (needs the game copy, --gta)
+-- Ported once from upstream by tools/convert, which is retired: edit this file by hand, never regenerate it.
 
 -- Upstream DefineTreeSpecies(model, diameter, health, chop damage, pieces, category, fall type, Chainsaw,
 -- Wood Log) and GTA's own placements of those models. Species: [model] = { diameter, health, chop damage per

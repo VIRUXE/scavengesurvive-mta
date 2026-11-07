@@ -1,5 +1,5 @@
 -- Derived from Southclaws/ScavengeSurvive (MPL-2.0). See THIRD_PARTY_NOTICES.md
--- GENERATED FILE - do not edit; run: python -m tools.convert all
+-- Ported once from upstream by tools/convert, which is retired: edit this file by hand, never regenerate it.
 local M = {}
 M.order = { "Bobcat", "Rustler", "Maverick", "Comet", "MountBike", "Wayfarer", "Sabre", "Rhino", "Barracks", "Patriot", "Boxville", "DFT30", "Flatbed", "Rumpo", "Yankee", "Yosemite", "Dinghy", "Coastguard", "Launch", "Reefer", "Tropic", "Sentinel", "Regina", "Tampa", "Clover", "Sultan", "Huntley", "Mesa", "Sandking", "Bandito", "Ambulance", "Faggio", "Sanchez", "Freeway", "Police1", "Police2", "Police3", "Ranger", "Enforcer", "FbiTruck", "Seasparr", "Blista", "HPV1000", "Squalo", "Marquis", "Tug", "BfInject", "Trailer", "Steamroll", "APC30", "Moonbeam", "Duneride", "Doomride", "Walton", "Rancher", "Sadler", "Journey", "Bloodring", "Linerunner", "Articulat1", "Firetruck", "Baggage", "DavidSabre", "Truckfort", "Roadpain", "Vortex", "Airstream" }
 M.byUname = {}

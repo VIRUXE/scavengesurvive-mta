@@ -1,5 +1,5 @@
 -- Derived from Southclaws/ScavengeSurvive scriptfiles/maps (CC BY-SA 4.0). See THIRD_PARTY_NOTICES.md
--- GENERATED FILE - do not edit; run: python -m tools.convert maps
+-- Ported once from upstream by tools/convert, which is retired: edit this file by hand, never regenerate it.
 
 return {
     zone = "LS",

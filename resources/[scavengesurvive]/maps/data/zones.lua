@@ -1,5 +1,5 @@
 -- Derived from Southclaws/ScavengeSurvive pyss/data/regions.json (MPL-2.0). See THIRD_PARTY_NOTICES.md
--- GENERATED FILE - do not edit; run: python -m tools.convert maps
+-- Ported once from upstream by tools/convert, which is retired: edit this file by hand, never regenerate it.
 
 return {
     bc = { { 964.0, 788.0 }, { 962.0, 956.0 }, { 945.0, 1189.0 }, { 895.0, 1598.0 }, { 849.0, 1843.0 }, { 862.0, 2070.0 }, { 898.0, 2443.0 }, { 919.0, 2759.0 }, { 1046.0, 3000.0 }, { -1137.0, 3000.0 }, { -1135.0, 2720.0 }, { -932.0, 2304.0 }, { -723.0, 1954.0 }, { -621.0, 1658.0 }, { -523.0, 1256.0 }, { -469.0, 1095.0 }, { -672.0, 560.0 }, { -152.0, 428.0 }, { 409.0, 555.0 }, { 811.0, 583.0 }, { 961.0, 683.0 } },

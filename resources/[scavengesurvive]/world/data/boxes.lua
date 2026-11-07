@@ -1,4 +1,4 @@
--- GENERATED FILE - do not edit; run: python -m tools.convert maps (tools/convert/world_boxes.py)
+-- Ported once from upstream by tools/convert, which is retired: edit this file by hand, never regenerate it.
 -- GTA's boxes, crates and bags as item spots: { uname, x, y, z, rz, interior }, the box's base and heading.
 
 return {

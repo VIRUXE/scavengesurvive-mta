@@ -1,5 +1,5 @@
 -- Derived from Southclaws/ScavengeSurvive (MPL-2.0). See THIRD_PARTY_NOTICES.md
--- GENERATED FILE - do not edit; run: python -m tools.convert all
+-- Ported once from upstream by tools/convert, which is retired: edit this file by hand, never regenerate it.
 INSERT INTO settings (skey, svalue) VALUES
 ('items.pickup_radius','2.0'),
 ('items.sync_radius','150'),

@@ -1,5 +1,5 @@
 -- Derived from Southclaws/ScavengeSurvive (MPL-2.0). See THIRD_PARTY_NOTICES.md
--- GENERATED FILE - do not edit; run: python -m tools.convert all
+-- Ported once from upstream by tools/convert, which is retired: edit this file by hand, never regenerate it.
 return {
     ["#008080Please take some time to look at the #33CCFF/rules #008080and #33CCFF/help #008080before diving into the game."] = "#008080Dedica un momento a leer #33CCFF/rules #008080y #33CCFF/help #008080antes de lanzarte al juego.",
     ["%.1f%% Unconscious"] = "%.1f%% inconsciente",

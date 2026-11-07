@@ -19,7 +19,12 @@ MAPS_REPORT = ROOT / "docs" / "maps-census.md"
 SAMP_ONLY = lambda model: 18631 <= model < 20001 or 11682 <= model <= 11753  # noqa: E731 (port hats sit at 20001+)
 
 
+RETIRED = ("tools.convert is retired: it did the one-off port from upstream, and the files it wrote have been hand edited "
+           "since, so running it would revert those edits. Edit data/generated/, sql/seed/ and maps/ by hand (CLAUDE.md).")
+
+
 def main(argv=None) -> int:
+    sys.exit(RETIRED)
     p = argparse.ArgumentParser(prog="python -m tools.convert")
     p.add_argument("kind", choices=["all", "items", "loot", "zones", "maps", "vspawn", "trees"])
     p.add_argument("--src", default=str(ROOT.parent / "ScavengeSurvive"))

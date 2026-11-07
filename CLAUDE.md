@@ -12,8 +12,12 @@ Scavenge & Survive ported to MTA:SA 1.6 (Lua 5.1) with MariaDB 13.1.1+ (`item_cr
   `items` triggers keep `world_items_pos` in step, so nothing writes that table by hand); `sql/seed/*.sql` (seed data, edited by hand).
 - Upstream is fully converted. `data/generated/`, `sql/seed/`, `maps/data/<ZONE>.lua`, `maps/data/zones.lua`, `maps/meta.xml`
   and `docs/maps-census.md` are ordinary source files now: edit them directly (a new item type, loot row or map object is
-  a hand edit to those files and the live DB). `tools/convert/*.py` is a port artifact (it did the one-off conversion and is not tooling); never run it, it would
-  overwrite hand edits.
+  a hand edit to those files and the live DB).
+- **Never run or edit `tools/convert/` (`python -m tools.convert …`), for any reason.** It did the one-off port from
+  upstream, which is finished; it is dead code kept only for history, not tooling. The files it once wrote have been hand
+  edited since, so running it reverts those edits (item names, settings, loot, translations). A change to an item type,
+  loot row, map object or translation is a hand edit to the file in `data/generated/`, `sql/seed/` or `maps/`, never a
+  change to the converter followed by a regen. `tools/convert/__main__.py` refuses to run.
 - `site/` is the public website (GitHub Pages, `https://viruxe.github.io/scavengesurvive-mta/`): plain HTML, CSS and JS, no build step,
   deployed by `.github/workflows/pages.yml` on every push to `main`. Images are WebP copies made by `python -m tools.site_assets`
   from `docs/images` (never link the site into `docs/` or the wiki). Texts are English in the HTML with `data-i18n` keys;

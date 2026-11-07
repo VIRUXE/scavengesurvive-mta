@@ -1,5 +1,5 @@
 -- Derived from Southclaws/ScavengeSurvive (MPL-2.0). See THIRD_PARTY_NOTICES.md
--- GENERATED FILE - do not edit; run: python -m tools.convert all
+-- Ported once from upstream by tools/convert, which is retired: edit this file by hand, never regenerate it.
 
 INSERT INTO item_types (uname,name,model,size,max_hitpoints,category,category_data) VALUES
 ('AK47Rifle','AK-47',355,5,5,'weapon','{"animSet": null, "baseWeapon": 30, "calibre": "762", "flags": 0, "magSize": 30, "maxReserveMags": 1, "melee": false, "muzzleVelocity": 715.0}'),
