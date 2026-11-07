@@ -2214,6 +2214,9 @@ do
 end
 
 addEventHandler("onResourceStart", resourceRoot, function()
+    -- MTA starts the engine whenever a driver gets in, skipping the Y-key checks (battery, fuel, damage, starter wear):
+    -- the engine only starts from engineToggleRequested
+    setWorldSpecialPropertyEnabled("vehicle_engine_autostart", false)
     if not db.connect("vehicles") then
         return
     end
