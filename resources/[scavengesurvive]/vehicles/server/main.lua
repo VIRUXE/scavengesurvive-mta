@@ -1858,10 +1858,10 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
         local gone = getVehicleDoorState(vehicle, 0) == 4 -- bonnet taken off: nothing to open or shut
         local open = engineReachable(vehicle)
         if not held then
-            if not open then
             if gone then
                 return
             end
+            if not open then
                 local _, _, prz = getElementRotation(player)
                 if not vlogic.facingVehicle(px, py, prz, vx, vy) then
                     return
