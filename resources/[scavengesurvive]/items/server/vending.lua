@@ -67,6 +67,15 @@ return function(ctx)
         end)
     end
 
+    -- on start every machine's coils are filed again from what its container holds, so nothing stale is drawn
+    function M.start()
+        db.query("SELECT id FROM items WHERE type_uname = ? AND x IS NOT NULL", { logic.UNAME }, function(rows)
+            for _, r in ipairs(rows or {}) do
+                M.refresh(r.id)
+            end
+        end)
+    end
+
     -- itemPickupRequested on a machine: true when it was one (handled)
     function M.interact(player, _, _, row)
         if not row or not logic.is(row.uname) then

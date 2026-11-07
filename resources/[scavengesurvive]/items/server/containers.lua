@@ -153,11 +153,11 @@ return function(ctx)
         return false
     end
 
-    -- a take from the open side container: its owner (a snack machine) hears of it
-    local function sideChanged(player, containerId)
-        local cont = activeContainer[player]
-        if cont and cont.onChange and cont.containerId == tonumber(containerId) then
-            cont.onChange()
+    -- a take from the side container the player had open when they asked (side: activeContainer[player] then; the
+    -- list may be closed by the time the database answers): its owner (a snack machine) hears of it
+    local function sideChanged(side, containerId)
+        if side and side.onChange and side.containerId == tonumber(containerId) then
+            side.onChange()
         end
     end
 
@@ -1126,9 +1126,9 @@ return function(ctx)
                 data = hands.decodeData(p.data),
             })
             triggerEvent("itemMoved", c.player, c.itemId, "container", "held")
-            sideChanged(c.player, p.container_id)
+            sideChanged(c.side, p.container_id)
             sendInventory(c.player)
-        end, { player = player, itemId = itemId })
+        end, { player = player, itemId = itemId, side = activeContainer[player] })
     end, { rate = 5 })
 
     net.handler("itemContainerMoveRequested", function(player, itemId, target)
@@ -1161,9 +1161,9 @@ return function(ctx)
                 if not res or not res.ok then
                     return toast(c.player, res and res.code or "DB_ERROR")
                 end
-                sideChanged(c.player, res.payload and res.payload.from_container_id)
+                sideChanged(c.side, res.payload and res.payload.from_container_id)
                 sendInventory(c.player)
-            end, { player = player })
+            end, { player = player, side = activeContainer[player] })
         end
 
         if target == "bag" or target == "inventory" then
