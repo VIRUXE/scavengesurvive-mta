@@ -1,7 +1,7 @@
 -- GTA's snack machines as items (data/vending.lua, tools/make_vending.py): on start every spot without its SnackMachine
 -- gets one again (item_create_many, the container comes with it), and every world.vending_restock_s each machine no
--- player is within world.vending_player_distance of and that has room asks the loot budget for snacks
--- (exports.loot:stockContainer, table vending_snacks): the zone's scarcity decides how much comes back. items
+-- player is within world.vending_player_distance of and that has room asks for snacks (exports.loot:stockContainer,
+-- table vending_snacks): the machines' own scarcity budget per zone decides how much comes back. items
 -- (server/vending.lua) mends the glass and shows the snacks once they are in.
 -- ctx = { db, util, log, logic = shared/logic/boxes.lua, spots, setting }.
 return function(ctx)
@@ -67,11 +67,14 @@ return function(ctx)
             local distance = ctx.setting("world.vending_player_distance", 60)
             local asked = 0
             for _, r in ipairs(rows) do
+                -- every machine is named to loot (its slots size the zone's vending budget); one in sight of a
+                -- player asks for nothing
                 local free = (tonumber(r.size) or 0) - (tonumber(r.n) or 0)
-                if r.cid and free > 0 and not watched(r.x, r.y, distance) then
-                    if exports.loot:stockContainer(r.cid, r.x, r.y, TABLE, free) then
-                        asked = asked + 1
-                    end
+                if watched(r.x, r.y, distance) then
+                    free = 0
+                end
+                if r.cid and exports.loot:stockContainer(r.cid, r.x, r.y, TABLE, free, r.size) and free > 0 then
+                    asked = asked + 1
                 end
             end
             util.log("world", "info", "vending: %d machines, %d asked for stock", #rows, asked)
@@ -81,7 +84,7 @@ return function(ctx)
     function M.start()
         M.ensure()
         setTimer(M.restock, 60000, 1)
-        setTimer(M.restock, ctx.setting("world.vending_restock_s", 1800) * 1000, 0)
+        setTimer(M.restock, ctx.setting("world.vending_restock_s", 600) * 1000, 0)
     end
 
     return M

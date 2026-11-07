@@ -19,6 +19,7 @@ local warnedTables = {}
 local allowance = {} -- zone -> items the zone may still spawn (cache of world_budget.allowance between refill ticks)
 local refillTimer = nil
 local budgetBusy = true -- serialize placement and refill; startup loads the persisted budget first
+local vendingTick -- the snack machines' budget tick, with stockContainer below
 
 -- Per-zone carrying capacity: enabled points × items_per_point × cap_multiplier.
 -- New zones earn their first allowance on the refill tick; restarts never mint supply.
@@ -131,6 +132,7 @@ local function refillTick()
             end
             budgetBusy = false
         end)
+        vendingTick(scale, interval)
         log.event("loot.refillSummary", {
             zones = zones,
             alive = totalAlive,
@@ -375,46 +377,94 @@ function rollNear(x, y, radius, onDone)
     return true
 end
 
--- The zone a fixed container stands in: that of the nearest loot point (zones are whole regions), looked up once.
-local containerZone = {}
+-- The snack machines' own budget (world/server/vending.lua through stockContainer), apart from the loot points': per
+-- zone a capacity of loot.vending_fill of the slots of the machines there (scaled for the players online like the
+-- loot cap), alive = what they were stocked with that still exists (loot_zone "v_<zone>", carried too while
+-- loot.count_carried), refilled every tick by budget.refill at loot.vending_refill_rate with a floor of
+-- loot.vending_refill_floor per hour, banked between restocks up to the deficit. Kept in memory: a restart starts
+-- every zone at nothing and the ticks earn it back (ADR 0001: restarts never mint supply).
+local VENDING = "v_"
+local fixedContainers = {} -- container id -> { zone, size }, learned from stockContainer
+local vendingAllowance, vendingRemainder = {}, {}
 
--- Restocks a fixed container (the snack machines, world/server/vending.lua) out of the loot budget: up to `free`
--- items rolled from `tableName` (one pick per free slot, two of a kind allowed), no more than the zone of (x, y) may
--- still spawn, appended by loot_stock_container, which counts them as the zone's loot and spends its allowance.
--- Every item of the table must be of size 1. Asynchronous: lootContainerStocked (containerId, created) follows on
--- resourceRoot when the call went through. false when nothing was asked of the database.
-function stockContainer(containerId, x, y, tableName, free)
-    containerId, free = tonumber(containerId), tonumber(free) or 0
+function vendingTick(scale, interval)
+    local slots = {}
+    for _, c in pairs(fixedContainers) do
+        slots[c.zone] = (slots[c.zone] or 0) + c.size
+    end
+    if not next(slots) then
+        return
+    end
+    local sql = "SELECT loot_zone, COUNT(*) AS n FROM items WHERE loot_zone LIKE 'v\\_%' "
+        .. "AND (? = 1 OR holder_char_id IS NULL) GROUP BY loot_zone"
+    db.query(sql, { setting("loot.count_carried", 1) }, function(rows)
+        if not rows then
+            return
+        end
+        local alive = {}
+        for _, r in ipairs(rows) do
+            alive[r.loot_zone] = tonumber(r.n) or 0
+        end
+        local rate, floor = setting("loot.vending_refill_rate", 0.5), setting("loot.vending_refill_floor", 0.05)
+        for zone, n in pairs(slots) do
+            local cap = math.floor(n * setting("loot.vending_fill", 0.5) * scale + 0.5)
+            local have = alive[VENDING .. zone] or 0
+            local spawns, rem = budget.refill(cap, have, vendingRemainder[zone] or 0, rate, floor, interval)
+            vendingRemainder[zone] = rem
+            vendingAllowance[zone] = math.min((vendingAllowance[zone] or 0) + spawns, math.max(cap - have, 0))
+            log.event(
+                "loot.vendingTicked",
+                { zone = zone, cap = cap, alive = have, spawned = spawns, allowance = vendingAllowance[zone] }
+            )
+        end
+    end)
+end
+
+-- Restocks a fixed container of `size` slots (the snack machines, world/server/vending.lua) out of its zone's vending
+-- budget: up to `free` items rolled from `tableName` (one pick per free slot, two of a kind allowed), no more than
+-- the budget still allows, appended by loot_stock_container with loot_zone "v_<zone>" (the zone is that of the
+-- nearest loot point, looked up once). Every item of the table must be of size 1. Asynchronous:
+-- lootContainerStocked (containerId, created) follows on resourceRoot when the call went through. false when nothing
+-- was asked of the database.
+function stockContainer(containerId, x, y, tableName, free, size)
+    containerId, free, size = tonumber(containerId), tonumber(free) or 0, tonumber(size) or 0
     local tbl = lootTable(tostring(tableName))
-    if not containerId or not tbl or free <= 0 or budgetBusy then
+    if not containerId or not tbl then
         return false
     end
     local function stock(zone)
-        local left = allowance[zone] or 0
+        local left = vendingAllowance[zone] or 0
         local unames = roll.fill(tbl, math.min(free, left), math.random)
         if #unames == 0 then
             return
         end
-        allowance[zone] = left - #unames
+        vendingAllowance[zone] = left - #unames
         local items = {}
         for i, uname in ipairs(unames) do
             items[i] = { u = uname }
         end
-        db.call("loot_stock_container", { containerId, zone, toJSON(items) }, function(res)
+        db.call("loot_stock_container", { containerId, VENDING .. zone, toJSON(items) }, function(res)
             local made = res and res.ok and res.payload and tonumber(res.payload.created) or 0
             local line = { container_id = containerId, zone = zone, rolled = #unames, items = made }
             if not (res and res.ok) then
-                loadAllowances() -- the rolled-back call spent nothing
+                vendingAllowance[zone] = (vendingAllowance[zone] or 0) + #unames -- the rolled-back call spent nothing
                 line.ok, line.code = false, res and res.code or "DB_ERROR"
                 return log.event("loot.containerStocked", line, "warn")
+            end
+            if made < #unames then
+                vendingAllowance[zone] = (vendingAllowance[zone] or 0) + #unames - made
             end
             log.event("loot.containerStocked", line)
             triggerEvent("lootContainerStocked", resourceRoot, containerId, made)
         end)
     end
-    if containerZone[containerId] then
-        stock(containerZone[containerId])
-        return true
+    local known = fixedContainers[containerId]
+    if known then
+        known.size = size > 0 and size or known.size
+        if free > 0 then
+            stock(known.zone)
+        end
+        return free > 0
     end
     local sql = string.format(
         "SELECT zone FROM loot_spawns WHERE enabled = 1 ORDER BY ST_Distance(pos, POINT(%f, %f)) LIMIT 1",
@@ -423,8 +473,10 @@ function stockContainer(containerId, x, y, tableName, free)
     )
     db.one(sql, {}, function(row)
         if row and row.zone then
-            containerZone[containerId] = row.zone
-            stock(row.zone)
+            fixedContainers[containerId] = { zone = row.zone, size = size }
+            if free > 0 then
+                stock(row.zone)
+            end
         end
     end)
     return true
