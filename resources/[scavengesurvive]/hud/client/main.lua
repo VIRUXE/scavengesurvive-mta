@@ -574,10 +574,16 @@ addEventHandler("onClientRender", root, function()
     end
     local vehicle = getPedOccupiedVehicle(localPlayer)
     local driver = vehicle and getVehicleOccupant(vehicle, 0) == localPlayer or false
-    drawHunger()
+    -- duty staff have frozen stats, so no hunger bar, and no watch (bearing, clock, radio frequency)
+    local onDuty = getElementData(localPlayer, "staff.duty") == true
+    if not onDuty then
+        drawHunger()
+    end
     drawAmmo()
     drawKeyActions(driver)
-    drawWatch(vehicle)
+    if not onDuty then
+        drawWatch(vehicle)
+    end
     drawSkillNotice()
     if driver then
         drawVehiclePanel(vehicle)
