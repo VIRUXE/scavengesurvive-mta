@@ -307,7 +307,10 @@ return function(ctx)
             local localX = dx * math.cos(rad) + dy * math.sin(rad)
             local localY = -dx * math.sin(rad) + dy * math.cos(rad)
             local angle = (math.deg(math.atan2(localX, localY)) + 360) % 360
-            local isFront = angle < 25 or angle > 335
+            -- standing on the vehicle (a boat's deck, the Marquis helm at its stern) is not standing at its bonnet or
+            -- trunk: F there takes the wheel
+            local onBoard = getPedContactElement(localPlayer) == nearVeh
+            local isFront = not onBoard and (angle < 25 or angle > 335)
             -- empty hands at the bonnet: a tap opens or shuts it, a hold takes the battery out (vehicles server)
             if not uname and isFront and exports.vehicles:hasBatteryBay(nearVeh) then
                 blockEnterUntil = getTickCount() + TRUNK_ENTER_BLOCK_MS
@@ -354,7 +357,7 @@ return function(ctx)
                 end, 50, 0)
                 return
             end
-            local isRear = angle > 155 and angle < 205
+            local isRear = not onBoard and angle > 155 and angle < 205
             local isPart = uname and exports.vehicles:isBodyPart(uname)
             if (uname and VEHICLE_TOOLS[uname]) or isPart or isRear then
                 blockEnterUntil = getTickCount() + TRUNK_ENTER_BLOCK_MS
