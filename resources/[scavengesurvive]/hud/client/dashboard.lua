@@ -2,15 +2,18 @@
 -- dark binnacle. A speedometer dial (with a digital readout) on the left, a tachometer on the right, a fuel gauge and
 -- a voltmeter between them over a row of tell-tale lamps, and the ignition barrel outside the hood's left end. The
 -- markings are lit by the backlight only while the panel has power; the needles rest at their stops otherwise.
--- It spans y 430..478, under the overheat bar (380..400); the skill notice moves above it while it shows.
+-- It spans y 404..474 on screen; the skill notice moves above it while it shows.
 -- ctx = { canvas, c, logic }.
 return function(ctx)
     local canvas, c, logic = ctx.canvas, ctx.c, ctx.logic
     local M = {}
 
-    -- canvas units, anchored on the screen's centre
-    M.TOP = 430
-    local X, Y, W, H = 214, M.TOP, 212, 48
+    -- design units, anchored on the screen's centre: the cluster is laid out at 212 x 48 and drawn K times that,
+    -- scaled about its bottom centre so that edge sits at canvas y BOTTOM, a little clear of the screen's edge
+    local K, BOTTOM = 1.45, 474
+    local X, Y, W, H = 214, 430, 212, 48
+    local BASE = Y + H
+    M.TOP = BOTTOM - H * K
     local DIAL_R, DIAL_CY = 21, Y + 25
     local SPEEDO_CX, TACHO_CX = X + 38, X + W - 38
     local DIAL_SWEEP = 120 -- degrees either side of straight up
@@ -44,7 +47,15 @@ return function(ctx)
     local speedTop = 160
 
     local function px(x)
-        return canvas.x(c, x, "center")
+        return canvas.x(c, 320 + (x - 320) * K, "center")
+    end
+
+    local function py(y)
+        return canvas.y(c, BOTTOM + (y - BASE) * K)
+    end
+
+    local function len(u)
+        return canvas.len(c, u * K)
     end
 
     local function rgba(rgb, a)
@@ -66,15 +77,15 @@ return function(ctx)
     -- text centred on canvas (x, y), letter height ly; font 1 (Tahoma Bold) for the numerals, 2 for the labels
     local function text(s, x, y, colour, ly, font)
         font = font or 1
-        local scaleY = canvas.textScale(c, ly, font)
+        local scaleY = canvas.textScale(c, ly * K, font)
         local scaleX = scaleY * canvas.xScale(font, ly * 0.22, ly)
         local h = ly * 10
         dxDrawText(
             s,
             px(x - 20),
-            canvas.y(c, y - h / 2),
+            py(y - h / 2),
             px(x + 20),
-            canvas.y(c, y + h / 2),
+            py(y + h / 2),
             colour,
             scaleX,
             scaleY,
@@ -158,15 +169,15 @@ return function(ctx)
 
     -- canvas-unit primitives
     local function rect(x, y, w, h, colour)
-        dxDrawRectangle(px(x), canvas.y(c, y), canvas.len(c, w), canvas.len(c, h), colour)
+        dxDrawRectangle(px(x), py(y), len(w), len(h), colour)
     end
 
     local function stroke(x1, y1, x2, y2, colour, width)
-        dxDrawLine(px(x1), canvas.y(c, y1), px(x2), canvas.y(c, y2), colour, math.max(1, canvas.len(c, width)))
+        dxDrawLine(px(x1), py(y1), px(x2), py(y2), colour, math.max(1, len(width)))
     end
 
     local function disc(x, y, r, colour)
-        dxDrawCircle(px(x), canvas.y(c, y), canvas.len(c, r), 0, 360, colour, colour, 32)
+        dxDrawCircle(px(x), py(y), len(r), 0, 360, colour, colour, 48)
     end
 
     local function frame(x, y, w, h, col, t)
@@ -199,8 +210,8 @@ return function(ctx)
         end
     end
 
-    local function needleAt(cx, cy, sweep, frac, len, tail, width, powered)
-        local tx, ty = polar(cx, cy, sweep, frac, len)
+    local function needleAt(cx, cy, sweep, frac, reach, tail, width, powered)
+        local tx, ty = polar(cx, cy, sweep, frac, reach)
         local sx, sy = polar(cx, cy, sweep, frac, -tail)
         local rgb = powered and NEEDLE_LIT or NEEDLE_DARK
         stroke(sx, sy, tx, ty, rgba(rgb, 255), width)
@@ -342,18 +353,18 @@ return function(ctx)
             if i % 4 == 0 then
                 tick(cx, cy, DIAL_SWEEP, frac, r - 0.8, r - 4, col, 0.8)
                 local lx, ly = polar(cx, cy, DIAL_SWEEP, frac, r - 7.6)
-                text(tostring(math.floor(frac * speedTop + 0.5)), lx, ly, col, 0.42)
+                text(tostring(math.floor(frac * speedTop + 0.5)), lx, ly, col, 0.5)
             elseif i % 2 == 0 then
                 tick(cx, cy, DIAL_SWEEP, frac, r - 0.8, r - 2.8, col, 0.5)
             else
                 tick(cx, cy, DIAL_SWEEP, frac, r - 0.8, r - 2, col, 0.4)
             end
         end
-        text("km/h", cx, cy - 5.5, col, 0.36, 2)
+        text("km/h", cx, cy - 6, col, 0.42, 2)
         -- the LCD: the speed in digits, dark with the panel off
         rect(cx - 6.5, cy + 6, 13, 5.6, LCD_BACK)
         if powered then
-            text(string.format("%d", math.floor(kmh + 0.5)), cx, cy + 8.9, rgba(LCD_INK, 255 * glow), 0.46)
+            text(string.format("%d", math.floor(kmh + 0.5)), cx, cy + 8.9, rgba(LCD_INK, 255 * glow), 0.55)
         end
         needleAt(cx, cy, DIAL_SWEEP, shown.speed / speedTop, r - 2, 3.5, 1.1, powered)
         hub(cx, cy, 2.4)
@@ -373,14 +384,13 @@ return function(ctx)
             if i % 4 == 0 then
                 tick(cx, cy, DIAL_SWEEP, frac, r - 0.8, r - 4, tc, 0.8)
                 local lx, ly = polar(cx, cy, DIAL_SWEEP, frac, r - 7.6)
-                text(tostring(i / 4), lx, ly, tc, 0.5)
+                text(tostring(i / 4), lx, ly, tc, 0.6)
             elseif i % 2 == 0 then
                 tick(cx, cy, DIAL_SWEEP, frac, r - 0.8, r - 2.8, tc, 0.5)
             end
         end
-        text("x1000", cx, cy - 6.2, col, 0.32, 2)
-        text("r/min", cx, cy - 2.8, col, 0.32, 2)
-        text("RPM", cx, cy + 9, col, 0.4, 2)
+        text("x1000", cx, cy - 6, col, 0.42, 2)
+        text("RPM", cx, cy + 8.5, col, 0.46, 2)
         local frac = math.max(0, math.min(1, needle / logic.MAX_RPM))
         needleAt(cx, cy, DIAL_SWEEP, powered and frac or 0, r - 2, 3.5, 1.1, powered)
         hub(cx, cy, 2.4)
@@ -398,10 +408,10 @@ return function(ctx)
         end
         -- the end labels just under the arc's ends and the name under the pivot, clear of the needle's sweep
         local lx, ly = polar(cx, cy, SMALL_SWEEP, 0, r)
-        text(lowLabel, lx - 0.6, ly + 4, red, 0.36, 2)
+        text(lowLabel, lx - 0.6, ly + 4, red, 0.44, 2)
         local hx, hy = polar(cx, cy, SMALL_SWEEP, 1, r)
-        text(highLabel, hx + 0.6, hy + 4, col, 0.36, 2)
-        text(name, cx, cy + 4.2, col, 0.26, 2)
+        text(highLabel, hx + 0.6, hy + 4, col, 0.44, 2)
+        text(name, cx, cy + 4.6, col, 0.36, 2)
         needleAt(cx, cy, SMALL_SWEEP, frac, r - 1.5, 2, 0.8, powered)
         hub(cx, cy, 1.5)
     end
