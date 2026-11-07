@@ -127,6 +127,16 @@ return function(ctx)
     addEventHandler("engineCranked", root, function(code)
         perform("crank", source, code)
     end)
+    -- vehicles: the lights were asked for on a dead battery: a relay click (the dim flicker is the server's)
+    addEventHandler("lightsFlickered", root, function()
+        if source ~= getPedOccupiedVehicle(localPlayer) then
+            return
+        end
+        local click = playSound("sounds/crank_dead.wav", false)
+        if click then
+            setSoundVolume(click, SOUND_VOLUME)
+        end
+    end)
     addEventHandler("engineStalled", root, function(code)
         perform("stall", source, code)
     end)

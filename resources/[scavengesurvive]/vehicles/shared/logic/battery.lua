@@ -58,6 +58,17 @@ function M.hasBay(model, vt, noBonnet)
     return not (noBonnet and noBonnet[model])
 end
 
+-- headlights with the engine off: any charge left will light them, a dead battery gives nothing
+function M.canLight(level)
+    if not level then
+        return false, "NO_BATTERY"
+    end
+    if level <= 0 then
+        return false, "BATTERY_FLAT"
+    end
+    return true
+end
+
 function M.canStart(level)
     if not level then
         return false, "NO_BATTERY"

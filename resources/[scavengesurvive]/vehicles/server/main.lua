@@ -668,7 +668,7 @@ local function tickSimulation()
             -- headlights left on with the engine off flatten the battery; a flat one puts them out
             local level = battery.lightsDrain(batteryLevel(inf), 1.0)
             inf.battery, inf.batterySince = level, unixNow()
-            if level < battery.START_MIN then
+            if level <= 0 then
                 setVehicleOverrideLights(v, 1)
             end
         end
@@ -907,6 +907,30 @@ net.handler("engineToggleRequested", function(player)
     end
 end, { rate = 3 })
 
+-- A dead battery gives the headlights a faint double flicker, then they stay off.
+local flickering = {}
+local function flickerLights(v)
+    if flickering[v] then
+        return
+    end
+    flickering[v] = true
+    local r, g, b = getVehicleHeadLightColor(v)
+    setVehicleHeadLightColor(v, 60, 50, 30)
+    local step = 0
+    setTimer(function()
+        step = step + 1
+        if not isElement(v) then
+            flickering[v] = nil
+            return
+        end
+        setVehicleOverrideLights(v, step % 2 == 1 and 2 or 1)
+        if step >= 4 then
+            flickering[v] = nil
+            setVehicleHeadLightColor(v, r, g, b)
+        end
+    end, 120, 4)
+end
+
 -- Lights toggle (occupant N key)
 net.handler("lightsToggleRequested", function(player)
     local v = getPedOccupiedVehicle(player)
@@ -918,9 +942,12 @@ net.handler("lightsToggleRequested", function(player)
     local engineOn = getVehicleEngineState(v)
     if curr ~= 2 and inf and inf.bay and not engineOn then
         -- with the engine off the lights run off the battery: none or a flat one gives nothing
-        local ok, why = battery.canStart(batteryLevel(inf))
+        local ok, why = battery.canLight(batteryLevel(inf))
         if not ok then
-            if why ~= "BATTERY_FLAT" then
+            if why == "BATTERY_FLAT" then
+                flickerLights(v)
+                triggerClientEvent(player, "lightsFlickered", v) -- the relay click
+            else
                 toast(player, why)
             end
             return
