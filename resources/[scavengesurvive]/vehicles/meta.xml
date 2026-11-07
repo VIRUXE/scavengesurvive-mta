@@ -27,6 +27,7 @@
     <file src="server/bodyparts.lua"/>
     <export function="getVehicleDbId" type="server"/>
     <export function="countVehicles" type="server"/>
+    <export function="spawnVehicle" type="server"/>
     <export function="respawnAll" type="server"/>
     <export function="getVehicleFuel" type="server"/>
     <export function="setVehicleFuel" type="server"/>

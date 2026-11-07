@@ -319,6 +319,19 @@ command("vehrespawn", function(p)
     )
 end, true)
 
+local function spawnVeh(p, ...)
+    local query = table.concat({ ... }, " ")
+    if query == "" then
+        return say(p, "usage: /veh <name|model>  e.g. /veh sultan, /veh 560")
+    end
+    local ok, res = exports.vehicles:spawnVehicle(p, query)
+    if not ok then
+        say(p, "veh: %s", tostring(res))
+    end
+end
+command("veh", spawnVeh)
+command("spawnveh", spawnVeh)
+
 command("stats", function(p)
     local st = exports.character:getStats(p)
     if not st then

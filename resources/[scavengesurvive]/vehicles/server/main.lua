@@ -658,6 +658,11 @@ local function tickSimulation()
         if isElement(v) then
             bodySrv.scan(v, inf) -- a body part a crash knocked off drops as an item
         end
+        if isElement(v) and inf.bay and getVehicleOverrideLights(v) == 0 then
+            -- override 0 is GTA's own: it lights the headlights at night by itself, battery or not. The headlights of a
+            -- vehicle with a battery are the driver's (lightsToggleRequested), off until switched on
+            setVehicleOverrideLights(v, 1)
+        end
         if isElement(v) and inf.bay and inf.battery and getVehicleOverrideLights(v) == 2 and batteryLevel(inf) <= 0 then
             setVehicleOverrideLights(v, 1) -- a dead battery lights nothing, engine running or not
         end
@@ -2466,6 +2471,112 @@ end
 
 function countVehicles()
     return count()
+end
+
+-- Resolves a /veh query (model id, uname, display name, or a unique prefix of either) to a vehicle type.
+local function findType(query)
+    local q = tostring(query):lower()
+    local byModel = tonumber(q) and exports.data:vehicleTypeByModel(tonumber(q))
+    if byModel then
+        return byModel
+    end
+    local prefix = {}
+    for _, uname in ipairs(exports.data:vehicleTypes()) do
+        local t = exports.data:vehicleType(uname)
+        local u, n = t.uname:lower(), (t.name or t.uname):lower()
+        if u == q or n == q then
+            return t
+        end
+        if u:sub(1, #q) == q or n:sub(1, #q) == q then
+            prefix[#prefix + 1] = t
+        end
+    end
+    if #prefix == 1 then
+        return prefix[1]
+    end
+    return nil, #prefix > 1 and "AMBIGUOUS" or "UNKNOWN_TYPE"
+end
+
+-- Dev command support (/veh): a pristine persisted vehicle 5 m in front of the player. It is marked left_spawn so it
+-- never blocks a spawn point and the abandoned-vehicle cleanup can retire it. Returns ok, uname | code; the DB result
+-- is reported to the player in chat.
+function spawnVehicle(player, query)
+    if not isElement(player) or getElementType(player) ~= "player" then
+        return false, "PLAYER_ONLY"
+    end
+    if not types then
+        return false, "NOT_READY"
+    end
+    if getElementInterior(player) ~= 0 or getElementDimension(player) ~= 0 then
+        return false, "IN_INTERIOR"
+    end
+    local t, code = findType(query)
+    if not t then
+        return false, code
+    end
+    local px, py, pz = getElementPosition(player)
+    local _, _, prz = getElementRotation(player)
+    local rad = math.rad(prz)
+    local row = {
+        type_uname = t.uname,
+        model = t.model,
+        x = px - math.sin(rad) * 5,
+        y = py + math.cos(rad) * 5,
+        z = pz + 0.5,
+        rz = prz,
+        health = vlogic.HEALTH_MAX,
+        fuel = t.maxFuel or 0,
+        locked = vlogic.LOCK_OPEN,
+        battery = 100,
+        battery_since = unixNow(),
+        starter = starter.freshLife(math.random),
+        left_spawn = 1,
+    }
+    local params = {
+        nil,
+        row.type_uname,
+        row.model,
+        row.x,
+        row.y,
+        row.z,
+        row.rz,
+        row.health,
+        row.fuel,
+        row.locked,
+        nil,
+        nil,
+        nil,
+        row.battery,
+        row.battery_since,
+        row.starter,
+        n = 16,
+    }
+    db.exec(INSERT_VEHICLE, params, function(ok, ctx, _, insertId)
+        if not ok or not insertId then
+            if isElement(player) then
+                outputChatBox("[dev] veh: db error (see logs/scripts.log)", player, 120, 200, 255)
+            end
+            return
+        end
+        ctx.id = insertId
+        db.exec("UPDATE vehicles SET left_spawn = 1 WHERE id = ?", { insertId })
+        local v = create(ctx, true)
+        if not v then
+            return
+        end
+        log.event("vehicle.spawnedByCommand", {
+            actor = isElement(player) and player or "Console",
+            vehicle_id = insertId,
+            uname = ctx.type_uname,
+            x = ctx.x,
+            y = ctx.y,
+            z = ctx.z,
+        }, "warn")
+        if isElement(player) then
+            outputChatBox(("[dev] spawned %s id=%d"):format(ctx.type_uname, insertId), player, 120, 200, 255)
+        end
+    end, row)
+    return true, t.uname
 end
 
 function getVehicleFuel(vehicle)
