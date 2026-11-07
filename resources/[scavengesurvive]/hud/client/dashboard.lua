@@ -59,11 +59,11 @@ return function(ctx)
             bay = getElementData(vehicle, "vehicles.bay") == true,
             battery = tonumber(getElementData(vehicle, "vehicles.battery")),
             engine = getVehicleEngineState(vehicle),
+            acc = getElementData(vehicle, "vehicles.acc") == true,
             lights = getVehicleOverrideLights(vehicle) == 2,
             health = getElementHealth(vehicle),
             fuel = tonumber(getElementData(vehicle, "vehicles.fuel")) or 0,
             maxFuel = vt and vt.maxFuel or 0,
-            tyres = { getVehicleWheelStates(vehicle) },
         }
         for k, v in pairs(preview or {}) do
             s[k] = v
@@ -194,7 +194,7 @@ return function(ctx)
         drawVolts(volts, powered, glow)
     end
 
-    -- dev preview: overrides (a table of state fields: battery, bay, engine, lights, health, fuel, maxFuel, tyres)
+    -- dev preview: overrides (a table of state fields: battery, bay, engine, acc, lights, health, fuel, maxFuel)
     -- replace the vehicle's own until cleared with false (nil keeps them); kind "crank" | "stall" with a code plays
     -- that performance on the vehicle driven, as if vehicles had sent it
     function M.preview(overrides, kind, code)

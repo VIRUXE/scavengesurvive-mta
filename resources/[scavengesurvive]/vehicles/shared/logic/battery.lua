@@ -8,6 +8,7 @@ M.RECHARGE_PER_S = 10 / 60 -- percent gained per second of driving (full in abou
 M.IDLE_RECHARGE_FACTOR = 0.25 -- an engine left running while standing still charges at this share of that
 M.DRIVING_KMH = 5 -- above this the car counts as driven
 M.LIGHTS_DRAIN_PER_H = 12.0 -- percent lost per hour by headlights left on with the engine off, from the first second
+M.ACC_DRAIN_PER_H = 3.0 -- percent lost per hour by the key left in ACC (dash and accessories on) with the engine off
 M.START_MIN = 10 -- under this the engine will not turn over
 M.SPAWN_MIN = 15
 
@@ -32,6 +33,11 @@ end
 -- headlights burning with the engine off
 function M.lightsDrain(level, dt)
     return math.max(0, (level or 0) - M.LIGHTS_DRAIN_PER_H / 3600 * (dt or 1))
+end
+
+-- the key left in ACC with the engine off
+function M.accDrain(level, dt)
+    return math.max(0, (level or 0) - M.ACC_DRAIN_PER_H / 3600 * (dt or 1))
 end
 
 function M.spawnLevel(rng)

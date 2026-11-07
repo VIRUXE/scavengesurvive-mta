@@ -646,6 +646,11 @@ local function tickSimulation()
                 setVehicleOverrideLights(v, 1)
             end
         end
+        if isElement(v) and inf.bay and inf.battery and inf.acc and not getVehicleEngineState(v) then
+            -- the key left in ACC with the engine off drains the battery on top of any headlights
+            inf.battery, inf.batterySince = battery.accDrain(batteryLevel(inf), 1.0), unixNow()
+            publishBattery(v, inf)
+        end
         if isElement(v) and getVehicleEngineState(v) then
             local vt = exports.data:vehicleType(inf.uname)
             if inf.bay and inf.battery then
@@ -787,6 +792,34 @@ addEventHandler("onVehicleStartEnter", root, function(player)
     end
 end)
 
+-- The key's ACC position (dash and accessories on, engine off): a tap of Y toggles it, a hold cranks through it.
+-- Kept in memory and in element data for the dashboard; it drains the battery slowly (battery.accDrain).
+local function setAcc(v, inf, on)
+    on = on and true or false
+    if inf.acc == on then
+        return
+    end
+    inf.acc = on
+    setElementData(v, "vehicles.acc", on, "broadcast", "deny")
+end
+
+net.handler("accessoryToggleRequested", function(player)
+    local v = getPedOccupiedVehicle(player)
+    if not v or getVehicleController(v) ~= player or getVehicleEngineState(v) then
+        return
+    end
+    local inf = info[v]
+    if not inf then
+        return
+    end
+    local on = not inf.acc
+    setAcc(v, inf, on)
+    log.event("vehicle.accToggled", vehicleLine(v, { player = player, acc = on }))
+    if on then
+        engineCranked(player, v, "ACC")
+    end
+end, { rate = 3 })
+
 -- Engine toggle (driver Y key)
 net.handler("engineToggleRequested", function(player)
     local v = getPedOccupiedVehicle(player)
@@ -801,6 +834,7 @@ net.handler("engineToggleRequested", function(player)
     local hp = getElementHealth(v)
     local curr = getVehicleEngineState(v)
     if not curr then
+        setAcc(v, inf, true) -- cranking goes through ACC: a start that fails leaves the key there
         -- the battery first: without one, or with a flat one, the starter never turns and nothing else shows
         if inf.bay then
             local started, why = battery.canStart(batteryLevel(inf))
@@ -836,6 +870,7 @@ net.handler("engineToggleRequested", function(player)
         engineCranked(player, v, false)
     else
         setVehicleEngineState(v, false)
+        setAcc(v, inf, false) -- the engine switched off by hand takes the key fully off
     end
 end, { rate = 3 })
 

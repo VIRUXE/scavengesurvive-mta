@@ -30,7 +30,7 @@ The keys below are the defaults. The item keys (`F`, `N`, `Y`, `H`, `R`) are ord
 
 | Action | Key | Notes |
 |:--|:--|:--|
-| Engine on / off | `Y` | Driver only. The engine needs fuel, a charged battery and a vehicle that is not wrecked, see [Vehicles](Vehicles). |
+| Engine on / off | `Y` | Driver only. A tap with the engine off turns the key to ACC (dashboard on) or back off; holding `Y` for 0.3 s cranks the engine; pressing it while the engine runs stops it. The engine needs fuel, a charged battery and a vehicle that is not wrecked, see [Vehicles](Vehicles). |
 | Lights on / off | `N` | Any seat. |
 | Radio | `R` | Opens the [radio](Radio) panel. If you hold a reloadable firearm, hold `R` for 600 ms instead (a tap reloads). |
 | Lock / unlock doors | `2` (GTA's "sub mission" control) or `/lock` | From inside the vehicle, any seat. |

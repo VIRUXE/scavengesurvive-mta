@@ -4,6 +4,7 @@ addEvent("vehicleRefillSpawned", false)
 
 -- client to server (handlers registered with net.handler)
 addEvent("engineToggleRequested", true)
+addEvent("accessoryToggleRequested", true)
 addEvent("lightsToggleRequested", true)
 addEvent("lockToggleRequested", true)
 addEvent("vehicleInteractRequested", true)

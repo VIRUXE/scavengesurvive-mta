@@ -1,6 +1,6 @@
 # Driver's Dashboard
 
-While you drive a vehicle with an engine and a fuel tank, a small black strip sits at the bottom centre of the screen: five warning lamps above a segmented rev counter and a voltmeter. It is lit from the state of the vehicle you sit in and plays out what happens when you turn the key, so each way a start can fail looks different. Only the driver sees it. The vehicle panel in the bottom right corner ([HUD](HUD)) still shows doors, engine, damage, fuel and speed.
+While you drive a vehicle with an engine and a fuel tank, a small black strip sits at the bottom centre of the screen: four warning lamps above a segmented rev counter and a voltmeter. It is lit from the state of the vehicle you sit in and plays out what happens when you turn the key, so each way a start can fail looks different. Only the driver sees it. The vehicle panel in the bottom right corner ([HUD](HUD)) still shows doors, engine, damage, fuel and speed.
 
 <!-- shot:shot-dashboard -->
 
@@ -13,7 +13,6 @@ Left to right. A lamp stays dark until something is wrong; it then glows, flashe
 | `BAT` | red | the battery is under 25 % (slow flash) or under 10 % (fast flash). Steady while the headlights are on with the engine off: they are draining the battery |
 | `CHK` | amber | the vehicle is worn (650 health or less, steady), broken (450 or less, slow flash) or wrecked (300 or less, a fast red flash) |
 | `FUEL` | amber | the tank is at 15 % or less (steady), 5 % or less (slow flash) or empty (a fast red flash) |
-| `TYRE` | amber | a tyre is burst or missing |
 | `LGT` | green | the headlights are on |
 
 The thresholds are the ones that matter when you drive: under 450 health the engine can cut out at speed, at 300 or less it will not start, under 10 % the battery will not turn it over. See [Vehicles](Vehicles), [Fuel](Fuel) and [Car Batteries & Starters](Car-Batteries-and-Starters).
@@ -24,11 +23,13 @@ The row below the lamps reads `RPM`, then 22 segments that fill from the left: w
 
 The voltmeter on the right shows `14.1V` while the engine runs and charges the battery. With the engine off it reads the battery's resting voltage, `11.6V` empty to `12.7V` full, amber under 11.9 V and red under 11.0 V. Vehicles without a battery (motorbikes, boats, the open vehicles without doors) read as if theirs were always full.
 
-The strip is dim with the engine off and bright while it runs. With no battery under the bonnet the dashboard is dead: every lamp dark, the rev counter empty, the voltmeter reading `--.-V`.
+The strip is dark until the key is turned to ACC or the engine runs, dim in ACC and bright while the engine runs. With no battery under the bonnet the dashboard is dead: every lamp dark, the rev counter empty, the voltmeter reading `--.-V`.
 
 ## Turning the key
 
-Pressing `Y` as the driver plays the outcome:
+The key has two positions before the engine. With the engine off, a tap of `Y` as the driver turns it to **ACC**: the dashboard wakes with the 0.7 second bulb check, and a second tap switches it off again. Holding `Y` for 0.3 seconds goes through ACC and cranks the engine; a start that fails leaves the key in ACC. Pressing `Y` while the engine runs stops it and takes the key fully off. ACC drains the battery slowly (see [Car Batteries & Starters](Car-Batteries-and-Starters)) and stays on when you get out, like the headlights.
+
+Cranking plays the outcome:
 
 - **It starts.** Every lamp lights for 0.7 seconds, the bulb check, the starter turns, the needle catches and settles at idle.
 - **No battery.** Nothing happens at all: the dashboard stays dark.

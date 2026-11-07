@@ -482,8 +482,32 @@ return function(ctx)
         if not guard() or listIsOpen() then
             return
         end
-        if getPedOccupiedVehicle(localPlayer) then
-            return triggerServerEvent("engineToggleRequested", localPlayer)
+        local vehicle = getPedOccupiedVehicle(localPlayer)
+        if vehicle then
+            -- running: Y stops the engine at once. Engine off: a tap turns ACC on or off, a hold cranks through it
+            if isTimer(holdTimer) then
+                return
+            end
+            if getVehicleEngineState(vehicle) then
+                return triggerServerEvent("engineToggleRequested", localPlayer)
+            end
+            local key = string.lower(getKeyBoundToCommand("putaway") or "y")
+            if not isKeyHeld(key, "putaway") then
+                return triggerServerEvent("accessoryToggleRequested", localPlayer)
+            end
+            local startTick = getTickCount()
+            holdTimer = setTimer(function()
+                if not isKeyHeld(key, "putaway") then
+                    killTimer(holdTimer)
+                    holdTimer = nil
+                    triggerServerEvent("accessoryToggleRequested", localPlayer)
+                elseif getTickCount() - startTick >= 300 then
+                    killTimer(holdTimer)
+                    holdTimer = nil
+                    triggerServerEvent("engineToggleRequested", localPlayer)
+                end
+            end, 50, 0)
+            return
         end
         finishTweak()
         triggerServerEvent("itemPutAwayRequested", localPlayer)

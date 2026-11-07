@@ -140,7 +140,7 @@
  "drv.title": "Os carros são agora máquinas",
  "drv.lead": "O original tinha combustível, fechaduras e um capot para reparar. O Reborn abre o capot a sério: uma bateria que descarrega e recarrega, um motor de arranque com vida própria, um painel de instrumentos que te diz qual deles acabou de te deixar ficar mal, e carroçaria que podes tirar e vender.",
  "drv.1.t": "O painel de instrumentos",
- "drv.1.p": "Luzes BAT, CHK, FUEL, TYRE e LGT, um conta-rotações segmentado e um voltímetro no estilo do próprio HUD. Roda a chave: uma bateria descarregada faz clique, um motor destruído range, um depósito vazio roda sem pegar, um arranque faz o teste das lâmpadas e a agulha sobe.",
+ "drv.1.p": "Luzes BAT, CHK, FUEL e LGT, um conta-rotações segmentado e um voltímetro no estilo do próprio HUD. Roda a chave: uma bateria descarregada faz clique, um motor destruído range, um depósito vazio roda sem pegar, um arranque faz o teste das lâmpadas e a agulha sobe.",
  "drv.2.t": "Baterias e motores de arranque",
  "drv.2.p": "Os carros estacionados perdem carga, as luzes deixadas acesas gastam-na depressa, conduzir repõe-na. A bateria sai de debaixo do capot, e um motor de arranque morto também. Um Motor de arranque dura 60 a 400 arranques; 2 % dos carros aparecem com um que já era.",
  "drv.3.t": "Desmantelamento e blindagem",

@@ -100,6 +100,7 @@ return {
     attachEditConfigRequested = true,
     hudStateRequested = true,
     engineToggleRequested = true,
+    accessoryToggleRequested = true,
     lightsToggleRequested = true,
     vehicleInteractRequested = true,
     vehicleBatteryRequested = true,

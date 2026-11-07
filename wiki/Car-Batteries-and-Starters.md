@@ -16,6 +16,7 @@ A vehicle found in the world holds a charge of 15 to 100 %. The engine needs at 
 |:--|:--|
 | Parked, engine off | nothing lost for 24 hours after the engine last ran, then 1 % per hour |
 | Headlights on, engine off | 12 % per hour from the first second |
+| Key left in ACC, engine off | 3 % per hour from the first second, on top of the headlights |
 | Engine running, standing still | gains 2.5 % per minute |
 | Engine running, driving (above 5 km/h) | gains 10 % per minute, so an empty battery is full after about ten minutes on the road |
 

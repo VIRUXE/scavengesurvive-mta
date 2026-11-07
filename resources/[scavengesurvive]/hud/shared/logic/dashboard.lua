@@ -1,5 +1,5 @@
 -- The driver's dashboard, bottom centre: a strip of warning lamps over a tachometer and a voltmeter, lit from the
--- vehicle's state (battery, damage, fuel, tyres, headlights) and playing a short "performance" when the engine is
+-- vehicle's state (battery, damage, fuel, headlights) and playing a short "performance" when the engine is
 -- cranked or stalls, so each way a start can fail looks different (vehicles' engineCranked / engineStalled).
 -- Pure logic: no MTA calls at file scope. Levels are percent, times are milliseconds.
 local M = {}
@@ -25,7 +25,6 @@ M.LAMPS = {
     { key = "bat", label = "BAT", colour = RED },
     { key = "chk", label = "CHK", colour = AMBER },
     { key = "fuel", label = "FUEL", colour = AMBER },
-    { key = "tyre", label = "TYRE", colour = AMBER },
     { key = "lgt", label = "LGT", colour = GREEN },
 }
 M.RED = RED
@@ -38,6 +37,7 @@ M.RED = RED
 M.FLASH_MS = 4000
 M.CRANKS = {
     OK = { bulb = 700, crank = "catch", ms = 1400 },
+    ACC = { bulb = 700, ms = 700 }, -- the key turned to ACC: only the bulb check, no starter
     NO_BATTERY = { ms = 0 }, -- nothing at all: the dash stays dark
     BATTERY_FLAT = { crank = "click", ms = 1300, flash = "bat", flicker = true },
     -- a dead starter motor: the solenoid clicks on a healthy battery, so BAT just stays lit (no flash, the battery
@@ -63,7 +63,7 @@ function M.lit(mode, now)
 end
 
 -- The lamps for a vehicle state: s = { bay, battery (percent, nil: none fitted), engine, lights, health, fuel,
--- maxFuel, tyres (MTA wheel states) }. Returns key -> { mode, colour (nil: the lamp's own) }.
+-- maxFuel }. Returns key -> { mode, colour (nil: the lamp's own) }.
 function M.lamps(s)
     local out = {}
     for _, lamp in ipairs(M.LAMPS) do
@@ -96,20 +96,16 @@ function M.lamps(s)
             out.fuel.mode = "on"
         end
     end
-    for _, wheel in ipairs(s.tyres or {}) do
-        if wheel ~= 0 then
-            out.tyre.mode = "on"
-        end
-    end
     if s.lights then
         out.lgt.mode = "on"
     end
     return out
 end
 
--- The panel has power: anything but a bonnet with no battery under it (bikes and boats keep no battery level).
+-- The panel has power: the key is in ACC or the engine runs, and the bonnet has a battery under it (bikes and boats
+-- keep no battery level).
 function M.powered(s)
-    return not s.bay or type(s.battery) == "number"
+    return (s.engine or s.acc or false) and (not s.bay or type(s.battery) == "number")
 end
 
 -- Resting voltage of a lead-acid battery from its charge, 14.1 V while the alternator charges it.
