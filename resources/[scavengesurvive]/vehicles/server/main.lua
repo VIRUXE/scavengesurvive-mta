@@ -1850,7 +1850,13 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
 
     -- Case 1c: the bonnet of an unlocked car opens and shuts with empty hands; a Car Battery in hand is fitted while
     -- it is open (taking one out is the hold, vehicleBatteryRequested)
-    if vlogic.isFront(angle) and inf.bay and (not held or uname == "Battery") then
+    -- (a bonnet taken off, door state 4, leaves nothing to open or shut)
+    if
+        vlogic.isFront(angle)
+        and inf.bay
+        and getVehicleDoorState(vehicle, 0) ~= 4
+        and (not held or uname == "Battery")
+    then
         if inf.locked > 0 then
             return toast(player, "BONNET_LOCKED")
         end
@@ -2119,6 +2125,19 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
         if not inf.containerId then
             return toast(player, "NO_TRUNK")
         end
+        -- the trunk stays open once opened, like the bonnet: empty hands shut an open one (unless someone is still
+        -- looking in it), and a carried Wheel only goes into one already open
+        local trunkOpen = getVehicleDoorOpenRatio(vehicle, 1) > 0.5
+        if uname == "Wheel" and not trunkOpen then
+            return toast(player, "TRUNK_SHUT")
+        end
+        if not held and trunkOpen then
+            if exports.items:trunkViewers(vehicle) == 0 then
+                setVehicleDoorOpenRatio(vehicle, 1, 0, 500)
+                markUsed(vehicle)
+            end
+            return
+        end
         setVehicleDoorOpenRatio(vehicle, 1, 1, 500)
         markUsed(vehicle)
         local tname = lang.formatFor(player, "%s Trunk", vt and vt.name or lang.textFor(player, "Vehicle"))
@@ -2171,22 +2190,17 @@ net.handler("holdActionCancelRequested", function(player)
     cancelHoldAction(player)
 end, { rate = 5 })
 
+-- closing the trunk window leaves the trunk itself open (an empty-handed tap at the rear shuts it, Case 3)
 net.handler("trunkCloseRequested", function(player)
     exports.items:closeTrunk(player)
-    -- find any vehicle near player whose trunk is open and close it, unless someone else still has it open
-    local px, py, pz = getElementPosition(player)
-    for v in pairs(info) do
-        if isElement(v) then
-            local vx, vy, vz = getElementPosition(v)
-            if getDistanceBetweenPoints3D(px, py, pz, vx, vy, vz) < 7.0 and exports.items:trunkViewers(v) == 0 then
-                setVehicleDoorOpenRatio(v, 1, 0, 500)
-            end
-        end
-    end
 end, { rate = 3 })
 
 addEventHandler("onVehicleEnter", resourceRoot, function(player, seat)
     markUsed(source)
+    -- a driver getting in shuts a trunk left open, unless someone is still looking in it
+    if seat == 0 and getVehicleDoorOpenRatio(source, 1) > 0 and exports.items:trunkViewers(source) == 0 then
+        setVehicleDoorOpenRatio(source, 1, 0, 500)
+    end
     publishBattery(source, info[source]) -- a parked battery drains unseen: the dashboard gets today's level
     local key = seat == 0 and vlogic.repairTipKey(getElementHealth(source))
     if key then

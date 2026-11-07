@@ -72,6 +72,7 @@ return function(ctx)
         -- Vehicles
         TRUNKLOCKED = "Trunk is locked",
         NO_TRUNK = "This vehicle has no trunk",
+        TRUNK_SHUT = "Open the trunk first",
         DOORLOCKED = "Door is locked",
         LOCKUSECROW = "This vehicle is locked, maybe you could break it with a crowbar",
         LOCKCUSTOML = "This vehicle has a custom lock, you need a key to open it",
