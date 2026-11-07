@@ -29,7 +29,7 @@ The thresholds are the ones that matter when you drive: under 450 health the eng
 
 ## The ignition switch
 
-A chrome barrel sits just left of the binnacle. Three ticks sit around it, `OFF`, `ACC` and `START` from left round to right, as on a real barrel, and the key turns to the one it is in; the lit tick is grey, amber or red to match. The key goes to `START` while the starter turns, then springs back to `ACC` and stays there while the engine runs, the tick turning green. Getting into a car, the key is already where the car's state says it is.
+A chrome barrel sits just left of the binnacle. With the key out (`OFF`) it is an empty cylinder with a black keyway; with the key in, its brass bow stands across the barrel and turns with it, and switching off turns it back to `OFF` before it comes out. Three ticks sit around it, `OFF`, `ACC` and `START` from left round to right, as on a real barrel, and the key turns to the one it is in; the lit tick is grey, amber or red to match. The key goes to `START` while the starter turns, then springs back to `ACC` and stays there while the engine runs, the tick turning green. Getting into a car, the key is already where the car's state says it is.
 
 ## Turning the key
 

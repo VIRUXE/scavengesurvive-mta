@@ -23,8 +23,8 @@ return function(ctx)
     local TELL_X = { 287, 303.5, 320, 336.5, 353 }
 
     -- the ignition switch: a chrome barrel on its own plate left of the hood, the key turning through its positions
-    local IGN_CX, IGN_CY = X - 15, Y + H - 16
-    local IGN_R, IGN_TICK_R = 7, 10.5
+    local IGN_CX, IGN_CY = X - 20, Y + H - 17.5
+    local IGN_R, IGN_TICK_R = 8.5, 14.5
 
     local HOOD = tocolor(14, 14, 16, 250)
     local HOOD_RIM = tocolor(58, 58, 62, 250)
@@ -424,7 +424,10 @@ return function(ctx)
         start = { 0xFF, 0x22, 0x22 },
     }
     local RUNNING = { 0x33, 0xFF, 0x33 } -- the ACC tick while the engine runs
-    local KEY, KEY_TAIL = tocolor(228, 205, 130, 255), tocolor(150, 135, 85, 255)
+    local KEY = tocolor(235, 200, 95, 255) -- the key's brass bow
+    local KEY_EDGE = tocolor(110, 85, 30, 255)
+    local KEY_SHINE = tocolor(255, 240, 190, 255)
+    local SLOT = tocolor(0, 0, 0, 255)
 
     local function drawIgnition(pos, angle, running)
         local cx, cy = IGN_CX, IGN_CY
@@ -443,11 +446,35 @@ return function(ctx)
         disc(cx, cy, IGN_R + 0.6, CHROME_DARK)
         disc(cx, cy, IGN_R, CHROME)
         disc(cx, cy, IGN_R - 1.4, CHROME_DARK)
+        -- key out (OFF, once it has turned back there): the bare cylinder with its black keyway at the OFF angle
+        local out = pos == "off" and math.abs(angle - logic.KEY_ANGLES.off) < 1
+        if out then
+            local o = math.rad(logic.KEY_ANGLES.off)
+            local ox, oy = math.sin(o), -math.cos(o)
+            stroke(
+                cx - ox * (IGN_R - 2.6),
+                cy - oy * (IGN_R - 2.6),
+                cx + ox * (IGN_R - 2.6),
+                cy + oy * (IGN_R - 2.6),
+                SLOT,
+                1.6
+            )
+            return
+        end
+        -- key in: its brass bow across the barrel, overhanging it, turning with the key; the ring hole at the
+        -- end that points at the position
         local a = math.rad(angle)
         local dx, dy = math.sin(a), -math.cos(a)
-        stroke(cx, cy, cx - dx * 3, cy - dy * 3, KEY_TAIL, 2)
-        stroke(cx, cy, cx + dx * (IGN_R - 1.6), cy + dy * (IGN_R - 1.6), KEY, 2)
-        disc(cx, cy, 1.2, CHROME)
+        local tipX, tipY = cx + dx * (IGN_R + 1.5), cy + dy * (IGN_R + 1.5)
+        local tailX, tailY = cx - dx * (IGN_R - 1), cy - dy * (IGN_R - 1)
+        stroke(tailX, tailY, tipX, tipY, KEY_EDGE, 6)
+        disc(tipX, tipY, 3, KEY_EDGE)
+        disc(tailX, tailY, 3, KEY_EDGE)
+        stroke(tailX, tailY, tipX, tipY, KEY, 4.6)
+        disc(tipX, tipY, 2.3, KEY)
+        disc(tailX, tailY, 2.3, KEY)
+        stroke(tailX + dy * 1, tailY - dx * 1, tipX + dy * 1, tipY - dx * 1, KEY_SHINE, 0.6) -- light along one edge
+        disc(tipX - dx * 0.6, tipY - dy * 0.6, 1.1, HOOD) -- the ring hole
     end
 
     local function ease(current, target, dt, ms)
