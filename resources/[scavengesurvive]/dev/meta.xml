@@ -20,6 +20,7 @@
     <export function="rcon" type="server" http="true"/>
     <export function="isHeld" type="client"/>
     <export function="isItemSpawnAllowed" type="server"/>
+    <export function="isAllowed" type="server"/>
     <aclrequest>
         <right name="function.restartResource" access="true"/>
         <right name="function.startResource" access="true"/>

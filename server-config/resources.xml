@@ -32,4 +32,5 @@
     <resource src="hud" startup="1" protected="0"/>
     <resource src="staff" startup="1" protected="0"/>
     <resource src="dev" startup="1" protected="0"/>
+    <resource src="sfx" startup="1" protected="0"/>
 </resources>

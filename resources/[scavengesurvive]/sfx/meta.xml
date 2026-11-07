@@ -1,0 +1,10 @@
+<meta>
+    <info author="scavengesurvive-mta" type="script" name="sfx" description="Dev tool: /sfx browses and plays GTA's sound effects" version="0.1.0"/>
+    <min_mta_version server="1.6.0" client="1.6.0"/>
+    <include resource="lib"/>
+    <script src="shared/events.lua" type="shared"/>
+    <script src="server/main.lua" type="server"/>
+    <script src="client/main.lua" type="client"/>
+    <file src="shared/logic/browser.lua"/>
+    <file src="data/catalog.lua"/>
+</meta>

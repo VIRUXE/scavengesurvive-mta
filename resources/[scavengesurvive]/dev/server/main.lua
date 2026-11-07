@@ -93,6 +93,11 @@ local function setStat(key, hi)
     end
 end
 
+-- export for other dev tools (the sfx resource's /sfx): whether p may use the dev commands
+function isAllowed(p)
+    return isElement(p) and allowed(p) or false
+end
+
 function isItemSpawnAllowed(p)
     if not isElement(p) then
         return getElementType(p) == "console"
