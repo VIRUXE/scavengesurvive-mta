@@ -179,7 +179,9 @@ function M.powered(s)
     return (s.engine or s.acc or false) and (not s.bay or type(s.battery) == "number")
 end
 
--- Resting voltage of a lead-acid battery from its charge, 14.1 V while the alternator charges it.
+-- The voltage the needle shows for a charge, 14.1 V while the alternator charges it. Read as a gauge, not a
+-- chemistry: a battery too flat to start (under BATTERY_FLAT) sits in the red, VOLTS_MIN .. VOLTS_LOW, and a dead one
+-- pins the needle at the stop; from BATTERY_FLAT up it climbs VOLTS_LOW .. 12.7 V (full).
 function M.volts(s)
     if not M.powered(s) then
         return 0
@@ -187,8 +189,11 @@ function M.volts(s)
     if s.engine then
         return 14.1
     end
-    local level = s.bay and s.battery or 100
-    return 11.6 + 1.1 * math.max(0, math.min(100, level)) / 100
+    local level = math.max(0, math.min(100, s.bay and s.battery or 100))
+    if level < M.BATTERY_FLAT then
+        return M.VOLTS_MIN + (M.VOLTS_LOW - M.VOLTS_MIN) * level / M.BATTERY_FLAT
+    end
+    return M.VOLTS_LOW + (12.7 - M.VOLTS_LOW) * (level - M.BATTERY_FLAT) / (100 - M.BATTERY_FLAT)
 end
 
 -- The needle with the engine running: the share of the current gear's speed band (handling maxVelocity split
