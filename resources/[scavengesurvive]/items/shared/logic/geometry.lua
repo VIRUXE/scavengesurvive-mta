@@ -45,6 +45,20 @@ function geometry.insideBox(lx, ly, lz, minX, minY, minZ, maxX, maxY, maxZ, marg
         and lz <= maxZ + margin
 end
 
+-- The first free drop spot around (x, y): the heading first, then 30 degrees to either side in turn, at the asked
+-- distance and then farther out. blocked(cx, cy) says whether a spot is taken; nil when nothing is free.
+function geometry.freeSpot(x, y, rz, ahead, blocked)
+    for _, scale in ipairs({ 1, 1.6, 2.2 }) do
+        for step = 0, 12 do
+            local turn = math.ceil(step / 2) * 30 * (step % 2 == 1 and 1 or -1)
+            local cx, cy = geometry.dropPosition(x, y, rz + turn, ahead * scale)
+            if not blocked(cx, cy) then
+                return cx, cy
+            end
+        end
+    end
+end
+
 function geometry.polygonWKT(minx, miny, maxx, maxy)
     return string.format(
         "POLYGON((%g %g,%g %g,%g %g,%g %g,%g %g))",

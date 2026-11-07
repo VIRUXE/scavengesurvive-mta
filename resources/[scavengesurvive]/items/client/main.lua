@@ -161,3 +161,33 @@ addEventHandler("treatmentStopped", localPlayer, function()
         killTimer(treatmentTimer)
     end
 end)
+
+-- A drop beside a vehicle: the server has no bounding boxes, so it asks here for the first spot around the player
+-- that no vehicle's box (plus a margin) holds, and drops there (server/hands.lua, itemDropSpotChosen)
+addEventHandler("itemDropSpotRequested", localPlayer, function()
+    local x, y, z = getElementPosition(localPlayer)
+    local _, _, rz = getElementRotation(localPlayer)
+    local dz = z - 0.9
+    local vehicles = getElementsByType("vehicle", root, true)
+    local function blocked(cx, cy)
+        for _, veh in ipairs(vehicles) do
+            local vx, vy, vz = getElementPosition(veh)
+            local ox, oy, oz = cx - vx, cy - vy, dz - vz
+            if ox * ox + oy * oy + oz * oz <= 100 then
+                local minX, minY, minZ, maxX, maxY, maxZ = getElementBoundingBox(veh)
+                if minX then
+                    local m = getElementMatrix(veh)
+                    local lx = ox * m[1][1] + oy * m[1][2] + oz * m[1][3]
+                    local ly = ox * m[2][1] + oy * m[2][2] + oz * m[2][3]
+                    local lz = ox * m[3][1] + oy * m[3][2] + oz * m[3][3]
+                    if geometry.insideBox(lx, ly, lz, minX, minY, minZ, maxX, maxY, maxZ, 0.3) then
+                        return true
+                    end
+                end
+            end
+        end
+        return false
+    end
+    local cx, cy = geometry.freeSpot(x, y, rz, 1.0, blocked)
+    triggerServerEvent("itemDropSpotChosen", localPlayer, cx, cy)
+end)

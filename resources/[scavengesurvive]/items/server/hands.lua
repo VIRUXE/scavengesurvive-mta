@@ -1058,29 +1058,8 @@ return function(ctx)
         end, { player = player, charId = cid, radius = radius })
     end, { rate = 5 })
 
-    -- The vehicle whose bounding box (plus a margin) holds the world point, or nil
-    function M.vehicleAt(x, y, z, int, dim)
-        for _, veh in ipairs(getElementsByType("vehicle")) do
-            if getElementInterior(veh) == int and getElementDimension(veh) == dim then
-                local vx, vy, vz = getElementPosition(veh)
-                local ox, oy, oz = x - vx, y - vy, z - vz
-                if ox * ox + oy * oy + oz * oz <= 64 then
-                    local minX, minY, minZ, maxX, maxY, maxZ = getElementBoundingBox(veh)
-                    if minX then
-                        local m = getElementMatrix(veh)
-                        local lx = ox * m[1][1] + oy * m[1][2] + oz * m[1][3]
-                        local ly = ox * m[2][1] + oy * m[2][2] + oz * m[2][3]
-                        local lz = ox * m[3][1] + oy * m[3][2] + oz * m[3][3]
-                        if geometry.insideBox(lx, ly, lz, minX, minY, minZ, maxX, maxY, maxZ, 0.3) then
-                            return veh
-                        end
-                    end
-                end
-            end
-        end
-    end
-
-    -- opts (placing an item, server/smallitems.lua's shield): { ahead, below, turn, data }, or at = { x, y, z, rz }
+    -- opts (placing an item, server/smallitems.lua's shield): { ahead, below, turn, data }, spot = { x, y } (a free
+    -- spot beside a vehicle, chosen by the client), or at = { x, y, z, rz }
     -- for a spot of the server's (on a table, server/furniture.lua); a plain drop lands 1 m ahead at the feet with
     -- the player's heading, and clears a placed item's standing pose
     function M.dropHeld(player, opts)
@@ -1098,30 +1077,11 @@ return function(ctx)
         local dz, drz = z - (opts.below or 0.9), (rz + (opts.turn or 0)) % 360
         if opts.at then
             dx, dy, dz, drz = opts.at.x, opts.at.y, opts.at.z, opts.at.rz % 360
-        else
-            -- the first free spot around the player: the heading first, then 30 degrees to either side in turn,
-            -- at the asked distance and then farther out; a spot nothing frees stays where the heading puts it
-            local int, dim = getElementInterior(player), getElementDimension(player)
-            local ahead = opts.ahead or 1.0
-            if M.vehicleAt(dx, dy, dz, int, dim) then
-                local found
-                for _, scale in ipairs({ 1, 1.6, 2.2 }) do
-                    for step = 1, 12 do
-                        local turn = math.ceil(step / 2) * 30 * (step % 2 == 1 and 1 or -1)
-                        local cx, cy = geometry.dropPosition(x, y, rz + turn, ahead * scale)
-                        if not M.vehicleAt(cx, cy, dz, int, dim) then
-                            found = { cx, cy }
-                            break
-                        end
-                    end
-                    if found then
-                        break
-                    end
-                end
-                if found then
-                    dx, dy = found[1], found[2]
-                end
-            end
+        elseif opts.spot then
+            -- the ped turns to face the free spot, and the item lies with that heading
+            dx, dy = opts.spot[1], opts.spot[2]
+            drz = (math.deg(math.atan2(x - dx, dy - y)) + (opts.turn or 0)) % 360
+            setElementRotation(player, 0, 0, drz, "default", true)
         end
         if opts.data then
             item.data = opts.data
@@ -1293,12 +1253,70 @@ return function(ctx)
         return true
     end
 
-    net.handler("itemDropRequested", function(player)
-        local ok, err = M.dropHeld(player)
+    -- The server has no bounding boxes for vehicles, so with one near the drop the client picks the free spot beside
+    -- it (client/main.lua) and answers; no answer within a second drops at the default spot
+    local dropSpotPending = {}
+
+    local function dropAt(player, spot)
+        local ok, err = M.dropHeld(player, spot and { spot = spot } or nil)
         if not ok and err and isElement(player) then
             toast(player, err)
         end
+    end
+
+    local function vehicleNear(player)
+        local x, y, z = getElementPosition(player)
+        local int, dim = getElementInterior(player), getElementDimension(player)
+        for _, veh in ipairs(getElementsByType("vehicle")) do
+            if getElementInterior(veh) == int and getElementDimension(veh) == dim then
+                local vx, vy, vz = getElementPosition(veh)
+                if (vx - x) ^ 2 + (vy - y) ^ 2 + (vz - z) ^ 2 <= 100 then
+                    return true
+                end
+            end
+        end
+        return false
+    end
+
+    net.handler("itemDropRequested", function(player)
+        if dropSpotPending[player] then
+            return
+        end
+        if not vehicleNear(player) then
+            return dropAt(player)
+        end
+        dropSpotPending[player] = setTimer(function()
+            dropSpotPending[player] = nil
+            if isElement(player) then
+                dropAt(player)
+            end
+        end, 1000, 1)
+        triggerClientEvent(player, "itemDropSpotRequested", player)
     end, { rate = 5 })
+
+    net.handler("itemDropSpotChosen", function(player, x, y)
+        local timer = dropSpotPending[player]
+        if not timer then
+            return
+        end
+        killTimer(timer)
+        dropSpotPending[player] = nil
+        local px, py = getElementPosition(player)
+        local spot
+        if type(x) == "number" and type(y) == "number" and x == x and y == y then
+            if (x - px) ^ 2 + (y - py) ^ 2 <= 12 then
+                spot = { x, y }
+            end
+        end
+        dropAt(player, spot)
+    end, { rate = 5 })
+
+    addEventHandler("onPlayerQuit", root, function()
+        if dropSpotPending[source] then
+            killTimer(dropSpotPending[source])
+            dropSpotPending[source] = nil
+        end
+    end)
 
     net.handler("itemGiveRequested", function(player)
         local ok, err = M.giveHeld(player)
