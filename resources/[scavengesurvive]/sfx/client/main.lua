@@ -2,6 +2,8 @@
 -- and plays each one it lands on: left/right the sound (on into the next bank), up/down the bank, page up/down the
 -- container, K plays it again, J switches between plain and 3D (at the player, as a world sound would be), L marks
 -- it: a chat line, a copy in the clipboard and an sfx.marked line in the server log. /sfx again closes it.
+-- /sfx <playlist> (browser.LISTS, e.g. glass) walks only that list's sounds with left/right; up/down or page up/down
+-- leave it for the whole catalog.
 local function loadFile(path, name)
     local f = fileOpen(path, true)
     local src = fileRead(f, fileGetSize(f))
@@ -13,23 +15,38 @@ local catalog = loadFile("data/catalog.lua", "=sfx/catalog.lua")
 local browser = loadFile("shared/logic/browser.lua", "=sfx/browser.lua")
 
 local open, pos, playing, threeD = false, nil, nil, false
+local list, listName, listIndex = nil, nil, 1 -- a playlist being walked, or nil
+
+local function stepSound(step)
+    if list then
+        listIndex = (listIndex - 1 + step) % #list + 1
+        pos = browser.fromList(catalog, list, listIndex)
+    else
+        browser.stepSound(catalog, pos, step)
+    end
+end
+
 local KEYS = {
     arrow_r = function()
-        browser.stepSound(catalog, pos, 1)
+        stepSound(1)
     end,
     arrow_l = function()
-        browser.stepSound(catalog, pos, -1)
+        stepSound(-1)
     end,
     arrow_u = function()
+        list = nil
         browser.stepBank(catalog, pos, 1)
     end,
     arrow_d = function()
+        list = nil
         browser.stepBank(catalog, pos, -1)
     end,
     pgup = function()
+        list = nil
         browser.stepContainer(catalog, pos, 1)
     end,
     pgdn = function()
+        list = nil
         browser.stepContainer(catalog, pos, -1)
     end,
     k = function() end, -- the same sound again
@@ -68,7 +85,7 @@ local function mark()
     local text = ('playSFX("%s", %d, %d)'):format(name, bank, sound)
     setClipboard(text)
     outputChatBox("[sfx] marked " .. text, 120, 220, 255)
-    triggerServerEvent("sfxMarked", resourceRoot, name, bank, sound)
+    triggerServerEvent("sfxMarked", resourceRoot, name, bank, sound, list and ("%s #%d"):format(listName, listIndex))
 end
 
 local function draw()
@@ -78,7 +95,8 @@ local function draw()
     local x, y = 24, math.floor(sh * 0.3) -- above the watch and the chat-free middle of the left edge
     dxDrawRectangle(x, y, w, h, tocolor(10, 12, 16, 210))
     dxDrawText(
-        ("%s   bank %d/%d   sound %d/%d"):format(name, bank, nBanks - 1, sound, nSounds - 1),
+        list and ("%s   %d of %d   (%s %d:%d)"):format(listName, listIndex, #list, name, bank, sound)
+            or ("%s   bank %d/%d   sound %d/%d"):format(name, bank, nBanks - 1, sound, nSounds - 1),
         x + 12,
         y + 10,
         x + w,
@@ -132,12 +150,20 @@ addEventHandler("sfxBrowserToggled", resourceRoot, function(container, bank, sou
     if open and not container then
         return close()
     end
-    pos = browser.start(
-        catalog,
-        container or (pos and catalog.order[pos.c]) or "genrl",
-        bank or (pos and pos.bank) or 0,
-        sound or (pos and pos.sound) or 0
-    )
+    if container and browser.LISTS[container] then -- a playlist, from its first sound (or the one numbered)
+        list, listName, listIndex = browser.LISTS[container], container, tonumber(bank) or 1
+        pos = browser.fromList(catalog, list, listIndex)
+    else
+        if container then
+            list = nil
+        end
+        pos = browser.start(
+            catalog,
+            container or (pos and catalog.order[pos.c]) or "genrl",
+            bank or (pos and pos.bank) or 0,
+            sound or (pos and pos.sound) or 0
+        )
+    end
     if not open then
         open = true
         for key in pairs(KEYS) do

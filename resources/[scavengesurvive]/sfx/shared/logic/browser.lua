@@ -2,6 +2,39 @@
 -- container, a bank in it and a sound in that bank, numbered from 0 as playSFX takes them. Pure: no MTA calls.
 local M = {}
 
+-- Playlists /sfx <name> walks instead of the whole catalog: { container, bank, sound } in order.
+-- glass: the shortest, brightest, noisiest one-shots of genrl with a sharp attack, the candidates for the snack
+-- machine's pane breaking (bank 32 holds most of them: the collision sounds)
+M.LISTS = {
+    glass = {
+        { "genrl", 32, 5 },
+        { "genrl", 32, 6 },
+        { "genrl", 32, 7 },
+        { "genrl", 32, 8 },
+        { "genrl", 32, 9 },
+        { "genrl", 32, 10 },
+        { "genrl", 32, 11 },
+        { "genrl", 32, 15 },
+        { "genrl", 32, 16 },
+        { "genrl", 32, 17 },
+        { "genrl", 32, 18 },
+        { "genrl", 32, 53 },
+        { "genrl", 32, 56 },
+        { "genrl", 32, 68 },
+        { "genrl", 32, 69 },
+        { "genrl", 32, 70 },
+        { "genrl", 32, 71 },
+        { "genrl", 20, 0 },
+        { "genrl", 20, 13 },
+    },
+}
+
+-- the position of entry i (wrapping) of a playlist
+function M.fromList(catalog, list, i)
+    local e = list[(i - 1) % #list + 1]
+    return M.start(catalog, e[1], e[2], e[3])
+end
+
 -- pos = { c = container index (1-based into catalog.order), bank = 0.., sound = 0.. }
 function M.start(catalog, container, bank, sound)
     local c = 1
