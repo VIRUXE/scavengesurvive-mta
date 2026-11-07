@@ -62,6 +62,33 @@ function M.soundFor(p)
     return spec.sound
 end
 
+-- The ignition switch beside the strip: where the key points in each position, in degrees clockwise from straight up.
+M.KEY_ORDER = { "off", "acc", "on", "start" }
+M.KEY_ANGLES = { off = -45, acc = 0, on = 45, start = 90 }
+M.KEY_DEG_PER_S = 700
+
+-- Where the key sits: START while the starter turns (the performance's cranking phase), else ON with the engine
+-- running, ACC with the key left there, OFF. A start that fails lets the key spring back to ACC, a started one to ON.
+function M.keyPosition(s, shot)
+    if shot and shot.start then
+        return "start"
+    elseif s.engine then
+        return "on"
+    elseif s.acc then
+        return "acc"
+    end
+    return "off"
+end
+
+-- One step of the shown key angle towards `target` degrees.
+function M.keyStep(angle, target, dtMs)
+    local rate = M.KEY_DEG_PER_S * (dtMs or 0) / 1000
+    if math.abs(target - angle) <= rate then
+        return target
+    end
+    return angle + (target > angle and rate or -rate)
+end
+
 -- mode -> lit at tick `now`: "off" | "on" | "slow" | "fast"
 function M.lit(mode, now)
     if mode == "on" then
@@ -154,7 +181,8 @@ function M.needle(shown, target, dtMs)
 end
 
 -- A playing performance at `elapsed` ms: { rpm, volts, glow (backlight 0..1), bulb, flash (lamp key), solid (lamp
--- keys lit) }, each nil when the performance leaves it to the live state; nil when it is over.
+-- keys lit), start (the key is in START) }, each nil when the performance leaves it to the live state; nil when it
+-- is over.
 -- p = { kind = "crank" | "stall", code }, rng () -> [0, 1).
 function M.sample(p, elapsed, rng)
     rng = rng or math.random
@@ -180,6 +208,7 @@ function M.sample(p, elapsed, rng)
         out.solid = spec.steady and { [spec.steady] = true } or nil
         return out
     end
+    out.start = spec.crank ~= nil -- the key is held in START while the starter turns
     local t = elapsed
     if spec.crank == "catch" then
         if t < 600 then

@@ -13,6 +13,10 @@ return function(ctx)
     local GAUGE_Y, GAUGE_H = Y + 19, 7
     local TACHO_X, TACHO_W, SEGMENTS = X + 26, 88, 22
 
+    -- the ignition switch: a square cell of its own to the left of the strip, the key turning through four positions
+    local IGN_X = X - H - 4
+    local IGN_R, IGN_TICK_R = 8, 12
+
     local BACK = tocolor(0, 0, 0, 170)
     local FRAME = tocolor(70, 70, 70, 200)
     local UNLIT_BOX = tocolor(28, 28, 28, 220)
@@ -23,6 +27,7 @@ return function(ctx)
     local performance = nil -- { kind = "crank" | "stall", code, vehicle, start }
     local preview = nil -- dashboardPreview overrides of the vehicle's state
     local needle, lastTick, lastVehicle, handling = 0, nil, nil, nil
+    local keyAngle, keyVehicle = 0, nil -- the key's shown angle and the vehicle it was set for
 
     local function px(x)
         return canvas.x(c, x, "center")
@@ -174,6 +179,57 @@ return function(ctx)
         label(string.format("%.1fV", volts), x, GAUGE_Y, w, GAUGE_H, rgba(rgb, 255 * glow), 1.0, "right")
     end
 
+    local TICK = {
+        off = { 170, 170, 170 },
+        acc = AMBER,
+        on = { 0x33, 0xFF, 0x33 },
+        start = { 0xFF, 0x22, 0x22 },
+    }
+    local METAL, METAL_INNER = tocolor(95, 95, 95, 230), tocolor(30, 30, 30, 240)
+    local KEY, KEY_TAIL = tocolor(228, 205, 130, 255), tocolor(150, 135, 85, 255)
+
+    -- a little circle at canvas (x, y) with radius r canvas units
+    local function disc(x, y, r, colour)
+        dxDrawCircle(px(x), canvas.y(c, y), canvas.len(c, r), 0, 360, colour, colour, 24)
+    end
+
+    -- the ignition cylinder: the four positions as ticks (the one the key is in lit), the key pointing at the angle
+    local function drawIgnition(pos, angle)
+        local cx, cy = IGN_X + H / 2, Y + H / 2
+        local x0, y0 = px(IGN_X), canvas.y(c, Y)
+        local w, h = canvas.len(c, H), canvas.len(c, H)
+        dxDrawRectangle(x0, y0, w, h, BACK)
+        dxDrawLine(x0, y0, x0 + w, y0, FRAME)
+        dxDrawLine(x0, y0 + h, x0 + w, y0 + h, FRAME)
+        dxDrawLine(x0, y0, x0, y0 + h, FRAME)
+        dxDrawLine(x0 + w, y0, x0 + w, y0 + h, FRAME)
+        for _, name in ipairs(logic.KEY_ORDER) do
+            local a = math.rad(logic.KEY_ANGLES[name])
+            local lit = name == pos
+            disc(
+                cx + math.sin(a) * IGN_TICK_R,
+                cy - math.cos(a) * IGN_TICK_R,
+                lit and 1.7 or 1.2,
+                lit and rgba(TICK[name], 255) or UNLIT_SEGMENT
+            )
+        end
+        disc(cx, cy, IGN_R, METAL)
+        disc(cx, cy, IGN_R - 1.3, METAL_INNER)
+        local a = math.rad(angle)
+        local dx, dy = math.sin(a), -math.cos(a)
+        local width = math.max(1, canvas.len(c, 2.2))
+        dxDrawLine(px(cx), canvas.y(c, cy), px(cx - dx * 3), canvas.y(c, cy - dy * 3), KEY_TAIL, width)
+        dxDrawLine(
+            px(cx),
+            canvas.y(c, cy),
+            px(cx + dx * (IGN_R - 1.8)),
+            canvas.y(c, cy + dy * (IGN_R - 1.8)),
+            KEY,
+            width
+        )
+        disc(cx, cy, 1.3, METAL)
+    end
+
     -- the dashboard of `vehicle` (vt: its data vehicle type) for its driver; every frame
     function M.draw(vehicle, vt)
         local now = getTickCount()
@@ -213,6 +269,14 @@ return function(ctx)
         drawLamps(s, shot, powered, glow, now)
         drawTacho(powered, glow)
         drawVolts(volts, powered, glow)
+
+        local pos = logic.keyPosition(s, shot)
+        local keyTarget = logic.KEY_ANGLES[pos]
+        if vehicle ~= keyVehicle then
+            keyVehicle, keyAngle = vehicle, keyTarget -- the key is already where it is on getting in
+        end
+        keyAngle = logic.keyStep(keyAngle, keyTarget, dt)
+        drawIgnition(pos, keyAngle)
     end
 
     -- dev preview: overrides (a table of state fields: battery, bay, engine, acc, lights, health, fuel, maxFuel)

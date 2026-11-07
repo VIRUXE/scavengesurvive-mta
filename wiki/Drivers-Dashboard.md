@@ -25,6 +25,10 @@ The voltmeter on the right shows `14.1V` while the engine runs and charges the b
 
 The strip is dark until the key is turned to ACC or the engine runs, dim in ACC and bright while the engine runs. With no battery under the bonnet the dashboard is dead: every lamp dark, the rev counter empty, the voltmeter reading `--.-V`.
 
+## The ignition switch
+
+A small square to the left of the strip shows the ignition cylinder. Four ticks sit around it, `OFF`, `ACC`, `ON` and `START` from left round to right, and the key turns to the one it is in; the lit tick is grey, amber, green or red to match. The key goes to `START` while the starter turns, then springs back to `ON` if the engine caught, or to `ACC` if the start failed. Getting into a car, the key is already where the car's state says it is.
+
 ## Turning the key
 
 The key has two positions before the engine. With the engine off, a tap of `Y` as the driver turns it to **ACC**: the dashboard wakes with the 0.7 second bulb check, and a second tap switches it off again. Holding `Y` for 0.3 seconds goes through ACC and cranks the engine; a start that fails leaves the key in ACC. Pressing `Y` while the engine runs stops it and takes the key fully off. ACC drains the battery slowly (see [Car Batteries & Starters](Car-Batteries-and-Starters)) and stays on when you get out, like the headlights.
