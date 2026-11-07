@@ -29,6 +29,8 @@ The strip is dark until the key is turned to ACC or the engine runs, dim in ACC 
 
 The key has two positions before the engine. With the engine off, a tap of `Y` as the driver turns it to **ACC**: the dashboard wakes with the 0.7 second bulb check, and a second tap switches it off again. Holding `Y` for 0.3 seconds goes through ACC and cranks the engine; a start that fails leaves the key in ACC. Pressing `Y` while the engine runs stops it and takes the key fully off. ACC drains the battery slowly (see [Car Batteries & Starters](Car-Batteries-and-Starters)) and stays on when you get out, like the headlights.
 
+Each turn of the key has a sound that goes with what the dashboard shows, heard by the driver: a relay clunk for ACC; a starter whirr that speeds up as the engine catches; weak solenoid chatter on a flat battery; a solid clunk on every try with a dead starter motor; an uneven grinding with a wrecked engine; an even crank that never catches on an empty tank; and a shudder that slows and ends in a clunk when the engine stalls. With no battery there is no sound at all.
+
 Cranking plays the outcome:
 
 - **It starts.** Every lamp lights for 0.7 seconds, the bulb check, the starter turns, the needle catches and settles at idle.

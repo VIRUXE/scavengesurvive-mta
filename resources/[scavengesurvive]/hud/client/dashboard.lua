@@ -39,12 +39,33 @@ return function(ctx)
         return tocolor(rgb[1], rgb[2], rgb[3], math.floor(math.max(0, math.min(255, a)) + 0.5))
     end
 
+    local SOUND_VOLUME = 0.8
+    local performanceSound = nil -- the sound of the performance playing, cut short when a new one starts
+
+    local function cutSound()
+        if isElement(performanceSound) then
+            stopSound(performanceSound)
+        end
+        performanceSound = nil
+    end
+
     local function perform(kind, vehicle, code)
         if not isElement(vehicle) or vehicle ~= getPedOccupiedVehicle(localPlayer) then
             return
         end
         performance = { kind = kind, code = code or nil, vehicle = vehicle, start = getTickCount() }
+        cutSound()
+        local name = logic.soundFor(performance)
+        if name then
+            performanceSound = playSound("sounds/" .. name .. ".wav", false)
+            if performanceSound then
+                setSoundVolume(performanceSound, SOUND_VOLUME)
+            end
+        end
     end
+
+    -- getting out cuts the key's sound off with the dashboard
+    addEventHandler("onClientPlayerVehicleExit", localPlayer, cutSound)
 
     -- vehicles: the driver turned the key (code false: it started) or the engine died under them
     addEventHandler("engineCranked", root, function(code)

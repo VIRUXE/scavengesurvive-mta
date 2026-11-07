@@ -34,21 +34,33 @@ M.RED = RED
 --   crank how the needle moves while the starter turns: "catch" fires up, "click" a solenoid clicking on a flat
 --         battery, "grind" a starter fighting a wrecked engine, "steady" an even crank that never catches
 --   ms    how long the starter turns; flash = the lamp that then flashes fast for FLASH_MS
+--   sound the file in hud/sounds (without .wav) played with it, cut to the same beats (tools/make_ignition_sounds.py)
 M.FLASH_MS = 4000
 M.CRANKS = {
-    OK = { bulb = 700, crank = "catch", ms = 1400 },
-    ACC = { bulb = 700, ms = 700 }, -- the key turned to ACC: only the bulb check, no starter
-    NO_BATTERY = { ms = 0 }, -- nothing at all: the dash stays dark
-    BATTERY_FLAT = { crank = "click", ms = 1300, flash = "bat", flicker = true },
+    OK = { bulb = 700, crank = "catch", ms = 1400, sound = "crank_start" },
+    ACC = { bulb = 700, ms = 700, sound = "acc_on" }, -- the key turned to ACC: only the bulb check, no starter
+    NO_BATTERY = { ms = 0 }, -- nothing at all: the dash stays dark and silent
+    BATTERY_FLAT = { crank = "click", ms = 1300, flash = "bat", flicker = true, sound = "crank_flat" },
     -- a dead starter motor: the solenoid clicks on a healthy battery, so BAT just stays lit (no flash, the battery
     -- is fine)
-    STARTER_BAD = { bulb = 700, crank = "dead", ms = 1300, steady = "bat" },
-    DAMAGED = { bulb = 700, crank = "grind", ms = 2200, flash = "chk" },
-    NO_FUEL = { bulb = 700, crank = "steady", ms = 2200, flash = "fuel" },
+    STARTER_BAD = { bulb = 700, crank = "dead", ms = 1300, steady = "bat", sound = "crank_dead" },
+    DAMAGED = { bulb = 700, crank = "grind", ms = 2200, flash = "chk", sound = "crank_grind" },
+    NO_FUEL = { bulb = 700, crank = "steady", ms = 2200, flash = "fuel", sound = "crank_steady" },
 }
 -- A stall: the needle drops, BAT and CHK come on as the alternator stops (STALL_MS), the cause flashes.
 M.STALL_MS = 1500
 M.STALLS = { NO_FUEL = "fuel", DAMAGED = "chk", STALL = "chk", BATTERY_FLAT = "bat", NO_BATTERY = "bat" }
+M.STALL_SOUND = "engine_stall"
+
+-- The sound file (hud/sounds, no extension) a performance plays, or nil for a silent one: p = { kind, code } as in
+-- sample.
+function M.soundFor(p)
+    if p.kind == "stall" then
+        return M.STALL_SOUND
+    end
+    local spec = M.CRANKS[p.code or "OK"] or M.CRANKS.OK
+    return spec.sound
+end
 
 -- mode -> lit at tick `now`: "off" | "on" | "slow" | "fast"
 function M.lit(mode, now)

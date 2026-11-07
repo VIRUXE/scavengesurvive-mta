@@ -24,6 +24,13 @@
     <file src="shared/logic/voice.lua"/>
     <file src="shared/logic/dashboard.lua"/>
     <file src="images/voice.png"/>
+    <file src="sounds/acc_on.wav"/>
+    <file src="sounds/crank_start.wav"/>
+    <file src="sounds/crank_flat.wav"/>
+    <file src="sounds/crank_dead.wav"/>
+    <file src="sounds/crank_grind.wav"/>
+    <file src="sounds/crank_steady.wav"/>
+    <file src="sounds/engine_stall.wav"/>
     <export function="setHidden" type="client"/>
     <export function="holdingReloadable" type="client"/>
     <export function="dashboardPreview" type="client"/>
