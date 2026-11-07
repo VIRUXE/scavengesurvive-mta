@@ -510,7 +510,8 @@ def build_in_blender(gta: Path, out: Path, preview: Path | None) -> None:
                 path.append((cx + r * math.cos(a), -0.33 + 0.64 * k / (turns * steps), zt + r + 0.004 + r * math.sin(a)))
             m.sweep(path, 0.0035, 4, CH, 0.75)
     natives = [vanilla(SHEET), vanilla(PANEL), vanilla(DARK), vanilla(EDGE), vanilla(CHROME)]
-    m.finish("snack_machine", natives, [((0, 0, H / 2), (hx, hy, H / 2))])
+    # the boxes and coils are wound outward as built; recalculating flips some of the cabinet's walls inside out
+    m.finish("snack_machine", natives, [((0, 0, H / 2), (hx, hy, H / 2))], recalc=False)
 
     # ---- the glass, intact
     def glass_mesh(name, broken):
@@ -604,6 +605,7 @@ def render_previews(preview: Path) -> None:
         sh = scn.display.shading
         sh.light, sh.color_type, sh.show_cavity = "STUDIO", "TEXTURE", False
         sh.background_type, sh.background_color = "VIEWPORT", (0.16, 0.17, 0.19)
+        sh.show_backface_culling = True  # as the game draws: a face turned away is not drawn
         scn.view_settings.view_transform = "Standard"
         cam = bpy.data.objects.new("cam", bpy.data.cameras.new("cam"))
         scn.collection.objects.link(cam)
@@ -632,6 +634,7 @@ def render_previews(preview: Path) -> None:
             load("snack_" + s["uname"].lower(), (COLUMNS[col], SLOT_Y, zt + s["dims"][1] / 2), (90, 0, 0))
         shoot(preview / ("machine_broken.png" if broken else "machine.png"), (-0.1, 0, 1.15), 4.2, (0.45, -1, 0.25))
     shoot(preview / "machine_close.png", (-0.14, -0.2, 1.3), 1.9, (0.15, -1, 0.1))
+    shoot(preview / "machine_left.png", (0, 0, 1.1), 4.5, (-0.6, -1, 0.35))
 
 
 # the vanilla snack machines: model -> the height of its origin above its base (956 stands 0.404 m up, 1776 1.099 m)
