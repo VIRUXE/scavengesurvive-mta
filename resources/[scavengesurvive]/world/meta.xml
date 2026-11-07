@@ -11,6 +11,8 @@
     <file src="client/screen.fx"/>
     <file src="server/buttons.lua"/>
     <file src="server/boxes.lua"/>
+    <file src="server/vending.lua" download="false"/>
+    <file src="data/vending.lua" download="false"/>
     <file src="server/trees.lua" download="false"/>
     <file src="shared/logic/trees.lua" download="false"/>
     <file src="data/trees.lua" download="false"/>

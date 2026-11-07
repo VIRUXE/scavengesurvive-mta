@@ -30,7 +30,9 @@ worldCtx.small = small
 worldCtx.gardening = gardening
 worldCtx.machines = machines
 worldCtx.furniture = loadModule("shared/logic/furniture.lua")
+worldCtx.vending = loadModule("shared/logic/vending.lua")
 local world = loadModule("client/world.lua")(worldCtx)
+loadModule("client/vending.lua")({ world = world, vending = worldCtx.vending })
 local carry = loadModule("shared/logic/carry.lua")
 local attach = loadModule("client/attach.lua")({ models = models, apparel = apparel, carry = carry })
 local preview = loadModule("client/preview.lua")({ logic = loadModule("shared/logic/preview.lua"), models = models })

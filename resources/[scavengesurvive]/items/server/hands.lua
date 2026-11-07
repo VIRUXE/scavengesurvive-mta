@@ -71,6 +71,12 @@ return function(ctx)
         furnitureSrv = f
     end
 
+    -- server/vending.lua: the snack machines, opened once their glass is broken and never picked up
+    local vendingSrv
+    function M.setVending(v)
+        vendingSrv = v
+    end
+
     local function baseWeapon(t)
         local w = t and t.category == "weapon" and t.categoryData and t.categoryData.baseWeapon
         return w and w > 0 and w or nil
@@ -834,6 +840,9 @@ return function(ctx)
         if furnitureSrv and furnitureSrv.blocksPickup(row.uname) then
             return -- upstream OnPlayerPickUpItem breaks for furniture; a Crowbar takes it down
         end
+        if vendingSrv and vendingSrv.is(row.uname) then
+            return -- a snack machine stays where it stands
+        end
         db.call("item_pickup", { row.id, cid }, function(res, c)
             logProc(
                 "item.pickedUp",
@@ -932,6 +941,11 @@ return function(ctx)
                 elseif built then
                     return exports.building:interactDefence(c.player, row)
                 end
+            end
+
+            -- a snack machine: its glass holds, or it opens to be emptied (server/vending.lua)
+            if vendingSrv and vendingSrv.interact(c.player, c.charId, curHeld, row) then
+                return
             end
 
             if curUname == "Crowbar" then

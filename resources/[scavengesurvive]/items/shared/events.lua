@@ -8,6 +8,7 @@ addEvent("characterSpawned", false)
 addEvent("characterDied", false)
 addEvent("characterItemsDropped", false)
 addEvent("workbenchRecipeMissed", false)
+addEvent("lootContainerStocked", false) -- from loot: a snack machine restocked
 
 -- client to server (handlers registered with net.handler)
 addEvent("itemPickupRequested", true)
@@ -42,12 +43,14 @@ addEvent("machineMenuRequested", true)
 addEvent("machineHoldReleased", true)
 addEvent("machineStartRequested", true)
 addEvent("parachuteSpent", true)
+addEvent("vendingGlassHit", true)
 
 -- server to client / client-local
 addEvent("inventorySynced", true)
 addEvent("heldItemChanged", true)
 addEvent("inventoryOpened", true)
 addEvent("toastShown", true)
+addEvent("vendingGlassBroken", true)
 addEvent("vehicleHoldStarted", true)
 addEvent("clothesChangeStarted", true)
 addEvent("clothesChangeStopped", true)

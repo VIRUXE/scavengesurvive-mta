@@ -337,6 +337,18 @@ local furnitureCtx = { db = db, state = state, type = itemType, toast = toast, w
 furnitureCtx.furniture, furnitureCtx.decodeData, furnitureCtx.charId = furniture, hands.decodeData, charId
 local furnitureSrv = loadFile("server/furniture.lua")(furnitureCtx)
 hands.setFurniture(furnitureSrv)
+-- the snack machines: glass to break, then a take-only container (shared/logic/vending.lua)
+local vendingSrv = loadFile("server/vending.lua")({
+    db = db,
+    net = net,
+    toast = toast,
+    world = world,
+    containers = containers,
+    vending = loadFile("shared/logic/vending.lua"),
+    decodeData = hands.decodeData,
+    log = log,
+})
+hands.setVending(vendingSrv)
 
 loadFile("server/use.lua")({
     isBadInteract = isBadInteract,

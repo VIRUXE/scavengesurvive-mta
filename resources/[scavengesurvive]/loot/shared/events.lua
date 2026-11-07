@@ -2,6 +2,7 @@
 addEvent("lootSpawned", false)
 addEvent("playerZoneEntered", false)
 addEvent("weaponCacheDropped", false)
+addEvent("lootContainerStocked", false)
 -- client to server (handler registered with net.handler)
 addEvent("supplyCrateOpenRequested", true)
 -- server to client (and server-local for other resources: supplyCrateLanded)

@@ -384,8 +384,9 @@ def render_props() -> str:
         "return {",
     ]
     from tools.bobcat_parts import PARTS
+    from tools.make_vending import props_rows
     from tools.vanilla_props import COPIES
-    entries = PROPS_TABLE + [dict(id=p["model"], name=p["asset"], dist=80) for p in PARTS] + COPIES
+    entries = PROPS_TABLE + [dict(id=p["model"], name=p["asset"], dist=80) for p in PARTS] + COPIES + props_rows()
     lines += [f'    [{p["id"]}] = {{ dff = "{p["name"]}", txd = "{p["name"]}", dist = {p["dist"]} }},' for p in entries]
     return "\n".join(lines + ["}", ""])
 

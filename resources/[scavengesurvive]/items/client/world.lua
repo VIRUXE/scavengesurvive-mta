@@ -14,6 +14,7 @@ return function(ctx)
     local gardening = ctx.gardening
     local machines = ctx.machines
     local furniture = ctx.furniture
+    local vending = ctx.vending
     local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")()
     local SIGN_RANGE = 25 -- metres a sign's text can be read from
     local LABEL_RANGE = 4 -- metres an item's name shows from
@@ -135,9 +136,14 @@ return function(ctx)
         for _, fx in ipairs(e.fires or {}) do
             list[#list + 1] = fx
         end
-        for _, key in ipairs({ "plant", "smoke", "shown", "covering" }) do
+        for _, key in ipairs({ "plant", "smoke", "shown", "covering", "glass" }) do
             if isElement(e[key]) then
                 list[#list + 1] = e[key]
+            end
+        end
+        for _, obj in ipairs(e.snacks or {}) do
+            if isElement(obj) then
+                list[#list + 1] = obj
             end
         end
         return list
@@ -248,9 +254,23 @@ return function(ctx)
         end
     end)
 
+    -- a snack machine's pane and the snacks in its coils (updateVending), all attached to its object
+    local function clearVending(e)
+        if isElement(e.glass) then
+            destroyElement(e.glass)
+        end
+        for _, obj in ipairs(e.snacks or {}) do
+            if isElement(obj) then
+                destroyElement(obj)
+            end
+        end
+        e.glass, e.snacks = nil, nil
+    end
+
     local function forget(id)
         local e = objects[id]
         if e then
+            clearVending(e)
             if isElement(e.obj) then
                 destroyElement(e.obj)
             end
@@ -325,10 +345,19 @@ return function(ctx)
 
     -- every element the item draws, so that a ray passes through it
     local function markItemElements(e)
-        for _, el in ipairs({ e.obj or false, e.plant or false, e.shown or false, e.covering or false }) do
+        for _, el in ipairs({
+            e.obj or false,
+            e.plant or false,
+            e.shown or false,
+            e.covering or false,
+            e.glass or false,
+        }) do
             if el then
                 itemElements[el] = true
             end
+        end
+        for _, obj in ipairs(e.snacks or {}) do
+            itemElements[obj] = true
         end
         for _, part in ipairs(e.parts or {}) do
             itemElements[part] = true
@@ -382,7 +411,10 @@ return function(ctx)
         -- loose items are walked through; a built defence is a wall (upstream's defence objects collide), and so are a
         -- Locker, which stands as tall as a player, and the furniture (#148)
         local def = builtDefence(r)
-        setElementCollisionsEnabled(obj, def ~= nil or r.uname == small.LOCKER.uname or furniture.is(r.uname))
+        setElementCollisionsEnabled(
+            obj,
+            def ~= nil or r.uname == small.LOCKER.uname or furniture.is(r.uname) or vending.is(r.uname)
+        )
         if def then
             -- its row already holds the raised z and full heading, data the pose
             setElementPosition(obj, r.x, r.y, r.z)
@@ -505,6 +537,35 @@ return function(ctx)
         end
     end
 
+    -- a snack machine (shared/logic/vending.lua): its pane, whole or broken, and a snack in each coil data.shelf
+    -- names, all hung on the cabinet
+    local function updateVending(e, r)
+        clearVending(e)
+        if not vending.is(r.uname) or not isElement(e.obj) then
+            return
+        end
+        local paneModel = models.forSamp(vending.isBroken(r.data) and vending.MODEL_BROKEN or vending.MODEL_GLASS)
+        local pane = paneModel and createObject(paneModel, r.x, r.y, r.z)
+        if pane then
+            place(pane, r)
+            attachElements(pane, e.obj, 0, 0, 0)
+            e.glass = pane
+        end
+        e.snacks = {}
+        local shelf = type(r.data) == "table" and type(r.data.shelf) == "table" and r.data.shelf or {}
+        for coil = 1, vending.SLOTS do
+            local st = shelf[coil] and shelf[coil] ~= "" and itemType(shelf[coil])
+            if st then
+                local obj = createObject(models.forType(st), r.x, r.y, r.z)
+                if obj then
+                    place(obj, r)
+                    attachElements(obj, e.obj, vending.slotPose(coil, st.uname))
+                    e.snacks[#e.snacks + 1] = obj
+                end
+            end
+        end
+    end
+
     -- a locker draws its open twin while someone has it open
     local function modelFor(r, t)
         if r.uname == small.LOCKER.uname then
@@ -549,6 +610,7 @@ return function(ctx)
                 updateSmoke(e, r)
                 updateShown(e, r)
                 updateCovering(e, r)
+                updateVending(e, r)
                 markItemElements(e)
             else
                 e = {
@@ -572,6 +634,7 @@ return function(ctx)
                 updateSmoke(e, r)
                 updateShown(e, r)
                 updateCovering(e, r)
+                updateVending(e, r)
                 markItemElements(e)
                 objects[r.id] = e
             end
@@ -595,6 +658,7 @@ return function(ctx)
                 models.applyTint(e.obj, t)
             end
             updateCovering(e, e.row)
+            updateVending(e, e.row)
         end
     end)
 
@@ -707,6 +771,36 @@ return function(ctx)
 
     -- A campfire or barbecue within reach of the local player (the hud's "Cook" hint), nil when none.
     local M = {}
+
+    -- the snack machines this client draws whose glass still holds: { { id, x, y, z, rz, int, dim } }
+    function M.intactMachines()
+        local out = {}
+        for id, e in pairs(objects) do
+            local r = e.row
+            if r and vending.is(r.uname) and not vending.isBroken(r.data) then
+                out[#out + 1] = {
+                    id = id,
+                    x = r.x,
+                    y = r.y,
+                    z = r.z,
+                    rz = r.rz or 0,
+                    int = r.interior or 0,
+                    dim = r.dimension or 0,
+                }
+            end
+        end
+        return out
+    end
+
+    -- where a machine stands, for the shatter (client/vending.lua): x, y, z, rz or nil
+    function M.machineAt(id)
+        local e = objects[id]
+        local r = e and e.row
+        if r and vending.is(r.uname) then
+            return r.x, r.y, r.z, r.rz or 0
+        end
+    end
+
     function M.nearbyCooker(reach)
         local px, py, pz = getElementPosition(localPlayer)
         local dim, int = getElementDimension(localPlayer), getElementInterior(localPlayer)

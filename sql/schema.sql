@@ -2298,6 +2298,39 @@ BEGIN
   SELECT 1 AS ok, 'OK' AS code, JSON_OBJECT('created', CAST(v_n AS SIGNED)) AS payload;
 END//
 
+CREATE OR REPLACE PROCEDURE `loot_stock_container`(IN p_container_id INT, IN p_zone VARCHAR(8), IN p_items JSON)
+BEGIN
+  -- A fixed container restocked out of a zone's loot budget (loot/server/main.lua stockContainer, the snack machines):
+  -- p_items, MTA's toJSON of [{u}] wrapped in an outer array, go in after what it holds, as many as still fit,
+  -- counted as the zone's loot (loot_zone) and paid for from its allowance.
+  DECLARE v_size INT DEFAULT NULL;
+  DECLARE v_used INT DEFAULT 0;
+  DECLARE v_slot INT DEFAULT 0;
+  DECLARE v_n INT DEFAULT 0;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
+  SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+  START TRANSACTION;
+  SELECT size INTO v_size FROM containers WHERE id = p_container_id FOR UPDATE;
+  IF v_size IS NULL THEN
+    ROLLBACK;
+    SELECT 0 AS ok, 'NO_CONTAINER' AS code, NULL AS payload;
+  ELSE
+    SELECT IFNULL(SUM(t.size), 0), IFNULL(MAX(i.slot) + 1, 0) INTO v_used, v_slot
+      FROM items i JOIN item_types t ON t.uname = i.type_uname WHERE i.container_id = p_container_id FOR UPDATE;
+    INSERT INTO items (type_uname, hitpoints, container_id, slot, loot_zone)
+      SELECT t.uname, t.max_hitpoints, p_container_id, v_slot + j.ord - 1, p_zone
+      FROM JSON_TABLE(p_items, '$[0][*]' COLUMNS (ord FOR ORDINALITY,
+        u VARCHAR(32) COLLATE utf8mb4_uca1400_ai_ci PATH '$.u')) j
+      JOIN item_types t ON t.uname = j.u
+      WHERE j.ord <= v_size - v_used
+      ORDER BY j.ord;
+    SET v_n = ROW_COUNT();
+    UPDATE world_budget SET allowance = GREATEST(allowance - v_n, 0) WHERE category = 'loot' AND zone = p_zone;
+    COMMIT;
+    SELECT 1 AS ok, 'OK' AS code, JSON_OBJECT('created', CAST(v_n AS SIGNED)) AS payload;
+  END IF;
+END//
+
 CREATE OR REPLACE PROCEDURE `machine_finish`(IN p_machine_id INT, IN p_old_data LONGTEXT, IN p_new_data LONGTEXT,
   IN p_container_id INT, IN p_results JSON, IN p_ids JSON)
 BEGIN

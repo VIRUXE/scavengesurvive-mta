@@ -41,6 +41,9 @@
     <file src="shared/logic/firework.lua"/>
     <file src="client/firework.lua"/>
     <file src="server/furniture.lua"/>
+    <file src="shared/logic/vending.lua"/>
+    <file src="server/vending.lua" download="false"/>
+    <file src="client/vending.lua"/>
     <file src="client/text.lua"/>
     <file src="client/models.lua"/>
     <file src="server/cooking.lua"/>

@@ -51,6 +51,9 @@ return function(ctx)
         NOT_WORN = "Nothing equipped in that slot",
         INVENTORY_FULL = "Inventory is full",
         TOO_BIG = "Too big to put away, it goes in a vehicle or a box",
+        -- the snack machine (server/vending.lua)
+        TAKE_ONLY = "Nothing goes back into the machine",
+        GLASS_INTACT = "The glass is in the way, break it first",
         CLOTHESWRGE = "Wrong gender for clothes",
         CLOTHES_ON_DUTY = "Go off duty before changing clothes",
         -- Cooking (#95): upstream's texts where it had one
@@ -386,6 +389,7 @@ return function(ctx)
             end
             local emptyAction = last
                     and last.held
+                    and not p.takeOnly
                     and { id = "put_held:trunk", label = lang.format("Store in %s", tname) }
                 or nil
             rows = rowsFor(p.trunk, p.capacity.trunk, moveActions, emptyAction, true)
@@ -402,7 +406,7 @@ return function(ctx)
         elseif view == "bag" and p.bag then
             title = string.format("%s (%d/%d)", bname, p.capacity.bag.used, p.capacity.bag.size)
             local moveActions = { { id = "move:inventory", label = lang.text("Move to Inventory") } }
-            if p.trunk then
+            if p.trunk and not p.takeOnly then
                 moveActions[#moveActions + 1] = { id = "move:trunk", label = lang.format("Move to %s", tname) }
             end
             local emptyAction = last
@@ -421,7 +425,7 @@ return function(ctx)
             if p.bag then
                 moveActions[#moveActions + 1] = { id = "move:bag", label = lang.format("Move to %s", bname) }
             end
-            if p.trunk then
+            if p.trunk and not p.takeOnly then
                 moveActions[#moveActions + 1] = { id = "move:trunk", label = lang.format("Move to %s", tname) }
             end
             local emptyAction = last

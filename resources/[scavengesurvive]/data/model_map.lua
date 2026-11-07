@@ -44,6 +44,20 @@ M.byModel = {
     [20416] = 1265,
     [20417] = 1265,
     [20418] = 1224,
+    -- the snack machine and its snacks (prop_models, tools/make_vending.py): GTA's own snack machine and 24/7 packets
+    [20223] = 2821,
+    [20224] = 2821,
+    [20225] = 2821,
+    [20226] = 2821,
+    [20227] = 2821,
+    [20228] = 2821,
+    [20229] = 2821,
+    [20230] = 2821,
+    [20231] = 2821,
+    [20232] = 2821,
+    [20233] = 956,
+    [20234] = 1271,
+    [20235] = 1271,
 }
 function M.isSampOnly(model)
     return model >= 18631 or (model >= 11682 and model <= 11753)

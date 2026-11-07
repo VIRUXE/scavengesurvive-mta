@@ -143,7 +143,28 @@ return function(ctx)
         return t and t.useCarryAnim or false
     end
 
+    -- true when the side container the player has open is take-only (a snack machine) and containerId is it
+    local function takeOnly(player, containerId)
+        local cont = activeContainer[player]
+        if cont and cont.takeOnly and cont.containerId == containerId then
+            toast(player, "TAKE_ONLY")
+            return true
+        end
+        return false
+    end
+
+    -- a take from the open side container: its owner (a snack machine) hears of it
+    local function sideChanged(player, containerId)
+        local cont = activeContainer[player]
+        if cont and cont.onChange and cont.containerId == tonumber(containerId) then
+            cont.onChange()
+        end
+    end
+
     local function put(player, cid, itemId, containerId, onFull)
+        if takeOnly(player, containerId) then
+            return
+        end
         local held = state.held[player]
         if held and held.id == itemId and not machineAccepts(player, containerId, held.uname, held.data) then
             return
@@ -319,7 +340,8 @@ return function(ctx)
         end
 
         local openId = M.openContainerId(player)
-        if openId then
+        local side = activeContainer[player]
+        if openId and not (side and side.takeOnly) then -- a snack machine open: put away as if none were
             return put(player, cid, item.id, openId, function()
                 toast(player, "CONTAINER_FULL")
             end)
@@ -439,7 +461,8 @@ return function(ctx)
                 payload.trunk = {}
                 payload.capacity.trunk = { used = 0, size = side.size or 40, uname = side.title or "Container" }
                 payload.trunkContainerId = side.containerId
-                payload.containerWorldItemId = not side.carryable and side.worldItemId or false
+                payload.containerWorldItemId = not side.carryable and not side.takeOnly and side.worldItemId or false
+                payload.takeOnly = side.takeOnly or nil
             end
             local byId = {}
             local function target(r)
@@ -688,13 +711,18 @@ return function(ctx)
         local t = itemType(uname)
         local isBag = t and t.category == "bag"
         opts = opts or {}
+        -- a take-only type (the snack machine) opens only through its own module (server/vending.lua), which checks
+        -- its glass first; the generic paths (a hold on it, the bag-open request) get nothing
+        if t and t.categoryData and t.categoryData.takeOnly and not opts.takeOnly then
+            return
+        end
         local csize = opts.size
             or (isTent and 16 or (t and t.categoryData and (t.categoryData.bag_size or t.categoryData.size) or 8))
         local ckind = opts.kind or (isTent and "tent" or (isBag and "bag" or "safebox"))
         local title = opts.title or (isTent and lang.textFor(player, "Tent") or lang.itemName(uname, player))
         local pos = itemRow.x and itemRow.y and itemRow.z and { x = itemRow.x, y = itemRow.y, z = itemRow.z }
         -- a bag or box is picked up with a hold of the interact key, contents and all (upstream), not from its list
-        local carryable = (isBag or (t and t.category == "safebox")) and not opts.machine or false
+        local carryable = (isBag or (t and t.category == "safebox")) and not opts.machine and not opts.takeOnly or false
 
         db.one(
             "SELECT id, size, kind FROM containers WHERE owner_item_id = ? "
@@ -714,6 +742,8 @@ return function(ctx)
                         pos = c.pos,
                         machine = c.machine,
                         carryable = c.carryable,
+                        takeOnly = c.takeOnly,
+                        onChange = c.onChange,
                     }
                     sendInventory(c.player, "opened")
                 else
@@ -738,6 +768,8 @@ return function(ctx)
                                     pos = c.pos,
                                     machine = c.machine,
                                     carryable = c.carryable,
+                                    takeOnly = c.takeOnly,
+                                    onChange = c.onChange,
                                 }
                                 sendInventory(c.player, "opened")
                             end
@@ -754,6 +786,8 @@ return function(ctx)
                 pos = pos,
                 machine = opts.machine,
                 carryable = carryable,
+                takeOnly = opts.takeOnly,
+                onChange = opts.onChange,
             }
         )
     end
@@ -1092,6 +1126,7 @@ return function(ctx)
                 data = hands.decodeData(p.data),
             })
             triggerEvent("itemMoved", c.player, c.itemId, "container", "held")
+            sideChanged(c.player, p.container_id)
             sendInventory(c.player)
         end, { player = player, itemId = itemId })
     end, { rate = 5 })
@@ -1126,6 +1161,7 @@ return function(ctx)
                 if not res or not res.ok then
                     return toast(c.player, res and res.code or "DB_ERROR")
                 end
+                sideChanged(c.player, res.payload and res.payload.from_container_id)
                 sendInventory(c.player)
             end, { player = player })
         end
@@ -1151,7 +1187,7 @@ return function(ctx)
             end, { player = player })
         end
         if target == "trunk" then
-            if not sideContId then
+            if not sideContId or takeOnly(player, sideContId) then
                 return
             end
             local cont = activeContainer[player]

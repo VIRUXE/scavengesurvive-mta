@@ -34,14 +34,14 @@ None: the converter replaced every `~x~`, `{C_*}`, `~k~` and `%P` token.
 
 Item type, ammo kind, calibre, liquid and seed kind names, and the item UI's labels, messages and format templates, are English in the data and the code; lib's `lang` module shows them in the player's language from the hand-edited `data/generated/strings_<code>.lua` tables. The English texts are collected from the item data and the code (`tr("…")`, `L("…")`, `lang.text/format("…")`, `lang.textFor/formatFor(player, "…")` and `-- lang:begin` … `-- lang:end` blocks). A text a language lacks shows in English; one whose placeholders differ from English is formatted in English. Texts kept identical to English are model names, brands, acronyms and the like.
 
-English has 944 texts.
+English has 957 texts.
 
 | Code | Language | Missing (shown in English) | Kept as in English | Placeholder mismatches | Not in English (stale) |
 | --- | --- | ---: | ---: | ---: | ---: |
-| `es` | Español | 32 | 6 | 0 | 0 |
-| `fr` | Français | 57 | 0 | 0 | 0 |
-| `pt` | Português | 31 | 3 | 0 | 0 |
-| `ptbr` | Português do Brasil | 34 | 4 | 0 | 0 |
+| `es` | Español | 32 | 7 | 0 | 0 |
+| `fr` | Français | 57 | 1 | 0 | 0 |
+| `pt` | Português | 31 | 4 | 0 | 0 |
+| `ptbr` | Português do Brasil | 34 | 5 | 0 | 0 |
 | `ru` | Russian | 16 | 0 | 0 | 0 |
 | `ro` | Romanian | 44 | 0 | 0 | 0 |
 | `id` | Indonesian | 41 | 0 | 0 | 0 |

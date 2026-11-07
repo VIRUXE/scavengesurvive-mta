@@ -375,6 +375,61 @@ function rollNear(x, y, radius, onDone)
     return true
 end
 
+-- The zone a fixed container stands in: that of the nearest loot point (zones are whole regions), looked up once.
+local containerZone = {}
+
+-- Restocks a fixed container (the snack machines, world/server/vending.lua) out of the loot budget: up to `free`
+-- items rolled from `tableName` (one pick per free slot, two of a kind allowed), no more than the zone of (x, y) may
+-- still spawn, appended by loot_stock_container, which counts them as the zone's loot and spends its allowance.
+-- Every item of the table must be of size 1. Asynchronous: lootContainerStocked (containerId, created) follows on
+-- resourceRoot when the call went through. false when nothing was asked of the database.
+function stockContainer(containerId, x, y, tableName, free)
+    containerId, free = tonumber(containerId), tonumber(free) or 0
+    local tbl = lootTable(tostring(tableName))
+    if not containerId or not tbl or free <= 0 or budgetBusy then
+        return false
+    end
+    local function stock(zone)
+        local left = allowance[zone] or 0
+        local unames = roll.fill(tbl, math.min(free, left), math.random)
+        if #unames == 0 then
+            return
+        end
+        allowance[zone] = left - #unames
+        local items = {}
+        for i, uname in ipairs(unames) do
+            items[i] = { u = uname }
+        end
+        db.call("loot_stock_container", { containerId, zone, toJSON(items) }, function(res)
+            local made = res and res.ok and res.payload and tonumber(res.payload.created) or 0
+            local line = { container_id = containerId, zone = zone, rolled = #unames, items = made }
+            if not (res and res.ok) then
+                loadAllowances() -- the rolled-back call spent nothing
+                line.ok, line.code = false, res and res.code or "DB_ERROR"
+                return log.event("loot.containerStocked", line, "warn")
+            end
+            log.event("loot.containerStocked", line)
+            triggerEvent("lootContainerStocked", resourceRoot, containerId, made)
+        end)
+    end
+    if containerZone[containerId] then
+        stock(containerZone[containerId])
+        return true
+    end
+    local sql = string.format(
+        "SELECT zone FROM loot_spawns WHERE enabled = 1 ORDER BY ST_Distance(pos, POINT(%f, %f)) LIMIT 1",
+        tonumber(x) or 0,
+        tonumber(y) or 0
+    )
+    db.one(sql, {}, function(row)
+        if row and row.zone then
+            containerZone[containerId] = row.zone
+            stock(row.zone)
+        end
+    end)
+    return true
+end
+
 local overlay = loadFile("server/overlay.lua")({
     db = db,
     roll = roll,

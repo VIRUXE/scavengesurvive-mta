@@ -56,6 +56,17 @@ local boxesSrv = loadFile("server/boxes.lua", "=world/server/boxes.lua")({
     end,
 })
 
+local vendingSrv = loadFile("server/vending.lua", "=world/server/vending.lua")({
+    db = db,
+    util = util,
+    log = log,
+    logic = loadFile("shared/logic/boxes.lua", "=world/boxes.lua"),
+    spots = loadFile("data/vending.lua", "=world/vending_data.lua").spots,
+    setting = function(key, default)
+        return tonumber(settings[key]) or default
+    end,
+})
+
 loadFile("server/trees.lua", "=world/server/trees.lua")({
     db = db,
     net = net,
@@ -121,6 +132,7 @@ addEventHandler("onResourceStart", resourceRoot, function()
     db.settings(function(map)
         settings = map
         boxesSrv.start()
+        vendingSrv.start()
     end)
     setMinuteDuration(weather.MINUTE_MS)
     syncClock()
