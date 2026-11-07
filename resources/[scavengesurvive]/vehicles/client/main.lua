@@ -229,3 +229,77 @@ end
 
 addCommandHandler("lock", requestLockToggle)
 bindKey("sub_mission", "down", requestLockToggle)
+
+-- Duty vehicle-spawn overlay: the spawn points the server pushes to developer-level staff on duty
+-- (server/overlay.lua). A beam per point in 250 m coloured by state, a label within 60 m. /vehiclespots toggles it.
+local vSpots, vShown, vHinted = {}, true, false
+local vAlive, vCap = nil, nil
+local V_COLOURS = {
+    ready = { 80, 255, 80 },
+    cooldown = { 255, 170, 40 },
+    occupied = { 80, 220, 255 },
+    disabled = { 255, 70, 70 },
+}
+
+addEventHandler("vehicleSpotsChanged", root, function(list, alive, cap)
+    vSpots = type(list) == "table" and list or {}
+    vAlive, vCap = alive, cap
+    if #vSpots > 0 and not vHinted then
+        vHinted = true
+        outputChatBox(" >  Vehicle spawn points shown while on duty. /vehiclespots hides them.", 255, 255, 0)
+    end
+end)
+
+addCommandHandler("vehiclespots", function()
+    vShown = not vShown
+    outputChatBox(" >  Vehicle spawn points " .. (vShown and "shown" or "hidden"), 255, 255, 0)
+end)
+
+local function vStateText(s)
+    if s.state == "ready" then
+        return "Free: next refill may use it"
+    elseif s.state == "cooldown" then
+        local m = math.ceil(s.dueIn / 60)
+        return string.format("Cooldown %dh%02dm", math.floor(m / 60), m % 60)
+    elseif s.state == "occupied" then
+        return string.format("Occupied: %s (vehicle #%d)", s.occType or "?", s.occId)
+    end
+    return "Disabled"
+end
+
+local function vOutlined(text, x, y, c, scale)
+    dxDrawText(text, x + 1, y + 1, x + 1, y + 1, tocolor(0, 0, 0, 210), scale, "default-bold", "center", "center")
+    dxDrawText(text, x, y, x, y, tocolor(c[1], c[2], c[3], 255), scale, "default-bold", "center", "center")
+end
+
+addEventHandler("onClientRender", root, function()
+    if #vSpots == 0 or not vShown then
+        return
+    end
+    local px, py, pz = getElementPosition(localPlayer)
+    for _, s in ipairs(vSpots) do
+        local dx, dy, dz = s.x - px, s.y - py, s.z - pz
+        local d2 = dx * dx + dy * dy + dz * dz
+        if d2 < 250 * 250 then
+            local c = V_COLOURS[s.state] or V_COLOURS.ready
+            dxDrawLine3D(s.x, s.y, s.z, s.x, s.y, s.z + 3, tocolor(c[1], c[2], c[3], 220), 4)
+            if d2 < 60 * 60 then
+                local sx, sy = getScreenFromWorldPosition(s.x, s.y, s.z + 3.3, 0.06)
+                if sx then
+                    local head = string.format("#%d  %s  [%s%s]  fleet %s/%s", s.id, s.what, s.cats or "",
+                        (s.sizes or "") ~= "" and (" " .. s.sizes) or "", tostring(vAlive or "?"), tostring(vCap or "?"))
+                    vOutlined(head, sx, sy, { 255, 255, 255 }, 0.9)
+                    local line = vStateText(s)
+                    if (s.driven or 0) > 0 then
+                        line = line .. string.format("  (%d driven off)", s.driven)
+                    end
+                    vOutlined(line, sx, sy + 14, c, 0.9)
+                end
+            end
+        end
+    end
+end)
+
+addEventHandler("onClientResourceStop", resourceRoot, function()
+    vSpots = {}
+end)

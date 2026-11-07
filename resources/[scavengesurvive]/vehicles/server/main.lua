@@ -2205,10 +2205,19 @@ addEventHandler("onPlayerWasted", root, function()
     cancelHoldAction(source)
 end)
 
+local overlay
+do
+    local f = fileOpen("server/overlay.lua", true)
+    local src = fileRead(f, fileGetSize(f))
+    fileClose(f)
+    overlay = assert(loadstring(src, "=vehicles/server/overlay.lua"))()({ db = db })
+end
+
 addEventHandler("onResourceStart", resourceRoot, function()
     if not db.connect("vehicles") then
         return
     end
+    overlay.start()
     types = loadTypes()
     for _, t in ipairs(types.list) do
         for property, value in pairs(t.handling or {}) do

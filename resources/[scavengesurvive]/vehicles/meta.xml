@@ -22,6 +22,7 @@
     <file src="shared/logic/carmour_place.lua"/>
     <file src="shared/data/carmour_geometry.lua"/>
     <file src="server/carmour.lua"/>
+    <file src="server/overlay.lua"/>
     <file src="server/gasbottles.lua"/>
     <file src="server/bodyparts.lua"/>
     <export function="getVehicleDbId" type="server"/>
