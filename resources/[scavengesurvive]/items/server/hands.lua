@@ -1098,12 +1098,30 @@ return function(ctx)
         local dz, drz = z - (opts.below or 0.9), (rz + (opts.turn or 0)) % 360
         if opts.at then
             dx, dy, dz, drz = opts.at.x, opts.at.y, opts.at.z, opts.at.rz % 360
-        elseif M.vehicleAt(dx, dy, dz, getElementInterior(player), getElementDimension(player)) then
-            log.event(
-                "item.dropRefused",
-                { player = player, item_id = item.id, ok = false, code = "DROP_BLOCKED_VEHICLE" }
-            )
-            return false, "DROP_BLOCKED_VEHICLE"
+        else
+            -- the first free spot around the player: the heading first, then 30 degrees to either side in turn,
+            -- at the asked distance and then farther out; a spot nothing frees stays where the heading puts it
+            local int, dim = getElementInterior(player), getElementDimension(player)
+            local ahead = opts.ahead or 1.0
+            if M.vehicleAt(dx, dy, dz, int, dim) then
+                local found
+                for _, scale in ipairs({ 1, 1.6, 2.2 }) do
+                    for step = 1, 12 do
+                        local turn = math.ceil(step / 2) * 30 * (step % 2 == 1 and 1 or -1)
+                        local cx, cy = geometry.dropPosition(x, y, rz + turn, ahead * scale)
+                        if not M.vehicleAt(cx, cy, dz, int, dim) then
+                            found = { cx, cy }
+                            break
+                        end
+                    end
+                    if found then
+                        break
+                    end
+                end
+                if found then
+                    dx, dy = found[1], found[2]
+                end
+            end
         end
         if opts.data then
             item.data = opts.data
