@@ -3,6 +3,7 @@
 -- its first opening (world_dumpsters keeps spot -> container) and filled again, once it is empty, dumpsters.refill_s
 -- after the last fill. The lid state is derived from who has the container open, polled once a second.
 local db = loadstring(exports.lib:getModule("db"), "=lib/db.lua")()
+db.connect("dumpsters")
 local net = loadstring(exports.lib:getModule("net"), "=lib/net.lua")()
 local util = loadstring(exports.lib:getModule("util"), "=lib/util.lua")()
 local log = loadstring(exports.lib:getModule("log"), "=lib/log.lua")()
