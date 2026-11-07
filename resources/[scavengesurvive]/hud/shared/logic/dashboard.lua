@@ -63,18 +63,16 @@ function M.soundFor(p)
 end
 
 -- The ignition switch beside the strip: where the key points in each position, in degrees clockwise from straight up.
-M.KEY_ORDER = { "off", "acc", "on", "start" }
-M.KEY_ANGLES = { off = -45, acc = 0, on = 45, start = 90 }
+M.KEY_ORDER = { "off", "acc", "start" }
+M.KEY_ANGLES = { off = -45, acc = 0, start = 45 }
 M.KEY_DEG_PER_S = 700
 
--- Where the key sits: START while the starter turns (the performance's cranking phase), else ON with the engine
--- running, ACC with the key left there, OFF. A start that fails lets the key spring back to ACC, a started one to ON.
+-- Where the key sits: START while the starter turns (the performance's cranking phase), ACC with the key left there
+-- or the engine running (the barrel has no position of its own for that: START springs back to ACC), else OFF.
 function M.keyPosition(s, shot)
     if shot and shot.start then
         return "start"
-    elseif s.engine then
-        return "on"
-    elseif s.acc then
+    elseif s.engine or s.acc then
         return "acc"
     end
     return "off"

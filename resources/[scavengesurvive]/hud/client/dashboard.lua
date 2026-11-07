@@ -182,9 +182,9 @@ return function(ctx)
     local TICK = {
         off = { 170, 170, 170 },
         acc = AMBER,
-        on = { 0x33, 0xFF, 0x33 },
         start = { 0xFF, 0x22, 0x22 },
     }
+    local RUNNING = { 0x33, 0xFF, 0x33 } -- the ACC tick while the engine runs
     local METAL, METAL_INNER = tocolor(95, 95, 95, 230), tocolor(30, 30, 30, 240)
     local KEY, KEY_TAIL = tocolor(228, 205, 130, 255), tocolor(150, 135, 85, 255)
 
@@ -193,8 +193,9 @@ return function(ctx)
         dxDrawCircle(px(x), canvas.y(c, y), canvas.len(c, r), 0, 360, colour, colour, 24)
     end
 
-    -- the ignition cylinder: the four positions as ticks (the one the key is in lit), the key pointing at the angle
-    local function drawIgnition(pos, angle)
+    -- the ignition cylinder: the three positions as ticks (the one the key is in lit, green for ACC with the engine
+    -- running), the key pointing at the angle
+    local function drawIgnition(pos, angle, running)
         local cx, cy = IGN_X + H / 2, Y + H / 2
         local x0, y0 = px(IGN_X), canvas.y(c, Y)
         local w, h = canvas.len(c, H), canvas.len(c, H)
@@ -210,7 +211,7 @@ return function(ctx)
                 cx + math.sin(a) * IGN_TICK_R,
                 cy - math.cos(a) * IGN_TICK_R,
                 lit and 1.7 or 1.2,
-                lit and rgba(TICK[name], 255) or UNLIT_SEGMENT
+                lit and rgba(running and name == "acc" and RUNNING or TICK[name], 255) or UNLIT_SEGMENT
             )
         end
         disc(cx, cy, IGN_R, METAL)
@@ -276,7 +277,7 @@ return function(ctx)
             keyVehicle, keyAngle = vehicle, keyTarget -- the key is already where it is on getting in
         end
         keyAngle = logic.keyStep(keyAngle, keyTarget, dt)
-        drawIgnition(pos, keyAngle)
+        drawIgnition(pos, keyAngle, s.engine)
     end
 
     -- dev preview: overrides (a table of state fields: battery, bay, engine, acc, lights, health, fuel, maxFuel)

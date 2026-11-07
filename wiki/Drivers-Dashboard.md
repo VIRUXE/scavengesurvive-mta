@@ -27,7 +27,7 @@ The strip is dark until the key is turned to ACC or the engine runs, dim in ACC 
 
 ## The ignition switch
 
-A small square to the left of the strip shows the ignition cylinder. Four ticks sit around it, `OFF`, `ACC`, `ON` and `START` from left round to right, and the key turns to the one it is in; the lit tick is grey, amber, green or red to match. The key goes to `START` while the starter turns, then springs back to `ON` if the engine caught, or to `ACC` if the start failed. Getting into a car, the key is already where the car's state says it is.
+A small square to the left of the strip shows the ignition cylinder. Three ticks sit around it, `OFF`, `ACC` and `START` from left round to right, as on a real barrel, and the key turns to the one it is in; the lit tick is grey, amber or red to match. The key goes to `START` while the starter turns, then springs back to `ACC` and stays there while the engine runs, the tick turning green. Getting into a car, the key is already where the car's state says it is.
 
 ## Turning the key
 
