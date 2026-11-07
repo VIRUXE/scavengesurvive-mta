@@ -8,8 +8,8 @@
 -- * the trailers (models 3167-3175, trailers.lua, tools/trailer_shells): panelled rooms, glazed windows and the
 --   vanilla door cut out as a leaf of its own that swings, hung in every trailer of the world (the upright vanilla
 --   placements listed in trailers.lua, and the ones the maps resource builds, found once it has built them).
--- * the houses (houses.lua, tools/house_shells): the Fort Carson weatherboard house des_bighus01 (model 3305), rooms
---   behind its front and porch doors and its garage's side door, each door a leaf of its own that swings.
+-- * the houses (houses.lua, tools/house_shells): the Fort Carson houses des_bighus01-03 (models 3305-3303), rooms
+--   behind their front, porch and side doors (and 01's garage behind its side door), each door a leaf that swings.
 local function readLua(path)
     local f = fileOpen(path, true)
     local src = fileRead(f, fileGetSize(f))
