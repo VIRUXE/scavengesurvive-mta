@@ -100,7 +100,7 @@ addEventHandler("onClientRender", root, function()
     end
 end)
 
--- Duty loot overlay: the loot points the server pushes to staff on duty (server/overlay.lua). A beam per point in
+-- Duty loot overlay: the loot points the server pushes to developer-level staff on duty (server/overlay.lua). A beam per point in
 -- 150 m coloured by state, and a two-line label within 40 m. /lootspots hides or shows it.
 local spots, spotsShown, spotsHinted = {}, true, false
 local SPOT_COLOURS = {

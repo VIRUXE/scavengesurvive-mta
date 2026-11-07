@@ -1,4 +1,4 @@
--- Duty loot overlay: staff on duty see the loot points around them (client/main.lua draws them) with why each one
+-- Duty loot overlay: developer-level staff on duty see the loot points around them (client/main.lua draws them) with why each one
 -- is or is not rolling. The state order mirrors what rollNear checks: disabled, items still out, cooldown, zone budget.
 return function(ctx)
     local M = {}
@@ -6,8 +6,11 @@ return function(ctx)
     local MOVE, REFRESH_MS = 40, 15000
     local last = {} -- player -> { x, y, int, dim, at, pending }
 
+    local DEV_LEVEL = 5 -- staff.MAX_LEVEL, "Developer"
+
+    -- on duty and at dev level; the staff resource includes loot, so its level comes through the export at call time
     local function onDuty(p)
-        return getElementData(p, "staff.duty") == true
+        return getElementData(p, "staff.duty") == true and (tonumber(exports.staff:getLevel(p)) or 0) >= DEV_LEVEL
     end
 
     local function sizeText(size)
