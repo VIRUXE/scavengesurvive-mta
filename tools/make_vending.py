@@ -561,8 +561,13 @@ def build_in_blender(gta: Path, out: Path, preview: Path | None) -> None:
                     tri = [b, inner_pts[j], c]
                     for t2 in (tri, tri[::-1]):
                         m.face([at(*p) for p in t2], [uv(*p) for p in t2], 0, 1.0, 0.6)
-        w, h = glass_px.shape[1], glass_px.shape[0]
-        m.finish(name, [native_rgba("snack_glass", w, h, to_bgra(glass_px), True)],
+        px = glass_px
+        if broken:  # what is left in the frame: shards edge-on catch the light, whiter and less see-through
+            px = glass_px.copy()
+            px[..., :3] = np.clip(px[..., :3] * 1.15 + 0.08, 0, 1)
+            px[..., 3] = np.clip(px[..., 3] * 2.0, 0, 0.85)
+        w, h = px.shape[1], px.shape[0]
+        m.finish(name, [native_rgba("snack_glass", w, h, to_bgra(px), True)],
                  [((0, GLASS_Y, (WINDOW[2] + WINDOW[3]) / 2), ((WINDOW[1] - WINDOW[0]) / 2, 0.005, (WINDOW[3] - WINDOW[2]) / 2))], recalc=False)
 
     glass_mesh("snack_glass", False)

@@ -24,6 +24,7 @@ return function(ctx)
     local labelVisibility = {} -- id -> { visible, checkedAt }
     local reachCache = {} -- id -> { ok, at }: no wall between the player and the item
     local itemElements = setmetatable({}, { __mode = "k" }) -- elements world items draw: never a wall
+    local paneOf = setmetatable({}, { __mode = "k" }) -- a snack machine's intact pane -> the machine's item id
     local shaders = {} -- tent material key -> shader, or false when its texture could not be read
     local typeCache = {} -- uname -> item type with its names in the local player's language (lang.itemType)
     -- Items riding in a towed walk-in trailer (the vehicles resource lists them in the trailer's "vehicles.cargo"
@@ -544,11 +545,16 @@ return function(ctx)
         if not vending.is(r.uname) or not isElement(e.obj) then
             return
         end
-        local paneModel = models.forSamp(vending.isBroken(r.data) and vending.MODEL_BROKEN or vending.MODEL_GLASS)
+        local broken = vending.isBroken(r.data)
+        local paneModel = models.forSamp(broken and vending.MODEL_BROKEN or vending.MODEL_GLASS)
         local pane = paneModel and createObject(paneModel, r.x, r.y, r.z)
         if pane then
             place(pane, r)
             attachElements(pane, e.obj, 0, 0, 0)
+            if not broken then -- fists, clubs and bullets land on it (client/vending.lua hears the hits)
+                setElementCollisionsEnabled(pane, true)
+                paneOf[pane] = r.id
+            end
             e.glass = pane
         end
         e.snacks = {}
@@ -790,6 +796,11 @@ return function(ctx)
             end
         end
         return out
+    end
+
+    -- the snack machine whose intact pane this element is, or nil
+    function M.machineOfPane(el)
+        return paneOf[el]
     end
 
     -- where a machine stands, for the shatter (client/vending.lua): x, y, z, rz or nil
