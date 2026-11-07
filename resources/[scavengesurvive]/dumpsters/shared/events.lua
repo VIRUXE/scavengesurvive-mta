@@ -1,0 +1,5 @@
+-- client to server (handler registered with net.handler)
+addEvent("dumpsterOpenRequested", true)
+addEvent("dumpsterLidsRequested", true)
+-- server to client: the spots whose lid stands open (sent on join and when one changes)
+addEvent("dumpsterLidsChanged", true)

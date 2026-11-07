@@ -151,6 +151,9 @@ return function(ctx)
         if not groundItemFirst and exports.loot:tryOpenCrate() == true then
             return
         end
+        if not groundItemFirst and exports.dumpsters:tryOpenDumpster() == true then
+            return
+        end
         -- carmour (vehicles/server/carmour.lua), ahead of the Generator powering the Welder (a machine): the torch
         -- in hand welds at a vehicle that takes armour and goes back on its Welder anywhere else; a Welder in hand is
         -- told to be laid down; an Angle Grinder in hand grinds a welded panel; a defence in hand at such a vehicle

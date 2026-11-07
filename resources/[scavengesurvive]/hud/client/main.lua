@@ -448,7 +448,7 @@ local function drawKeyActions(driver)
         held = held and { uname = held.uname, category = held.category, isWeapon = isCalibreWep },
         nearPlayer = held and hasPlayerNearby() or false,
         nearFeature = nearFeature(),
-        nearCrate = exports.loot:nearbyCrate() or nil,
+        nearCrate = exports.loot:nearbyCrate() or exports.dumpsters:nearbyDumpster() or nil,
         nearDoor = walkInDoor(),
         nearBonnet = nearBonnetHint(held),
         nearItem = nearItem,

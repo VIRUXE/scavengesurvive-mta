@@ -39,7 +39,7 @@ end
 
 -- The interact verb next to a landed crate, by the loot resource's crate kind.
 -- lang:begin
-M.CRATES = { supply = "Open supply crate", cache = "Open weapon cache" }
+M.CRATES = { supply = "Open supply crate", cache = "Open weapon cache", dumpster = "Open dumpster" }
 -- the world resource's button labels (puzzles.lua, area69.lua, doors.lua), listed so tools/lang_qa collects them
 M.BUTTON_LABELS = {
     "Activate",
@@ -63,7 +63,7 @@ M.BUTTON_LABELS = {
 --   nearItem (a loose world item in pickup reach),
 --   nearInspectable (the uname of a nearby sign, plant pot or body),
 --   cuffedNearby, hasBag,
---   nearFeature ("ladder" / "zipline" / "ladder_on" / "zipline_on" / "button:<label>"), nearCrate ("supply" / "cache"),
+--   nearFeature ("ladder" / "zipline" / "ladder_on" / "zipline_on" / "button:<label>"), nearCrate ("supply" / "cache" / "dumpster"),
 --   nearDoor ("open" / "closed" / "locked": a walk-in vehicle door in reach, the towable Airstream's),
 --   bodyPart ("(Hold) Remove Left Door" / "(Hold) Tighten Left Door", already in the reader's language: a Wrench in
 --     hand at a vehicle body part that is still on),

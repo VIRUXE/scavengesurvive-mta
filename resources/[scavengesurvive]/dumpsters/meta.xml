@@ -1,0 +1,21 @@
+<meta>
+    <info author="scavengesurvive-mta" type="script" name="dumpsters" description="GTA's dumpsters as openable containers: hollow body, hinged lid, bin bags inside" version="0.1.0"/>
+    <min_mta_version server="1.6.0" client="1.6.0-9.21695"/>
+    <download_priority_group>90</download_priority_group>
+    <include resource="lib"/>
+    <include resource="data"/>
+    <include resource="items"/>
+    <script src="shared/events.lua" type="shared"/>
+    <script src="server/main.lua" type="server"/>
+    <script src="client/main.lua" type="client"/>
+    <file src="shared/spots.lua"/>
+    <file src="shared/logic/dumpsters.lua"/>
+    <file src="files/dumpster_body.dff"/>
+    <file src="files/dumpster_body.txd"/>
+    <file src="files/dumpster_body.col"/>
+    <file src="files/dumpster_lid.dff"/>
+    <file src="files/dumpster_lid.txd"/>
+    <file src="files/dumpster_lid.col"/>
+    <export function="nearbyDumpster" type="client"/>
+    <export function="tryOpenDumpster" type="client"/>
+</meta>
