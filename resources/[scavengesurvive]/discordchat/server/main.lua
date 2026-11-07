@@ -21,6 +21,11 @@ local function getJoinPartChannel()
     return (type(val) == "string" and val ~= "") and val or "1564285345426833608"
 end
 
+local function getInGameChatChannel()
+    local val = get("inGameChatChannel")
+    return (type(val) == "string" and val ~= "") and val or "in-game-chat"
+end
+
 local function getStaffChannel()
     local val = get("staffChannel")
     return (type(val) == "string" and val ~= "") and val or "1563498523507425421"
@@ -112,9 +117,12 @@ addEventHandler("onPlayerJoin", root, function()
     if not res then
         return
     end
-    local payload = logic.joinPayload(getPlayerName(source), getJoinPartChannel())
-    if payload then
-        call(res, "send", "player.join", payload)
+    local name = getPlayerName(source)
+    for _, channel in ipairs({ getJoinPartChannel(), getInGameChatChannel() }) do
+        local payload = logic.joinPayload(name, channel)
+        if payload then
+            call(res, "send", "player.join", payload)
+        end
     end
 end)
 
