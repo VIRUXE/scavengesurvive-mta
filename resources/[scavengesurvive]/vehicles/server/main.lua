@@ -866,7 +866,11 @@ net.handler("engineToggleRequested", function(player)
             local started, why = battery.canStart(batteryLevel(inf))
             if not started then
                 engineCranked(player, v, why)
-                return toast(player, why)
+                -- a flat battery is already shown by the dashboard volt meter: no toast for it
+                if why ~= "BATTERY_FLAT" then
+                    toast(player, why)
+                end
+                return
             end
         end
         local ok, err = vlogic.canStartEngine(hp, inf.fuel, vt and vt.noEngine, vt and vt.maxFuel)
@@ -913,7 +917,10 @@ net.handler("lightsToggleRequested", function(player)
         -- with the engine off the lights run off the battery: none or a flat one gives nothing
         local ok, why = battery.canStart(batteryLevel(inf))
         if not ok then
-            return toast(player, why)
+            if why ~= "BATTERY_FLAT" then
+                toast(player, why)
+            end
+            return
         end
     end
     setVehicleOverrideLights(v, curr == 2 and 1 or 2)
