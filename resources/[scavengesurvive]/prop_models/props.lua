@@ -22,4 +22,5 @@ return {
     [20219] = { dff = "bobcat_bump_front_dam", txd = "bobcat_bump_front_dam", dist = 80 },
     [20220] = { dff = "bobcat_bump_rear_ok", txd = "bobcat_bump_rear_ok", dist = 80 },
     [20221] = { dff = "bobcat_bump_rear_dam", txd = "bobcat_bump_rear_dam", dist = 80 },
+    [20222] = { dff = "wheel", txd = "wheel", dist = 80 },
 }

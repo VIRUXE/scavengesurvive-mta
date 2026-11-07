@@ -332,7 +332,7 @@ INSERT INTO item_types (uname,name,model,size,max_hitpoints,category,category_da
 ('WeaponCrate','Weapon Crate',20418,6,6,'safebox','{"fill": "weapons", "size": 10}'),
 ('WeddingCake','Wedding Cake',19525,1,1,'generic',NULL),
 ('Welder','Welder',20202,6,3,'generic',NULL),
-('Wheel','Wheel',1079,5,5,'generic',NULL),
+('Wheel','Wheel',20222,5,5,'generic',NULL),
 ('WheelLock','Lock and Chain',2680,1,1,'generic',NULL),
 ('Whisky','Whisky',19823,1,1,'liquid','{"capacity": 1.5, "liquids": [["Whiskey", 100.0]], "reusable": false}'),
 ('Wine1','Wine',19820,1,1,'liquid','{"capacity": 0.75, "liquids": [["WineRed", 100.0]], "reusable": false}'),

@@ -68,5 +68,8 @@
     <file src="files/welder_torch.col"/>
     <file src="files/welder_torch.dff"/>
     <file src="files/welder_torch.txd"/>
+    <file src="files/wheel.col"/>
+    <file src="files/wheel.dff"/>
+    <file src="files/wheel.txd"/>
     <export function="resolve" type="client"/>
 </meta>
