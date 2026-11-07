@@ -872,6 +872,9 @@ net.handler("engineToggleRequested", function(player)
                 end
                 return
             end
+            -- the starter draws current on every turn, whether or not the engine catches
+            inf.battery, inf.batterySince = battery.crankDrain(batteryLevel(inf)), unixNow()
+            publishBattery(v, inf)
         end
         local ok, err = vlogic.canStartEngine(hp, inf.fuel, vt and vt.noEngine, vt and vt.maxFuel)
         if not ok then

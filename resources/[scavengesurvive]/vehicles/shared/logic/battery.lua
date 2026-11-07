@@ -9,6 +9,7 @@ M.IDLE_RECHARGE_FACTOR = 0.25 -- an engine left running while standing still cha
 M.DRIVING_KMH = 5 -- above this the car counts as driven
 M.LIGHTS_DRAIN_PER_H = 12.0 -- percent lost per hour by headlights left on with the engine off, from the first second
 M.ACC_DRAIN_PER_H = 3.0 -- percent lost per hour by the key left in ACC (dash and accessories on) with the engine off
+M.CRANK_DRAIN = 2.0 -- percent one turn of the starter takes, whether the engine catches or not
 M.START_MIN = 10 -- under this the engine will not turn over
 M.SPAWN_MIN = 15
 
@@ -38,6 +39,11 @@ end
 -- the key left in ACC with the engine off
 function M.accDrain(level, dt)
     return math.max(0, (level or 0) - M.ACC_DRAIN_PER_H / 3600 * (dt or 1))
+end
+
+-- one turn of the key to START: the starter motor's draw
+function M.crankDrain(level)
+    return math.max(0, (level or 0) - M.CRANK_DRAIN)
 end
 
 function M.spawnLevel(rng)
