@@ -94,11 +94,15 @@ local SIM_TICK_MS = 1000
 
 local USED_TICK_MS = 300000
 
+local GLOVEBOX_LOOT = "vehicle_glovebox" -- loot table of a fresh vehicle's glovebox (small items only)
+
 local SELECT_VEHICLES = "SELECT v.id, v.spawn_id, v.type_uname, v.model, v.x, v.y, v.z, v.rz, "
     .. "v.health, v.fuel, v.locked, v.damage, v.carmour, v.gas_bottles, v.key_code, v.keypad_code, "
     .. "v.trailer_id, v.left_spawn, v.battery, v.battery_since, v.starter, "
-    .. "c.id AS container_id, "
-    .. "s.x AS spawn_x, s.y AS spawn_y FROM vehicles v LEFT JOIN containers c ON c.owner_vehicle_id = v.id "
+    .. "c.id AS container_id, g.id AS glovebox_id, "
+    .. "s.x AS spawn_x, s.y AS spawn_y FROM vehicles v "
+    .. "LEFT JOIN containers c ON c.owner_vehicle_id = v.id AND c.kind = 'vehicle' "
+    .. "LEFT JOIN containers g ON g.owner_vehicle_id = v.id AND g.kind = 'glovebox' "
     .. "LEFT JOIN vehicle_spawns s ON s.id = v.spawn_id"
 
 local INSERT_VEHICLE = "INSERT INTO vehicles (spawn_id, type_uname, model, x, y, z, rz, "
@@ -294,8 +298,8 @@ local function applyDamage(v, d)
     end
 end
 
--- row: a vehicles table row joined with containers
-local function create(row)
+-- row: a vehicles table row joined with containers; fresh: a vehicle that has just spawned (its glovebox is stocked)
+local function create(row, fresh)
     local v = createVehicle(row.model, row.x, row.y, row.z, 0, 0, row.rz)
     if not v then
         log.event("vehicle.createFailed", { vehicle_id = row.id, uname = row.type_uname, model = row.model }, "warn")
@@ -315,6 +319,7 @@ local function create(row)
 
     local cid = row.container_id and tonumber(row.container_id) or nil
     setElementData(v, "vehicles.containerId", cid or false, "broadcast", "deny")
+    local gid = row.glovebox_id and tonumber(row.glovebox_id) or nil
 
     info[v] = {
         id = row.id,
@@ -325,6 +330,7 @@ local function create(row)
         keypad = row.keypad_code or nil, -- a walk-in door's keypad: "" installed, no code yet; "1234" its code
         trailerId = row.trailer_id and tonumber(row.trailer_id) or nil,
         containerId = cid,
+        gloveboxId = gid,
         spawnId = row.spawn_id and tonumber(row.spawn_id) or nil,
         spawnX = row.spawn_x and tonumber(row.spawn_x) or nil,
         spawnY = row.spawn_y and tonumber(row.spawn_y) or nil,
@@ -359,6 +365,26 @@ local function create(row)
                 end
             end
         )
+    end
+
+    -- a cab has a glovebox (vehicle types: glovebox = its size) reached from the front seats; its row is made like the
+    -- trunk's, and a vehicle that has just spawned gets a few small items in it
+    if vt and (vt.glovebox or 0) > 0 then
+        setElementData(v, "vehicles.glovebox", true, "broadcast", "deny")
+        if not gid then
+            db.exec(
+                "INSERT INTO containers (kind, size, owner_vehicle_id) VALUES ('glovebox', ?, ?)",
+                { vt.glovebox, row.id },
+                function(ok, _, _, insertId)
+                    if ok and insertId and isElement(v) and info[v] then
+                        info[v].gloveboxId = insertId
+                        if fresh then
+                            exports.loot:stockGlovebox(insertId, GLOVEBOX_LOOT, math.random(0, 2))
+                        end
+                    end
+                end
+            )
+        end
     end
 
     return v
@@ -425,7 +451,7 @@ local function spawnAt(s, chance, cb)
         local v = nil
         if ok and insertId then
             ctx.id = insertId
-            v = create(ctx)
+            v = create(ctx, true)
         end
         if cb then
             cb(v)
@@ -2223,6 +2249,23 @@ end, { rate = 3 })
 net.handler("holdActionCancelRequested", function(player)
     cancelHoldAction(player)
 end, { rate = 5 })
+
+-- The glovebox: the interact key from a front seat (driver or front passenger) opens the container in the dash.
+net.handler("gloveboxOpenRequested", function(player)
+    local vehicle = getPedOccupiedVehicle(player)
+    local inf = vehicle and info[vehicle]
+    if not inf or isPedDead(player) or getPedOccupiedVehicleSeat(player) > 1 then
+        return
+    end
+    if not inf.gloveboxId then
+        return toast(player, "NO_GLOVEBOX")
+    end
+    local vt = exports.data:vehicleType(inf.uname)
+    markUsed(vehicle)
+    local title = lang.formatFor(player, "%s Glovebox", vt and vt.name or lang.textFor(player, "Vehicle"))
+    exports.items:openGlovebox(player, vehicle, inf.gloveboxId, title, vt and vt.glovebox or 4)
+    log.event("vehicle.gloveboxOpened", vehicleLine(vehicle, { player = player, container_id = inf.gloveboxId }))
+end, { rate = 3 })
 
 -- closing the trunk window leaves the trunk itself open (an empty-handed tap at the rear shuts it, Case 3)
 net.handler("trunkCloseRequested", function(player)

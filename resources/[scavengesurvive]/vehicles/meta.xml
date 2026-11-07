@@ -41,6 +41,7 @@
     <export function="hasCarmourSlots" type="server"/>
     <export function="getGasBottles" type="server"/>
     <export function="hasBatteryBay" type="client"/>
+    <export function="hasGlovebox" type="client"/>
     <export function="nearbyTrailerDoor" type="client"/>
     <export function="tryTrailerDoor" type="client"/>
     <export function="tryGasMount" type="client"/>

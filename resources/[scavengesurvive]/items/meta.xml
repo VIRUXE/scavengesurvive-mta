@@ -62,6 +62,7 @@
     <export function="gasBottleKg" type="server"/>
     <export function="clearHeld" type="server"/>
     <export function="openTrunkContainer" type="server"/>
+    <export function="openGlovebox" type="server"/>
     <export function="closeTrunk" type="server"/>
     <export function="trunkViewers" type="server"/>
     <export function="closeContainerViewers" type="server"/>

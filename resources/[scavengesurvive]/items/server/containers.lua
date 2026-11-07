@@ -89,6 +89,10 @@ return function(ctx)
             if not isElement(veh) then
                 return false
             end
+            -- the glovebox is reached from a front seat of the vehicle, however far its centre is
+            if cont.seated then
+                return getPedOccupiedVehicle(player) == veh and getPedOccupiedVehicleSeat(player) <= 1
+            end
             if
                 getElementInterior(veh) ~= getElementInterior(player)
                 or getElementDimension(veh) ~= getElementDimension(player)
@@ -141,6 +145,21 @@ return function(ctx)
         return ok
     end
 
+    -- a side container with an item size limit (the glovebox takes size 1 only): true when the item may go into the
+    -- one the player has open
+    local function sizeAccepts(player, containerId, uname)
+        local cont = activeContainer[player]
+        if not cont or not cont.maxItemSize or cont.containerId ~= containerId then
+            return true
+        end
+        local t = itemType(uname)
+        if t and (tonumber(t.size) or 1) > cont.maxItemSize then
+            toast(player, "GLOVEBOX_SMALL")
+            return false
+        end
+        return true
+    end
+
     -- carried two-handed items (Wheel, boxes, panels) never go in the inventory or a bag (upstream backpack.pwn
     -- OnPlayerAddToInventory, IsItemTypeCarry); trunks and other containers still take them
     local function isCarry(uname)
@@ -172,6 +191,9 @@ return function(ctx)
         end
         local held = state.held[player]
         if held and held.id == itemId and not machineAccepts(player, containerId, held.uname, held.data) then
+            return
+        end
+        if held and held.id == itemId and not sizeAccepts(player, containerId, held.uname) then
             return
         end
         if held and held.id == itemId then
@@ -623,7 +645,7 @@ return function(ctx)
     function M.trunkViewers(vehicle)
         local n = 0
         for p, cont in pairs(activeContainer) do
-            if cont.vehicle == vehicle and isElement(p) and inReach(p, cont) then
+            if cont.vehicle == vehicle and not cont.seated and isElement(p) and inReach(p, cont) then
                 n = n + 1
             end
         end
@@ -642,6 +664,33 @@ return function(ctx)
         }
         sendInventory(player, "opened")
     end
+
+    -- the glovebox of the vehicle the player sits in, from a front seat: reach is the seat, and only items up to
+    -- GLOVEBOX_MAX_ITEM_SIZE go in (sizeAccepts)
+    local GLOVEBOX_MAX_ITEM_SIZE = 1
+    function M.openGlovebox(player, vehicle, containerId, title, size)
+        if isBadInteract(player) then
+            return
+        end
+        activeContainer[player] = {
+            vehicle = vehicle,
+            seated = true,
+            containerId = containerId,
+            title = title,
+            size = size,
+            maxItemSize = GLOVEBOX_MAX_ITEM_SIZE,
+        }
+        sendInventory(player, "opened")
+    end
+
+    -- getting out shuts the glovebox at once (inReach would only notice on the next action)
+    addEventHandler("onPlayerVehicleExit", root, function()
+        local cont = activeContainer[source]
+        if cont and cont.seated then
+            activeContainer[source] = nil
+            sendInventory(source, "viewer")
+        end
+    end)
 
     function M.closeTrunk(player)
         activeContainer[player] = nil
@@ -1196,12 +1245,15 @@ return function(ctx)
                 return
             end
             local cont = activeContainer[player]
-            if cont and cont.machine then
+            if cont and (cont.machine or cont.maxItemSize) then
                 return db.one("SELECT type_uname AS uname, data FROM items WHERE id = ?", { itemId }, function(r, c)
                     if not isElement(c.player) or not r then
                         return
                     end
-                    if machineAccepts(c.player, sideContId, r.uname, hands.decodeData(r.data)) then
+                    if
+                        machineAccepts(c.player, sideContId, r.uname, hands.decodeData(r.data))
+                        and sizeAccepts(c.player, sideContId, r.uname)
+                    then
                         executeMove(sideContId, r.uname)
                     end
                 end, { player = player })

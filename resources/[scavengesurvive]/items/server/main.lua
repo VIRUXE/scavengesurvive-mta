@@ -718,6 +718,15 @@ function openTrunkContainer(player, vehicle, containerId, trunkTitle, trunkSize)
     return true
 end
 
+-- export: the glovebox of the vehicle the player sits in (vehicles resource, interact key from a front seat)
+function openGlovebox(player, vehicle, containerId, title, size)
+    if not isElement(player) or not isElement(vehicle) then
+        return false
+    end
+    containers.openGlovebox(player, vehicle, containerId, title, size)
+    return true
+end
+
 function closeTrunk(player)
     if not isElement(player) then
         return false

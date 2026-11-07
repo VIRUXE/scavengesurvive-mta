@@ -50,6 +50,10 @@ Every vehicle belongs to a **group** (Civilian, Industrial, Medical, Military, P
 
 Walk to the rear of an unlocked vehicle and press `F` to open the trunk. It works like a [container](Containers-and-Bags): the number of slots in the table below is counted in item sizes ([Item Sizes](Item-Sizes)). A locked trunk can be broken open, see [Repairing & Locks](Repairing-and-Locks). A trunk of 0 slots means the vehicle has none.
 
+## Glovebox
+
+Cars and cab trucks have a glovebox in the dash. Sit in the driver's or front passenger's seat and press `F` to open it; getting out shuts it. It is a small [container](Containers-and-Bags) of 4 slots that takes only items of size 1 (pills, notes, a phone, a knife, a pistol), so anything bigger is refused. The vehicle's lock does not matter, you are already inside. A freshly spawned vehicle may have up to two small items in it. Bikes, boats, aircraft, tanks, trailers and the Airstream have none.
+
 ## Trailers
 
 A truck with a hitch can tow a trailer of the same size class: the small hitch (cars and pickups such as the Bobcat, Patriot or Yosemite) tows the small Trailer and Airstream, the Linerunner's large hitch tows the Articulated trailer. Back up next to the trailer and press the secondary fire key; press it again to drop it. While you drive a vehicle with a hitch the key list shows `Hitch trailer` when a free trailer is in reach (the two vehicles' lengths plus a metre, centre to centre) and `Unhitch trailer` while towing; only the driver can hitch. A trailer torn off in a crash stays off until you hitch it again, but a trailer that comes loose from an empty truck is hooked back on by itself.

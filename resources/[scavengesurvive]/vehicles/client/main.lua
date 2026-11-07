@@ -172,6 +172,11 @@ function hasBatteryBay(vehicle)
     return isElement(vehicle) and getElementData(vehicle, "vehicles.bay") == true
 end
 
+-- export: the vehicle has a glovebox in its dash (the interact key opens it from a front seat); the server publishes it
+function hasGlovebox(vehicle)
+    return isElement(vehicle) and getElementData(vehicle, "vehicles.glovebox") == true
+end
+
 -- export: the part item `uname` is a removable vehicle body part (fits a slot of some model)
 function isBodyPart(uname)
     return bodyparts.partOf(uname) ~= nil

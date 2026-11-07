@@ -135,14 +135,14 @@ CREATE TABLE IF NOT EXISTS `connection_log` (
 
 CREATE TABLE IF NOT EXISTS `containers` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `kind` enum('inventory','bag','safebox','tent','vehicle','supply') NOT NULL,
+  `kind` enum('inventory','bag','safebox','tent','vehicle','supply','glovebox') NOT NULL,
   `size` tinyint(4) NOT NULL,
   `owner_char_id` int(11) DEFAULT NULL,
   `owner_item_id` int(11) DEFAULT NULL,
   `owner_vehicle_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_containers_owner_item` (`owner_item_id`),
-  UNIQUE KEY `uq_containers_owner_vehicle` (`owner_vehicle_id`),
+  UNIQUE KEY `uq_containers_owner_vehicle_kind` (`owner_vehicle_id`,`kind`),
   KEY `ix_containers_owner_char` (`owner_char_id`),
   CONSTRAINT `fk_containers_owner_item` FOREIGN KEY (`owner_item_id`) REFERENCES `items` (`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_containers_owner_vehicle` FOREIGN KEY (`owner_vehicle_id`) REFERENCES `vehicles` (`id`) ON DELETE CASCADE

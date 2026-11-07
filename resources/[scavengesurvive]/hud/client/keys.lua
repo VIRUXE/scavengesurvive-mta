@@ -129,7 +129,15 @@ return function(ctx)
         if not guard() or listIsOpen() then
             return
         end
-        if getPedOccupiedVehicle(localPlayer) or tweaking() then
+        -- from a front seat the interact key opens the glovebox in the dash
+        local seatedIn = getPedOccupiedVehicle(localPlayer)
+        if seatedIn then
+            if getPedOccupiedVehicleSeat(localPlayer) <= 1 and exports.vehicles:hasGlovebox(seatedIn) then
+                triggerServerEvent("gloveboxOpenRequested", localPlayer)
+            end
+            return
+        end
+        if tweaking() then
             return
         end
         -- Reachable world items take the interact key before world features, crates and vehicle actions.

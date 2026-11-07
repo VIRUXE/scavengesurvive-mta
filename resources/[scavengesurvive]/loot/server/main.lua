@@ -290,6 +290,50 @@ function pickItem(tableName)
     return def.uname, medical or roll.initialItemData(def, tostring(tableName), ammoTypes, math.random)
 end
 
+-- Stocks a vehicle's glovebox container with up to `count` items rolled from tableName (small items only, the table
+-- decides); one that does not fit is skipped. Returns the number rolled; loot.gloveboxStocked follows with how many
+-- went in.
+function stockGlovebox(containerId, tableName, count)
+    containerId, count = tonumber(containerId), math.floor(tonumber(count) or 0)
+    if not containerId or count < 1 then
+        return 0
+    end
+    local rolled = {}
+    for _ = 1, count do
+        local uname, data = pickItem(tableName)
+        if uname then
+            rolled[#rolled + 1] = { uname = uname, data = data }
+        end
+    end
+    local placed = 0
+    local function place(i)
+        local r = rolled[i]
+        if not r then
+            return log.event("loot.gloveboxStocked", { container_id = containerId, rolled = #rolled, items = placed })
+        end
+        db.call("item_create_in_container", { r.uname, containerId }, function(res)
+            if res and res.ok then
+                placed = placed + 1
+                if r.data and res.payload and res.payload.item_id then
+                    db.exec("UPDATE items SET data = ? WHERE id = ?", { r.data, res.payload.item_id })
+                end
+            elseif not res or res.code ~= "CONTAINER_FULL" then
+                util.log(
+                    "loot",
+                    "warn",
+                    "glovebox %d: %s not added (%s)",
+                    containerId,
+                    r.uname,
+                    res and res.code or "db"
+                )
+            end
+            place(i + 1)
+        end)
+    end
+    place(1)
+    return #rolled
+end
+
 -- Rolls due spawns inside a box around (x, y): spawns are due when next_roll_at has passed and no item from the
 -- previous roll remains in the world; the zone must still have allowance and no player may be within
 -- world.min_player_distance of the point. Every roll of the batch goes to the DB in one loot_roll call.

@@ -72,6 +72,8 @@ return function(ctx)
         -- Vehicles
         TRUNKLOCKED = "Trunk is locked",
         NO_TRUNK = "This vehicle has no trunk",
+        NO_GLOVEBOX = "This vehicle has no glovebox",
+        GLOVEBOX_SMALL = "Only small items fit in the glovebox",
         TRUNK_SHUT = "Open the trunk first",
         DOORLOCKED = "Door is locked",
         LOCKUSECROW = "This vehicle is locked, maybe you could break it with a crowbar",
