@@ -105,6 +105,72 @@ local function drawNametags()
     end
 end
 
+-- Duty ghosts: quit spots the server pushes to staff on duty (server/ghosts.lua). Each is a translucent frozen ped
+-- plus a label; ages arrive relative to the moment the list was received so client clock skew does not matter.
+local GHOST_DISTANCE = 150
+local ghosts = {} -- { data..., ped, receivedAt }
+
+local function clearGhosts()
+    for _, g in ipairs(ghosts) do
+        if isElement(g.ped) then
+            destroyElement(g.ped)
+        end
+    end
+    ghosts = {}
+end
+
+addEventHandler("staffGhostsChanged", root, function(list)
+    clearGhosts()
+    if type(list) ~= "table" then
+        return
+    end
+    local now = getTickCount()
+    for _, d in ipairs(list) do
+        local ped = createPed(d.skin or 0, d.x, d.y, d.z, d.rz or 0)
+        if ped then
+            setElementInterior(ped, d.int or 0)
+            setElementDimension(ped, d.dim or 0)
+            setElementAlpha(ped, 120)
+            setElementFrozen(ped, true)
+            setElementCollisionsEnabled(ped, false)
+            d.ped, d.receivedAt = ped, now
+            ghosts[#ghosts + 1] = d
+        end
+    end
+end)
+
+addEventHandler("onClientResourceStop", resourceRoot, clearGhosts)
+
+local function formatAge(seconds)
+    if seconds < 60 then
+        return seconds .. "s"
+    end
+    return math.floor(seconds / 60) .. "m"
+end
+
+local function drawGhosts()
+    if #ghosts == 0 then
+        return
+    end
+    local cx, cy, cz = getCameraMatrix()
+    local interior, dimension = getElementInterior(localPlayer), getElementDimension(localPlayer)
+    local now = getTickCount()
+    for _, g in ipairs(ghosts) do
+        if (g.int or 0) == interior and (g.dim or 0) == dimension then
+            local dist = getDistanceBetweenPoints3D(cx, cy, cz, g.x, g.y, g.z)
+            if dist < GHOST_DISTANCE then
+                local sx, sy = getScreenFromWorldPosition(g.x, g.y, g.z + 1.1, 0.06)
+                if sx then
+                    local age = (g.age or 0) + math.floor((now - g.receivedAt) / 1000)
+                    local scale = math.max(0.8, 1.5 - dist / 100)
+                    local text = string.format("%s  %s ago  %s  %dm", g.name, formatAge(age), g.reason or "Quit", dist)
+                    shadowText(text, sx, sy, tocolor(140, 230, 255, 255), scale, "default-bold")
+                end
+            end
+        end
+    end
+end
+
 local function drawSpectate()
     if not isElement(spectating) then
         return
@@ -122,6 +188,7 @@ addEventHandler("onClientRender", root, function()
     if nametags then
         drawNametags()
     end
+    drawGhosts()
     if spectating then
         drawSpectate()
     end

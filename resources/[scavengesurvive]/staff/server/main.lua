@@ -27,6 +27,8 @@ local state = {
     lastKiller = {}, -- player -> name of the last player who killed them (for /report killer)
     kicked = {}, -- player -> true while a delayed kick is pending
     autoBanned = {}, -- player -> true once anticheat's ban was sent (a failed ban clears it)
+    ghosts = {}, -- quit spots shown to staff on duty (server/ghosts.lua)
+    authed = {}, -- player -> true once authenticated (only those leave a ghost)
 }
 local ctx = { db = db, net = net, util = util, logic = logic, reg = logic.newRegistry(), state = state }
 
@@ -399,6 +401,8 @@ addEventHandler("playerAuthenticated", root, function()
     end
     loadMute(source)
     modules.moderation.checkAliases(source)
+    state.authed[source] = true
+    modules.ghosts.clearFor(ctx.accountId(source), getPlayerName(source))
 end)
 
 addEventHandler("characterDied", root, function(_, _, killer)
@@ -407,8 +411,9 @@ addEventHandler("characterDied", root, function(_, _, killer)
     end
 end)
 
-for _, name in ipairs({ "moderation", "bans", "reports", "bugs", "duty", "fields" }) do
+for _, name in ipairs({ "moderation", "bans", "reports", "bugs", "ghosts", "duty", "fields" }) do
     modules[name] = loadFile("server/" .. name .. ".lua")(ctx)
+    ctx[name] = modules[name]
 end
 
 local function forget(p)
@@ -422,12 +427,14 @@ local function forget(p)
     state.lastKiller[p] = nil
     state.kicked[p] = nil
     state.autoBanned[p] = nil
+    state.authed[p] = nil
     modules.bans.release(p)
     modules.moderation.forget(p)
     modules.duty.forget(p)
 end
 
-addEventHandler("onPlayerQuit", root, function()
+addEventHandler("onPlayerQuit", root, function(quitType)
+    modules.ghosts.record(source, quitType)
     forget(source)
 end)
 
@@ -441,6 +448,7 @@ addEventHandler("onResourceStart", resourceRoot, function()
     end)
     for _, p in ipairs(getElementsByType("player")) do
         if ctx.accountId(p) then
+            state.authed[p] = true
             loadMute(p) -- mutes survive a staff restart; never re-raise playerAuthenticated (character would respawn)
         end
     end
