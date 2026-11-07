@@ -658,6 +658,9 @@ local function tickSimulation()
         if isElement(v) then
             bodySrv.scan(v, inf) -- a body part a crash knocked off drops as an item
         end
+        if isElement(v) and inf.bay and inf.battery and getVehicleOverrideLights(v) == 2 and batteryLevel(inf) <= 0 then
+            setVehicleOverrideLights(v, 1) -- a dead battery lights nothing, engine running or not
+        end
         if
             isElement(v)
             and inf.bay
@@ -939,9 +942,8 @@ net.handler("lightsToggleRequested", function(player)
     end
     local curr = getVehicleOverrideLights(v)
     local inf = info[v]
-    local engineOn = getVehicleEngineState(v)
-    if curr ~= 2 and inf and inf.bay and not engineOn then
-        -- with the engine off the lights run off the battery: none or a flat one gives nothing
+    if curr ~= 2 and inf and inf.bay then
+        -- the lights run off the battery, engine or not: none or a dead one gives nothing
         local ok, why = battery.canLight(batteryLevel(inf))
         if not ok then
             if why == "BATTERY_FLAT" then
