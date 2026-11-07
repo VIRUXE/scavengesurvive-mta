@@ -99,3 +99,74 @@ addEventHandler("onClientRender", root, function()
         end
     end
 end)
+
+-- Duty loot overlay: the loot points the server pushes to staff on duty (server/overlay.lua). A beam per point in
+-- 150 m coloured by state, and a two-line label within 40 m. /lootspots hides or shows it.
+local spots, spotsShown, spotsHinted = {}, true, false
+local SPOT_COLOURS = {
+    ready = { 80, 255, 80 },
+    cooldown = { 255, 170, 40 },
+    blocked = { 80, 220, 255 },
+    nobudget = { 160, 160, 160 },
+    disabled = { 255, 70, 70 },
+}
+
+addEventHandler("lootSpotsChanged", root, function(list)
+    spots = type(list) == "table" and list or {}
+    if #spots > 0 and not spotsHinted then
+        spotsHinted = true
+        outputChatBox(" >  Loot points shown while on duty. /lootspots hides them.", 255, 255, 0)
+    end
+end)
+
+addCommandHandler("lootspots", function()
+    spotsShown = not spotsShown
+    outputChatBox(" >  Loot points " .. (spotsShown and "shown" or "hidden"), 255, 255, 0)
+end)
+
+local function spotText(s)
+    if s.state == "ready" then
+        return "Ready to roll"
+    elseif s.state == "cooldown" then
+        local m = math.ceil(s.dueIn / 60)
+        return string.format("Cooldown %dh%02dm", math.floor(m / 60), m % 60)
+    elseif s.state == "blocked" then
+        return string.format("%d item(s) out: %s", s.outTotal, s.lying or "carried")
+    elseif s.state == "nobudget" then
+        return "Zone budget spent"
+    end
+    return "Disabled"
+end
+
+local function outlined(text, x, y, c, scale)
+    dxDrawText(text, x + 1, y + 1, x + 1, y + 1, tocolor(0, 0, 0, 210), scale, "default-bold", "center", "center")
+    dxDrawText(text, x, y, x, y, tocolor(c[1], c[2], c[3], 255), scale, "default-bold", "center", "center")
+end
+
+addEventHandler("onClientRender", root, function()
+    if #spots == 0 or not spotsShown then
+        return
+    end
+    local px, py, pz = getElementPosition(localPlayer)
+    for _, s in ipairs(spots) do
+        local dx, dy, dz = s.x - px, s.y - py, s.z - pz
+        local d2 = dx * dx + dy * dy + dz * dz
+        if d2 < 150 * 150 then
+            local c = SPOT_COLOURS[s.state] or SPOT_COLOURS.ready
+            dxDrawLine3D(s.x, s.y, s.z, s.x, s.y, s.z + 1.5, tocolor(c[1], c[2], c[3], 220), 3)
+            if d2 < 40 * 40 then
+                local sx, sy = getScreenFromWorldPosition(s.x, s.y, s.z + 1.7, 0.06)
+                if sx then
+                    local head = string.format("#%d  %s  %d%%  x%s  zone %s (%d left)", s.id, s.tbl, s.chance,
+                        s.size, s.zone, s.left)
+                    outlined(head, sx, sy, { 255, 255, 255 }, 0.9)
+                    outlined(spotText(s), sx, sy + 14, c, 0.9)
+                end
+            end
+        end
+    end
+end)
+
+addEventHandler("onClientResourceStop", resourceRoot, function()
+    spots = {}
+end)

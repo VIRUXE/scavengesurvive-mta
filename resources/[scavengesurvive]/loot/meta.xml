@@ -11,6 +11,7 @@
     <file src="shared/logic/roll.lua"/>
     <file src="shared/logic/drops.lua"/>
     <file src="server/drops.lua"/>
+    <file src="server/overlay.lua"/>
     <export function="rollNear" type="server"/>
     <export function="pickItem" type="server"/>
     <export function="dropSupply" type="server"/>

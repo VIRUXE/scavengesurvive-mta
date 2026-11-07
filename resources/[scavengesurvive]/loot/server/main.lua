@@ -375,6 +375,15 @@ function rollNear(x, y, radius, onDone)
     return true
 end
 
+local overlay = loadFile("server/overlay.lua")({
+    db = db,
+    roll = roll,
+    setting = setting,
+    allowance = function()
+        return allowance
+    end,
+})
+
 addEventHandler("onResourceStart", resourceRoot, function()
     if not db.connect("loot") then
         return
@@ -382,6 +391,7 @@ addEventHandler("onResourceStart", resourceRoot, function()
     db.settings(function(map)
         settings = map
         drops.start()
+        overlay.start()
         local perPoint, mult = setting("loot.items_per_point", 2.0), setting("loot.cap_multiplier", 0.05)
         db.exec(UPSERT_BUDGETS, { perPoint, mult }, function()
             loadAllowances()
