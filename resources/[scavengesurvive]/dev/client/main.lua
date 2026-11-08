@@ -173,7 +173,12 @@ addEventHandler("onClientPreRender", root, function(slice)
     local rad = math.rad(-flyAngle)
     local vx = forwd * math.sin(rad)
     local vy = forwd * math.cos(rad)
-    setElementVelocity(localPlayer, vx, vy, hMult)
+    -- GTA's ground physics overwrite a ped's velocity every frame, so move by position instead. The old SA-MP
+    -- velocities are per tick (~50 a second); zero the velocity so gravity does not pull against the step.
+    local x, y, z = getElementPosition(localPlayer)
+    local step = 50 * dt
+    setElementVelocity(localPlayer, 0, 0, 0)
+    setElementPosition(localPlayer, x + vx * step, y + vy * step, z + hMult * step, false)
 end)
 
 addEventHandler("onClientPlayerDamage", localPlayer, function()
