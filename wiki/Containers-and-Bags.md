@@ -36,6 +36,7 @@ Storage comes in two kinds: **bags**, which you wear on your back, and **contain
 | Daypack | bag worn on the back | 8 | 3 |
 | Small Bag | bag worn on the back | 7 | 2 |
 | Heart Shaped Box | bag worn on the back | 6 | 1 |
+| Snack Machine | container placed in the world | 20 | 20 |
 | Locker | container placed in the world | 16 | 12 |
 | Workbench | container placed in the world | 16 | 12 |
 | Large Box | container placed in the world | 12 | 6 |

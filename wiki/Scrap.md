@@ -109,20 +109,21 @@ The table lists the pieces of Scrap Metal each item yields. Many items are worth
 | [Power Supply](Power-Supply) | 1 |
 | [Radio](Radio) | 1 |
 | [Rake](Rake) | 1 |
+| [Ratchet](Ratchet) | 1 |
 | [Rockets](Rockets) | 1 |
 | [Screwdriver](Screwdriver) | 1 |
 | [Shotgun Shells (`AmmoBuck`)](Shotgun-Shells-AmmoBuck) | 1 |
 | [Shotgun Shells (`AmmoFlechette`)](Shotgun-Shells-AmmoFlechette) | 1 |
 | [Shotgun Shells (`AmmoHomeBuck`)](Shotgun-Shells-AmmoHomeBuck) | 1 |
 | [Sledgehammer](Sledgehammer) | 1 |
+| [Spanner](Spanner) | 1 |
 | [Spatula](Spatula) | 1 |
 | [Starter Motor](Starter-Motor) | 1 |
 | [Storage Unit](Storage-Unit) | 1 |
 | [Stun Gun](Stun-Gun) | 1 |
 | [Timer Device](Timer-Device) | 1 |
 | [Tool Battery](Tool-Battery) | 1 |
-| [Wrench (`Spanner`)](Wrench-Spanner) | 1 |
-| [Wrench (`Wrench`)](Wrench-Wrench) | 1 |
+| [Tyre Wrench](Tyre-Wrench) | 1 |
 <!-- /table:scrap -->
 
 ## Refining

@@ -20,9 +20,13 @@ A vehicle found in the world holds a charge of 15 to 100 %. The engine needs at 
 | Engine running, standing still | gains 2.5 % per minute |
 | Engine running, driving (above 5 km/h) | gains 10 % per minute, so an empty battery is full after about ten minutes on the road |
 
-**Taking it out:** with the bonnet open and empty hands, hold `F` for half a second. A 3 second job follows and the Car Battery is in your hands, named with its charge (*Car Battery (63%)*). If the engine was running it stops. A vehicle without a battery says so.
+A battery in the bay is **tight** (bolted, and the car can use it), **loose** (sitting there, and the car will not start until you tighten it) or missing. Nothing from the bay is dropped on the ground.
 
-**Fitting one:** hold a Car Battery at the open bonnet and press `F`, 3 seconds. A vehicle that already has one refuses it. The battery brings the charge it carries; a loose one found as loot holds 15 to 100 %, and charge is kept while a battery is carried or lies about. Swapping a flat battery for a charged one from another vehicle is the quick way to get a car going.
+**Unbolt and tighten:** hold a Ratchet at the open bonnet and hold `F`. A menu lists only what applies: *Unbolt battery* when it is tight, *Tighten battery* when it is loose. Each is a 3 second job, shorter with the Repair [skill](Skills). Unbolting leaves the battery in the bay and stops the engine if it was running. The menu waits for your click, even with one line. Empty hands, or any other tool, are told *You need a Ratchet*.
+
+**Taking it out:** only a loose battery. With empty hands, tap `F` at the open bonnet and the Car Battery goes into your hands, named with its charge (*Car Battery (63%)*). A tight battery has to be unbolted first.
+
+**Fitting one:** hold a Car Battery at the open bonnet and tap `F`. It goes into an empty slot loose and your hands are freed. Tighten it from the Ratchet menu or the car will not start. A vehicle that already has one refuses it. The battery brings the charge it carries; one found as loot holds 15 to 100 %, and charge is kept while a battery is carried. A flat battery stays flat. Swapping a flat battery for a charged one from another vehicle is the quick way to get a car going.
 
 **EMPs:** an [EMP](Explosives) going off within 12 m switches the engine off and drains the installed battery to 0 %; the headlights go out with it. The car cannot start again until a charged battery is fitted; taking the flat one out and putting it back does not restore it, and the flat charge survives a server restart.
 
@@ -30,15 +34,21 @@ A vehicle found in the world holds a charge of 15 to 100 %. The engine needs at 
 
 Every successful engine start wears the starter motor. A fresh one lasts a random 60 to 400 starts; once its life is spent the key only clicks (*The engine won't turn over: the starter motor is dead*). Battery, fuel and lights are untouched; only the start is gone. About 2 % of vehicles spawn with a dead starter, so a car that will not start with a good battery, fuel and a working engine has probably spent it.
 
-**Replacing it:** hold a Starter Motor at the open bonnet of an unlocked vehicle with the engine off and press `F`. The hold takes 6 seconds, shorter with the Repair [skill](Skills); the item is used up and the vehicle gets a fresh starter with a new random life. A vehicle whose starter still works refuses the part. There is no way to see how many starts are left: the first sign is the click.
+It is tight, loose or missing, the same way as the battery, and the two parts are independent of each other. The engine has to be off.
+
+**Unbolt and tighten:** the same Ratchet menu. *Unbolt starter motor* shows when it is tight; *Tighten starter motor* shows when it is loose. Each takes 6 seconds, shorter with the Repair [skill](Skills). Unbolting leaves the motor in the bay.
+
+**Taking it out:** tap `F` with empty hands on a loose motor. It goes into your hands and keeps the starts it had left, including a dead one (0 stays 0).
+
+**Fitting one:** hold a Starter Motor at the open bonnet and tap `F`. The starter slot has to be empty; a motor that is still in, tight or loose, has to come out first. The item is used up and the motor sits loose until you tighten it. One that was taken out goes back in with the starts it had left; one found as loot, with no life stored, rolls a fresh 60 to 400. There is no way to see how many starts are left: the first sign is the click.
 
 ## Why a car will not start
 
 The checks run in this order; the first that fails is the one you are told about:
 
-1. No battery, or a battery under 10 %.
+1. No battery, a loose battery (*Tighten the battery: the car will not start*), or a battery under 10 %.
 2. The vehicle is wrecked (300 health or less) or the tank is empty; see [Vehicles](Vehicles) and [Fuel](Fuel).
-3. The starter motor is dead.
+3. The starter motor is loose (*Tighten the starter motor: the car will not start*), missing or dead. A missing one shows the same click as a dead one.
 
 Every start that gets past the first two costs the starter motor one, even a start made just to check.
 

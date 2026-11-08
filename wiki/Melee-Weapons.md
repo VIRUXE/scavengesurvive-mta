@@ -33,7 +33,7 @@ Sharp weapons bleed, blunt weapons knock out.
 | Crowbar | 0.03 | 1.25 |
 | Sledgehammer | 0.03 | 2.9 |
 | Hammer | 0.02 | 1.3 |
-| Wrench | 0.01 | 1.2 |
+| Tyre Wrench | 0.01 | 1.2 |
 | Pan | 0.01 | 1.05 |
 | Frying Pan | 0.01 | 1.06 |
 | Dildo, Flowers | 0.01 | 0 |

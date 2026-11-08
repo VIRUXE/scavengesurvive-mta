@@ -13,7 +13,7 @@ The keys below are the defaults. The item keys (`F`, `N`, `Y`, `H`, `R`) are ord
 | Open a held bag | `F` | With a bag or safebox in your hands. A bag lying on the ground opens on a tap and is picked up on a hold. |
 | Machines | `F` | Tap opens the machine's container, hold opens its menu. See [Machines](Machines). |
 | Vehicle tools, trunk | `F` | With a vehicle tool in hand next to a vehicle, or standing behind a vehicle for its trunk. See [Repairing & Locks](Repairing-and-Locks). |
-| Bonnet, battery | `F` | With empty hands at the front of a vehicle: a tap opens or shuts the bonnet, a hold (500 ms) takes the battery out. With a Car Battery in hand, `F` fits it. See [Vehicles](Vehicles). |
+| Bonnet, battery | `F` | With empty hands at the front of a vehicle: a tap opens or shuts the bonnet, or lifts a loose battery or starter motor into your hands. With a Car Battery or Starter Motor in hand, `F` fits it loose. Hold `F` (500 ms) with a Ratchet for the engine menu: repair, and unbolt or tighten the battery and starter motor. See [Vehicles](Vehicles). |
 | Airstream door, gas mounts | `F` | At the trailer's door opens or closes it. At the A-frame: a Gas Bottle in hand goes onto a mount, empty hands take one off. See [Houses & Trailers](Houses-and-Trailers). |
 | Vehicle armour | `F` | With a defence in hand at the Airstream: starts attaching it; `F` again fixes it where the ghost lies, `N` cancels. With the Welder's torch: welds; with an Angle Grinder: grinds. See [Vehicle Armour](Vehicle-Armour). |
 | Fishing | `F` (hold) | With a fishing rod: the longer you hold, the farther the cast (up to 10 s). Press `F` again to reel in. See [Fishing](Fishing). |

@@ -2,7 +2,7 @@
 
 ![Bobcat](images/vehicles/422_bobcat.png)
 
-The Bobcat pickup is the one vehicle whose body comes apart. Its hood, tailgate, two doors and two bumpers are items: a Wrench takes them off, a crash knocks them off, and a part in hand goes back onto a Bobcat that is missing it. No other vehicle has removable parts yet.
+The Bobcat pickup is the one vehicle whose body comes apart. Its hood, tailgate, two doors and two bumpers are items: a Ratchet takes them off, a crash knocks them off, and a part in hand goes back onto a Bobcat that is missing it. No other vehicle has removable parts yet.
 
 <!-- shot:shot-bobcat-salvage -->
 
@@ -23,9 +23,9 @@ Every part is size 6 and is carried in both hands like a crate: it never goes in
 
 ## Taking a part off
 
-1. Hold a **Wrench** ([Wrench](Wrench-Wrench); the game's messages call it a Tyre Wrench).
+1. Hold a **Ratchet** ([Ratchet](Ratchet)).
 2. Stand within 1.8 m of the part. The vehicle must be unlocked, standing still, with its engine off. The key list reads `(Hold) Remove Left Door` or the part you are nearest to.
-3. Hold `F` for half a second (a tap at the bonnet is the Wrench's usual engine repair instead). A 4 second hold follows, shorter with the Repair [skill](Skills).
+3. Hold `F` for half a second (a tap at the bonnet is the Ratchet's repair of a slightly broken engine instead). A 4 second hold follows, shorter with the Repair [skill](Skills). A part that is still on the Bobcat takes the hold before the battery does, including the hood.
 
 The part lands on the ground beside its slot: a Good item if it was whole or dented, a Bad one if it hung broken. Walking more than 0.8 m, changing what you hold, getting into a vehicle or dying cancels the hold, and only one person can work on a vehicle at a time. A slot that is already empty says there is no part left there to take off.
 
@@ -33,7 +33,7 @@ The part lands on the ground beside its slot: a Good item if it was whole or den
 
 Hold the part, stand by its slot on a Bobcat and press `F` (`Install Bobcat body part` in the key list). The slot must be **empty**: to replace a dented door you take the old one off first. The 4 second hold has the same cancel rules. A Good part leaves the slot as new, a Bad part leaves it dented and hanging, but on the vehicle.
 
-A part put on by hand is only **loose**: *Body part fitted loosely, tighten it with a Wrench or it will shake off*. Hold a Wrench at it and hold `F` (`(Hold) Tighten Left Door`): 3 seconds, and *Body part tightened*. Tightening trains the Repair skill. A tightened part stays on until a Wrench takes it off or a crash does.
+A part put on by hand is only **loose**: *Body part fitted loosely, tighten it with a Ratchet or it will shake off*. Hold a Ratchet at it and hold `F` (`(Hold) Tighten Left Door`): 3 seconds, and *Body part tightened*. Tightening trains the Repair skill. A tightened part stays on until a Ratchet takes it off or a crash does.
 
 ## Loose parts shake off
 
@@ -46,6 +46,6 @@ A part that shakes off is flung ahead of the vehicle, up to 12 m, and lands as t
 
 ## Crash damage
 
-When a crash tears a part off, it drops onto the ground beside its slot as a **Bad** item, so a wreck can be stripped for parts even without a Wrench. Parts that were already missing when the vehicle spawned never drop.
+When a crash tears a part off, it drops onto the ground beside its slot as a **Bad** item, so a wreck can be stripped for parts even without a Ratchet. Parts that were already missing when the vehicle spawned never drop.
 
 See also [Vehicles](Vehicles), [Repairing & Locks](Repairing-and-Locks) and [Tools](Tools).

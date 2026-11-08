@@ -2,13 +2,15 @@
 
 Tools are items you hold to build, take down and repair things. Hold the tool and press `F` at the target; most jobs are a held `F` with a progress bar. The [Construction skill](Skills) shortens building and removal times.
 
-![Hammer](images/items/18635_gtasahammer1.png) ![Wrench](images/items/18633_gtasawrench1.png) ![Screwdriver](images/items/18644_screwdriver1.png) ![Crowbar](images/items/18634_gtasacrowbar1.png) ![Sledgehammer](images/items/19631_sledgehammer1.png) ![Lighter](images/items/19998_cutscenelighterfl.png)
+![Hammer](images/items/18635_gtasahammer1.png) ![Tyre Wrench](images/items/18633_gtasawrench1.png) ![Spanner](images/items/19627_wrench1.png) ![Ratchet](images/items/20236_ratchet.png) ![Screwdriver](images/items/18644_screwdriver1.png) ![Crowbar](images/items/18634_gtasacrowbar1.png) ![Sledgehammer](images/items/19631_sledgehammer1.png) ![Lighter](images/items/19998_cutscenelighterfl.png)
 
 | Tool | Size | Uses |
 |:--|--:|:--|
-| Hammer | 2 | Lays a [defence](Defences) flat (a floor or ramp). Pitches a [tent](Tent) (3 s). Builds a Workbench from parts on the ground, and is the tool for the Metal Panel and Gas Cylinder [Workbench](Workbench) recipes. Repairs vehicles. |
-| Screwdriver | 1 | Stands a [defence](Defences) upright (a wall). Builds furniture, machines and a Plot Pole from parts on the ground, copies keys, and is the tool for most [Workbench](Workbench) recipes (explosives, keypads, motors). Repairs vehicles. |
-| Wrench | 2 | Repairs vehicles. |
+| Hammer | 2 | Lays a [defence](Defences) flat (a floor or ramp). Pitches a [tent](Tent) (3 s). Builds a Workbench from parts on the ground, and is the tool for the Metal Panel and Gas Cylinder [Workbench](Workbench) recipes. Repairs a vehicle in the broken band (650 to 799 health). |
+| Screwdriver | 1 | Stands a [defence](Defences) upright (a wall). Builds furniture, machines and a Plot Pole from parts on the ground, copies keys, and is the tool for most [Workbench](Workbench) recipes (explosives, keypads, motors). Repairs a vehicle in the broken band (450 to 649 health). |
+| Spanner | 1 | Repairs the engine of a very broken vehicle (under 450 health): stand at the front and tap `F`. Open the bonnet first. |
+| Ratchet | 1 | Finishes an engine repair on a slightly broken vehicle (800 to 989 health). Hold `F` at the open bonnet for a menu to repair the engine, or to tighten or unbolt the battery and the starter motor. Also tightens and removes [Bobcat body parts](Bobcat-Salvage-Parts). |
+| Tyre Wrench | 2 | Takes wheels off and fits them. Also a light [melee weapon](Melee-Weapons). |
 | Crowbar | 2 | Takes down [defences](Defences) (from behind, 10 s), packs up an empty [tent](Tent) (3 s), and deconstructs things built from ground parts (25 s for the Workbench and the machines). Breaks open vehicle locks. |
 | Sledgehammer | 7 | Builds a Locker and a Large Frame from parts on the ground. Also a heavy [melee weapon](Melee-Weapons). |
 | Lighter | 1 | Lights a [campfire](Campfire-and-BBQ) (built from 3 Wood Logs), a barbecue, and a [Fireworks](Fireworks) box. |

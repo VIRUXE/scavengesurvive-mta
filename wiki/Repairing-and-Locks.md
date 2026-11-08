@@ -4,23 +4,23 @@ Tools you hold are used at a vehicle by standing next to it and pressing the int
 
 ## Repairing
 
-![Wrench](images/items/18633_gtasawrench1.png) ![Screwdriver](images/items/18644_screwdriver1.png) ![Hammer](images/items/18635_gtasahammer1.png)
+![Spanner](images/items/19627_wrench1.png) ![Screwdriver](images/items/18644_screwdriver1.png) ![Hammer](images/items/18635_gtasahammer1.png) ![Ratchet](images/items/20236_ratchet.png)
 
-Stand at the front of the vehicle with the right tool in your hands and press `F`. The bonnet opens and after 3 seconds (shorter with the Repair [skill](Skills)) the vehicle gains 150 health, up to a field-repair limit of 990 out of 1000. The tool you need depends on how damaged it is, and it changes as it heals, so you repair in stages:
+Stand at the front of the vehicle with the right tool in your hands and press `F`. The bonnet has to be open already (empty hands, a tap of `F`) and after 3 seconds (shorter with the Repair [skill](Skills)) the vehicle gains 150 health, up to a field-repair limit of 990 out of 1000. The tool you need depends on how damaged it is, and it changes as it heals, so you repair in stages:
 
 | Vehicle health | Tool |
 |:--|:--|
-| under 450 (very broken) | Wrench |
+| under 450 (very broken) | Spanner |
 | 450 to 649 | Screwdriver |
 | 650 to 799 | Hammer |
-| 800 to 989 | Wrench |
+| 800 to 989 | Ratchet |
 | 990 and over | fully repaired |
 
 The wrong tool says *You need another tool*. When you get into the driver's seat a tip tells you how broken the vehicle is. Under 450 health the engine can cut out at speed, and under 300 it will not run at all.
 
 - **Tyres**: lay a Wheel on the ground beside the vehicle, then hold a Tyre Wrench by a burst or missing tyre (not at the rear). The nearest damaged tyre is replaced and the Wheel is used up; a car with no wheels left freezes after two seconds.
 - **Headlights**: hold a Headlight at the front. A broken light is replaced and the item is used up.
-- **Battery**: with empty hands a tap of `F` at the front opens the bonnet; the battery comes out and goes in from there. See [Vehicles](Vehicles).
+- **Battery and starter motor**: with empty hands a tap of `F` at the front opens the bonnet, or lifts a loose battery or a loose starter motor into your hands. A Battery or Starter Motor in hand goes into its empty slot loose with a tap. Hold `F` with a Ratchet at the open bonnet for a menu: repair the engine, or tighten or unbolt those parts. See [Car Batteries & Starters](Car-Batteries-and-Starters).
 
 ## Locks
 

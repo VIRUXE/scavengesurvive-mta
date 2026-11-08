@@ -26,14 +26,24 @@ Hold food in your hands and press the interact key (`F`), or choose `Use` on it 
 | Ham | 6 | 6.12 | yes | yes |
 | Wrapped Meat | 4 | 6.7 | yes | yes |
 | Steak | 4 | 6.49 | yes | yes |
+| Beef Jerky | 4 | 6 | no | no |
+| Cheesy Puffs | 6 | 4 | no | no |
+| Chocolate Chip Cookies | 6 | 4 | no | no |
+| Phat Chips | 6 | 4 | no | no |
+| Twisted Pretzels | 6 | 3.5 | no | no |
+| EgoChaser Bar | 3 | 6 | no | no |
 | Fish | 4 | 4.5 | yes | yes |
 | Green Apple | 4 | 4.5 | no | no |
 | Orange | 4 | 4.5 | no | no |
 | Red Apple | 4 | 4.5 | no | no |
 | Banana | 3 | 5.5 | no | no |
 | Lemon | 4 | 4 | no | no |
+| Meteorite Bar | 3 | 5 | no | no |
+| Salted Peanuts | 3 | 5 | no | no |
+| Zebra Bar | 3 | 5 | no | no |
 | Cereal | 6 | 2.2 | no | no |
 | Cereal | 6 | 2.2 | no | no |
+| Fruit Candy | 4 | 3 | no | no |
 | Bread | 5 | 2.34 | yes | no |
 | Tomato | 3 | 3 | yes | no |
 | Cake Slice | 1 | 2.5 | yes | no |

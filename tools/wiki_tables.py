@@ -461,8 +461,9 @@ def where(d, u: str) -> str:
     for table, tbl in d.loot.items():
         total = sum(e["weight"] for e in tbl["entries"])
         mine = sum(e["weight"] for e in tbl["entries"] if e["uname"] == u)
-        if mine:
-            found.append((KINDS.index(table.partition("_")[0]), -mine / total * 100, table))
+        kind = table.partition("_")[0]
+        if mine and kind in KINDS:
+            found.append((KINDS.index(kind), -mine / total * 100, table))
     rows = [[source_label(d, table), source_where(d, table), pct(-share)] for _, share, table in sorted(found)]
     out = [md(["Source", "Where", "Share of the table"], rows, "llr") if rows else "Not found as loot.\n"]
     extras = []
