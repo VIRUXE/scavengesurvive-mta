@@ -327,6 +327,8 @@
     <file src="files/pager1.col"/>
     <file src="files/pager1.dff"/>
     <file src="files/pager1.txd"/>
+    <file src="files/paradropnondynamic.col"/>
+    <file src="files/paradropnondynamic.dff"/>
     <file src="files/particle.txd"/>
     <file src="files/pd_jail_door02.col"/>
     <file src="files/pd_jail_door02.dff"/>

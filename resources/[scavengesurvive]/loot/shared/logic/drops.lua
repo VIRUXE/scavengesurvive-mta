@@ -46,6 +46,12 @@ drops.CACHE_SIGNAL_INTERVAL_S = 200
 drops.CACHE_REFERENCE_RADIUS = 1000.0
 drops.CACHE_CLEAR_RADIUS = 500.0 -- no cache where a player is within this distance
 drops.LAND_PUSH_RADIUS = 3.0
+-- The parachute (SA-MP-only object 18849) starts 8 m above the bottom crate and falls at the same speed to 10 m
+-- under the landing spot; the drop lands, and the parachute goes, when it gets there, about 5 s after the crates
+-- touch down (supply-crate.pwn:263, :268, :321, :338-341).
+drops.PARACHUTE_OBJECT = 18849
+drops.PARACHUTE_START_Z = 8.0
+drops.PARACHUTE_END_Z = -10.0
 
 -- Per-type timer state: lastDrop (ms tick) and the randomised offset, seeded like upstream so every type is
 -- due at start (lastDrop = now - interval) with a random extra wait.
@@ -85,6 +91,12 @@ end
 function drops.descentMs(fromZ, toZ, speed)
     local dist = math.abs((fromZ or drops.DROP_HEIGHT) - (toZ or 0))
     return math.max(1000, math.floor(dist / (speed or drops.DROP_SPEED) * 1000))
+end
+
+-- From the drop's start until its parachute reaches PARACHUTE_END_Z under the landing spot at z.
+function drops.parachuteMs(z, speed)
+    local fromZ, toZ = drops.DROP_HEIGHT + drops.PARACHUTE_START_Z, z + drops.PARACHUTE_END_Z
+    return drops.descentMs(fromZ, toZ, speed)
 end
 
 -- Upstream crate contents: 4 + random(16) items for a supply crate, 22 + random(11) for a weapons cache.

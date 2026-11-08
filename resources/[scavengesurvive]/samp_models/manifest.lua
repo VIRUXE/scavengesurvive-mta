@@ -31,6 +31,7 @@ return {
     [18644] = { dff = "screwdriver1", txd = "mattextures", dist = 100 },
     [18724] = { dff = "shootlight", txd = "mattextures", dist = 100 },
     [18817] = { dff = "tube50mtsection1", txd = "mattextures", dist = 299 },
+    [18849] = { dff = "paradropnondynamic", txdModel = 2903, dist = 150 },
     [18854] = { dff = "tube100m90bend1", txd = "mattextures", dist = 299 },
     [18865] = { dff = "mobilephone1", txd = "mobilephone1", dist = 100 },
     [18875] = { dff = "pager1", txd = "pager1", dist = 100 },
