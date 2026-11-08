@@ -231,6 +231,9 @@ return function(ctx)
         if isElement(d.blip) then
             destroyElement(d.blip)
         end
+        if isElement(d.objects[1]) then
+            removeElementData(d.objects[1], "supply.dropZ")
+        end
         for _, p in ipairs(getElementsByType("player")) do
             local px, py, pz = getElementPosition(p)
             if math.abs(pz - d.z) < 5 then
@@ -271,15 +274,19 @@ return function(ctx)
             moveObject(o, ms, spec.x, spec.y, spec.z, 0, 0, 720)
         end
         local blip = createBlipAttachedTo(objects[1], 0, 2, 255, 200, 0, 255, 0, 99999)
+        -- clients hang the parachute over the bottom crate while this is set (late joiners included)
+        setElementData(objects[1], "supply.dropZ", z, "broadcast", "deny")
         inFlight = { typeIdx = typeIdx, x = x, y = y, z = z, objects = objects, blip = blip }
-        inFlight.timer = setTimer(land, ms, 1)
+        -- upstream lands the drop when its parachute finishes moving, not the crates (supply-crate.pwn:338-341)
+        local landMs = drops.parachuteMs(z, drops.DROP_SPEED)
+        inFlight.timer = setTimer(land, landMs, 1)
         triggerClientEvent(root, "supplyDropStarted", resourceRoot, objects[1], x, y, z)
         local shown = drops.announceName(t.name, rand)
         say(function(_, format, tr)
             return drops.supplyText(tr(shown), locationName or tr(drops.UNKNOWN_LOCATION), format)
         end)
         local target = string.format("%s (%s) falling to %.1f, %.1f, %.1f", t.name, locationName or "?", x, y, z)
-        util.log("loot", "info", "supply drop %s in %d s", target, ms / 1000)
+        util.log("loot", "info", "supply drop %s in %d s", target, landMs / 1000)
         return true
     end
 

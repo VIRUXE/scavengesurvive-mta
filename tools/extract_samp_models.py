@@ -131,8 +131,9 @@ def map_models_used(lua_text: str) -> list[int]:
 # swaps to (items/shared/logic/smallitems.lua, upstream core/item/locker.pwn), and the blood pool a bleeding
 # player leaves behind (character/client/blood.lua, upstream core/char/bleed.pwn); the puzzles' spark under Mt Chiliad's
 # keypad and the ranch PC's screen (world/shared/logic/puzzles.lua, upstream world/puzzles/mtchill.pwn, ranch.pwn), and
-# Area 69's main and airstrip gates (world/shared/logic/area69.lua)
-STRUCTURE_MODELS = [19477, 19087, 11730, 19836, 18724, 19475, 19313]
+# Area 69's main and airstrip gates (world/shared/logic/area69.lua), and the supply drop's parachute
+# (loot/client/main.lua, upstream core/world/supply-crate.pwn)
+STRUCTURE_MODELS = [19477, 19087, 11730, 19836, 18724, 19475, 19313, 18849]
 
 
 def all_models_used(items_path: Path, maps_dir: Path | None) -> list[int]:

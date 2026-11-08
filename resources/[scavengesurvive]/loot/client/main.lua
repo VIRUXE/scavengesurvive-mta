@@ -1,6 +1,7 @@
--- Supply drop visuals (a smoke trail on the falling crate and a smoke marker where it landed; upstream used the
--- SA-MP-only smoke object 18728, which is not in the model pack, so MTA's built-in effect replaces it) and the
--- landed crates: their label, and the interact key that opens them (upstream's SIF button next to the crate).
+-- Supply drop visuals (the parachute, a smoke trail on the falling crate and a smoke marker where it landed;
+-- upstream used the SA-MP-only smoke object 18728, which is not in the model pack, so MTA's built-in effect replaces
+-- it) and the landed crates: their label, and the interact key that opens them (upstream's SIF button next to the
+-- crate).
 local function loadFile(path)
     local f = fileOpen(path, true)
     local src = fileRead(f, fileGetSize(f))
@@ -8,6 +9,7 @@ local function loadFile(path)
     return assert(loadstring(src, "=loot/" .. path))()
 end
 local drops = loadFile("shared/logic/drops.lua")
+local models = loadstring(exports.lib:getModule("models"), "=lib/models.lua")()
 
 -- smoke_flare blows along the effect's local Y axis, so a -90 pitch points it up instead of sideways (#112)
 local FLARE_RX = -90
@@ -41,7 +43,105 @@ addEventHandler("supplyDropStarted", root, function(obj, x, y)
     end
 end)
 
+-- Parachutes ------------------------------------------------------------------------------------------------
+-- Upstream's parachute is a third object falling with the crates 8 m above the bottom one; it keeps falling
+-- after they touch down, to 10 m under the spot, and is destroyed as the drop lands (supply-crate.pwn:263-268,
+-- :321). Its model is SA-MP-only, so each client draws it: hung over the bottom crate (the server object that
+-- carries "supply.dropZ" while the drop is in the air) until the crate stops, then sent on down alone.
+
+local parachutes = {} -- bottom crate object -> { dropZ, obj, falling }
+
+local function removeParachute(crate)
+    local p = parachutes[crate]
+    parachutes[crate] = nil
+    if p and isElement(p.obj) then
+        destroyElement(p.obj)
+    end
+end
+
+-- The parachute object of `p`, made or re-modelled for the current pack; none while the pack lacks the model.
+local function placeParachute(crate, p)
+    local model = models.resolve(drops.PARACHUTE_OBJECT)
+    if isElement(p.obj) then
+        if model then
+            setElementModel(p.obj, model)
+        else
+            destroyElement(p.obj)
+            p.obj = nil
+        end
+        return
+    end
+    if not model or p.falling then
+        return
+    end
+    local x, y, z = getElementPosition(crate)
+    p.obj = createObject(model, x, y, z + drops.PARACHUTE_START_Z)
+    if p.obj then
+        setElementCollisionsEnabled(p.obj, false)
+        attachElements(p.obj, crate, 0, 0, drops.PARACHUTE_START_Z)
+    end
+end
+
+local function addParachute(crate)
+    local dropZ = isElement(crate) and tonumber(getElementData(crate, "supply.dropZ"))
+    if not dropZ or parachutes[crate] then
+        return
+    end
+    local p = { dropZ = dropZ }
+    parachutes[crate] = p
+    placeParachute(crate, p)
+    addEventHandler("onClientElementDestroy", crate, function()
+        removeParachute(source)
+    end, false)
+end
+
+-- the crates touched down: the parachute goes on alone at the drop speed to PARACHUTE_END_Z under the spot
+local function dropParachute(crate, p)
+    p.falling = true
+    if not isElement(p.obj) then
+        return
+    end
+    local x, y = getElementPosition(crate)
+    local fromZ, toZ = p.dropZ + drops.PARACHUTE_START_Z, p.dropZ + drops.PARACHUTE_END_Z
+    local ms = drops.descentMs(fromZ, toZ, drops.DROP_SPEED)
+    detachElements(p.obj, crate)
+    setElementPosition(p.obj, x, y, fromZ)
+    moveObject(p.obj, ms, x, y, toZ)
+    setTimer(removeParachute, ms, 1, crate)
+end
+
+addEventHandler("onClientPreRender", root, function()
+    for crate, p in pairs(parachutes) do
+        if not p.falling then
+            local _, _, z = getElementPosition(crate)
+            if z <= p.dropZ + 0.01 then
+                dropParachute(crate, p)
+            end
+        end
+    end
+end)
+
+addEventHandler("supplyDropStarted", root, function(obj)
+    addParachute(obj)
+end)
+
+addEventHandler("onClientResourceStart", resourceRoot, function()
+    for _, o in ipairs(getElementsByType("object", resourceRoot)) do
+        addParachute(o)
+    end
+end)
+
+-- the SA-MP model pack (re)loaded or is stopping: its ids change
+addEventHandler("sampModelsChanged", root, function()
+    for crate, p in pairs(parachutes) do
+        placeParachute(crate, p)
+    end
+end)
+
 addEventHandler("supplyCrateLanded", root, function(x, y, z)
+    for crate in pairs(parachutes) do
+        removeParachute(crate)
+    end
     effectFor(3 * 60 * 1000, x, y, z + 0.5)
 end)
 
