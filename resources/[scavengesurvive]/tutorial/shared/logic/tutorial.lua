@@ -17,16 +17,20 @@ M.DRIVEN_KMH = 5
 
 M.SPAWN = { x = 1078.36194, y = 2139.40771, z = 10.64758, rz = 180.0 }
 
--- upstream's kit: uname, position, random heading, data
+-- upstream's kit: uname, position, random heading, data. Upstream laid the tools and wheels in a line right in front
+-- of the Bobcat; here the bonnet opens with empty hands and F there would pick a tool up instead, so everything but
+-- the Satchel lies 4 m further back (KIT_SHIFT_Y), out of the pickup radius of a player at the bonnet.
+local KIT_SHIFT_Y = 4.0
 M.ITEMS = {
     { uname = "Satchel", x = 1078.70325, y = 2132.96069, z = 9.85179 },
-    { uname = "Wrench", x = 1077.57263, y = 2125.35938, z = 9.85153, spin = true },
-    { uname = "Screwdriver", x = 1076.52942, y = 2125.82959, z = 9.85156, spin = true },
-    { uname = "Hammer", x = 1074.94214, y = 2126.51489, z = 9.85160, spin = true },
-    { uname = "Wheel", x = 1073.59448, y = 2127.05786, z = 9.85164, spin = true },
-    { uname = "Wheel", x = 1073.4965, y = 2125.6582, z = 9.8516, spin = true },
-    -- a Petrol Can with 10 L: the Bobcat's tank starts all but empty
-    { uname = "GasCan", x = 1071.55, y = 2124.92, z = 9.8516, spin = true, data = { 10, "Petrol" } },
+    { uname = "Wrench", x = 1077.57263, y = 2125.35938 + KIT_SHIFT_Y, z = 9.85153, spin = true },
+    { uname = "Screwdriver", x = 1076.52942, y = 2125.82959 + KIT_SHIFT_Y, z = 9.85156, spin = true },
+    { uname = "Hammer", x = 1074.94214, y = 2126.51489 + KIT_SHIFT_Y, z = 9.85160, spin = true },
+    { uname = "Wheel", x = 1073.59448, y = 2127.05786 + KIT_SHIFT_Y, z = 9.85164, spin = true },
+    { uname = "Wheel", x = 1073.4965, y = 2125.6582 + KIT_SHIFT_Y, z = 9.8516, spin = true },
+    -- a Petrol Can with 10 L: the Bobcat's tank starts all but empty. Keyed, as vehicles reads and writes a can's
+    -- fill (data.amount); the Petrol Can holds only petrol (items/shared/logic/liquids.lua)
+    { uname = "GasCan", x = 1071.55, y = 2124.92 + KIT_SHIFT_Y, z = 9.8516, spin = true, data = { amount = 10 } },
 }
 
 M.VEHICLE = {
