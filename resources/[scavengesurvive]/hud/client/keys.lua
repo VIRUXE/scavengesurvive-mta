@@ -5,6 +5,25 @@ return function(ctx)
     local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")()
     local holdTimer = nil
     local interactHoldTimer = nil
+    local bayMenu = nil -- { vehicle, entries = { { id, label } }, index }
+    local bayKey = nil
+    -- lang:begin
+    local BAY_FOOTER = "Wheel: select    Click: confirm    Release F: close"
+    -- lang:end
+
+    local function bonnetIsOpen(veh)
+        if not isElement(veh) then
+            return false
+        end
+        if getVehicleDoorState(veh, 0) == 4 then
+            return true
+        end
+        return getVehicleDoorOpenRatio(veh, 0) > 0.5
+    end
+
+    local function closeBayMenu()
+        bayMenu = nil
+    end
 
     local function guard()
         return not (
@@ -33,6 +52,8 @@ return function(ctx)
     local VEHICLE_TOOLS = {
         Welder = true,
         Wrench = true,
+        Spanner = true,
+        Ratchet = true,
         Screwdriver = true,
         Hammer = true,
         GasCan = true,
@@ -311,7 +332,8 @@ return function(ctx)
             -- trunk: F there takes the wheel
             local onBoard = getPedContactElement(localPlayer) == nearVeh
             local isFront = not onBoard and (angle < 25 or angle > 335)
-            -- empty hands at the bonnet: a tap opens or shuts it, a hold takes the battery out (vehicles server)
+            -- empty hands at the bonnet: a tap opens or shuts it, or lifts a loose part (vehicles server). A hold
+            -- at the open bonnet asks for the ratchet menu; without a ratchet the server says so.
             if not uname and isFront and exports.vehicles:hasBatteryBay(nearVeh) then
                 blockEnterUntil = getTickCount() + TRUNK_ENTER_BLOCK_MS
                 if isTimer(interactHoldTimer) then
@@ -320,42 +342,78 @@ return function(ctx)
                 local key = string.lower(getKeyBoundToCommand("interact") or "f")
                 local startTick = getTickCount()
                 local bonnetVeh = nearVeh
+                bayKey = key
                 interactHoldTimer = setTimer(function()
                     local heldMs = getTickCount() - startTick
                     local released = not isKeyHeld(key, "interact")
-                    if released or heldMs >= 500 then
-                        killTimer(interactHoldTimer)
-                        interactHoldTimer = nil
-                        local eventName = heldMs >= 500 and "vehicleBatteryRequested" or "vehicleInteractRequested"
-                        if isElement(bonnetVeh) then
-                            triggerServerEvent(eventName, localPlayer, bonnetVeh)
-                        end
+                    if not released and heldMs < 500 then
+                        return
+                    end
+                    killTimer(interactHoldTimer)
+                    interactHoldTimer = nil
+                    if not isElement(bonnetVeh) then
+                        return
+                    end
+                    if released and heldMs < 500 then
+                        triggerServerEvent("vehicleInteractRequested", localPlayer, bonnetVeh)
+                    elseif bonnetIsOpen(bonnetVeh) then
+                        triggerServerEvent("vehicleBayMenuRequested", localPlayer, bonnetVeh)
+                    else
+                        triggerServerEvent("vehicleInteractRequested", localPlayer, bonnetVeh)
                     end
                 end, 50, 0)
                 return
             end
-            -- a Wrench at a body part: a tap is the Wrench's usual job, a hold takes the part off (vehicles server)
-            if uname == "Wrench" and exports.vehicles:bodyPartSlot(nearVeh) then
-                blockEnterUntil = getTickCount() + TRUNK_ENTER_BLOCK_MS
-                if isTimer(interactHoldTimer) then
+            -- a Ratchet at the open bonnet: a tap is the engine repair, a hold opens the bay menu.
+            -- at a body part on the side, or at the front while the bonnet is still shut: a tap is the
+            -- repair, a hold tightens or takes the part off.
+            if uname == "Ratchet" then
+                local partName, condition = exports.vehicles:bodyPartSlot(nearVeh)
+                local partOn = partName ~= nil and condition ~= "missing"
+                local atBay = isFront and bonnetIsOpen(nearVeh) and exports.vehicles:hasBatteryBay(nearVeh)
+                if atBay or partOn then
+                    blockEnterUntil = getTickCount() + TRUNK_ENTER_BLOCK_MS
+                    if isTimer(interactHoldTimer) then
+                        return
+                    end
+                    local key = string.lower(getKeyBoundToCommand("interact") or "f")
+                    local startTick = getTickCount()
+                    local partVeh = nearVeh
+                    local bayAsked = false
+                    bayKey = key
+                    closeBayMenu()
+                    interactHoldTimer = setTimer(function()
+                        local heldMs = getTickCount() - startTick
+                        local released = not isKeyHeld(key, "interact")
+                        if released then
+                            killTimer(interactHoldTimer)
+                            interactHoldTimer = nil
+                            closeBayMenu()
+                            if not bayAsked and heldMs < 500 and isElement(partVeh) then
+                                triggerServerEvent("vehicleInteractRequested", localPlayer, partVeh)
+                            end
+                            return
+                        end
+                        if heldMs < 500 then
+                            return
+                        end
+                        if not atBay then
+                            killTimer(interactHoldTimer)
+                            interactHoldTimer = nil
+                            if isElement(partVeh) then
+                                triggerServerEvent("vehiclePartRemoveRequested", localPlayer, partVeh)
+                            end
+                            return
+                        end
+                        if not bayAsked and isElement(partVeh) then
+                            -- ask once; the answer opens the list, or the server runs the only entry itself
+                            bayAsked = true
+                            bayMenu = { vehicle = partVeh, entries = {}, index = 1, pending = true }
+                            triggerServerEvent("vehicleBayMenuRequested", localPlayer, partVeh)
+                        end
+                    end, 50, 0)
                     return
                 end
-                local key = string.lower(getKeyBoundToCommand("interact") or "f")
-                local startTick = getTickCount()
-                local partVeh = nearVeh
-                interactHoldTimer = setTimer(function()
-                    local heldMs = getTickCount() - startTick
-                    local released = not isKeyHeld(key, "interact")
-                    if released or heldMs >= 500 then
-                        killTimer(interactHoldTimer)
-                        interactHoldTimer = nil
-                        local eventName = heldMs >= 500 and "vehiclePartRemoveRequested" or "vehicleInteractRequested"
-                        if isElement(partVeh) then
-                            triggerServerEvent(eventName, localPlayer, partVeh)
-                        end
-                    end
-                end, 50, 0)
-                return
             end
             local isRear = not onBoard and angle > 155 and angle < 205
             local isPart = uname and exports.vehicles:isBodyPart(uname)
@@ -581,5 +639,116 @@ return function(ctx)
             killTimer(interactHoldTimer)
             interactHoldTimer = nil
         end
+        closeBayMenu()
+    end)
+
+    addEventHandler("vehicleBayMenuShown", localPlayer, function(vehicle, entries)
+        if not bayMenu or not bayMenu.pending or not bayKey or not isKeyHeld(bayKey, "interact") then
+            closeBayMenu()
+            return
+        end
+        local list = {}
+        if type(entries) == "table" then
+            for _, entry in ipairs(entries) do
+                if type(entry) == "table" and entry.id then
+                    list[#list + 1] = { id = entry.id, label = tostring(entry.label or entry.id) }
+                end
+            end
+        end
+        if #list < 1 or not isElement(vehicle) then
+            closeBayMenu()
+            return
+        end
+        bayMenu = { vehicle = vehicle, entries = list, index = 1 }
+    end)
+
+    local function confirmBayMenu()
+        local menu = bayMenu
+        if not menu or not menu.entries or not menu.entries[1] then
+            return
+        end
+        local entry = menu.entries[menu.index] or menu.entries[1]
+        local veh = menu.vehicle
+        closeBayMenu()
+        if entry and entry.id and isElement(veh) then
+            triggerServerEvent("vehicleBayActionRequested", localPlayer, veh, entry.id)
+        end
+    end
+
+    -- While the list is up, the wheel moves the line and the click confirms it. Both are swallowed so the
+    -- camera does not zoom and the player does not punch.
+    addEventHandler("onClientKey", root, function(button, press)
+        local menu = bayMenu
+        if not menu or not menu.entries or not menu.entries[1] then
+            return
+        end
+        local n = #menu.entries
+        if button == "mouse_wheel_up" or button == "mouse_wheel_down" then
+            cancelEvent()
+            if press then
+                if button == "mouse_wheel_up" then
+                    menu.index = menu.index - 1
+                    if menu.index < 1 then
+                        menu.index = n
+                    end
+                else
+                    menu.index = menu.index % n + 1
+                end
+            end
+        elseif button == "mouse1" then
+            cancelEvent()
+            if press then
+                confirmBayMenu()
+            end
+        end
+    end)
+
+    addEventHandler("onClientRender", root, function()
+        local menu = bayMenu
+        if not menu or not menu.entries or not menu.entries[1] or not ctx.draw or not ctx.canvas then
+            return
+        end
+        local canvas, c = ctx.canvas, ctx.c
+        local n = #menu.entries
+        local rowH, width = 13, 220
+        local y = 268
+        local height = 8 + n * rowH + 14
+        local left = canvas.x(c, 320 - width / 2, "center")
+        local top = canvas.y(c, y)
+        dxDrawRectangle(left, top, canvas.len(c, width), canvas.len(c, height), tocolor(0, 0, 0, 170))
+        for i, entry in ipairs(menu.entries) do
+            local selected = i == menu.index
+            if selected then
+                dxDrawRectangle(
+                    left + canvas.len(c, 2),
+                    top + canvas.len(c, 4 + (i - 1) * rowH),
+                    canvas.len(c, width - 4),
+                    canvas.len(c, rowH),
+                    tocolor(232, 232, 144, 45)
+                )
+            end
+            ctx.draw.text({
+                text = entry.label,
+                x = 320,
+                y = y + 4 + (i - 1) * rowH,
+                lx = 0.24,
+                ly = 1.15,
+                colour = selected and tocolor(232, 232, 144, 255) or tocolor(255, 255, 255, 255),
+                align = "center",
+                anchor = "center",
+                outline = 1,
+            })
+        end
+        ctx.draw.text({
+            text = lang.text(BAY_FOOTER),
+            x = 320,
+            y = y + 6 + n * rowH,
+            lx = 0.18,
+            ly = 0.95,
+            colour = tocolor(232, 232, 144, 255),
+            align = "center",
+            anchor = "center",
+            outline = 1,
+        })
     end)
 end

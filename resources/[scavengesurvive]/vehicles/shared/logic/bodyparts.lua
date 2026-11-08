@@ -88,7 +88,7 @@ function M.nearestSlot(model, lx, ly)
     return best
 end
 
--- A part fitted by hand sits loose until a Wrench secures it: driving shakes it off. Above LOOSE_KMH it comes off with
+-- A part fitted by hand sits loose until a Ratchet secures it: driving shakes it off. Above LOOSE_KMH it comes off with
 -- a chance per second that grows with speed; braking hard (LOOSE_BRAKE_KMH lost within a second) throws off every one.
 M.LOOSE_KMH = 15
 M.LOOSE_BRAKE_KMH = 25

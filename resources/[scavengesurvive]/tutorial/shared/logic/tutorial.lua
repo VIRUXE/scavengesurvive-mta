@@ -24,6 +24,8 @@ local KIT_SHIFT_Y = 4.0
 M.ITEMS = {
     { uname = "Satchel", x = 1078.70325, y = 2132.96069, z = 9.85179 },
     { uname = "Wrench", x = 1077.57263, y = 2125.35938 + KIT_SHIFT_Y, z = 9.85153, spin = true },
+    { uname = "Spanner", x = 1078.7, y = 2125.35938 + KIT_SHIFT_Y, z = 9.85153, spin = true },
+    { uname = "Ratchet", x = 1079.8, y = 2125.35938 + KIT_SHIFT_Y, z = 9.85153, spin = true },
     { uname = "Screwdriver", x = 1076.52942, y = 2125.82959 + KIT_SHIFT_Y, z = 9.85156, spin = true },
     { uname = "Hammer", x = 1074.94214, y = 2126.51489 + KIT_SHIFT_Y, z = 9.85160, spin = true },
     { uname = "Wheel", x = 1073.59448, y = 2127.05786 + KIT_SHIFT_Y, z = 9.85164, spin = true },

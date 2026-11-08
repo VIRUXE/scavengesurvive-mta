@@ -60,15 +60,19 @@ M.BUTTON_LABELS = {
 
 -- ctx = {
 --   spawned, uiOpen, knockedOut, hudOff, driver, hitch ("hitch" / "unhitch"), nearTrunk,
---   nearBonnet ("open" / "closed": an engine bonnet in reach with empty hands), nearPlayer,
+--   nearBonnet ("open" / "closed" / "pickup_battery" / "pickup_starter": an engine bonnet in reach with empty hands,
+--     the last two when a loose part lies in the bay), nearPlayer,
 --   nearItem (a loose world item in pickup reach),
 --   nearInspectable (the uname of a nearby sign, plant pot or body),
 --   cuffedNearby, hasBag,
 --   glovebox (seated in a front seat of a vehicle with a glovebox: "Open glovebox"),
 --   nearFeature ("ladder" / "zipline" / "ladder_on" / "zipline_on" / "button:<label>"), nearCrate ("supply" / "cache" / "dumpster"),
 --   nearDoor ("open" / "closed" / "locked": a walk-in vehicle door in reach, the towable Airstream's),
---   bodyPart ("(Hold) Remove Left Door" / "(Hold) Tighten Left Door", already in the reader's language: a Wrench in
+--   bodyPart ("(Hold) Remove Left Door" / "(Hold) Tighten Left Door", already in the reader's language: a Ratchet in
 --     hand at a vehicle body part that is still on),
+--   bayMenu ("(Hold) Engine menu", already in the reader's language: a Ratchet in hand at the open bonnet),
+--   fitPart ("Fit battery" / "Fit starter motor", already in the reader's language: that part in hand at the open
+--     bonnet with its slot empty),
 --   installPart (a held body part is at its matching empty vehicle slot),
 --   held = false | { uname, category, isWeapon },
 --   nearCooker,                           -- uncooked food in hand next to a campfire or barbecue (#95): "Cook"
@@ -189,9 +193,17 @@ function M.lines(ctx, keys)
         local doorText = { open = tr("Close door"), locked = tr("Door locked") }
         add("interact", doorText[ctx.nearDoor] or tr("Open door"))
     end
-    -- a Wrench at a body part of a vehicle (vehicles bodyparts, not an upstream line): a hold takes the part off
+    -- a Ratchet at a body part of a vehicle (vehicles bodyparts, not an upstream line): a hold takes the part off
     if ctx.bodyPart and not busyF then
         add("interact", ctx.bodyPart)
+    end
+    -- a Ratchet at the open bonnet: hold F opens the bay menu (engine repair, battery, starter motor)
+    if ctx.bayMenu and not busyF then
+        add("interact", ctx.bayMenu)
+    end
+    -- a Battery or Starter Motor in hand at the open bonnet: F fits it into the empty slot
+    if ctx.fitPart and not busyF then
+        add("interact", ctx.fitPart)
     end
     -- a machine (items, #145): upstream's button "Press F to access machine / Hold F to open menu"; a Crowbar in
     -- hand takes it down instead (Deconstruct, a port deviation: upstream left it a TODO)
@@ -208,7 +220,12 @@ function M.lines(ctx, keys)
         add("interact", tr("Open Trunk"), "trunk")
     end
     if ctx.nearBonnet and not busyF then
-        add("interact", ctx.nearBonnet == "open" and tr("Close Bonnet") or tr("Open Bonnet"))
+        local bonnetText = {
+            open = tr("Close Bonnet"),
+            pickup_battery = tr("Take out battery"),
+            pickup_starter = tr("Take out starter motor"),
+        }
+        add("interact", bonnetText[ctx.nearBonnet] or tr("Open Bonnet"))
     end
     local h = ctx.held
     if not h then

@@ -133,7 +133,8 @@ end
 -- has a level rolled from its id (15..100), so it is the same every time it is looked at and never drains lying about
 function M.carBatteryCharge(itemId, data)
     local stored = tonumber(unwrap(data).charge)
-    if stored then
+    -- 0 is a flat battery and must stay flat; only a missing charge rolls one
+    if stored ~= nil then
         return math.max(0, math.min(100, stored))
     end
     local s = (math.floor(tonumber(itemId) or 0) * 2654435761) % 2147483647

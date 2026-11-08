@@ -10,7 +10,7 @@ M.HEALTH_MIN = 250
 M.HEALTH_CHUNK_1 = 300 -- wrecked, won't start
 M.HEALTH_CHUNK_2 = 450 -- broken, screwdriver / stall chance
 M.HEALTH_CHUNK_3 = 650 -- a bit broken, hammer
-M.HEALTH_CHUNK_4 = 800 -- slightly broken, wrench
+M.HEALTH_CHUNK_4 = 800 -- slightly broken, ratchet
 M.HEALTH_MAX = 990 -- maximum field repair health
 
 -- Calculate angle relative to vehicle heading.
@@ -124,19 +124,19 @@ end
 function M.repairToolForHealth(health)
     local h = health or 1000
     if h < M.HEALTH_CHUNK_2 then
-        return "Wrench"
+        return "Spanner"
     elseif h < M.HEALTH_CHUNK_3 then
         return "Screwdriver"
     elseif h < M.HEALTH_CHUNK_4 then
         return "Hammer"
     elseif h < M.HEALTH_MAX then
-        return "Wrench"
+        return "Ratchet"
     end
     return nil -- fully repaired
 end
 
 -- Help tip for a driver getting in (upstream key-actions.pwn _ShowRepairTip): bands inclusive at the top, and
--- anything up to HEALTH_MAX counts as slightly broken; nil above it. Upstream pairs "very broken" with the wrench.
+-- anything up to HEALTH_MAX counts as slightly broken; nil above it. Very broken takes a Spanner, slightly broken a Ratchet.
 function M.repairTipKey(health)
     local h = health or 1000
     if h <= M.HEALTH_CHUNK_2 then

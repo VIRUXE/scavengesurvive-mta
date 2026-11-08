@@ -272,6 +272,7 @@ INSERT INTO item_types (uname,name,model,size,max_hitpoints,category,category_da
 ('RadioPole','Receiver',3221,3,3,'generic',NULL),
 ('Rake','Rake',18890,6,6,'weapon','{"animSet": "Heavy", "baseWeapon": 0, "bleed": 0.18, "knockout": 1.3, "melee": true}'),
 ('RanchHat','Rancher''s Hat',20006,1,5,'generic',NULL),
+('Ratchet','Ratchet',20236,1,1,'generic',NULL),
 ('RawFish','Fish',19630,9,9,'food','{"biteValue": 4.5, "canCook": true, "canRawInfect": true, "destroyOnEnd": true, "maxBites": 4}'),
 ('RedApple','Red Apple',19575,1,1,'food','{"biteValue": 4.5, "canCook": false, "canRawInfect": false, "destroyOnEnd": true, "maxBites": 4}'),
 ('RedPanel','Red Panel',11713,5,5,'generic',NULL),

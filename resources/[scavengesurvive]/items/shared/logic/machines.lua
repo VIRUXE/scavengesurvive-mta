@@ -112,6 +112,7 @@ M.SCRAP = {
     Ammo308 = 1,
     Sledgehammer = 1,
     Spanner = 1,
+    Ratchet = 1,
     OilCan = 2,
     BigSword = 1,
     Spatula = 1,

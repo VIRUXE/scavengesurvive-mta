@@ -21,7 +21,8 @@ function M.spawnLife(rng)
     return M.freshLife(rng)
 end
 
--- nil (a row from before starter motors were tracked) counts as fresh
+-- nil (a row from before starter motors were tracked, or a tight motor whose life was never rolled) counts as fresh.
+-- 0 is a dead motor that is still in the bay. An empty slot is a bay state, not a nil life.
 function M.isBad(life)
     return life ~= nil and life <= 0
 end

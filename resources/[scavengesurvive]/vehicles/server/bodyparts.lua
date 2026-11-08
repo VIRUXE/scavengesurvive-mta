@@ -1,5 +1,5 @@
 -- Removable body parts (doors, bonnet, boot, bumpers). A part fitted by hand sits loose and is shaken off by driving;
--- a Wrench secures it, and a Wrench takes a secured one off. A part a crash knocked off lands on the ground as a Bad
+-- a Ratchet secures it, and a Ratchet takes a secured one off. A part a crash knocked off lands on the ground as a Bad
 -- item. The slots per model are shared/logic/bodyparts.lua.
 local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")()
 return function(ctx)
@@ -196,7 +196,7 @@ return function(ctx)
 
     local WRENCH_ANIM = { "BOMBER", "BOM_Plant_Loop" }
 
-    -- A held part goes into the empty slot it belongs to, loose: a Wrench has to secure it.
+    -- A held part goes into the empty slot it belongs to, loose: a Ratchet has to secure it.
     function M.install(player, vehicle, held)
         local modelId, slot, good = bp.partOf(held.uname)
         if not modelId or ctx.activeActions[player] or M.busy(vehicle) then
@@ -253,7 +253,7 @@ return function(ctx)
         hold(player, vehicle, slot, held, lang.textFor(player, "Fitting body part"), HOLD_MS, nil, ready, commit)
     end
 
-    -- Wrench on a loose part: tighten it, it no longer shakes off.
+    -- Ratchet on a loose part: tighten it, it no longer shakes off.
     local function secure(player, vehicle, slot, held)
         local function ready()
             local inf = ctx.info[vehicle]
@@ -285,7 +285,7 @@ return function(ctx)
         )
     end
 
-    -- Wrench on a secured part: unbolt it, it lands beside the slot as a Good or a Bad part item.
+    -- Ratchet on a secured part: unbolt it, it lands beside the slot as a Good or a Bad part item.
     local function unbolt(player, vehicle, slot, held, modelId)
         local function ready()
             local inf = ctx.info[vehicle]
@@ -344,10 +344,10 @@ return function(ctx)
         )
     end
 
-    -- Hold F with a Wrench at a part: a loose one is tightened, a secured one is taken off.
+    -- Hold F with a Ratchet at a part: a loose one is tightened, a secured one is taken off.
     function M.remove(player, vehicle)
         local held = exports.items:getHeld(player)
-        if not held or held.uname ~= "Wrench" then
+        if not held or held.uname ~= "Ratchet" then
             return ctx.toast(player, "PART_WRENCH")
         end
         if ctx.activeActions[player] or M.busy(vehicle) then

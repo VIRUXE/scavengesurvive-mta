@@ -380,7 +380,7 @@ local function lookedAtVehicle(maxDistance)
     return nil
 end
 
--- a Wrench in hand next to a vehicle body part that is still on: what F held does ("Tighten Left Door" for a part
+-- a Ratchet in hand next to a vehicle body part that is still on: what F held does ("Tighten Left Door" for a part
 -- fitted loose, "Remove Left Door" for a secured one), else nil
 -- the vehicles resource's body part slot names (bodyparts.lua) as the hint shows them
 -- lang:begin
@@ -394,8 +394,45 @@ local BODY_PART_NAMES = {
 }
 -- lang:end
 
+-- the open bonnet the local player is standing at, if any (same front cone as the interact key)
+local function openBonnetVehicle()
+    if getPedOccupiedVehicle(localPlayer) then
+        return nil
+    end
+    local px, py, pz = getElementPosition(localPlayer)
+    local best, bestDist = nil, 5.5
+    for _, veh in ipairs(getElementsByType("vehicle", root, true)) do
+        if getPedContactElement(localPlayer) ~= veh and exports.vehicles:hasBatteryBay(veh) then
+            local vx, vy, vz = getElementPosition(veh)
+            local dist = getDistanceBetweenPoints3D(px, py, pz, vx, vy, vz)
+            if dist < bestDist then
+                best, bestDist = veh, dist
+            end
+        end
+    end
+    if not best then
+        return nil
+    end
+    local vx, vy = getElementPosition(best)
+    local _, _, vrz = getElementRotation(best)
+    local rad = math.rad(vrz or 0)
+    local dx, dy = px - vx, py - vy
+    local localX = dx * math.cos(rad) + dy * math.sin(rad)
+    local localY = -dx * math.sin(rad) + dy * math.cos(rad)
+    local angle = (math.deg(math.atan2(localX, localY)) + 360) % 360
+    if angle >= 25 and angle <= 335 then
+        return nil
+    end
+    local open = getVehicleDoorState(best, 0) == 4 or getVehicleDoorOpenRatio(best, 0) > 0.5
+    return open and best or nil
+end
+
 local function bodyPartHint(held)
-    if not held or held.uname ~= "Wrench" then
+    if not held or held.uname ~= "Ratchet" then
+        return nil
+    end
+    -- the front of the car is the bay menu; body-part holds stay on the sides
+    if openBonnetVehicle() then
         return nil
     end
     local veh = lookedAtVehicle(5.5)
@@ -405,6 +442,41 @@ local function bodyPartHint(held)
             local part = lang.text(BODY_PART_NAMES[name] or (name:gsub("(%l)(%u)", "%1 %2")))
             return loose and lang.format("(Hold) Tighten %s", part) or lang.format("(Hold) Remove %s", part)
         end
+    end
+    return nil
+end
+
+-- a Ratchet at the open bonnet: hold F opens the bay menu
+local function bayMenuHint(held)
+    if not held or held.uname ~= "Ratchet" or not openBonnetVehicle() then
+        return nil
+    end
+    -- a lone entry is named (the hold runs it once confirmed); several are just the menu
+    local labels = exports.vehicles:bayMenuLabels(openBonnetVehicle())
+    if labels and #labels == 1 then
+        return lang.format("(Hold) %s", lang.text(labels[1]))
+    end
+    return lang.text("(Hold) Engine menu")
+end
+
+-- a Battery or a Starter Motor in hand at the open bonnet: F fits it into its empty slot
+local function fitPartHint(held)
+    if not held or (held.uname ~= "Battery" and held.uname ~= "StarterMotor") then
+        return nil
+    end
+    local veh = openBonnetVehicle()
+    if not veh then
+        return nil
+    end
+    local battery, starter = exports.vehicles:bayStates(veh)
+    if not battery then
+        return nil
+    end
+    if held.uname == "Battery" and battery == 0 then
+        return lang.text("Fit battery")
+    end
+    if held.uname == "StarterMotor" and starter == 0 then
+        return lang.text("Fit starter motor")
     end
     return nil
 end
@@ -448,7 +520,18 @@ local function nearBonnetHint(held)
     if angle >= 25 and angle <= 335 then
         return nil
     end
-    return getVehicleDoorOpenRatio(nearVeh, 0) > 0.5 and "open" or "closed"
+    if getVehicleDoorOpenRatio(nearVeh, 0) <= 0.5 then
+        return "closed"
+    end
+    -- empty hands at the open bonnet lift a loose battery or a loose starter motor
+    local battery, starter = exports.vehicles:bayStates(nearVeh)
+    if battery == 1 then
+        return "pickup_battery"
+    end
+    if starter == 1 then
+        return "pickup_starter"
+    end
+    return "open"
 end
 
 -- a bag or box in reach: true, or "fixed" for one that is never picked up (the snack machine), else false
@@ -494,6 +577,8 @@ local function drawKeyActions(driver)
         nearContainer = nearContainerHint(),
         carmour = carmourHint(held),
         bodyPart = bodyPartHint(held),
+        bayMenu = bayMenuHint(held),
+        fitPart = fitPartHint(held),
         installPart = installPartHint(held),
         cuffedNearby = not held and hasCuffedPlayerNearby() or false,
         hasHolster = getElementData(localPlayer, "items.holster") ~= false,
@@ -652,4 +737,7 @@ loadFile("client/keys.lua", "=hud/keys.lua")({
         return state.held
     end,
     hasPlayerNearby = hasPlayerNearby,
+    canvas = canvas,
+    c = c,
+    draw = draw,
 })

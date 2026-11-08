@@ -15,6 +15,7 @@
     <file src="shared/logic/vehicle.lua"/>
     <file src="shared/logic/battery.lua"/>
     <file src="shared/logic/starter.lua"/>
+    <file src="shared/logic/bay.lua"/>
     <file src="shared/logic/fuel-pumps.lua"/>
     <file src="shared/logic/overheat.lua"/>
     <file src="shared/logic/carmour.lua"/>
@@ -44,6 +45,8 @@
     <export function="hasCarmourSlots" type="server"/>
     <export function="getGasBottles" type="server"/>
     <export function="hasBatteryBay" type="client"/>
+    <export function="bayStates" type="client"/>
+    <export function="bayMenuLabels" type="client"/>
     <export function="hasGlovebox" type="client"/>
     <export function="nearbyTrailerDoor" type="client"/>
     <export function="tryTrailerDoor" type="client"/>

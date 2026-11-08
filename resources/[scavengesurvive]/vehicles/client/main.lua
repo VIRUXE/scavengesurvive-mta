@@ -14,6 +14,13 @@ do
     fileClose(f)
     bodyparts = assert(loadstring(src, "=vehicles/bodyparts.lua"))()
 end
+local bay
+do
+    local f = fileOpen("shared/logic/bay.lua", true)
+    local src = fileRead(f, fileGetSize(f))
+    fileClose(f)
+    bay = assert(loadstring(src, "=vehicles/bay.lua"))()
+end
 local activeAction = nil
 local lastPos = nil
 
@@ -170,6 +177,34 @@ end
 -- export: the vehicle has an engine under a bonnet (a battery to take or fit); the server publishes it
 function hasBatteryBay(vehicle)
     return isElement(vehicle) and getElementData(vehicle, "vehicles.bay") == true
+end
+
+-- export: the engine bay's part states (0 missing, 1 loose, 2 tight) as battery, starter; nil without a bay.
+-- The server publishes them as battery * 10 + starter (vehicles.bayState).
+function bayStates(vehicle)
+    if not hasBatteryBay(vehicle) then
+        return nil
+    end
+    local packed = getElementData(vehicle, "vehicles.bayState")
+    if type(packed) ~= "number" then
+        return nil
+    end
+    return math.floor(packed / 10), packed % 10
+end
+
+-- export: the English labels of what the Ratchet menu at this vehicle's open bonnet would list right now (the same
+-- entries the server builds: bay.menuEntries), in menu order; nil without a bay.
+function bayMenuLabels(vehicle)
+    local battery, starter = bayStates(vehicle)
+    if not battery then
+        return nil
+    end
+    local labels = {}
+    local entries = bay.menuEntries(vlogic.repairToolForHealth(getElementHealth(vehicle)), battery, starter)
+    for i, entry in ipairs(entries) do
+        labels[i] = entry.label
+    end
+    return labels
 end
 
 -- export: the vehicle has a glovebox in its dash (the interact key opens it from a front seat); the server publishes it
