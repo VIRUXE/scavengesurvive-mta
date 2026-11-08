@@ -130,8 +130,8 @@ local SELECT_COOLED_SPAWNS = SELECT_SPAWNS
 local COOL_SPAWN = "INSERT INTO vehicle_spawn_state (spawn_id, next_roll_at) "
     .. "VALUES (?, DATE_ADD(NOW(), INTERVAL ? SECOND)) ON DUPLICATE KEY UPDATE next_roll_at = VALUES(next_roll_at)"
 
-local SELECT_BUDGET = "SELECT cap, remainder, (SELECT COUNT(*) FROM vehicles WHERE transient = 0) AS alive FROM world_budget "
-    .. "WHERE category = 'vehicles' AND zone = 'all'"
+local SELECT_BUDGET = "SELECT cap, remainder, (SELECT COUNT(*) FROM vehicles WHERE transient = 0) AS alive "
+    .. "FROM world_budget WHERE category = 'vehicles' AND zone = 'all'"
 
 local UPSERT_BUDGET = "INSERT INTO world_budget (category, zone, cap, remainder, allowance) "
     .. "VALUES ('vehicles', 'all', ?, 0, 0) ON DUPLICATE KEY UPDATE cap = VALUES(cap), remainder = 0"
@@ -2593,17 +2593,11 @@ function spawnVehicle(player, query)
     return true, t.uname
 end
 
-function getVehicleFuel(vehicle)
-    local i = info[vehicle]
-    return i and i.fuel or 0
-end
-
-function setVehicleFuel(vehicle, amount)
-    local i = info[vehicle]
 -- The tutorial's vehicle: a transient row (INSERT_TRANSIENT) in a private dimension, kept out of the flush, the budget
 -- and the next start. spec = { uname, x, y, z, rz, dimension, health, fuel, damage = {panels, doors, lights, tires},
--- loot = { table, count } }; cb(vehicle or nil) when it exists. Its trunk is stocked once the container row is in.
-function spawnTransientVehicle(spec, cb)
+-- loot = { table, count }, owner = element }. vehicleTransientSpawned(owner) is raised on the vehicle once it exists
+-- (an export cannot carry a callback); its trunk is stocked once the container row is in.
+function spawnTransientVehicle(spec)
     local t = type(spec) == "table" and exports.data:vehicleType(spec.uname)
     if not t or not types then
         return false, t and "NOT_READY" or "UNKNOWN_TYPE"
@@ -2624,7 +2618,7 @@ function spawnTransientVehicle(spec, cb)
     }
     db.exec(INSERT_TRANSIENT, params, function(ok, _, _, insertId)
         if not ok or not insertId then
-            return cb and cb(nil)
+            return util.log("vehicles", "warn", "transient %s not inserted", t.uname)
         end
         local row = {
             id = insertId,
@@ -2645,8 +2639,7 @@ function spawnTransientVehicle(spec, cb)
         }
         local v = create(row, true)
         if not v then
-            db.exec("DELETE FROM vehicles WHERE id = ?", { insertId })
-            return cb and cb(nil)
+            return db.exec("DELETE FROM vehicles WHERE id = ?", { insertId })
         end
         info[v].transient = true
         setElementDimension(v, tonumber(spec.dimension) or 0)
@@ -2668,9 +2661,7 @@ function spawnTransientVehicle(spec, cb)
             end
             stock()
         end
-        if cb then
-            cb(v)
-        end
+        triggerEvent("vehicleTransientSpawned", v, spec.owner)
     end, spec)
     return true
 end
@@ -2688,6 +2679,13 @@ function destroyTransientVehicle(vehicle)
     return true
 end
 
+function getVehicleFuel(vehicle)
+    local i = info[vehicle]
+    return i and i.fuel or 0
+end
+
+function setVehicleFuel(vehicle, amount)
+    local i = info[vehicle]
     if i and isElement(vehicle) then
         i.fuel = math.max(0, tonumber(amount) or 0)
         setElementData(vehicle, "vehicles.fuel", i.fuel, "broadcast", "deny")

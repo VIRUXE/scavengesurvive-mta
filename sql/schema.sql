@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS `accounts` (
   `warnings` tinyint(4) NOT NULL DEFAULT 0,
   `muted` tinyint(1) NOT NULL DEFAULT 0,
   `mute_until` datetime DEFAULT NULL,
+  `tutorial_done` tinyint(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_accounts_name` (`name`),
   KEY `ix_accounts_serial` (`last_serial`)

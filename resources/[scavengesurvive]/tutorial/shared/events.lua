@@ -6,9 +6,13 @@ addEvent("itemMoved", false)
 addEvent("itemHolstered", false)
 addEvent("characterItemsDropped", false)
 addEvent("playerLoggedOut", false)
+addEvent("vehicleTransientSpawned", false)
+
+-- client to server (handlers registered with net.handler)
+addEvent("tutorialStateRequested", true) -- the client script started: is this player in the tutorial?
 
 -- server to client / client-local
-addEvent("tutorialOffered", true) -- true while a fresh character may start the tutorial, false when it may not
+addEvent("tutorialCompleted", true)
 addEvent("tutorialStarted", true)
 addEvent("tutorialEnded", true)
 addEvent("inventoryOpened", true)

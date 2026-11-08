@@ -3,10 +3,17 @@ local M = {}
 
 M.DIMENSION_BASE = 61000
 M.DIMENSION_COUNT = 1000
-M.OFFER_MS = 300000 -- a fresh character may start the tutorial for this long, or until it first moves an item
 M.TIP_MS = 20000
 M.INTRO_MS = 25000
 M.DRIVE_TIP_DELAY_MS = 21000 -- after the Bobcat's repair tip (20 s) has run its course
+M.CHECK_MS = 1000
+M.VEHICLE_RETRY_MS = 10000 -- a Bobcat asked for and not there after this long is asked for again
+
+-- The tutorial is complete when the Bobcat is repaired (the "a bit broken" band, vehicles HEALTH_CHUNK_3), refuelled
+-- past what it started with, running, and driven at a walking pace or faster.
+M.REPAIRED_HEALTH = 650
+M.REFUELLED_LITRES = 1.0
+M.DRIVEN_KMH = 5
 
 M.SPAWN = { x = 1078.36194, y = 2139.40771, z = 10.64758, rz = 180.0 }
 
@@ -48,12 +55,22 @@ function M.damage(rng)
     return { panels = panels, doors = doors, lights = lights, tires = M.VEHICLE.tires }
 end
 
--- Upstream's strings carry SA-MP codes and name /exit, which MTA's console takes for "quit": `~>~` (an arrow glyph)
--- becomes ">>", `~n~` a line break, `#RRGGBB` goes, and /exit becomes /tutorial (which toggles the tutorial).
+-- Upstream's strings carry SA-MP codes: `~>~` (an arrow glyph) becomes ">>", `~n~` a line break and `#RRGGBB` goes.
+-- They also name /exit (MTA's console takes that for "quit"; the tutorial cannot be left before it is completed), so a
+-- sentence naming /exit is dropped; the goal replaces it.
 function M.clean(text)
     text = tostring(text or "")
-    text = text:gsub("~>~", ">>"):gsub("~n~", "\n"):gsub("#%x%x%x%x%x%x", ""):gsub("/exit", "/tutorial")
+    text = text:gsub("~>~", ">>"):gsub("~n~", "\n"):gsub("#%x%x%x%x%x%x", "")
+    text = text:gsub("%s*[^%.!]*/exit[^%.!]*[%.!]", "")
     return (text:gsub("^%s+", ""):gsub("%s+$", ""))
+end
+
+-- true when the vehicle and its driver meet the completion conditions (see REPAIRED_HEALTH)
+function M.completed(health, fuel, engineOn, kmh)
+    return engineOn == true
+        and (tonumber(health) or 0) >= M.REPAIRED_HEALTH
+        and (tonumber(fuel) or 0) > M.REFUELLED_LITRES
+        and (tonumber(kmh) or 0) >= M.DRIVEN_KMH
 end
 
 -- The key of the tip an item move earns: (from, to) as itemMoved reports them, containerKind the kind of the

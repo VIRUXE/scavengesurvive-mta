@@ -11,7 +11,8 @@ end
 local logic = loadFile("shared/logic/tutorial.lua")
 
 -- lang:begin
-local PROMPT = "Want to try the game first? Type /tutorial to play the tutorial!"
+local GOAL = "To leave the tutorial, repair the Bobcat, fill its tank and drive it."
+local COMPLETE = "Tutorial complete! Type /tutorial to leave it."
 -- lang:end
 
 -- upstream's textdraw boxes on its 640x448 screen: key, x, left edge y, right edge, centred
@@ -19,12 +20,12 @@ local LABELS = {
     { key = "TUTORKEYSPR", x = 390, y = 140, right = 480 },
     { key = "TUTORWATCHI", x = 8, y = 250, right = 158 },
     { key = "TUTORHPAPEN", x = 390, y = 20, right = 480 },
-    { key = "TUTOREXITCM", x = 484, y = 280, right = 630 },
+    { goal = true, x = 484, y = 280, right = 630 }, -- where upstream said "type /exit": what leaves the tutorial
 }
 local BOX = tocolor(0, 0, 0, 100)
 local WHITE = tocolor(255, 255, 255, 255)
 
-local offered, active, invOpen, lastClose = false, false, false, -10000
+local active, done, invOpen, lastClose = false, false, false, -10000
 
 local function language()
     return getElementData(localPlayer, "auth.lang") or "en"
@@ -45,26 +46,29 @@ local function box(text, left, top, right, align)
 end
 
 addEventHandler("onClientRender", root, function()
-    if offered then
-        box(lang.text(PROMPT), 210, 300, 430, "center")
-    end
     if active and not invOpen then
         for _, label in ipairs(LABELS) do
-            box(logic.clean(exports.data:t(language(), label.key)), label.x, label.y, label.right)
+            local text
+            if label.goal then
+                text = lang.text(done and COMPLETE or GOAL)
+            else
+                text = logic.clean(exports.data:t(language(), label.key))
+            end
+            box(text, label.x, label.y, label.right)
         end
     end
 end)
 
-addEventHandler("tutorialOffered", root, function(on)
-    offered = on == true
+addEventHandler("tutorialStarted", root, function()
+    active, done, invOpen = true, false, false
 end)
 
-addEventHandler("tutorialStarted", root, function()
-    offered, active, invOpen = false, true, false
+addEventHandler("tutorialCompleted", root, function()
+    done = true
 end)
 
 addEventHandler("tutorialEnded", root, function()
-    active, invOpen = false, false
+    active, done, invOpen = false, false, false
     exports.ui:listClose()
     exports.ui:tipHide()
 end)
@@ -97,4 +101,8 @@ addEventHandler("uiListActionsOpened", root, function(listId)
     if active and listId == "inventory" then
         say("TUTORITMOPT")
     end
+end)
+
+addEventHandler("onClientResourceStart", resourceRoot, function()
+    triggerServerEvent("tutorialStateRequested", localPlayer)
 end)

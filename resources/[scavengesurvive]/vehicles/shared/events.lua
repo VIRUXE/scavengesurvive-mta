@@ -1,6 +1,7 @@
 -- server-local (triggered and handled on one side, or between resources)
 addEvent("vehiclesSpawned", false)
 addEvent("vehicleRefillSpawned", false)
+addEvent("vehicleTransientSpawned", false) -- a spawnTransientVehicle vehicle exists (source); arg: its owner
 
 -- client to server (handlers registered with net.handler)
 addEvent("engineToggleRequested", true)
