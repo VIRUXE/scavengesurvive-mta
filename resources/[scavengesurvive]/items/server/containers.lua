@@ -491,6 +491,8 @@ return function(ctx)
                 payload.trunkContainerId = side.containerId
                 payload.containerWorldItemId = not side.carryable and not side.takeOnly and side.worldItemId or false
                 payload.takeOnly = side.takeOnly or nil
+                -- a bag or box lying on the ground: a hold of the interact key picks it up (the tutorial's tip)
+                payload.carryable = side.carryable and side.worldItemId and true or nil
             end
             local byId = {}
             local function target(r)

@@ -27,6 +27,7 @@ return {
     ["<Empty>"] = "<Kosong>",
     ["A door only goes on the trailer's door"] = "Pintu hanya bisa dipasang di pintu trailer",
     ["A lock and chain only fits a vehicle without doors, use a Locksmith Kit"] = "Gembok dan rantai hanya cocok untuk kendaraan tanpa pintu, pakai Peralatan Tukang Kunci",
+    ["A tap on [F] opens a bag lying on the ground; hold [F] to pick it up."] = "Tekan [F] sekali untuk membuka tas yang tergeletak di tanah; tahan [F] untuk mengambilnya.",
     ["A welded panel will not come off with a crowbar, grind it off with an Angle Grinder"] = "Panel yang dilas tidak bisa dicongkel dengan linggis, gerinda dengan Gerinda",
     Accelerometer = "Akselerometer",
     Accept = "Terima",

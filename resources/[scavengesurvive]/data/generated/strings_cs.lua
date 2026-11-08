@@ -27,6 +27,7 @@ return {
     ["<Empty>"] = "<Prázdné>",
     ["A door only goes on the trailer's door"] = "Dveře patří jen na dveře přívěsu",
     ["A lock and chain only fits a vehicle without doors, use a Locksmith Kit"] = "Zámek s řetězem pasuje jen na vozidlo bez dveří, použij Zámečnickou sadu",
+    ["A tap on [F] opens a bag lying on the ground; hold [F] to pick it up."] = "Klepnutím na [F] otevřeš tašku ležící na zemi; podržením [F] ji sebereš.",
     ["A welded panel will not come off with a crowbar, grind it off with an Angle Grinder"] = "Přivařený panel páčidlem nesundáš, odbrus ho Úhlovou bruskou",
     Accelerometer = "Akcelerometr",
     Accept = "Přijmout",

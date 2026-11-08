@@ -27,6 +27,7 @@ return {
     ["<Empty>"] = "<Vide>",
     ["A door only goes on the trailer's door"] = "Une porte ne se monte que sur la porte de la remorque",
     ["A lock and chain only fits a vehicle without doors, use a Locksmith Kit"] = "Une chaîne et cadenas ne convient qu'à un véhicule sans portes, utilisez un Kit de serrurier",
+    ["A tap on [F] opens a bag lying on the ground; hold [F] to pick it up."] = "Un appui sur [F] ouvre un sac posé au sol ; maintenez [F] pour le ramasser.",
     ["A welded panel will not come off with a crowbar, grind it off with an Angle Grinder"] = "Un panneau soudé ne s'enlève pas avec un Pied-de-biche, meulez-le avec une Meuleuse d'angle",
     Accelerometer = "Accéléromètre",
     Accept = "Accepter",

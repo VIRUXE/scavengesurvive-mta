@@ -27,6 +27,7 @@ return {
     ["<Empty>"] = "<Vazio>",
     ["A door only goes on the trailer's door"] = "Uma porta só vai na porta do trailer",
     ["A lock and chain only fits a vehicle without doors, use a Locksmith Kit"] = "Cadeado e corrente só servem em veículo sem portas, use um Kit de chaveiro",
+    ["A tap on [F] opens a bag lying on the ground; hold [F] to pick it up."] = "Um toque em [F] abre uma mochila no chão; segure [F] para pegá-la.",
     ["A welded panel will not come off with a crowbar, grind it off with an Angle Grinder"] = "Um painel soldado não sai com pé de cabra, corte com uma Esmerilhadeira",
     Accelerometer = "Acelerômetro",
     Accept = "Aceitar",

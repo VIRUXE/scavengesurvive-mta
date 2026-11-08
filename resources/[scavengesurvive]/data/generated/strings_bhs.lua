@@ -27,6 +27,7 @@ return {
     ["<Empty>"] = "<Prazno>",
     ["A door only goes on the trailer's door"] = "Vrata idu samo na vrata prikolice",
     ["A lock and chain only fits a vehicle without doors, use a Locksmith Kit"] = "Lanac s katancem staje samo na vozilo bez vrata, koristi bravarski pribor",
+    ["A tap on [F] opens a bag lying on the ground; hold [F] to pick it up."] = "Kratki pritisak na [F] otvara torbu koja leži na tlu; drži [F] da je podigneš.",
     ["A welded panel will not come off with a crowbar, grind it off with an Angle Grinder"] = "Zavarena ploča neće ići pajserom, odbrusi je brusilicom",
     Accelerometer = "Akcelerometar",
     Accept = "Prihvati",

@@ -27,6 +27,7 @@ return {
     ["<Empty>"] = "<Пусто>",
     ["A door only goes on the trailer's door"] = "Дверь ставится только на дверной проём прицепа",
     ["A lock and chain only fits a vehicle without doors, use a Locksmith Kit"] = "Цепь с замком подходит только транспорту без дверей, используйте Набор слесаря",
+    ["A tap on [F] opens a bag lying on the ground; hold [F] to pick it up."] = "Короткое нажатие [F] открывает сумку, лежащую на земле; удерживайте [F], чтобы подобрать её.",
     ["A welded panel will not come off with a crowbar, grind it off with an Angle Grinder"] = "Приваренную панель ломом не снять, срежьте её Болгаркой",
     Accelerometer = "Акселерометр",
     Accept = "Принять",

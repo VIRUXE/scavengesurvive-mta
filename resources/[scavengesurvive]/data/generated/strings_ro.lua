@@ -27,6 +27,7 @@ return {
     ["<Empty>"] = "<Gol>",
     ["A door only goes on the trailer's door"] = "O ușă se pune doar în locul ușii remorcii",
     ["A lock and chain only fits a vehicle without doors, use a Locksmith Kit"] = "Un lacăt cu lanț se potrivește doar unui vehicul fără uși, folosește o trusă de lăcătuș",
+    ["A tap on [F] opens a bag lying on the ground; hold [F] to pick it up."] = "O apăsare scurtă pe [F] deschide un rucsac de pe jos; ține apăsat [F] ca să-l ridici.",
     ["A welded panel will not come off with a crowbar, grind it off with an Angle Grinder"] = "Un panou sudat nu se desprinde cu o rangă, taie-l cu un flex",
     Accelerometer = "Accelerometru",
     Accept = "Acceptă",

@@ -13,6 +13,7 @@ local logic = loadFile("shared/logic/tutorial.lua")
 -- lang:begin
 local GOAL = "To leave the tutorial, repair the Bobcat, fill its tank and drive it."
 local COMPLETE = "Tutorial complete! Type /tutorial to leave it."
+local BAG_ON_GROUND = "A tap on [F] opens a bag lying on the ground; hold [F] to pick it up."
 -- lang:end
 
 -- The HUD's own canvas (ui): 640x480 units scaled by screenH/480, right-hand elements anchored to the right edge.
@@ -77,12 +78,32 @@ local function targetOf(step, c, sw)
     return { x = canvas.x(c, 33), y = canvas.y(c, 338), w = canvas.len(c, 108), h = canvas.len(c, 89) }
 end
 
+-- Wrapped on spaces only: dxDrawText's own word break also breaks after "/", splitting "/tutorial".
+local function wrap(text, width, scale, font)
+    local lines = {}
+    for paragraph in (text .. "\n"):gmatch("(.-)\n") do
+        local line = ""
+        for word in paragraph:gmatch("%S+") do
+            local candidate = line == "" and word or (line .. " " .. word)
+            if line ~= "" and dxGetTextWidth(candidate, scale, font) > width then
+                lines[#lines + 1] = line
+                line = word
+            else
+                line = candidate
+            end
+        end
+        lines[#lines + 1] = line
+    end
+    return table.concat(lines, "\n"), #lines
+end
+
 local function textBox(c, text)
     local scale = canvas.textScale(c, 1.2, 1)
     local w = canvas.len(c, BOX_W)
     local pad = canvas.len(c, PAD)
-    local _, h = dxGetTextSize(text, w - 2 * pad, scale, "default-bold", true)
-    h = (h or 0) + 2 * pad
+    local n
+    text, n = wrap(text, w - 2 * pad, scale, "default-bold")
+    local h = n * dxGetFontHeight(scale, "default-bold") + 2 * pad
     return {
         w = w,
         h = h,
@@ -100,7 +121,7 @@ local function textBox(c, text)
                 "left",
                 "top",
                 false,
-                true
+                false -- already wrapped
             )
         end,
     }
@@ -187,6 +208,8 @@ addEventHandler("inventoryOpened", localPlayer, function(p)
     invOpen = true
     if not p.trunk then
         say("TUTORINTINV")
+    elseif p.carryable then
+        exports.ui:tipShow(lang.text(BAG_ON_GROUND), false, logic.TIP_MS)
     end
 end)
 
