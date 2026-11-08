@@ -381,6 +381,23 @@ addEventHandler("onResourceStop", resourceRoot, function()
     tick.flushAll(true)
 end)
 
+-- The tutorial ended: its character is already retired in the database (tutorial_cleanup); drop it from memory and
+-- start the player on a new one, as upstream's PlayerCreateNewCharacter does.
+function restartCharacter(player)
+    local accountId = isElement(player) and exports.auth:getAccountId(player)
+    if not accountId or state.creating[player] then
+        return false
+    end
+    local st = state.byPlayer[player]
+    if st then
+        state.byId[st.id] = nil
+        state.byPlayer[player] = nil
+    end
+    clearStatuses(player, true)
+    createAndSpawn(player, accountId, survival.NEW)
+    return true
+end
+
 function getCharacterId(player)
     local st = state.byPlayer[player]
     return st and st.id or false

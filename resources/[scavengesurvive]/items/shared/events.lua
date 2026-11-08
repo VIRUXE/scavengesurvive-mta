@@ -1,6 +1,7 @@
 -- server-local (triggered and handled on one side, or between resources)
 addEvent("itemCreated", false)
 addEvent("itemMoved", false)
+addEvent("itemHolstered", false) -- a held item put on the holster (tutorial tip)
 addEvent("itemPickupAttempted", false) -- cancellable: anticheat vetoes the pickup of a hacker trap
 addEvent("itemDestroyed", false)
 addEvent("itemUseAttempted", false)

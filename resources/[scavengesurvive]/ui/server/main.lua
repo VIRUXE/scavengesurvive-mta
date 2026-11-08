@@ -1,7 +1,8 @@
 -- Server side of the help tip (client/tip.lua): resources call exports.ui:showTip(player, text, footer, ms) and
 -- it reaches only players with /tooltips on (auth, accounts.tooltips), as upstream's ShowHelpTip does.
-function showTip(player, text, footer, ms)
-    if not isElement(player) or not exports.auth:tooltipsOn(player) then
+-- force: the tutorial's tips reach a player whatever /tooltips says
+function showTip(player, text, footer, ms, force)
+    if not isElement(player) or not (force or exports.auth:tooltipsOn(player)) then
         return false
     end
     triggerClientEvent(player, "helpTipShown", player, tostring(text), footer or false, tonumber(ms) or 0)

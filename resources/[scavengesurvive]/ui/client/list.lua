@@ -110,6 +110,7 @@ return function(ctx)
             end
             state.options = dialog.new(state.base.id, row.label, rows, optionButtons())
             state.options.rowId = row.id
+            triggerEvent("uiListActionsOpened", root, state.base.id, row.id)
         else
             triggerEvent("uiListActionSelected", root, state.base.id, row.id, "select")
         end

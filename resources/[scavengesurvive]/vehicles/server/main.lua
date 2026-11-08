@@ -109,6 +109,12 @@ local INSERT_VEHICLE = "INSERT INTO vehicles (spawn_id, type_uname, model, x, y,
     .. "health, fuel, locked, damage, key_code, trailer_id, battery, battery_since, starter) "
     .. "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 
+-- A tutorial vehicle (spawnTransientVehicle): a real row, so its trunk is a container like any other, but marked
+-- transient so it is never flushed, never counts toward the world budget and is deleted on every start.
+local INSERT_TRANSIENT = "INSERT INTO vehicles (spawn_id, type_uname, model, x, y, z, rz, health, fuel, locked, "
+    .. "damage, battery, battery_since, starter, left_spawn, transient) "
+    .. "VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, 100, ?, ?, 1, 1)"
+
 local SELECT_SPAWNS = "SELECT id, x, y, z, rz, group_name, type_name, categories, sizes "
     .. "FROM vehicle_spawns WHERE enabled = 1"
 
@@ -124,7 +130,7 @@ local SELECT_COOLED_SPAWNS = SELECT_SPAWNS
 local COOL_SPAWN = "INSERT INTO vehicle_spawn_state (spawn_id, next_roll_at) "
     .. "VALUES (?, DATE_ADD(NOW(), INTERVAL ? SECOND)) ON DUPLICATE KEY UPDATE next_roll_at = VALUES(next_roll_at)"
 
-local SELECT_BUDGET = "SELECT cap, remainder, (SELECT COUNT(*) FROM vehicles) AS alive FROM world_budget "
+local SELECT_BUDGET = "SELECT cap, remainder, (SELECT COUNT(*) FROM vehicles WHERE transient = 0) AS alive FROM world_budget "
     .. "WHERE category = 'vehicles' AND zone = 'all'"
 
 local UPSERT_BUDGET = "INSERT INTO world_budget (category, zone, cap, remainder, allowance) "
@@ -395,7 +401,13 @@ local function forget(v)
 end
 
 local function count()
-    return util.tableCount(info)
+    local n = 0
+    for _, i in pairs(info) do
+        if not i.transient then
+            n = n + 1
+        end
+    end
+    return n
 end
 
 -- Rolls one spawn point (a vehicle_spawns row) with the given per-point chance. Returns true when a vehicle is
@@ -582,6 +594,8 @@ local function refillTick()
 end
 
 local function loadOrRoll()
+    -- a tutorial vehicle left by a crash goes first (its trunk and contents cascade)
+    db.exec("DELETE FROM vehicles WHERE transient = 1", {})
     db.query(SELECT_VEHICLES, {}, function(rows)
         if not rows then
             return
@@ -618,7 +632,7 @@ local function flushAll()
     local rows = {}
     local leaveRadius = setting("vehicles.leave_radius", 100)
     for v, i in pairs(info) do
-        if isElement(v) then
+        if isElement(v) and not i.transient then
             local x, y, z = getElementPosition(v)
             local _, _, rz = getElementRotation(v)
             -- the first time a vehicle is driven away from its point, the point becomes free and cools down
@@ -2586,6 +2600,94 @@ end
 
 function setVehicleFuel(vehicle, amount)
     local i = info[vehicle]
+-- The tutorial's vehicle: a transient row (INSERT_TRANSIENT) in a private dimension, kept out of the flush, the budget
+-- and the next start. spec = { uname, x, y, z, rz, dimension, health, fuel, damage = {panels, doors, lights, tires},
+-- loot = { table, count } }; cb(vehicle or nil) when it exists. Its trunk is stocked once the container row is in.
+function spawnTransientVehicle(spec, cb)
+    local t = type(spec) == "table" and exports.data:vehicleType(spec.uname)
+    if not t or not types then
+        return false, t and "NOT_READY" or "UNKNOWN_TYPE"
+    end
+    local params = {
+        t.uname,
+        t.model,
+        spec.x,
+        spec.y,
+        spec.z,
+        spec.rz or 0,
+        spec.health or vlogic.HEALTH_MAX,
+        math.min(tonumber(spec.fuel) or 0, t.maxFuel or 0),
+        spec.damage and toJSON(spec.damage, true):sub(2, -2) or nil,
+        unixNow(),
+        starter.freshLife(math.random),
+        n = 11,
+    }
+    db.exec(INSERT_TRANSIENT, params, function(ok, _, _, insertId)
+        if not ok or not insertId then
+            return cb and cb(nil)
+        end
+        local row = {
+            id = insertId,
+            type_uname = t.uname,
+            model = t.model,
+            x = spec.x,
+            y = spec.y,
+            z = spec.z,
+            rz = spec.rz or 0,
+            health = params[7],
+            fuel = params[8],
+            locked = 0,
+            damage = params[9],
+            battery = 100,
+            battery_since = params[10],
+            starter = params[11],
+            left_spawn = 1,
+        }
+        local v = create(row, true)
+        if not v then
+            db.exec("DELETE FROM vehicles WHERE id = ?", { insertId })
+            return cb and cb(nil)
+        end
+        info[v].transient = true
+        setElementDimension(v, tonumber(spec.dimension) or 0)
+        log.event("vehicle.spawnedTransient", vehicleLine(v, { uname = t.uname, dim = spec.dimension }))
+        local loot, tries = spec.loot, 0
+        if loot then
+            -- the trunk's container row is inserted by create(); wait for its id
+            local function stock()
+                tries = tries + 1
+                if not isElement(v) or not info[v] then
+                    return
+                end
+                if info[v].containerId then
+                    return exports.loot:stockGlovebox(info[v].containerId, loot[1], loot[2])
+                end
+                if tries < 20 then
+                    setTimer(stock, 250, 1)
+                end
+            end
+            stock()
+        end
+        if cb then
+            cb(v)
+        end
+    end, spec)
+    return true
+end
+
+-- Removes a transient vehicle, its row and (by cascade) its trunk and glovebox.
+function destroyTransientVehicle(vehicle)
+    local i = isElement(vehicle) and info[vehicle]
+    if not i or not i.transient then
+        return false
+    end
+    db.exec("DELETE FROM vehicles WHERE id = ? AND transient = 1", { i.id })
+    log.event("vehicle.removed", vehicleLine(vehicle, { uname = i.uname, reason = "tutorial" }))
+    forget(vehicle)
+    destroyElement(vehicle)
+    return true
+end
+
     if i and isElement(vehicle) then
         i.fuel = math.max(0, tonumber(amount) or 0)
         setElementData(vehicle, "vehicles.fuel", i.fuel, "broadcast", "deny")

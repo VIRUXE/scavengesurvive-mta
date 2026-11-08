@@ -6,6 +6,7 @@ addEvent("characterDied", false)
 addEvent("characterDeathLogged", false)
 addEvent("characterStatsChanged", false)
 addEvent("characterItemsDropped", false)
+addEvent("tutorialCharacterDied", false) -- the tutorial character would have died; the tutorial resource ends it
 addEvent("itemCreated", false) -- items' event, triggered by death.lua for the body (#139)
 
 -- client to server (handlers registered with net.handler)

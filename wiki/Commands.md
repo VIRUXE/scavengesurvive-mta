@@ -11,6 +11,7 @@ See [Account & Login](Account-and-Login).
 | `/changepass <old> <new>` | Changes your account password (4 to 32 characters). |
 | `/lang <code>` | Sets your language: `en`, `es`, `fr`, `pt`, `ptbr`, `ru`, `ro`, `id`, `bhs` or `cs`. Saved on your account. |
 | `/tooltips` | Turns the help tips on or off (see [HUD](HUD)). Saved on your account. |
+| `/tutorial` | A new character, before it has picked anything up, starts the tutorial: a private room with a tool kit, a Satchel, a Petrol Can and a damaged Bobcat, and a tip for each thing you try. Type it again to leave; leaving, dying or quitting deletes the kit and you start over as a new character. |
 | `/welcome` | Shows the welcome window again. |
 
 ## Character

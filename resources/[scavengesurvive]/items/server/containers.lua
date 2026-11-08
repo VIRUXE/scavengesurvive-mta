@@ -216,7 +216,7 @@ return function(ctx)
             end
             if res and res.ok then
                 hands.setHeld(c.player, nil)
-                triggerEvent("itemMoved", c.player, c.itemId, "held", "container")
+                triggerEvent("itemMoved", c.player, c.itemId, "held", "container", containerId)
                 if activeContainer[c.player] then
                     sendInventory(c.player)
                 end
@@ -409,6 +409,7 @@ return function(ctx)
                     end
                     c.heldItem.data = hands.decodeData(c.heldItem.data)
                     hands.setGear(c.player, "holster", c.heldItem)
+                    triggerEvent("itemHolstered", c.player, c.heldItem.id)
                     local swId = res.payload and res.payload.swapped_id
                     if swId then
                         db.one(

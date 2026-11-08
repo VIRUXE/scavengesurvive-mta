@@ -356,6 +356,7 @@ CREATE TABLE IF NOT EXISTS `vehicles` (
   `battery` float DEFAULT NULL,
   `battery_since` int(10) unsigned DEFAULT NULL,
   `starter` smallint(5) unsigned DEFAULT NULL,
+  `transient` tinyint(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
   KEY `ix_vehicles_spawn` (`spawn_id`),
   KEY `fk_vehicles_trailer` (`trailer_id`),
@@ -2513,6 +2514,21 @@ BEGIN
     COMMIT;
     SELECT 1 AS ok, 'OK' AS code, NULL AS payload;
   END IF;
+END//
+
+CREATE OR REPLACE PROCEDURE `tutorial_cleanup`(IN p_char_id INT, IN p_dimension INT)
+BEGIN
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
+  SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+  START TRANSACTION;
+  
+  
+  DELETE FROM items WHERE holder_char_id = p_char_id;
+  DELETE i FROM items i JOIN containers c ON c.id = i.container_id WHERE c.owner_char_id = p_char_id;
+  DELETE FROM items WHERE dimension = p_dimension AND x IS NOT NULL;
+  UPDATE characters SET alive = 0, died_at = IFNULL(died_at, NOW()) WHERE id = p_char_id;
+  COMMIT;
+  SELECT 1 AS ok, 'OK' AS code, JSON_OBJECT() AS payload;
 END//
 
 CREATE OR REPLACE PROCEDURE `vehicle_flush`(IN p_rows JSON)

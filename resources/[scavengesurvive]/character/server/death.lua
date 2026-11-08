@@ -71,6 +71,11 @@ return function(ctx)
         if not st or st.dead or getElementData(player, "auth.reauthProtection") or ctx.onDuty(player) then
             return false
         end
+        -- the tutorial's character never dies for real: its resource ends the tutorial (kit, vehicle, new character)
+        if getElementData(player, "tutorial.active") == true then
+            triggerEvent("tutorialCharacterDied", player, cause)
+            return false
+        end
         st.dead, st.hp = true, 0
         if state.clearStatuses then
             state.clearStatuses(player, not silent)
