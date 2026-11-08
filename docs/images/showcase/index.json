@@ -25,14 +25,9 @@
     "source": "Discord #updates, Scavenge & Survive, 2026-11-07"
   },
   "key-art": {
-    "caption": "Scavenge and Survive MTA key art by KingSergio: loot, craft, survive",
+    "caption": "Scavenge & Survive Reborn key art: a survivor at a supply drop on the Verdant Meadows airfield",
     "file": "key-art.png",
-    "source": "Discord #general, .kingsergio, 2026-11-02"
-  },
-  "key-art-alt": {
-    "caption": "Alternate key art by KingSergio",
-    "file": "key-art-alt.png",
-    "source": "Discord #general, .kingsergio, 2026-11-02"
+    "source": "Generated with ChatGPT from in-game reference renders (docs/images/keyart-refs), 2026-11-08"
   },
   "workshop-machines": {
     "caption": "A workshop corner: machines, gas bottles and a generator",

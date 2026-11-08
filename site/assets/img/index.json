@@ -4121,34 +4121,17 @@
   }
  },
  "showcase/key-art": {
-  "caption": "Scavenge and Survive MTA key art by KingSergio: loot, craft, survive",
+  "caption": "Scavenge & Survive Reborn key art: a survivor at a supply drop on the Verdant Meadows airfield",
   "sizes": {
    "1920": {
-    "bytes": 277842,
+    "bytes": 319270,
     "file": "showcase/key-art.webp",
     "h": 941,
     "w": 1672
    },
    "960": {
-    "bytes": 132830,
+    "bytes": 134430,
     "file": "showcase/key-art-960.webp",
-    "h": 540,
-    "w": 960
-   }
-  }
- },
- "showcase/key-art-alt": {
-  "caption": "Alternate key art by KingSergio",
-  "sizes": {
-   "1920": {
-    "bytes": 166240,
-    "file": "showcase/key-art-alt.webp",
-    "h": 941,
-    "w": 1672
-   },
-   "960": {
-    "bytes": 88476,
-    "file": "showcase/key-art-alt-960.webp",
     "h": 540,
     "w": 960
    }
