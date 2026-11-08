@@ -39,6 +39,23 @@
    }
   }
  },
+ "hero/key-art": {
+  "caption": "A survivor at a supply drop on the Verdant Meadows airfield",
+  "sizes": {
+   "1920": {
+    "bytes": 346134,
+    "file": "hero/key-art.webp",
+    "h": 941,
+    "w": 1672
+   },
+   "960": {
+    "bytes": 132400,
+    "file": "hero/key-art-960.webp",
+    "h": 540,
+    "w": 960
+   }
+  }
+ },
  "hero/sandstorm": {
   "caption": "Fort Defiance around Grove Street in a sandstorm",
   "sizes": {
