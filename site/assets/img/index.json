@@ -3950,6 +3950,142 @@
    }
   }
  },
+ "showcase/airstream-boarded": {
+  "caption": "An Airstream with boarded windows, gas bottles and a generator",
+  "sizes": {
+   "1920": {
+    "bytes": 52620,
+    "file": "showcase/airstream-boarded.webp",
+    "h": 1080,
+    "w": 1920
+   },
+   "960": {
+    "bytes": 21684,
+    "file": "showcase/airstream-boarded-960.webp",
+    "h": 540,
+    "w": 960
+   }
+  }
+ },
+ "showcase/airstream-fortified": {
+  "caption": "The Airstream welded shut with scrap panels, a generator and welder beside it",
+  "sizes": {
+   "1920": {
+    "bytes": 68274,
+    "file": "showcase/airstream-fortified.webp",
+    "h": 900,
+    "w": 1600
+   },
+   "960": {
+    "bytes": 34008,
+    "file": "showcase/airstream-fortified-960.webp",
+    "h": 540,
+    "w": 960
+   }
+  }
+ },
+ "showcase/boat-cabin": {
+  "caption": "The Marquis yacht's deck, down to the cabin hatch",
+  "sizes": {
+   "1920": {
+    "bytes": 26978,
+    "file": "showcase/boat-cabin.webp",
+    "h": 750,
+    "w": 1000
+   },
+   "960": {
+    "bytes": 25848,
+    "file": "showcase/boat-cabin-960.webp",
+    "h": 720,
+    "w": 960
+   }
+  }
+ },
+ "showcase/house-interior": {
+  "caption": "Inside a hollow town house",
+  "sizes": {
+   "1920": {
+    "bytes": 38614,
+    "file": "showcase/house-interior.webp",
+    "h": 600,
+    "w": 960
+   },
+   "960": {
+    "bytes": 38614,
+    "file": "showcase/house-interior-960.webp",
+    "h": 600,
+    "w": 960
+   }
+  }
+ },
+ "showcase/house-porch": {
+  "caption": "A hollow town house with its porch and flag",
+  "sizes": {
+   "1920": {
+    "bytes": 51568,
+    "file": "showcase/house-porch.webp",
+    "h": 600,
+    "w": 960
+   },
+   "960": {
+    "bytes": 51568,
+    "file": "showcase/house-porch-960.webp",
+    "h": 600,
+    "w": 960
+   }
+  }
+ },
+ "showcase/key-art": {
+  "caption": "Scavenge and Survive MTA key art by KingSergio: loot, craft, survive",
+  "sizes": {
+   "1920": {
+    "bytes": 277842,
+    "file": "showcase/key-art.webp",
+    "h": 941,
+    "w": 1672
+   },
+   "960": {
+    "bytes": 132830,
+    "file": "showcase/key-art-960.webp",
+    "h": 540,
+    "w": 960
+   }
+  }
+ },
+ "showcase/key-art-alt": {
+  "caption": "Alternate key art by KingSergio",
+  "sizes": {
+   "1920": {
+    "bytes": 166240,
+    "file": "showcase/key-art-alt.webp",
+    "h": 941,
+    "w": 1672
+   },
+   "960": {
+    "bytes": 88476,
+    "file": "showcase/key-art-alt-960.webp",
+    "h": 540,
+    "w": 960
+   }
+  }
+ },
+ "showcase/workshop-machines": {
+  "caption": "A workshop corner: machines, gas bottles and a generator",
+  "sizes": {
+   "1920": {
+    "bytes": 43240,
+    "file": "showcase/workshop-machines.webp",
+    "h": 1080,
+    "w": 1920
+   },
+   "960": {
+    "bytes": 18022,
+    "file": "showcase/workshop-machines-960.webp",
+    "h": 540,
+    "w": 960
+   }
+  }
+ },
  "vehicles/403_linerun": {
   "caption": "linerun",
   "sizes": {

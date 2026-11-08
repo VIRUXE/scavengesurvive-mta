@@ -51,6 +51,7 @@ FOLDERS = [
     # (source folder, output folder, widths, quality, caption index json or None)
     ("scenes", "scenes", (1600, 800), 82, "scenes/index.json"),
     ("places", "places", (1600, 800), 82, "places/index.json"),
+    ("showcase", "showcase", (1920, 960), 84, "showcase/index.json"),
     ("map", "map", (1536,), 88, None),
     ("items/all", "items", (256,), 85, None),
     ("vehicles", "vehicles", (480,), 85, None),
