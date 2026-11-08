@@ -1,42 +1,87 @@
 {
- "airstream-boarded": {
-  "caption": "An Airstream with boarded windows, gas bottles and a generator",
-  "file": "airstream-boarded.png",
-  "source": "Discord #tmp, Scavenge & Survive, 2026-11-01"
- },
- "airstream-fortified": {
-  "caption": "The Airstream welded shut with scrap panels, a generator and welder beside it",
-  "file": "airstream-fortified.png",
-  "source": "Discord #updates, Scavenge & Survive, 2026-11-01"
- },
- "boat-cabin": {
-  "caption": "The Marquis yacht's deck, down to the cabin hatch",
-  "file": "boat-cabin.png",
-  "source": "Discord #tmp, Scavenge & Survive, 2026-11-08"
- },
- "house-interior": {
-  "caption": "Inside a hollow town house",
-  "file": "house-interior.png",
-  "source": "Discord #updates, Scavenge & Survive, 2026-11-07"
- },
- "house-porch": {
-  "caption": "A hollow town house with its porch and flag",
-  "file": "house-porch.png",
-  "source": "Discord #updates, Scavenge & Survive, 2026-11-07"
- },
- "key-art": {
-  "caption": "Scavenge and Survive MTA key art by KingSergio: loot, craft, survive",
-  "file": "key-art.png",
-  "source": "Discord #general, .kingsergio, 2026-11-02"
- },
- "key-art-alt": {
-  "caption": "Alternate key art by KingSergio",
-  "file": "key-art-alt.png",
-  "source": "Discord #general, .kingsergio, 2026-11-02"
- },
- "workshop-machines": {
-  "caption": "A workshop corner: machines, gas bottles and a generator",
-  "file": "workshop-machines.png",
-  "source": "Discord #tmp, Scavenge & Survive, 2026-11-01"
- }
+  "airstream-boarded": {
+    "caption": "An Airstream with boarded windows, gas bottles and a generator",
+    "file": "airstream-boarded.png",
+    "source": "Discord #tmp, Scavenge & Survive, 2026-11-01"
+  },
+  "airstream-fortified": {
+    "caption": "The Airstream welded shut with scrap panels, a generator and welder beside it",
+    "file": "airstream-fortified.png",
+    "source": "Discord #updates, Scavenge & Survive, 2026-11-01"
+  },
+  "boat-cabin": {
+    "caption": "The Marquis yacht's deck, down to the cabin hatch",
+    "file": "boat-cabin.png",
+    "source": "Discord #tmp, Scavenge & Survive, 2026-11-08"
+  },
+  "house-interior": {
+    "caption": "Inside a hollow town house",
+    "file": "house-interior.png",
+    "source": "Discord #updates, Scavenge & Survive, 2026-11-07"
+  },
+  "house-porch": {
+    "caption": "A hollow town house with its porch and flag",
+    "file": "house-porch.png",
+    "source": "Discord #updates, Scavenge & Survive, 2026-11-07"
+  },
+  "key-art": {
+    "caption": "Scavenge and Survive MTA key art by KingSergio: loot, craft, survive",
+    "file": "key-art.png",
+    "source": "Discord #general, .kingsergio, 2026-11-02"
+  },
+  "key-art-alt": {
+    "caption": "Alternate key art by KingSergio",
+    "file": "key-art-alt.png",
+    "source": "Discord #general, .kingsergio, 2026-11-02"
+  },
+  "workshop-machines": {
+    "caption": "A workshop corner: machines, gas bottles and a generator",
+    "file": "workshop-machines.png",
+    "source": "Discord #tmp, Scavenge & Survive, 2026-11-01"
+  },
+  "standoff-sandstorm": {
+    "caption": "A standoff at dusk in a sandstorm at the Verdant Meadows boneyard",
+    "file": "standoff-sandstorm.png",
+    "source": "In-game shoot on the live server, 2026-11-08 (NPCs stand in for other players)"
+  },
+  "hold-up": {
+    "caption": "Hands up: a hold-up between survivors at the plane boneyard",
+    "file": "hold-up.png",
+    "source": "In-game shoot on the live server, 2026-11-08 (NPCs stand in for other players)"
+  },
+  "death-loot": {
+    "caption": "Everything you carried drops where you fall",
+    "file": "death-loot.png",
+    "source": "In-game shoot on the live server, 2026-11-08 (NPCs stand in for other players)"
+  },
+  "supply-drop": {
+    "caption": "A supply drop parachuting in at dusk",
+    "file": "supply-drop.png",
+    "source": "In-game shoot on the live server, 2026-11-08 (NPCs stand in for other players)"
+  },
+  "supply-drop-landed": {
+    "caption": "The supply crate is down; now everyone knows where it is",
+    "file": "supply-drop-landed.png",
+    "source": "In-game shoot on the live server, 2026-11-08 (NPCs stand in for other players)"
+  },
+  "campfire-night": {
+    "caption": "Survivors around a campfire at night",
+    "file": "campfire-night.png",
+    "source": "In-game shoot on the live server, 2026-11-08 (NPCs stand in for other players)"
+  },
+  "dashboard-night": {
+    "caption": "The vehicle dashboard: fuel, battery voltage, ignition and lights",
+    "file": "dashboard-night.png",
+    "source": "In-game shoot on the live server, 2026-11-08 (NPCs stand in for other players)"
+  },
+  "inventory": {
+    "caption": "The inventory: worn gear, held weapon, backpack and wound status",
+    "file": "inventory.png",
+    "source": "In-game shoot on the live server, 2026-11-08 (NPCs stand in for other players)"
+  },
+  "keypad-door": {
+    "caption": "A keypad on a base door",
+    "file": "keypad-door.png",
+    "source": "In-game shoot on the live server, 2026-11-08 (NPCs stand in for other players)"
+  }
 }

@@ -4001,6 +4001,74 @@
    }
   }
  },
+ "showcase/campfire-night": {
+  "caption": "Survivors around a campfire at night",
+  "sizes": {
+   "1920": {
+    "bytes": 51646,
+    "file": "showcase/campfire-night.webp",
+    "h": 900,
+    "w": 1600
+   },
+   "960": {
+    "bytes": 22530,
+    "file": "showcase/campfire-night-960.webp",
+    "h": 540,
+    "w": 960
+   }
+  }
+ },
+ "showcase/dashboard-night": {
+  "caption": "The vehicle dashboard: fuel, battery voltage, ignition and lights",
+  "sizes": {
+   "1920": {
+    "bytes": 75166,
+    "file": "showcase/dashboard-night.webp",
+    "h": 900,
+    "w": 1600
+   },
+   "960": {
+    "bytes": 32994,
+    "file": "showcase/dashboard-night-960.webp",
+    "h": 540,
+    "w": 960
+   }
+  }
+ },
+ "showcase/death-loot": {
+  "caption": "Everything you carried drops where you fall",
+  "sizes": {
+   "1920": {
+    "bytes": 69096,
+    "file": "showcase/death-loot.webp",
+    "h": 900,
+    "w": 1600
+   },
+   "960": {
+    "bytes": 33832,
+    "file": "showcase/death-loot-960.webp",
+    "h": 540,
+    "w": 960
+   }
+  }
+ },
+ "showcase/hold-up": {
+  "caption": "Hands up: a hold-up between survivors at the plane boneyard",
+  "sizes": {
+   "1920": {
+    "bytes": 147036,
+    "file": "showcase/hold-up.webp",
+    "h": 900,
+    "w": 1600
+   },
+   "960": {
+    "bytes": 60732,
+    "file": "showcase/hold-up-960.webp",
+    "h": 540,
+    "w": 960
+   }
+  }
+ },
  "showcase/house-interior": {
   "caption": "Inside a hollow town house",
   "sizes": {
@@ -4035,6 +4103,23 @@
    }
   }
  },
+ "showcase/inventory": {
+  "caption": "The inventory: worn gear, held weapon, backpack and wound status",
+  "sizes": {
+   "1920": {
+    "bytes": 131510,
+    "file": "showcase/inventory.webp",
+    "h": 900,
+    "w": 1600
+   },
+   "960": {
+    "bytes": 58642,
+    "file": "showcase/inventory-960.webp",
+    "h": 540,
+    "w": 960
+   }
+  }
+ },
  "showcase/key-art": {
   "caption": "Scavenge and Survive MTA key art by KingSergio: loot, craft, survive",
   "sizes": {
@@ -4064,6 +4149,74 @@
    "960": {
     "bytes": 88476,
     "file": "showcase/key-art-alt-960.webp",
+    "h": 540,
+    "w": 960
+   }
+  }
+ },
+ "showcase/keypad-door": {
+  "caption": "A keypad on a base door",
+  "sizes": {
+   "1920": {
+    "bytes": 160520,
+    "file": "showcase/keypad-door.webp",
+    "h": 900,
+    "w": 1600
+   },
+   "960": {
+    "bytes": 67712,
+    "file": "showcase/keypad-door-960.webp",
+    "h": 540,
+    "w": 960
+   }
+  }
+ },
+ "showcase/standoff-sandstorm": {
+  "caption": "A standoff at dusk in a sandstorm at the Verdant Meadows boneyard",
+  "sizes": {
+   "1920": {
+    "bytes": 41912,
+    "file": "showcase/standoff-sandstorm.webp",
+    "h": 900,
+    "w": 1600
+   },
+   "960": {
+    "bytes": 17220,
+    "file": "showcase/standoff-sandstorm-960.webp",
+    "h": 540,
+    "w": 960
+   }
+  }
+ },
+ "showcase/supply-drop": {
+  "caption": "A supply drop parachuting in at dusk",
+  "sizes": {
+   "1920": {
+    "bytes": 79450,
+    "file": "showcase/supply-drop.webp",
+    "h": 900,
+    "w": 1600
+   },
+   "960": {
+    "bytes": 32256,
+    "file": "showcase/supply-drop-960.webp",
+    "h": 540,
+    "w": 960
+   }
+  }
+ },
+ "showcase/supply-drop-landed": {
+  "caption": "The supply crate is down; now everyone knows where it is",
+  "sizes": {
+   "1920": {
+    "bytes": 82688,
+    "file": "showcase/supply-drop-landed.webp",
+    "h": 900,
+    "w": 1600
+   },
+   "960": {
+    "bytes": 31992,
+    "file": "showcase/supply-drop-landed-960.webp",
     "h": 540,
     "w": 960
    }
