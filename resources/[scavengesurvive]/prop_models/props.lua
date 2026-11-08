@@ -10,6 +10,7 @@ return {
     [20207] = { dff = "grind_disc", txd = "grind_disc", dist = 40 },
     [20208] = { dff = "car_battery", txd = "car_battery", dist = 60 },
     [20209] = { dff = "tool_battery", txd = "tool_battery", dist = 40 },
+    [20236] = { dff = "ratchet", txd = "ratchet", dist = 40 },
     [20210] = { dff = "bobcat_boot_ok", txd = "bobcat_boot_ok", dist = 80 },
     [20211] = { dff = "bobcat_boot_dam", txd = "bobcat_boot_dam", dist = 80 },
     [20212] = { dff = "bobcat_door_lf_ok", txd = "bobcat_door_lf_ok", dist = 80 },

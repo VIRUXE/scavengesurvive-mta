@@ -38,7 +38,11 @@ then runs itself in Blender (DragonFF) for each prop's dff and col.
     tool_battery 20209 a cordless tool's slide-on 18 V pack, the one under the grinder's tail (tool_pack), standing on its foot:
                      black body, yellow latch band, charge lamps on +Y; GRINDER_TEXTURES' subset (TOOL_BATTERY_TEXTURES).
 
-Origin (except welder_torch and grinder): the centre of the base (x, y) with z = 0 at the lowest point; the front faces +Y.
+    ratchet  20236   a socket ratchet, 0.25 m: a chrome handle along Y with a knurled rubber grip (the origin at the grip's
+                     centre), a round head toward +Y, a reversing lever on the head and a square drive under it with a
+                     socket fitted; vanilla textures (RATCHET_TEXTURES, found with gta-scout). One box of collision.
+
+Origin (except welder_torch, grinder and ratchet): the centre of the base (x, y) with z = 0 at the lowest point; the front faces +Y.
 """
 from __future__ import annotations
 
@@ -355,6 +359,69 @@ def build_grind_disc(ctx):
     return [((0.0, 0.0, 0.0015), (0.0575, 0.0575, 0.0015))]
 
 
+# 0.25 m overall: the butt face at y = -0.132, the head's front face at y = +0.118. The head's axis is Z (the drive).
+RATCHET_HEAD_Y, RATCHET_HEAD_R = 0.094, 0.024
+# (source TXD, texture) per ratchet material, all vanilla and found with gta-scout: chrome pipe (handle, head, drive
+# and socket), the airport's bumpy black rubber (the knurled grip), smooth black plastic (the reversing lever)
+RATCHET_TEXTURES = [("cj_airprt.txd", "cj_chromepipe"), ("cj_airprt.txd", "CJ_BLACK_RUB2"), ("ballys01.txd", "CJ_blackplastic")]
+
+
+def build_ratchet(ctx):
+    """A 1/2 inch socket ratchet, 0.25 m: the chrome handle along Y, a knurled rubber grip centred on the origin, a round
+    head toward +Y with the reversing lever on top (+Z) and the square drive under it (-Z) holding a hex socket."""
+    bm, box, paint = ctx["bm"], ctx["box"], ctx["paint"]
+    chrome, rubber, lever = 0, 1, 2
+    white, dim = (0.92, 0.92, 0.93, 1.0), (0.55, 0.55, 0.56, 1.0)
+    night = lambda c: (c[0] * 0.3, c[1] * 0.3, c[2] * 0.32, 1.0)
+    hy, hr = RATCHET_HEAD_Y, RATCHET_HEAD_R
+
+    def y_tube(y0, y1, radius, segs, material, col, u_rep=1.0, v_rep=1.0):
+        """A closed cylinder along Y. `u_rep` / `v_rep` tile the texture around it and along it."""
+        rings = []
+        for y in (y0, y1):
+            ring = [bm.verts.new((radius * math.cos(2 * math.pi * i / segs), y, radius * math.sin(2 * math.pi * i / segs))) for i in range(segs)]
+            rings.append(ring)
+        for i in range(segs):
+            j = (i + 1) % segs
+            u0, u1 = u_rep * i / segs, u_rep * (i + 1) / segs
+            paint(bm.faces.new((rings[0][i], rings[0][j], rings[1][j], rings[1][i])), [(u0, 0), (u1, 0), (u1, v_rep), (u0, v_rep)], col, night(col), material)
+        for ring, flip in ((rings[0], True), (rings[1], False)):
+            order = list(reversed(ring)) if flip else ring
+            uvs = [(0.5 + 0.5 * math.cos(2 * math.pi * i / segs), 0.5 + 0.5 * math.sin(2 * math.pi * i / segs)) for i in range(segs)]
+            paint(bm.faces.new(order), uvs, col, night(col), material)
+
+    def z_tube(z0, z1, radius, segs, material, col):
+        """A closed cylinder along Z at the head. The chrome wraps once, so the rim is not a stack of stripes."""
+        rings = [[bm.verts.new((radius * math.cos(2 * math.pi * i / segs), hy + radius * math.sin(2 * math.pi * i / segs), z)) for i in range(segs)] for z in (z0, z1)]
+        for i in range(segs):
+            j = (i + 1) % segs
+            u0, u1 = i / segs, (i + 1) / segs
+            paint(bm.faces.new((rings[0][i], rings[0][j], rings[1][j], rings[1][i])), [(u0, 0), (u1, 0), (u1, 1), (u0, 1)], col, night(col), material)
+        for ring, flip in ((rings[0], True), (rings[1], False)):
+            order = list(reversed(ring)) if flip else ring
+            uvs = [(0.5 + 0.5 * math.cos(2 * math.pi * i / segs), 0.5 + 0.5 * math.sin(2 * math.pi * i / segs)) for i in range(segs)]
+            paint(bm.faces.new(order), uvs, col, night(col), material)
+
+    # the handle, a rounded butt past the grip, and the grip itself (its centre is the origin) with a collar each end
+    y_tube(-0.118, 0.076, 0.010, 12, chrome, white)
+    y_tube(-0.132, -0.112, 0.013, 12, chrome, white)
+    y_tube(-0.046, 0.046, 0.0155, 16, rubber, dim, 4.0, 2.0)
+    y_tube(-0.054, -0.040, 0.0175, 16, chrome, white)
+    y_tube(0.040, 0.054, 0.0175, 16, chrome, white)
+    # the head: a round housing the handle runs into, and a smaller cover the lever sits on.
+    # overlapping shells stay more than 1 mm off any parallel face so the caps do not z-fight
+    z_tube(-0.010, 0.009, hr, 20, chrome, white)
+    z_tube(0.006, 0.015, 0.020, 16, chrome, white)
+    z_tube(0.011, 0.021, 0.0025, 8, chrome, dim)  # the lever's pivot, inside the lever's width
+    box((0.007, hy, 0.016), (0.026, 0.010, 0.006), lever, dim)  # flipped toward +X
+    # the square drive (its top buried in the head), then the socket stepped down over it
+    box((0.0, hy, -0.017), (0.0127, 0.0127, 0.020), chrome, white)
+    z_tube(-0.050, -0.022, 0.014, 6, chrome, white)
+    z_tube(-0.060, -0.046, 0.012, 6, chrome, dim)
+    # butt y=-0.132 to head front y=0.118; the socket's nose is the low point, the pivot the high one
+    return [((0.0, -0.007, -0.0195), (0.026, 0.125, 0.0405))]
+
+
 PROPS_TABLE = [
     {"name": "ls_hatch", "id": 20201, "dist": 150, "source": "zombtest1.txd", "textures": ["pave_manhole1"], "build": build_ls_hatch},
     {"name": "welder", "id": 20202, "dist": 100, "source": "dynbarrels.txd", "textures": ["redmetal", "yellowmetal", "alumplat64"], "build": build_welder},
@@ -365,6 +432,7 @@ PROPS_TABLE = [
     {"name": "grind_disc", "id": 20207, "dist": 40, "sources": GRIND_DISC_TEXTURES, "build": build_grind_disc},
     {"name": "car_battery", "id": 20208, "dist": 60, "sources": BATTERY_TEXTURES, "build": build_car_battery},
     {"name": "tool_battery", "id": 20209, "dist": 40, "sources": TOOL_BATTERY_TEXTURES, "build": build_tool_battery},
+    {"name": "ratchet", "id": 20236, "dist": 40, "sources": RATCHET_TEXTURES, "build": build_ratchet},
 ]
 
 
