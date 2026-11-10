@@ -19,6 +19,7 @@ local warnedTables = {}
 local allowance = {} -- zone -> items the zone may still spawn (cache of world_budget.allowance between refill ticks)
 local refillTimer = nil
 local budgetBusy = true -- serialize placement and refill; startup loads the persisted budget first
+local sweepBusy = false
 local vendingTick -- the snack machines' budget tick, with stockContainer below
 
 -- Per-zone carrying capacity: enabled points × items_per_point × cap_multiplier.
@@ -143,6 +144,47 @@ local function refillTick()
             scale = scale,
         })
     end)
+end
+
+-- Maintenance refill: make the current deficit available immediately. Normal loot rolls still
+-- enforce point cooldowns, occupied points, and distance from players.
+function refillNow()
+    if budgetBusy then
+        return false
+    end
+    budgetBusy = true
+    db.query(SELECT_BUDGETS, { setting("loot.count_carried", 1) }, function(rows)
+        if not rows then
+            budgetBusy = false
+            return
+        end
+        local scale = budget.playerScale(onlinePlayers(), setting("loot.player_scale", 0.25))
+        local pending, granted = #rows, 0
+        if pending == 0 then
+            budgetBusy = false
+            return
+        end
+        for _, row in ipairs(rows) do
+            local cap = scaledCap(row.cap, scale)
+            local deficit = math.max(cap - (tonumber(row.alive) or 0), 0)
+            db.exec(
+                "UPDATE world_budget SET allowance = ? WHERE category = 'loot' AND zone = ?",
+                { deficit, row.zone },
+                function(ok)
+                    if ok then
+                        allowance[row.zone] = deficit
+                        granted = granted + deficit
+                    end
+                    pending = pending - 1
+                    if pending == 0 then
+                        budgetBusy = false
+                        log.event("loot.refilledManually", { granted = granted, scale = scale })
+                    end
+                end
+            )
+        end
+    end)
+    return true
 end
 
 -- A character ID is installed before spawnPlayer finishes. Wait for the first settled
@@ -418,6 +460,38 @@ function rollNear(x, y, radius, onDone)
             finish()
         end, rolls)
     end)
+    return true
+end
+
+-- Maintenance pass over the map. Placement still goes through rollNear's normal guards.
+function rollWorldNow()
+    if sweepBusy then
+        return false
+    end
+    sweepBusy = true
+    local points = {}
+    for x = -3000, 3000, 400 do
+        for y = -2800, 2800, 400 do
+            points[#points + 1] = { x = x, y = y }
+        end
+    end
+    local i = 1
+    local function nextCell()
+        if i > #points then
+            sweepBusy = false
+            log.event("loot.worldSweepFinished", { cells = #points })
+            return
+        end
+        local point = points[i]
+        local accepted
+        accepted = rollNear(point.x, point.y, 400, function()
+            if accepted then
+                i = i + 1
+            end
+            setTimer(nextCell, 50, 1)
+        end)
+    end
+    nextCell()
     return true
 end
 

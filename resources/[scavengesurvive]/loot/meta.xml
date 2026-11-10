@@ -19,6 +19,8 @@
     <export function="supplyDropTypes" type="server"/>
     <export function="dropStatus" type="server"/>
     <export function="lootAllowances" type="server"/>
+    <export function="refillNow" type="server"/>
+    <export function="rollWorldNow" type="server"/>
     <export function="stockContainer" type="server"/>
     <export function="stockGlovebox" type="server"/>
     <export function="nearbyCrate" type="client"/>
