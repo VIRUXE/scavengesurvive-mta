@@ -929,6 +929,7 @@ BEGIN
   DECLARE v_dst_slot INT DEFAULT 0;
 
   DECLARE v_item_size INT DEFAULT 1;
+  DECLARE v_take_only INT DEFAULT 0;
 
   DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
   SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
@@ -964,6 +965,8 @@ BEGIN
     END IF;
     IF v_dst_owner_item IS NOT NULL THEN
       SELECT holder_char_id INTO v_dst_owner_holder FROM items WHERE id = v_dst_owner_item FOR UPDATE;
+      SELECT IFNULL(JSON_VALUE(t.category_data, '$.takeOnly') = 'true', 0) INTO v_take_only
+        FROM items o JOIN item_types t ON t.uname = o.type_uname WHERE o.id = v_dst_owner_item;
     END IF;
 
     SELECT t.size INTO v_item_size FROM items i JOIN item_types t ON t.uname = i.type_uname WHERE i.id = p_item_id;
@@ -974,6 +977,9 @@ BEGIN
     ELSEIF v_dst_owner_item = p_item_id THEN
       ROLLBACK;
       SELECT 0 AS ok, 'SELF_CONTAINMENT' AS code, NULL AS payload;
+    ELSEIF v_take_only THEN
+      ROLLBACK;
+      SELECT 0 AS ok, 'TAKE_ONLY' AS code, NULL AS payload;
     ELSEIF NOT (
       p_char_id IS NOT NULL AND (
         v_src_owner_char <=> p_char_id
@@ -1089,6 +1095,7 @@ BEGIN
   DECLARE v_item_size INT DEFAULT 1;
   DECLARE v_held INT DEFAULT 0;
   DECLARE v_slot INT DEFAULT 0;
+  DECLARE v_take_only INT DEFAULT 0;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
   SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
   START TRANSACTION;
@@ -1100,6 +1107,8 @@ BEGIN
   IF v_owner_item IS NOT NULL THEN
     SELECT holder_char_id, container_id, x INTO v_owner_holder, v_owner_container, v_owner_x
       FROM items WHERE id = v_owner_item FOR UPDATE;
+    SELECT IFNULL(JSON_VALUE(t.category_data, '$.takeOnly') = 'true', 0) INTO v_take_only
+      FROM items o JOIN item_types t ON t.uname = o.type_uname WHERE o.id = v_owner_item;
   END IF;
   IF v_size IS NULL OR v_held = 0 THEN
     ROLLBACK;
@@ -1107,6 +1116,9 @@ BEGIN
   ELSEIF v_owner_item = p_item_id THEN
     ROLLBACK;
     SELECT 0 AS ok, 'SELF_CONTAINMENT' AS code, NULL AS payload;
+  ELSEIF v_take_only THEN
+    ROLLBACK;
+    SELECT 0 AS ok, 'TAKE_ONLY' AS code, NULL AS payload;
   ELSEIF NOT (
     v_owner_char <=> p_char_id
     OR v_owner_holder <=> p_char_id
