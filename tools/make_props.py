@@ -453,24 +453,33 @@ def render_props() -> str:
     ]
     from tools.bobcat_parts import PARTS
     from tools.make_vending import props_rows
+    from tools.stock_wheels import props_rows as wheel_rows
     from tools.vanilla_props import COPIES
-    entries = PROPS_TABLE + [dict(id=p["model"], name=p["asset"], dist=80) for p in PARTS] + COPIES + props_rows()
+    entries = PROPS_TABLE + [dict(id=p["model"], name=p["asset"], dist=80) for p in PARTS] + COPIES + props_rows() + wheel_rows()
     def extra(p):  # a vanilla model whose physical properties it takes, IDE flags it is drawn with
         return "".join(f", {k} = {p[k]}" for k in ("parent", "ideFlags") if p.get(k) is not None)
 
-    lines += [f'    [{p["id"]}] = {{ dff = "{p["name"]}", txd = "{p["name"]}", dist = {p["dist"]}{extra(p)} }},' for p in entries]
+    def txd_name(p):
+        # prop_txd is the file in prop_models/files. `txd` on a vanilla copy is the GTA source, not that file.
+        return p.get("prop_txd") or p["name"]
+
+    lines += [f'    [{p["id"]}] = {{ dff = "{p["name"]}", txd = "{txd_name(p)}", dist = {p["dist"]}{extra(p)} }},' for p in entries]
     return "\n".join(lines + ["}", ""])
 
 
 def render_meta(out_dir: Path) -> str:
     props_lua = out_dir / "props.lua"
-    dffs = []
-    if props_lua.is_file():
-        dffs += [f"{name}.dff" for name in re.findall(r'dff = "([^"]+)"', props_lua.read_text(encoding="ascii"))]
-    files = []
-    for dff in sorted(dffs):
-        stem = dff[:-4]
-        files += [f"{stem}.col", f"{stem}.dff", f"{stem}.txd"]
+    text = props_lua.read_text(encoding="ascii") if props_lua.is_file() else ""
+    # A row may share another row's TXD (the stock wheels share stock_wheels.txd). Collision defaults to the dff name.
+    names = set()
+    for dff in re.findall(r'dff = "([^"]+)"', text):
+        names.add(f"{dff}.col")
+        names.add(f"{dff}.dff")
+    for txd in re.findall(r'txd = "([^"]+)"', text):
+        names.add(f"{txd}.txd")
+    for col in re.findall(r'\bcol = "([^"]+)"', text):
+        names.add(f"{col}.col")
+    files = sorted(names)
     lines = [
         "<meta>",
         '    <info author="scavengesurvive-mta" type="script" name="prop_models" '

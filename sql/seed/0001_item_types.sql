@@ -360,3 +360,26 @@ INSERT INTO item_types (uname,name,model,size,max_hitpoints,category,category_da
 ('ZebraBar','Zebra Bar',20229,1,1,'food','{"biteValue": 5.0, "canCook": false, "canRawInfect": false, "destroyOnEnd": true, "maxBites": 3}'),
 ('ZorroMask','Zorro Mask',18974,1,1,'generic',NULL)
 ON DUPLICATE KEY UPDATE name=VALUES(name), model=VALUES(model), size=VALUES(size), max_hitpoints=VALUES(max_hitpoints), category=VALUES(category), category_data=VALUES(category_data);
+
+INSERT INTO item_types (uname,name,model,size,max_hitpoints,category,category_data) VALUES
+('WheelSmallcar','Small Car Wheel',20237,5,5,'generic',NULL),
+('WheelOffroad','Offroad Wheel',20238,5,5,'generic',NULL),
+('WheelTruck','Truck Wheel',20239,5,5,'generic',NULL),
+('WheelRim','Steel Rim Wheel',20240,5,5,'generic',NULL),
+('WheelAlloy','Alloy Wheel',20241,5,5,'generic',NULL),
+('WheelLightvan','Light Van Wheel',20242,5,5,'generic',NULL),
+('WheelLighttruck','Light Truck Wheel',20243,5,5,'generic',NULL),
+('WheelClassic','Classic Wheel',20244,5,5,'generic',NULL),
+('WheelSaloon','Saloon Wheel',20245,5,5,'generic',NULL),
+('WheelSport','Sport Wheel',20246,5,5,'generic',NULL),
+('WheelSmallcarFlat','Small Car Wheel (Flat)',20247,5,5,'generic',NULL),
+('WheelOffroadFlat','Offroad Wheel (Flat)',20248,5,5,'generic',NULL),
+('WheelTruckFlat','Truck Wheel (Flat)',20249,5,5,'generic',NULL),
+('WheelRimFlat','Steel Rim Wheel (Flat)',20250,5,5,'generic',NULL),
+('WheelAlloyFlat','Alloy Wheel (Flat)',20251,5,5,'generic',NULL),
+('WheelLightvanFlat','Light Van Wheel (Flat)',20252,5,5,'generic',NULL),
+('WheelLighttruckFlat','Light Truck Wheel (Flat)',20253,5,5,'generic',NULL),
+('WheelClassicFlat','Classic Wheel (Flat)',20254,5,5,'generic',NULL),
+('WheelSaloonFlat','Saloon Wheel (Flat)',20255,5,5,'generic',NULL),
+('WheelSportFlat','Sport Wheel (Flat)',20256,5,5,'generic',NULL)
+ON DUPLICATE KEY UPDATE name=VALUES(name), model=VALUES(model), size=VALUES(size), max_hitpoints=VALUES(max_hitpoints), category=VALUES(category), category_data=VALUES(category_data);
