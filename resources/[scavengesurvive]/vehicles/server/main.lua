@@ -94,6 +94,7 @@ end
 
 local carmourSrv -- server/carmour.lua, built once the roadside helpers it needs exist
 local bodySrv -- Bobcat salvage part installation
+local lugSrv -- lug-nut minigame for taking a wheel off or fitting one
 local gasSrv -- server/gasbottles.lua, built with it
 
 local FLUSH_MS = 60000
@@ -2194,90 +2195,10 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
         end
         local tires = { getVehicleWheelStates(vehicle) }
         local removing = tires[wheel] ~= 2
-        local action = { actionType = "wheel", vehicle = vehicle }
-        activeActions[player] = action
-        local count = vlogic.lugNutCount(getElementModel(vehicle))
-        local duration = exports.character:skillTimeModifier(player, count * 1000, "Repair")
-        local started = getTickCount()
-        local label = removing and lang.formatFor(player, "Removing wheel: %d lug nuts", count)
-            or lang.formatFor(player, "Installing wheel: %d lug nuts", count)
-        triggerClientEvent(player, "vehicleHoldStarted", player, label, duration)
-        setPedAnimation(player, "BOMBER", "BOM_Plant_Loop", -1, true, false, false, false)
-        action.timer = setTimer(function()
-            local cur = isElement(player) and exports.items:getHeld(player)
-            if
-                not isElement(vehicle)
-                or not info[vehicle]
-                or not cur
-                or cur.id ~= held.id
-                or getPedOccupiedVehicle(player)
-                or getVehicleEngineState(vehicle)
-                or inf.locked > 0
-                or getElementDimension(player) ~= getElementDimension(vehicle)
-                or getElementInterior(player) ~= getElementInterior(vehicle)
-                or isPedDead(player)
-            then
-                return cancelHoldAction(player)
-            end
-            local x, y, z = getElementPosition(player)
-            local vx1, vy1, vz1 = getElementVelocity(vehicle)
-            if getDistanceBetweenPoints3D(x, y, z, px, py, pz) > 0.8 or vx1 * vx1 + vy1 * vy1 + vz1 * vz1 > 0.0001 then
-                return cancelHoldAction(player)
-            end
-            if getTickCount() - started < duration then
-                return
-            end
-            cancelHoldAction(player)
-            local current = { getVehicleWheelStates(vehicle) }
-            if current[wheel] ~= tires[wheel] then
-                return
-            end
-            local function fitted()
-                current[wheel] = removing and 2 or 0
-                setVehicleWheelStates(vehicle, unpack(current))
-                if not removing then
-                    -- Reassert the wheel dummy's visibility client-side as well as repairing its MTA wheel state.
-                    triggerClientEvent(root, "vehicleWheelInstalled", vehicle, wheel)
-                end
-                updateWheelFreeze(vehicle)
-                inf.damage = bodySrv.snapshot(vehicle)
-                db.exec("UPDATE vehicles SET damage = ? WHERE id = ?", { toJSON(inf.damage), inf.id })
-                exports.character:gainSkill(player, "Repair")
-            end
-            if removing then
-                db.exec(
-                    "INSERT INTO items (type_uname, x, y, z, rz, interior, dimension) VALUES ('Wheel', ?, ?, ?, 0, ?, ?)",
-                    { x, y, z - 0.8, getElementInterior(player), getElementDimension(player) },
-                    function(ok, _, _, id)
-                        if ok and isElement(vehicle) then
-                            fitted()
-                            exports.items:resendWorldItem(tonumber(id))
-                        end
-                    end
-                )
-            else
-                db.query(
-                    "SELECT id FROM items WHERE type_uname = 'Wheel' AND interior = ? AND dimension = ? AND POW(x - ?, 2) + POW(y - ?, 2) + POW(z - ?, 2) < 9 LIMIT 1",
-                    { getElementInterior(player), getElementDimension(player), x, y, z },
-                    function(rows)
-                        if rows and rows[1] and isElement(vehicle) then
-                            db.exec(
-                                "DELETE FROM items WHERE id = ? AND holder_char_id IS NULL AND container_id IS NULL",
-                                { rows[1].id },
-                                function(ok, _, affected)
-                                    if ok and tonumber(affected) == 1 then
-                                        exports.items:forgetWorldItem(tonumber(rows[1].id))
-                                        if isElement(vehicle) then
-                                            fitted()
-                                        end
-                                    end
-                                end
-                            )
-                        end
-                    end
-                )
-            end
-        end, 100, 0)
+        if not lugSrv then
+            return
+        end
+        lugSrv.begin(player, vehicle, wheel, removing, held, px, py, pz, tires)
         return
     end
 
@@ -3068,4 +2989,29 @@ do
     ctx.log, ctx.vehicleLine = log, vehicleLine
     ctx.cancel, ctx.toLocal, ctx.toWorld, ctx.toast = cancelHoldAction, toLocal, toWorld, toast
     bodySrv = assert(loadstring(src, "=vehicles/bodyparts.lua"))()(ctx)
+end
+
+do
+    local f = fileOpen("shared/logic/lugnuts.lua", true)
+    local logic = fileRead(f, fileGetSize(f))
+    fileClose(f)
+    local rules = assert(loadstring(logic, "=vehicles/lugnuts.lua"))()
+    f = fileOpen("server/lugnuts.lua", true)
+    local src = fileRead(f, fileGetSize(f))
+    fileClose(f)
+    lugSrv = assert(loadstring(src, "=vehicles/lugnuts_server.lua"))()({
+        lug = rules,
+        db = db,
+        info = info,
+        activeActions = activeActions,
+        cancel = cancelHoldAction,
+        toast = toast,
+        lang = lang,
+        net = net,
+        updateWheelFreeze = updateWheelFreeze,
+        lugCount = vlogic.lugNutCount,
+        snapshot = function(vehicle)
+            return bodySrv.snapshot(vehicle)
+        end,
+    })
 end
