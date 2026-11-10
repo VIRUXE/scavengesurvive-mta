@@ -409,6 +409,15 @@ CREATE TABLE IF NOT EXISTS `world_crates` (
   CONSTRAINT `fk_world_crates_container` FOREIGN KEY (`container_id`) REFERENCES `containers` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
+CREATE TABLE IF NOT EXISTS `world_dumpsters` (
+  `spot` smallint(6) NOT NULL,
+  `container_id` int(11) NOT NULL,
+  `filled_at` datetime NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`spot`),
+  UNIQUE KEY `uq_world_dumpsters_container` (`container_id`),
+  CONSTRAINT `fk_world_dumpsters_container` FOREIGN KEY (`container_id`) REFERENCES `containers` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+
 CREATE TABLE IF NOT EXISTS `world_items_pos` (
   `item_id` int(11) NOT NULL,
   `pos` point NOT NULL,
