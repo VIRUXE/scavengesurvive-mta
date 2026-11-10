@@ -58,7 +58,7 @@ def material(name, png, rough=0.6, metal=0.1):
 
 
 paint = material("Metal4_256", METAL_PNG)
-bagmat = material("Gen_Bin_Bag", BAG_PNG, 0.35, 0.0)
+bagmat = material("Gen_Bin_Bag", BAG_PNG, 0.72, 0.0)
 
 
 BOUNDS = None  # ((x0, y0, z0), (x1, y1, z1)): the part's whole box, so a face maps the way dump1's did
@@ -147,13 +147,34 @@ parts.append(box("rim_back", (0, D / 2 + 0.012, H - 0.04), (W, 0.03, 0.08), beve
 rng = random.Random(1227)
 
 
+def bag_uv(o):
+    """One cylindrical unwrap per bag, kept in 0–1. The old planar map tiled the 128 px paint across the lump."""
+    me = o.data
+    bm = bmesh.new()
+    bm.from_mesh(me)
+    uv = bm.loops.layers.uv.verify()
+    zs = [v.co.z for v in bm.verts]
+    z0, z1 = min(zs), max(zs)
+    span = max(z1 - z0, 1e-6)
+    for f in bm.faces:
+        us = [math.atan2(lp.vert.co.y, lp.vert.co.x) / math.tau + 0.5 for lp in f.loops]
+        if max(us) - min(us) > 0.5:
+            us = [u - 1.0 if u > 0.5 else u for u in us]
+        shift = -math.floor(min(us))
+        for lp, u in zip(f.loops, us):
+            v = (lp.vert.co.z - z0) / span
+            lp[uv].uv = (min(max(u + shift, 0.0), 1.0), min(max(v, 0.0), 1.0))
+    bm.to_mesh(me)
+    bm.free()
+
+
 def bag(name, loc, rot):
     bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=2, radius=1, location=(0, 0, 0))
     o = bpy.context.object
     o.name = name
-    sx, sy, sz = rng.uniform(0.26, 0.33), rng.uniform(0.28, 0.35), rng.uniform(0.22, 0.28)
+    sx, sy, sz = rng.uniform(0.28, 0.36), rng.uniform(0.30, 0.38), rng.uniform(0.24, 0.30)
     for v in o.data.vertices:
-        j = 1 + rng.uniform(-0.1, 0.1)
+        j = 1 + rng.uniform(-0.06, 0.06)
         v.co = Vector((v.co.x * sx * j, v.co.y * sy * j, v.co.z * sz * j))
         if v.co.z > sz * 0.85:  # the gathered neck of the bag
             v.co.x *= 0.45
@@ -162,27 +183,35 @@ def bag(name, loc, rot):
     o.rotation_euler = (0, 0, rot)
     o.location = loc
     bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
-    planar_uv(o, 0.8)
+    for poly in o.data.polygons:
+        poly.use_smooth = True
+    bag_uv(o)
     o.data.materials.append(bagmat)
     return o
 
 
-inner_x, inner_y = W / 2 - T - 0.3, D / 2 - T - 0.27
+inner_x, inner_y = W / 2 - T - 0.32, D / 2 - T - 0.30
 BOUNDS = None
 bags = []
-for layer, (z0, nx, ny) in enumerate([(T + 0.25, 5, 2), (T + 0.55, 4, 2), (T + 0.84, 3, 2)]):
+for layer, (z0, nx, ny) in enumerate([(0.34, 3, 2), (0.62, 3, 2), (0.90, 2, 2)]):
     for ix in range(nx):
         for iy in range(ny):
             fx = (ix + 0.5) / nx * 2 - 1
             fy = (iy + 0.5) / ny * 2 - 1
             loc = (
-                fx * inner_x + rng.uniform(-0.07, 0.07),
-                fy * inner_y + rng.uniform(-0.05, 0.05),
-                z0 + rng.uniform(-0.03, 0.06),
+                fx * inner_x + rng.uniform(-0.04, 0.04),
+                fy * inner_y + rng.uniform(-0.03, 0.03),
+                z0 + rng.uniform(-0.02, 0.03),
             )
             bags.append(bag(f"bag{layer}{ix}{iy}", loc, rng.uniform(0, math.tau)))
 
-body = join(parts + bags, "dumpster_body", (0, 0, 0))
+body = join(parts, "dumpster_body", (0, 0, 0))
+bm = bmesh.new()
+bm.from_mesh(body.data)
+bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=0.0001)
+bm.to_mesh(body.data)
+bm.free()
+bags_obj = join(bags, "dumpster_bags", (0, 0, 0))
 
 # --- lid: origin at the hinge (top of the back wall); slab, edge lips, three raised panels, a handle -------------
 LW, LD = W + 0.04, D + 0.08
@@ -229,6 +258,16 @@ from DragonFF.ops.dff_exporter import export_dff  # noqa: E402
 from DragonFF.ops.txd_exporter import export_txd  # noqa: E402
 
 
+def duplicate_joined(a, b, name):
+    copies = []
+    for src in (a, b):
+        copy = src.copy()
+        copy.data = src.data.copy()
+        bpy.context.scene.collection.objects.link(copy)
+        copies.append(copy)
+    return join(copies, name, (0, 0, 0))
+
+
 def export(obj, name, coll):
     bpy.ops.object.select_all(action="DESELECT")
     obj.select_set(True)
@@ -268,14 +307,25 @@ def export(obj, name, coll):
     obj.location = keep
 
 
-export(body, "dumpster_body", cbody)
+export_body = duplicate_joined(body, bags_obj, "dumpster_body_export")
+export(export_body, "dumpster_body", cbody)
+bpy.data.objects.remove(export_body, do_unlink=True)
 export(lid, "dumpster_lid", clid)
 for stem in ("dumpster_body", "dumpster_lid"):
     for ext in ("dff", "txd", "col"):
         shutil.copyfile(OUT / f"{stem}.{ext}", RESOURCE / "files" / f"{stem}.{ext}")
 
-tris = sum(sum(len(f.vertices) - 2 for f in o.data.polygons) for o in (body, lid))
-print("DUMPSTER OK", "triangles", tris, "body bounds", [tuple(round(c, 3) for c in v) for v in (body.bound_box[0], body.bound_box[6])])
+def tri_count(o):
+    return sum(len(f.vertices) - 2 for f in o.data.polygons)
+
+
+print(
+    "DUMPSTER OK",
+    "body", tri_count(body),
+    "bags", tri_count(bags_obj),
+    "lid", tri_count(lid),
+    "bag_count", len(bags),
+)
 
 # --- previews (Cycles, small): closed and open ---------------------------------------------------------------------
 for c in (cbody, clid):
@@ -293,12 +343,29 @@ sun.energy = 4
 so = bpy.data.objects.new("sun", sun)
 so.rotation_euler = (math.radians(50), 0, math.radians(30))
 bpy.context.scene.collection.objects.link(so)
+fill = bpy.data.lights.new("fill", "AREA")
+fill.energy = 80
+fill.size = 1.4
+fo = bpy.data.objects.new("fill", fill)
+fo.location = (0, -0.2, 2.3)
+fo.rotation_euler = (0, 0, 0)
+bpy.context.scene.collection.objects.link(fo)
 cam = bpy.data.objects.new("cam", bpy.data.cameras.new("cam"))
 bpy.context.scene.collection.objects.link(cam)
 bpy.context.scene.camera = cam
-cam.location = (2.6, -3.2, 4.6)
-cam.rotation_euler = (math.radians(48), 0, math.radians(39))
-for state, angle in (("closed", 0), ("open", -110)):
+def aim(location, target):
+    cam.location = location
+    cam.rotation_euler = (Vector(target) - Vector(location)).to_track_quat("-Z", "Y").to_euler()
+
+
+shots = {
+    "closed": ((2.6, -3.2, 4.6), (0.0, 0.0, 0.75), 0),
+    "open": ((2.6, -3.2, 4.6), (0.0, 0.0, 0.75), -110),
+    "front": ((0.0, -3.8, 1.35), (0.0, 0.0, 0.7), 0),
+    "inside": ((0.0, -0.15, 2.35), (0.0, 0.05, 0.55), -110),
+}
+for state, (loc, target, angle) in shots.items():
+    aim(loc, target)
     lid.rotation_euler = (math.radians(angle), 0, 0)
     bpy.context.scene.render.filepath = str(OUT / f"preview_{state}.png")
     bpy.ops.render.render(write_still=True)
