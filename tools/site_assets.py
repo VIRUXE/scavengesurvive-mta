@@ -23,6 +23,7 @@ OUT = ROOT / "site" / "assets" / "img"
 # (source relative to docs/images, output relative to site/assets/img, widths, quality, caption)
 SINGLES = [
     ("fort-defiance-sandstorm.jpg", "hero/sandstorm", (1920, 960), 82, "Fort Defiance around Grove Street in a sandstorm"),
+    ("key-art-hero.png", "hero/key-art", (1920, 960), 82, "A survivor at a supply drop on the Verdant Meadows airfield"),
     ("logo-reborn.png", "brand/logo", (512, 192, 64), 90, "Scavenge & Survive Reborn mark"),
     ("logo-reborn-hammer.png", "brand/hammer", (512, 192), 90, "The hammer mark"),
     ("loot-vehicle-blista.jpg", "shots/loot-vehicle", (1600, 800), 82, "A loot vehicle: smoking, half-wrecked and almost out of fuel"),
