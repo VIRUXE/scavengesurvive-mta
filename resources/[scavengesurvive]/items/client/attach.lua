@@ -133,12 +133,14 @@ return function(ctx)
         local t = itemType(uname)
         -- GTA draws real weapons in the hand itself (the server gives the weapon); only custom models are attached.
         -- An unloaded firearm ("items.ammo" false) is no GTA weapon at all, so its item model is held instead.
+        -- An empty Chainsaw or Flamer is the same (upstream still attaches the item; it only GivePlayerWeapon
+        -- once the ammo type is valid and the mag is above 0). Fuel is published as items.ammo "GasCan".
         local cd = t and t.category == "weapon" and t.categoryData
         if cd and (cd.baseWeapon or 0) > 0 then
             if loaded[player] == nil then
                 loaded[player] = getElementData(player, "items.ammo") or false
             end
-            local unloaded = cd.calibre ~= nil and not cd.liquid and not loaded[player]
+            local unloaded = not loaded[player] and (cd.liquid or cd.calibre ~= nil)
             if not unloaded then
                 return nil
             end

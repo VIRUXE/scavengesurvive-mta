@@ -1,6 +1,7 @@
 -- Hands and the worn bag: what a player carries is published as protected element data ("items.held" /
--- "items.bag" = type uname or false; "items.ammo" = loaded ammoItem uname or false); every client draws
--- its own bone-attached objects and bullet tracers from it (client/attach.lua, weapons/client/tracer.lua).
+-- "items.bag" = type uname or false; "items.ammo" = loaded ammoItem uname or false, or "GasCan" while a
+-- Chainsaw or Flamer still has fuel); every client draws its own bone-attached objects and bullet tracers
+-- from it (client/attach.lua, weapons/client/tracer.lua).
 -- ctx = { db, net, state, geometry, ammo, type, defaultAmmo, charId, toast, world } built by server/main.lua;
 -- state.held / state.worn are shared with it. Busted loads this file with fake deps.
 return function(ctx)
@@ -132,6 +133,11 @@ return function(ctx)
     local function publishAmmo(player, item)
         if isElement(player) then
             local loaded = item and item.data and item.data.ammoItem or false
+            -- Upstream stores item_GasCan as the ammo type once petrol is poured in (weapon/interact.pwn).
+            -- Fuel left is what arms the GTA weapon; none of it means the item model is held instead.
+            if item and ammo and ammo.isLiquidWeapon(itemType(item.uname)) then
+                loaded = ammo.fuelUnits(item.data) > 0 and "GasCan" or false
+            end
             setElementData(player, "items.ammo", loaded, "broadcast", "deny")
         end
     end
@@ -299,8 +305,9 @@ return function(ctx)
                 item.data = ws
             end
             state.held[player] = item
-            publish(player, "items.held", item)
+            -- Ammo first: the client decides the held model from items.ammo when items.held arrives.
             publishAmmo(player, item)
+            publish(player, "items.held", item)
             local w = baseWeapon(t)
             if w then
                 local rounds = ammoFor(t, item.data)
