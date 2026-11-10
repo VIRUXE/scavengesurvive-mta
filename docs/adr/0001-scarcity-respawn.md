@@ -125,7 +125,7 @@ baseline, and quitting clears it. Check with `lua tests/lua/spawn_guard_test.lua
 With `cap = points × items_per_point` (22,958 items) and lazy materialisation plus despawn keeping only 300–700
 loot items alive, the deficit sat at about 98 % of the cap: every tick granted about 187 items, all spent around
 whoever was online, so the budget never refused a roll and only the 30–90 minute point cooldown limited loot.
-Prod now runs `loot.cap_multiplier = 0.05` (cap 1,149) and `loot.cooldown_minutes = 360` (a rolled point waits
+Prod now runs `loot.cap_multiplier = 0.15` (three times the 0.05 cap) and `loot.cooldown_minutes = 360` (a rolled point waits
 3–9 h). The refill tick and the startup clamp scale each zone's cap by
 `budget.playerScale(players, loot.player_scale)` = 1 + 0.25 per player with a character after the first (32 players:
 8.75×), so a full server refills faster than a solo one while each player's share still shrinks as it fills.

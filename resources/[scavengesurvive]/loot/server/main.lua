@@ -543,7 +543,7 @@ addEventHandler("onResourceStart", resourceRoot, function()
         settings = map
         drops.start()
         overlay.start()
-        local perPoint, mult = setting("loot.items_per_point", 2.0), setting("loot.cap_multiplier", 0.05)
+        local perPoint, mult = setting("loot.items_per_point", 2.0), setting("loot.cap_multiplier", 0.15)
         db.exec(UPSERT_BUDGETS, { perPoint, mult }, function()
             loadAllowances()
         end)

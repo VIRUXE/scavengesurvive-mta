@@ -67,7 +67,7 @@ restart resources.
 ## Economy settings (table `settings`, ADR 0001)
 
 Read on resource start (`rr loot`, `rr vehicles` after a change). Carrying capacity: `loot.items_per_point` (2.0) ×
-`loot.cap_multiplier` (0.05) items per loot point and zone, scaled by 1 + `loot.player_scale` (0.25) for each player online after the first; `vehicles.cap_multiplier` (1.0) × the first vehicle roll.
+`loot.cap_multiplier` (0.15) items per loot point and zone, scaled by 1 + `loot.player_scale` (0.25) for each player online after the first; `vehicles.cap_multiplier` (1.0) × the first vehicle roll.
 Refill every `world.refill_interval_s` (300): `loot.refill_rate` / `vehicles.refill_rate` (0.10 of the deficit per
 hour) with a floor of `loot.refill_floor` / `vehicles.refill_floor` (0.02 of the cap per hour). Cooldown of a consumed
 point: `loot.cooldown_minutes` (360) ± `loot.cooldown_jitter` (0.5); `vehicles.cooldown_hours` (6) ±
