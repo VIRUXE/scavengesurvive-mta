@@ -90,6 +90,9 @@ end)
 local doorTypes = {} -- vehicle type uname -> whether it has a walk-in door (the data resource, asked once)
 
 local function hasWalkInDoor(vehicle)
+    if vlogic.CABIN_DOOR_MODELS[getElementModel(vehicle)] then
+        return true
+    end
     local uname = getElementData(vehicle, "vehicles.type")
     if not uname then
         return false
@@ -110,7 +113,8 @@ function nearbyTrailerDoor()
     local px, py, pz = getElementPosition(localPlayer)
     for _, v in ipairs(getElementsByType("vehicle", root, true)) do
         if hasWalkInDoor(v) then
-            local hx, hy, hz = getVehicleComponentPosition(v, "door_lf_dummy", "world")
+            local component = vlogic.CABIN_DOOR_MODELS[getElementModel(v)] and vlogic.CABIN_DOOR_COMPONENT or "door_lf_dummy"
+            local hx, hy, hz = getVehicleComponentPosition(v, component, "world")
             local d = hx and getDistanceBetweenPoints3D(px, py, pz, hx, hy, hz)
             if d and d < vlogic.DOOR_REACH then
                 local itemD = exports.items:nearestItemDistance()
@@ -126,7 +130,11 @@ function nearbyTrailerDoor()
                     local lz = dx * m[3][1] + dy * m[3][2] + dz * m[3][3]
                     locked = not vlogic.inCargoBox(lx, ly, lz)
                 end
-                return v, getVehicleDoorOpenRatio(v, vlogic.WALK_IN_DOOR) > 0.5, locked
+                local open = getVehicleDoorOpenRatio(v, vlogic.WALK_IN_DOOR) > 0.5
+                if vlogic.CABIN_DOOR_MODELS[getElementModel(v)] then
+                    open = getElementData(v, vlogic.CABIN_DOOR_DATA) == 1
+                end
+                return v, open, locked
             end
         end
     end

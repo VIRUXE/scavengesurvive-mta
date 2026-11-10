@@ -300,6 +300,16 @@ M.MODEL_LENGTH = {
 M.WALK_IN_DOOR = 2
 M.DOOR_REACH = 1.8
 M.DOOR_SERVER_REACH = 6.0
+-- Vehicles whose front-left door is a walk-in door the same key works, without the trailer's lock, keypad, armour or
+-- cargo rules (a type flagged door = true gets all of those, and loses its trunk): the Marquis's cabin door
+-- (marquis_cabin).
+M.CABIN_DOOR_MODELS = { [484] = true }
+-- A boat's door ratio is not synced to clients, so the cabin door's state is element data (0 shut, 1 open) that
+-- marquis_cabin turns into a swing of the leaf on every client.
+M.CABIN_DOOR_DATA = "vehicles.cabinDoor"
+-- the hinge frame of that door in the model (tools/marquis_cabin/cabin.py): not the standard door_lf_dummy, which the game
+-- resets on a boat every frame
+M.CABIN_DOOR_COMPONENT = "cabin_door"
 
 -- The door's hinge in the vehicle's frame (airstream_trailer/towable.lua `door`; the server has no component
 -- positions): a lock tool or key works within DOOR_LOCK_REACH of it, in the XY plane, inside or outside.

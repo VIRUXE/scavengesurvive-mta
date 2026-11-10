@@ -1606,12 +1606,19 @@ end)
 net.handler("trailerDoorToggleRequested", function(player, vehicle)
     local inf = isElement(vehicle) and info[vehicle]
     local vt = inf and exports.data:vehicleType(inf.uname)
-    if not (vt and vt.door) or getPedOccupiedVehicle(player) then
+    local cabinDoor = inf and vlogic.CABIN_DOOR_MODELS[getElementModel(vehicle)] == true
+    if not (cabinDoor or (vt and vt.door)) or getPedOccupiedVehicle(player) then
         return
     end
     local px, py, pz = getElementPosition(player)
     local vx, vy, vz = getElementPosition(vehicle)
     if getDistanceBetweenPoints3D(px, py, pz, vx, vy, vz) > vlogic.DOOR_SERVER_REACH then
+        return
+    end
+    if cabinDoor then
+        local shut = getElementData(vehicle, vlogic.CABIN_DOOR_DATA) ~= 1
+        setElementData(vehicle, vlogic.CABIN_DOOR_DATA, shut and 1 or 0, "broadcast", "deny")
+        markUsed(vehicle)
         return
     end
     local open = getVehicleDoorOpenRatio(vehicle, vlogic.WALK_IN_DOOR) < 0.5
