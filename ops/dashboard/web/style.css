@@ -120,6 +120,9 @@ body {
   padding: 10px 12px; background: rgba(28, 31, 29, 0.97); border: 1px solid var(--line-strong); border-radius: var(--radius);
 }
 .scrub input[type="range"] { flex: 1; accent-color: var(--lichen); }
+.scrub { flex-wrap: wrap; }
+.scrub-note { flex: 1 0 100%; order: -1; margin: 0 0 2px; }
+.scrub-note[hidden] { display: none; }
 .scrub-label { min-width: 11ch; text-align: right; }
 
 .coords {

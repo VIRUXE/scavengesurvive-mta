@@ -166,6 +166,30 @@ def downsample(rows, limit):
     return out
 
 
+def sparse_points(who, who_id, start, end):
+    """Where the database knows a character was when there is no full trail: each vehicle enter/exit (position and
+    time) and the character's last saved position (where they logged off, or died). Rows are shaped like trail points
+    plus a label: [x, y, z, interior, dimension, vehicle, unix, label]. Characters never moved from (0, 0) are skipped
+    (a fresh row, not a place)."""
+    cond = "c.id = %s" if who == "char_id" else "c.account_id = %s"
+    sql = (
+        "SELECT v.x, v.y, v.z, 0, 0, 0, UNIX_TIMESTAMP(v.at), CONCAT('vehicle ', v.action) AS label "
+        "FROM vehicle_events v JOIN characters c ON c.id = v.character_id "
+        f"WHERE {cond} AND v.at >= FROM_UNIXTIME(%s) AND v.at <= FROM_UNIXTIME(%s) "
+        "UNION ALL "
+        "SELECT c.x, c.y, c.z, c.interior, c.dimension, 0, UNIX_TIMESTAMP(c.updated_at), "
+        "IF(c.alive = 1, 'last saved position', 'died here') FROM characters c "
+        f"WHERE {cond} AND c.updated_at >= FROM_UNIXTIME(%s) AND c.updated_at <= FROM_UNIXTIME(%s) "
+        "ORDER BY 7"
+    )
+    rows = query(sql, (who_id, start, end, who_id, start, end))
+    return [
+        [round(r[0], 1), round(r[1], 1), round(r[2], 1), r[3], r[4], r[5], float(r[6]), r[7]]
+        for r in rows
+        if abs(r[0]) > 0.5 or abs(r[1]) > 0.5
+    ]
+
+
 def api_track(params):
     start, end = need_int(params, "from"), need_int(params, "to")
     if end < start:
@@ -180,7 +204,7 @@ def api_track(params):
     )
     rows = [[round(r[0], 1), round(r[1], 1), round(r[2], 1), r[3], r[4], r[5], float(r[6])] for r in query(sql, (who_id, start, end))]
     total = len(rows)
-    return {"points": downsample(rows, TRACK_LIMIT), "total": total}
+    return {"points": downsample(rows, TRACK_LIMIT), "total": total, "sparse": sparse_points(who, who_id, start, end)}
 
 
 def like_prefix(text):
@@ -196,7 +220,12 @@ def api_sessions(params):
         args.append(like_prefix(name))
     sql = (
         "SELECT l.id, l.name, l.account_id, UNIX_TIMESTAMP(l.joined_at), UNIX_TIMESTAMP(l.left_at), "
-        "COUNT(t.at), GROUP_CONCAT(DISTINCT t.char_id) FROM connection_log l "
+        "COUNT(t.at), GROUP_CONCAT(DISTINCT t.char_id), "
+        "(SELECT COUNT(*) FROM vehicle_events v JOIN characters c ON c.id = v.character_id "
+        " WHERE c.account_id = l.account_id AND v.at >= l.joined_at AND v.at <= COALESCE(l.left_at, NOW())) + "
+        "(SELECT COUNT(*) FROM characters c WHERE c.account_id = l.account_id AND (c.x <> 0 OR c.y <> 0) "
+        " AND c.updated_at >= l.joined_at AND c.updated_at <= COALESCE(l.left_at, NOW())) AS known "
+        "FROM connection_log l "
         "LEFT JOIN character_track t ON t.account_id = l.account_id AND t.at >= l.joined_at "
         "AND t.at <= COALESCE(l.left_at, NOW()) "
         f"WHERE {where} GROUP BY l.id ORDER BY l.joined_at DESC LIMIT 200"
@@ -211,6 +240,7 @@ def api_sessions(params):
                 "joinedAt": int(r[3]),
                 "leftAt": int(r[4]) if r[4] is not None else None,
                 "points": r[5],
+                "known": int(r[7]),
                 "charIds": [int(c) for c in r[6].split(",")] if r[6] else [],
             }
         )

@@ -339,11 +339,27 @@ async function openSession(s, button) {
   document.body.classList.add("session-mode");
   sessionLayer.clearLayers();
   trackPoints = track.points;
-  if (!trackPoints.length) { $("sessionEmpty").hidden = false; $("sessionEmpty").textContent = "No trail was recorded for that session."; $("scrub").hidden = true; return; }
-  $("sessionEmpty").hidden = true;
+  let sparse = false;
+  if (!trackPoints.length && track.sparse && track.sparse.length) {
+    // no full trail (the session predates trail recording): show the stops the database does know
+    trackPoints = track.sparse; sparse = true;
+    $("sessionEmpty").hidden = true;
+    $("scrubNote").hidden = false;
+    $("scrubNote").textContent = `No full trail was recorded for this session. Showing ${trackPoints.length} known stops: vehicle use, and where the character died or last saved.`;
+  } else if (!trackPoints.length) {
+    $("sessionEmpty").hidden = false; $("sessionEmpty").textContent = "Nothing is known about where this player was during that session."; $("scrub").hidden = true; return;
+  } else { $("sessionEmpty").hidden = true; $("scrubNote").hidden = true; }
   const t0 = trackPoints[0][6], t1 = trackPoints[trackPoints.length - 1][6], span = Math.max(1, t1 - t0);
-  trailLines(trackPoints, (t) => mix(COLOR.lichen, COLOR.bone, t), (u) => (u - t0) / span, 3).forEach((l) => sessionLayer.addLayer(l));
-  trackDot = L.circleMarker(ll(trackPoints[0][0], trackPoints[0][1]), { radius: 7, color: "#141614", weight: 2, fillColor: COLOR.bone, fillOpacity: 1, renderer: canvas, interactive: false }).addTo(sessionLayer);
+  if (sparse) {
+    const out = trackPoints.filter((p) => !p[3] && !p[4]);
+    L.polyline(out.map((p) => ll(p[0], p[1])), { color: COLOR.bone, weight: 3, dashArray: "8 7", opacity: 0.85, renderer: canvas, interactive: false }).addTo(sessionLayer);
+    for (const p of trackPoints) {
+      const stop = L.circleMarker(ll(p[0], p[1]), { radius: 7, color: COLOR.bone, weight: 2, fillColor: "#3f5a4b", fillOpacity: 1, renderer: canvas });
+      stop.bindTooltip(`${p[7]}, ${clock(p[6])}${p[3] || p[4] ? " (inside)" : ""}`);
+      stop.addTo(sessionLayer);
+    }
+  } else trailLines(trackPoints, (t) => mix(COLOR.lichen, COLOR.bone, t), (u) => (u - t0) / span, 3).forEach((l) => sessionLayer.addLayer(l));
+  trackDot = L.circleMarker(ll(trackPoints[0][0], trackPoints[0][1]), { radius: 10, color: "#141614", weight: 3, fillColor: COLOR.ember, fillOpacity: 1, renderer: canvas, interactive: false }).addTo(sessionLayer);
   const range = $("scrubRange");
   range.max = trackPoints.length - 1; range.value = 0;
   scrubTo(0);
@@ -351,12 +367,13 @@ async function openSession(s, button) {
   const outdoor = trackPoints.filter((p) => !p[3] && !p[4]);
   if (outdoor.length) map.fitBounds(L.latLngBounds(outdoor.map((p) => ll(p[0], p[1]))).pad(0.15), { paddingTopLeft: [window.innerWidth > 720 ? 300 : 0, 0] });
   playerLayer.eachLayer((l) => l.setStyle && l.setStyle({ opacity: 0.25 }));
+  $("sessions").hidden = true; // the History button brings it back; it would sit on top of the track
 }
 function scrubTo(i) {
   const p = trackPoints[i];
   if (!p) return;
   trackDot.setLatLng(ll(p[0], p[1]));
-  $("scrubLabel").textContent = clock(p[6]) + (p[3] || p[4] ? " (inside)" : "");
+  $("scrubLabel").textContent = (p[7] ? p[7] + ", " : "") + clock(p[6]) + (p[3] || p[4] ? " (inside)" : "");
 }
 $("scrubRange").addEventListener("input", (e) => scrubTo(+e.target.value));
 $("backToLive").addEventListener("click", backToLive);
@@ -376,7 +393,7 @@ async function searchSessions() {
       el("span", { className: "name", textContent: s.name }),
       el("span", { className: "sub", textContent: clock(s.joinedAt) }),
       el("span", { className: "sub", textContent: s.leftAt ? duration(s.leftAt - s.joinedAt) : "still online", style: "text-align:left" }),
-      el("span", { className: "sub", textContent: s.points ? `${s.points.toLocaleString()} points` : "no trail" }),
+      el("span", { className: "sub", textContent: s.points ? `${s.points.toLocaleString()} points` : s.known ? `${s.known} known stops` : "no location data" }),
     );
     b.addEventListener("click", () => openSession(s, b));
     list.append(el("li", {}, b));
