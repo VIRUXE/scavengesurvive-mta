@@ -1,5 +1,5 @@
 /* Staff survey map. World metres: x and y run -3000..3000 (see tools/render_map.py). Leaflet uses a custom CRS so
-   zoom 0 is the whole world in one 256 px tile, which is also how a terrain tile pyramid (tiles/{z}/{x}/{y}.png,
+   zoom 0 is the whole world in one 256 px tile, which is also how a terrain tile pyramid (tiles/{z}/{x}/{y}.jpg,
    row 0 along the north edge) lines up with it. A point is L.latLng(y, x). */
 "use strict";
 
@@ -44,16 +44,20 @@ const el = (tag, props = {}, ...kids) => {
 /* ---------- map ---------- */
 
 const CRS = L.Util.extend({}, L.CRS.Simple, { transformation: new L.Transformation(K, WORLD * K, -K, WORLD * K) });
-const map = L.map("map", { crs: CRS, minZoom: 0.5, maxZoom: 6, zoomSnap: 0.25, zoomDelta: 0.5, maxBounds: [[-3300, -3300], [3300, 3300]], attributionControl: true });
+const map = L.map("map", { crs: CRS, minZoom: 0.5, maxZoom: 7, zoomSnap: 0.25, zoomDelta: 0.5, maxBounds: [[-3300, -3300], [3300, 3300]], attributionControl: true });
 map.attributionControl.setPrefix(false);
-map.attributionControl.addAttribution("Radar tiles © Rockstar Games");
+map.attributionControl.addAttribution("Map art © Rockstar Games; satellite render by the community");
 
 const radar = L.imageOverlay("radar.webp", BOUNDS);
-const terrain = L.tileLayer("tiles/{z}/{x}/{y}.png", { minZoom: 0, maxZoom: 6, maxNativeZoom: 4, noWrap: true, bounds: BOUNDS, errorTileUrl: "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" });
+const terrain = L.tileLayer("tiles/{z}/{x}/{y}.jpg", { minZoom: 0, maxZoom: 7, maxNativeZoom: 5, noWrap: true, bounds: BOUNDS, errorTileUrl: "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" });
 radar.addTo(map);
 const baseControl = L.control.layers({ Radar: radar, Terrain: terrain }, {}, { collapsed: false, position: "topright" }).addTo(map);
-fetch("tiles/0/0/0.png", { method: "HEAD" }).then((r) => {
-  if (!r.ok) {
+fetch("tiles/0/0/0.jpg", { method: "HEAD" }).then((r) => {
+  if (r.ok) {
+    // satellite is the default base map once its tiles are installed
+    map.removeLayer(radar);
+    terrain.addTo(map);
+  } else {
     const label = [...document.querySelectorAll(".leaflet-control-layers-base label span")].find((s) => s.textContent.trim() === "Terrain");
     if (label) label.textContent = " Terrain (not installed)";
   }

@@ -30,9 +30,17 @@ spawn with whether an item lies there and which. Read-only; nothing here writes 
    ```
    Reload with `nginx -t && systemctl reload nginx`.
 
-## Terrain base map
-Optional. Put a tile pyramid in `/var/www/nasa/ssmta/tiles/{z}/{x}/{y}.png`: zoom 0..4, 256 px tiles, the 6000 m
-world square, row 0 along the north edge. Until it exists the page labels the option "Terrain (not installed)".
+## Terrain base map (satellite)
+Optional; the page makes it the default base map once `tiles/0/0/0.jpg` exists, and labels the option "Terrain (not
+installed)" until then. `make_tiles.py` builds the pyramid (zoom 0..5, 256 px JPEG, row 0 north) from the
+`satellite_tiles` folder of github.com/interactive-game-maps/grand_theft_auto_san_andreas, which is a fan render of
+the game's art with no licence of its own, so keep the output on the LAN and out of git:
+
+```
+git clone --depth 1 --filter=blob:none --sparse <that repo> src && git -C src sparse-checkout set satellite_tiles
+python3 -I ops/dashboard/make_tiles.py --source-tiles src/satellite_tiles --out /var/www/nasa/ssmta/tiles
+```
+Checked against the radar (docs/images/map/base.png): roads and coastlines coincide at zero offset.
 
 ## Local check
 `SSMTA_PORT=8121 SSMTA_DB_DEFAULTS_FILE=~/.my.cnf python3 server.py`; set `SSMTA_LIVE_FILE` to try other positions.
