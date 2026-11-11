@@ -1,0 +1,17 @@
+[Unit]
+Description=Scavenge & Survive staff map API (ops/dashboard)
+After=network.target mariadb.service
+
+[Service]
+User=mta
+EnvironmentFile=/etc/ssmta-dashboard.env
+ExecStart=/usr/bin/python3 /gta/sa/mta/servers/scavengesurvive/scavengesurvive-mta/ops/dashboard/server.py
+Restart=on-failure
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadOnlyPaths=/gta
+
+[Install]
+WantedBy=multi-user.target

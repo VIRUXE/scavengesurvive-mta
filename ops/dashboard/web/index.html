@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Survey map</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="bar">
+  <h1 class="mark">Scavenge &amp; Survive survey</h1>
+  <p id="status" class="status" role="status" aria-live="polite">Connecting…</p>
+  <button id="railToggle" class="rail-toggle" type="button" aria-expanded="false" aria-controls="rail">Players</button>
+</header>
+
+<main class="stage">
+  <div id="map" aria-label="Map of San Andreas"></div>
+
+  <aside id="rail" class="rail" aria-label="Players and layers">
+    <section class="block">
+      <h2>Online <span id="onlineCount" class="count">0</span></h2>
+      <ul id="roster" class="roster"></ul>
+      <p id="rosterEmpty" class="empty">No one is online. Positions appear here as soon as someone spawns.</p>
+    </section>
+
+    <section class="block">
+      <h2>Layers</h2>
+      <label class="check"><input type="checkbox" id="layerPlayers" checked> Players and trails</label>
+      <label class="check"><input type="checkbox" id="layerLoot" checked> Loot spawns</label>
+      <div id="lootChips" class="chips" role="group" aria-label="Loot spawn filter"></div>
+      <p id="lootNote" class="note"></p>
+    </section>
+
+    <section class="block">
+      <h2>History</h2>
+      <button id="openSessions" class="btn" type="button">Past sessions</button>
+    </section>
+  </aside>
+
+  <section id="sessions" class="sessions" hidden aria-label="Past sessions">
+    <form id="sessionForm" class="sessions-form">
+      <label class="field"><span>Player</span><input id="sessionName" type="search" autocomplete="off" placeholder="Name starts with…"></label>
+      <label class="field"><span>Within</span>
+        <select id="sessionDays"><option value="1">1 day</option><option value="7" selected>7 days</option><option value="30">30 days</option></select>
+      </label>
+      <button class="btn" type="submit">Search</button>
+      <button id="closeSessions" class="btn ghost" type="button">Close</button>
+    </form>
+    <ul id="sessionList" class="session-list"></ul>
+    <p id="sessionEmpty" class="empty" hidden>No sessions in that window.</p>
+  </section>
+
+  <div id="scrub" class="scrub" hidden>
+    <button id="backToLive" class="btn" type="button">Back to live</button>
+    <input id="scrubRange" type="range" min="0" max="0" value="0" aria-label="Position along the session">
+    <output id="scrubLabel" class="scrub-label"></output>
+  </div>
+
+  <p id="coords" class="coords" aria-hidden="true"></p>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

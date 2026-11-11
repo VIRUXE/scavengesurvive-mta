@@ -1,0 +1,178 @@
+@font-face { font-family: "Bebas Neue"; src: url("fonts/bebas-neue-latin.woff2") format("woff2"); font-display: swap; }
+@font-face { font-family: "Inter"; font-weight: 400; src: url("fonts/inter-400-latin.woff2") format("woff2"); font-display: swap; }
+@font-face { font-family: "Inter"; font-weight: 500; src: url("fonts/inter-500-latin.woff2") format("woff2"); font-display: swap; }
+@font-face { font-family: "Inter"; font-weight: 600; src: url("fonts/inter-600-latin.woff2") format("woff2"); font-display: swap; }
+
+:root {
+  --graphite: #1c1f1d;
+  --graphite-deep: #141614;
+  --line: rgba(220, 214, 200, 0.14);
+  --line-strong: rgba(220, 214, 200, 0.28);
+  --bone: #dcd6c8;
+  --bone-dim: #a39e92;
+  --ember: #ff6a00;
+  --rust: #7a3b16;
+  --hivis: #e8d44d;
+  --lichen: #6f8a7a;
+  --ash: #5a5853;
+  --radius: 3px;
+  --rail: 300px;
+  --bar: 44px;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  display: flex; flex-direction: column;
+  background: var(--graphite-deep); color: var(--bone);
+  font: 400 14px/1.45 "Inter", system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+:focus-visible { outline: 2px solid var(--ember); outline-offset: 2px; }
+
+/* top bar */
+.bar {
+  flex: 0 0 var(--bar); display: flex; align-items: center; gap: 16px; padding: 0 16px;
+  background: var(--graphite); border-bottom: 1px solid var(--line); z-index: 1100;
+}
+.mark { margin: 0; font: 400 24px/1 "Bebas Neue", Impact, sans-serif; letter-spacing: 0.02em; }
+.status { margin: 0 0 0 auto; color: var(--bone-dim); font-size: 13px; }
+.status::before {
+  content: ""; display: inline-block; width: 8px; height: 8px; margin-right: 8px; border-radius: 50%;
+  background: var(--ash); vertical-align: 0;
+}
+.status[data-state="live"]::before { background: var(--ember); }
+.status[data-state="stale"]::before, .status[data-state="down"]::before { background: var(--hivis); }
+.rail-toggle { display: none; }
+
+/* stage: map full bleed, rail and panels laid over it */
+.stage { position: relative; flex: 1; min-height: 0; }
+#map { position: absolute; inset: 0; background: #0f1110; }
+
+.rail {
+  position: absolute; z-index: 1000; top: 0; bottom: 0; left: 0; width: var(--rail); overflow-y: auto;
+  background: rgba(28, 31, 29, 0.95); border-right: 1px solid var(--line);
+}
+.block { padding: 14px 16px 16px; border-bottom: 1px solid var(--line); }
+.block h2 { margin: 0 0 10px; font: 600 13px/1.2 "Inter", sans-serif; color: var(--bone-dim); }
+.count { margin-left: 6px; color: var(--bone); }
+
+.roster { list-style: none; margin: 0; padding: 0; }
+.roster li {
+  display: grid; grid-template-columns: 1fr auto; gap: 0 12px; padding: 8px 8px; margin: 0 -8px;
+  border-radius: var(--radius); cursor: pointer;
+}
+.roster li:hover { background: rgba(220, 214, 200, 0.06); }
+.roster li[aria-pressed="true"] { background: rgba(255, 106, 0, 0.12); box-shadow: inset 2px 0 var(--ember); }
+.roster .who { font: 400 22px/1.1 "Bebas Neue", Impact, sans-serif; letter-spacing: 0.02em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.roster .who small { font: 500 11px/1 "Inter", sans-serif; margin-left: 6px; color: var(--ember); }
+.roster .time { color: var(--bone); text-align: right; }
+.roster .meta { grid-column: 1 / -1; color: var(--bone-dim); font-size: 12px; }
+.empty { margin: 0; color: var(--bone-dim); font-size: 13px; }
+.note { margin: 10px 0 0; color: var(--bone-dim); font-size: 12px; }
+
+.check { display: flex; align-items: center; gap: 8px; padding: 4px 0; cursor: pointer; }
+.check input { accent-color: var(--ember); width: 16px; height: 16px; margin: 0; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.chip {
+  display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border: 1px solid var(--line-strong);
+  border-radius: var(--radius); background: transparent; color: var(--bone); font: 500 12px/1.2 "Inter", sans-serif; cursor: pointer;
+}
+.chip::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--swatch); }
+.chip[aria-pressed="false"] { color: var(--bone-dim); border-style: dashed; }
+.chip[aria-pressed="false"]::before { background: transparent; box-shadow: inset 0 0 0 1.5px var(--swatch); }
+.chip b { font-weight: 600; }
+
+.btn {
+  padding: 7px 12px; border: 1px solid var(--line-strong); border-radius: var(--radius); background: #262a27;
+  color: var(--bone); font: 500 13px/1.2 "Inter", sans-serif; cursor: pointer;
+}
+.btn:hover { border-color: var(--bone-dim); }
+.btn.ghost { background: transparent; }
+
+/* past sessions panel */
+.sessions {
+  position: absolute; z-index: 1000; left: calc(var(--rail) + 12px); top: 12px; width: min(460px, calc(100% - var(--rail) - 80px));
+  max-height: calc(100% - 24px); display: flex; flex-direction: column;
+  background: rgba(28, 31, 29, 0.97); border: 1px solid var(--line-strong); border-radius: var(--radius);
+}
+.sessions[hidden], .scrub[hidden], .empty[hidden] { display: none; }
+.sessions-form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px; padding: 12px; border-bottom: 1px solid var(--line); }
+.field { display: grid; gap: 3px; font-size: 12px; color: var(--bone-dim); }
+.field input, .field select {
+  padding: 6px 8px; border: 1px solid var(--line-strong); border-radius: var(--radius); background: var(--graphite-deep);
+  color: var(--bone); font: 400 13px "Inter", sans-serif;
+}
+.session-list { list-style: none; margin: 0; padding: 4px 0; overflow-y: auto; }
+.session-list button {
+  display: grid; grid-template-columns: 1fr auto; gap: 0 12px; width: 100%; padding: 8px 12px; border: 0; background: transparent;
+  color: var(--bone); text-align: left; font: 400 13px "Inter", sans-serif; cursor: pointer;
+}
+.session-list button:hover, .session-list button[aria-pressed="true"] { background: rgba(111, 138, 122, 0.16); }
+.session-list .name { font: 400 20px/1.1 "Bebas Neue", Impact, sans-serif; letter-spacing: 0.02em; }
+.session-list .sub { color: var(--bone-dim); font-size: 12px; text-align: right; }
+.sessions .empty { padding: 12px; }
+
+.scrub {
+  position: absolute; z-index: 1000; left: calc(var(--rail) + 12px); right: 12px; bottom: 12px; display: flex; align-items: center; gap: 12px;
+  padding: 10px 12px; background: rgba(28, 31, 29, 0.97); border: 1px solid var(--line-strong); border-radius: var(--radius);
+}
+.scrub input[type="range"] { flex: 1; accent-color: var(--lichen); }
+.scrub-label { min-width: 11ch; text-align: right; }
+
+.coords {
+  position: absolute; z-index: 900; left: calc(var(--rail) + 8px); bottom: 4px; margin: 0; padding: 2px 6px;
+  background: rgba(20, 22, 20, 0.7); color: var(--bone-dim); font-size: 12px; pointer-events: none;
+}
+body.session-mode .coords { bottom: 64px; }
+
+/* map furniture */
+.leaflet-container { background: #0f1110; font-family: "Inter", system-ui, sans-serif; }
+.leaflet-bar a, .leaflet-control-layers {
+  background: var(--graphite); color: var(--bone); border-color: var(--line-strong);
+}
+.leaflet-bar a:hover { background: #262a27; color: var(--bone); }
+.leaflet-control-layers { border: 1px solid var(--line-strong); border-radius: var(--radius); box-shadow: none; }
+.leaflet-control-layers-expanded { padding: 8px 10px; color: var(--bone); }
+.leaflet-control-layers label { margin: 2px 0; }
+.leaflet-control-layers input { accent-color: var(--ember); }
+.leaflet-control-attribution { background: rgba(20, 22, 20, 0.7) !important; color: var(--bone-dim); }
+.leaflet-control-attribution a { color: var(--bone-dim); }
+.leaflet-popup-content-wrapper, .leaflet-popup-tip {
+  background: var(--graphite); color: var(--bone); border: 1px solid var(--line-strong); border-radius: var(--radius); box-shadow: none;
+}
+.leaflet-popup-content { margin: 12px 14px; font-size: 13px; line-height: 1.5; }
+.leaflet-popup-close-button { color: var(--bone-dim) !important; }
+.popup h3 { margin: 0 0 6px; font: 400 20px/1.1 "Bebas Neue", Impact, sans-serif; letter-spacing: 0.02em; }
+.popup dl { display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; margin: 0; }
+.popup dt { color: var(--bone-dim); }
+.popup dd { margin: 0; }
+.popup ul { margin: 6px 0 0; padding-left: 18px; }
+.player-label.leaflet-tooltip {
+  background: transparent; border: 0; box-shadow: none; padding: 0 0 0 2px; color: var(--bone);
+  font: 400 17px/1 "Bebas Neue", Impact, sans-serif; letter-spacing: 0.02em; text-shadow: 0 0 3px #000, 0 0 3px #000;
+}
+.player-label.leaflet-tooltip-right::before { display: none; }
+
+@media (max-width: 720px) {
+  .rail-toggle {
+    display: inline-block; padding: 5px 10px; border: 1px solid var(--line-strong); border-radius: var(--radius);
+    background: #262a27; color: var(--bone); font: 500 13px "Inter", sans-serif;
+  }
+  .mark { font-size: 20px; }
+  .status { margin-left: auto; font-size: 12px; }
+  .rail {
+    top: auto; width: 100%; max-height: 55%; border-right: 0; border-top: 1px solid var(--line-strong);
+    transform: translateY(100%); visibility: hidden;
+  }
+  body.rail-open .rail { transform: none; visibility: visible; }
+  .sessions { left: 8px; right: 8px; width: auto; }
+  .scrub { left: 8px; right: 8px; flex-wrap: wrap; }
+  .coords { left: 8px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
