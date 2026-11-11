@@ -86,6 +86,21 @@ CREATE TABLE IF NOT EXISTS `bug_reports` (
   KEY `ix_bug_reports_created` (`created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
+CREATE TABLE IF NOT EXISTS `character_track` (
+  `char_id` int(11) NOT NULL,
+  `account_id` int(11) NOT NULL,
+  `at` datetime(1) NOT NULL,
+  `x` float NOT NULL,
+  `y` float NOT NULL,
+  `z` float NOT NULL,
+  `interior` tinyint(4) NOT NULL DEFAULT 0,
+  `dimension` int(11) NOT NULL DEFAULT 0,
+  `vehicle` smallint(6) DEFAULT NULL,
+  PRIMARY KEY (`char_id`,`at`),
+  KEY `ix_character_track_account_at` (`account_id`,`at`),
+  KEY `ix_character_track_at` (`at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+
 CREATE TABLE IF NOT EXISTS `characters` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `account_id` int(11) NOT NULL,
@@ -777,6 +792,18 @@ BEGIN
       c.drugs = COALESCE(j.drugs, c.drugs)
     WHERE c.alive = 1;
   SET v_n = ROW_COUNT();
+  -- trail points the server buffered since the last flush (staff dashboard); "ago" is milliseconds before now,
+  -- so the game server and the database need no shared clock
+  INSERT IGNORE INTO character_track (char_id, account_id, at, x, y, z, interior, dimension, vehicle)
+    SELECT c.id, c.account_id, NOW(1) - INTERVAL (p.ago * 1000) MICROSECOND, p.x, p.y, p.z, p.interior, p.dimension,
+      NULLIF(p.vehicle, 0)
+    FROM JSON_TABLE(p_rows, '$[0][*]' COLUMNS (
+      id INT PATH '$.id',
+      NESTED PATH '$.path[*]' COLUMNS (
+        ago INT PATH '$[0]', x FLOAT PATH '$[1]', y FLOAT PATH '$[2]', z FLOAT PATH '$[3]',
+        interior INT PATH '$[4]', dimension INT PATH '$[5]', vehicle INT PATH '$[6]'))) p
+    JOIN characters c ON c.id = p.id
+    WHERE p.x IS NOT NULL;
   COMMIT;
   SELECT 1 AS ok, 'OK' AS code, JSON_OBJECT('updated', CAST(v_n AS SIGNED)) AS payload;
 END//
@@ -2748,6 +2775,8 @@ BEGIN
       ON DUPLICATE KEY UPDATE pos = VALUE(pos);
   END IF;
 END//
+
+CREATE OR REPLACE EVENT `ev_character_track_purge` ON SCHEDULE EVERY 1 DAY STARTS '2026-11-12 04:00:00' ON COMPLETION NOT PRESERVE ENABLE DO DELETE FROM character_track WHERE at < NOW() - INTERVAL 30 DAY//
 
 CREATE OR REPLACE EVENT `ev_despawn_items` ON SCHEDULE EVERY 1 MINUTE STARTS '2026-10-25 12:32:28' ON COMPLETION NOT PRESERVE ENABLE DO DELETE FROM items WHERE despawn_at IS NOT NULL AND despawn_at < NOW() AND x IS NOT NULL//
 

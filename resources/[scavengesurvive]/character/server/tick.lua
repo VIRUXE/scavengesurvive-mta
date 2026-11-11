@@ -91,6 +91,57 @@ return function(ctx)
         return x, y, z, getElementInterior(player), getElementDimension(player)
     end
 
+    -- Trail for the staff dashboard: a point every TRAIL_MS when the character moved TRAIL_MIN metres (or changed
+    -- interior/dimension), buffered per player and sent with the next flush as
+    -- { msAgo, x, y, z, int, dim, vehicleModel }.
+    local TRAIL_MS, TRAIL_MIN, TRAIL_KEEP = 2000, 1.5, 60
+    local trail = {} -- player -> { last = { x, y, z, int, dim }, points = { { tick, x, y, z, int, dim, veh } } }
+
+    local function sampleTrail()
+        local now = getTickCount()
+        for player, st in pairs(state.byPlayer) do
+            if isElement(player) and st.hp > 0 and not st.dead then
+                local x, y, z, int, dim = placeOf(player)
+                local t = trail[player]
+                if not t then
+                    t = { points = {} }
+                    trail[player] = t
+                end
+                local l = t.last
+                local moved = not l
+                    or l[4] ~= int
+                    or l[5] ~= dim
+                    or (x - l[1]) ^ 2 + (y - l[2]) ^ 2 + (z - l[3]) ^ 2 >= TRAIL_MIN * TRAIL_MIN
+                if moved then
+                    local vehicle = getPedOccupiedVehicle(player)
+                    t.last = { x, y, z, int, dim }
+                    t.points[#t.points + 1] = { now, x, y, z, int, dim, vehicle and getElementModel(vehicle) or nil }
+                    if #t.points > TRAIL_KEEP then
+                        table.remove(t.points, 1)
+                    end
+                end
+            end
+        end
+    end
+
+    -- Points since the last flush, oldest first, as offsets from now; clears the buffer.
+    local function takeTrail(player)
+        local t = trail[player]
+        if not t or #t.points == 0 then
+            return nil
+        end
+        local now, out = getTickCount(), {}
+        for i, p in ipairs(t.points) do
+            out[i] = { now - p[1], p[2], p[3], p[4], p[5], p[6], p[7] or false }
+        end
+        t.points = {}
+        return out
+    end
+
+    addEventHandler("onPlayerQuit", root, function()
+        trail[source] = nil
+    end)
+
     function M.flushOne(player, st)
         if not st.dirty or st.dead then
             return
@@ -115,6 +166,7 @@ return function(ctx)
                 row.skills = st.skillsDirty and skills.encode(st.skills) or nil
                 row.infection, row.drugs = medical.encodeInfection(st.infection), medical.encodeDrugs(st.drugs)
                 row.interior, row.dimension = int, dim
+                row.path = takeTrail(player)
                 rows[#rows + 1] = row
                 st.dirty, st.skillsDirty = false, false
             end
@@ -130,6 +182,7 @@ return function(ctx)
         end)
     end
 
+    setTimer(sampleTrail, TRAIL_MS, 0)
     setTimer(function()
         M.flushAll(false)
     end, FLUSH_MS, 0)
