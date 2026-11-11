@@ -16,3 +16,6 @@ tools/blender/*
 .cache/
 tools/trailer_shells/build/
 tools/marquis_cabin/build/
+
+# live snapshot written by the dashboard resource
+resources/\[scavengesurvive\]/dashboard/live.json

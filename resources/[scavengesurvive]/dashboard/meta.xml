@@ -1,0 +1,7 @@
+<meta>
+    <info author="scavengesurvive-mta" type="script" name="dashboard" description="Live player positions for the staff map dashboard (ops/dashboard)" version="0.1.0"/>
+    <min_mta_version server="1.6.0"/>
+    <include resource="character"/>
+    <include resource="maps"/>
+    <script src="server/main.lua" type="server"/>
+</meta>
