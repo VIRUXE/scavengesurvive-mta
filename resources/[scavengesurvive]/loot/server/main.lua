@@ -148,8 +148,8 @@ local function refillTick()
 end
 
 -- Maintenance refill: grant every zone its whole deficit and place it at once through fillWorld, which still
--- enforces point cooldowns, occupied points, and distance from players. Every item placed is one post in the
--- discordchat item respawns channel, so a refill of a nearly empty map posts thousands.
+-- enforces point cooldowns, occupied points, and distance from players. The fill is quiet (no lootSpawned per
+-- point, so discordchat does not post thousands of item respawns); loot.refilledManually logs the total.
 function refillNow()
     if budgetBusy then
         return false
@@ -180,8 +180,12 @@ function refillNow()
                     pending = pending - 1
                     if pending == 0 then
                         budgetBusy = false
-                        log.event("loot.refilledManually", { granted = granted, scale = scale })
-                        fillWorld()
+                        fillWorld(function(placed)
+                            log.event(
+                                "loot.refilledManually",
+                                { granted = granted, placed = placed or 0, scale = scale }
+                            )
+                        end, true)
                     end
                 end
             )
@@ -370,9 +374,9 @@ end
 
 -- Rolls the due points in `rows` (loot_spawns rows: due when next_roll_at has passed and no item of the previous roll
 -- is left) while their zone has allowance and no player is within world.min_player_distance, and places the batch
--- with one loot_roll call. done(ok, spots): ok false when the call failed (the caller reloads the allowance), spots
--- the number of points rolled. The caller holds budgetBusy.
-local function placeRolls(rows, done)
+-- with one loot_roll call. done(ok, spots, items): ok false when the call failed (the caller reloads the allowance),
+-- spots and items what was placed. A quiet batch emits no lootSpawned. The caller holds budgetBusy.
+local function placeRolls(rows, done, quiet)
     local players, minDist = playerPositions(), setting("world.min_player_distance", 150)
     local rolls, zoneOf = {}, {}
     for _, s in ipairs(rows) do
@@ -387,7 +391,7 @@ local function placeRolls(rows, done)
         end
     end
     if #rolls == 0 then
-        return done(true, 0)
+        return done(true, 0, 0)
     end
     local started = getTickCount()
     -- an item left untouched on its point lies loot.point_despawn_minutes (corpses keep loot.despawn_minutes)
@@ -407,14 +411,16 @@ local function placeRolls(rows, done)
         if not res or not res.ok then
             line.ok, line.code = false, res and res.code or "DB_ERROR"
             log.event("loot.rolled", line, "warn")
-            return done(false, 0)
+            return done(false, 0, 0)
         end
         log.event("loot.rolled", line)
-        for _, r in ipairs(sent) do
-            triggerEvent("lootSpawned", resourceRoot, r.s, #r.items, r.items)
+        if not quiet then
+            for _, r in ipairs(sent) do
+                triggerEvent("lootSpawned", resourceRoot, r.s, #r.items, r.items)
+            end
         end
         fillLoveBoxes(sent)
-        done(true, #sent)
+        done(true, #sent, itemCount)
     end, rolls)
 end
 
@@ -474,11 +480,11 @@ local DUE_IN_ZONE = "SELECT s.id, s.x, s.y, s.z, s.zone, s.table_name, s.weight,
 -- The refill's placement (ADR 0001 point 4, correction of 2026-11-12): every zone spends its allowance on due points
 -- drawn at random from the whole zone, never near a player, zone after zone. Most points roll fewer items than they
 -- could, many none, so a zone draws a few points per item it is owed, and draws again until its allowance is spent or
--- a draw rolls no point.
-function fillWorld(onDone)
+-- a draw rolls no point. onDone(items placed) follows; a quiet fill (refillNow) emits no lootSpawned.
+function fillWorld(onDone, quiet)
     if budgetBusy then
         if onDone then
-            onDone()
+            onDone(0)
         end
         return false
     end
@@ -489,13 +495,13 @@ function fillWorld(onDone)
             zones[#zones + 1] = zone
         end
     end
-    local i = 1
+    local i, placed = 1, 0
     local function step()
         local zone = zones[i]
         if not zone then
             budgetBusy = false
             if onDone then
-                onDone()
+                onDone(placed)
             end
             return
         end
@@ -510,15 +516,16 @@ function fillWorld(onDone)
                 i = i + 1
                 return step()
             end
-            placeRolls(rows, function(ok, spots)
+            placeRolls(rows, function(ok, spots, items)
                 if not ok then
                     return loadAllowances(onDone) -- restore reservations from the rolled-back transaction
                 end
+                placed = placed + items
                 if spots == 0 then
                     i = i + 1
                 end
                 step()
-            end)
+            end, quiet)
         end)
     end
     step()

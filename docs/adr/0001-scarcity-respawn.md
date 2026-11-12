@@ -145,8 +145,9 @@ Now the refill tick hands each zone's allowance straight to `fillWorld`, which d
 whole zone (`ORDER BY RAND()`, a few per item owed, drawing again until the allowance is spent or a draw rolls
 nothing) and rolls them through `loot_roll`. The 150 m exclusion holds for players in the overworld only
 (interior 0, dimension 0, where every loot point is). The per-player 15 s scan and the `playerZoneEntered` roll are
-gone; `rollNear` stays for the dev `/rollloot`. Startup places what `loadAllowances` keeps, and `refillNow` places
-the whole deficit at once (one discordchat respawn post per item). `rollWorldNow` places the current allowance.
+gone; `rollNear` stays for the dev `/rollloot`. Startup places what `loadAllowances` keeps. `refillNow` places the
+whole deficit at once and quietly (no `lootSpawned`, so discordchat posts no item respawns; `loot.refilledManually`
+logs the total). `rollWorldNow` places the current allowance.
 
 An item left untouched on the point that rolled it lies `loot.point_despawn_minutes` (1440) before it despawns;
 `loot.despawn_minutes` (120) is now only the corpse's. Cap, refill rate, floor, cooldowns and the count of carried
