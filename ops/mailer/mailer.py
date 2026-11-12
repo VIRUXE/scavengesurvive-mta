@@ -21,6 +21,7 @@ from __future__ import annotations
 import argparse
 import os
 import smtplib
+import socket
 import ssl
 import sys
 import time
@@ -80,6 +81,16 @@ def build(row, sender: str, sender_name: str) -> EmailMessage:
     return msg
 
 
+class _SmtpSslV4(smtplib.SMTP_SSL):
+    """SMTP_SSL over IPv4 only: a host without IPv6 routing otherwise waits out the full timeout on Gmail's AAAA
+    address before falling back (30 s per batch, seen 2026-11-12)."""
+
+    def _get_socket(self, host, port, timeout):
+        addr = socket.getaddrinfo(host, port, socket.AF_INET, socket.SOCK_STREAM)[0][4]
+        sock = socket.create_connection(addr, timeout, self.source_address)
+        return self.context.wrap_socket(sock, server_hostname=host)
+
+
 class Smtp:
     """One SMTP connection per batch, opened on first use and reopened after an error."""
 
@@ -92,7 +103,8 @@ class Smtp:
 
     def send(self, msg: EmailMessage) -> None:
         if self.conn is None:
-            self.conn = smtplib.SMTP_SSL(self.host, self.port, context=ssl.create_default_context(), timeout=30)
+            cls = smtplib.SMTP_SSL if os.environ.get("SMTP_IPV6") == "1" else _SmtpSslV4
+            self.conn = cls(self.host, self.port, context=ssl.create_default_context(), timeout=30)
             self.conn.login(self.user, self.password)
         try:
             self.conn.send_message(msg)
