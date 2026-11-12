@@ -29,6 +29,7 @@ LIVE_FILE = Path(os.environ.get("SSMTA_LIVE_FILE") or ROOT / "resources" / "[sca
 PORT = int(os.environ.get("SSMTA_PORT", "8120"))
 STALE_AFTER = 5  # seconds without a new snapshot before the page is told the server is not live
 TRACK_LIMIT = 20000
+LOOT_HISTORY_LIMIT = 60000
 
 # state codes in /api/loot rows
 READY, LYING, TAKEN, COOLDOWN, DISABLED = 0, 1, 2, 3, 4
@@ -82,6 +83,9 @@ class Cache:
             if hit and time.monotonic() - hit[0] < ttl:
                 return hit[1]
             value = make()
+            # History windows are user-selected; do not retain an unbounded number of large replays.
+            if len(self.items) >= 32 and key not in self.items:
+                del self.items[min(self.items, key=lambda k: self.items[k][0])]
             self.items[key] = (time.monotonic(), value)
             return value
 
@@ -324,7 +328,93 @@ def api_loot_one(spawn_id):
     }
 
 
-ROUTES = {"/api/live": api_live, "/api/track": api_track, "/api/sessions": api_sessions, "/api/loot": api_loot}
+# The spawn link is cleared on pickup, but system-versioned items retain the original link. Join through that
+# history so carried, stored, dropped and deleted loot remains traceable. No new game logging or DB writes.
+LOOT_HISTORY_SQL = (
+    "SELECT i.id, i.type_uname, origin.spawn_id, s.zone, i.loot_spawn_id, i.holder_char_id, i.container_id, "
+    "i.x, i.y, i.interior, i.dimension, UNIX_TIMESTAMP(i.created_at), "
+    "UNIX_TIMESTAMP(i.row_start), UNIX_TIMESTAMP(i.row_end) "
+    "FROM items FOR SYSTEM_TIME ALL AS i "
+    "JOIN (SELECT id, MIN(loot_spawn_id) AS spawn_id FROM items FOR SYSTEM_TIME ALL "
+    "WHERE loot_spawn_id IS NOT NULL GROUP BY id) origin ON origin.id = i.id "
+    "JOIN loot_spawns s ON s.id = origin.spawn_id "
+    "WHERE s.interior = 0 AND s.dimension = 0 AND i.row_start <= FROM_UNIXTIME(%s) "
+    "AND i.row_end >= FROM_UNIXTIME(%s) ORDER BY i.id, i.row_start "
+    f"LIMIT {LOOT_HISTORY_LIMIT + 1}"
+)
+
+
+def history_location(row):
+    """Only changes of location matter; HP/data/rotation updates are not loot movements."""
+    if row[5] is not None:
+        return {"place": "carried", "holder": row[5]}
+    if row[6] is not None:
+        return {"place": "stored", "container": row[6]}
+    return {
+        "place": "spawn" if row[4] is not None else "ground",
+        "x": round(row[7], 2) if row[7] is not None else None,
+        "y": round(row[8], 2) if row[8] is not None else None,
+        "interior": row[9] or 0,
+        "dimension": row[10] or 0,
+    }
+
+
+def history_action(previous, state):
+    if state["place"] == "carried":
+        return "transferred" if previous["place"] == "carried" else "picked up"
+    if state["place"] == "stored":
+        return "stored"
+    return "dropped" if previous["place"] in ("carried", "stored") else "moved"
+
+
+def build_loot_history(rows, start, end):
+    items, initial, events = [], [], []
+    previous, previous_end, item_id = None, None, None
+    for row in rows:
+        at, until = float(row[12]), float(row[13])
+        state = history_location(row)
+        if row[0] != item_id:
+            if previous is not None and start < previous_end <= end:
+                events.append({"at": previous_end, "item": item_id, "kind": "removed", "state": None})
+            item_id, previous, previous_end = row[0], None, None
+            items.append({"id": item_id, "type": row[1], "spawn": row[2], "zone": row[3]})
+        if at <= start < until:
+            initial.append({"item": item_id, "state": state})
+        if start < at <= end:
+            if previous is None:
+                kind = "spawned" if abs(at - float(row[11])) < 2 else "first recorded"
+            else:
+                kind = history_action(previous, state)
+            if previous != state:
+                events.append({"at": at, "item": item_id, "kind": kind, "state": state})
+        previous, previous_end = state, until
+    if previous is not None and start < previous_end <= end:
+        events.append({"at": previous_end, "item": item_id, "kind": "removed", "state": None})
+    events.sort(key=lambda event: (event["at"], event["item"]))
+    return {"from": start, "to": end, "items": items, "initial": initial, "events": events}
+
+
+def api_loot_history(params):
+    start, end = need_int(params, "from"), need_int(params, "to")
+    if start < 0 or end <= start or end - start > 7 * 86400:
+        raise ApiError(400, "choose a time window between 1 second and 7 days")
+    end = min(end, int(time.time()))
+    if end <= start:
+        raise ApiError(400, "choose a time window in the past")
+
+    def make():
+        rows = query(LOOT_HISTORY_SQL, (end, start))
+        if len(rows) > LOOT_HISTORY_LIMIT:
+            raise ApiError(413, "too much history; choose a shorter time window")
+        return build_loot_history(rows, start, end)
+
+    return cache.get(("loot-history", start, end), 30, make)
+
+
+ROUTES = {
+    "/api/live": api_live, "/api/track": api_track, "/api/sessions": api_sessions,
+    "/api/loot": api_loot, "/api/loot-history": api_loot_history,
+}
 
 
 class Handler(BaseHTTPRequestHandler):

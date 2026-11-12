@@ -1,7 +1,7 @@
 # Staff map dashboard (http://nasa/ssmta)
 
-LAN-only map of San Andreas: live players with their trails, past sessions with a scrubber, and every outdoor loot
-spawn with whether an item lies there and which. Read-only; nothing here writes to the game or the database.
+LAN-only map of San Andreas: live players with their trails, past sessions with a scrubber, outdoor loot spawns,
+and a replay of what happened to their items. Read-only; nothing here writes to the game or the database.
 
 ## Parts
 - `resources/[scavengesurvive]/dashboard` (game server): writes `live.json` once a second with each spawned
@@ -9,7 +9,8 @@ spawn with whether an item lies there and which. Read-only; nothing here writes 
   account allowed to call exports.
 - `character/server/tick.lua` + `character_flush`: record trail points into `character_track` (kept 30 days, purged
   by `ev_character_track_purge`) for the past-session view.
-- `server.py`: JSON API on 127.0.0.1:8120 (`/api/live`, `/api/track`, `/api/sessions`, `/api/loot`, `/api/loot/<id>`).
+- `server.py`: JSON API on 127.0.0.1:8120 (`/api/live`, `/api/track`, `/api/sessions`, `/api/loot`, `/api/loot/<id>`,
+  `/api/loot-history?from=<unix>&to=<unix>`).
 - `web/`: the page (Leaflet from cdnjs, fonts and the radar image are local).
 
 ## Install
@@ -42,6 +43,30 @@ python3 -I ops/dashboard/make_tiles.py --source-tiles src/satellite_tiles --out 
 ```
 Checked against the radar (docs/images/map/base.png): roads and coastlines coincide at zero offset.
 
+## Loot timeline
+Open **History → Loot timeline**, or click a loot point and choose **View loot timeline**. Choose a 1-hour,
+6-hour, 24-hour or 7-day window ending at any past time, then play or drag the slider. Zone and spawn filters
+restrict both the map and the event list; the event-type filter restricts the list. Clicking an event seeks to its
+time and focuses its recorded outdoor ground position, or its original spawn when it has no known ground position.
+The list shows up to 60 recent events plus upcoming events around the cursor. The chart shows spawns above the
+line and removals below it; hover for counts or click a bar to seek.
+
+`items FOR SYSTEM_TIME ALL` supplies the baseline and location transitions. The original spawn link is recovered
+from earlier versions, so items remain traceable after pickup clears `loot_spawn_id`. Playback needs no further
+database requests. Yellow points have loot at their original spawn; orange dots are dropped loot. Totals distinguish
+items at their spawn, held by a character, in a container, and dropped elsewhere (including indoors). Items inside
+a carried bag count as in a container, since ownership of containers is not versioned. This covers items originally
+created at outdoor loot points, not vending stock, map boxes, supply drops, or their generated contents.
+
+Historical cooldowns, empty rolls, deletion reasons, and carriers' positions are not recorded and are not inferred.
+Empty replay points mean no recorded loot at that time, not that they were eligible to roll. Spawn geometry and
+zone labels come from the current catalogue. “First recorded” distinguishes history beginning after an item's
+creation from a known spawn. The endpoint rejects windows over 7 days or over 60,000 item versions rather than
+silently truncating them. History cache entries are bounded; the existing SELECT-only DB account is sufficient.
+
 ## Local check
 `SSMTA_PORT=8121 SSMTA_DB_DEFAULTS_FILE=~/.my.cnf python3 server.py`; set `SSMTA_LIVE_FILE` to try other positions.
 The loot state "no zone budget left" from the in-game overlay is not shown: it needs the game's in-memory allowance.
+
+Run replay boundary and API validation tests with `python3 -m unittest discover -s ops/dashboard -p 'test_*.py'`
+from the repository root. Restart `ssmta-dashboard` after changing `server.py`; nginx serves `web/` directly.

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Survey map</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=loot-history-1">
 </head>
 <body>
 <header class="bar">
@@ -35,6 +35,7 @@
     <section class="block">
       <h2>History</h2>
       <button id="openSessions" class="btn" type="button">Past sessions</button>
+      <button id="openLootHistory" class="btn" type="button" aria-controls="lootHistory" aria-expanded="false">Loot timeline</button>
     </section>
   </aside>
 
@@ -51,6 +52,54 @@
     <p id="sessionEmpty" class="empty" hidden>No sessions in that window.</p>
   </section>
 
+  <section id="lootHistory" class="loot-history" hidden aria-label="Loot timeline">
+    <div class="history-heading">
+      <div><h2>Loot timeline</h2><p>Follow the loot through the world.</p></div>
+      <button id="closeLootHistory" class="btn ghost" type="button">Back to live</button>
+    </div>
+    <form id="lootHistoryForm" class="history-form">
+      <label class="field"><span>Window</span><select id="lootHistoryWindow">
+        <option value="3600">1 hour</option><option value="21600">6 hours</option>
+        <option value="86400" selected>24 hours</option><option value="604800">7 days</option>
+      </select></label>
+      <label class="field"><span>Ending at</span><input id="lootHistoryEnd" type="datetime-local" required></label>
+      <button id="loadLootHistory" class="btn" type="submit">Load</button>
+      <label class="field"><span>Zone</span><select id="lootHistoryZone"><option value="">All zones</option></select></label>
+      <label class="field"><span>Spawn</span><input id="lootHistorySpawn" type="number" min="1" step="1" placeholder="All"></label>
+    </form>
+    <p id="lootHistoryStatus" class="note history-status" role="status" aria-live="polite"></p>
+    <div id="lootHistoryBody" hidden>
+      <div id="lootHistoryTotals" class="history-totals"></div>
+      <div class="history-chart-wrap">
+        <div class="history-chart-key"><span class="spawned">Spawned</span><span class="removed">Removed</span></div>
+        <div id="lootHistoryChart" class="history-chart" role="img" aria-label="Loot spawned and removed over time"></div>
+        <div id="lootHistoryCursor" class="history-cursor"></div>
+      </div>
+      <input id="lootHistoryRange" class="history-range" type="range" min="0" max="1000" step="1" value="0" aria-label="Time in loot history">
+      <div class="history-playback">
+        <button id="lootHistoryPlay" class="btn" type="button">Play</button>
+        <label class="field"><span class="sr-only">Playback speed</span><select id="lootHistorySpeed">
+          <option value="60">1 min / sec</option><option value="600" selected>10 min / sec</option>
+          <option value="3600">1 hour / sec</option>
+        </select></label>
+        <output id="lootHistoryTime"></output>
+      </div>
+      <div class="history-events-heading">
+        <h3>Events <span id="lootHistoryEventCount" class="count"></span></h3>
+        <label class="field"><span class="sr-only">Event type</span><select id="lootHistoryKind">
+          <option value="">All events</option><option value="spawned">Spawned</option>
+          <option value="picked up">Picked up</option><option value="stored">Stored</option>
+          <option value="dropped">Dropped</option><option value="moved">Moved</option>
+          <option value="transferred">Transferred</option><option value="removed">Removed</option>
+          <option value="first recorded">First recorded</option>
+        </select></label>
+      </div>
+      <ol id="lootHistoryEvents" class="history-events"></ol>
+      <p id="lootHistoryEmpty" class="empty" hidden>No events in this window.</p>
+    </div>
+    <p class="note history-footnote">Outdoor loot points only. Empty points have no recorded loot at the selected time; past cooldowns and empty rolls are not recorded. “Removed” means the item was deleted; the reason is not recorded. Container contents are shown by their own location, not their container’s owner.</p>
+  </section>
+
   <div id="scrub" class="scrub" hidden>
     <button id="backToLive" class="btn" type="button">Back to live</button>
     <p id="scrubNote" class="note scrub-note" hidden></p>
@@ -62,6 +111,7 @@
 </main>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
-<script src="app.js"></script>
+<script src="app.js?v=loot-history-1"></script>
+<script src="loot-history.js?v=1"></script>
 </body>
 </html>

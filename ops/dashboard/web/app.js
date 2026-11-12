@@ -244,6 +244,7 @@ setInterval(pollLive, 2000);
 /* ---------- loot spawns ---------- */
 
 const loot = { markers: new Map(), groups: [], data: null };
+const lootHistory = { active: false, open: null };
 LOOT_STATES.forEach((s, i) => { loot.groups[i] = L.layerGroup(); if (s.on) loot.groups[i].addTo(map); });
 const lootRadius = (state) => {
   const base = Math.max(1.5, Math.min(7, 1.2 * (map.getZoom() - 0.5)));
@@ -274,16 +275,20 @@ function chipsRender(counts) {
 }
 
 function showSpawn(id, latlng) {
+  if (lootHistory.active) { lootHistory.open(id); return; }
   const popup = L.popup({ maxWidth: 320 }).setLatLng(latlng).setContent("Loading…").openOn(map);
   getJSON("loot/" + id).then((d) => {
     const dl = el("dl");
     const add = (k, v) => dl.append(el("dt", { textContent: k }), el("dd", { textContent: v }));
     add("Spawn", `#${d.id}`); add("Table", d.table); add("Zone", d.zone); add("State", d.state);
-    if (d.cooldownSeconds) add("Next roll", `in ${duration(d.cooldownSeconds)}`);
+    if (d.cooldownSeconds) add("Cooldown ends", `in ${duration(d.cooldownSeconds)}`);
     add("Chance", `${Math.round(d.weight)} %`); add("Position", `${d.x}, ${d.y}, ${d.z}`);
     const box = el("div", { className: "popup" }, el("h3", { textContent: d.lying.length ? "Item lying here" : "Nothing lying here" }), dl);
     if (d.lying.length) box.append(el("ul", {}, ...d.lying.map((i) => el("li", { textContent: `${i.type} (item ${i.id})` }))));
     if (d.takenCount) box.append(el("p", { className: "note", textContent: `${d.takenCount} more taken from here and still around.` }));
+    const history = el("button", { type: "button", className: "btn", textContent: "View loot timeline" });
+    history.addEventListener("click", () => { map.closePopup(); lootHistory.open(id); });
+    box.append(history);
     popup.setContent(box);
   }).catch((e) => popup.setContent("Could not load: " + e.message));
 }
@@ -311,12 +316,17 @@ function applyLoot(data) {
   chipsRender(counts);
   $("lootNote").textContent = data.skippedIndoor ? `${data.skippedIndoor.toLocaleString()} spawns inside buildings are not on the map.` : "";
 }
-async function pollLoot() { try { applyLoot(await getJSON("loot", 15000)); } catch { $("lootNote").textContent = "Loot spawns unavailable: the database did not answer."; } }
+async function pollLoot() {
+  try {
+    loot.data = await getJSON("loot", 15000);
+    if (!lootHistory.active) applyLoot(loot.data);
+  } catch { if (!lootHistory.active) $("lootNote").textContent = "Loot spawns unavailable: the database did not answer."; }
+}
 pollLoot();
 setInterval(pollLoot, 30000);
 map.on("zoomend", () => loot.markers.forEach((m) => m.marker.setRadius(lootRadius(m.state))));
 
-$("layerPlayers").addEventListener("change", (e) => e.target.checked ? playerLayer.addTo(map) : map.removeLayer(playerLayer));
+$("layerPlayers").addEventListener("change", (e) => e.target.checked && !lootHistory.active ? playerLayer.addTo(map) : map.removeLayer(playerLayer));
 $("layerLoot").addEventListener("change", (e) => LOOT_STATES.forEach((s, i) => (e.target.checked && s.on ? loot.groups[i].addTo(map) : map.removeLayer(loot.groups[i]))));
 
 /* ---------- past sessions ---------- */
@@ -334,6 +344,7 @@ function backToLive() {
 }
 
 async function openSession(s, button) {
+  if (lootHistory.active) $("closeLootHistory").click();
   document.querySelectorAll("#sessionList button").forEach((b) => b.setAttribute("aria-pressed", String(b === button)));
   const end = s.leftAt || Math.round(Date.now() / 1000);
   let track;
@@ -403,7 +414,7 @@ async function searchSessions() {
     list.append(el("li", {}, b));
   }
 }
-$("openSessions").addEventListener("click", () => { $("sessions").hidden = false; $("sessionName").focus(); if (!$("sessionList").children.length) searchSessions(); });
+$("openSessions").addEventListener("click", () => { if (lootHistory.active) $("closeLootHistory").click(); $("sessions").hidden = false; $("sessionName").focus(); if (!$("sessionList").children.length) searchSessions(); });
 $("closeSessions").addEventListener("click", () => { $("sessions").hidden = true; $("openSessions").focus(); });
 $("sessionForm").addEventListener("submit", (e) => { e.preventDefault(); searchSessions(); });
 document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("sessions").hidden) $("closeSessions").click(); });

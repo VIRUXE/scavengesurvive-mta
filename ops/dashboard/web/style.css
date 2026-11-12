@@ -179,3 +179,67 @@ body.session-mode .coords { bottom: 64px; }
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }
 }
+
+/* Loot replay: keep the map visible beside a compact timeline and event log. */
+[hidden] { display: none !important; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.btn:disabled { opacity: 0.5; cursor: wait; }
+#openLootHistory { margin-top: 8px; }
+.loot-history {
+  position: absolute; z-index: 1000; top: 12px; right: 12px; bottom: 28px;
+  width: min(460px, calc(100% - var(--rail) - 80px)); overflow-y: auto;
+  background: rgba(28, 31, 29, 0.97); border: 1px solid var(--line-strong); border-radius: var(--radius);
+}
+.history-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px; border-bottom: 1px solid var(--line); }
+.history-heading h2 { margin: 0; font: 400 27px/1 "Bebas Neue", Impact, sans-serif; letter-spacing: 0.02em; }
+.history-heading p { margin: 5px 0 0; font-size: 12px; color: var(--bone-dim); }
+.history-form { display: flex; flex-wrap: wrap; align-items: end; gap: 10px; padding: 14px 14px 0; }
+.history-form .field { min-width: 0; }
+#lootHistorySpawn { width: 95px; }
+.history-status { margin: 12px 14px; }
+.history-totals { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; padding: 10px 14px; border-block: 1px solid var(--line); }
+.history-totals div { display: flex; flex-direction: column; }
+.history-totals strong { font-size: 23px; font-weight: 500; }
+.history-totals span { font-size: 11px; color: var(--bone-dim); }
+.history-chart-wrap { margin: 10px 14px 0; position: relative; }
+.history-chart-key { display: flex; gap: 14px; font-size: 11px; color: var(--bone-dim); }
+.history-chart-key span::before { content: ""; display: inline-block; width: 8px; height: 8px; margin-right: 5px; background: var(--lichen); }
+.history-chart-key .removed::before { background: var(--ember); }
+.history-chart { height: 68px; display: flex; gap: 1px; position: relative; margin-top: 5px; }
+.history-chart::before { content: ""; position: absolute; top: 50%; left: 0; right: 0; border-top: 1px solid var(--line-strong); pointer-events: none; }
+.history-bin { flex: 1; min-width: 0; position: relative; background: transparent; padding: 0; border: 0; cursor: pointer; }
+.history-bin:hover { background: rgba(220, 214, 200, 0.12); }
+.history-bin span { position: absolute; left: 0; right: 0; }
+.history-bin .spawned { bottom: 50%; background: var(--lichen); }
+.history-bin .removed { top: 50%; background: var(--ember); }
+.history-cursor { position: absolute; top: 19px; bottom: 0; width: 1px; background: var(--bone); pointer-events: none; }
+.history-range { display: block; width: calc(100% - 28px); margin: 5px 14px; accent-color: var(--ember); }
+.history-playback { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 2px 14px 12px; border-bottom: 1px solid var(--line); }
+.history-playback output { flex: 1 0 100%; font-size: 12px; color: var(--bone); }
+.history-events-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; }
+.history-events-heading h3 { margin: 0; font-size: 13px; font-weight: 500; }
+.history-events { list-style: none; padding: 0; margin: 0; }
+.history-events button {
+  display: grid; grid-template-columns: 1fr auto; gap: 3px 10px; width: 100%; padding: 10px 14px;
+  border: 0; border-top: 1px solid var(--line); border-left: 3px solid var(--line-strong);
+  text-align: left; background: transparent; color: var(--bone); font: 400 12px/1.4 "Inter", sans-serif; cursor: pointer;
+}
+.history-events button:hover { background: rgba(220, 214, 200, 0.06); }
+.history-events button.upcoming { opacity: 0.5; }
+.history-events button[data-kind="spawned"] { border-left-color: var(--lichen); }
+.history-events button[data-kind="removed"] { border-left-color: var(--ember); }
+.history-events button[data-kind="picked up"] { border-left-color: var(--hivis); }
+.history-events time { color: var(--bone-dim); font-size: 11px; }
+.history-events strong { font-weight: 500; text-transform: capitalize; }
+.history-events .event-item, .history-events .event-detail { grid-column: 1 / -1; overflow-wrap: anywhere; }
+.history-events .event-detail { color: var(--bone-dim); font-size: 11px; }
+#lootHistoryEmpty { padding: 0 14px 12px; }
+.history-footnote { padding: 12px 14px; margin: 0; border-top: 1px solid var(--line); font-size: 11px; }
+body.loot-history-mode .coords { bottom: 4px; }
+@media (max-width: 720px) {
+  .loot-history { left: 8px; right: 8px; top: auto; bottom: 22px; width: auto; max-height: 56%; }
+  .history-heading { padding: 10px 12px; }
+  .history-form { padding: 10px 12px 0; gap: 8px; }
+  .history-chart { height: 46px; }
+  .history-playback output { flex: 1; white-space: nowrap; }
+}
