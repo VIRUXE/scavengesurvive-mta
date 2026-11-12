@@ -305,6 +305,35 @@ local function updateWheelFreeze(v)
     end
 end
 
+-- Missing passenger doors leave the cabin unsecured (bonnet and boot are separate).
+local function hasMissingDoor(vehicle)
+    for door = 2, 5 do
+        if getVehicleDoorState(vehicle, door) == 4 then
+            return true
+        end
+    end
+    return false
+end
+
+-- Keep native locks, replicated state and persistence in sync when a door is lost.
+local function unlockMissingDoors(vehicle)
+    local inf = info[vehicle]
+    if inf and inf.locked > 0 and hasMissingDoor(vehicle) then
+        inf.locked = vlogic.LOCK_OPEN
+        setVehicleLocked(vehicle, false)
+        setElementData(vehicle, "vehicles.locked", inf.locked, "broadcast", "deny")
+        db.exec("UPDATE vehicles SET locked = 0 WHERE id = ?", { inf.id })
+    end
+end
+
+setTimer(function()
+    for vehicle in pairs(info) do
+        if isElement(vehicle) then
+            unlockMissingDoors(vehicle)
+        end
+    end
+end, 250, 0)
+
 local function applyDamage(v, d)
     if type(d) ~= "table" then
         return
@@ -344,6 +373,11 @@ local function create(row, fresh)
     setVehicleLocked(v, lockState > 0)
     if row.damage and row.damage ~= "" and row.damage ~= false then
         applyDamage(v, fromJSON(row.damage))
+    end
+    if lockState > 0 and hasMissingDoor(v) then
+        lockState = vlogic.LOCK_OPEN
+        setVehicleLocked(v, false)
+        db.exec("UPDATE vehicles SET locked = 0 WHERE id = ?", { row.id })
     end
     setElementData(v, "vehicles.id", row.id, "broadcast", "deny")
     setElementData(v, "vehicles.type", row.type_uname, "broadcast", "deny")
@@ -867,6 +901,7 @@ addEventHandler("onVehicleStartEnter", root, function(player)
         cancelEvent()
         return
     end
+    unlockMissingDoors(source)
     local held = exports.items:getHeld(player)
     local heldType = held and exports.data:itemType(held.uname)
     if heldType and heldType.useCarryAnim then
@@ -1046,6 +1081,9 @@ net.handler("lockToggleRequested", function(player)
     local inf = info[v]
     if not inf then
         return
+    end
+    if inf.locked == vlogic.LOCK_OPEN and hasMissingDoor(v) then
+        return toast(player, "LOCKNODOORS")
     end
     if inf.locked > 0 then
         inf.locked = vlogic.LOCK_OPEN
@@ -1548,6 +1586,9 @@ net.handler("vehicleKeypadSetupSubmitted", function(player, vehicle, code)
     local digits = tostring(code or ""):match("^%d%d?%d?%d?$")
     if not digits or digits == "" then
         return
+    end
+    if hasMissingDoor(vehicle) then
+        return toast(player, "LOCKNODOORS")
     end
     inf.keypad = string.format("%04d", tonumber(digits))
     inf.locked = vlogic.LOCK_EXTERNAL
@@ -2321,6 +2362,9 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
     -- Case 2: Driver-side interactions (Key, LocksmithKit, LockBreaker, Crowbar)
     if (walkIn and atDoor) or (not walkIn and vlogic.isDriverSide(angle)) then
         if uname == "Key" then
+            if inf.locked == vlogic.LOCK_OPEN and hasMissingDoor(vehicle) then
+                return toast(player, "LOCKNODOORS")
+            end
             local ok, err = vlogic.canUseKey(held.data, inf.keyCode)
             if not ok then
                 return toast(player, err)
@@ -2343,6 +2387,9 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
         end
 
         if uname == "LocksmithKit" or uname == "WheelLock" then
+            if hasMissingDoor(vehicle) then
+                return toast(player, "LOCKNODOORS")
+            end
             local doorless = vlogic.isDoorless(getElementModel(vehicle), vt and vt.notLockable)
             local ok, err = vlogic.canCraftKey(inf.locked, uname, doorless, inf.keyCode, vlogic.isCutLock(held.data))
             if not ok then
@@ -2369,6 +2416,9 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
                 end
                 local code = math.random(100000, 999999)
                 local vinf = info[veh]
+                if hasMissingDoor(veh) then
+                    return toast(p, "LOCKNODOORS")
+                end
                 if vinf then
                     vinf.locked = vlogic.LOCK_EXTERNAL
                     vinf.keyCode = code

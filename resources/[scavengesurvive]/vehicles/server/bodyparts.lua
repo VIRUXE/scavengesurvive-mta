@@ -97,7 +97,7 @@ return function(ctx)
         end
     end
 
-    -- the vehicle is one a player may work on: a parked, unlocked, engine-off car of a model with slots
+    -- the vehicle is one a player may work on: a parked, unlocked car of a model with slots (the engine may be running)
     local function workable(player, vehicle)
         if not isElement(player) or not isElement(vehicle) or not ctx.info[vehicle] then
             return false
@@ -105,7 +105,7 @@ return function(ctx)
         if not bp.MODELS[getElementModel(vehicle)] or isVehicleBlown(vehicle) or isPedDead(player) then
             return false
         end
-        if getPedOccupiedVehicle(player) or getVehicleEngineState(vehicle) or ctx.info[vehicle].locked > 0 then
+        if getPedOccupiedVehicle(player) or ctx.info[vehicle].locked > 0 then
             return false
         end
         local sameDim = getElementDimension(player) == getElementDimension(vehicle)

@@ -148,7 +148,7 @@ return function(ctx)
         KEY_CRAFTED = "Key crafted",
         REFUELLED = "Refuelled",
         REPAIRED = "Vehicle repaired",
-        PART_NOT_HERE = "Stand by that part of an unlocked, parked vehicle with its engine off",
+        PART_NOT_HERE = "Stand by the matching part of an unlocked, parked vehicle",
         PART_SLOT_TAKEN = "There is a part there already. Take it off with a Ratchet first",
         PART_MISSING = "There is no part left there to take off",
         PART_WRENCH = "Hold a Ratchet to take a body part off",
