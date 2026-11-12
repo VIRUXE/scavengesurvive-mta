@@ -304,6 +304,7 @@ return function(ctx)
                 end
                 item.data = ws
             end
+            item.cid = charId(player) -- server-only: the quit drop runs after character has forgotten the player
             state.held[player] = item
             -- Ammo first: the client decides the held model from items.ammo when items.held arrives.
             publishAmmo(player, item)
@@ -1154,6 +1155,53 @@ return function(ctx)
             int = params[7],
             dim = params[8],
         })
+        return true
+    end
+
+    -- A player leaving with something in their hands: it falls where they stood (beside the vehicle when they sat in
+    -- one). The character id comes from the item (setHeld), as character has already forgotten the player by now.
+    local TUTORIAL_DIM_FIRST, TUTORIAL_DIM_LAST = 61000, 61999 -- tutorial_cleanup deletes what lies there anyway
+    function M.dropOnQuit(player)
+        local item = state.held[player]
+        local cid = item and item.cid
+        if not cid or not isElement(player) then
+            return false
+        end
+        local dim = getElementDimension(player)
+        if dim >= TUTORIAL_DIM_FIRST and dim <= TUTORIAL_DIM_LAST then
+            return false
+        end
+        local x, y, z = getElementPosition(player)
+        local _, _, rz = getElementRotation(player)
+        local dx, dy = geometry.dropPosition(x, y, rz, 1.0)
+        local veh = getPedOccupiedVehicle and getPedOccupiedVehicle(player)
+        if veh then
+            local vx, vy, vz = getElementPosition(veh)
+            local _, _, vrz = getElementRotation(veh)
+            dx, dy = geometry.dropPosition(vx, vy, vrz + 90, 2.5)
+            z = vz
+        end
+        local dz = z - 0.9
+        if item.data then
+            M.queueData(item)
+        end
+        M.flushData(item.id)
+        local int = getElementInterior(player)
+        db.call("item_drop", { item.id, cid, dx, dy, dz, rz, int, dim }, function(res, c)
+            log.event("item.dropped", {
+                item_id = c.itemId,
+                uname = c.uname,
+                reason = "quit",
+                ok = res and res.ok or false,
+                code = res and res.code or "DB_ERROR",
+                x = math.floor(c.x),
+                y = math.floor(c.y),
+                z = math.floor(c.z),
+                int = c.int,
+                dim = c.dim,
+                character_id = cid,
+            })
+        end, { itemId = item.id, uname = item.uname, x = dx, y = dy, z = dz, int = int, dim = dim })
         return true
     end
 

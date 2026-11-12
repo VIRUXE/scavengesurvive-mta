@@ -456,6 +456,7 @@ addEventHandler("itemMoved", root, function(_, from, to)
 end)
 
 addEventHandler("onPlayerQuit", root, function()
+    hands.dropOnQuit(source) -- before clearHeld: what lies in the hands falls to the floor
     hands.clearHeld(source)
     hands.setWorn(source, nil)
     hands.clearGear(source)
