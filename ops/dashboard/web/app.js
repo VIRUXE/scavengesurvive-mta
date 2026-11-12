@@ -44,7 +44,7 @@ const el = (tag, props = {}, ...kids) => {
 /* ---------- map ---------- */
 
 const CRS = L.Util.extend({}, L.CRS.Simple, { transformation: new L.Transformation(K, WORLD * K, -K, WORLD * K) });
-const map = L.map("map", { crs: CRS, minZoom: 0.5, maxZoom: 7, zoomSnap: 0.25, zoomDelta: 0.5, maxBounds: [[-3300, -3300], [3300, 3300]], attributionControl: true });
+const map = L.map("map", { crs: CRS, minZoom: 0.5, maxZoom: 7, zoomSnap: 0.25, zoomDelta: 0.5, maxBoundsViscosity: 1, attributionControl: true });
 map.attributionControl.setPrefix(false);
 map.attributionControl.addAttribution("Map art © Rockstar Games; satellite render by the community");
 
@@ -63,7 +63,23 @@ fetch("tiles/0/0/0.jpg", { method: "HEAD" }).then((r) => {
   }
 }).catch(() => {});
 
+// Leaflet bounds contain the viewport. Expand them by its size so the world can
+// move freely, while leaving at least 48 px of map visible on each axis.
+function updatePanBounds() {
+  const size = map.getSize();
+  const zoom = map.getZoom();
+  const northwest = map.project([WORLD, -WORLD], zoom);
+  const southeast = map.project([-WORLD, WORLD], zoom);
+  const reachX = Math.max(0, size.x - Math.min(48, size.x / 2));
+  const reachY = Math.max(0, size.y - Math.min(48, size.y / 2));
+  map.setMaxBounds(L.latLngBounds(
+    map.unproject(northwest.subtract([reachX, reachY]), zoom),
+    map.unproject(southeast.add([reachX, reachY]), zoom),
+  ));
+}
+map.on("zoomend resize", updatePanBounds);
 map.fitBounds(BOUNDS, { paddingTopLeft: [window.innerWidth > 720 ? 300 : 0, 0] });
+updatePanBounds();
 map.on("mousemove", (e) => { $("coords").textContent = `x ${Math.round(e.latlng.lng)}  y ${Math.round(e.latlng.lat)}`; });
 
 /* ---------- trails ---------- */
