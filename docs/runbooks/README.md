@@ -16,6 +16,7 @@ cut after the local checks (`docs/runbooks/release.md`).
 | [release.md](release.md) | tagging a version from `main` |
 | [discord-bridge.md](discord-bridge.md) | the Discord chat relay or Rich Presence stops working, or moving it to another host |
 | [repivot-defences.md](repivot-defences.md) | the hinged defence doors' re-pivoted copies: rebuilding them, deploying, the one-off fix of built rows |
+| [../../ops/mailer/README.md](../../ops/mailer/README.md) | installing the mailer that sends email confirmation codes, or players say the code never arrives |
 
 Conventions: `$MTA` is the server directory (`C:\Program Files (x86)\MTA San Andreas 1.6\server`), `$DM` is
 `$MTA\mods\deathmatch`, the repo is `scavengesurvive-mta`. `rcon.ps1` means `pwsh server-config/rcon.ps1`.

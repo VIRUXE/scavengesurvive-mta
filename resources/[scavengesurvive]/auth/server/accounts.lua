@@ -24,6 +24,9 @@ local function toAccount(row)
         langChosen = row.lang ~= nil and row.lang ~= false, -- NULL (read as false): the player never picked one
         tooltips = row.tooltips ~= 0,
         active = row.active ~= 0,
+        -- the address stored on the account (lower case) and whether it was confirmed with a mailed code
+        email = type(row.email) == "string" and row.email ~= "" and row.email or nil,
+        emailVerified = row.email_verified_at ~= nil and row.email_verified_at ~= false,
     }
 end
 
@@ -45,8 +48,8 @@ function accounts.new(deps)
     end
 
     function self.lookup(name, cb)
-        local sql = "SELECT id, name, password_hash, admin_level, lang, tooltips, active, last_ip, last_serial"
-            .. " FROM accounts WHERE name = ?"
+        local sql = "SELECT id, name, password_hash, admin_level, lang, tooltips, active, last_ip, last_serial,"
+            .. " email, email_verified_at FROM accounts WHERE name = ?"
         deps.db.one(sql, { name }, function(row)
             cb(row)
         end)
@@ -87,6 +90,7 @@ function accounts.new(deps)
                             langChosen = false,
                             tooltips = true,
                             active = true,
+                            emailVerified = false,
                         }
                         cb(true, "OK", account)
                     end

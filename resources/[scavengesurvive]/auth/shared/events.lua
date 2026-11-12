@@ -7,10 +7,12 @@ addEvent("loginRequested", true)
 addEvent("registrationRequested", true)
 addEvent("authPromptDismissed", true)
 addEvent("authLanguageChosen", true)
+addEvent("authEmailSubmitted", true)
+addEvent("authEmailCodeSubmitted", true)
 
 -- server to client
 addEvent("authLanguageOffered", true)
-addEvent("authPromptShown", true)
+addEvent("authPromptShown", true) -- mode, title, body, style ("password" unless given)
 addEvent("authWelcomeShown", true)
 addEvent("whitelistCountdownChanged", true) -- seconds left, or false to hide
 

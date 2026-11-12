@@ -13,6 +13,7 @@ local accountsModule = loadFile("server/accounts.lua")
 local access = loadFile("shared/logic/access.lua")
 local prompts = loadFile("shared/logic/prompt.lua")
 local rules = loadFile("shared/logic/rules.lua")
+local emailLogic = loadFile("shared/logic/email.lua")
 
 local session = {} -- player -> account table
 local pending = {} -- player -> true while a login/register request is in flight
@@ -38,6 +39,9 @@ local accounts
 local finish -- defined after prompt, which calls it for an auto-login
 local warnedNoDb = false
 local joinedAt = {} -- player -> tick of onPlayerJoin, for session.left's duration_s
+-- player -> { account, isNew, method, email, code, expires, wrong, sends, lastSend, busy } while an authenticated
+-- player confirms an email address before admit; the code lives only here (never logged, never in the DB)
+local confirming = {}
 
 -- Clear protection left by the previous auth version during the first upgrade to session restoration.
 local REAUTH_KEY = "auth.reauthProtection"
@@ -244,6 +248,8 @@ local function checkBan(player)
 end
 
 addEventHandler("onResourceStart", resourceRoot, function()
+    local now = getRealTime()
+    math.randomseed((now.timestamp * 1000 + getTickCount()) % 2147483647)
     -- Restore trusted sessions synchronously, before client readiness can cause a login prompt.
     -- Do not call admit: these connections are already admitted and their characters are still loaded.
     for _, p in ipairs(getElementsByType("player")) do
@@ -316,12 +322,25 @@ addEventHandler("onPlayerJoin", root, function()
     checkBan(source)
 end)
 
--- The upstream dialog for the mode: title and body in the player's language, the client adds Accept / Leave.
+-- An English text of shared/logic/email.lua in the dialog language: lang.textFor reads the session's language,
+-- which only exists after admit.
+local function trFor(player)
+    local code = promptLang[player] or "en"
+    return function(s)
+        return exports.data:translate(code, s) or s
+    end
+end
+
+-- The upstream dialog for the mode: title and body in the player's language, the client adds Accept / Leave. The
+-- register dialog adds that a valid email address comes next.
 local function showDialog(player, mode, attempts)
     promptMode[player] = mode
     local d = prompts.dialog(mode, getPlayerName(player), attempts)
     local title = t(player, d.titleKey)
     local body = t(player, d.bodyKey, unpack(d.args))
+    if mode == "register" then
+        body = body .. "\n\n#FFD700" .. trFor(player)(emailLogic.TEXTS.registerNote)
+    end
     triggerClientEvent(player, "authPromptShown", player, mode, title, body)
 end
 
@@ -335,8 +354,14 @@ local function leave(player)
         mode = mode,
         msg = getPlayerName(player) .. " left the " .. tostring(mode) .. " dialog",
     })
-    local why = mode == "register" and lang.textFor(player, "Left without registering")
-        or lang.textFor(player, "Left without logging in")
+    local why
+    if mode == "email" or mode == "code" then
+        why = trFor(player)(emailLogic.TEXTS.leftReason)
+    elseif mode == "register" then
+        why = lang.textFor(player, "Left without registering")
+    else
+        why = lang.textFor(player, "Left without logging in")
+    end
     kickLater(player, why)
 end
 
@@ -418,9 +443,9 @@ addEventHandler("onPlayerResourceStart", root, function(res)
     end
 end)
 
-local function admit(player, account, isNew, method)
-    -- one session per account: a client that renamed itself (/nick) keeps its session, so a second client joining
-    -- under the account's name must not load and control the same character
+-- one session per account: a client that renamed itself (/nick) keeps its session, so a second client joining
+-- under the account's name must not load and control the same character. True when it kicked the player.
+local function refuseIfOnline(player, account)
     for other, held in pairs(session) do
         if other ~= player and held.id == account.id then
             log.event("session.refused", {
@@ -430,8 +455,16 @@ local function admit(player, account, isNew, method)
                 target = other,
                 msg = account.name .. " refused: account already online as " .. getPlayerName(other),
             })
-            return kickLater(player, lang.textFor(player, "Account already online"))
+            kickLater(player, lang.textFor(player, "Account already online"))
+            return true
         end
+    end
+    return false
+end
+
+local function admit(player, account, isNew, method)
+    if refuseIfOnline(player, account) then
+        return
     end
     if chosenLang[player] and not account.langChosen then
         account.lang = chosenLang[player]
@@ -463,6 +496,175 @@ local function admit(player, account, isNew, method)
     })
     triggerEvent("playerAuthenticated", player, account.id)
     finishReauth(player)
+end
+
+-- Email confirmation (shared/logic/email.lua): between a successful login or registration and admit, an account
+-- without a confirmed address types one, gets a 6-digit code mailed (a row in email_outbox, sent by ops/mailer) and
+-- types it back. Applies to every account, staff included.
+local function showEmailDialog(player, kind, note)
+    local c = confirming[player]
+    promptMode[player] = kind
+    local title, body = emailLogic.dialog(kind, c and c.email, note, trFor(player))
+    triggerClientEvent(player, "authPromptShown", player, kind, title, body, "input")
+end
+
+local function newCode(player)
+    local mix = hash(
+        "sha256",
+        table.concat({
+            tostring(math.random(0, 2147483646)),
+            tostring(getTickCount()),
+            tostring(getRealTime().timestamp),
+            getPlayerSerial(player) or "",
+            tostring(math.random(0, 2147483646)),
+        }, "|")
+    )
+    return emailLogic.formatCode(tonumber(mix:sub(1, 8), 16))
+end
+
+-- Mails a new code to c.email; force skips the resend cooldown (a new address, a void code). False when it did not
+-- (the cooldown dialog is up, or the player was kicked for asking too often).
+local function sendCode(player, force)
+    local c = confirming[player]
+    local now = getTickCount()
+    local ok, why, wait = emailLogic.canSend(c, now, force)
+    if not ok then
+        if why == "LIMIT" then
+            log.event("session.kicked", {
+                player = player,
+                account_id = c.account.id,
+                reason = "emailSendLimit",
+                sends = c.sends,
+                msg = c.account.name .. " kicked: too many confirmation emails",
+            })
+            kickLater(player, trFor(player)(emailLogic.TEXTS.limitReason))
+        else
+            showEmailDialog(player, "code", { "COOLDOWN", wait })
+        end
+        return false
+    end
+    c.code, c.expires, c.wrong = newCode(player), now + emailLogic.CODE_TTL_MS, 0
+    c.sends, c.lastSend = (c.sends or 0) + 1, now
+    local subject, body = emailLogic.message(c.account.name, c.code, trFor(player))
+    local sql = "INSERT INTO email_outbox (account_id, to_addr, subject, body) VALUES (?, ?, ?, ?)"
+    local sentCode = c.code
+    db.exec(sql, { c.account.id, c.email, subject, body }, function(inserted)
+        if inserted or confirming[player] ~= c or c.code ~= sentCode then
+            return
+        end
+        -- nothing was queued: let the player ask again at once
+        c.code, c.lastSend = nil, nil
+        c.sends = c.sends - 1
+        if isElement(player) then
+            showEmailDialog(player, "code", { "DB_ERROR" })
+        end
+    end)
+    log.event("session.emailCodeSent", {
+        player = player,
+        account_id = c.account.id,
+        email = c.email,
+        sends = c.sends,
+    })
+    return true
+end
+
+-- A new address typed in the email or the code dialog (kind = the dialog to reprompt in).
+local function setEmail(player, addr, kind)
+    local c = confirming[player]
+    local valid, reason = emailLogic.validate(addr)
+    if not valid then
+        log.event("session.emailSubmitted", { player = player, account_id = c.account.id, ok = false, code = reason })
+        return showEmailDialog(player, kind, { reason })
+    end
+    c.busy = true
+    db.one(emailLogic.TAKEN_SQL, { addr, c.account.id }, function(row)
+        c.busy = nil
+        if not isElement(player) or confirming[player] ~= c then
+            return
+        end
+        if row == false then
+            return showEmailDialog(player, kind, { "DB_ERROR" })
+        end
+        if (tonumber(row and row.n) or 0) >= emailLogic.MAX_ACCOUNTS then
+            log.event("session.emailSubmitted", {
+                player = player,
+                account_id = c.account.id,
+                ok = false,
+                code = "TAKEN",
+                email = addr,
+            })
+            return showEmailDialog(player, kind, { "TAKEN" })
+        end
+        c.email, c.code = addr, nil
+        c.account.email = addr
+        -- kept unconfirmed on the account, so the next login goes straight to a code for it
+        db.exec("UPDATE accounts SET email = ?, email_verified_at = NULL WHERE id = ?", { addr, c.account.id })
+        log.event("session.emailSubmitted", { player = player, account_id = c.account.id, ok = true, email = addr })
+        if sendCode(player, true) then
+            showEmailDialog(player, "code")
+        end
+    end)
+end
+
+local function startConfirm(player, account, isNew, method)
+    local c = { account = account, isNew = isNew, method = method, sends = 0, wrong = 0 }
+    confirming[player] = c
+    log.event("session.emailRequired", {
+        player = player,
+        account_id = account.id,
+        has_email = account.email ~= nil,
+        is_new = isNew == true,
+    })
+    if account.email then
+        c.email = account.email
+        if sendCode(player, true) then
+            showEmailDialog(player, "code")
+        end
+    else
+        showEmailDialog(player, "email")
+    end
+end
+
+-- admit, once the account has a confirmed email address
+local function gate(player, account, isNew, method)
+    if account.emailVerified then
+        return admit(player, account, isNew, method)
+    end
+    if refuseIfOnline(player, account) then
+        return
+    end
+    startConfirm(player, account, isNew, method)
+end
+
+local function confirmCode(player, c)
+    c.busy = true
+    local id = c.account.id
+    db.exec(emailLogic.CONFIRM_SQL, { c.email, id, c.email, id }, function(ok, _, affected)
+        c.busy = nil
+        if not isElement(player) or confirming[player] ~= c or blocked[player] then
+            return
+        end
+        if not ok then
+            return showEmailDialog(player, "code", { "DB_ERROR" })
+        end
+        if (tonumber(affected) or 0) < 1 then
+            -- MAX_ACCOUNTS other accounts confirmed this address while the code was on its way
+            log.event("session.emailVerified", { player = player, account_id = id, ok = false, code = "TAKEN" })
+            c.email, c.code = nil, nil
+            return showEmailDialog(player, "email", { "TAKEN" })
+        end
+        confirming[player] = nil
+        c.account.emailVerified = true
+        log.event("session.emailVerified", {
+            player = player,
+            account_id = id,
+            ok = true,
+            email = c.email,
+            sends = c.sends,
+            msg = c.account.name .. " confirmed their email",
+        })
+        admit(player, c.account, c.isNew, c.method)
+    end)
 end
 
 local function refused(player, code, attempts)
@@ -499,7 +701,7 @@ function finish(player, ok, code, account, attempts, isNew, method)
         return refused(player, code, attempts)
     end
     if not whitelistEnabled or account.adminLevel > 0 then
-        return admit(player, account, isNew, method)
+        return gate(player, account, isNew, method)
     end
     -- whitelist on (upstream player/whitelist.pwn): only listed names and staff may stay
     db.one("SELECT name FROM whitelist WHERE name = ?", { account.name }, function(row, p)
@@ -507,7 +709,7 @@ function finish(player, ok, code, account, attempts, isNew, method)
             return
         end
         if access.whitelistAllows(true, row ~= nil and row ~= false, account.adminLevel) then
-            return admit(p, account, isNew, method)
+            return gate(p, account, isNew, method)
         end
         outputChatBox(t(p, "WHITELISTAC"), p, 255, 255, 0, true)
         outputChatBox(t(p, "WHITELISTNO"), p, 255, 255, 0, true)
@@ -550,6 +752,53 @@ net.handler("registrationRequested", function(player, password)
     end)
 end, { rate = 2 })
 
+net.handler("authEmailSubmitted", function(player, text)
+    local c = confirming[player]
+    if not c or c.busy or blocked[player] or promptMode[player] ~= "email" then
+        return
+    end
+    setEmail(player, emailLogic.normalize(type(text) == "string" and text:sub(1, 300) or ""), "email")
+end, { rate = 2 })
+
+-- The code dialog's box: the 6-digit code, a new address, or nothing (send another code).
+net.handler("authEmailCodeSubmitted", function(player, text)
+    local c = confirming[player]
+    if not c or c.busy or blocked[player] or promptMode[player] ~= "code" then
+        return
+    end
+    local kind, value = emailLogic.classify(type(text) == "string" and text:sub(1, 300) or "")
+    if kind == "email" and value ~= c.email then
+        return setEmail(player, value, "code")
+    end
+    if kind == "empty" or kind == "email" then
+        if sendCode(player, false) then
+            showEmailDialog(player, "code", { "SENT" })
+        end
+        return
+    end
+    if kind == "other" then
+        return showEmailDialog(player, "code", { "NOT_CODE" })
+    end
+    local result = emailLogic.check(c, value, getTickCount())
+    if result == "OK" then
+        return confirmCode(player, c)
+    end
+    log.event("session.emailCodeFailed", {
+        player = player,
+        account_id = c.account.id,
+        code = result,
+        attempts = c.wrong,
+    })
+    if result == "WRONG" then
+        return showEmailDialog(player, "code", { "WRONG", emailLogic.MAX_WRONG - c.wrong })
+    end
+    -- expired, used up its tries, or none was ever queued: a new one (counts towards MAX_SENDS)
+    c.code = nil
+    if sendCode(player, true) then
+        showEmailDialog(player, "code", { result == "NONE" and "SENT" or result })
+    end
+end, { rate = 2 })
+
 net.handler("authPromptDismissed", function(player)
     if session[player] or pending[player] or blocked[player] or not promptMode[player] then
         return
@@ -587,6 +836,7 @@ addEventHandler("onPlayerQuit", root, function(reason)
     promptMode[source] = nil
     promptLang[source] = nil
     chosenLang[source] = nil
+    confirming[source] = nil
 end)
 
 -- /lang <code>: the language every resource reads through getLanguage (data's t()); stored on the account.

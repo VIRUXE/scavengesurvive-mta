@@ -1,0 +1,19 @@
+[Unit]
+Description=Scavenge & Survive mailer: sends email_outbox (ops/mailer)
+After=network-online.target mariadb.service
+Wants=network-online.target
+
+[Service]
+User=mta
+EnvironmentFile=/etc/scavengesurvive-mailer.env
+ExecStart=/usr/bin/python3 /gta/sa/mta/servers/scavengesurvive/scavengesurvive-mta/ops/mailer/mailer.py
+Restart=always
+RestartSec=10
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadOnlyPaths=/gta
+
+[Install]
+WantedBy=multi-user.target

@@ -6,8 +6,9 @@ Your account is your MTA nickname: the name you connect with is the name you reg
 
 1. **Language.** A window lists the ten languages of the interface. Pick yours and press **Continue** (double-clicking or `Enter` works too). The choice is saved on the account once you are in; change it later with `/lang`.
 2. **Register.** The dialog *Register For A New Account* asks for a password of 4 to 32 characters. **Accept** creates the account and logs you in. **Leave** disconnects you.
-3. **Welcome.** New accounts read the welcome text. Its only button counts down from 10 before it reads **Accept**; closing it earlier just brings it back. `/welcome` shows it again any time.
-4. Your first character spawns; see [Death](Death) for what a new character starts with.
+3. **Email.** Type a **valid** email address you can open right away: the server mails a 6-digit code to it, and you cannot play until you type that code in the next dialog (see [Email confirmation](#email-confirmation)).
+4. **Welcome.** New accounts read the welcome text. Its only button counts down from 10 before it reads **Accept**; closing it earlier just brings it back. `/welcome` shows it again any time.
+5. Your first character spawns; see [Death](Death) for what a new character starts with.
 
 ![Register dialog](images/screens/auth-dialog-register.jpg)
 
@@ -26,6 +27,16 @@ Only one session per account: a second client connecting with your name is refus
 The server can turn on automatic login for players returning from the same address and computer as their last login; it is off by default, so expect the password dialog.
 
 Once you are in, your character loads where you left it, with its stats and inventory; after a death a new one is created.
+
+## Email confirmation
+
+Every account needs a confirmed email address before it may play, staff included. Accounts made before this existed are asked for one at their next login (also when the server logs you in automatically).
+
+- *Confirm your email* asks for the address. A malformed one (it has to look like `name@example.com`, no spaces) is refused with the reason, and one address can confirm at most 3 accounts.
+- *Enter your confirmation code* then waits for the 6-digit code from the mail *Your Scavenge & Survive confirmation code: …*. Check the spam folder too; it can take a minute.
+- In the code box you can also type a different address (a typo the first time), or leave it empty and press **Accept** to get a new code, once a minute.
+- A code is valid for 15 minutes and allows 5 wrong tries; after that a new one is mailed. One connection gets at most 5 mails: past that you are disconnected and can rejoin later. An address you typed but never confirmed is remembered, so the next login mails a new code straight to it.
+- **Leave** on either dialog disconnects you (*Left without confirming email*).
 
 ## Commands
 

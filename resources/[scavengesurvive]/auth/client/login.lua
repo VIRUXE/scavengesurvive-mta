@@ -1,6 +1,7 @@
--- The login, register and welcome dialogs, drawn by ui's SA-MP style password and message boxes. The server
--- sends the title and body already in the player's language (authPromptShown); every answer goes back as
--- loginRequested / registrationRequested with the typed password, or authPromptDismissed for Leave.
+-- The login, register, email and welcome dialogs, drawn by ui's SA-MP style password, input and message boxes. The
+-- server sends the title and body already in the player's language (authPromptShown); every answer goes back as
+-- loginRequested / registrationRequested with the typed password, authEmailSubmitted / authEmailCodeSubmitted
+-- with the typed address or code, or authPromptDismissed for Leave.
 local prompt
 do
     local f = fileOpen("shared/logic/prompt.lua", true)
@@ -12,9 +13,17 @@ end
 local L = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")().text
 local welcomeLeft = 0
 
-addEventHandler("authPromptShown", root, function(mode, title, body)
+local SUBMIT_EVENTS = {
+    login = "loginRequested",
+    register = "registrationRequested",
+    email = "authEmailSubmitted",
+    code = "authEmailCodeSubmitted",
+}
+
+addEventHandler("authPromptShown", root, function(mode, title, body, style)
     local id = "auth:" .. tostring(mode)
-    exports.ui:dialogOpen(id, "password", title, body, L(prompt.BUTTONS[1]), L(prompt.BUTTONS[2]))
+    local kind = style == "input" and "input" or "password"
+    exports.ui:dialogOpen(id, kind, title, body, L(prompt.BUTTONS[1]), L(prompt.BUTTONS[2]))
 end)
 
 local function showWelcome()
@@ -37,10 +46,9 @@ end)
 
 addEventHandler("uiDialogResponded", root, function(id, accepted, text)
     local mode = tostring(id):match("^auth:(%a+)$")
-    if mode == "login" or mode == "register" then
+    if SUBMIT_EVENTS[mode] then
         if accepted then
-            local event = mode == "login" and "loginRequested" or "registrationRequested"
-            triggerServerEvent(event, localPlayer, text)
+            triggerServerEvent(SUBMIT_EVENTS[mode], localPlayer, text)
         else
             triggerServerEvent("authPromptDismissed", localPlayer)
         end

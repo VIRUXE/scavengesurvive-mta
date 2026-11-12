@@ -9,6 +9,8 @@ CREATE TABLE IF NOT EXISTS `accounts` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(24) NOT NULL,
   `password_hash` char(60) NOT NULL,
+  `email` varchar(254) DEFAULT NULL,
+  `email_verified_at` datetime DEFAULT NULL,
   `admin_level` tinyint(4) NOT NULL DEFAULT 0,
   `lang` varchar(8) DEFAULT NULL,
   `tooltips` tinyint(1) NOT NULL DEFAULT 1,
@@ -23,7 +25,8 @@ CREATE TABLE IF NOT EXISTS `accounts` (
   `tutorial_done` tinyint(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_accounts_name` (`name`),
-  KEY `ix_accounts_serial` (`last_serial`)
+  KEY `ix_accounts_serial` (`last_serial`),
+  KEY `ix_accounts_email` (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci WITH SYSTEM VERSIONING;
 
 CREATE TABLE IF NOT EXISTS `anticheat_field_logs` (
@@ -162,6 +165,22 @@ CREATE TABLE IF NOT EXISTS `containers` (
   KEY `ix_containers_owner_char` (`owner_char_id`),
   CONSTRAINT `fk_containers_owner_item` FOREIGN KEY (`owner_item_id`) REFERENCES `items` (`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_containers_owner_vehicle` FOREIGN KEY (`owner_vehicle_id`) REFERENCES `vehicles` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+
+CREATE TABLE IF NOT EXISTS `email_outbox` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `account_id` int(11) DEFAULT NULL,
+  `to_addr` varchar(254) NOT NULL,
+  `subject` varchar(255) NOT NULL,
+  `body` text NOT NULL,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `sent_at` datetime DEFAULT NULL,
+  `attempts` int(11) NOT NULL DEFAULT 0,
+  `last_error` varchar(512) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `ix_email_outbox_pending` (`sent_at`,`attempts`),
+  KEY `ix_email_outbox_account` (`account_id`),
+  CONSTRAINT `fk_email_outbox_account` FOREIGN KEY (`account_id`) REFERENCES `accounts` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
 CREATE TABLE IF NOT EXISTS `felled_trees` (
