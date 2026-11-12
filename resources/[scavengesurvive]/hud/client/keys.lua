@@ -146,7 +146,7 @@ return function(ctx)
         end
     end)
 
-    -- from a front seat the glovebox key (E) or the interact key opens the glovebox in the dash
+    -- From a front seat only the dedicated glovebox key (E) opens the glovebox in the dash.
     local function openGlovebox(seatedIn)
         if getPedOccupiedVehicleSeat(localPlayer) <= 1 and exports.vehicles:hasGlovebox(seatedIn) then
             triggerServerEvent("gloveboxOpenRequested", localPlayer)
@@ -165,7 +165,6 @@ return function(ctx)
         end
         local seatedIn = getPedOccupiedVehicle(localPlayer)
         if seatedIn then
-            openGlovebox(seatedIn)
             return
         end
         if tweaking() then
