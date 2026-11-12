@@ -113,3 +113,23 @@ function tryOpenDumpster()
     triggerServerEvent("dumpsterOpenRequested", localPlayer, i)
     return true
 end
+
+local interactionLang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")()
+function interactionActions()
+    if isPedInVehicle(localPlayer) then
+        return {}
+    end
+    local x, y, z = getElementPosition(localPlayer)
+    local i = logic.nearest(spots, x, y, z, logic.OPEN_REACH)
+    if not i then
+        return {}
+    end
+    return {
+        {
+            id = "dumpster:" .. i,
+            label = interactionLang.text("Open dumpster"),
+            event = "dumpsterOpenRequested",
+            target = i,
+        },
+    }
+end

@@ -29,7 +29,7 @@ The **bonnet** of an unlocked vehicle opens and shuts with a tap of `F` at the f
 
 - a tap of `F` with empty hands lifts a **loose** battery into your hands (labelled with its charge, *Car Battery (63%)*), or a loose starter motor. A tight part stays in the bay until it is unbolted.
 - a tap of `F` with a Car Battery in hand puts it into an empty slot loose. The same tap with a Starter Motor puts that in loose.
-- hold `F` with a **Ratchet** for a menu: repair the engine when that tool's band applies, unbolt a tight battery or tighten a loose one, and the same for the starter motor. The menu always waits for your click, even with one line. The engine will not start until a loose part is tightened.
+- press `F` with a **Ratchet** for the available actions: repair the engine when that tool's band applies, unbolt a tight battery or tighten a loose one, and the same for the starter motor. When several actions are available, a shared menu includes nearby ground items and vehicle actions. Scroll to choose and click to confirm; Escape closes it. The engine will not start until a loose part is tightened.
 
 A Car Battery (size 2) keeps its charge while carried; one found as loot holds 15 to 100 %, and a flat one stays flat. Swapping a flat battery for a charged one from another vehicle is the quick way to get a car going. See [Car Batteries & Starters](Car-Batteries-and-Starters).
 

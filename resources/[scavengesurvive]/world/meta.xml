@@ -30,4 +30,6 @@
     <export function="setGlobalWeather" type="server"/>
     <export function="tryInteract" type="client"/>
     <export function="nearbyFeature" type="client"/>
+    <export function="interactionActions" type="client"/>
+    <export function="chooseInteraction" type="client"/>
 </meta>

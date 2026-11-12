@@ -270,3 +270,19 @@ end)
 addEventHandler("onClientResourceStop", resourceRoot, function()
     spots = {}
 end)
+
+local interactionLang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")()
+function interactionActions()
+    local c = crateNear()
+    if not c then
+        return {}
+    end
+    return {
+        {
+            id = "crate:" .. c.id,
+            label = interactionLang.text(c.kind == "cache" and "Open weapon cache" or "Open supply crate"),
+            event = "supplyCrateOpenRequested",
+            target = c.id,
+        },
+    }
+end

@@ -207,3 +207,8 @@ addEventHandler("itemDropSpotRequested", localPlayer, function()
     local cx, cy = geometry.freeSpot(x, y, rz, 1.0, blocked)
     triggerServerEvent("itemDropSpotChosen", localPlayer, cx, cy)
 end)
+
+-- Actions exposed to the HUD interaction chooser.
+function interactionActions()
+    return world.interactionActions()
+end

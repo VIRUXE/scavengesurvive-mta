@@ -240,3 +240,41 @@ addEventHandler("onClientResourceStop", resourceRoot, function()
         exitZipline(false)
     end
 end)
+
+local interactionLang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")()
+function interactionActions()
+    if busy() or onLadder or onZip then
+        return {}
+    end
+    local actions = buttonInteractionActions()
+    local x, y, z = getElementPosition(localPlayer)
+    local li, zi = F.ladderAt(ladders, x, y, z), F.ziplineAt(ziplines, x, y, z)
+    local function add(kind, index, label)
+        actions[#actions + 1] = {
+            id = kind .. ":" .. index,
+            label = interactionLang.text(label),
+            clientResource = "world",
+            clientFunction = "chooseInteraction",
+            target = kind .. ":" .. index,
+        }
+    end
+    if li then
+        add("ladder", li, "Climb ladder")
+    end
+    if zi then
+        add("zipline", zi, "Grab zipline")
+    end
+    return actions
+end
+function chooseInteraction(id)
+    if busy() or onLadder or onZip then
+        return
+    end
+    local x, y, z = getElementPosition(localPlayer)
+    local li, zi = F.ladderAt(ladders, x, y, z), F.ziplineAt(ziplines, x, y, z)
+    if li and id == "ladder:" .. li then
+        enterLadder(li)
+    elseif zi and id == "zipline:" .. zi then
+        enterZipline(zi)
+    end
+end

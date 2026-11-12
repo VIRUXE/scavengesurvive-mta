@@ -16,6 +16,8 @@ M.TIGHTEN_STARTER = "tighten_starter"
 
 -- lang:begin
 M.LABELS = {
+    pickup_battery = "Take out battery",
+    pickup_starter = "Take out starter motor",
     repair_engine = "Repair engine",
     unbolt_battery = "Unbolt battery",
     tighten_battery = "Tighten battery",
@@ -79,7 +81,7 @@ end
 
 -- Entries for the ratchet menu at the open bonnet, only those that apply.
 -- repairTool is vehicles.repairToolForHealth (nil when the engine needs no more field repair).
-function M.menuEntries(repairTool, batteryState, starterState)
+function M.menuEntries(repairTool, batteryState, starterState, emptyHands)
     local out = {}
     if repairTool == "Ratchet" then
         out[#out + 1] = { id = M.REPAIR, label = M.LABELS.repair_engine }
@@ -93,6 +95,15 @@ function M.menuEntries(repairTool, batteryState, starterState)
         out[#out + 1] = { id = M.TIGHTEN_STARTER, label = M.LABELS.tighten_starter }
     elseif starterState == M.TIGHT then
         out[#out + 1] = { id = M.UNBOLT_STARTER, label = M.LABELS.unbolt_starter }
+    end
+    if emptyHands then
+        for _, part in ipairs({ "battery", "starter" }) do
+            local state = part == "battery" and batteryState or starterState
+            if state == M.LOOSE then
+                local id = "pickup_" .. part
+                out[#out + 1] = { id = id, label = M.LABELS[id] }
+            end
+        end
     end
     return out
 end

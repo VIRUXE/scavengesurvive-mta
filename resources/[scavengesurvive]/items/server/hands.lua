@@ -872,7 +872,7 @@ return function(ctx)
         end, { player = player, row = row })
     end
 
-    net.handler("itemPickupRequested", function(player, blocked)
+    net.handler("itemPickupRequested", function(player, blocked, targetId)
         local cid = charId(player)
         if not cid or isBadInteract(player) then
             return
@@ -881,17 +881,34 @@ return function(ctx)
             return
         end
         local held = state.held[player]
-        if tryPlayerInteraction(player, cid, held) then
+        if targetId ~= nil then
+            targetId = tonumber(targetId)
+            if not targetId or targetId <= 0 or targetId % 1 ~= 0 or targetId > 2147483647 then
+                return
+            end
+        end
+        if not targetId and tryPlayerInteraction(player, cid, held) then
             return
         end
         local x, y = getElementPosition(player)
         local r = tonumber(state.settings["items.pickup_radius"]) or 2.0
         local unames = held and targetsFor(held.uname)
         local int, dim = getElementInterior(player), getElementDimension(player)
-        local sql = world.findNearestSql(x, y, r, int, dim, unames, world.cleanIds(blocked))
+        local sql = world.findNearestSql(x, y, r, int, dim, unames, world.cleanIds(blocked), targetId)
         db.one(sql, {}, function(row, c)
             if not isElement(c.player) then
                 return
+            end
+            if row and c.targetId then
+                local px, py, pz = getElementPosition(c.player)
+                if
+                    isBadInteract(c.player)
+                    or getElementInterior(c.player) ~= (row.interior or 0)
+                    or getElementDimension(c.player) ~= (row.dimension or 0)
+                    or getDistanceBetweenPoints3D(px, py, pz, row.x, row.y, row.z) > c.radius
+                then
+                    return
+                end
             end
             local curHeld = state.held[c.player]
             local curUname = curHeld and curHeld.uname
@@ -1022,7 +1039,7 @@ return function(ctx)
                 return tryTransferFromWorld(c.player, c.charId, curHeld, curType, row)
             end
             M.pickup(c.player, c.charId, row)
-        end, { player = player, charId = cid, radius = r })
+        end, { player = player, charId = cid, radius = r, targetId = targetId })
     end, { rate = 5 })
 
     -- a hold of the interact key on a bag or a box lying there (upstream "Hold F to pick up / Press F to open"): the

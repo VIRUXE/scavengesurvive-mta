@@ -25,4 +25,5 @@
     <export function="stockGlovebox" type="server"/>
     <export function="nearbyCrate" type="client"/>
     <export function="tryOpenCrate" type="client"/>
+    <export function="interactionActions" type="client"/>
 </meta>

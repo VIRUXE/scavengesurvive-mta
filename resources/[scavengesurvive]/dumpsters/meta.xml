@@ -18,4 +18,5 @@
     <file src="files/dumpster_lid.col"/>
     <export function="nearbyDumpster" type="client"/>
     <export function="tryOpenDumpster" type="client"/>
+    <export function="interactionActions" type="client"/>
 </meta>

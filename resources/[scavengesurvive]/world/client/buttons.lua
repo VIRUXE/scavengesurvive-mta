@@ -231,3 +231,16 @@ addEventHandler("onClientResourceStop", resourceRoot, function()
         toggleAllControls(true, true, false)
     end
 end)
+
+-- The shared chooser lists a reachable button alongside world items, without the legacy item priority.
+function buttonInteractionActions()
+    if isPedDead(localPlayer) or getPedOccupiedVehicle(localPlayer) then
+        return {}
+    end
+    local x, y, z = getElementPosition(localPlayer)
+    local b = buttons.buttonAt(reg, x, y, z, getElementDimension(localPlayer), hidden)
+    if not b then
+        return {}
+    end
+    return { { id = "button:" .. b.id, label = lang.text(b[5]), event = "buttonPressed", target = b.id } }
+end

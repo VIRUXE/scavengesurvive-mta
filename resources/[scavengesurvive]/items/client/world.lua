@@ -905,6 +905,73 @@ return function(ctx)
         return nearest, nearestCategory
     end
 
+    -- Explicit targets for the shared interaction chooser; never substitute a nearer item on selection.
+    function M.interactionActions()
+        local actions = {}
+        local px, py, pz = getElementPosition(localPlayer)
+        local dim, int = getElementDimension(localPlayer), getElementInterior(localPlayer)
+        for id, e in pairs(objects) do
+            local r, t = e.row, itemType(e.uname)
+            local dx, dy, dz = e.x - px, e.y - py, e.z - pz
+            if
+                t
+                and (r.dimension or 0) == dim
+                and (r.interior or 0) == int
+                and dx * dx + dy * dy + dz * dz <= 4
+                and reachable(id, e)
+            then
+                local verb = lang.text("Pick up")
+                local event = "itemPickupRequested"
+                if t.category == "bag" or t.category == "safebox" then
+                    verb = lang.text("Open")
+                    if t.category == "bag" then
+                        event = "itemBagOpenRequested"
+                    end
+                elseif e.uname == "Sign" then
+                    verb, event = lang.text("Edit sign"), "signEditRequested"
+                elseif e.uname == "PlantPot" then
+                    verb, event = lang.text("Inspect plant pot"), "potInspectRequested"
+                elseif e.uname == "Torso" then
+                    verb, event = lang.text("Investigate"), "bodyInspectRequested"
+                elseif machines.isMachine(e.uname) then
+                    verb = lang.text("Access machine")
+                end
+                if e.uname == "Welder" then
+                    actions[#actions + 1] = {
+                        id = "torch:" .. id,
+                        label = lang.text("Take torch") .. " · " .. t.name,
+                        event = "weldTorchGrabRequested",
+                        target = id,
+                        item = true,
+                    }
+                end
+                actions[#actions + 1] = {
+                    id = "item:" .. id,
+                    label = verb .. " · " .. t.name,
+                    event = event,
+                    target = id,
+                    item = true,
+                }
+                if
+                    (t.category == "bag" or t.category == "safebox")
+                    and not (t.categoryData and t.categoryData.takeOnly)
+                then
+                    actions[#actions + 1] = {
+                        id = "carry:" .. id,
+                        label = lang.text("Pick up") .. " · " .. t.name,
+                        event = "itemLongPickupRequested",
+                        target = id,
+                        item = true,
+                    }
+                end
+            end
+        end
+        table.sort(actions, function(a, b)
+            return a.id < b.id
+        end)
+        return actions
+    end
+
     -- the distance to the nearest world item in the player's world, or false: world's buttons give way to an item
     -- lying nearer (upstream items are buttons too and the nearest one wins)
     function M.nearestItemDistance()

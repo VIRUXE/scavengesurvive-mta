@@ -448,11 +448,11 @@ end
 
 -- a Ratchet at the open bonnet: hold F opens the bay menu
 local function bayMenuHint(held)
-    if not held or held.uname ~= "Ratchet" or not openBonnetVehicle() then
+    if (held and held.uname ~= "Ratchet") or not openBonnetVehicle() then
         return nil
     end
     -- a lone entry is named (the hold runs it once confirmed); several are just the menu
-    local labels = exports.vehicles:bayMenuLabels(openBonnetVehicle())
+    local labels = exports.vehicles:bayMenuLabels(openBonnetVehicle(), not held)
     if labels and #labels == 1 then
         return lang.format("(Hold) %s", lang.text(labels[1]))
     end
@@ -551,12 +551,15 @@ local function vehicleHasFrontGlovebox()
         and exports.vehicles:hasGlovebox(vehicle) == true
 end
 
+local interactionActions = loadFile("client/interactions.lua", "=hud/interactions.lua")
+
 local function drawKeyActions(driver)
     local held = state.held
     local isCalibreWep = held and held.category == "weapon" and held.calibre ~= nil and not held.liquid or false
     local itemDist = not held and exports.items:nearestItemDistance() or false
     local nearItem = itemDist and itemDist <= 2.0
     local _, inspectUname = exports.items:nearbyInspectable()
+    local choices = interactionActions(held)
     local lines = keyactions.lines({
         spawned = true,
         uiOpen = uiListIsOpen(),
@@ -584,6 +587,19 @@ local function drawKeyActions(driver)
         hasHolster = getElementData(localPlayer, "items.holster") ~= false,
         supports = SUPPORTS,
     }, state.keys)
+    if (#choices > 1 or (#choices == 1 and not choices[1].item)) and #lines > 0 then
+        local interactKey = state.keys.interact or "F"
+        for i = #lines, 1, -1 do
+            if lines[i].key == interactKey then
+                table.remove(lines, i)
+            end
+        end
+        table.insert(
+            lines,
+            1,
+            { key = interactKey, text = #choices > 1 and lang.text("Choose action") or choices[1].label }
+        )
+    end
     local scale = canvas.textScale(c, 1.5, 1)
     local font = canvas.font(1)
     local y = 120
@@ -733,6 +749,7 @@ addEventHandler("onClientResourceStart", resourceRoot, function()
 end)
 
 loadFile("client/keys.lua", "=hud/keys.lua")({
+    interactionActions = interactionActions,
     getHeld = function()
         return state.held
     end,

@@ -8,7 +8,7 @@ return function(ctx)
     local bayMenu = nil -- { vehicle, entries = { { id, label } }, index }
     local bayKey = nil
     -- lang:begin
-    local BAY_FOOTER = "Wheel: select    Click: confirm    Release F: close"
+    local BAY_FOOTER = "Wheel: select    Click: confirm    Escape: close"
     -- lang:end
 
     local function bonnetIsOpen(veh)
@@ -159,6 +159,8 @@ return function(ctx)
         end
     end)
 
+    local confirmBayMenu
+
     addCommandHandler("interact", function()
         if not guard() or listIsOpen() then
             return
@@ -168,6 +170,19 @@ return function(ctx)
             return
         end
         if tweaking() then
+            return
+        end
+        if bayMenu and bayMenu.generic then
+            closeBayMenu()
+            return
+        end
+        local choices = ctx.interactionActions(ctx.getHeld(), true)
+        if #choices > 1 or (#choices == 1 and not choices[1].item) then
+            blockEnterUntil = getTickCount() + TRUNK_ENTER_BLOCK_MS
+            bayMenu = { entries = choices, index = 1, generic = true }
+            if #choices == 1 then
+                confirmBayMenu()
+            end
             return
         end
         -- Reachable world items take the interact key before world features, crates and vehicle actions.
@@ -331,46 +346,15 @@ return function(ctx)
             -- trunk: F there takes the wheel
             local onBoard = getPedContactElement(localPlayer) == nearVeh
             local isFront = not onBoard and (angle < 25 or angle > 335)
-            -- empty hands at the bonnet: a tap opens or shuts it, or lifts a loose part (vehicles server). A hold
-            -- at the open bonnet asks for the ratchet menu; without a ratchet the server says so.
-            if not uname and isFront and exports.vehicles:hasBatteryBay(nearVeh) then
-                blockEnterUntil = getTickCount() + TRUNK_ENTER_BLOCK_MS
-                if isTimer(interactHoldTimer) then
-                    return
-                end
-                local key = string.lower(getKeyBoundToCommand("interact") or "f")
-                local startTick = getTickCount()
-                local bonnetVeh = nearVeh
-                bayKey = key
-                interactHoldTimer = setTimer(function()
-                    local heldMs = getTickCount() - startTick
-                    local released = not isKeyHeld(key, "interact")
-                    if not released and heldMs < 500 then
-                        return
-                    end
-                    killTimer(interactHoldTimer)
-                    interactHoldTimer = nil
-                    if not isElement(bonnetVeh) then
-                        return
-                    end
-                    if released and heldMs < 500 then
-                        triggerServerEvent("vehicleInteractRequested", localPlayer, bonnetVeh)
-                    elseif bonnetIsOpen(bonnetVeh) then
-                        triggerServerEvent("vehicleBayMenuRequested", localPlayer, bonnetVeh)
-                    else
-                        triggerServerEvent("vehicleInteractRequested", localPlayer, bonnetVeh)
-                    end
-                end, 50, 0)
-                return
-            end
-            -- a Ratchet at the open bonnet: a tap is the engine repair, a hold opens the bay menu.
+            -- At the open bonnet, empty hands or a Ratchet can hold to choose an engine-bay action.
             -- at a body part on the side, or at the front while the bonnet is still shut: a tap is the
             -- repair, a hold tightens or takes the part off.
-            if uname == "Ratchet" then
+            if not uname or uname == "Ratchet" then
                 local partName, condition = exports.vehicles:bodyPartSlot(nearVeh)
-                local partOn = partName ~= nil and condition ~= "missing"
+                local partOn = uname == "Ratchet" and partName ~= nil and condition ~= "missing"
                 local atBay = isFront and bonnetIsOpen(nearVeh) and exports.vehicles:hasBatteryBay(nearVeh)
-                if atBay or partOn then
+                local atBonnet = not uname and isFront and exports.vehicles:hasBatteryBay(nearVeh)
+                if atBay or partOn or atBonnet then
                     blockEnterUntil = getTickCount() + TRUNK_ENTER_BLOCK_MS
                     if isTimer(interactHoldTimer) then
                         return
@@ -400,12 +384,16 @@ return function(ctx)
                             killTimer(interactHoldTimer)
                             interactHoldTimer = nil
                             if isElement(partVeh) then
-                                triggerServerEvent("vehiclePartRemoveRequested", localPlayer, partVeh)
+                                triggerServerEvent(
+                                    uname and "vehiclePartRemoveRequested" or "vehicleInteractRequested",
+                                    localPlayer,
+                                    partVeh
+                                )
                             end
                             return
                         end
                         if not bayAsked and isElement(partVeh) then
-                            -- ask once; the answer opens the list, or the server runs the only entry itself
+                            -- ask once; the answer opens the list for an explicit selection
                             bayAsked = true
                             bayMenu = { vehicle = partVeh, entries = {}, index = 1, pending = true }
                             triggerServerEvent("vehicleBayMenuRequested", localPlayer, partVeh)
@@ -661,13 +649,32 @@ return function(ctx)
         bayMenu = { vehicle = vehicle, entries = list, index = 1 }
     end)
 
-    local function confirmBayMenu()
+    confirmBayMenu = function()
         local menu = bayMenu
         if not menu or not menu.entries or not menu.entries[1] then
             return
         end
         local entry = menu.entries[menu.index] or menu.entries[1]
         local veh = menu.vehicle
+        if menu.generic then
+            closeBayMenu()
+            -- Recollect before dispatch: moved or removed targets must never resolve to a different action.
+            for _, current in ipairs(ctx.interactionActions(ctx.getHeld(), true)) do
+                if current.id == entry.id then
+                    if current.clientResource then
+                        call(getResourceFromName(current.clientResource), current.clientFunction, current.target)
+                    elseif current.event == "itemPickupRequested" then
+                        triggerServerEvent(current.event, localPlayer, exports.items:blockedItemsNear(), current.target)
+                    elseif current.action then
+                        triggerServerEvent(current.event, localPlayer, current.target, current.action)
+                    else
+                        triggerServerEvent(current.event, localPlayer, current.target)
+                    end
+                    break
+                end
+            end
+            return
+        end
         closeBayMenu()
         if entry and entry.id and isElement(veh) then
             triggerServerEvent("vehicleBayActionRequested", localPlayer, veh, entry.id)
@@ -679,6 +686,13 @@ return function(ctx)
     addEventHandler("onClientKey", root, function(button, press)
         local menu = bayMenu
         if not menu or not menu.entries or not menu.entries[1] then
+            return
+        end
+        if menu.generic and button == "escape" then
+            cancelEvent()
+            if press then
+                closeBayMenu()
+            end
             return
         end
         local n = #menu.entries
@@ -707,20 +721,44 @@ return function(ctx)
         if not menu or not menu.entries or not menu.entries[1] or not ctx.draw or not ctx.canvas then
             return
         end
+        if not guard() or listIsOpen() or getPedOccupiedVehicle(localPlayer) then
+            closeBayMenu()
+            return
+        end
+        if menu.generic and (not menu.refreshedAt or getTickCount() - menu.refreshedAt >= 200) then
+            local selected = menu.entries[menu.index] and menu.entries[menu.index].id
+            menu.entries = ctx.interactionActions(ctx.getHeld(), true)
+            menu.refreshedAt = getTickCount()
+            menu.index = 1
+            for i, entry in ipairs(menu.entries) do
+                if entry.id == selected then
+                    menu.index = i
+                    break
+                end
+            end
+            if #menu.entries == 0 then
+                closeBayMenu()
+                return
+            end
+        end
         local canvas, c = ctx.canvas, ctx.c
         local n = #menu.entries
-        local rowH, width = 13, 220
+        local rowH, width = 13, 280
+        local visible = math.min(n, 10)
+        local first = math.max(1, math.min(menu.index - visible + 1, n - visible + 1))
         local y = 268
-        local height = 8 + n * rowH + 14
+        local height = 8 + visible * rowH + 14
         local left = canvas.x(c, 320 - width / 2, "center")
         local top = canvas.y(c, y)
         dxDrawRectangle(left, top, canvas.len(c, width), canvas.len(c, height), tocolor(0, 0, 0, 170))
-        for i, entry in ipairs(menu.entries) do
+        for i = first, first + visible - 1 do
+            local entry = menu.entries[i]
+            local row = i - first
             local selected = i == menu.index
             if selected then
                 dxDrawRectangle(
                     left + canvas.len(c, 2),
-                    top + canvas.len(c, 4 + (i - 1) * rowH),
+                    top + canvas.len(c, 4 + row * rowH),
                     canvas.len(c, width - 4),
                     canvas.len(c, rowH),
                     tocolor(232, 232, 144, 45)
@@ -729,7 +767,7 @@ return function(ctx)
             ctx.draw.text({
                 text = entry.label,
                 x = 320,
-                y = y + 4 + (i - 1) * rowH,
+                y = y + 4 + row * rowH,
                 lx = 0.24,
                 ly = 1.15,
                 colour = selected and tocolor(232, 232, 144, 255) or tocolor(255, 255, 255, 255),
@@ -741,7 +779,7 @@ return function(ctx)
         ctx.draw.text({
             text = lang.text(BAY_FOOTER),
             x = 320,
-            y = y + 6 + n * rowH,
+            y = y + 6 + visible * rowH,
             lx = 0.18,
             ly = 0.95,
             colour = tocolor(232, 232, 144, 255),

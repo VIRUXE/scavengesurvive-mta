@@ -1987,8 +1987,13 @@ local function beginBayHold(player, vehicle, itemId, ms, label, actionType, engi
     activeActions[player] = { actionType = actionType, vehicle = vehicle, timer = timer }
 end
 
-local function bayEntries(vehicle, inf)
-    return bay.menuEntries(vlogic.repairToolForHealth(getElementHealth(vehicle)), inf.batteryState, inf.starterState)
+local function bayEntries(vehicle, inf, emptyHands)
+    return bay.menuEntries(
+        vlogic.repairToolForHealth(getElementHealth(vehicle)),
+        inf.batteryState,
+        inf.starterState,
+        emptyHands
+    )
 end
 
 local function runBayAction(player, vehicle, actionId, held)
@@ -2061,7 +2066,7 @@ local function noBayWork(player, vehicle)
     toast(player, "NEEDANOTOOL")
 end
 
--- Hold F at the open bonnet. The server decides the list; one entry runs immediately.
+-- Hold F at the open bonnet. The server decides the list; empty hands can also select loose parts.
 net.handler("vehicleBayMenuRequested", function(player, vehicle)
     local inf = info[vehicle]
     if not inf or not atBonnet(player, vehicle) or activeActions[player] then
@@ -2074,10 +2079,10 @@ net.handler("vehicleBayMenuRequested", function(player, vehicle)
         return toast(player, "BONNET_SHUT")
     end
     local held = exports.items:getHeld(player)
-    if not held or held.uname ~= "Ratchet" then
+    if held and held.uname ~= "Ratchet" then
         return toast(player, "ENGINE_RATCHET")
     end
-    local entries = bayEntries(vehicle, inf)
+    local entries = bayEntries(vehicle, inf, not held)
     if #entries == 0 then
         return noBayWork(player, vehicle)
     end
@@ -2098,10 +2103,35 @@ net.handler("vehicleBayActionRequested", function(player, vehicle, actionId)
     if inf.locked > 0 then
         return toast(player, "BONNET_LOCKED")
     end
+    if actionId == "close_bonnet" or actionId == "open_bonnet" then
+        if getVehicleDoorState(vehicle, 0) ~= 4 then
+            setVehicleDoorOpenRatio(vehicle, 0, actionId == "open_bonnet" and 1 or 0, 500)
+            markUsed(vehicle)
+        end
+        return
+    end
     if not engineReachable(vehicle) then
         return toast(player, "BONNET_SHUT")
     end
     local held = exports.items:getHeld(player)
+    if actionId == "fit_battery" then
+        if held and held.uname == "Battery" then
+            return placeBattery(player, vehicle, held)
+        end
+        return
+    elseif actionId == "fit_starter" then
+        if held and held.uname == "StarterMotor" then
+            return placeStarter(player, vehicle, held)
+        end
+        return
+    end
+    if not held and bay.hasEntry(bayEntries(vehicle, inf, true), actionId) then
+        if actionId == "pickup_battery" then
+            return pickupBattery(player, vehicle)
+        elseif actionId == "pickup_starter" then
+            return pickupStarter(player, vehicle)
+        end
+    end
     if not held or held.uname ~= "Ratchet" then
         return toast(player, "ENGINE_RATCHET")
     end

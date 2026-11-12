@@ -69,4 +69,5 @@
     <export function="bodyPartSlot" type="client"/>
     <export function="isBodyPart" type="client"/>
     <export function="canInstallBodyPart" type="client"/>
+    <export function="interactionActions" type="client"/>
 </meta>

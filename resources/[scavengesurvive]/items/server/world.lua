@@ -22,7 +22,7 @@ return function(ctx)
 
     -- unames: optional list of type unames (server constants) the nearest item must be one of; exclude: optional list
     -- of item ids to leave out (the client's walled-off items, already cleaned to integers by M.cleanIds)
-    function M.findNearestSql(x, y, r, interior, dimension, unames, exclude)
+    function M.findNearestSql(x, y, r, interior, dimension, unames, exclude, targetId)
         local point = string.format("POINT(%g, %g)", x, y)
         -- Match the same rounded centre/radius as the existing exact predicate.
         local qx, qy, qr =
@@ -41,6 +41,9 @@ return function(ctx)
         end
         if exclude and #exclude > 0 then
             where = where .. " AND i.id NOT IN (" .. table.concat(exclude, ", ") .. ")"
+        end
+        if targetId then
+            where = where .. string.format(" AND i.id = %d", targetId)
         end
         return "SELECT " .. COLS .. FROM .. where .. " ORDER BY ST_Distance(p.pos, " .. point .. ") ASC LIMIT 1"
     end

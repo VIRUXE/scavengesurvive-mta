@@ -202,13 +202,13 @@ end
 
 -- export: the English labels of what the Ratchet menu at this vehicle's open bonnet would list right now (the same
 -- entries the server builds: bay.menuEntries), in menu order; nil without a bay.
-function bayMenuLabels(vehicle)
+function bayMenuLabels(vehicle, emptyHands)
     local battery, starter = bayStates(vehicle)
     if not battery then
         return nil
     end
     local labels = {}
-    local entries = bay.menuEntries(vlogic.repairToolForHealth(getElementHealth(vehicle)), battery, starter)
+    local entries = bay.menuEntries(vlogic.repairToolForHealth(getElementHealth(vehicle)), battery, starter, emptyHands)
     for i, entry in ipairs(entries) do
         labels[i] = entry.label
     end
@@ -351,3 +351,75 @@ end)
 addEventHandler("onClientResourceStop", resourceRoot, function()
     vSpots = {}
 end)
+
+local interactionLang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")()
+
+-- The shared chooser combines these target-specific actions with nearby world items.
+function interactionActions(heldUname)
+    if getPedOccupiedVehicle(localPlayer)
+        or (heldUname and heldUname ~= "Ratchet" and heldUname ~= "Battery" and heldUname ~= "StarterMotor") then
+        return {}
+    end
+    local lang = interactionLang
+    local actions = {}
+    local px, py, pz = getElementPosition(localPlayer)
+    for _, vehicle in ipairs(getElementsByType("vehicle", root, true)) do
+        local vx, vy, vz = getElementPosition(vehicle)
+        local _, _, rz = getElementRotation(vehicle)
+        if
+            hasBatteryBay(vehicle)
+            and getElementDimension(vehicle) == getElementDimension(localPlayer)
+            and getElementInterior(vehicle) == getElementInterior(localPlayer)
+            and getPedContactElement(localPlayer) ~= vehicle
+            and getDistanceBetweenPoints3D(px, py, pz, vx, vy, vz) <= 5.5
+            and vlogic.isFront(vlogic.angleToVehicle(px, py, vx, vy, rz))
+            and (tonumber(getElementData(vehicle, "vehicles.locked")) or 0) == 0
+        then
+            local gone = getVehicleDoorState(vehicle, 0) == 4
+            local open = gone or getVehicleDoorOpenRatio(vehicle, 0) > 0.5
+            local battery, starter = bayStates(vehicle)
+            local vehicleType = exports.data:vehicleType(getElementData(vehicle, "vehicles.type"))
+            local name = vehicleType and lang.text(vehicleType.name) or getVehicleName(vehicle)
+            local function add(id, label)
+                actions[#actions + 1] = {
+                    id = "vehicle:" .. tostring(getElementData(vehicle, "vehicles.id")) .. ":" .. id,
+                    label = lang.text(label) .. " · " .. name,
+                    event = "vehicleBayActionRequested",
+                    target = vehicle,
+                    action = id,
+                }
+            end
+            if not gone then
+                add(open and "close_bonnet" or "open_bonnet", open and "Close Bonnet" or "Open Bonnet")
+            end
+            if open and battery and heldUname == "Battery" and battery == bay.MISSING then
+                add("fit_battery", "Fit battery")
+            elseif open and starter and heldUname == "StarterMotor" and starter == bay.MISSING then
+                add("fit_starter", "Fit starter motor")
+            end
+            if open and battery and (not heldUname or heldUname == "Ratchet") then
+                for _, entry in
+                    ipairs(
+                        bay.menuEntries(
+                            vlogic.repairToolForHealth(getElementHealth(vehicle)),
+                            battery,
+                            starter,
+                            not heldUname
+                        )
+                    )
+                do
+                    -- Advertise the full set of applicable jobs, including the tool needed to perform them.
+                    local label = entry.label
+                    if not heldUname and entry.id ~= "pickup_battery" and entry.id ~= "pickup_starter" then
+                        label = lang.text(label) .. " (" .. lang.text("Ratchet") .. ")"
+                    end
+                    add(entry.id, label)
+                end
+            end
+        end
+    end
+    table.sort(actions, function(a, b)
+        return a.id < b.id
+    end)
+    return actions
+end
