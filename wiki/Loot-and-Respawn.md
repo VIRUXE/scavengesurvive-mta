@@ -13,32 +13,31 @@ Loot and vehicles do not reset when the server restarts. The world is kept in th
 
 ### Where and when a loot point rolls
 
-Loot lies at about 11,000 fixed loot points spread over the seven zones of the map; which zone holds what, and where the military, police and medical points are, is on [World & Zones](World-and-Zones). Points are not filled at server start. A point is rolled while a player is within 400 m of it (checked every 15 seconds, and when a player enters a new area), and only if all of these hold:
+Loot lies at about 11,000 fixed loot points spread over the seven zones of the map; which zone holds what, and where the military, police and medical points are, is on [World & Zones](World-and-Zones). Points are not filled at server start. Every 5 minutes each zone earns new spawn allowance (see below) and spends it at once on points drawn at random from the whole zone, wherever the players are. A point can be drawn only if all of these hold:
 
 - its **cooldown** has passed (see below);
 - none of the items it spawned before are still there (all picked up, destroyed or rotted away);
-- its zone still has **allowance** to spawn items;
-- **no player is within 150 m** of the point. Loot therefore appears 150 to 400 m from you, never in front of you.
+- **no player is within 150 m** of the point, so loot never appears in front of you. Players inside an interior or in the tutorial do not count.
 
-A roll tries 3 to 5 slots at the point (3 at many of them), and each slot produces an item only with the point's own spawn chance, 5 to 35 % depending on the point and 20 % at a typical one. Most rolls therefore leave one item or nothing, a few leave several; the items are drawn from the point's loot table, each kind at most once per roll, and never more than 6.
+A roll tries 3 to 5 slots at the point (3 at many of them), and each slot produces an item only with the point's own spawn chance, 5 to 35 % depending on the point and 20 % at a typical one. Most rolls therefore leave one item or nothing, a few leave several; the items are drawn from the point's loot table, each kind at most once per roll, and never more than 6. A roll larger than the allowance left is cut short.
 
 ### Cooldown
 
-After a point rolls, it waits 60 minutes, give or take up to 50 % (30 to 90 minutes), before it can roll again. The wait counts from the roll, not from the pickup, so a point emptied late can roll again at once.
+After a point rolls, it waits 6 hours, give or take up to 50 % (3 to 9 hours), before it can roll again, even if the roll left nothing. The wait counts from the roll, not from the pickup, so a point emptied late can roll again at once.
 
 ### Capacity and refill
 
-- A zone's capacity is 2 items per loot point in the zone. A zone starts full (it may spawn up to its capacity), which is why a fresh world is rich.
+- A zone's capacity is 0.3 items per loot point in the zone, a quarter more for every player online after the first.
 - Every 5 minutes each zone earns new spawn allowance from its deficit (capacity minus items alive):
   - 10 % of the deficit per hour, but never less than 2 % of the capacity per hour while there is any deficit;
   - allowance never exceeds the deficit, and fractions carry over between ticks.
-- Loot points only spend that allowance; a roll larger than what is left is cut short.
+- The allowance is placed straight away; none of it is saved up for later.
 
-The result: a looted-out busy area stays thin for hours; the more the map is consumed or destroyed, the faster it earns allowance back, but a zone full of carried and stored items earns almost nothing beyond the 2 % trickle.
+The result: an empty map fills up over about a day, and a looted-out busy area stays thin for hours, since new loot lands at random across the whole zone. The more the map is consumed or destroyed, the faster it earns allowance back, but a zone full of carried and stored items earns almost nothing beyond the 2 % trickle.
 
 ### Despawn
 
-Loot nobody touches disappears after 120 minutes. Picking an item up cancels its despawn timer. The items of a dead player's corpse also despawn after 120 minutes unless picked up. Destroyed, eaten or used-up items free their share at once.
+Loot nobody touches disappears from its point after 24 hours, and its share goes back to the zone. Picking an item up cancels its despawn timer. The items of a dead player's corpse despawn after 120 minutes unless picked up. Destroyed, eaten or used-up items free their share at once.
 
 ### What found items come with
 

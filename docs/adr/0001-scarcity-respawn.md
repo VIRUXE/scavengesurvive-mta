@@ -129,3 +129,27 @@ Prod now runs `loot.cap_multiplier = 0.15` (three times the 0.05 cap) and `loot.
 3–9 h). The refill tick and the startup clamp scale each zone's cap by
 `budget.playerScale(players, loot.player_scale)` = 1 + 0.25 per player with a character after the first (32 players:
 8.75×), so a full server refills faster than a solo one while each player's share still shrinks as it fills.
+
+
+## Correction (2026-11-12): place the refill across the whole zone
+
+Lazy materialisation kept the map empty. Points rolled only inside the 400 m box around a player, at least 150 m
+from every player, and the paced allowance (about 20 items per tick for the whole map, at one player) was spent
+there or expired. Whatever rolled despawned after `loot.despawn_minutes` (120). Of the 2,518 items rolled from
+2026-11-05 to 2026-11-12, 2,487 despawned untouched and 27 were picked up; the staff map showed 22 items on loot
+points out of a cap of 3,473. The roller also ignored dimensions: the tutorial puts new players at
+(1078, 2139) in a private dimension, and every tutorial rolled the overworld points around that spot (on
+2026-11-12 the only player online spawned in San Fierro, and the loot rolled for them landed in Las Venturas).
+
+Now the refill tick hands each zone's allowance straight to `fillWorld`, which draws due points at random from the
+whole zone (`ORDER BY RAND()`, a few per item owed, drawing again until the allowance is spent or a draw rolls
+nothing) and rolls them through `loot_roll`. The 150 m exclusion holds for players in the overworld only
+(interior 0, dimension 0, where every loot point is). The per-player 15 s scan and the `playerZoneEntered` roll are
+gone; `rollNear` stays for the dev `/rollloot`. Startup places what `loadAllowances` keeps, and `refillNow` places
+the whole deficit at once (one discordchat respawn post per item). `rollWorldNow` places the current allowance.
+
+An item left untouched on the point that rolled it lies `loot.point_despawn_minutes` (1440) before it despawns;
+`loot.despawn_minutes` (120) is now only the corpse's. Cap, refill rate, floor, cooldowns and the count of carried
+items are unchanged. Modelled at one player with today's stock: the points hold about 240 items after an hour,
+1,000 after 6 h and level off between 1,800 and 2,300 after a day; with the 2 h despawn the same fill would level
+off at about 400.

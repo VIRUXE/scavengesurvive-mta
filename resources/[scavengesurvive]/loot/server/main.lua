@@ -1,7 +1,6 @@
 local db = loadstring(exports.lib:getModule("db"), "=lib/db.lua")()
 local net = loadstring(exports.lib:getModule("net"), "=lib/net.lua")()
 local util = loadstring(exports.lib:getModule("util"), "=lib/util.lua")()
-local spawnGuard = loadstring(exports.lib:getModule("spawn_guard"), "=lib/spawn_guard.lua")().new()
 local budget = loadstring(exports.lib:getModule("budget"), "=lib/budget.lua")()
 local log = loadstring(exports.lib:getModule("log"), "=lib/log.lua")()
 local function loadFile(path)
@@ -19,7 +18,7 @@ local warnedTables = {}
 local allowance = {} -- zone -> items the zone may still spawn (cache of world_budget.allowance between refill ticks)
 local refillTimer = nil
 local budgetBusy = true -- serialize placement and refill; startup loads the persisted budget first
-local sweepBusy = false
+local fillWorld -- the refill's placement over the whole map, after rollSpawn below
 local vendingTick -- the snack machines' budget tick, with stockContainer below
 
 -- Per-zone carrying capacity: enabled points × items_per_point × cap_multiplier.
@@ -59,8 +58,8 @@ local function scaledCap(cap, scale)
     return math.floor((tonumber(cap) or 0) * scale + 0.5)
 end
 
--- Unspent refill expires at the next tick. Banking it lets an unexplored area release hours of
--- supply in seconds. On restart, retain at most one interval (never award fresh allowance).
+-- Unspent refill expires at the next tick (fillWorld spends each tick's allowance as soon as it is granted). On
+-- restart, retain at most one interval (never award fresh allowance).
 local function loadAllowances(cb)
     db.query(SELECT_BUDGETS, { setting("loot.count_carried", 1) }, function(rows)
         if not rows then
@@ -94,7 +93,8 @@ local function loadAllowances(cb)
     end)
 end
 
--- The ADR 0001 refill tick: each zone earns spawns in proportion to its deficit, never beyond it.
+-- The ADR 0001 refill tick: each zone earns spawns in proportion to its deficit, never beyond it, and fillWorld
+-- places them at once.
 local function refillTick()
     if budgetBusy then
         return
@@ -132,6 +132,7 @@ local function refillTick()
                 allowance = {}
             end
             budgetBusy = false
+            fillWorld()
         end)
         vendingTick(scale, interval)
         log.event("loot.refillSummary", {
@@ -146,8 +147,9 @@ local function refillTick()
     end)
 end
 
--- Maintenance refill: make the current deficit available immediately. Normal loot rolls still
--- enforce point cooldowns, occupied points, and distance from players.
+-- Maintenance refill: grant every zone its whole deficit and place it at once through fillWorld, which still
+-- enforces point cooldowns, occupied points, and distance from players. Every item placed is one post in the
+-- discordchat item respawns channel, so a refill of a nearly empty map posts thousands.
 function refillNow()
     if budgetBusy then
         return false
@@ -179,6 +181,7 @@ function refillNow()
                     if pending == 0 then
                         budgetBusy = false
                         log.event("loot.refilledManually", { granted = granted, scale = scale })
+                        fillWorld()
                     end
                 end
             )
@@ -187,27 +190,16 @@ function refillNow()
     return true
 end
 
--- A character ID is installed before spawnPlayer finishes. Wait for the first settled
--- non-origin position before allowing that player to activate lazy loot placement.
-local function playerReady(player)
-    if not exports.character:getCharacterId(player) or isPedDead(player) then
-        return false
-    end
-    local x, y, z = getElementPosition(player)
-    return spawnGuard.ready(player, getTickCount(), x, y, z)
-end
-addEventHandler("onPlayerSpawn", root, function()
-    spawnGuard.reset(source, getTickCount())
-end)
-addEventHandler("onPlayerQuit", root, function()
-    spawnGuard.forget(source)
-end)
-
+-- Players in the overworld (interior 0, dimension 0, where every loot point is): loot never appears within
+-- world.min_player_distance of one of them. A player in the tutorial's dimension or inside an interior stands near
+-- no loot point, whatever their coordinates say.
 local function playerPositions()
     local out = {}
     for _, p in ipairs(getElementsByType("player")) do
-        local x, y = getElementPosition(p)
-        out[#out + 1] = { x = x, y = y }
+        if getElementDimension(p) == 0 and getElementInterior(p) == 0 then
+            local x, y = getElementPosition(p)
+            out[#out + 1] = { x = x, y = y }
+        end
     end
     return out
 end
@@ -376,9 +368,57 @@ function stockGlovebox(containerId, tableName, count)
     return #rolled
 end
 
--- Rolls due spawns inside a box around (x, y): spawns are due when next_roll_at has passed and no item from the
--- previous roll remains in the world; the zone must still have allowance and no player may be within
--- world.min_player_distance of the point. Every roll of the batch goes to the DB in one loot_roll call.
+-- Rolls the due points in `rows` (loot_spawns rows: due when next_roll_at has passed and no item of the previous roll
+-- is left) while their zone has allowance and no player is within world.min_player_distance, and places the batch
+-- with one loot_roll call. done(ok, spots): ok false when the call failed (the caller reloads the allowance), spots
+-- the number of points rolled. The caller holds budgetBusy.
+local function placeRolls(rows, done)
+    local players, minDist = playerPositions(), setting("world.min_player_distance", 150)
+    local rolls, zoneOf = {}, {}
+    for _, s in ipairs(rows) do
+        local clear = (allowance[s.zone] or 0) > 0 and budget.clearOfPlayers(s.x, s.y, players, minDist)
+        if clear and not busy[s.id] then
+            local r = rollSpawn(s)
+            if r then
+                busy[s.id] = true
+                zoneOf[s.id] = s.zone
+                rolls[#rolls + 1] = r
+            end
+        end
+    end
+    if #rolls == 0 then
+        return done(true, 0)
+    end
+    local started = getTickCount()
+    -- an item left untouched on its point lies loot.point_despawn_minutes (corpses keep loot.despawn_minutes)
+    local despawn = setting("loot.point_despawn_minutes", 1440)
+    db.call("loot_roll", { toJSON(rolls), despawn }, function(res, sent)
+        local zoneSeen, zoneCount, itemCount = {}, 0, 0
+        for _, r in ipairs(sent) do
+            busy[r.s] = nil
+            itemCount = itemCount + #r.items
+            local zone = zoneOf[r.s]
+            if zone and not zoneSeen[zone] then
+                zoneSeen[zone] = true
+                zoneCount = zoneCount + 1
+            end
+        end
+        local line = { zones = zoneCount, spots = #sent, items = itemCount, ms = getTickCount() - started }
+        if not res or not res.ok then
+            line.ok, line.code = false, res and res.code or "DB_ERROR"
+            log.event("loot.rolled", line, "warn")
+            return done(false, 0)
+        end
+        log.event("loot.rolled", line)
+        for _, r in ipairs(sent) do
+            triggerEvent("lootSpawned", resourceRoot, r.s, #r.items, r.items)
+        end
+        fillLoveBoxes(sent)
+        done(true, #sent)
+    end, rolls)
+end
+
+-- Rolls the due points inside a box around (x, y) (the dev /rollloot), with the guards of the world fill.
 function rollNear(x, y, radius, onDone)
     if budgetBusy then
         if onDone then
@@ -413,86 +453,82 @@ function rollNear(x, y, radius, onDone)
         )
     db.query(sql, {}, function(rows)
         if not rows then
-            finish()
-            return
+            return finish()
         end
-        local players, minDist = playerPositions(), setting("world.min_player_distance", 150)
-        local rolls, zoneOf = {}, {}
-        for _, s in ipairs(rows) do
-            local clear = (allowance[s.zone] or 0) > 0 and budget.clearOfPlayers(s.x, s.y, players, minDist)
-            if clear and not busy[s.id] then
-                local r = rollSpawn(s)
-                if r then
-                    busy[s.id] = true
-                    zoneOf[s.id] = s.zone
-                    rolls[#rolls + 1] = r
-                end
+        placeRolls(rows, function(ok)
+            if ok then
+                return finish()
             end
-        end
-        if #rolls == 0 then
-            finish()
-            return
-        end
-        local started = getTickCount()
-        db.call("loot_roll", { toJSON(rolls), setting("loot.despawn_minutes", 120) }, function(res, done)
-            local zoneSeen, zoneCount, itemCount = {}, 0, 0
-            for _, r in ipairs(done) do
-                busy[r.s] = nil
-                itemCount = itemCount + #r.items
-                local zone = zoneOf[r.s]
-                if zone and not zoneSeen[zone] then
-                    zoneSeen[zone] = true
-                    zoneCount = zoneCount + 1
-                end
-            end
-            local line = { zones = zoneCount, spots = #done, items = itemCount, ms = getTickCount() - started }
-            if not res or not res.ok then
-                loadAllowances(onDone) -- restore reservations from the rolled-back transaction
-                line.ok, line.code = false, res and res.code or "DB_ERROR"
-                log.event("loot.rolled", line, "warn")
-                return
-            end
-            log.event("loot.rolled", line)
-            for _, r in ipairs(done) do
-                triggerEvent("lootSpawned", resourceRoot, r.s, #r.items, r.items)
-            end
-            fillLoveBoxes(done)
-            finish()
-        end, rolls)
+            loadAllowances(onDone) -- restore reservations from the rolled-back transaction
+        end)
     end)
     return true
 end
 
--- Maintenance pass over the map. Placement still goes through rollNear's normal guards.
-function rollWorldNow()
-    if sweepBusy then
+-- Due points of one zone in random order, from anywhere in the zone.
+local DUE_IN_ZONE = "SELECT s.id, s.x, s.y, s.z, s.zone, s.table_name, s.weight, s.size FROM loot_spawns s "
+    .. "JOIN loot_spawn_state st ON st.spawn_id = s.id WHERE s.enabled = 1 AND s.zone = ? "
+    .. "AND st.next_roll_at <= NOW() AND NOT EXISTS (SELECT 1 FROM items i WHERE i.loot_spawn_id = s.id) "
+    .. "ORDER BY RAND() LIMIT %d"
+
+-- The refill's placement (ADR 0001 point 4, correction of 2026-11-12): every zone spends its allowance on due points
+-- drawn at random from the whole zone, never near a player, zone after zone. Most points roll fewer items than they
+-- could, many none, so a zone draws a few points per item it is owed, and draws again until its allowance is spent or
+-- a draw rolls no point.
+function fillWorld(onDone)
+    if budgetBusy then
+        if onDone then
+            onDone()
+        end
         return false
     end
-    sweepBusy = true
-    local points = {}
-    for x = -3000, 3000, 400 do
-        for y = -2800, 2800, 400 do
-            points[#points + 1] = { x = x, y = y }
+    budgetBusy = true
+    local zones = {}
+    for zone, left in pairs(allowance) do
+        if left > 0 then
+            zones[#zones + 1] = zone
         end
     end
     local i = 1
-    local function nextCell()
-        if i > #points then
-            sweepBusy = false
-            log.event("loot.worldSweepFinished", { cells = #points })
+    local function step()
+        local zone = zones[i]
+        if not zone then
+            budgetBusy = false
+            if onDone then
+                onDone()
+            end
             return
         end
-        local point = points[i]
-        local accepted
-        accepted = rollNear(point.x, point.y, 400, function()
-            if accepted then
+        local left = allowance[zone] or 0
+        if left <= 0 then
+            i = i + 1
+            return step()
+        end
+        local limit = math.floor(math.min(setting("loot.roll_batch", 300), left * 4 + 10))
+        db.query(string.format(DUE_IN_ZONE, limit), { zone }, function(rows)
+            if not rows or #rows == 0 then
                 i = i + 1
+                return step()
             end
-            setTimer(nextCell, 50, 1)
+            placeRolls(rows, function(ok, spots)
+                if not ok then
+                    return loadAllowances(onDone) -- restore reservations from the rolled-back transaction
+                end
+                if spots == 0 then
+                    i = i + 1
+                end
+                step()
+            end)
         end)
     end
-    nextCell()
+    step()
     return true
+end
+
+-- Maintenance: place the allowance there is now instead of waiting for the next refill tick. false while a
+-- placement or refill is running.
+function rollWorldNow()
+    return fillWorld()
 end
 
 -- The snack machines' own budget (world/server/vending.lua through stockContainer), apart from the loot points': per
@@ -619,7 +655,9 @@ addEventHandler("onResourceStart", resourceRoot, function()
         overlay.start()
         local perPoint, mult = setting("loot.items_per_point", 2.0), setting("loot.cap_multiplier", 0.15)
         db.exec(UPSERT_BUDGETS, { perPoint, mult }, function()
-            loadAllowances()
+            loadAllowances(function()
+                fillWorld()
+            end)
         end)
         if isTimer(refillTimer) then
             killTimer(refillTimer)
@@ -658,30 +696,3 @@ end
 function dropStatus()
     return drops.status()
 end
-
--- Visit every player sequentially so asynchronous reservations cannot overlap or starve
--- everyone after the first player in the list.
-setTimer(function()
-    local players = getElementsByType("player")
-    local index = 0
-    local function nextPlayer()
-        index = index + 1
-        local p = players[index]
-        if not p then
-            return
-        end
-        if not isElement(p) or not playerReady(p) then
-            return nextPlayer()
-        end
-        local x, y = getElementPosition(p)
-        rollNear(x, y, 400, nextPlayer)
-    end
-    nextPlayer()
-end, 15000, 0)
-
-addEventHandler("playerZoneEntered", root, function()
-    if playerReady(source) then
-        local x, y = getElementPosition(source)
-        rollNear(x, y, 400)
-    end
-end)

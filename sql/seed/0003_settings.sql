@@ -12,6 +12,7 @@ INSERT INTO settings (skey, svalue) VALUES
 ('loot.despawn_minutes','120'),
 ('loot.drop_point_reuse_hours','24'),
 ('loot.items_per_point','2.0'),
+('loot.point_despawn_minutes','1440'),
 ('loot.player_scale','0.25'),
 ('loot.refill_floor','0.02'),
 ('loot.refill_rate','0.10'),

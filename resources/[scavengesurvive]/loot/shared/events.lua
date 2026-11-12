@@ -1,6 +1,5 @@
 -- server-local (triggered and handled on one side, or between resources)
 addEvent("lootSpawned", false)
-addEvent("playerZoneEntered", false)
 addEvent("weaponCacheDropped", false)
 addEvent("lootContainerStocked", false)
 addEvent("sampModelsChanged", false) -- fired on every client by the model resources

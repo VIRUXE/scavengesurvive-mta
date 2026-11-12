@@ -278,11 +278,13 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
     - c. **Cooldowns.** `SELECT COUNT(*) FROM vehicle_spawn_state WHERE next_roll_at > NOW()` equals the vehicles rolled
       (6 h ± 33 %). Drive one more than 100 m from its point: within a minute its row has `left_spawn = 1` and its
       point gets a fresh `next_roll_at`.
-    - d. **Loot allowance.** Loot a point empty and stand there: it does not re-roll for its cooldown (60 min ± 50 %),
+    - d. **Loot allowance.** Loot a point empty and stand there: it does not re-roll for its cooldown (360 min ± 50 %),
       and the `[loot] refill` line shows `alive` unchanged (the carried items still count: `items.loot_zone` keeps the
-      zone after pickup). Nothing rolls within 150 m of any player: walk away and back after the cooldown, the point
-      refilled while you were out of range, provided the zone's allowance (`exports.loot:lootAllowances()` through
-      `rcon.ps1 lua`) was above 0.
+      zone after pickup). Every refill tick is followed by `loot.rolled` lines that place the zone allowances at
+      random due points across each zone, wherever the players are, none within 150 m of a player in the overworld
+      (a player in the tutorial or an interior blocks nothing); `exports.loot:lootAllowances()` through `rcon.ps1 lua`
+      reads 0 again right after the tick. An item left on its point has `despawn_at` 1440 minutes after its roll
+      (`loot.point_despawn_minutes`), a corpse's items 120 (`loot.despawn_minutes`).
     - e. **One call per batch** (#78). `rcon.ps1 lua return exports.loot:rollNear(2000, -1500, 600)` with nobody
       near: one `loot_roll` call places the batch, the `ls` row of `world_budget` loses exactly the items created,
       every new bag or safebox has its `containers` row, and

@@ -54,7 +54,7 @@ Short answers to the questions new players ask, with the page that has the long 
 
 ## The world
 
-**Why does no loot appear where I stand?** Loot never spawns within 150 m of a player; a point only rolls while someone is 150 to 400 m away, and then waits about an hour before it rolls again. See [Loot & Respawn](Loot-and-Respawn).
+**Why does no loot appear where I stand?** Loot never spawns within 150 m of a player. New loot lands every 5 minutes at random points across each zone, and a point that rolled waits 3 to 9 hours before it rolls again, so a looted street stays bare for a while. See [Loot & Respawn](Loot-and-Respawn).
 
 **Why is there so little loot lately?** Everything alive counts against each zone's capacity: items on the ground, in boxes, in trunks and in players' bags. A big stockpile slows the respawn for the whole server. See [Loot & Respawn](Loot-and-Respawn).
 
