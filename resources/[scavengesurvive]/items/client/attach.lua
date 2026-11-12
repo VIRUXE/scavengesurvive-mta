@@ -346,9 +346,15 @@ return function(ctx)
         for player, slots in pairs(tracked) do
             if isElement(player) and (player == localPlayer or isElementStreamedIn(player)) then
                 poseCarry(player, slots)
+                -- what a player carries is hidden with them (a close-up camera hides the local player)
+                local hidden = getElementAlpha(player) == 0
                 for _, a in pairs(slots) do
                     if isElement(a.obj) then
                         place(a, player)
+                        if a.hidden ~= hidden then
+                            a.hidden = hidden
+                            setElementAlpha(a.obj, hidden and 0 or 255)
+                        end
                     end
                 end
             end

@@ -78,6 +78,11 @@ local function close()
             destroyElement(element)
         end
     end
+    for _, object in ipairs(session.hidden or {}) do
+        if isElement(object) then
+            setElementAlpha(object, 255)
+        end
+    end
     setElementAlpha(localPlayer, session.alpha)
     setCameraTarget(localPlayer)
     showCursor(false)
@@ -214,7 +219,7 @@ local function placeNuts(frame)
     local a, f, u = frame.axle, frame.forward, frame.up
     local layout = lug.layout(#session.states, BOLT_RING * session.radius)
     -- the ring runs clockwise as the player sees it, whichever side of the vehicle the wheel is on
-    local across = -frame.outward
+    local across = frame.outward
     if isElement(session.wheelObject) then
         -- the model's axle is its own X axis
         local fx, fy, fz = cross(u[1], u[2], u[3], a[1], a[2], a[3])
@@ -530,7 +535,18 @@ addEventHandler("lugnutsStarted", root, function(count, sign, turn, wheel, title
     end
     -- a work light at the camera, or the nuts are lost at night
     session.light = createLight(0, cx, cy, cz, 4, 255, 244, 225)
-    -- the player crouches right where the camera goes
+    -- loose wheels lying beside the vehicle (the one about to go on, or one just taken off) are
+    -- right where the camera goes, as is the player
+    session.hidden = {}
+    for _, object in pairs(exports.items:worldObjectsOfType("Wheel") or {}) do
+        if isElement(object) and getElementAlpha(object) > 0 then
+            local ox, oy, oz = getElementPosition(object)
+            if getDistanceBetweenPoints3D(x, y, z, ox, oy, oz) < 3 then
+                setElementAlpha(object, 0)
+                session.hidden[#session.hidden + 1] = object
+            end
+        end
+    end
     setElementAlpha(localPlayer, 0)
     showCursor(true)
     guiSetInputMode("no_binds")
