@@ -34,19 +34,19 @@ None: the converter replaced every `~x~`, `{C_*}`, `~k~` and `%P` token.
 
 Item type, ammo kind, calibre, liquid and seed kind names, and the item UI's labels, messages and format templates, are English in the data and the code; lib's `lang` module shows them in the player's language from the hand-edited `data/generated/strings_<code>.lua` tables. The English texts are collected from the item data and the code (`tr("…")`, `L("…")`, `lang.text/format("…")`, `lang.textFor/formatFor(player, "…")` and `-- lang:begin` … `-- lang:end` blocks). A text a language lacks shows in English; one whose placeholders differ from English is formatted in English. Texts kept identical to English are model names, brands, acronyms and the like.
 
-English has 1037 texts.
+English has 1036 texts.
 
 | Code | Language | Missing (shown in English) | Kept as in English | Placeholder mismatches | Not in English (stale) |
 | --- | --- | ---: | ---: | ---: | ---: |
-| `es` | Español | 57 | 7 | 0 | 6 |
-| `fr` | Français | 82 | 1 | 0 | 6 |
-| `pt` | Português | 56 | 4 | 0 | 6 |
-| `ptbr` | Português do Brasil | 59 | 5 | 0 | 6 |
-| `ru` | Russian | 41 | 0 | 0 | 5 |
-| `ro` | Romanian | 69 | 0 | 0 | 5 |
-| `id` | Indonesian | 66 | 0 | 0 | 5 |
-| `bhs` | Bosanski-Hrvatski-Srpski | 60 | 0 | 0 | 5 |
-| `cs` | Čeština | 61 | 0 | 0 | 5 |
+| `es` | Español | 53 | 7 | 0 | 6 |
+| `fr` | Français | 78 | 1 | 0 | 6 |
+| `pt` | Português | 52 | 4 | 0 | 6 |
+| `ptbr` | Português do Brasil | 55 | 5 | 0 | 6 |
+| `ru` | Russian | 37 | 0 | 0 | 5 |
+| `ro` | Romanian | 65 | 0 | 0 | 5 |
+| `id` | Indonesian | 62 | 0 | 0 | 5 |
+| `bhs` | Bosanski-Hrvatski-Srpski | 56 | 0 | 0 | 5 |
+| `cs` | Čeština | 57 | 0 | 0 | 5 |
 
 - `es` lacks: `M9`, `M9 SD`, `Desert Eagle`, `Spas 12`, `Mac 10`, `MP5`, `WASR-3`, `M16`, `Tec 9`, `TNT`, `Pizza`, `Taco`, `Torso`, `Action Express`, `FMJ`, `Sebastian`, `Motor`, `AK-47`, `M77-RM`, `BMG`, `Model 70`, `The Len-Knocks`, `Whisky`, `Radio`, `Small Car Wheel`, `Offroad Wheel`, `Truck Wheel`, `Steel Rim Wheel`, `Alloy Wheel`, `Light Van Wheel`, `Light Truck Wheel`, `Classic Wheel`, `Saloon Wheel`, `Sport Wheel`, `Small Car Wheel (Flat)`, `Offroad Wheel (Flat)`, `Truck Wheel (Flat)`, `Steel Rim Wheel (Flat)`, `Alloy Wheel (Flat)`, `Light Van Wheel (Flat)` …
 - `es` has texts no longer in English: `Fitting battery`, `Hold a Ratchet to take the battery or starter motor out`, `Removing battery`, `Removing starter motor`, `Replacing starter motor`, `You cannot drop that inside a vehicle`
@@ -56,7 +56,7 @@ English has 1037 texts.
 - `pt` has texts no longer in English: `Fitting battery`, `Hold a Ratchet to take the battery or starter motor out`, `Removing battery`, `Removing starter motor`, `Replacing starter motor`, `You cannot drop that inside a vehicle`
 - `ptbr` lacks: `M9`, `M9 SD`, `Desert Eagle`, `Spas 12`, `Mac 10`, `MP5`, `WASR-3`, `M16`, `Tec 9`, `RPG`, `TNT`, `IED`, `Pizza`, `Taco`, `Action Express`, `FMJ`, `Sebastian`, `Motor`, `AK-47`, `M77-RM`, `BMG`, `Model 70`, `The Len-Knocks`, `Banana`, `Cereal`, `Ketchup`, `Bandana`, `Small Car Wheel`, `Offroad Wheel`, `Truck Wheel`, `Steel Rim Wheel`, `Alloy Wheel`, `Light Van Wheel`, `Light Truck Wheel`, `Classic Wheel`, `Saloon Wheel`, `Sport Wheel`, `Small Car Wheel (Flat)`, `Offroad Wheel (Flat)`, `Truck Wheel (Flat)` …
 - `ptbr` has texts no longer in English: `Fitting battery`, `Hold a Ratchet to take the battery or starter motor out`, `Removing battery`, `Removing starter motor`, `Replacing starter motor`, `You cannot drop that inside a vehicle`
-- `ru` lacks: `M9`, `M9 SD`, `Desert Eagle`, `Spas 12`, `Mac 10`, `MP5`, `WASR-3`, `M16`, `Tec 9`, `Action Express`, `AK-47`, `M77-RM`, `BMG`, `Model 70`, `The Len-Knocks`, `Small Car Wheel`, `Offroad Wheel`, `Truck Wheel`, `Steel Rim Wheel`, `Alloy Wheel`, `Light Van Wheel`, `Light Truck Wheel`, `Classic Wheel`, `Saloon Wheel`, `Sport Wheel`, `Small Car Wheel (Flat)`, `Offroad Wheel (Flat)`, `Truck Wheel (Flat)`, `Steel Rim Wheel (Flat)`, `Alloy Wheel (Flat)`, `Light Van Wheel (Flat)`, `Light Truck Wheel (Flat)`, `Classic Wheel (Flat)`, `Saloon Wheel (Flat)`, `Sport Wheel (Flat)`, `Open the trunk first`, `Southclaws`, `Drag a nut counter-clockwise. It seizes if both neighbours are still tight.`, `Drag a nut clockwise. It seizes if both neighbours are still loose.`, `Seized. Ease the neighbouring nuts first.` …
+- `ru` lacks: `M9`, `M9 SD`, `Desert Eagle`, `Spas 12`, `Mac 10`, `MP5`, `WASR-3`, `M16`, `Tec 9`, `Action Express`, `AK-47`, `M77-RM`, `BMG`, `Model 70`, `The Len-Knocks`, `Small Car Wheel`, `Offroad Wheel`, `Truck Wheel`, `Steel Rim Wheel`, `Alloy Wheel`, `Light Van Wheel`, `Light Truck Wheel`, `Classic Wheel`, `Saloon Wheel`, `Sport Wheel`, `Small Car Wheel (Flat)`, `Offroad Wheel (Flat)`, `Truck Wheel (Flat)`, `Steel Rim Wheel (Flat)`, `Alloy Wheel (Flat)`, `Light Van Wheel (Flat)`, `Light Truck Wheel (Flat)`, `Classic Wheel (Flat)`, `Saloon Wheel (Flat)`, `Sport Wheel (Flat)`, `Open the trunk first`, `Southclaws`
 - `ru` has texts no longer in English: `Fitting battery`, `Hold a Ratchet to take the battery or starter motor out`, `Removing battery`, `Removing starter motor`, `Replacing starter motor`
 - `ro` lacks: `M9`, `M9 SD`, `Desert Eagle`, `Spas 12`, `Mac 10`, `MP5`, `WASR-3`, `M16`, `Tec 9`, `RPG`, `Detonator`, `TNT`, `Pager`, `Pizza`, `Burger`, `Taco`, `Injector`, `Detergent`, `Action Express`, `FMJ`, `Sebastian`, `Motor`, `AK-47`, `M77-RM`, `BMG`, `Model 70`, `The Len-Knocks`, `Ketchup`, `Whisky`, `Radio`, `Generator`, `Small Car Wheel`, `Offroad Wheel`, `Truck Wheel`, `Steel Rim Wheel`, `Alloy Wheel`, `Light Van Wheel`, `Light Truck Wheel`, `Classic Wheel`, `Saloon Wheel` …
 - `ro` has texts no longer in English: `Fitting battery`, `Hold a Ratchet to take the battery or starter motor out`, `Removing battery`, `Removing starter motor`, `Replacing starter motor`

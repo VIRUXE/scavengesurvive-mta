@@ -19,7 +19,6 @@
     <file src="files/lugnut.dff"/>
     <file src="files/lugnut.txd"/>
     <file src="files/lugnut.col"/>
-    <file src="files/lugnut.png"/>
     <file src="shared/logic/battery.lua"/>
     <file src="shared/logic/starter.lua"/>
     <file src="shared/logic/bay.lua"/>

@@ -552,7 +552,7 @@ return {
     WoodenCra_T = "Store items inside this, they are saved over restarts",
     Workbench_T = "Press [F] to open this and store items inside it",
     WrappedMe_T = "Cook and eat this for food value",
-    Wrench_T = "Takes a wheel off or fits one: stand beside the vehicle and hold [F], then turn each lug nut",
+    Wrench_T = "Takes a wheel off or fits one: stand beside the vehicle and hold [F], then thread each lug nut",
     XmasHat_T = "Wear this by pressing [F]",
     YOUNEEDFCAN = "You need a petrol can",
     ZorroMask_T = "Wear this by pressing [F] and pretend you are Zorro",

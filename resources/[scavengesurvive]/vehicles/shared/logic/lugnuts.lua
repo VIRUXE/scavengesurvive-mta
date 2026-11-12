@@ -1,45 +1,21 @@
--- Turning the lug nuts on a wheel (vehicles/client/lugnuts.lua, vehicles/server/lugnuts.lua).
--- Progress is 0 when the nut is loose and 1 when it is tight. Removing drags counter-clockwise
--- (negative radians); installing drags clockwise. A nut stops at BIND while either neighbour is
--- still seated, so each nut has to be cracked loose (or snugged) before any of them can finish.
+-- Threading the lug nuts on a wheel (vehicles/client/lugnuts.lua, vehicles/server/lugnuts.lua).
+-- Progress is 0 when the nut sits at the end of its stud and 1 when it is tight. Taking a wheel
+-- off runs each nut out (negative radians); fitting one runs each nut in.
 local M = {}
 
-M.TURN = 2 * math.pi * 1.15 -- radians of wrench travel for one nut, before the Repair skill
-M.BIND = 0.35 -- how far a nut will go while a neighbour is still seated
-M.SEATED = 0.08 -- a neighbour counts as seated until it has moved this far
+M.TURN = 2 * math.pi * 3 -- radians of wrench travel for one nut, before the Repair skill
+M.SPEED = 2 * math.pi * 1.6 -- radians a second the wrench turns while the player holds it on a nut
 M.LOOSE = 0.02
 M.TIGHT = 0.98
 M.MAX_STEP = math.rad(100) -- largest turn one client report may apply
 
-function M.neighbours(count, index)
-    local previous = index - 1
-    if previous < 1 then
-        previous = count
-    end
-    local following = index + 1
-    if following > count then
-        following = 1
-    end
-    return previous, following
-end
-
-function M.blocked(states, index, sign)
-    local start = sign < 0 and 1 or 0
-    local function seated(progress)
-        return math.abs(progress - start) < M.SEATED
-    end
-    local previous, following = M.neighbours(#states, index)
-    return seated(states[previous]) or seated(states[following])
-end
-
--- Returns the new progress and whether the nut seized against the neighbour rule.
-function M.apply(progress, delta, sign, turn, blocked)
+function M.apply(progress, delta, sign, turn)
     if turn == nil or turn <= 0 then
-        return progress, false
+        return progress
     end
     local useful = sign > 0 and math.max(0, delta) or math.max(0, -delta)
     if useful <= 0 then
-        return progress, false
+        return progress
     end
     local nextProgress = progress + sign * (useful / turn)
     if nextProgress < 0 then
@@ -47,18 +23,7 @@ function M.apply(progress, delta, sign, turn, blocked)
     elseif nextProgress > 1 then
         nextProgress = 1
     end
-    if not blocked then
-        return nextProgress, false
-    end
-    local start = sign < 0 and 1 or 0
-    local limit = start + sign * M.BIND
-    if sign < 0 and nextProgress < limit then
-        return limit, true
-    end
-    if sign > 0 and nextProgress > limit then
-        return limit, true
-    end
-    return nextProgress, false
+    return nextProgress
 end
 
 function M.done(progress, sign)
@@ -77,8 +42,20 @@ function M.allDone(states, sign)
     return #states > 0
 end
 
--- Screen offsets for a ring of nuts. The first sits at the top; the rest run clockwise
--- once the Y offset is added to a screen coordinate (Y grows downward).
+-- The next nut still to be done, walking the ring in `step` (1 or -1) from `index`; nil when none is left.
+function M.nextOpen(states, sign, index, step)
+    local count = #states
+    for offset = 1, count do
+        local candidate = ((index - 1 + step * offset) % count) + 1
+        if not M.done(states[candidate], sign) then
+            return candidate
+        end
+    end
+    return nil
+end
+
+-- Offsets for a ring of nuts on the hub face. The first sits at the top; the rest run clockwise
+-- as seen from outside the wheel (Y grows downward).
 function M.layout(count, radius)
     local out = {}
     for index = 1, count do

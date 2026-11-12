@@ -1,4 +1,4 @@
--- Server side of the lug-nut minigame. The client reports wrench radians; the wheel comes off, or
+-- Server side of threading the lug nuts. The client reports wrench radians; the wheel comes off, or
 -- a wheel laid beside the vehicle goes on, only once every nut has reached the end of its thread.
 return function(ctx)
     local lug = ctx.lug
@@ -25,14 +25,13 @@ return function(ctx)
             return false
         end
         local x, y, z = getElementPosition(player)
-        local vx, vy, vz = getElementVelocity(vehicle)
         if getDistanceBetweenPoints3D(x, y, z, action.x, action.y, action.z) > 0.8 then
             return false
         end
-        if vx * vx + vy * vy + vz * vz > 0.0001 then
-            return false
-        end
-        return true
+        -- the vehicle must stay put. Its position is compared rather than its velocity: a parked vehicle
+        -- resting on a bare hub keeps the last velocity its syncer sent, which never settles to zero
+        local vx, vy, vz = getElementPosition(vehicle)
+        return getDistanceBetweenPoints3D(vx, vy, vz, action.vx, action.vy, action.vz) <= 0.5
     end
 
     local function finish(player)
@@ -120,6 +119,7 @@ return function(ctx)
         local scaled = exports.character:skillTimeModifier(player, 1000, "Repair")
         local turn = lug.TURN * (scaled / 1000)
         local sign = removing and -1 or 1
+        local vx, vy, vz = getElementPosition(vehicle)
         local title = removing and lang.formatFor(player, "Removing wheel: %d lug nuts", count)
             or lang.formatFor(player, "Installing wheel: %d lug nuts", count)
         local action = {
@@ -135,6 +135,9 @@ return function(ctx)
             x = px,
             y = py,
             z = pz,
+            vx = vx,
+            vy = vy,
+            vz = vz,
         }
         activeActions[player] = action
         setPedAnimation(player, "BOMBER", "BOM_Plant_Loop", -1, true, false, false, false)
@@ -173,10 +176,9 @@ return function(ctx)
         elseif delta < -lug.MAX_STEP then
             delta = -lug.MAX_STEP
         end
-        local blocked = lug.blocked(action.states, index, action.sign)
-        local progress, seized = lug.apply(action.states[index], delta, action.sign, action.turn, blocked)
+        local progress = lug.apply(action.states[index], delta, action.sign, action.turn)
         action.states[index] = progress
-        triggerClientEvent(player, "lugnutTurned", player, index, progress, seized)
+        triggerClientEvent(player, "lugnutTurned", player, index, progress)
         if lug.allDone(action.states, action.sign) then
             finish(player)
         end

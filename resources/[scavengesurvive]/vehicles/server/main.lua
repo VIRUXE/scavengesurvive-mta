@@ -94,7 +94,7 @@ end
 
 local carmourSrv -- server/carmour.lua, built once the roadside helpers it needs exist
 local bodySrv -- Bobcat salvage part installation
-local lugSrv -- lug-nut minigame for taking a wheel off or fitting one
+local lugSrv -- threading the lug nuts to take a wheel off or fit one
 local gasSrv -- server/gasbottles.lua, built with it
 
 local FLUSH_MS = 60000
