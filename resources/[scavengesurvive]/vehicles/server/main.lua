@@ -1899,6 +1899,29 @@ end
 
 -- A part in hand goes into an empty slot loose. The slot is claimed first; if the item is not destroyed the
 -- claim is given back.
+-- Uses up the item `itemId` the player holds. exports.items:destroyItem takes no callback from another resource (a
+-- function does not cross an export, it arrives as nil), so the destroy runs here and cb(ok, code) is called locally.
+local function consumeHeld(player, itemId, reason, cb)
+    local cid = charId(player)
+    if not cid then
+        return cb(false, "NO_CHARACTER")
+    end
+    db.call("item_destroy", { itemId, cid }, function(res, c)
+        local ok = res and res.ok or false
+        local code = res and res.code or "DB_ERROR"
+        local fields = { player = c.p, item_id = c.id, reason = reason, ok = ok, code = code, by = "vehicles" }
+        log.event("item.destroyed", fields, ok and "info" or "warn")
+        if ok then
+            triggerEvent("itemDestroyed", resourceRoot, c.id)
+            local cur = isElement(c.p) and exports.items:getHeld(c.p)
+            if cur and cur.id == c.id then
+                exports.items:clearHeld(c.p)
+            end
+        end
+        cb(ok, code)
+    end, { p = player, id = itemId })
+end
+
 local function placeBattery(player, vehicle, held)
     local inf = info[vehicle]
     if not inf or not held or activeActions[player] then
@@ -1913,7 +1936,7 @@ local function placeBattery(player, vehicle, held)
     inf.battery, inf.batterySince, inf.batteryState = charge, unixNow(), bay.LOOSE
     saveBattery(inf)
     publishBattery(vehicle, inf)
-    exports.items:destroyItem(itemId, player, function(gone, code)
+    consumeHeld(player, itemId, "used", function(gone, code)
         local vinf = isElement(vehicle) and info[vehicle]
         if not gone then
             if vinf and vinf.batteryState == bay.LOOSE and vinf.battery == charge then
@@ -1929,7 +1952,7 @@ local function placeBattery(player, vehicle, held)
         end
         local line = vehicleLine(vehicle, { player = player, part = "battery", item_id = itemId })
         log.event("vehicle.partInstalled", line)
-    end, "used")
+    end)
 end
 
 local function placeStarter(player, vehicle, held)
@@ -1953,7 +1976,7 @@ local function placeStarter(player, vehicle, held)
     local itemId = held.id
     inf.starter, inf.starterState = life, bay.LOOSE
     saveStarter(inf)
-    exports.items:destroyItem(itemId, player, function(gone, code)
+    consumeHeld(player, itemId, "used", function(gone, code)
         local vinf = isElement(vehicle) and info[vehicle]
         if not gone then
             if vinf and vinf.starterState == bay.LOOSE and vinf.starter == life then
@@ -1968,7 +1991,7 @@ local function placeStarter(player, vehicle, held)
         end
         local line = vehicleLine(vehicle, { player = player, part = "starter_motor", item_id = itemId })
         log.event("vehicle.partInstalled", line)
-    end, "used")
+    end)
 end
 
 -- Engine repair: raising the vehicle's engine health. The bonnet only has to be open. Shared by a tap of
@@ -2414,36 +2437,69 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
                 if not cur or cur.id ~= kitId then
                     return
                 end
-                local code = math.random(100000, 999999)
                 local vinf = info[veh]
+                if not vinf then
+                    return
+                end
                 if hasMissingDoor(veh) then
                     return toast(p, "LOCKNODOORS")
                 end
-                if vinf then
-                    vinf.locked = vlogic.LOCK_EXTERNAL
-                    vinf.keyCode = code
-                    setVehicleLocked(veh, true)
-                    shutWalkInDoor(veh)
-                    setElementData(veh, "vehicles.locked", 1, "broadcast", "deny")
-                    db.exec("UPDATE vehicles SET locked = 1, key_code = ? WHERE id = ?", { code, vinf.id })
-                    local line = vehicleLine(veh, { player = p, locked = 1, via = "locksmith", item_id = kitId })
-                    log.event("vehicle.lockToggled", line)
+                -- another player may have keyed the vehicle during the hold
+                if (vinf.keyCode or 0) ~= 0 or vinf.locked == vlogic.LOCK_EXTERNAL then
+                    return toast(p, "LOCKALREADY")
                 end
-                -- the key is cut only once the kit is really gone
-                exports.items:destroyItem(kitId, p, function(gone)
-                    if not gone or not isElement(p) then
+                local code = math.random(100000, 999999)
+                local keyData = { code = code, model = vt and vt.model or 0 }
+                -- The kit goes and the key arrives in one transaction (item_replace_held): the kit is never used
+                -- up without a key. The vehicle is locked and given its code only once the key exists. (A callback
+                -- handed to exports.items:destroyItem never runs: functions do not cross an export.)
+                db.call("item_replace_held", { cid, kitId, "Key", toJSON(keyData) }, function(res, c)
+                    local failCode = res and res.code or "DB_ERROR"
+                    if not res or not res.ok then
+                        local line = vehicleLine(c.v, { player = c.p, via = "locksmith", ok = false, code = failCode })
+                        log.event("vehicle.keyCut", line, "warn")
+                        if isElement(c.p) then
+                            toast(c.p, failCode)
+                        end
                         return
                     end
-                    db.call("item_create_held", { "Key", cid }, function(res, c)
-                        if res and res.ok and isElement(c.p) then
-                            local newKeyId = res.payload.item_id
-                            local keyData = { code = code, model = vt and vt.model or 0 }
-                            db.exec("UPDATE items SET data = ? WHERE id = ?", { toJSON(keyData), newKeyId })
-                            exports.items:setHeld(c.p, { id = newKeyId, uname = "Key", hp = 5, data = keyData })
-                            toast(c.p, "KEY_CRAFTED")
-                        end
-                    end, { p = p })
-                end, "used")
+                    local newKeyId = res.payload.item_id
+                    log.event("item.destroyed", {
+                        player = c.p,
+                        item_id = c.kitId,
+                        uname = c.kitUname,
+                        reason = "used",
+                        ok = true,
+                        code = "OK",
+                        by = "vehicles",
+                    })
+                    log.event("item.created", {
+                        player = c.p,
+                        item_id = newKeyId,
+                        uname = "Key",
+                        source = "locksmith",
+                        ok = true,
+                        code = "OK",
+                    })
+                    triggerEvent("itemDestroyed", resourceRoot, c.kitId)
+                    triggerEvent("itemCreated", resourceRoot, newKeyId)
+                    local vi = isElement(c.v) and info[c.v]
+                    if vi then
+                        vi.locked = vlogic.LOCK_EXTERNAL
+                        vi.keyCode = code
+                        setVehicleLocked(c.v, true)
+                        shutWalkInDoor(c.v)
+                        setElementData(c.v, "vehicles.locked", 1, "broadcast", "deny")
+                        db.exec("UPDATE vehicles SET locked = 1, key_code = ? WHERE id = ?", { code, vi.id })
+                        local line =
+                            vehicleLine(c.v, { player = c.p, locked = 1, via = "locksmith", item_id = newKeyId })
+                        log.event("vehicle.lockToggled", line)
+                    end
+                    if isElement(c.p) then
+                        exports.items:setHeld(c.p, { id = newKeyId, uname = "Key", hp = 5, data = keyData })
+                        toast(c.p, "KEY_CRAFTED")
+                    end
+                end, { p = p, v = veh, kitId = kitId, kitUname = cur.uname })
             end, 3000, 1, player, vehicle, held.id)
             activeActions[player] = { actionType = "locksmith", vehicle = vehicle, timer = timer }
             return

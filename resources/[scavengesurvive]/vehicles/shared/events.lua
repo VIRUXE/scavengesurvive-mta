@@ -2,6 +2,8 @@
 addEvent("vehiclesSpawned", false)
 addEvent("vehicleRefillSpawned", false)
 addEvent("vehicleTransientSpawned", false) -- a spawnTransientVehicle vehicle exists (source); arg: its owner
+addEvent("itemDestroyed", false) -- triggered when a held item is used up here (a kit, a part), as items/crafting do
+addEvent("itemCreated", false) -- triggered when a key is cut
 
 -- client to server (handlers registered with net.handler)
 addEvent("engineToggleRequested", true)

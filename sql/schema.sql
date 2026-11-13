@@ -2115,6 +2115,38 @@ BEGIN
   END IF;
 END//
 
+CREATE OR REPLACE PROCEDURE `item_replace_held`(IN p_char_id INT, IN p_old_id INT, IN p_type_uname VARCHAR(32), IN p_data LONGTEXT)
+BEGIN
+  DECLARE v_hp INT DEFAULT NULL;
+  DECLARE v_item INT DEFAULT 0;
+  DECLARE v_old INT DEFAULT 0;
+  DECLARE v_alive INT DEFAULT 0;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
+  SELECT max_hitpoints INTO v_hp FROM item_types WHERE uname = p_type_uname;
+  IF v_hp IS NULL THEN
+    SELECT 0 AS ok, 'UNKNOWN_TYPE' AS code, NULL AS payload;
+  ELSE
+    SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+    START TRANSACTION;
+    SELECT COUNT(*) INTO v_alive FROM characters WHERE id = p_char_id AND alive = 1 FOR UPDATE;
+    SELECT COUNT(*) INTO v_old FROM items WHERE id = p_old_id AND holder_char_id = p_char_id AND holder_kind = 'held' FOR UPDATE;
+    IF v_alive = 0 THEN
+      ROLLBACK;
+      SELECT 0 AS ok, 'NO_CHARACTER' AS code, NULL AS payload;
+    ELSEIF v_old = 0 THEN
+      ROLLBACK;
+      SELECT 0 AS ok, 'NOT_HELD' AS code, NULL AS payload;
+    ELSE
+      DELETE FROM items WHERE id = p_old_id;
+      INSERT INTO items (type_uname, hitpoints, data, holder_char_id, holder_kind)
+        VALUES (p_type_uname, v_hp, p_data, p_char_id, 'held');
+      SET v_item = LAST_INSERT_ID();
+      COMMIT;
+      SELECT 1 AS ok, 'OK' AS code, JSON_OBJECT('item_id', CAST(v_item AS SIGNED)) AS payload;
+    END IF;
+  END IF;
+END//
+
 CREATE OR REPLACE PROCEDURE `item_transfer_world`(
   IN p_char_id INT, IN p_held_id INT, IN p_world_id INT,
   IN p_held_data JSON, IN p_world_data JSON,
