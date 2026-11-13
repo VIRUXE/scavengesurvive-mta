@@ -146,6 +146,39 @@ return function(ctx)
         end
     end)
 
+    -- the nearest phone bomb (an explosive with the RADIO trigger) lying within reach and not behind a wall, or false:
+    -- F with a Mobile Phone in hand syncs the two there (upstream use-item-with-item) instead of calling the phone
+    local phoneBombTypes = nil
+    local function nearbyPhoneBomb()
+        if not phoneBombTypes or #phoneBombTypes == 0 then
+            phoneBombTypes = {}
+            for _, uname in ipairs(exports.data:itemTypes() or {}) do
+                local t = exports.data:itemType(uname)
+                if t and t.explosive and t.explosive.trigger == "RADIO" then
+                    phoneBombTypes[#phoneBombTypes + 1] = uname
+                end
+            end
+        end
+        local px, py, pz = getElementPosition(localPlayer)
+        local dim, int = getElementDimension(localPlayer), getElementInterior(localPlayer)
+        local blocked = {}
+        for _, id in ipairs(exports.items:blockedItemsNear() or {}) do
+            blocked[id] = true
+        end
+        local nearest, nearestDist = false, PICKUP_REACH
+        for _, uname in ipairs(phoneBombTypes) do
+            for id, obj in pairs(exports.items:worldObjectsOfType(uname) or {}) do
+                local x, y, z = getElementPosition(obj)
+                local dist = getDistanceBetweenPoints3D(px, py, pz, x, y, z)
+                local here = getElementDimension(obj) == dim and getElementInterior(obj) == int
+                if here and not blocked[id] and dist <= nearestDist then
+                    nearest, nearestDist = id, dist
+                end
+            end
+        end
+        return nearest
+    end
+
     -- From a front seat only the dedicated glovebox key (E) opens the glovebox in the dash.
     local function openGlovebox(seatedIn)
         if getPedOccupiedVehicleSeat(localPlayer) <= 1 and exports.vehicles:hasGlovebox(seatedIn) then
@@ -446,6 +479,15 @@ return function(ctx)
                 end
             end, 50, 0)
             return
+        end
+        -- a Mobile Phone at a phone bomb lying within reach syncs the two (items hands.lua -> explosives
+        -- linkPhoneBomb, upstream use-item-with-item); anywhere else F with the phone detonates its synced bomb
+        if uname == "MobilePhone" then
+            local bombId = nearbyPhoneBomb()
+            if bombId then
+                blockEnterUntil = getTickCount() + TRUNK_ENTER_BLOCK_MS
+                return triggerServerEvent("itemPickupRequested", localPlayer, exports.items:blockedItemsNear(), bombId)
+            end
         end
         -- food is eaten; a held treatment starts its hold, and letting go of the key cancels it (items, #94);
         -- held Clothes start the clothes change (#110); a liquid container is drunk from, sip per hold (#122);
