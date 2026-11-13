@@ -411,7 +411,7 @@ addEventHandler("characterDied", root, function(_, _, killer)
     end
 end)
 
-for _, name in ipairs({ "moderation", "bans", "reports", "bugs", "ghosts", "duty", "fields" }) do
+for _, name in ipairs({ "moderation", "bans", "reports", "bugs", "ghosts", "esp", "duty", "fields" }) do
     modules[name] = loadFile("server/" .. name .. ".lua")(ctx)
     ctx[name] = modules[name]
 end

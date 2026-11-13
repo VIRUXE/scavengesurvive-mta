@@ -20,6 +20,7 @@
     <file src="server/bugs.lua"/>
     <file src="server/duty.lua"/>
     <file src="server/ghosts.lua"/>
+    <file src="server/esp.lua"/>
     <file src="server/fields.lua"/>
     <export function="getLevel" type="server"/>
     <export function="getMotd" type="server"/>

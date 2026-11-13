@@ -171,6 +171,90 @@ local function drawGhosts()
     end
 end
 
+-- Duty ESP: every player's position as pushed by server/esp.lua. A marker and label on screen, an edge arrow when the
+-- player is off screen. Streamed-in players use their live bone position, the rest the last snapshot.
+local esp, espShown, espHinted = {}, true, false
+
+addEventHandler("staffEspChanged", root, function(list)
+    esp = type(list) == "table" and list or {}
+    if #esp > 0 and not espHinted then
+        espHinted = true
+        outputChatBox(" >  Player ESP shown while on duty. /esp hides it.", 255, 255, 0)
+    end
+end)
+
+addCommandHandler("esp", function()
+    espShown = not espShown
+    outputChatBox(" >  Player ESP " .. (espShown and "shown" or "hidden"), 255, 255, 0)
+end)
+
+addEventHandler("onClientResourceStop", resourceRoot, function()
+    esp = {}
+end)
+
+local function espColour(e)
+    if e.dead then
+        return tocolor(150, 150, 150, 255)
+    elseif e.duty then
+        return tocolor(120, 255, 120, 255)
+    elseif not e.authed then
+        return tocolor(140, 230, 255, 255)
+    end
+    return tocolor(255, 255, 0, 255)
+end
+
+local function drawEsp()
+    if #esp == 0 or not espShown then
+        return
+    end
+    local sw, sh = guiGetScreenSize()
+    local cx, cy, cz = getCameraMatrix()
+    local interior, dimension = getElementInterior(localPlayer), getElementDimension(localPlayer)
+    for _, e in ipairs(esp) do
+        local p = e.p
+        if p ~= localPlayer and (e.int or 0) == interior and (e.dim or 0) == dimension then
+            local x, y, z = e.x, e.y, e.z
+            if isElement(p) and isElementStreamedIn(p) then
+                x, y, z = getPedBonePosition(p, 8)
+            end
+            local dist = getDistanceBetweenPoints3D(cx, cy, cz, x, y, z)
+            local colour = espColour(e)
+            local sx, sy = getScreenFromWorldPosition(x, y, z + 0.35, 0.06)
+            if sx and sx > 0 and sx < sw and sy > 0 and sy < sh then
+                dxDrawRectangle(sx - 3, sy + 10, 6, 6, colour)
+                if not (nametags and isElement(p) and isElementStreamedIn(p) and dist < TAG_DISTANCE) then
+                    local text = string.format("%s  %d%%%s  %dm%s", e.name, e.hp or 0,
+                        (e.armour or 0) > 0 and ("+" .. e.armour) or "", dist, e.veh and ("  [" .. e.veh .. "]") or "")
+                    shadowText(text, sx, sy, colour, math.max(0.8, 1.4 - dist / 400), "default-bold")
+                end
+            else
+                -- off screen: project onto the screen edge along the direction from the centre
+                local ax, ay = getScreenFromWorldPosition(x, y, z, 10000, true)
+                local dx, dy
+                if ax then
+                    dx, dy = ax - sw / 2, ay - sh / 2
+                else
+                    -- behind the camera: use the camera-relative direction
+                    local _, _, _, lx, ly = getCameraMatrix()
+                    local fx, fy = lx - cx, ly - cy
+                    local rx, ry = fy, -fx -- screen right in the world plane
+                    local wx, wy = x - cx, y - cy
+                    dx = wx * rx + wy * ry
+                    dy = -(wx * fx + wy * fy)
+                    if dx == 0 and dy == 0 then
+                        dy = 1
+                    end
+                end
+                local m = 40
+                local k = math.min((sw / 2 - m) / math.max(math.abs(dx), 1e-6), (sh / 2 - m) / math.max(math.abs(dy), 1e-6))
+                local ex, ey = sw / 2 + dx * k, sh / 2 + dy * k
+                dxDrawRectangle(ex - 4, ey - 4, 8, 8, colour)
+                shadowText(string.format("%s  %dm", e.name, dist), ex, ey + 12, colour, 0.9, "default-bold")
+            end
+        end
+    end
+end
+
 local function drawSpectate()
     if not isElement(spectating) then
         return
@@ -189,6 +273,7 @@ addEventHandler("onClientRender", root, function()
         drawNametags()
     end
     drawGhosts()
+    drawEsp()
     if spectating then
         drawSpectate()
     end
