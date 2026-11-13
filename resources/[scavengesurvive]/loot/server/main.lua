@@ -21,10 +21,11 @@ local budgetBusy = true -- serialize placement and refill; startup loads the per
 local fillWorld -- the refill's placement over the whole map, after rollSpawn below
 local vendingTick -- the snack machines' budget tick, with stockContainer below
 
--- Per-zone carrying capacity: enabled points × items_per_point × cap_multiplier.
+-- Per-zone carrying capacity: enabled points × items_per_point × cap_multiplier. House points (weight 60, three times
+-- the usual 20) count three times, so their richer rolls do not take loot from the rest of the zone.
 -- New zones earn their first allowance on the refill tick; restarts never mint supply.
 local UPSERT_BUDGETS = "INSERT INTO world_budget (category, zone, cap, remainder, allowance) "
-    .. "SELECT 'loot', zone, ROUND(COUNT(*) * ? * ?), 0, 0 "
+    .. "SELECT 'loot', zone, ROUND(SUM(IF(weight >= 60, 3, 1)) * ? * ?), 0, 0 "
     .. "FROM loot_spawns WHERE enabled = 1 GROUP BY zone "
     .. "ON DUPLICATE KEY UPDATE cap = VALUES(cap), allowance = LEAST(allowance, VALUES(cap))"
 
