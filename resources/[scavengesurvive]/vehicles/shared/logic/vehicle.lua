@@ -135,20 +135,18 @@ function M.repairToolForHealth(health)
     return nil -- fully repaired
 end
 
--- Help tip for a driver getting in (upstream key-actions.pwn _ShowRepairTip): bands inclusive at the top, and
--- anything up to HEALTH_MAX counts as slightly broken; nil above it. Very broken takes a Spanner, slightly broken a Ratchet.
+-- Help tip for a driver getting in (upstream key-actions.pwn _ShowRepairTip). Derived from repairToolForHealth so the
+-- tip always names the tool that works at this health; nil when no tool would do anything (including the 990 cap).
+local REPAIR_TIP_KEYS = {
+    Spanner = "TUTORVEHVER",
+    Screwdriver = "TUTORVEHBRO",
+    Hammer = "TUTORVEHBIT",
+    Ratchet = "TUTORVEHSLI",
+}
+
 function M.repairTipKey(health)
-    local h = health or 1000
-    if h <= M.HEALTH_CHUNK_2 then
-        return "TUTORVEHVER"
-    elseif h <= M.HEALTH_CHUNK_3 then
-        return "TUTORVEHBRO"
-    elseif h <= M.HEALTH_CHUNK_4 then
-        return "TUTORVEHBIT"
-    elseif h <= M.HEALTH_MAX then
-        return "TUTORVEHSLI"
-    end
-    return nil
+    local tool = M.repairToolForHealth(health)
+    return tool and REPAIR_TIP_KEYS[tool]
 end
 
 function M.canBreakLock(lockState, itemUname)
