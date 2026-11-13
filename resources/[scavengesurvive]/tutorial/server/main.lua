@@ -6,6 +6,9 @@
 --
 -- The tutorial character is a real one (items and vehicles are database rows). character.realPosition keeps the
 -- dimension out of its saved position, tutorial.active stops its death, and tutorial_cleanup deletes what it holds.
+-- luacheck: globals isInTutorial
+-- luacheck: read_globals getVehicleDoorState getVehicleDoorOpenRatio getVehicleWheelStates getVehicleEngineState
+-- luacheck: read_globals getVehicleController removeElementData
 local db = loadstring(exports.lib:getModule("db"), "=lib/db.lua")()
 local net = loadstring(exports.lib:getModule("net"), "=lib/net.lua")()
 local util = loadstring(exports.lib:getModule("util"), "=lib/util.lua")()
@@ -20,14 +23,20 @@ local function loadFile(path)
 end
 local logic = loadFile("shared/logic/tutorial.lua")
 
+-- luacheck: push ignore 631
 -- lang:begin
-local GOAL = "To leave the tutorial, repair the Bobcat, fill its tank and drive it."
+local GOAL = "To leave the tutorial, repair the Bobcat, change its flat tyres, fill its tank and drive it."
 local COMPLETE = "Tutorial complete! Type /tutorial to leave it."
 local DONE = "You have already completed the tutorial."
-local DRIVE_TIP = "Tap Y to turn the key to ACC, hold Y to crank the engine. Press E for the glovebox."
+local DASHBOARD_TIP =
+    "The dashboard: BAT lights when the battery is low, CHK when the engine is damaged. The needle on the right shows the battery charge."
+local EXTRAS_TIP =
+    "Before you go: [F] at the back of a truck opens its trunk, [E] in the driver's seat its glovebox. Out there, a Ratchet tightens loose doors and bolts the battery in."
 -- lang:end
+-- luacheck: pop
 
-local sessions = {} -- player -> { charId, accountId, dim, vehicle, ending, real = {...}, driveTimer, checkTimer }
+-- player -> { charId, accountId, dim, vehicle, ending, real = {...}, extrasTimer, checkTimer, guide }
+local sessions = {}
 local completed = {} -- account id -> true once its tutorial is completed (accounts.tutorial_done)
 
 local function tipText(player, key)
@@ -39,6 +48,21 @@ local function tip(player, key, ms)
     if isElement(player) then
         exports.ui:showTip(player, tipText(player, key), false, ms or logic.TIP_MS, true)
     end
+end
+
+local function snapshot(player, v)
+    local held = exports.items:getHeld(player)
+    local vx, vy, vz = getElementVelocity(v)
+    return {
+        bonnetOpen = getVehicleDoorState(v, 0) == 4 or getVehicleDoorOpenRatio(v, 0) > 0.5,
+        health = getElementHealth(v),
+        wheels = { getVehicleWheelStates(v) },
+        fuel = exports.vehicles:getVehicleFuel(v),
+        engineOn = getVehicleEngineState(v),
+        driver = getVehicleController(v) == player,
+        kmh = math.sqrt(vx * vx + vy * vy + vz * vz) * 180,
+        held = held and held.uname or nil,
+    }
 end
 
 local function onDuty(player)
@@ -156,19 +180,33 @@ local function checkCompleted(player, s)
         end
         return
     end
-    if s.ending or s.completed or not isElement(v) or getVehicleController(v) ~= player then
+    if s.ending or s.completed or not isElement(v) then
         return
     end
-    local vx, vy, vz = getElementVelocity(v)
-    local kmh = math.sqrt(vx * vx + vy * vy + vz * vz) * 180
-    if not logic.completed(getElementHealth(v), exports.vehicles:getVehicleFuel(v), getVehicleEngineState(v), kmh) then
+    -- a locked Bobcat cannot be opened again (nothing in the kit breaks a lock), so it never stays locked
+    if exports.vehicles:getVehicleLockState(v) > 0 then
+        exports.vehicles:setVehicleLockState(v, 0)
+    end
+    local snap = snapshot(player, v)
+    local step, hint, tool = logic.guide(snap)
+    local key = step .. "|" .. hint .. "|" .. (tool or "")
+    if s.guide ~= key then
+        s.guide = key
+        triggerClientEvent(player, "tutorialStepChanged", player, step, hint, tool)
+    end
+    if not snap.driver or not logic.completed(snap.health, snap.fuel, snap.engineOn, snap.kmh, snap.wheels) then
         return
     end
     s.completed = true
     completed[s.accountId] = true
     db.exec("UPDATE accounts SET tutorial_done = 1 WHERE id = ?", { s.accountId })
     triggerClientEvent(player, "tutorialCompleted", player)
-    exports.ui:showTip(player, lang.textFor(player, COMPLETE), false, logic.INTRO_MS, true)
+    exports.ui:showTip(player, lang.textFor(player, COMPLETE), false, logic.COMPLETE_MS, true)
+    s.extrasTimer = setTimer(function()
+        if sessions[player] == s and not s.ending then
+            exports.ui:showTip(player, lang.textFor(player, EXTRAS_TIP), false, logic.INTRO_MS, true)
+        end
+    end, logic.COMPLETE_MS, 1)
     log.event("tutorial.completed", { player = player, character_id = s.charId, account_id = s.accountId })
 end
 
@@ -218,7 +256,7 @@ local function finish(player, reason)
         return false
     end
     s.ending = true
-    for _, timer in ipairs({ s.driveTimer, s.checkTimer }) do
+    for _, timer in ipairs({ s.extrasTimer, s.checkTimer }) do
         if isTimer(timer) then
             killTimer(timer)
         end
@@ -335,24 +373,21 @@ addEventHandler("itemHolstered", root, function()
     end
 end)
 
--- The first time the player drives the Bobcat, once its repair tip has been read: the key and the glovebox.
+-- The first time the player sits at the wheel of the Bobcat: what the dashboard in front of them says.
 addEventHandler("onVehicleEnter", root, function(player, seat)
     local s = sessions[player]
-    if not s or seat ~= 0 or source ~= s.vehicle or s.drove then
+    if not s or seat ~= 0 or source ~= s.vehicle or s.dashboardShown then
         return
     end
-    s.drove = true
-    s.driveTimer = setTimer(function()
-        if sessions[player] == s and not s.ending and getPedOccupiedVehicle(player) == s.vehicle then
-            exports.ui:showTip(player, lang.textFor(player, DRIVE_TIP), false, logic.TIP_MS, true)
-        end
-    end, logic.DRIVE_TIP_DELAY_MS, 1)
+    s.dashboardShown = true
+    exports.ui:showTip(player, lang.textFor(player, DASHBOARD_TIP), false, logic.TIP_MS, true)
 end)
 
 -- A client whose script (re)started after the tutorial began missed tutorialStarted: send the state again.
 net.handler("tutorialStateRequested", function(player)
     local s = sessions[player]
     if s and not s.ending then
+        s.guide = nil -- the next tick sends the step again
         triggerClientEvent(player, "tutorialStarted", player)
         if s.completed then
             triggerClientEvent(player, "tutorialCompleted", player)

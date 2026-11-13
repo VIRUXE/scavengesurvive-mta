@@ -15,6 +15,9 @@ addEvent("tutorialStateRequested", true) -- the client script started: is this p
 addEvent("tutorialCompleted", true)
 addEvent("tutorialStarted", true)
 addEvent("tutorialEnded", true)
+addEvent("tutorialStepChanged", true) -- the step the player is on: index, hint key, the item the hint names
+addEvent("toastShown", true) -- from vehicles and items: a short code for what just happened or was refused
+addEvent("lugnutsStarted", true) -- from vehicles: the lug nut view opened on a wheel
 addEvent("inventoryOpened", true)
 addEvent("uiListActionSelected", false)
 addEvent("uiListActionsOpened", false)

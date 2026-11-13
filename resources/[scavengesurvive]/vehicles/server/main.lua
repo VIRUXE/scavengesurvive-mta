@@ -2648,7 +2648,10 @@ addEventHandler("onVehicleEnter", resourceRoot, function(player, seat)
         setVehicleDoorOpenRatio(source, 1, 0, 500)
     end
     publishBattery(source, info[source]) -- a parked battery drains unseen: the dashboard gets today's level
-    local key = seat == 0 and vlogic.repairTipKey(getElementHealth(source))
+    -- the tutorial's own guide says what to do with this Bobcat
+    local key = seat == 0
+        and getElementData(player, "tutorial.active") ~= true
+        and vlogic.repairTipKey(getElementHealth(source))
     if key then
         exports.ui:showTip(player, exports.data:t(exports.auth:getLanguage(player), key), false, 20000)
     end

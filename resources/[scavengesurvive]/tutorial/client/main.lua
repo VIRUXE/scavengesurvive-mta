@@ -1,5 +1,6 @@
 -- The tutorial's client side: the offer to a new character, the boxes that point at the HUD (upstream's four
 -- textdraws) and the tips for what the inventory dialog shows (items raises the rest on the server).
+-- luacheck: read_globals getPlayerHudComponentProperty getVehicleWheelStates getVehicleComponentPosition
 local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")()
 
 local function loadFile(path)
@@ -10,11 +11,49 @@ local function loadFile(path)
 end
 local logic = loadFile("shared/logic/tutorial.lua")
 
+-- luacheck: push ignore 631
 -- lang:begin
-local GOAL = "To leave the tutorial, repair the Bobcat, fill its tank and drive it."
 local COMPLETE = "Tutorial complete! Type /tutorial to leave it."
 local BAG_ON_GROUND = "A tap on [F] opens a bag lying on the ground; hold [F] to pick it up."
+local CHECKLIST = "Checklist"
+local GOOD = "Good!"
+-- the checklist: one line per step of logic.STEPS
+local STEP_LABELS = {
+    "Open the bonnet",
+    "Repair the engine",
+    "Change the flat tyres",
+    "Fill the tank",
+    "Start the engine",
+    "Drive",
+}
+-- what to do now, by the hint key the server sends (%s is the item's name)
+local HINTS = {
+    BONNET_OPEN = "Stand in front of the truck, hands empty, and press [F] to open the bonnet.",
+    BONNET_EMPTY = "Put down what you hold with [N]. Then stand in front of the truck and press [F] to open the bonnet.",
+    PICK_UP = "Pick up the %s from the ground: stand over it and press [F].",
+    PUT_DOWN = "Put down what you hold with [N]. Then pick up the %s.",
+    ENGINE_FIX = "With the %s in hand, stand at the open bonnet and press [F]. Wait until it is repaired.",
+    TYRES_ENGINE_OFF = "The engine is on. Sit in the truck and press [Y] to turn it off.",
+    TYRES_REMOVE = "Stand beside a flat wheel and press [F]. Click a nut and hold the mouse button until it is off. Do all 6.",
+    TYRES_HUB = "The wheel is off. Pick up a spare Wheel and put it down beside the hub with [N]. Then hold the %s and press [F].",
+    TYRES_PLACE = "Stand beside the empty hub and press [N] to put the wheel on the ground.",
+    TYRES_FIT = "Press [F] beside the empty hub. Click a nut and hold the mouse button until it is on. Do all 6.",
+    FUEL_POUR = "Stand at the front or side of the truck and press [F]. Stay still while it fills.",
+    START_ENTER = "Get in the truck: stand by the driver's door and press [F].",
+    START_EMPTY = "Put down what you hold with [N]. Then get in the truck: stand by the driver's door and press [F].",
+    START_KEY = "Tap [Y] to turn the key. Then hold [Y] until the engine starts.",
+    DRIVE = "Hold [W] to drive forward.",
+}
+-- a tip for the toast the game just showed, when a newcomer is likely to need more than the toast says
+local TOAST_TIPS = {
+    BONNET_SHUT = "Empty your hands first with [N]. Then press [F] in front of the truck to open the bonnet.",
+    NEEDANOTOOL = "That tool has done its part. The checklist shows which one you need now.",
+    WHEEL_LAY = "Press [N] to put the wheel on the ground beside the truck. Then hold the Tyre Wrench and press [F].",
+    NO_FUEL = "The tank is empty. Fill it with the Petrol Can first.",
+}
+local NUTS = "Click a nut and hold the mouse button to turn it. Do all %d nuts."
 -- lang:end
+-- luacheck: pop
 
 -- The HUD's own canvas (ui): 640x480 units scaled by screenH/480, right-hand elements anchored to the right edge.
 local function loadUi(path, name)
@@ -34,6 +73,11 @@ local WHITE = tocolor(255, 255, 255, 255)
 local BOX_W, PAD, GAP = 150, 4, 14 -- canvas units
 
 local active, done, invOpen, lastClose, startedAt = false, false, false, -10000, 0
+-- the server's guide: the step, what to do and the item it names
+local stage, hint, tool, goodUntil = 0, nil, nil, 0
+local tipAt = {} -- toast code -> when its tip was last shown
+-- the marker over what to touch next, where it points and when that was last worked out
+local arrowMarker, arrowTarget, arrowChecked
 
 local function language()
     return getElementData(localPlayer, "auth.lang") or "en"
@@ -170,23 +214,230 @@ local function drawStep(index, c, sw)
     arrow(ax, ay, tx, ty, yellow, thick)
 end
 
+local GREEN, GREY, YELLOW = tocolor(120, 220, 120, 255), tocolor(170, 170, 170, 255), tocolor(0xE8, 0xE8, 0x90, 255)
+
+local function hintText()
+    local fmt = HINTS[hint]
+    if not fmt then
+        return ""
+    end
+    return tool and lang.format(fmt, lang.itemName(tool)) or lang.text(fmt)
+end
+
+-- One line per step with a tick box, the current one lit, and under them what to do now.
+local function drawChecklist(c)
+    if stage < 1 then
+        return
+    end
+    local scale = canvas.textScale(c, 1.2, 1)
+    local w = canvas.len(c, 170)
+    local pad = canvas.len(c, PAD)
+    local lineH = dxGetFontHeight(scale, "default-bold") + pad
+    local x = canvas.x(c, 632, "right") - w
+    local text, n = wrap(hintText(), w - 2 * pad, scale * 1.1, "default-bold")
+    local hintH = n * dxGetFontHeight(scale * 1.1, "default-bold") + 2 * pad
+    local h = pad + lineH * (#STEP_LABELS + 1) + hintH
+    local y = math.min(canvas.y(c, 260), canvas.y(c, 470) - h) -- below the key list, within the screen
+    dxDrawRectangle(x, y, w, h, BOX)
+    local ty = y + pad
+    dxDrawText(lang.text(CHECKLIST), x + pad, ty, x + w - pad, ty + lineH, WHITE, scale, "default-bold")
+    local boxSize = lineH * 0.6
+    for i, label in ipairs(STEP_LABELS) do
+        ty = ty + lineH
+        local colour = i < stage and GREEN or (i == stage and YELLOW or GREY)
+        local bx, by = x + pad, ty + (lineH - boxSize) / 2
+        dxDrawRectangle(bx, by, boxSize, boxSize, colour)
+        if i < stage then
+            dxDrawLine(bx + boxSize * 0.2, by + boxSize * 0.55, bx + boxSize * 0.45, by + boxSize * 0.8, BOX, 2)
+            dxDrawLine(bx + boxSize * 0.45, by + boxSize * 0.8, bx + boxSize * 0.85, by + boxSize * 0.2, BOX, 2)
+        else
+            dxDrawRectangle(bx + 2, by + 2, boxSize - 4, boxSize - 4, BOX)
+        end
+        dxDrawText(
+            lang.text(label),
+            bx + boxSize + pad,
+            ty,
+            x + w - pad,
+            ty + lineH,
+            colour,
+            scale,
+            "default-bold",
+            "left",
+            "center"
+        )
+    end
+    local hy = y + h - hintH
+    dxDrawRectangle(x, hy, w, hintH, tocolor(0x30, 0x30, 0x10, 220))
+    dxDrawText(text, x + pad, hy + pad, x + w - pad, hy + hintH - pad, WHITE, scale * 1.1, "default-bold")
+    if getTickCount() < goodUntil then
+        dxDrawText(
+            lang.text(GOOD),
+            x,
+            y - lineH * 1.6,
+            x + w,
+            y,
+            GREEN,
+            scale * 1.6,
+            "default-bold",
+            "center",
+            "bottom"
+        )
+    end
+end
+
+-- The Bobcat: the nearest vehicle in the tutorial's dimension.
+local function bobcat()
+    local px, py, pz = getElementPosition(localPlayer)
+    local best, bestD
+    for _, v in ipairs(getElementsByType("vehicle", root, true)) do
+        if getElementDimension(v) == getElementDimension(localPlayer) then
+            local d = getDistanceBetweenPoints3D(px, py, pz, getElementPosition(v))
+            if not bestD or d < bestD then
+                best, bestD = v, d
+            end
+        end
+    end
+    return best
+end
+
+-- vehicle's own getVehicleWheelStates order (front-left, rear-left, front-right, rear-right)
+local WHEELS = { "wheel_lf_dummy", "wheel_lb_dummy", "wheel_rf_dummy", "wheel_rb_dummy" }
+
+local function nearestWheel(v, wanted)
+    local px, py, pz = getElementPosition(localPlayer)
+    local states = { getVehicleWheelStates(v) }
+    local bx, by, bz, bestD
+    for i, name in ipairs(WHEELS) do
+        if wanted(states[i]) then
+            local x, y, z = getVehicleComponentPosition(v, name, "world")
+            if x then
+                local d = getDistanceBetweenPoints3D(px, py, pz, x, y, z)
+                if not bestD or d < bestD then
+                    bx, by, bz, bestD = x, y, z, d
+                end
+            end
+        end
+    end
+    return bx, by, bz
+end
+
+local function atComponent(v, name, fx, fy, fz)
+    local x, y, z = getVehicleComponentPosition(v, name, "world")
+    if x then
+        return x, y, z
+    end
+    local m = getElementMatrix(v)
+    return fx * m[1][1] + fy * m[2][1] + fz * m[3][1] + m[4][1],
+        fx * m[1][2] + fy * m[2][2] + fz * m[3][2] + m[4][2],
+        fx * m[1][3] + fy * m[2][3] + fz * m[3][3] + m[4][3]
+end
+
+-- Where the arrow goes for what the server asks of the player now, or nothing.
+local function targetFor()
+    if hint == "PICK_UP" and tool then
+        local px, py, pz = getElementPosition(localPlayer)
+        local bx, by, bz, bestD
+        for _, obj in pairs(exports.items:worldObjectsOfType(tool) or {}) do
+            if isElement(obj) and getElementDimension(obj) == getElementDimension(localPlayer) then
+                local x, y, z = getElementPosition(obj)
+                local d = getDistanceBetweenPoints3D(px, py, pz, x, y, z)
+                if not bestD or d < bestD then
+                    bx, by, bz, bestD = x, y, z, d
+                end
+            end
+        end
+        return bx, by, bz
+    end
+    local v = bobcat()
+    if not v then
+        return
+    end
+    if stage <= 2 or stage == 4 then
+        local x, y, z = atComponent(v, "bonnet_dummy", 0, 2.4, 0.6)
+        return x, y, z
+    elseif stage == 3 and hint ~= "TYRES_ENGINE_OFF" then
+        return nearestWheel(v, function(state)
+            return state ~= 0
+        end)
+    elseif stage == 5 and hint ~= "START_KEY" then
+        return atComponent(v, "door_lf_dummy", -1.2, 0.4, 0.4)
+    end
+end
+
+local function hideArrow()
+    if isElement(arrowMarker) then
+        destroyElement(arrowMarker)
+    end
+    arrowMarker = nil
+end
+
+addEventHandler("onClientRender", root, function()
+    if not active or done or stage < 1 then
+        return hideArrow()
+    end
+    local now = getTickCount()
+    if not arrowChecked or now - arrowChecked > 250 then
+        arrowChecked = now
+        arrowTarget = { targetFor() }
+    end
+    local x, y, z = unpack(arrowTarget)
+    if not x then
+        return hideArrow()
+    end
+    if not isElement(arrowMarker) then
+        arrowMarker = createMarker(x, y, z, "arrow", 0.9, 255, 230, 60, 220)
+    end
+    setElementDimension(arrowMarker, getElementDimension(localPlayer))
+    setElementPosition(arrowMarker, x, y, z + 1.2 + 0.15 * math.sin(now / 250))
+end)
+
 addEventHandler("onClientRender", root, function()
     if not active or invOpen then
         return
     end
     local sw, sh = guiGetScreenSize()
     local c = canvas.new(sw, sh)
-    local step = math.floor((getTickCount() - startedAt) / STEP_MS) + 1
-    if step <= #STEPS then
-        return drawStep(step, c, sw)
+    local intro = math.floor((getTickCount() - startedAt) / STEP_MS) + 1
+    if intro <= #STEPS then
+        drawStep(intro, c, sw)
     end
-    -- the goal (where upstream said "type /exit"), right-hand side
-    local goal = textBox(c, lang.text(done and COMPLETE or GOAL))
-    goal.draw(canvas.x(c, 632, "right") - goal.w, canvas.y(c, 300))
+    -- the checklist (where upstream said "type /exit"), right-hand side
+    if done then
+        local box = textBox(c, lang.text(COMPLETE))
+        return box.draw(canvas.x(c, 632, "right") - box.w, canvas.y(c, 300))
+    end
+    drawChecklist(c)
 end)
 
 addEventHandler("tutorialStarted", root, function()
     active, done, invOpen, startedAt = true, false, false, getTickCount()
+    stage, hint, tool = 0, nil, nil
+end)
+
+-- the server's guide: a step finished is cheered
+addEventHandler("tutorialStepChanged", root, function(newStep, newHint, newTool)
+    if stage > 0 and newStep > stage then
+        goodUntil = getTickCount() + 1800
+    end
+    stage, hint, tool = newStep, newHint, newTool
+    arrowChecked = nil
+end)
+
+-- a refusal or a result the newcomer may not understand: say what to do about it
+addEventHandler("toastShown", localPlayer, function(code)
+    local text = active and not done and TOAST_TIPS[code]
+    local now = getTickCount()
+    if text and now - (tipAt[code] or -10000) > 8000 then
+        tipAt[code] = now
+        exports.ui:tipShow(lang.text(text), false, logic.TIP_MS)
+    end
+end)
+
+-- the lug nut view opens: how it is worked
+addEventHandler("lugnutsStarted", root, function(count)
+    if active and not done then
+        exports.ui:tipShow(lang.format(NUTS, tonumber(count) or 6), false, logic.TIP_MS)
+    end
 end)
 
 addEventHandler("tutorialCompleted", root, function()
@@ -195,6 +446,8 @@ end)
 
 addEventHandler("tutorialEnded", root, function()
     active, done, invOpen = false, false, false
+    stage, hint, tool = 0, nil, nil
+    hideArrow()
     exports.ui:listClose()
     exports.ui:tipHide()
 end)

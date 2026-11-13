@@ -5,7 +5,7 @@ M.DIMENSION_BASE = 61000
 M.DIMENSION_COUNT = 1000
 M.TIP_MS = 20000
 M.INTRO_MS = 25000
-M.DRIVE_TIP_DELAY_MS = 21000 -- after the Bobcat's repair tip (20 s) has run its course
+M.COMPLETE_MS = 6000 -- the completion tip, before the extras tip takes its place
 M.CHECK_MS = 1000
 M.VEHICLE_RETRY_MS = 10000 -- a Bobcat asked for and not there after this long is asked for again
 
@@ -25,7 +25,6 @@ M.ITEMS = {
     { uname = "Satchel", x = 1078.70325, y = 2132.96069, z = 9.85179 },
     { uname = "Wrench", x = 1077.57263, y = 2125.35938 + KIT_SHIFT_Y, z = 9.85153, spin = true },
     { uname = "Spanner", x = 1078.7, y = 2125.35938 + KIT_SHIFT_Y, z = 9.85153, spin = true },
-    { uname = "Ratchet", x = 1079.8, y = 2125.35938 + KIT_SHIFT_Y, z = 9.85153, spin = true },
     { uname = "Screwdriver", x = 1076.52942, y = 2125.82959 + KIT_SHIFT_Y, z = 9.85156, spin = true },
     { uname = "Hammer", x = 1074.94214, y = 2126.51489 + KIT_SHIFT_Y, z = 9.85160, spin = true },
     { uname = "Wheel", x = 1073.59448, y = 2127.05786 + KIT_SHIFT_Y, z = 9.85164, spin = true },
@@ -71,12 +70,89 @@ function M.clean(text)
     return (text:gsub("^%s+", ""):gsub("%s+$", ""))
 end
 
+-- every wheel fitted and holding air (getVehicleWheelStates: 0 is fine, 1 flat, 2 missing)
+function M.wheelsOk(wheels)
+    for i = 1, 4 do
+        if (wheels and wheels[i] or 0) ~= 0 then
+            return false
+        end
+    end
+    return true
+end
+
 -- true when the vehicle and its driver meet the completion conditions (see REPAIRED_HEALTH)
-function M.completed(health, fuel, engineOn, kmh)
+function M.completed(health, fuel, engineOn, kmh, wheels)
     return engineOn == true
+        and M.wheelsOk(wheels)
         and (tonumber(health) or 0) >= M.REPAIRED_HEALTH
         and (tonumber(fuel) or 0) > M.REFUELLED_LITRES
         and (tonumber(kmh) or 0) >= M.DRIVEN_KMH
+end
+
+-- The steps the checklist shows, in the order a newcomer does them.
+M.STEPS = { "BONNET", "ENGINE", "TYRES", "FUEL", "START", "DRIVE" }
+
+-- The tool the engine needs at this health (vehicles' repairToolForHealth, for the bands the Bobcat passes through)
+function M.engineTool(health)
+    return (tonumber(health) or 0) < 450 and "Spanner" or "Screwdriver"
+end
+
+-- What a step asks of a player's hands: nil when the right item is held, else the hint that gets them there.
+local function needTool(held, tool)
+    if held == tool then
+        return nil
+    end
+    return held and "PUT_DOWN" or "PICK_UP"
+end
+
+-- The step the player is on and what to tell them, from a live snapshot (nothing is remembered, so a step undone or
+-- done out of order is always judged on how things stand): { bonnetOpen, health, wheels = {fl, rl, fr, rr}, fuel,
+-- engineOn, driver, kmh, held = uname or nil }. Returns step (index into STEPS), hint (a key of the client's
+-- HINTS) and tool (the item the hint names, or nil).
+function M.guide(snap)
+    local held = snap.held
+    local health = tonumber(snap.health) or 0
+    -- 1: the bonnet (nothing left to open once the engine is mended)
+    if not snap.bonnetOpen and health < M.REPAIRED_HEALTH then
+        return 1, held and "BONNET_EMPTY" or "BONNET_OPEN"
+    end
+    -- 2: the engine
+    if health < M.REPAIRED_HEALTH then
+        local tool = M.engineTool(health)
+        return 2, needTool(held, tool) or "ENGINE_FIX", tool
+    end
+    -- 3: the tyres
+    if not M.wheelsOk(snap.wheels) then
+        if snap.engineOn then
+            return 3, "TYRES_ENGINE_OFF"
+        end
+        local missing = false
+        for i = 1, 4 do
+            missing = missing or (snap.wheels and snap.wheels[i]) == 2
+        end
+        if missing then
+            if held == "Wheel" then
+                return 3, "TYRES_PLACE", "Wheel"
+            elseif held == "Wrench" then
+                return 3, "TYRES_FIT", "Wrench"
+            end
+            return 3, "TYRES_HUB", "Wrench"
+        end
+        return 3, needTool(held, "Wrench") or "TYRES_REMOVE", "Wrench"
+    end
+    -- 4: the tank
+    if (tonumber(snap.fuel) or 0) <= M.REFUELLED_LITRES then
+        return 4, needTool(held, "GasCan") or "FUEL_POUR", "GasCan"
+    end
+    -- 5: the key
+    if not (snap.engineOn and snap.driver) then
+        if not snap.driver then
+            return 5, held and "START_EMPTY" or "START_ENTER"
+        end
+        return 5, "START_KEY"
+    end
+    -- 6: the road
+    return 6, "DRIVE"
 end
 
 -- The key of the tip an item move earns: (from, to) as itemMoved reports them, containerKind the kind of the
