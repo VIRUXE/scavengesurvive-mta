@@ -16,6 +16,7 @@ return function(ctx)
     local furniture = ctx.furniture
     local vending = ctx.vending
     local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")()
+    local surface = loadstring(exports.lib:getModule("surface"), "=lib/surface.lua")()
     local SIGN_RANGE = 25 -- metres a sign's text can be read from
     local LABEL_RANGE = 4 -- metres an item's name shows from
     local DEFENCE_LABEL_RANGE = 10 -- a built defence's hitpoints, which other walls do not hide
@@ -590,9 +591,51 @@ return function(ctx)
         return obj
     end
 
+    -- rows the server flags `snap` lie on an untrusted z (item_ground_snap): measure the ground under each once it is
+    -- near enough for its collision to be loaded, and report it (itemGroundMeasured); the server moves the row
+    local toMeasure = {} -- id -> true
+    local MEASURE_RANGE, MEASURE_PER_TICK = 60, 5
+    setTimer(function()
+        if not next(toMeasure) then
+            return
+        end
+        local px, py = getElementPosition(localPlayer)
+        local sent = 0
+        for id in pairs(toMeasure) do
+            local e = objects[id]
+            if not e then
+                toMeasure[id] = nil
+            elseif getDistanceBetweenPoints2D(px, py, e.x, e.y) <= MEASURE_RANGE then
+                local obj = e.obj
+                local solid = isElement(obj) and getElementCollisionsEnabled(obj)
+                if solid then
+                    setElementCollisionsEnabled(obj, false) -- the ray must pass the item itself
+                end
+                local _, _, hz, nx, ny = surface.below(e.x, e.y, e.z, 1.5, 6)
+                if solid then
+                    setElementCollisionsEnabled(obj, true)
+                end
+                if hz then
+                    toMeasure[id] = nil
+                    triggerServerEvent("itemGroundMeasured", localPlayer, id, hz, nx, ny)
+                    sent = sent + 1
+                    if sent >= MEASURE_PER_TICK then
+                        return
+                    end
+                end
+            end
+        end
+    end, 1000, 0)
+
     addEventHandler("inventorySynced", resourceRoot, function(delta)
         for _, id in ipairs(delta.remove or {}) do
+            toMeasure[id] = nil
             forget(id)
+        end
+        for _, r in ipairs(delta.add or {}) do
+            if r.snap == 1 or r.snap == true then
+                toMeasure[r.id] = true
+            end
         end
         for _, r in ipairs(delta.add or {}) do
             local t = itemType(r.uname)

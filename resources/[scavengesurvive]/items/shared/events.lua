@@ -46,6 +46,7 @@ addEvent("machineHoldReleased", true)
 addEvent("machineStartRequested", true)
 addEvent("parachuteSpent", true)
 addEvent("vendingGlassHit", true)
+addEvent("itemGroundMeasured", true)
 
 -- server to client / client-local
 addEvent("inventorySynced", true)

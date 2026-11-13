@@ -99,7 +99,15 @@ local OWNED_SQL = "SELECT i.type_uname AS uname, i.data, i.container_id FROM ite
     .. "OR i.container_id = ?)"
 
 local world =
-    loadFile("server/world.lua")({ db = db, state = state, geometry = geometry, diff = diff, charId = charId })
+    loadFile("server/world.lua")({
+        db = db,
+        net = net,
+        log = log,
+        state = state,
+        geometry = geometry,
+        diff = diff,
+        charId = charId,
+    })
 
 -- Deletes an item the player owns (held, in their inventory or worn bag). cb(ok) runs only while the player exists.
 -- reason is the item.destroyed log reason (used, broken, ...); by names the calling resource of an export.

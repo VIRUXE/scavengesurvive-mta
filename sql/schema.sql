@@ -191,6 +191,16 @@ CREATE TABLE IF NOT EXISTS `felled_trees` (
   KEY `idx_felled_trees_regrow` (`regrow_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
+-- world items whose stored z is not trusted (bulk-inserted rows, not placed from a player or a loot point): the
+-- first client to draw one measures the ground under it and the server moves it there, while items.z still equals
+-- the z recorded here (an item picked up and dropped again keeps its new spot)
+CREATE TABLE IF NOT EXISTS `item_ground_snap` (
+  `item_id` int(11) NOT NULL,
+  `z` float NOT NULL,
+  PRIMARY KEY (`item_id`),
+  CONSTRAINT `fk_item_ground_snap_item` FOREIGN KEY (`item_id`) REFERENCES `items` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+
 CREATE TABLE IF NOT EXISTS `item_types` (
   `uname` varchar(32) NOT NULL,
   `name` varchar(48) NOT NULL,

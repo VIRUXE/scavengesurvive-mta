@@ -8,13 +8,18 @@ return function(ctx)
     local COLS = "i.id, i.type_uname AS uname, i.hitpoints AS hp, i.data, i.x, i.y, i.z, i.rz,"
         .. " i.ground_nx, i.ground_ny, i.interior, i.dimension"
     local FROM = " FROM world_items_pos p JOIN items i ON i.id = p.item_id WHERE "
+    -- the sync also says which rows still lie on an untrusted z (item_ground_snap, the z unchanged since it was
+    -- flagged): the client that draws one measures the ground under it (itemGroundMeasured)
+    local SYNC_FROM = " FROM world_items_pos p JOIN items i ON i.id = p.item_id"
+        .. " LEFT JOIN item_ground_snap s ON s.item_id = i.id AND s.z = i.z WHERE "
 
     -- Numbers are formatted into the SQL (never `?` literals); positions come from the server, never the client.
     function M.syncSql(x, y, r)
         local minx, miny, maxx, maxy = geometry.box(x, y, r)
         return "SELECT "
             .. COLS
-            .. FROM
+            .. ", s.item_id IS NOT NULL AS snap"
+            .. SYNC_FROM
             .. "MBRContains(ST_GeomFromText('"
             .. geometry.polygonWKT(minx, miny, maxx, maxy)
             .. "'), p.pos)"
@@ -143,6 +148,50 @@ return function(ctx)
             sent[itemId] = nil
         end
     end
+
+    -- A client measured the ground under a flagged item (sync row `snap`): the item is laid on it, 10 cm up as a
+    -- drop lies, tilted to the slope, if the player is near it and the ground is within reach of the stored z.
+    local SNAP_SQL = "SELECT i.x, i.y, i.z, i.interior, i.dimension FROM items i"
+        .. " JOIN item_ground_snap s ON s.item_id = i.id AND s.z = i.z WHERE i.id = ? AND i.x IS NOT NULL"
+    local SNAP_RANGE, SNAP_MAX_DZ = 80, 4
+    ctx.net.handler("itemGroundMeasured", function(player, id, gz, nx, ny)
+        id, gz, nx, ny = tonumber(id), tonumber(gz), tonumber(nx) or 0, tonumber(ny) or 0
+        if not id or not gz or gz ~= gz or math.abs(gz) > 3000 or math.abs(nx) > 1 or math.abs(ny) > 1 then
+            return
+        end
+        db.one(SNAP_SQL, { math.floor(id) }, function(row)
+            if not row or not isElement(player) then
+                return
+            end
+            local px, py = getElementPosition(player)
+            if
+                getElementDimension(player) ~= (row.dimension or 0)
+                or getElementInterior(player) ~= (row.interior or 0)
+                or getDistanceBetweenPoints2D(px, py, row.x, row.y) > SNAP_RANGE
+            then
+                return
+            end
+            local z = gz + 0.1
+            if math.abs(z - row.z) > SNAP_MAX_DZ then
+                return
+            end
+            if nx * nx + ny * ny < 0.0025 then -- flat: no tilt (NULL, as a drop on flat ground stores)
+                nx, ny = nil, nil
+            end
+            db.exec(
+                "UPDATE items i JOIN item_ground_snap s ON s.item_id = i.id AND s.z = i.z"
+                    .. " SET i.z = ?, i.ground_nx = ?, i.ground_ny = ? WHERE i.id = ? AND i.x IS NOT NULL",
+                { z, nx, ny, math.floor(id), n = 4 },
+                function(ok)
+                    db.exec("DELETE FROM item_ground_snap WHERE item_id = ?", { math.floor(id) })
+                    if ok then
+                        M.resendEverywhere(math.floor(id))
+                        ctx.log.event("items.groundSnapped", { id = math.floor(id), from = row.z, to = z })
+                    end
+                end
+            )
+        end)
+    end, { rate = 10 })
 
     return M
 end
