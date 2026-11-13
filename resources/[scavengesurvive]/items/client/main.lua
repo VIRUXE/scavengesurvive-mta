@@ -179,7 +179,7 @@ local function insideElement(el, px, py, pz, margin)
     return geometry.insideBox(lx, ly, lz, minX, minY, minZ, maxX, maxY, maxZ, margin)
 end
 
-addEventHandler("itemDropSpotRequested", localPlayer, function()
+addEventHandler("itemDropSpotRequested", localPlayer, function(removalId)
     local x, y, z = getElementPosition(localPlayer)
     local _, _, rz = getElementRotation(localPlayer)
     local dz = z - 0.9
@@ -205,7 +205,11 @@ addEventHandler("itemDropSpotRequested", localPlayer, function()
         return not world.dropSpotReachable(cx, cy, dz)
     end
     local cx, cy = geometry.freeSpot(x, y, rz, 1.0, blocked)
-    triggerServerEvent("itemDropSpotChosen", localPlayer, cx, cy)
+    if removalId then
+        triggerServerEvent("defenceRemovalSpotChosen", localPlayer, removalId, cx, cy)
+    else
+        triggerServerEvent("itemDropSpotChosen", localPlayer, cx, cy)
+    end
 end)
 
 -- Actions exposed to the HUD interaction chooser.

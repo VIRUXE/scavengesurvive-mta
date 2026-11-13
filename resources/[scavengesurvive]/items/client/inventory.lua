@@ -184,6 +184,7 @@ return function(ctx)
         DOOR_CLOSED = "Closed",
         DEFENCE_BUILT = "Defence built",
         DEFENCE_REMOVED = "Defence removed",
+        DEFENCE_NO_DROP_SPACE = "No clear space nearby. Make room before removing this defence.",
         DEFENCE_FRONT = "You can only remove a defence from the inside",
         DEFNOTMOVAB = "You cannot install a motor on that type of defence",
         DEFINSTMOTO = "Motor installed to defence",

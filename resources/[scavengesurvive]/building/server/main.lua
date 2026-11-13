@@ -451,6 +451,32 @@ function finishTweak(player)
     return tweak.commit(player)
 end
 
+-- A completed crowbar action asks the existing client drop search for a clear spot.
+-- Never fall back to the old wall position if the search fails or the client disappears.
+local removalSpots = {}
+local function clearRemovalSpot(player)
+    local pending = removalSpots[player]
+    if pending and isTimer(pending.timer) then killTimer(pending.timer) end
+    removalSpots[player] = nil
+    return pending
+end
+addEventHandler("onPlayerQuit", root, function() clearRemovalSpot(source) end)
+net.handler("defenceRemovalSpotChosen", function(player, id, x, y)
+    local pending = clearRemovalSpot(player)
+    if not pending or id ~= pending.id then return end
+    local px, py, pz = getElementPosition(player)
+    if type(x) ~= "number" or type(y) ~= "number" or x ~= x or y ~= y
+        or (x - px)^2 + (y - py)^2 < 0.4 or (x - px)^2 + (y - py)^2 > 6.6 then
+        return toast(player, "DEFENCE_NO_DROP_SPACE")
+    end
+    local row = pending.row
+    if not charId(player) or heldUname(player) ~= "Crowbar"
+        or getElementInterior(player) ~= (row.interior or 0)
+        or getElementDimension(player) ~= (row.dimension or 0)
+        or getDistanceBetweenPoints3D(px, py, pz, row.x, row.y, row.z) > 3 then return end
+    pending.finish(x, y, pz - 0.9)
+end, { rate = 5 })
+
 function removeDefence(player, itemId)
     itemId = tonumber(itemId)
     if not charId(player) or heldUname(player) ~= "Crowbar" or not itemId then
@@ -485,22 +511,36 @@ function removeDefence(player, itemId)
                 killTimer(movingDefences[cur.id])
                 movingDefences[cur.id] = nil
             end
-            local x, y, z, rz = defences.unbuild(t.defence, curSt, cur.x, cur.y, cur.z, cur.rz, t.rotz)
-            curData.defence = nil
-            curData.keypad = nil
-            curData.passcode = nil
-            db.exec(
-                "UPDATE items SET x = ?, y = ?, z = ?, rz = ?, data = ? WHERE id = ? AND x IS NOT NULL",
-                { x, y, z, rz, encodeData(curData), cur.id },
-                function()
-                    exports.items:resendWorldItem(cur.id)
-                    if isElement(pl) then
-                        toast(pl, "DEFENCE_REMOVED")
-                    end
+            clearRemovalSpot(pl)
+            local pending = { id = cur.id, row = cur }
+            removalSpots[pl] = pending
+            pending.timer = setTimer(function()
+                if removalSpots[pl] == pending then
+                    clearRemovalSpot(pl)
+                    if isElement(pl) then toast(pl, "DEFENCE_NO_DROP_SPACE") end
                 end
-            )
-            -- upstream's [CROWBAR] line, kept so a wrongly broken base can be put back
-            log.event("building.removed", defenceLine(cur, { player = pl, rz = cur.rz }))
+            end, 3000, 1)
+            pending.finish = function(x, y, z)
+                local _, _, _, rz = defences.unbuild(t.defence, curSt, cur.x, cur.y, cur.z, cur.rz, t.rotz)
+                curData.defence = nil
+                curData.keypad = nil
+                curData.passcode = nil
+                -- Compare the original row so a concurrent move/removal cannot overwrite a newer state.
+                db.exec(
+                    "UPDATE items SET x = ?, y = ?, z = ?, rz = ?, data = ? WHERE id = ? "
+                        .. "AND x = ? AND y = ? AND z = ? AND data = ? "
+                        .. "AND holder_char_id IS NULL AND container_id IS NULL",
+                    { x, y, z, rz, encodeData(curData), cur.id, cur.x, cur.y, cur.z, cur.data },
+                    function(ok, _, affected)
+                        if not ok or affected ~= 1 then return end
+                        exports.items:resendWorldItem(cur.id)
+                        if isElement(pl) then toast(pl, "DEFENCE_REMOVED") end
+                        log.event("building.removed", defenceLine(cur, { player = pl, rz = cur.rz,
+                            drop_x = x, drop_y = y, drop_z = z }))
+                    end
+                )
+            end
+            triggerClientEvent(pl, "itemDropSpotRequested", pl, cur.id)
         end)
     end, { player = player })
 end

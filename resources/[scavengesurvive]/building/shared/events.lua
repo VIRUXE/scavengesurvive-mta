@@ -24,3 +24,5 @@ addEvent("itemTweakFinished", true)
 
 -- server-local
 addEvent("characterDied", false)
+
+addEvent("defenceRemovalSpotChosen", true)
