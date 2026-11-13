@@ -589,7 +589,7 @@ return {
     ["Phone Remote TNT"] = "TNT cu declanșare telefonică",
     ["Pick up"] = "Ridică",
     ["Pick up container"] = "Ridică containerul",
-    ["Pick up the %s from the ground: stand over it and press [F]."] = "Ridică de pe jos: %s. Stai lângă el și apasă [F].",
+    ["Pick up the %s from the ground: stand over it and press [F]."] = "Ridică de pe jos: %s. Stai chiar pe el și apasă [F].",
     ["Picked up"] = "Ridicat",
     Pills = "Pastile",
     ["Pilot's Cap"] = "Șapcă de pilot",

@@ -623,7 +623,7 @@ return {
     ["Press 'Start' to activate the machine and convert certain types of items into scrap.\nItems that cannot be turned into scrap metal will be destroyed.\n\nFuel amount: %.1f"] = "Pressione 'Iniciar' para ativar a máquina e converter certos tipos de itens em sucata.\nItens que não podem virar sucata de metal serão destruídos.\n\nCombustível: %.1f",
     ["Press 'Start' to activate the machine and purify sea water.\nEach bottle of sea water becomes a bottle of water.\n\nFuel amount: %.1f"] = "Pressione 'Iniciar' para ativar a máquina e purificar água do mar.\nCada garrafa de água do mar vira uma garrafa de água.\n\nCombustível: %.1f",
     ["Press 'Start' to activate the machine and refine scrap metal.\nEach piece of scrap metal becomes refined metal.\n\nFuel amount: %.1f"] = "Pressione 'Iniciar' para ativar a máquina e refinar sucata de metal.\nCada pedaço de sucata de metal vira metal refinado.\n\nCombustível: %.1f",
-    ["Press [F] beside the empty hub. Click a nut and hold the mouse button until it is on. Do all 6."] = "Pressione [F] ao lado do cubo vazio. Clique numa porca e segure o botão do mouse até ela entrar. Faça as 6.",
+    ["Press [F] beside the empty hub. Click a nut and hold the mouse button until it is on. Do all 6."] = "Pressione [F] ao lado do cubo vazio. Clique numa porca e segure o botão do mouse até ela ficar apertada. Faça as 6.",
     ["Press [N] to put the wheel on the ground beside the truck. Then hold the Tyre Wrench and press [F]."] = "Pressione [N] para colocar a roda no chão ao lado do veículo. Depois segure a chave de roda e pressione [F].",
     ["Protein Powder"] = "Proteína em pó",
     ["Proximity EMP"] = "EMP de proximidade",
