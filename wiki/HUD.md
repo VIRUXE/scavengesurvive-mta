@@ -23,7 +23,7 @@ Under the weapon icon a column lists what your keys do right now: the key in yel
 |:--|:--|
 | Empty hands | `H Open inventory`; `Y Draw weapon` with a holstered weapon; `N Remove bag` with a bag on; `F Remove handcuffs` next to a cuffed player |
 | Holding a firearm | `Y Holster weapon` (or `Put away`), `R Reload`, `N (Hold) Unload`, `N Drop item` or `N Give item` (a player within 1.5 m), `H Open inventory` |
-| Holding anything else | `Y Put away`, `N Drop item` / `N Give item`, `H Open inventory`, plus the item's use: `F Eat`, `F Cook` (by a campfire), `F Drink`, `F Open satchel`, `Y Wear`, `F Wear clothes`, `F Wear armour`, `F Take Pills`, `F Read note`, `F Locate phone`, `F Cast line`, `F Place sign`, `F Place shield`, `F Repair vehicle wheel`, `F Deconstruct` (Crowbar) |
+| Holding anything else | `Y Put away`, `N Drop item` / `N Give item`, `H Open inventory`, plus the item's use: `F Eat`, `F Cook` (by a campfire), `F Drink`, `F Open satchel`, `Y Wear`, `F Wear clothes`, `F Wear armour`, `F Take Pills`, `F Read note`, `F Locate phone`, `F Cast line`, `F Place shield`, `F Deconstruct` (Crowbar) |
 | Near things | `F Open` / `F (Hold) Pick up` at a bag or box on the ground; `F Access machine` / `F (Hold) Machine menu`; `F Open door`, `Close door` or `Door locked` at the Airstream's door; `F Climb ladder`, `Grab zipline`, `Let go`; `F Open supply crate` / `Open weapon cache`; the label of a button or gate; the [armour](Vehicle-Armour) lines (`Attach to trailer`, `Take torch`, `Weld panel`, `Grind panel off`...) |
 | Driving | `R Open radio` (`(Hold) Open radio` with a firearm in hand) and `Hitch trailer` / `Unhitch trailer` on the hitch key when a trailer is in reach or towed |
 

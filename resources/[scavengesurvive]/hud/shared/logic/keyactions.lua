@@ -11,14 +11,14 @@ local function tr(s)
     return M.tr(s)
 end
 
--- Per-item verbs on the interact key (upstream's single-item table), by item type uname.
+-- Per-item verbs on the interact key (upstream's single-item table), by item type uname. A held Sign and a held
+-- Wheel have none: a sign is dropped and then edited where it lies ("Edit sign", the nearInspectable line below), and a
+-- Wheel is laid beside the vehicle and fitted with the Tyre Wrench (F with it in hand only toasts WHEEL_LAY).
 -- lang:begin
 M.SPECIAL = {
-    Sign = "Place sign",
     Armour = "Wear armour",
     Crowbar = "Deconstruct",
     Shield = "Place shield",
-    Wheel = "Repair vehicle wheel",
     Clothes = "Wear clothes",
     Pills = "Take Pills",
     HerpDerp = "Herp-a-derp",
