@@ -196,6 +196,17 @@ return function(ctx)
 
     local WRENCH_ANIM = { "BOMBER", "BOM_Plant_Loop" }
 
+    -- the held part belongs on this vehicle, its slot is empty and the player stands at it: the tap fits it
+    -- (anything else at the rear is a part for the trunk)
+    function M.fits(player, vehicle, held)
+        local modelId, slot = bp.partOf(held.uname)
+        return modelId ~= nil
+            and getElementModel(vehicle) == modelId
+            and workable(player, vehicle)
+            and atSlot(player, vehicle, slot)
+            and bp.condition(slot, state(vehicle, slot)) == "missing"
+    end
+
     -- A held part goes into the empty slot it belongs to, loose: a Ratchet has to secure it.
     function M.install(player, vehicle, held)
         local modelId, slot, good = bp.partOf(held.uname)

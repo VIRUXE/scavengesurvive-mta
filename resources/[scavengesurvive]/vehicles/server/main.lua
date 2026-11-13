@@ -2240,8 +2240,12 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
     local uname = held and held.uname
     local hp = getElementHealth(vehicle)
 
+    -- a part that does not fit at the rear is carried cargo: it falls through to the trunk (Case 3)
     if bodySrv.isPart(uname) then
-        return bodySrv.install(player, vehicle, held)
+        local atTrunk = vlogic.isRear(angle) and not walkIn
+        if not atTrunk or bodySrv.fits(player, vehicle, held) then
+            return bodySrv.install(player, vehicle, held)
+        end
     end
 
     -- Case W: the Welder's torch welds the nearest attached panel on (server/carmour.lua); the Welder itself has to
