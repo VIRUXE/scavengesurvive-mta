@@ -11,6 +11,9 @@ M.REACH_EXTRA = 1.0 -- upstream's tree area: a sphere of the species' diameter +
 M.MAX_DZ = 3.0 -- the tree's origin sits at its foot, the player's a metre up
 M.CHECK_MS = 250
 M.MAX_MOVE = 0.8 -- metres the player may shift while cutting
+-- petrol units (100 a litre, items/shared/logic/ammo.lua) each CHECK_MS of cutting burns: 4 a second, so a litre
+-- runs 25 s and a full 2 L Chainsaw fells three or four of the big trees (upstream burnt a unit every few seconds)
+M.FUEL_PER_CHECK = 1
 M.BASE_MS = 1000 -- one point of chop damage per second before the Forestry skill
 M.LOG_SPREAD = 1.5 -- upstream HARVEST_DROP_MAX_SPHERE_SIZE
 M.FALL_MS = 4000 -- the felled tree is drawn falling this long before the logs appear

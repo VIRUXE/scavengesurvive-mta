@@ -49,8 +49,10 @@ return function(ctx)
         arm()
     end
 
-    local function chainsawRuns()
-        return true
+    -- petrol in the held Chainsaw (items' data.mag, 100 units a litre; F at a Petrol Can lying near fills it)
+    local function chainsawRuns(held)
+        local d = type(held.data) == "table" and held.data or {}
+        return (tonumber(d.mag) or 0) > 0
     end
 
     local function stop(player, quiet)
@@ -112,9 +114,14 @@ return function(ctx)
         if isPedDead(player) or moved or getPedOccupiedVehicle(player) or felled[a.tree] then
             return stop(player)
         end
-        if not held or held.id ~= a.itemId or not chainsawRuns() then
+        if not held or held.id ~= a.itemId then
             return stop(player)
         end
+        if not chainsawRuns(held) then -- the last of the petrol went on the stretch before
+            stop(player)
+            return triggerClientEvent(player, "toastShown", player, "CHAINSAFUEL")
+        end
+        exports.items:burnHeldFuel(player, logic.FUEL_PER_CHECK)
         local species = index.species[index.trees[a.tree][1]]
         local left = (health[a.tree] or species[2]) - logic.damage(species, logic.CHECK_MS, a.perPointMs)
         health[a.tree] = left
@@ -131,8 +138,9 @@ return function(ctx)
         end
         local t = index.trees[i]
         local species = index.species[t[1]]
-        if not chainsawRuns() then
-            return false
+        if not chainsawRuns(held) then
+            triggerClientEvent(player, "toastShown", player, "CHAINSAFUEL")
+            return true -- handled: the empty saw only says so
         end
         stop(player)
         local perPointMs = exports.character:skillTimeModifier(player, logic.BASE_MS, logic.SKILL)

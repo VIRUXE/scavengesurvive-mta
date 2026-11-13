@@ -43,6 +43,13 @@ function Ammo.fuelUnits(data)
 end
 
 Ammo.FUEL_UNITS_PER_LITRE = 100
+
+-- the units a liquid weapon holds when full: magSize * (1 + maxReserveMags)
+function Ammo.fuelCapacity(def)
+    local cd = def.categoryData
+    return math.max(0, math.floor(tonumber(cd.magSize) or 0))
+        * (1 + math.max(0, math.floor(tonumber(cd.maxReserveMags) or 0)))
+end
 Ammo.FUEL_LITRES_PER_PRESS = 1.0
 
 -- F with a Petrol Can lying there (upstream weapon/interact.pwn:105-135): up to a litre a press moves from the
@@ -55,9 +62,7 @@ function Ammo.refuel(def, data, canLitres)
     if (tonumber(canLitres) or 0) <= 0 then
         return false, "EMPTY"
     end
-    local cd = def.categoryData
-    local cap = math.max(0, math.floor(tonumber(cd.magSize) or 0))
-        * (1 + math.max(0, math.floor(tonumber(cd.maxReserveMags) or 0)))
+    local cap = Ammo.fuelCapacity(def)
     local units = Ammo.fuelUnits(data)
     local room = (cap - units) / Ammo.FUEL_UNITS_PER_LITRE
     local litres = math.min(canLitres, Ammo.FUEL_LITRES_PER_PRESS, room)
@@ -327,6 +332,15 @@ function Ammo.displayName(def, data, resolveItemType, resolveCalibreName, defaul
             end
         end
         return string.format("%s (%d/%d, %s, %s)", def.name, state.mag, state.reserve, calName, ammoLabel)
+    end
+    if Ammo.isLiquidWeapon(def) then -- like the Petrol Can's own label: "Chainsaw (Petrol 1.5/2.00)"
+        local units = Ammo.fuelUnits(data)
+        if units <= 0 then
+            return string.format("%s (%s)", def.name, tr("Empty"))
+        end
+        local per = Ammo.FUEL_UNITS_PER_LITRE
+        local liquid = tr(def.categoryData.liquid)
+        return string.format("%s (%s %.1f/%.2f)", def.name, liquid, units / per, Ammo.fuelCapacity(def) / per)
     end
     if Ammo.isAmmoItem(def) then
         local cal = def.categoryData.calibre

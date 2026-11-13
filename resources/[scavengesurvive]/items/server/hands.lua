@@ -455,6 +455,23 @@ return function(ctx)
         syncHeldData(source, item, nextData)
     end)
 
+    -- A liquid weapon's petrol burnt by work rather than the trigger (a Chainsaw felling a tree, world/server/
+    -- trees.lua), the way a shot burns it above. Returns the units left, or false when no liquid weapon is in hand.
+    function M.burnFuel(player, units)
+        local item = state.held[player]
+        if not (item and ammo and ammo.isLiquidWeapon(itemType(item.uname))) then
+            return false
+        end
+        local left = math.max(0, ammo.fuelUnits(item.data) - math.max(0, math.floor(tonumber(units) or 0)))
+        if left > 0 then
+            item.data = { mag = left, reserve = 0 }
+            M.queueData(item)
+            return left
+        end
+        syncHeldData(player, item, { mag = 0, reserve = 0 })
+        return 0
+    end
+
     net.handler("itemReloadRequested", function(player)
         if not ammo or (isIncapacitated and isIncapacitated(player)) then
             return

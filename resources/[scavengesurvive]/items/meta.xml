@@ -73,6 +73,7 @@
     <export function="openSupplyContainer" type="server"/>
     <export function="closeContainer" type="server"/>
     <export function="updateHeldData" type="server"/>
+    <export function="burnHeldFuel" type="server"/>
     <export function="meleeHit" type="server"/>
     <export function="popHeadgear" type="server"/>
     <export function="armourHit" type="server"/>

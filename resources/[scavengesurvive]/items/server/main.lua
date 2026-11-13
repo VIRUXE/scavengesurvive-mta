@@ -829,3 +829,11 @@ function updateHeldData(player, nextData)
     triggerClientEvent(player, "heldItemChanged", player, item)
     return true
 end
+
+-- world/server/trees.lua: petrol a held Chainsaw burns while felling; the units left, false without one in hand
+function burnHeldFuel(player, units)
+    if not isElement(player) then
+        return false
+    end
+    return hands.burnFuel(player, units)
+end
