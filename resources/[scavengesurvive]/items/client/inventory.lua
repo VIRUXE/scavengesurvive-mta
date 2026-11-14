@@ -273,7 +273,13 @@ return function(ctx)
             ground, passes = code:match("^GRIND_PASS:(%d+):(%d+)$")
         end
         local charge = type(code) == "string" and code:match("^BATTERY_LEVEL:(%d+)$")
+        local needTool = type(code) == "string" and code:match("^NEEDANOTOOL:(%w+)$")
+        local toolType = needTool and lang.itemType(needTool)
         local msg = charge and lang.format("Car Battery: %d%%", tonumber(charge) or 0)
+            or needTool and lang.format(
+                "You need a %s to continue repairing this vehicle",
+                toolType and toolType.name or needTool
+            )
             or n and lang.format("Transferred %d rounds", tonumber(n) or 0)
             or dist and lang.format("Distance: %.3f", tonumber(dist) or 0) -- upstream DISTANCEVAL
             or ground and lang.format("Grinding: %s of %s passes cut", ground, passes)

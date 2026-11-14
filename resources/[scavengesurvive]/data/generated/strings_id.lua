@@ -1045,6 +1045,7 @@ return {
     ["You have unlocked the mystery door!"] = "Kamu membuka pintu misterius!",
     ["You mounted the gas bottle"] = "Kamu memasang botol gas",
     ["You must install a motor before installing a keypad!"] = "Kamu harus memasang motor sebelum memasang keypad!",
+    ["You need a %s to continue repairing this vehicle"] = "Untuk melanjutkan perbaikan kendaraan ini kamu butuh: %s",
     ["You need a Ratchet"] = "Kamu butuh Kunci Ratchet",
     ["You need another tool to continue repairing this vehicle"] = "Kamu butuh alat lain untuk melanjutkan perbaikan kendaraan ini",
     ["You need to be closer to the water"] = "Kamu harus lebih dekat ke air",

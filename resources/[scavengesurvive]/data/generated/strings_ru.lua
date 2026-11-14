@@ -1045,6 +1045,7 @@ return {
     ["You have unlocked the mystery door!"] = "Вы открыли таинственную дверь!",
     ["You mounted the gas bottle"] = "Вы установили газовый баллончик",
     ["You must install a motor before installing a keypad!"] = "Перед установкой кодовой панели нужно установить мотор!",
+    ["You need a %s to continue repairing this vehicle"] = "Для продолжения ремонта нужен инструмент: %s",
     ["You need a Ratchet"] = "Нужна Трещотка",
     ["You need another tool to continue repairing this vehicle"] = "Для продолжения ремонта нужен другой инструмент",
     ["You need to be closer to the water"] = "Нужно подойти ближе к воде",

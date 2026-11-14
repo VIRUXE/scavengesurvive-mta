@@ -969,6 +969,7 @@ return {
     ["You have unlocked the mystery door!"] = "Otključao si tajanstvena vrata!",
     ["You mounted the gas bottle"] = "Postavio si bocu s plinom",
     ["You must install a motor before installing a keypad!"] = "Prvo moraš ugraditi motor, pa tek onda tastaturu sa šifrom!",
+    ["You need a %s to continue repairing this vehicle"] = "Za nastavak popravka vozila treba ti: %s",
     ["You need a Ratchet"] = "Treba ti račna",
     ["You need another tool to continue repairing this vehicle"] = "Treba ti drugi alat da nastaviš popravak vozila",
     ["You need to be closer to the water"] = "Moraš biti bliže vodi",

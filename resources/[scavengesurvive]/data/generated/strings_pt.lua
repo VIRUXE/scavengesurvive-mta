@@ -973,6 +973,7 @@ return {
     ["You have unlocked the mystery door!"] = "Destrancaste a porta misteriosa!",
     ["You mounted the gas bottle"] = "Montaste a botija de gás",
     ["You must install a motor before installing a keypad!"] = "Tens de instalar um motor antes de instalar um teclado numérico!",
+    ["You need a %s to continue repairing this vehicle"] = "Para continuar a reparar este veículo precisas de: %s",
     ["You need a Ratchet"] = "Precisas de uma Catraca",
     ["You need another tool to continue repairing this vehicle"] = "Precisas de outra ferramenta para continuar a reparar este veículo",
     ["You need to be closer to the water"] = "Tens de estar mais perto da água",

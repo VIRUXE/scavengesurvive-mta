@@ -1046,6 +1046,7 @@ return {
     ["You have unlocked the mystery door!"] = "Odemkl jsi tajemné dveře!",
     ["You mounted the gas bottle"] = "Namontoval jsi plynovou láhev",
     ["You must install a motor before installing a keypad!"] = "Před instalací klávesnice musíš nainstalovat motor!",
+    ["You need a %s to continue repairing this vehicle"] = "K další opravě tohoto vozidla potřebuješ: %s",
     ["You need a Ratchet"] = "Potřebuješ ráčnu",
     ["You need another tool to continue repairing this vehicle"] = "K další opravě tohoto vozidla potřebuješ jiný nástroj",
     ["You need to be closer to the water"] = "Musíš být blíž k vodě",

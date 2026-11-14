@@ -425,6 +425,7 @@ end)
 
 -- a refusal or a result the newcomer may not understand: say what to do about it
 addEventHandler("toastShown", localPlayer, function(code)
+    code = type(code) == "string" and code:match("^[^:]+") or code
     local text = active and not done and TOAST_TIPS[code]
     local now = getTickCount()
     if text and now - (tipAt[code] or -10000) > 8000 then

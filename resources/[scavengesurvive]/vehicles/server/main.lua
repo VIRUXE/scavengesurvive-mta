@@ -2024,7 +2024,7 @@ local function startEngineRepair(player, vehicle, held)
         return toast(player, "VEH_FULL_REPAIR")
     end
     if not held or held.uname ~= toolNeeded then
-        return toast(player, "NEEDANOTOOL")
+        return toast(player, "NEEDANOTOOL:" .. toolNeeded)
     end
     local inf = info[vehicle]
     if not engineReachable(vehicle) then
@@ -2149,7 +2149,7 @@ local function noBayWork(player, vehicle)
     if not tool then
         return toast(player, "VEH_FULL_REPAIR")
     end
-    toast(player, "NEEDANOTOOL")
+    toast(player, "NEEDANOTOOL:" .. tool)
 end
 
 -- Hold F at the open bonnet. The server decides the list; empty hands can also select loose parts.

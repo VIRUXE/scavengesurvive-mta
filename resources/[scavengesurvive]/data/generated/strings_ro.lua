@@ -1045,6 +1045,7 @@ return {
     ["You have unlocked the mystery door!"] = "Ai descuiat ușa misterioasă!",
     ["You mounted the gas bottle"] = "Ai montat tubul de gaz",
     ["You must install a motor before installing a keypad!"] = "Trebuie să instalezi un motor înainte de tastatura cu cod!",
+    ["You need a %s to continue repairing this vehicle"] = "Pentru a continua repararea vehiculului ai nevoie de: %s",
     ["You need a Ratchet"] = "Ai nevoie de un clichet",
     ["You need another tool to continue repairing this vehicle"] = "Ai nevoie de altă unealtă ca să continui repararea vehiculului",
     ["You need to be closer to the water"] = "Trebuie să fii mai aproape de apă",

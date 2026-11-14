@@ -34,16 +34,26 @@ None: the converter replaced every `~x~`, `{C_*}`, `~k~` and `%P` token.
 
 Item type, ammo kind, calibre, liquid and seed kind names, and the item UI's labels, messages and format templates, are English in the data and the code; lib's `lang` module shows them in the player's language from the hand-edited `data/generated/strings_<code>.lua` tables. The English texts are collected from the item data and the code (`tr("…")`, `L("…")`, `lang.text/format("…")`, `lang.textFor/formatFor(player, "…")` and `-- lang:begin` … `-- lang:end` blocks). A text a language lacks shows in English; one whose placeholders differ from English is formatted in English. Texts kept identical to English are model names, brands, acronyms and the like.
 
-English has 1081 texts.
+English has 1084 texts.
 
 | Code | Language | Missing (shown in English) | Kept as in English | Placeholder mismatches | Not in English (stale) |
 | --- | --- | ---: | ---: | ---: | ---: |
-| `es` | Español | 0 | 39 | 0 | 0 |
-| `fr` | Français | 0 | 59 | 0 | 0 |
-| `pt` | Português | 0 | 35 | 0 | 0 |
-| `ptbr` | Português do Brasil | 0 | 39 | 0 | 0 |
-| `ru` | Russian | 0 | 16 | 0 | 0 |
-| `ro` | Romanian | 0 | 44 | 0 | 0 |
-| `id` | Indonesian | 0 | 38 | 0 | 0 |
-| `bhs` | Bosanski-Hrvatski-Srpski | 0 | 35 | 0 | 0 |
-| `cs` | Čeština | 0 | 36 | 0 | 0 |
+| `es` | Español | 2 | 39 | 0 | 0 |
+| `fr` | Français | 2 | 59 | 0 | 0 |
+| `pt` | Português | 2 | 35 | 0 | 0 |
+| `ptbr` | Português do Brasil | 2 | 39 | 0 | 0 |
+| `ru` | Russian | 2 | 16 | 0 | 0 |
+| `ro` | Romanian | 2 | 44 | 0 | 0 |
+| `id` | Indonesian | 2 | 38 | 0 | 0 |
+| `bhs` | Bosanski-Hrvatski-Srpski | 2 | 35 | 0 | 0 |
+| `cs` | Čeština | 2 | 36 | 0 | 0 |
+
+- `es` lacks: `No clear space nearby. Make room before removing this defence.`, `Blocked by a wall. Move around to reach the item.`
+- `fr` lacks: `No clear space nearby. Make room before removing this defence.`, `Blocked by a wall. Move around to reach the item.`
+- `pt` lacks: `No clear space nearby. Make room before removing this defence.`, `Blocked by a wall. Move around to reach the item.`
+- `ptbr` lacks: `No clear space nearby. Make room before removing this defence.`, `Blocked by a wall. Move around to reach the item.`
+- `ru` lacks: `No clear space nearby. Make room before removing this defence.`, `Blocked by a wall. Move around to reach the item.`
+- `ro` lacks: `No clear space nearby. Make room before removing this defence.`, `Blocked by a wall. Move around to reach the item.`
+- `id` lacks: `No clear space nearby. Make room before removing this defence.`, `Blocked by a wall. Move around to reach the item.`
+- `bhs` lacks: `No clear space nearby. Make room before removing this defence.`, `Blocked by a wall. Move around to reach the item.`
+- `cs` lacks: `No clear space nearby. Make room before removing this defence.`, `Blocked by a wall. Move around to reach the item.`
