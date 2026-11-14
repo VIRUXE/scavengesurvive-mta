@@ -43,9 +43,9 @@ function translate.worthTranslating(text)
     return #text >= 2 and text:find("[^%s%p%d]") ~= nil
 end
 
--- "es" for the reader, from Google's detected source ("pt-PT" -> "PT")
+-- the lowercase code of Google's detected source ("es", "pt-pt")
 function translate.sourceTag(source)
-    return tostring(source or "?"):upper()
+    return tostring(source or "?"):lower()
 end
 
 -- The extra line under the original: grey, the source language code in parentheses, the speaker, the translation.
