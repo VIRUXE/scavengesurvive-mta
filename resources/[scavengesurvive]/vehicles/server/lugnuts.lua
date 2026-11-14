@@ -177,7 +177,8 @@ return function(ctx)
         end, 200, 0)
     end
 
-    -- Taking a wheel off starts at once. Fitting needs a wheel laid within 3 m, the nearest one goes on, and
+    -- Taking a wheel off starts at once. Fitting needs a wheel laid within 3 m: a good one goes on before a flat one
+    -- (a flat just taken off lies at the player's feet), the nearest of its kind, and
     -- the job is refused up front when there is none, so nobody turns every nut for nothing.
     local function begin(player, vehicle, wheel, removing, held, px, py, pz, tires)
         if removing then
@@ -188,7 +189,7 @@ return function(ctx)
                 .. wheels.sqlList()
                 .. ") AND holder_char_id IS NULL AND container_id IS NULL AND interior = ? AND dimension = ?"
                 .. " AND POW(x - ?, 2) + POW(y - ?, 2) + POW(z - ?, 2) < 9"
-                .. " ORDER BY POW(x - ?, 2) + POW(y - ?, 2) + POW(z - ?, 2) LIMIT 1",
+                .. " ORDER BY type_uname LIKE '%Flat', POW(x - ?, 2) + POW(y - ?, 2) + POW(z - ?, 2) LIMIT 1",
             {
                 getElementInterior(player),
                 getElementDimension(player),
