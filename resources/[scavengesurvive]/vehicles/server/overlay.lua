@@ -27,10 +27,19 @@ return function(ctx)
                 state = "cooldown"
             end
             out[#out + 1] = {
-                id = r.id, x = r.x, y = r.y, z = r.z, rz = r.rz,
+                id = r.id,
+                x = r.x,
+                y = r.y,
+                z = r.z,
+                rz = r.rz,
                 what = r.type_name or ("group " .. tostring(r.group_name)),
-                cats = r.categories, sizes = r.sizes, state = state, dueIn = dueIn,
-                occId = r.occupant_id, occType = r.occupant_type, driven = tonumber(r.driven_off) or 0,
+                cats = r.categories,
+                sizes = r.sizes,
+                state = state,
+                dueIn = dueIn,
+                occId = r.occupant_id,
+                occType = r.occupant_type,
+                driven = tonumber(r.driven_off) or 0,
             }
         end
         return out
@@ -42,8 +51,16 @@ return function(ctx)
         last[p] = s
         local box = string.format(
             "POLYGON((%g %g,%g %g,%g %g,%g %g,%g %g))",
-            x - RADIUS, y - RADIUS, x + RADIUS, y - RADIUS, x + RADIUS, y + RADIUS, x - RADIUS, y + RADIUS,
-            x - RADIUS, y - RADIUS
+            x - RADIUS,
+            y - RADIUS,
+            x + RADIUS,
+            y - RADIUS,
+            x + RADIUS,
+            y + RADIUS,
+            x - RADIUS,
+            y + RADIUS,
+            x - RADIUS,
+            y - RADIUS
         )
         local sql = "SELECT s.id, s.x, s.y, s.z, s.rz, s.group_name, s.type_name, s.categories, s.sizes, s.enabled, "
             .. "TIMESTAMPDIFF(SECOND, NOW(), st.next_roll_at) AS due_in, "

@@ -1060,7 +1060,13 @@ return function(ctx)
                 return tryTransferFromWorld(c.player, c.charId, curHeld, curType, row)
             end
             M.pickup(c.player, c.charId, row)
-        end, { player = player, charId = cid, radius = r, targetId = targetId, blocked = world.cleanIds(blocked) })
+        end, {
+            player = player,
+            charId = cid,
+            radius = r,
+            targetId = targetId,
+            blocked = world.cleanIds(blocked),
+        })
     end, { rate = 5 })
 
     -- a hold of the interact key on a bag or a box lying there (upstream "Hold F to pick up / Press F to open"): the
