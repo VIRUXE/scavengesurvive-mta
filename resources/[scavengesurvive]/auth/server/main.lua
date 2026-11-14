@@ -863,18 +863,14 @@ local function setLanguage(player, account, code, via)
     log.event("session.languageSet", { player = player, account_id = account.id, lang = code, via = via })
 end
 
--- /lang [code]: a valid code sets it at once; otherwise the language window (CEGUI) opens on the current one.
-addCommandHandler("lang", function(player, _, code)
+-- /lang: the language window (CEGUI) opens on the current language; the pick comes back as authLanguageChanged.
+addCommandHandler("lang", function(player)
     if getElementType(player) ~= "player" then
         return
     end
     local account = session[player]
     if not account then
         return outputChatBox(" >  " .. lang.textFor(player, "Log in first."), player, 255, 255, 0)
-    end
-    code = type(code) == "string" and code:lower() or nil
-    if code and isLanguage(code) then
-        return setLanguage(player, account, code, "command")
     end
     triggerClientEvent(player, "authLanguageOffered", player, exports.data:languages(), account.lang or "en")
 end)
