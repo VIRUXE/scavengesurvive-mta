@@ -456,24 +456,41 @@ end
 local removalSpots = {}
 local function clearRemovalSpot(player)
     local pending = removalSpots[player]
-    if pending and isTimer(pending.timer) then killTimer(pending.timer) end
+    if pending and isTimer(pending.timer) then
+        killTimer(pending.timer)
+    end
     removalSpots[player] = nil
     return pending
 end
-addEventHandler("onPlayerQuit", root, function() clearRemovalSpot(source) end)
+addEventHandler("onPlayerQuit", root, function()
+    clearRemovalSpot(source)
+end)
 net.handler("defenceRemovalSpotChosen", function(player, id, x, y)
     local pending = clearRemovalSpot(player)
-    if not pending or id ~= pending.id then return end
+    if not pending or id ~= pending.id then
+        return
+    end
     local px, py, pz = getElementPosition(player)
-    if type(x) ~= "number" or type(y) ~= "number" or x ~= x or y ~= y
-        or (x - px)^2 + (y - py)^2 < 0.4 or (x - px)^2 + (y - py)^2 > 6.6 then
+    if
+        type(x) ~= "number"
+        or type(y) ~= "number"
+        or x ~= x
+        or y ~= y
+        or (x - px) ^ 2 + (y - py) ^ 2 < 0.4
+        or (x - px) ^ 2 + (y - py) ^ 2 > 6.6
+    then
         return toast(player, "DEFENCE_NO_DROP_SPACE")
     end
     local row = pending.row
-    if not charId(player) or heldUname(player) ~= "Crowbar"
+    if
+        not charId(player)
+        or heldUname(player) ~= "Crowbar"
         or getElementInterior(player) ~= (row.interior or 0)
         or getElementDimension(player) ~= (row.dimension or 0)
-        or getDistanceBetweenPoints3D(px, py, pz, row.x, row.y, row.z) > 3 then return end
+        or getDistanceBetweenPoints3D(px, py, pz, row.x, row.y, row.z) > 3
+    then
+        return
+    end
     pending.finish(x, y, pz - 0.9)
 end, { rate = 5 })
 
@@ -517,7 +534,9 @@ function removeDefence(player, itemId)
             pending.timer = setTimer(function()
                 if removalSpots[pl] == pending then
                     clearRemovalSpot(pl)
-                    if isElement(pl) then toast(pl, "DEFENCE_NO_DROP_SPACE") end
+                    if isElement(pl) then
+                        toast(pl, "DEFENCE_NO_DROP_SPACE")
+                    end
                 end
             end, 3000, 1)
             pending.finish = function(x, y, z)
@@ -525,18 +544,36 @@ function removeDefence(player, itemId)
                 curData.defence = nil
                 curData.keypad = nil
                 curData.passcode = nil
-                -- Compare the original row so a concurrent move/removal cannot overwrite a newer state.
+                -- Compare the original row so a concurrent move/removal cannot overwrite a newer state. x, y, z are
+                -- 32-bit FLOAT columns: an exact = never matches the value read back, so they compare within 1 cm.
                 db.exec(
                     "UPDATE items SET x = ?, y = ?, z = ?, rz = ?, data = ? WHERE id = ? "
-                        .. "AND x = ? AND y = ? AND z = ? AND data = ? "
+                        .. "AND ABS(x - ?) < 0.01 AND ABS(y - ?) < 0.01 AND ABS(z - ?) < 0.01 AND data = ? "
                         .. "AND holder_char_id IS NULL AND container_id IS NULL",
                     { x, y, z, rz, encodeData(curData), cur.id, cur.x, cur.y, cur.z, cur.data },
                     function(ok, _, affected)
-                        if not ok or affected ~= 1 then return end
+                        if not ok or affected ~= 1 then
+                            if isElement(pl) then
+                                toast(pl, "DEFENCE_CHANGED")
+                            end
+                            log.event(
+                                "building.removed",
+                                defenceLine(
+                                    cur,
+                                    { player = pl, ok = false, code = ok and "DEFENCE_CHANGED" or "DB_ERROR" }
+                                ),
+                                "warn"
+                            )
+                            return
+                        end
                         exports.items:resendWorldItem(cur.id)
-                        if isElement(pl) then toast(pl, "DEFENCE_REMOVED") end
-                        log.event("building.removed", defenceLine(cur, { player = pl, rz = cur.rz,
-                            drop_x = x, drop_y = y, drop_z = z }))
+                        if isElement(pl) then
+                            toast(pl, "DEFENCE_REMOVED")
+                        end
+                        log.event(
+                            "building.removed",
+                            defenceLine(cur, { player = pl, rz = cur.rz, drop_x = x, drop_y = y, drop_z = z })
+                        )
                     end
                 )
             end

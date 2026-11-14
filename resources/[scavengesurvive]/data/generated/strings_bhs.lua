@@ -780,6 +780,7 @@ return {
     ["The body has decomposed too much to harvest"] = "Tijelo je previše istrunulo za skupljanje mesa",
     ["The bonnet is locked: unlock the vehicle first"] = "Hauba je zaključana: prvo otključaj vozilo",
     ["The dashboard: BAT lights when the battery is low, CHK when the engine is damaged. The needle on the right shows the battery charge."] = "Instrumentna ploča: BAT svijetli kad je akumulator slab, CHK kad je motor oštećen. Kazaljka desno pokazuje napunjenost akumulatora.",
+    ["The defence changed while you worked on it. Try again."] = "Obrana se promijenila dok si radio na njoj. Pokušaj ponovo.",
     ["The door is armoured, a crowbar will not work"] = "Vrata su oklopljena, pajser neće pomoći",
     ["The engine is on. Sit in the truck and press [Y] to turn it off."] = "Motor radi. Sjedni u vozilo i pritisni [Y] da ga ugasiš.",
     ["The engine won't turn over: the starter motor is dead"] = "Motor neće da upali: anlaser je crkao",

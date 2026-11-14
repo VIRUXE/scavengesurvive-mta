@@ -846,6 +846,7 @@ return {
     ["The body has decomposed too much to harvest"] = "O corpo está decomposto demais para ser aproveitado",
     ["The bonnet is locked: unlock the vehicle first"] = "O capô está trancado: destranque o veículo primeiro",
     ["The dashboard: BAT lights when the battery is low, CHK when the engine is damaged. The needle on the right shows the battery charge."] = "O painel: BAT acende com a bateria fraca e CHK com o motor danificado. O ponteiro da direita mostra a carga da bateria.",
+    ["The defence changed while you worked on it. Try again."] = "A defesa mudou enquanto você trabalhava nela. Tente de novo.",
     ["The door is armoured, a crowbar will not work"] = "A porta é blindada, um pé de cabra não vai funcionar",
     ["The engine is on. Sit in the truck and press [Y] to turn it off."] = "O motor está ligado. Entre no veículo e pressione [Y] para desligá-lo.",
     ["The engine won't turn over: the starter motor is dead"] = "O motor não pega: o motor de arranque está queimado",

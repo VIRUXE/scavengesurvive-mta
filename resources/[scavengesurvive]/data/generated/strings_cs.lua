@@ -847,6 +847,7 @@ return {
     ["The body has decomposed too much to harvest"] = "Tělo je příliš rozložené na rozřezání",
     ["The bonnet is locked: unlock the vehicle first"] = "Kapota je zamčená: nejdřív odemkni vozidlo",
     ["The dashboard: BAT lights when the battery is low, CHK when the engine is damaged. The needle on the right shows the battery charge."] = "Palubní deska: BAT svítí při slabé baterii, CHK při poškozeném motoru. Ručička vpravo ukazuje nabití baterie.",
+    ["The defence changed while you worked on it. Try again."] = "Zábrana se změnila, zatímco jsi na ní pracoval. Zkus to znovu.",
     ["The door is armoured, a crowbar will not work"] = "Dveře jsou pancéřované, páčidlo nepomůže",
     ["The engine is on. Sit in the truck and press [Y] to turn it off."] = "Motor běží. Nastup do vozidla a stiskni [Y] pro jeho vypnutí.",
     ["The engine won't turn over: the starter motor is dead"] = "Motor nenaskočí: startér je mrtvý",

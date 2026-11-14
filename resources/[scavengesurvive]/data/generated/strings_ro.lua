@@ -846,6 +846,7 @@ return {
     ["The body has decomposed too much to harvest"] = "Cadavrul s-a descompus prea mult ca să fie recoltat",
     ["The bonnet is locked: unlock the vehicle first"] = "Capota este încuiată: descuie mai întâi vehiculul",
     ["The dashboard: BAT lights when the battery is low, CHK when the engine is damaged. The needle on the right shows the battery charge."] = "Bordul: BAT se aprinde când bateria e slabă, CHK când motorul e avariat. Acul din dreapta arată încărcarea bateriei.",
+    ["The defence changed while you worked on it. Try again."] = "Apărarea s-a schimbat în timp ce lucrai la ea. Încearcă din nou.",
     ["The door is armoured, a crowbar will not work"] = "Ușa este blindată, o rangă nu ajută",
     ["The engine is on. Sit in the truck and press [Y] to turn it off."] = "Motorul este pornit. Urcă în vehicul și apasă [Y] ca să-l oprești.",
     ["The engine won't turn over: the starter motor is dead"] = "Motorul nu pornește: electromotorul este defect",

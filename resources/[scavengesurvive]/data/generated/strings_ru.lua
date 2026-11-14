@@ -846,6 +846,7 @@ return {
     ["The body has decomposed too much to harvest"] = "Тело слишком разложилось, с него нечего взять",
     ["The bonnet is locked: unlock the vehicle first"] = "Капот заперт: сначала откройте транспорт",
     ["The dashboard: BAT lights when the battery is low, CHK when the engine is damaged. The needle on the right shows the battery charge."] = "Приборная панель: BAT загорается при низком заряде аккумулятора, CHK — при повреждении двигателя. Стрелка справа показывает заряд аккумулятора.",
+    ["The defence changed while you worked on it. Try again."] = "Укрепление изменилось, пока ты с ним работал. Попробуй ещё раз.",
     ["The door is armoured, a crowbar will not work"] = "Дверь бронированная, лом не поможет",
     ["The engine is on. Sit in the truck and press [Y] to turn it off."] = "Двигатель работает. Сядьте в машину и нажмите [Y], чтобы заглушить его.",
     ["The engine won't turn over: the starter motor is dead"] = "Двигатель не заводится: стартер неисправен",

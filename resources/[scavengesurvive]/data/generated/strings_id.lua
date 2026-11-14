@@ -846,6 +846,7 @@ return {
     ["The body has decomposed too much to harvest"] = "Mayat sudah terlalu membusuk untuk dipanen",
     ["The bonnet is locked: unlock the vehicle first"] = "Kap mesin terkunci: buka kunci kendaraan dulu",
     ["The dashboard: BAT lights when the battery is low, CHK when the engine is damaged. The needle on the right shows the battery charge."] = "Dasbor: BAT menyala saat aki lemah, CHK saat mesin rusak. Jarum di kanan menunjukkan muatan aki.",
+    ["The defence changed while you worked on it. Try again."] = "Pertahanan berubah saat kamu mengerjakannya. Coba lagi.",
     ["The door is armoured, a crowbar will not work"] = "Pintunya berlapis baja, linggis tidak akan berhasil",
     ["The engine is on. Sit in the truck and press [Y] to turn it off."] = "Mesin menyala. Masuk ke kendaraan dan tekan [Y] untuk mematikannya.",
     ["The engine won't turn over: the starter motor is dead"] = "Mesin tidak mau hidup: dinamo starternya mati",
