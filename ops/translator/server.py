@@ -8,13 +8,20 @@ One `claude -p` process stays up in stream-json mode, so every line said in game
 Haiku sees the recent conversation (who said what, what "the red one" refers to). The session is recycled every
 MAX_TURNS lines, or on an error or timeout. Requests are handled one at a time, in the order the game sends them.
 Only listens on 127.0.0.1.
+
+Fallback: when Claude fails (error, timeout, usage limit), the line goes to Google Cloud Translation v2 instead
+(key in SSMTA_GOOGLE_TRANSLATE_KEY), one call per target, without context, and Claude is skipped for a while
+(CLAUDE_PAUSE_LIMIT_S after a usage-limit error, CLAUDE_PAUSE_S after anything else).
 """
 import json
 import os
+import socket
 import subprocess
 import sys
 import threading
 import time
+import urllib.parse
+import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 HOST, PORT = "127.0.0.1", int(os.environ.get("SSMTA_TRANSLATOR_PORT", "8130"))
@@ -22,6 +29,11 @@ MODEL = os.environ.get("SSMTA_TRANSLATOR_MODEL", "haiku")
 MAX_TURNS = int(os.environ.get("SSMTA_TRANSLATOR_MAX_TURNS", "150"))
 TIMEOUT_S = float(os.environ.get("SSMTA_TRANSLATOR_TIMEOUT", "15"))
 MAX_TEXT = 400
+GOOGLE_KEY = os.environ.get("SSMTA_GOOGLE_TRANSLATE_KEY", "")
+GOOGLE_URL = "https://translation.googleapis.com/language/translate/v2"
+CLAUDE_PAUSE_S = 60
+CLAUDE_PAUSE_LIMIT_S = 900
+LIMIT_WORDS = ("limit", "quota", "usage", "rate", "overloaded", "credit")
 
 # the game's language codes (auth's list) and what they mean
 LANGUAGES = {
@@ -161,6 +173,47 @@ class _reader:
 
 session = Session()
 lock = threading.Lock()
+claude_paused_until = 0.0
+
+# the game's codes to Google's (Google's "pt" is Brazilian); and Google's detected source back to a game code
+GOOGLE_TARGETS = {"en": "en", "es": "es", "fr": "fr", "pt": "pt-PT", "ptbr": "pt", "ru": "ru", "ro": "ro",
+                  "id": "id", "bhs": "hr", "cs": "cs"}
+GOOGLE_SOURCES = {"pt": "pt", "bs": "bhs", "hr": "bhs", "sr": "bhs"}
+
+
+def same_language(source, code):
+    """A line detected as `source` (game code or ISO) needs no translation for readers of game code `code`."""
+    if code in ("pt", "ptbr"):
+        return source in ("pt", "ptbr")
+    return source == code
+
+
+_getaddrinfo = socket.getaddrinfo
+
+
+def _ipv4_only(host, *args, **kwargs):
+    # this box has no IPv6 route out; trying AAAA first stalls every call for seconds
+    return [a for a in _getaddrinfo(host, *args, **kwargs) if a[0] == socket.AF_INET]
+
+
+socket.getaddrinfo = _ipv4_only
+
+
+def google_translate(text, targets):
+    if not GOOGLE_KEY:
+        raise RuntimeError("no Google key")
+    out, source = {}, "?"
+    for code in targets:
+        body = urllib.parse.urlencode({"q": text, "target": GOOGLE_TARGETS[code], "format": "text"}).encode()
+        req = urllib.request.Request(GOOGLE_URL + "?key=" + GOOGLE_KEY, data=body, method="POST")
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            t = json.loads(resp.read())["data"]["translations"][0]
+        detected = str(t.get("detectedSourceLanguage") or "?").lower()
+        source = GOOGLE_SOURCES.get(detected, detected)
+        if same_language(source, code):
+            continue
+        out[code] = t["translatedText"].replace("&#39;", "'").replace("&quot;", '"').replace("&amp;", "&")
+    return {"source": source, "t": out, "via": "google"}
 
 
 def parse_reply(raw):
@@ -180,17 +233,23 @@ def translate(req):
     speaker = str(req.get("speaker") or "?")[:40]
     mode = str(req.get("mode") or "chat")[:12]
     prompt = f"[{mode}] {speaker}: {text}\ntargets: {', '.join(targets)}"
+    global claude_paused_until
     with lock:
         started = time.time()
-        try:
-            raw = session.ask(prompt)
-        except Exception as e:
-            log("ask failed:", e)
-            session.stop()
-            raise
-        out = parse_reply(raw)
-        out["t"] = {k: v for k, v in out["t"].items() if k in targets}
-        log(f"{time.time() - started:.2f}s", out["source"], "->", ",".join(out["t"]) or "-")
+        if time.time() >= claude_paused_until:
+            try:
+                out = parse_reply(session.ask(prompt))
+                out["t"] = {k: v for k, v in out["t"].items() if k in targets}
+                out["via"] = "claude"
+                log(f"{time.time() - started:.2f}s claude", out["source"], "->", ",".join(out["t"]) or "-")
+                return out
+            except Exception as e:
+                limited = any(w in str(e).lower() for w in LIMIT_WORDS)
+                claude_paused_until = time.time() + (CLAUDE_PAUSE_LIMIT_S if limited else CLAUDE_PAUSE_S)
+                log("claude failed, Google for", CLAUDE_PAUSE_LIMIT_S if limited else CLAUDE_PAUSE_S, "s:", e)
+                session.stop()
+        out = google_translate(text, targets)
+        log(f"{time.time() - started:.2f}s google", out["source"], "->", ",".join(out["t"]) or "-")
         return out
 
 
@@ -208,7 +267,8 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         if self.path == "/health":
-            return self._send(200, {"ok": True, "turns": session.turns})
+            paused = max(0, round(claude_paused_until - time.time()))
+            return self._send(200, {"ok": True, "turns": session.turns, "claude_paused_s": paused})
         self._send(404, {"error": "not found"})
 
     def do_POST(self):

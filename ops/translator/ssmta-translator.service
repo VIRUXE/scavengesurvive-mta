@@ -7,6 +7,8 @@ After=network-online.target
 User=root
 Environment=PATH=/root/.local/bin:/usr/local/bin:/usr/bin:/bin
 Environment=SSMTA_TRANSLATOR_WORKDIR=/var/lib/ssmta-translator
+# SSMTA_GOOGLE_TRANSLATE_KEY (fallback), mode 0600
+EnvironmentFile=-/etc/ssmta-translator.env
 ExecStart=/usr/bin/python3 -I /gta/sa/mta/servers/scavengesurvive/scavengesurvive-mta/ops/translator/server.py
 Restart=always
 RestartSec=5

@@ -9,6 +9,11 @@ Translates game chat for the `chat` resource with Claude Haiku through the Claud
 - One `claude -p` process stays up in stream-json mode, so each chat line is a turn of the same session and Haiku
   sees the recent conversation; it is recycled every 150 lines (`SSMTA_TRANSLATOR_MAX_TURNS`) or on an error or a
   15 s timeout. Requests run one at a time, in order. About 1 s per line.
+- Fallback: when Claude fails (error, timeout, usage limit), the same line goes to Google Cloud Translation v2
+  (project `scavenge-and-survive-reborn`, key restricted to that API and the server's IPv4, in
+  `/etc/ssmta-translator.env` as `SSMTA_GOOGLE_TRANSLATE_KEY`, mode 0600), one call per target and without context.
+  Claude is then skipped for 15 min after a usage-limit error, 1 min after anything else. `GET /health` shows
+  `claude_paused_s`; replies carry `"via": "claude"` or `"google"`. Google calls are forced onto IPv4.
 - `chat/server/main.lua` only calls it when the audience mixes languages (the speaker's, every reader's, plus
   English for global lines, which Discord gets in English).
 
