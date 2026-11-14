@@ -23,7 +23,7 @@ return function(ctx)
     local objects = {} -- id -> { obj | parts, pitched, row, uname, hp, x, y, z, name, fires, plant }
     local lockersOpen = {} -- locker item id -> true while someone has it open (lockerToggled, #143)
     local labelVisibility = {} -- id -> { visible, checkedAt }
-    local reachCache = {} -- id -> { ok, at }: no wall between the player and the item
+    local reachCache = {} -- id -> { ok, at, tool }: no wall between the player and the item
     local itemElements = setmetatable({}, { __mode = "k" }) -- elements world items draw: never a wall
     local paneOf = setmetatable({}, { __mode = "k" }) -- a snack machine's intact pane -> the machine's item id
     local shaders = {} -- tent material key -> shader, or false when its texture could not be read
@@ -334,14 +334,56 @@ return function(ctx)
     local function reachable(id, e)
         local now = getTickCount()
         local cached = reachCache[id]
-        if cached and now - cached.at < REACH_CACHE_MS then
+        local tool = ctx.heldUname and ctx.heldUname() or nil
+        if cached and cached.tool == tool and now - cached.at < REACH_CACHE_MS then
             return cached.ok
         end
         local sx, sy, sz = getElementPosition(localPlayer)
         sz = sz + 0.5
         local own = isElement(e.obj) and e.obj or nil
         local ok = rayClear(sx, sy, sz, e.x, e.y, e.z + 0.15, own) or rayClear(sx, sy, sz, e.x, e.y, e.z + 0.6, own)
-        reachCache[id] = { ok = ok, at = now }
+        -- A mounted panel can be sunk slightly into masonry to cover an opening. Crowbar work reaches its
+        -- surface, up to 20 cm before the stored target; loose-item pickup never gets this allowance.
+        -- The server still checks the tool, inside face, distance and hold before removing a defence.
+        if not ok and e.defence and tool == "Crowbar" then
+            for _, height in ipairs({ 0.15, 0.6 }) do
+                local tx, ty, tz = e.x, e.y, e.z + height
+                local distance = getDistanceBetweenPoints3D(sx, sy, sz, tx, ty, tz)
+                local inset = math.min(0.2 / math.max(distance, 0.001), 1)
+                if rayClear(sx, sy, sz,
+                    tx + (sx - tx) * inset, ty + (sy - ty) * inset, tz + (sz - tz) * inset, own) then
+                    ok = true
+                    break
+                end
+            end
+        end
+        -- Large loose items may have a visible edge even when their origin lies in masonry.
+        -- Sample inside their transformed bounds; every sample still needs an unobstructed ray.
+        local t = itemType(e.uname)
+        if not ok and not e.defence and own and t and (t.size or 0) >= 9 then
+            local ax, ay, az, bx, by, bz = getElementBoundingBox(own)
+            local m = getElementMatrix(own)
+            if ax and m then
+                local samples = {
+                    {0.1, 0.5, 0.5}, {0.9, 0.5, 0.5}, {0.5, 0.1, 0.5},
+                    {0.5, 0.9, 0.5}, {0.5, 0.5, 0.1}, {0.5, 0.5, 0.9},
+                }
+                for _, sample in ipairs(samples) do
+                    local lx = ax + (bx - ax) * sample[1]
+                    local ly = ay + (by - ay) * sample[2]
+                    local lz = az + (bz - az) * sample[3]
+                    local tx = m[4][1] + lx*m[1][1] + ly*m[2][1] + lz*m[3][1]
+                    local ty = m[4][2] + lx*m[1][2] + ly*m[2][2] + lz*m[3][2]
+                    local tz = m[4][3] + lx*m[1][3] + ly*m[2][3] + lz*m[3][3]
+                    if getDistanceBetweenPoints3D(sx, sy, sz, tx, ty, tz) <= 2.5
+                        and rayClear(sx, sy, sz, tx, ty, tz, own) then
+                        ok = true
+                        break
+                    end
+                end
+            end
+        end
+        reachCache[id] = { ok = ok, at = now, tool = tool }
         return ok
     end
 

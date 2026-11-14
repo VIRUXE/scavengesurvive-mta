@@ -931,6 +931,9 @@ return function(ctx)
             local curHeld = state.held[c.player]
             local curUname = curHeld and curHeld.uname
             if not row then
+                if not curHeld and #world.cleanIds(c.blocked) > 0 then
+                    return toast(c.player, "ITEM_WALL_BLOCKED")
+                end
                 if curUname == "Crowbar" then
                     runCrafting("deconstruct", c.player)
                 elseif curUname == "FireLighter" then
@@ -1057,7 +1060,7 @@ return function(ctx)
                 return tryTransferFromWorld(c.player, c.charId, curHeld, curType, row)
             end
             M.pickup(c.player, c.charId, row)
-        end, { player = player, charId = cid, radius = r, targetId = targetId })
+        end, { player = player, charId = cid, radius = r, targetId = targetId, blocked = world.cleanIds(blocked) })
     end, { rate = 5 })
 
     -- a hold of the interact key on a bag or a box lying there (upstream "Hold F to pick up / Press F to open"): the

@@ -35,6 +35,11 @@ local world = loadModule("client/world.lua")(worldCtx)
 loadModule("client/vending.lua")({ world = world, vending = worldCtx.vending })
 local carry = loadModule("shared/logic/carry.lua")
 local attach = loadModule("client/attach.lua")({ models = models, apparel = apparel, carry = carry })
+-- Reach checks distinguish crowbar work on installed panels from loose-item pickup.
+worldCtx.heldUname = function()
+    local _, uname = attach.heldObject(localPlayer)
+    return uname
+end
 local preview = loadModule("client/preview.lua")({ logic = loadModule("shared/logic/preview.lua"), models = models })
 local inventoryCtx = { ammo = ammo, apparel = apparel, clothes = clothes, models = models, preview = preview }
 inventoryCtx.cooking = cooking
