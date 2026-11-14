@@ -483,7 +483,14 @@ addEventHandler("playerJoinAnnounced", root, function(code)
     local name = getPlayerName(source)
     local langName = exports.data:languageName(code)
     for _, recipient in ipairs(getElementsByType("player")) do
-        outputChatBox(lang.formatFor(recipient, logic.JOINED, name, langName), recipient, 255, 255, 255, true)
+        -- the joiner has no session yet, so auth cannot say their language: use the one the event carries
+        local readerLang = recipient == source and code or lang.code(recipient)
+        local template = exports.data:translate(readerLang, logic.JOINED)
+        local ok, line = pcall(string.format, template, name, langName)
+        if not ok then
+            line = string.format(logic.JOINED, name, langName)
+        end
+        outputChatBox(line, recipient, 255, 255, 255, true)
     end
 end)
 
