@@ -43,6 +43,23 @@ python3 -I ops/dashboard/make_tiles.py --source-tiles src/satellite_tiles --out 
 ```
 Checked against the radar (docs/images/map/base.png): roads and coastlines coincide at zero offset.
 
+## Street view
+"Street view" (top right of the map) then a click on the map, or "Street view here" in a loot popup, opens a 3D view at
+eye height built from the game files; the map becomes a minimap with a cone for the camera. Drag to look, W A S D to walk,
+Shift to run, R / F to rise or sink, click a spot to go there, click a loot pillar for its details, Esc to close. Live
+players are capsules with their names. `#sv=x,y,heading` in the URL opens a view directly. three.js r160 is vendored in
+`web/vendor/three/` (no CDN).
+
+`web/streetview.js` reads static files baked by `tools/streetview_bake.py` from the game install (plain Python with
+DragonFF's gtaLib, no Blender; about 2 minutes for the models and longer for the textures on nasa):
+```
+python3 -m tools.streetview_bake --gta "/gta/sa/gamefiles/GTA San Andreas"      # -> /var/www/nasa/ssmta/streetview
+python3 -m tools.streetview_bake --gta "..." --cells-only                         # after a maps/data change
+```
+nginx serves it under `/ssmta/streetview/` (same LAN allow list, `alias /var/www/nasa/ssmta/streetview/`, gzip for
+`.json` and `.bin`). Models and textures already on disk are kept, so delete the folder for a full rebake. Not drawn:
+interiors, night-only objects, the house-shell swaps, and the 6 map objects with no known model.
+
 ## Player traces
 Live trails and recorded sessions use cyan for on foot, yellow for driving, lime for riding (bikes, motorbikes,
 quads and passengers), and pink for flying (all aircraft occupants). Lines have a dark outline, stay above loot

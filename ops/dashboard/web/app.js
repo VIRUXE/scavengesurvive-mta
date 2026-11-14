@@ -332,7 +332,9 @@ function showSpawn(id, latlng) {
     if (d.takenCount) box.append(el("p", { className: "note", textContent: `${d.takenCount} more taken from here and still around.` }));
     const history = el("button", { type: "button", className: "btn", textContent: "View loot timeline" });
     history.addEventListener("click", () => { map.closePopup(); lootHistory.open(id); });
-    box.append(history);
+    const street = el("button", { type: "button", className: "btn", textContent: "Street view here" });
+    street.addEventListener("click", () => { map.closePopup(); window.streetView?.open(Number(d.x), Number(d.y), { z: Number(d.z) }); });
+    box.append(el("div", { className: "popup-actions" }, history, street));
     popup.setContent(box);
   }).catch((e) => popup.setContent("Could not load: " + e.message));
 }
@@ -472,3 +474,32 @@ $("railToggle").addEventListener("click", () => {
   const open = document.body.classList.toggle("rail-open");
   $("railToggle").setAttribute("aria-expanded", String(open));
 });
+
+/* ---------- street view (streetview.js) ---------- */
+
+let svPick = false;
+const SvControl = L.Control.extend({
+  onAdd() {
+    const b = L.DomUtil.create("button", "btn sv-toggle");
+    b.type = "button";
+    b.textContent = "Street view";
+    b.title = "Then click a spot on the map";
+    b.setAttribute("aria-pressed", "false");
+    L.DomEvent.disableClickPropagation(b);
+    b.addEventListener("click", () => setSvPick(!svPick));
+    return b;
+  },
+});
+const svControl = new SvControl({ position: "topright" }).addTo(map);
+function setSvPick(on) {
+  svPick = on;
+  svControl.getContainer().setAttribute("aria-pressed", String(on));
+  map.getContainer().classList.toggle("sv-pick", on);
+}
+map.on("click", (e) => {
+  if (window.streetView?.isOpen()) window.streetView.open(e.latlng.lng, e.latlng.lat);
+  else if (svPick) { setSvPick(false); window.streetView?.open(e.latlng.lng, e.latlng.lat); }
+});
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && svPick) setSvPick(false); });
+
+window.ssmta = { map, ll, getJSON, duration, LOOT_STATES, TRAVEL_MODES, travelMode, live, loot };

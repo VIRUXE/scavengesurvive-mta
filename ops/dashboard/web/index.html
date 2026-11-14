@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Survey map</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
-<link rel="stylesheet" href="style.css?v=travel-traces-1">
+<link rel="stylesheet" href="style.css?v=street-view-1">
 </head>
 <body>
 <header class="bar">
@@ -110,10 +110,23 @@
   </div>
 
   <p id="coords" class="coords" aria-hidden="true"></p>
+
+  <section id="sv" class="sv" hidden aria-label="Street view">
+    <div id="svCanvas" class="sv-canvas"></div>
+    <div class="sv-hud">
+      <button id="svClose" class="btn" type="button">Back to map</button>
+      <label class="field"><span>Go to player</span><select id="svPlayer"><option value="">Choose…</option></select></label>
+      <label class="field"><span>Light</span><input id="svLight" type="range" min="0.8" max="3.5" step="0.05"></label>
+      <p id="svStatus" class="sv-status" role="status" aria-live="polite"></p>
+    </div>
+    <p class="sv-help">Drag to look · W A S D to walk · Shift to run · R / F to rise or sink · click to go there · Esc to close</p>
+    <div id="svCard" class="sv-card popup" hidden></div>
+  </section>
 </main>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
-<script src="app.js?v=terrain-original-restored-1"></script>
+<script src="app.js?v=street-view-1"></script>
 <script src="loot-history.js?v=1"></script>
+<script type="module" src="streetview.js?v=12"></script>
 </body>
 </html>

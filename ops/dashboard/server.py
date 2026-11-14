@@ -256,7 +256,7 @@ def api_sessions(params):
 # looked up per spawn.
 LOOT_SQL = (
     "SELECT s.id, s.x, s.y, s.table_name, s.zone, s.enabled, TIMESTAMPDIFF(SECOND, NOW(), st.next_roll_at), "
-    "COALESCE(o.total, 0), o.lying "
+    "COALESCE(o.total, 0), o.lying, s.z "
     "FROM loot_spawns s LEFT JOIN loot_spawn_state st ON st.spawn_id = s.id "
     "LEFT JOIN (SELECT loot_spawn_id, COUNT(*) AS total, "
     "GROUP_CONCAT(CASE WHEN holder_char_id IS NULL AND container_id IS NULL THEN type_uname END "
@@ -280,7 +280,7 @@ def build_loot():
     for r in query(LOOT_SQL):
         state = loot_state(r[5], r[6], r[7], r[8])
         counts[state] += 1
-        spawns.append([r[0], round(r[1], 1), round(r[2], 1), state, r[3], r[4], r[8] or ""])
+        spawns.append([r[0], round(r[1], 1), round(r[2], 1), state, r[3], r[4], r[8] or "", round(r[9], 1)])  # z last: street view
     indoor = query("SELECT COUNT(*) FROM loot_spawns WHERE interior <> 0 OR dimension <> 0")[0][0]
     return {
         "states": STATE_NAMES,
