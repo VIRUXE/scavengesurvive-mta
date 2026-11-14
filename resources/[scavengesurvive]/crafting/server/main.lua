@@ -156,14 +156,15 @@ net.handler("combineRequested", function(player, invItemId)
     if not held then
         return toast(player, "NOT_HELD")
     end
-    local openId = exports.items:getOpenContainerId(player) or -1
-    -- only an item in the character's own inventory or worn bag: item_destroy cannot consume one from a trunk, box
-    -- or crate (the result was made and the item stayed), and a stale list or forged id must not reach anyone else's
+    local openId = exports.items:getOpenContainerId(player, true) or -1
+    -- an item in the character's own inventory or worn bag, or in the trunk, box or crate open in reach (upstream
+    -- combined in any container dialog; craft_combine checks the same reach), never a snack machine's or a machine's;
+    -- a stale list or forged id must not reach anyone else's
     db.one(
         "SELECT i.id, i.type_uname AS uname, i.container_id, i.data FROM items i "
             .. "JOIN containers c ON c.id = i.container_id LEFT JOIN items owner ON owner.id = c.owner_item_id "
-            .. "WHERE i.id = ? AND (c.owner_char_id = ? OR owner.holder_char_id = ?)",
-        { invItemId, cid, cid },
+            .. "WHERE i.id = ? AND (c.owner_char_id = ? OR owner.holder_char_id = ? OR c.id = ?)",
+        { invItemId, cid, cid, openId },
         function(row, c)
             if not isElement(c.player) or not row then
                 return
@@ -732,6 +733,31 @@ function workbenchCraft(player)
     tryWorkbenchCraft(player, cid, held, px, py)
     return true
 end
+
+-- /recipes asks what the character carries (hands and worn slots, inventory, worn bag) for its "you need" list:
+-- { uname = count }
+local CARRIED = "SELECT uname, COUNT(*) AS n FROM ("
+    .. "SELECT type_uname AS uname FROM items WHERE holder_char_id = ? "
+    .. "UNION ALL SELECT i.type_uname FROM containers c JOIN items i ON i.container_id = c.id "
+    .. "WHERE c.owner_char_id = ? "
+    .. "UNION ALL SELECT i.type_uname FROM items o JOIN containers c ON c.owner_item_id = o.id "
+    .. "JOIN items i ON i.container_id = c.id WHERE o.holder_char_id = ?) t GROUP BY uname"
+net.handler("recipeCarriedRequested", function(player)
+    local cid = charId(player)
+    if not cid then
+        return
+    end
+    db.query(CARRIED, { cid, cid, cid }, function(rows, c)
+        if not isElement(c.player) or not rows then
+            return
+        end
+        local counts = {}
+        for _, r in ipairs(rows) do
+            counts[r.uname] = tonumber(r.n) or 0
+        end
+        triggerClientEvent(c.player, "recipeCarriedSent", c.player, counts)
+    end, { player = player })
+end, { rate = 2 })
 
 -- items' interact key: a tool of a ground recipe in hand builds from the items on the ground (#116)
 local GROUND_TOOLS = craft.groundTools()

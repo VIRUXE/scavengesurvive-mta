@@ -26,19 +26,35 @@ local function addRecipe(r)
     M.byName[r.name] = r
 end
 
--- 1. Items created by hand: { result, consumed, kept }
+-- lang:begin
+local NOTES = { lockCut = "Makes the lock cut, ready to lock a bike or other doorless vehicle." }
+-- the numbered steps the /recipes window shows (M.steps)
+local STEPS = {
+    combine = "Equip the %s, then choose Combine on the %s in your inventory.",
+    hold = "Hold the %s.",
+    drop = "Drop the items above on the ground, close together.",
+    holdF = "Stand next to them and hold [F] for about %d seconds.",
+    findBench = "Find a Workbench, or build one (see Construction).",
+    fillBench = "Put only the items above in the Workbench.",
+    benchF = "Stand at the Workbench and hold [F] for about %d seconds.",
+}
+-- lang:end
+
+-- 1. Items created by hand: { result, consumed, kept, data = result data, note = text for the recipe page }
 local COMBINE = {
     { "ParaBag", { Parachute = 1 }, { Knife = 1 } },
     { "MolotovEmpty", { Bottle = 1, Bandage = 1 } },
     { "Bandage", { Clothes = 1 }, { Knife = 1 } },
-    -- upstream locksmith.pwn OnPlayerCrafted: the kit cuts the lock (array data cell 0 = 1), here data.cut
-    { "WheelLock", { WheelLock = 1, LocksmithKit = 1 }, data = { cut = 1 } },
+    -- upstream locksmith.pwn OnPlayerCrafted: the kit cuts the lock (array data cell 0 = 1), here data.cut. Upstream
+    -- tested that cell the wrong way round on a vehicle, so its recipe broke the lock; the port reads cut = usable
+    { "WheelLock", { WheelLock = 1, LocksmithKit = 1 }, data = { cut = 1 }, note = NOTES.lockCut },
     -- upstream's Bottle + Bottle keeps both and makes a third: the liquid merge it stood for is commented out in
     -- liquid-container.pwn, so all it does there is duplicate bottles; not ported
 }
 for _, c in ipairs(COMBINE) do
     local r = { name = c[1], kind = "combine", ingredients = ingredientRows(c[2], c[3]) }
     r.result = { uname = c[1], count = 1, data = c.data }
+    r.note = c.note
     addRecipe(r)
 end
 
@@ -144,6 +160,45 @@ function M.matchCombine(unameA, unameB)
                 return { recipe = r, consumeA = not i2.keep, consumeB = not i1.keep }
             end
         end
+    end
+    return nil
+end
+
+-- which ingredient of a two-item combine goes in the hand and which is picked in the inventory: the kept tool is
+-- held, else the first by name; the server matches either way round
+function M.combineOrder(r)
+    local a, b = r.ingredients[1], r.ingredients[2]
+    if b and b.keep and not a.keep then
+        return b.uname, a.uname
+    end
+    return a.uname, b and b.uname
+end
+
+-- How to make a recipe, as numbered steps: { { fmt = English format, args = { { item = uname } | number, ... } } }.
+-- nil for a recipe that brings its own text (the items resource's machines, cooking and gathering: r.instructions).
+function M.steps(r)
+    local function item(uname)
+        return { item = uname }
+    end
+    local function seconds(ms)
+        return math.max(1, math.floor(ms / 1000 + 0.5))
+    end
+    if r.kind == "combine" and #r.ingredients == 2 then
+        local held, other = M.combineOrder(r)
+        return { { fmt = STEPS.combine, args = { item(held), item(other) } } }
+    elseif r.kind == "ground" then
+        return {
+            { fmt = STEPS.drop, args = {} },
+            { fmt = STEPS.hold, args = { item(r.tool) } },
+            { fmt = STEPS.holdF, args = { seconds(r.buildTime) } },
+        }
+    elseif r.kind == "workbench" then
+        return {
+            { fmt = STEPS.findBench, args = {} },
+            { fmt = STEPS.fillBench, args = {} },
+            { fmt = STEPS.hold, args = { item(r.tool) } },
+            { fmt = STEPS.benchF, args = { seconds(M.workbenchTime(r)) } },
+        }
     end
     return nil
 end

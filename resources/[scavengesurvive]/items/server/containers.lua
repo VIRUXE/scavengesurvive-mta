@@ -119,9 +119,11 @@ return function(ctx)
         return M.openContainerId(player) and activeContainer[player] or nil
     end
 
-    function M.openContainerId(player)
+    -- plain: nil for a snack machine (take-only) or a machine's container, where only a take or the machine's own
+    -- items belong (a combine there would drop its result in)
+    function M.openContainerId(player, plain)
         local cont = activeContainer[player]
-        if not cont then
+        if not cont or (plain and (cont.takeOnly or cont.machine)) then
             return nil
         end
         if not inReach(player, cont) then
@@ -491,6 +493,7 @@ return function(ctx)
                 payload.trunkContainerId = side.containerId
                 payload.containerWorldItemId = not side.carryable and not side.takeOnly and side.worldItemId or false
                 payload.takeOnly = side.takeOnly or nil
+                payload.machine = side.machine and true or nil -- no Combine in a machine's container
                 -- a bag or box lying on the ground: a hold of the interact key picks it up (the tutorial's tip)
                 payload.carryable = side.carryable and side.worldItemId and true or nil
             end

@@ -99,16 +99,15 @@ local OWNED_SQL = "SELECT i.type_uname AS uname, i.data, i.container_id FROM ite
     .. "WHERE i.id = ? AND (i.holder_char_id = ? OR c.owner_char_id = ? OR owner.holder_char_id = ? "
     .. "OR i.container_id = ?)"
 
-local world =
-    loadFile("server/world.lua")({
-        db = db,
-        net = net,
-        log = log,
-        state = state,
-        geometry = geometry,
-        diff = diff,
-        charId = charId,
-    })
+local world = loadFile("server/world.lua")({
+    db = db,
+    net = net,
+    log = log,
+    state = state,
+    geometry = geometry,
+    diff = diff,
+    charId = charId,
+})
 
 -- Deletes an item the player owns (held, in their inventory or worn bag). cb(ok) runs only while the player exists.
 -- reason is the item.destroyed log reason (used, broken, ...); by names the calling resource of an export.
@@ -778,8 +777,9 @@ function containerChanged(containerId)
 end
 
 -- export: the side container the player has open and still in reach (trunk, box, tent, crate), or false
-function getOpenContainerId(player)
-    return isElement(player) and containers.openContainerId(player) or false
+-- plain: false for a take-only snack machine or a machine's container (crafting's combine)
+function getOpenContainerId(player, plain)
+    return isElement(player) and containers.openContainerId(player, plain) or false
 end
 
 -- export: the container is about to go (a supply crate replaced by the next drop): closes it for whoever has it open

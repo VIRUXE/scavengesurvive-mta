@@ -46,6 +46,8 @@ return {
     craftHoldStarted = true,
     craftHoldStopped = true,
     craftHoldCancelRequested = true,
+    recipeCarriedRequested = true,
+    recipeCarriedSent = true,
     buildingInteractRequested = true,
     keypadSubmitted = true,
     keypadInstallRequested = true,

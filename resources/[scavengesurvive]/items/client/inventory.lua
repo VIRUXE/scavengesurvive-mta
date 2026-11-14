@@ -349,7 +349,7 @@ return function(ctx)
     end
 
     -- "[%02d]%s": the type size then the name, one "<Empty>" per free slot
-    -- side: the side container (trunk, box, crate): Combine only works on the player's own inventory and bag
+    -- side: the side container is take-only (a snack machine) or a machine's, where Combine is not offered
     local function rowsFor(list, cap, moveActions, emptyAction, side)
         local rows = {}
         for _, it in ipairs(list or {}) do
@@ -416,7 +416,7 @@ return function(ctx)
                     and not p.takeOnly
                     and { id = "put_held:trunk", label = lang.format("Store in %s", tname) }
                 or nil
-            rows = rowsFor(p.trunk, p.capacity.trunk, moveActions, emptyAction, true)
+            rows = rowsFor(p.trunk, p.capacity.trunk, moveActions, emptyAction, p.takeOnly or p.machine)
             rows[#rows + 1] = { id = "nav:inventory", label = lang.text("My Inventory") .. " >" }
             if p.bag then
                 rows[#rows + 1] = { id = "nav:bag", label = bname .. " >" }

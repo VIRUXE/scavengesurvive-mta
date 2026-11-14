@@ -5,7 +5,7 @@ Combining makes a new item out of two items you carry, without a tool bench. It 
 ## How to combine
 
 1. Hold one of the two items in your hands.
-2. Open the inventory (`H`) and open the options of the other item.
+2. Open the inventory (`H`), your bag, or a trunk, box or crate you have open, and open the options of the other item. Each recipe's page in `/recipes` says which item to hold.
 3. Choose **Combine**. If the pair is a recipe, the result is made at once; if not, you are told there is no recipe.
 
 A recipe takes exactly two items. Ingredients marked *kept* stay with you; the others are used up. When the held item is used up, the result ends up in your hands; when it is kept, the result goes into the container the other item was in.
