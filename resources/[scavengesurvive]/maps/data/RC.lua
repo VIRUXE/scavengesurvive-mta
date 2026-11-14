@@ -4898,6 +4898,7 @@ return {
         { 3283, 302.4297, 44.0547, 2.2266, 0.25 },
         { 12853, 666.711, -565.133, 17.3359, 250.0 },
         { 12854, 666.492, -571.18, 17.3125, 250.0 },
+        { 13245, 666.711, -565.133, 17.3359, 0.25 },
     },
     -- upstream SetObjectMaterial(Text) on objects[object]; MTA has no equivalent, kept for the record
     materials = {
