@@ -48,9 +48,9 @@ function translate.sourceTag(source)
     return tostring(source or "?"):lower()
 end
 
--- The translated text as it goes into the chat line (same mode prefix and name as the original): grey.
+-- The translated text as it goes into the chat line (same mode prefix and name as the original): off-white.
 function translate.line(text)
-    return "#B4B4B4" .. text
+    return "#E6E6E6" .. text
 end
 
 local function urlencode(s)
