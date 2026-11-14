@@ -335,7 +335,8 @@ class Shell:
             else:
                 c = z0 + f * (z1 - z0)
                 b0, b1 = (z0, z0 + bar) if f == 0 else (z1 - bar, z1) if f == 1 else (c - bar / 2, c + bar / 2)
-                lo, hi = _point(o.axis, d0 - 0.03, u0, b0), _point(o.axis, d0 + 0.03, u1, b1)
+                # a little shallower than the uprights, so the faces where they cross do not z-fight
+                lo, hi = _point(o.axis, d0 - 0.025, u0, b0), _point(o.axis, d0 + 0.025, u1, b1)
             self.box([min(lo[i], hi[i]) for i in range(3)], [max(lo[i], hi[i]) for i in range(3)], alu, light="out")
 
     def _sill(self, o):
