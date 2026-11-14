@@ -8,6 +8,7 @@
 -- luacheck: read_globals guiLabelSetHorizontalAlign
 local WIN_W, WIN_H = 340, 360
 local win
+local CANCEL_KEY = "escape"
 
 local function close()
     if not win then
@@ -32,11 +33,12 @@ local function choose()
     if not code then
         return
     end
+    local changing = win.changing
     close()
-    triggerServerEvent("authLanguageChosen", localPlayer, code)
+    triggerServerEvent(changing and "authLanguageChanged" or "authLanguageChosen", localPlayer, code)
 end
 
-addEventHandler("authLanguageOffered", root, function(codes)
+addEventHandler("authLanguageOffered", root, function(codes, current)
     close()
     local sw, sh = guiGetScreenSize()
     local window = guiCreateWindow((sw - WIN_W) / 2, (sh - WIN_H) / 2, WIN_W, WIN_H, "Language", false)
@@ -46,22 +48,35 @@ addEventHandler("authLanguageOffered", root, function(codes)
     local grid = guiCreateGridList(10, 54, WIN_W - 20, WIN_H - 112, false, window)
     guiGridListSetSortingEnabled(grid, false)
     guiGridListAddColumn(grid, "Language", 0.9)
-    for _, code in ipairs(codes) do
+    local selected = 0
+    for i, code in ipairs(codes) do
+        if code == current then
+            selected = i - 1
+        end
         local row = guiGridListAddRow(grid)
         guiGridListSetItemText(grid, row, 1, exports.data:languageName(code), false, false)
         guiGridListSetItemData(grid, row, 1, code)
     end
-    guiGridListSetSelectedItem(grid, 0, 1)
-    local button = guiCreateButton((WIN_W - 120) / 2, WIN_H - 42, 120, 28, "Continue", false, window)
+    guiGridListSetSelectedItem(grid, selected, 1)
+    local changing = current ~= nil
+    local bx = changing and WIN_W / 2 - 130 or (WIN_W - 120) / 2
+    local button = guiCreateButton(bx, WIN_H - 42, 120, 28, "Continue", false, window)
+    local cancel = changing and guiCreateButton(WIN_W / 2 + 10, WIN_H - 42, 120, 28, "Cancel", false, window)
     local function onKey(key, press)
         if press and (key == "enter" or key == "num_enter") then
             cancelEvent()
             choose()
+        elseif press and key == CANCEL_KEY and changing then
+            cancelEvent()
+            close()
         end
     end
-    win = { window = window, grid = grid, inputMode = guiGetInputMode(), onKey = onKey }
+    win = { window = window, grid = grid, inputMode = guiGetInputMode(), onKey = onKey, changing = changing }
     addEventHandler("onClientKey", root, onKey)
     addEventHandler("onClientGUIClick", button, choose, false)
+    if cancel then
+        addEventHandler("onClientGUIClick", cancel, close, false)
+    end
     addEventHandler("onClientGUIDoubleClick", grid, choose, false)
     showCursor(true)
     guiSetInputMode("no_binds")

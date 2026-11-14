@@ -853,7 +853,17 @@ addEventHandler("onPlayerQuit", root, function(reason)
     confirming[source] = nil
 end)
 
--- /lang <code>: the language every resource reads through getLanguage (data's t()); stored on the account.
+-- Stores a language on the account of a logged-in player: what every resource reads through getLanguage (data's t()).
+local function setLanguage(player, account, code, via)
+    account.lang = code
+    account.langChosen = true
+    setElementData(player, LANG_KEY, code, "broadcast", "deny")
+    db.exec("UPDATE accounts SET lang = ? WHERE id = ?", { code, account.id })
+    outputChatBox(" >  " .. lang.formatFor(player, "Language set to %s.", code), player, 255, 255, 0)
+    log.event("session.languageSet", { player = player, account_id = account.id, lang = code, via = via })
+end
+
+-- /lang [code]: a valid code sets it at once; otherwise the language window (CEGUI) opens on the current one.
 addCommandHandler("lang", function(player, _, code)
     if getElementType(player) ~= "player" then
         return
@@ -862,24 +872,20 @@ addCommandHandler("lang", function(player, _, code)
     if not account then
         return outputChatBox(" >  " .. lang.textFor(player, "Log in first."), player, 255, 255, 0)
     end
-    local codes = exports.data:languages()
-    local valid = {}
-    for _, c in ipairs(codes) do
-        valid[c] = true
-    end
     code = type(code) == "string" and code:lower() or nil
-    if not code or not valid[code] then
-        local list = table.concat(codes, ", ")
-        local usage = " >  " .. lang.formatFor(player, "Usage: /lang <%s> (now %s)", list, account.lang)
-        return outputChatBox(usage, player, 255, 255, 0)
+    if code and isLanguage(code) then
+        return setLanguage(player, account, code, "command")
     end
-    account.lang = code
-    account.langChosen = true
-    setElementData(player, LANG_KEY, code, "broadcast", "deny")
-    db.exec("UPDATE accounts SET lang = ? WHERE id = ?", { code, account.id })
-    outputChatBox(" >  " .. lang.formatFor(player, "Language set to %s.", code), player, 255, 255, 0)
-    log.event("session.languageSet", { player = player, account_id = account.id, lang = code, via = "command" })
+    triggerClientEvent(player, "authLanguageOffered", player, exports.data:languages(), account.lang or "en")
 end)
+
+net.handler("authLanguageChanged", function(player, code)
+    local account = session[player]
+    if not account or not isLanguage(code) or code == account.lang then
+        return
+    end
+    setLanguage(player, account, code, "window")
+end, { rate = 2 })
 
 -- /tooltips (upstream commands.pwn): the pickup and vehicle tips (ui's showTip) on or off; stored on the account.
 addCommandHandler("tooltips", function(player)

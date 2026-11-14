@@ -8,6 +8,7 @@ addEvent("loginRequested", true)
 addEvent("registrationRequested", true)
 addEvent("authPromptDismissed", true)
 addEvent("authLanguageChosen", true)
+addEvent("authLanguageChanged", true) -- code: picked in the /lang window by a logged-in player
 addEvent("authEmailSubmitted", true)
 addEvent("authEmailCodeSubmitted", true)
 
