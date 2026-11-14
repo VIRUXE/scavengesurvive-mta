@@ -16,7 +16,6 @@ modelz stays 0.
 from __future__ import annotations
 
 import shutil
-import struct
 import sys
 from pathlib import Path
 
