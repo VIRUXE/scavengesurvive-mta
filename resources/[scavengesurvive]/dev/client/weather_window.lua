@@ -38,7 +38,9 @@ local function close()
     if not win then
         return
     end
-    destroyElement(win.window)
+    if isElement(win.window) then
+        destroyElement(win.window)
+    end
     win = nil
     guiSetInputMode("allow_binds")
     showCursor(false)
@@ -60,8 +62,13 @@ local function send(action)
 end
 
 local function open(st)
-    if win then
+    if win and isElement(win.window) then
         return guiBringToFront(win.grid)
+    end
+    if win then -- the window was destroyed from outside: forget it and make a new one
+        win = nil
+        guiSetInputMode("allow_binds")
+        showCursor(false)
     end
     local sw, sh = guiGetScreenSize()
     local window = guiCreateWindow((sw - W) / 2, (sh - H) / 2, W, H, "Weather", false)
@@ -128,7 +135,7 @@ end
 addEventHandler("devWeatherWindowOpened", root, open)
 
 addEventHandler("devWeatherAnswered", root, function(ok, text, st)
-    if not win then
+    if not win or not isElement(win.window) then
         return
     end
     setResult(text, ok)
