@@ -2303,29 +2303,37 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
     if uname == "Wheel" and not vlogic.isRear(angle) then
         return toast(player, "WHEEL_LAY")
     end
-    if uname == "Wrench" and not vlogic.isFront(angle) and not vlogic.isRear(angle) then
-        if
-            activeActions[player]
-            or bodySrv.busy(vehicle)
-            or inf.locked > 0
-            or getPedOccupiedVehicle(player)
-            or getVehicleEngineState(vehicle)
-        then
-            return
+    if uname == "Wrench" then
+        local function refuse(code, message)
+            log.event("vehicle.wheelRefused", vehicleLine(vehicle, { player = player, ok = false, code = code }))
+            toast(player, message)
+        end
+        if activeActions[player] or bodySrv.busy(vehicle) then
+            return refuse("BUSY", lang.textFor(player, "Finish the current vehicle work first"))
+        end
+        if getPedOccupiedVehicle(player) then
+            return refuse("IN_VEHICLE", lang.textFor(player, "Get out of the vehicle first"))
+        end
+        if vlogic.isFront(angle) or vlogic.isRear(angle) then
+            return refuse("WHEEL_REACH", lang.textFor(player, "Stand beside the wheel with the Tyre Wrench"))
         end
         local lx, ly = toLocal(getElementMatrix(vehicle), px, py, pz)
         local wheel = vlogic.nearestDamagedWheel(lx, ly, { 2, 2, 2, 2 })
         local positions = { { -1, 1 }, { -1, -1 }, { 1, 1 }, { 1, -1 } }
         local pos = positions[wheel]
         if (lx - pos[1]) ^ 2 + (ly - pos[2]) ^ 2 > 2.25 then
-            return
+            return refuse("WHEEL_REACH", lang.textFor(player, "Stand beside the wheel with the Tyre Wrench"))
         end
         local tires = { getVehicleWheelStates(vehicle) }
         local removing = tires[wheel] ~= 2
         if not lugSrv then
-            return
+            return refuse("UNAVAILABLE", lang.textFor(player, "Wheel work is unavailable; try again shortly"))
         end
         lugSrv.begin(player, vehicle, wheel, removing, held, px, py, pz, tires)
+        log.event(
+            "vehicle.wheelStarted",
+            vehicleLine(vehicle, { player = player, wheel = wheel, removing = removing, item_id = held.id })
+        )
         return
     end
 
@@ -3125,14 +3133,6 @@ function getVehicleContainerId(vehicle)
     return i and i.containerId or false
 end
 
-function respawnAll()
-    if rolling then
-        return false
-    end
-    local removed = 0
-    for v in pairs(info) do
-        if isElement(v) then
-            destroyElement(v)
 -- Tops the fleet up to the stored carrying capacity. One-shot: the five-minute refill stays paced.
 -- Returns false when a roll or refill is already running. The count lands in vehicle.filledToCap.
 function fillToCap()
@@ -3167,6 +3167,14 @@ function fillToCap()
     return true
 end
 
+function respawnAll()
+    if rolling then
+        return false
+    end
+    local removed = 0
+    for v in pairs(info) do
+        if isElement(v) then
+            destroyElement(v)
             removed = removed + 1
         end
     end

@@ -17,8 +17,6 @@ return function(ctx)
             or held.id ~= action.heldId
             or held.uname ~= "Wrench"
             or getPedOccupiedVehicle(player)
-            or getVehicleEngineState(vehicle)
-            or info[vehicle].locked > 0
             or getElementDimension(player) ~= getElementDimension(vehicle)
             or getElementInterior(player) ~= getElementInterior(vehicle)
         then
