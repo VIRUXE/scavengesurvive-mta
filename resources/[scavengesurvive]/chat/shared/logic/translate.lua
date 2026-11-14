@@ -48,7 +48,8 @@ function translate.sourceTag(source)
     return tostring(source or "?"):lower()
 end
 
--- The translated text as it goes into the chat line (same mode prefix and name as the original): a soft mint, apart from the mode colours (cyan, white, orange).
+-- The translated text as it goes into the chat line (mode prefix and name as the original): a soft mint,
+-- apart from the mode colours (cyan, white, orange).
 function translate.line(text)
     return "#C8EBD2" .. text
 end
