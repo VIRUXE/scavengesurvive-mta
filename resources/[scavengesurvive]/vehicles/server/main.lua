@@ -692,6 +692,86 @@ local function refillTick()
     end)
 end
 
+-- Restart handoff: stopping the resource destroys every vehicle element and the start rebuilds them from MariaDB,
+-- which would drop drivers on the road with the engine off. The stop leaves each vehicle's live motion and switches
+-- in root element data and each occupant's seat in their own, which outlive the resource; the load puts it all back.
+local HANDOFF_KEY, SEAT_KEY, HANDOFF_TTL_S = "vehicles.handoff", "vehicles.handoffSeat", 120
+
+local function saveHandoff()
+    local list, now = {}, unixNow()
+    for v, i in pairs(info) do
+        if isElement(v) and not i.transient then
+            local x, y, z = getElementPosition(v)
+            local rx, ry, rz = getElementRotation(v)
+            local vx, vy, vz = getElementVelocity(v)
+            local tx, ty, tz = getElementAngularVelocity(v)
+            list[tostring(i.id)] = {
+                pos = { x, y, z, rx, ry, rz },
+                vel = { vx, vy, vz, tx, ty, tz },
+                engine = getVehicleEngineState(v),
+                lights = getVehicleOverrideLights(v),
+                acc = i.acc or false,
+            }
+            for seat, ped in pairs(getVehicleOccupants(v) or {}) do
+                if getElementType(ped) == "player" then
+                    setElementData(ped, SEAT_KEY, { id = i.id, seat = seat, at = now }, false)
+                end
+            end
+        end
+    end
+    setElementData(root, HANDOFF_KEY, { at = now, list = list }, false)
+end
+
+-- Takes the handoff a stop left (nil when there is none or it is stale) and clears it.
+local function takeHandoff()
+    local h = getElementData(root, HANDOFF_KEY)
+    removeElementData(root, HANDOFF_KEY)
+    if type(h) ~= "table" or type(h.list) ~= "table" or unixNow() - (tonumber(h.at) or 0) > HANDOFF_TTL_S then
+        return nil
+    end
+    return h.list
+end
+
+local function applyHandoff(v, s)
+    local p, m = s.pos, s.vel
+    setElementPosition(v, p[1], p[2], p[3])
+    setElementRotation(v, p[4], p[5], p[6])
+    if s.engine then
+        setVehicleEngineState(v, true)
+    end
+    if s.lights then
+        setVehicleOverrideLights(v, s.lights)
+    end
+    if s.acc and info[v] then
+        info[v].acc = true
+        setElementData(v, "vehicles.acc", true, "broadcast", "deny")
+    end
+    return m
+end
+
+-- Seats the players the stop took out of their vehicles, then gives the vehicles back their speed.
+local function reseatHandoff(byId, motion)
+    local now = unixNow()
+    for _, player in ipairs(getElementsByType("player")) do
+        local s = getElementData(player, SEAT_KEY)
+        if s ~= nil then
+            removeElementData(player, SEAT_KEY)
+        end
+        local v = type(s) == "table" and now - (tonumber(s.at) or 0) <= HANDOFF_TTL_S and byId[tonumber(s.id)]
+        if v and isElement(v) and not isPedDead(player) and not getPedOccupiedVehicle(player) then
+            setElementDimension(player, getElementDimension(v))
+            setElementInterior(player, getElementInterior(v))
+            warpPedIntoVehicle(player, v, s.seat)
+        end
+    end
+    for v, m in pairs(motion) do
+        if isElement(v) then
+            setElementVelocity(v, m[1], m[2], m[3])
+            setElementAngularVelocity(v, m[4], m[5], m[6])
+        end
+    end
+end
+
 local function loadOrRoll()
     -- a tutorial vehicle left by a crash goes first (its trunk and contents cascade)
     db.exec("DELETE FROM vehicles WHERE transient = 1", {})
@@ -704,10 +784,16 @@ local function loadOrRoll()
         end
         local n = 0
         local pendingTrailers = {}
+        local handoff, byId, motion = takeHandoff(), {}, {}
         for _, row in ipairs(rows) do
             local v = create(row)
             if v then
                 n = n + 1
+                local s = handoff and handoff[tostring(row.id)]
+                if s then
+                    byId[tonumber(row.id)] = v
+                    motion[v] = applyHandoff(v, s)
+                end
                 if row.trailer_id and tonumber(row.trailer_id) then
                     pendingTrailers[v] = tonumber(row.trailer_id)
                 end
@@ -722,7 +808,10 @@ local function loadOrRoll()
                 end
             end
         end
-        log.event("vehicle.loaded", { count = n })
+        if handoff then
+            reseatHandoff(byId, motion)
+        end
+        log.event("vehicle.loaded", { count = n, handoff = handoff and true or false })
         triggerEvent("vehiclesSpawned", resourceRoot, n)
     end)
 end
@@ -2872,6 +2961,10 @@ addEventHandler("onResourceStart", resourceRoot, function()
 end)
 
 addEventHandler("onResourceStop", resourceRoot, function()
+    local ok, err = pcall(saveHandoff) -- never in the way of the flush
+    if not ok then
+        util.log("vehicles", "error", "restart handoff failed: %s", tostring(err))
+    end
     flushAll()
 end)
 
