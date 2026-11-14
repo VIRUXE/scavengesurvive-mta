@@ -520,6 +520,7 @@ return {
     Never = "Nikad",
     ["Next you will need a VALID email address: we send a code to it and you cannot play until you confirm it."] = "Zatim će ti trebati VAŽEĆA email adresa: šaljemo kod na nju i ne možeš igrati dok je ne potvrdiš.",
     ["Night Vision"] = "Noćni vid",
+    ["No one nearby saw your message."] = "Niko u blizini nije vidio tvoju poruku.",
     ["No skills yet"] = "Još nema vještina",
     ["No staff yet."] = "Još nema osoblja.",
     ["No welded panel within reach to grind"] = "Nema zavarene ploče na dohvat za brušenje",

@@ -559,6 +559,7 @@ return {
     Never = "Nikdy",
     ["Next you will need a VALID email address: we send a code to it and you cannot play until you confirm it."] = "Dále budeš potřebovat PLATNOU e-mailovou adresu: pošleme na ni kód a dokud ji nepotvrdíš, nemůžeš hrát.",
     ["Night Vision"] = "Noční vidění",
+    ["No one nearby saw your message."] = "Nikdo v okolí tvou zprávu neviděl.",
     ["No skills yet"] = "Zatím žádné dovednosti",
     ["No staff yet."] = "Zatím žádný personál.",
     ["No welded panel within reach to grind"] = "V dosahu není žádný přivařený panel k odbroušení",

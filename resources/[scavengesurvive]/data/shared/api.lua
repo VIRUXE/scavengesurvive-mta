@@ -112,6 +112,7 @@ local LANGUAGE_NAMES = {
     id = "Bahasa Indonesia",
     bhs = "Bosanski / Hrvatski / Srpski",
     cs = "Čeština",
+    lv = "Latviešu",
 }
 
 function Data.languageName(code)
