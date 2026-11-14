@@ -1,0 +1,16 @@
+[Unit]
+Description=Scavenge & Survive chat translator (Claude Haiku via the Claude Code CLI, ops/translator)
+After=network-online.target
+
+[Service]
+# root: the Claude Code login lives in /root/.claude
+User=root
+Environment=PATH=/root/.local/bin:/usr/local/bin:/usr/bin:/bin
+Environment=SSMTA_TRANSLATOR_WORKDIR=/var/lib/ssmta-translator
+ExecStart=/usr/bin/python3 -I /gta/sa/mta/servers/scavengesurvive/scavengesurvive-mta/ops/translator/server.py
+Restart=always
+RestartSec=5
+MemoryMax=600M
+
+[Install]
+WantedBy=multi-user.target

@@ -20,7 +20,6 @@ do
     fileClose(f)
     tr = assert(loadstring(src, "=chat/translate.lua"))()
 end
-local getSetting = get -- MTA's get(); `get` below is this file's state lookup
 
 local ready = false
 local state = {} -- player -> { mode, oldMode, freq, quiet, streak, lastTick, charId, voiceWarned }
@@ -188,18 +187,19 @@ local function logMessage(p, text, mode, freq)
 end
 
 -- ---------------------------------------------------------------------------------------------------------
--- Translation: after a line goes out, every reader whose language differs from the one it was written in gets
--- a grey line under it in their own language (Google Cloud Translation v2, key `*chat.translate_key` in the
--- server's settings.xml; no key, no translation). One call per reader language, cached; each language has its
--- own fetchRemote queue so translations arrive in the order the lines were said.
-local trCache = tr.newCache()
+-- Translation: when a line's audience mixes languages (the speaker's, every reader's, plus English for a global
+-- line, which Discord gets in English), the line goes to the local translator service (ops/translator: one Claude
+-- Haiku session that sees the recent conversation). Each reader whose language it is not written in then gets the
+-- line again, translated, under the original. One call per line for every language; calls queue in order.
 local trPausedUntil = 0
 
-local function showTranslation(res, target, format, readers, rgb)
-    if not res or tr.sameLanguage(res.source, target) then
-        return
-    end
-    local l1, l2 = logic.split(format(tr.line(res.text)))
+local function translationFailed(code)
+    trPausedUntil = getTickCount() + tr.BACKOFF_MS
+    log.event("chat.translationFailed", { ok = false, code = tostring(code) }, "warn")
+end
+
+local function sendLines(line, readers, rgb)
+    local l1, l2 = logic.split(line)
     for _, pl in ipairs(readers) do
         if isElement(pl) then
             outputChatBox(l1, pl, rgb[1], rgb[2], rgb[3], true)
@@ -210,75 +210,73 @@ local function showTranslation(res, target, format, readers, rgb)
     end
 end
 
-local function translationFailed(target, code)
-    trPausedUntil = getTickCount() + tr.BACKOFF_MS
-    log.event("chat.translationFailed", { ok = false, target = target, code = tostring(code) }, "warn")
-end
-
--- relay is called once with the English text for Discord (the original when it is English already, nothing to
--- translate, or the call failed); English is then requested even when no English reader is in the audience.
-local function translateFor(speaker, format, text, players, rgb, relay)
-    local key = getSetting("translate_key")
+-- format(text) builds the chat line around a text (mode prefix and name); relay, for a global line, is called once
+-- with what Discord gets (English, or the original when there is no translation).
+local function translateFor(speaker, modeName, format, text, players, rgb, relay)
     local plain = tr.stripColours(text)
-    if type(key) ~= "string" or key == "" or getTickCount() < trPausedUntil or not tr.worthTranslating(plain) then
+    local byLang, langs = {}, {}
+    if speaker then
+        langs[langOf(speaker)] = true
+    end
+    for _, pl in ipairs(players) do
+        if pl ~= speaker and isElement(pl) then
+            local code = langOf(pl)
+            byLang[code] = byLang[code] or {}
+            table.insert(byLang[code], pl)
+            langs[code] = true
+        end
+    end
+    if relay then
+        langs.en = true
+    end
+    local targets = {}
+    for code in pairs(langs) do
+        targets[#targets + 1] = code
+    end
+    if #targets < 2 or getTickCount() < trPausedUntil or not tr.worthTranslating(plain) then
         if relay then
             relay(text)
         end
         return
     end
-    local byTarget = {}
-    for _, pl in ipairs(players) do
-        if pl ~= speaker and isElement(pl) then
-            local target = tr.TARGETS[langOf(pl)] or "en"
-            byTarget[target] = byTarget[target] or {}
-            table.insert(byTarget[target], pl)
-        end
-    end
-    if relay then
-        byTarget.en = byTarget.en or {}
-    end
-    local function done(target, res)
-        showTranslation(res, target, format, byTarget[target], rgb)
-        if relay and target == "en" then
-            relay(tr.relayText(text, res))
-        end
-    end
-    for target in pairs(byTarget) do
-        local cached = tr.cacheGet(trCache, target, plain)
-        if cached then
-            done(target, cached)
-        else
-            local options = {
-                method = "POST",
-                queueName = "chat-tr-" .. target,
-                connectionAttempts = 1,
-                connectTimeout = 5000,
-                headers = { ["Content-Type"] = "application/x-www-form-urlencoded" },
-                postData = tr.body(plain, target),
-            }
-            local sent = fetchRemote(tr.URL .. "?key=" .. key, options, function(body, info)
-                local status = info and info.statusCode
-                if not (info and info.success) or status ~= 200 then
-                    translationFailed(target, status or "network")
-                    return done(target, nil)
-                end
-                local data = fromJSON("[" .. tostring(body) .. "]")
-                local t = type(data) == "table" and data.data and data.data.translations and data.data.translations[1]
-                if type(t) ~= "table" or type(t.translatedText) ~= "string" then
-                    translationFailed(target, "parse")
-                    return done(target, nil)
-                end
-                local res = {
-                    text = tr.stripColours(tr.decodeEntities(t.translatedText)),
-                    source = t.detectedSourceLanguage,
-                }
-                tr.cachePut(trCache, target, plain, res)
-                done(target, res)
-            end)
-            if not sent then
-                translationFailed(target, "fetchRemote")
-                done(target, nil)
+    table.sort(targets)
+    local request = {
+        speaker = speaker and getPlayerName(speaker) or "Discord",
+        mode = modeName,
+        text = plain,
+        targets = targets,
+    }
+    local options = {
+        method = "POST",
+        queueName = "chat-translate",
+        connectionAttempts = 1,
+        connectTimeout = 3000,
+        headers = { ["Content-Type"] = "application/json" },
+        postData = toJSON(request, true),
+    }
+    local sent = fetchRemote(tr.URL, options, function(body, info)
+        local data = info and info.success and info.statusCode == 200 and fromJSON("[" .. tostring(body) .. "]")
+        if type(data) ~= "table" or type(data.t) ~= "table" then
+            translationFailed(info and info.statusCode or "network")
+            if relay then
+                relay(text)
             end
+            return
+        end
+        for code, readers in pairs(byLang) do
+            local translated = data.t[code]
+            if type(translated) == "string" and translated ~= "" then
+                sendLines(format(tr.line(tr.stripColours(translated))), readers, rgb)
+            end
+        end
+        if relay then
+            relay(tr.relayText(text, data.source, data.t.en))
+        end
+    end)
+    if not sent then
+        translationFailed("fetchRemote")
+        if relay then
+            relay(text)
         end
     end
 end
@@ -316,7 +314,7 @@ local function deliver(p, text, mode)
     local function format(translated)
         return logic.format(mode, name, translated, st.freq, colourHex)
     end
-    translateFor(p, format, text, players, rgb, relay)
+    translateFor(p, mode == "me" and "me" or logic.MODE_NAMES[mode], format, text, players, rgb, relay)
     outputServerLog(string.format("[CHAT] [%s] %s: %s", tag, name, text))
     logMessage(p, text, mode, st.freq)
 end
@@ -652,7 +650,7 @@ function sendGlobalExternal(tag, name, text)
     end
     local players = audience(nil, MODE.GLOBAL)
     send(format(tostring(text)), players, logic.COLOURS[MODE.GLOBAL])
-    translateFor(nil, format, tostring(text), players, logic.COLOURS[MODE.GLOBAL])
+    translateFor(nil, "discord", format, tostring(text), players, logic.COLOURS[MODE.GLOBAL])
     outputServerLog(string.format("[CHAT] [%s] %s: %s", tostring(tag), tostring(name), tostring(text)))
     return true
 end

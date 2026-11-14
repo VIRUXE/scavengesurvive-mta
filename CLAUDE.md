@@ -51,7 +51,7 @@ Scavenge & Survive ported to MTA:SA 1.6 (Lua 5.1) with MariaDB 13.1.1+ (`item_cr
   actions) logs one event with the ids involved; a refused action logs `ok = false` and the `code`. Fields are flat and
   snake_case, nothing per frame or per tick (batches log a count), and never a password, keypad code or token.
   `serial` and `ip` only in `session.*`. `util.log` stays for free-text diagnostics; a fact a dashboard counts gets a kind.
-  Only `logs` (Loki) and `chat` (Google Cloud Translation) call `fetchRemote`.
+  Only `logs` (Loki) and `chat` (the local translator, `ops/translator`) call `fetchRemote`.
 - Staff tooling lives in the `staff` resource (levels from `accounts.admin_level`, every action in `staff_actions`); a
   new privileged command goes through `ctx.command({ name, level, fn })` there, never into `dev`. Bans are MariaDB rows
   enforced by `auth` on join; never `banPlayer`/`addBan`.
