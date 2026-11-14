@@ -20,6 +20,14 @@ do
     lug = assert(loadstring(src, "=vehicles/lugnuts.lua"))()
 end
 
+local wheels
+do
+    local f = fileOpen("shared/logic/wheels.lua", true)
+    local src = fileRead(f, fileGetSize(f))
+    fileClose(f)
+    wheels = assert(loadstring(src, "=vehicles/wheels.lua"))()
+end
+
 local WHEELS = { "wheel_lf_dummy", "wheel_lb_dummy", "wheel_rf_dummy", "wheel_rb_dummy" }
 local CONTROLS =
     { "forwards", "backwards", "left", "right", "jump", "sprint", "crouch", "fire", "aim_weapon", "enter_exit" }
@@ -37,7 +45,7 @@ local CAM_OUT, CAM_UP, CAM_SIDE = 0.6, 0.14, 0.2
 local CAM_FOV = 60
 local CAM_EASE = 450
 local CAM_CLEARANCE = 0.3 -- the camera stays this far above the ground
-local WHEEL_MODEL = 20222 -- the Wheel item's model (prop_models), shown on the bare hub while fitting
+local WHEEL_MODEL = 20222 -- the generic Wheel item's model (prop_models), shown on the bare hub while fitting
 local WHEEL_MODEL_RADIUS = 0.49
 local WHEEL_MODEL_FACE = 0.20 -- its centre plane to the face of its hub, where the nuts seat
 
@@ -173,7 +181,10 @@ local function hubFrame()
     -- on sits with its tyre on the ground.
     local ground = getGroundPosition(wx, wy, wz + 1)
     local lift = ground and math.max(0, ground + session.radius - wz) or 0
-    local offset = session.sign > 0 and WHEEL_MODEL_FACE * session.radius / WHEEL_MODEL_RADIUS or HUB_OFFSET
+    local offset = HUB_OFFSET
+    if session.sign > 0 then
+        offset = (session.modelFace or WHEEL_MODEL_FACE) * session.radius / (session.modelRadius or WHEEL_MODEL_RADIUS)
+    end
     return {
         x = wx + axle[1] * offset,
         y = wy + axle[2] * offset,
@@ -477,7 +488,7 @@ addEventHandler("onClientMinimize", root, function()
     end
 end)
 
-addEventHandler("lugnutsStarted", root, function(count, sign, turn, wheel, title, states)
+addEventHandler("lugnutsStarted", root, function(count, sign, turn, wheel, title, states, wheelModel)
     if source ~= nil and getElementType(source) ~= "vehicle" then
         return
     end
@@ -523,13 +534,24 @@ addEventHandler("lugnutsStarted", root, function(count, sign, turn, wheel, title
         if not models then
             models = loadstring(exports.lib:getModule("models"), "=lib/models.lua")()
         end
-        local id = models.resolve(WHEEL_MODEL)
+        local itemModel = tonumber(wheelModel) or WHEEL_MODEL
+        local id = models.resolve(itemModel)
         local object = id and createObject(id, x, y, z)
         if object then
+            -- the stock styles are measured from the object itself: a face-up disc, so its diameter is in X/Y
+            -- and half its thickness is where the nuts seat; the generic Wheel keeps its tuned constants
+            session.modelRadius, session.modelFace = WHEEL_MODEL_RADIUS, WHEEL_MODEL_FACE
+            if itemModel ~= WHEEL_MODEL then
+                local x1, y1, z1, x2, y2, z2 = getElementBoundingBox(object)
+                if x1 then
+                    session.modelRadius = math.max(x2 - x1, y2 - y1) / 2
+                    session.modelFace = (z2 - z1) / 2
+                end
+            end
             setElementInterior(object, getElementInterior(vehicle))
             setElementDimension(object, getElementDimension(vehicle))
             setElementCollisionsEnabled(object, false)
-            setObjectScale(object, session.radius / WHEEL_MODEL_RADIUS)
+            setObjectScale(object, session.radius / session.modelRadius)
             session.wheelObject = object
         end
     end
@@ -538,12 +560,14 @@ addEventHandler("lugnutsStarted", root, function(count, sign, turn, wheel, title
     -- loose wheels lying beside the vehicle (the one about to go on, or one just taken off) are
     -- right where the camera goes, as is the player
     session.hidden = {}
-    for _, object in pairs(exports.items:worldObjectsOfType("Wheel") or {}) do
-        if isElement(object) and getElementAlpha(object) > 0 then
-            local ox, oy, oz = getElementPosition(object)
-            if getDistanceBetweenPoints3D(x, y, z, ox, oy, oz) < 3 then
-                setElementAlpha(object, 0)
-                session.hidden[#session.hidden + 1] = object
+    for _, uname in ipairs(wheels.UNAMES) do
+        for _, object in pairs(exports.items:worldObjectsOfType(uname) or {}) do
+            if isElement(object) and getElementAlpha(object) > 0 then
+                local ox, oy, oz = getElementPosition(object)
+                if getDistanceBetweenPoints3D(x, y, z, ox, oy, oz) < 3 then
+                    setElementAlpha(object, 0)
+                    session.hidden[#session.hidden + 1] = object
+                end
             end
         end
     end

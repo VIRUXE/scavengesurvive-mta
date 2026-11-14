@@ -15,6 +15,7 @@
     <file src="shared/logic/spawn.lua"/>
     <file src="shared/logic/vehicle.lua"/>
     <file src="shared/logic/lugnuts.lua"/>
+    <file src="shared/logic/wheels.lua"/>
     <file src="server/lugnuts.lua"/>
     <file src="files/lugnut.dff"/>
     <file src="files/lugnut.txd"/>

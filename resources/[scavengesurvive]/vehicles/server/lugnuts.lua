@@ -1,7 +1,8 @@
 -- Server side of threading the lug nuts. The client reports wrench radians; the wheel comes off, or
 -- a wheel laid beside the vehicle goes on, only once every nut has reached the end of its thread.
 return function(ctx)
-    local lug = ctx.lug
+    local lug, wheels = ctx.lug, ctx.wheels
+    local log, vehicleLine = ctx.log, ctx.vehicleLine
     local db, info, activeActions = ctx.db, ctx.info, ctx.activeActions
     local cancel, toast, lang = ctx.cancel, ctx.toast, ctx.lang
     local updateWheelFreeze, snapshot = ctx.updateWheelFreeze, ctx.snapshot
@@ -58,9 +59,9 @@ return function(ctx)
             if not isElement(vehicle) or info[vehicle] ~= inf then
                 return
             end
-            current[wheel] = removing and 2 or 0
+            current[wheel] = removing and 2 or (wheels.isFlat(action.wheelUname) and 1 or 0)
             setVehicleWheelStates(vehicle, unpack(current))
-            if not removing then
+            if not removing and current[wheel] == 0 then
                 triggerClientEvent(root, "vehicleWheelInstalled", vehicle, wheel)
             end
             updateWheelFreeze(vehicle)
@@ -72,34 +73,46 @@ return function(ctx)
         end
 
         if removing then
+            -- a burst tyre comes off as the flat twin of the vehicle's wheel style
+            local model = getElementModel(vehicle)
+            local uname = wheels.itemFor(model, tires[wheel] == 1, getVehicleType(vehicle) == "Automobile")
             db.exec(
-                "INSERT INTO items (type_uname, x, y, z, rz, interior, dimension) VALUES ('Wheel', ?, ?, ?, 0, ?, ?)",
-                { x, y, z - 0.8, getElementInterior(player), getElementDimension(player) },
+                "INSERT INTO items (type_uname, x, y, z, rz, interior, dimension) VALUES (?, ?, ?, ?, 0, ?, ?)",
+                { uname, x, y, z - 0.8, getElementInterior(player), getElementDimension(player) },
                 function(ok, _, _, id)
                     if ok and isElement(vehicle) then
                         fitted()
                         exports.items:resendWorldItem(tonumber(id))
+                        log.event(
+                            "vehicle.wheelRemoved",
+                            vehicleLine(
+                                vehicle,
+                                { player = player, wheel = wheel, item_id = tonumber(id), uname = uname }
+                            )
+                        )
                     end
                 end
             )
         else
-            db.query(
-                "SELECT id FROM items WHERE type_uname = 'Wheel' AND interior = ? AND dimension = ? AND POW(x - ?, 2) + POW(y - ?, 2) + POW(z - ?, 2) < 9 LIMIT 1",
-                { getElementInterior(player), getElementDimension(player), x, y, z },
-                function(rows)
-                    if rows and rows[1] and isElement(vehicle) then
-                        db.exec(
-                            "DELETE FROM items WHERE id = ? AND holder_char_id IS NULL AND container_id IS NULL",
-                            { rows[1].id },
-                            function(ok, _, affected)
-                                if ok and tonumber(affected) == 1 then
-                                    exports.items:forgetWorldItem(tonumber(rows[1].id))
-                                    if isElement(vehicle) then
-                                        fitted()
-                                    end
-                                end
-                            end
-                        )
+            -- the wheel found when the job began is the one that goes on
+            db.exec(
+                "DELETE FROM items WHERE id = ? AND holder_char_id IS NULL AND container_id IS NULL",
+                { action.wheelItemId },
+                function(ok, _, affected)
+                    if ok and tonumber(affected) == 1 then
+                        exports.items:forgetWorldItem(tonumber(action.wheelItemId))
+                        if isElement(vehicle) then
+                            fitted()
+                            log.event(
+                                "vehicle.wheelFitted",
+                                vehicleLine(vehicle, {
+                                    player = isElement(player) and player or nil,
+                                    wheel = wheel,
+                                    item_id = action.wheelItemId,
+                                    uname = action.wheelUname,
+                                })
+                            )
+                        end
                     elseif isElement(player) then
                         toast(player, "WHEEL_LAY")
                     end
@@ -108,7 +121,7 @@ return function(ctx)
         end
     end
 
-    local function begin(player, vehicle, wheel, removing, held, px, py, pz, tires)
+    local function start(player, vehicle, wheel, removing, held, px, py, pz, tires, fit)
         local count = ctx.lugCount(getElementModel(vehicle))
         local states = {}
         for _ = 1, count do
@@ -126,6 +139,8 @@ return function(ctx)
             wheel = wheel,
             removing = removing,
             tires = tires,
+            wheelItemId = fit and fit.id,
+            wheelUname = fit and fit.uname,
             heldId = held.id,
             states = states,
             sign = sign,
@@ -139,7 +154,18 @@ return function(ctx)
         }
         activeActions[player] = action
         setPedAnimation(player, "BOMBER", "BOM_Plant_Loop", -1, true, false, false, false)
-        triggerClientEvent(player, "lugnutsStarted", vehicle, count, sign, turn, wheel, title, states)
+        triggerClientEvent(
+            player,
+            "lugnutsStarted",
+            vehicle,
+            count,
+            sign,
+            turn,
+            wheel,
+            title,
+            states,
+            fit and wheels.modelFor(fit.uname) or nil
+        )
         action.timer = setTimer(function()
             local current = activeActions[player]
             if current ~= action then
@@ -149,6 +175,58 @@ return function(ctx)
                 cancel(player)
             end
         end, 200, 0)
+    end
+
+    -- Taking a wheel off starts at once. Fitting needs a wheel laid within 3 m, the nearest one goes on, and
+    -- the job is refused up front when there is none, so nobody turns every nut for nothing.
+    local function begin(player, vehicle, wheel, removing, held, px, py, pz, tires)
+        if removing then
+            return start(player, vehicle, wheel, removing, held, px, py, pz, tires)
+        end
+        db.query(
+            "SELECT id, type_uname FROM items WHERE type_uname IN ("
+                .. wheels.sqlList()
+                .. ") AND holder_char_id IS NULL AND container_id IS NULL AND interior = ? AND dimension = ?"
+                .. " AND POW(x - ?, 2) + POW(y - ?, 2) + POW(z - ?, 2) < 9"
+                .. " ORDER BY POW(x - ?, 2) + POW(y - ?, 2) + POW(z - ?, 2) LIMIT 1",
+            {
+                getElementInterior(player),
+                getElementDimension(player),
+                px,
+                py,
+                pz,
+                px,
+                py,
+                pz,
+            },
+            function(rows)
+                if not isElement(player) then
+                    return
+                end
+                local row = rows and rows[1]
+                if not row then
+                    return toast(player, "WHEEL_LAY")
+                end
+                -- the player may have moved on, started other work or let go of the Wrench meanwhile
+                local current = isElement(vehicle) and info[vehicle]
+                local heldNow = exports.items:getHeld(player)
+                if not current or activeActions[player] or not heldNow or heldNow.id ~= held.id then
+                    return
+                end
+                start(
+                    player,
+                    vehicle,
+                    wheel,
+                    removing,
+                    held,
+                    px,
+                    py,
+                    pz,
+                    tires,
+                    { id = row.id, uname = row.type_uname }
+                )
+            end
+        )
     end
 
     local net = ctx.net

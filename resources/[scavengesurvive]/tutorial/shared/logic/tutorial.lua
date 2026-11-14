@@ -131,7 +131,8 @@ function M.guide(snap)
             missing = missing or (snap.wheels and snap.wheels[i]) == 2
         end
         if missing then
-            if held == "Wheel" then
+            -- a good wheel of any stock style (WheelSport...), not a flat one and not the WheelLock
+            if held == "Wheel" or (held and held ~= "WheelLock" and held:match("^Wheel%u%l+$")) then
                 return 3, "TYRES_PLACE", "Wheel"
             elseif held == "Wrench" then
                 return 3, "TYRES_FIT", "Wrench"

@@ -39,6 +39,14 @@ do
     vlogic = assert(loadstring(src, "=vehicles/vehicle.lua"))()
 end
 
+local wheels
+do
+    local f = fileOpen("shared/logic/wheels.lua", true)
+    local src = fileRead(f, fileGetSize(f))
+    fileClose(f)
+    wheels = assert(loadstring(src, "=vehicles/wheels.lua"))()
+end
+
 local battery
 do
     local f = fileOpen("shared/logic/battery.lua", true)
@@ -2300,7 +2308,7 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
 
     -- Wheels need a tyre wrench in hand; a replacement wheel is laid beside the vehicle.
     -- (at the rear it falls through to the trunk, Case 3)
-    if uname == "Wheel" and not vlogic.isRear(angle) then
+    if wheels.isWheel(uname) and not vlogic.isRear(angle) then
         return toast(player, "WHEEL_LAY")
     end
     if uname == "Wrench" then
@@ -2647,7 +2655,7 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
         -- the trunk stays open once opened, like the bonnet: empty hands shut an open one (unless someone is still
         -- looking in it), and a carried Wheel only goes into one already open
         local trunkOpen = getVehicleDoorOpenRatio(vehicle, 1) > 0.5
-        if uname == "Wheel" and not trunkOpen then
+        if wheels.isWheel(uname) and not trunkOpen then
             return toast(player, "TRUNK_SHUT")
         end
         if not held and trunkOpen then
@@ -3215,6 +3223,9 @@ do
     fileClose(f)
     lugSrv = assert(loadstring(src, "=vehicles/lugnuts_server.lua"))()({
         lug = rules,
+        wheels = wheels,
+        log = log,
+        vehicleLine = vehicleLine,
         db = db,
         info = info,
         activeActions = activeActions,
