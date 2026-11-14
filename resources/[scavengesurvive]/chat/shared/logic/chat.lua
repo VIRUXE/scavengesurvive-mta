@@ -184,14 +184,11 @@ end
 -- player ids, so "NAME (id) has joined" loses the id.
 chat.COPYRIGHT = 'Scavenge and Survive #33CCFF(Copyright (C) 2016 Barnaby "Southclaws" Keene)'
 
--- The broadcast "has joined" line waits for the player's language (auth's playerJoinAnnounced), see
--- chat.JOINED / chat.joinedLine.
-chat.JOINED = " >  #B8B8B8%s#FFFFFF has joined"
-
--- The broadcast line: the translated "has joined" with the joiner's language, under its own name, after it.
-function chat.joinedLine(joined, langName)
-    return string.format("%s (%s)", joined, langName)
-end
+-- The broadcast "has joined" line waits for the player's language (auth's playerJoinAnnounced): name, then the
+-- language under its own name. A lang template, translated per reader.
+-- lang:begin
+chat.JOINED = " >  #B8B8B8%s#FFFFFF has joined (%s)"
+-- lang:end
 
 -- { text, r, g, b } in send order for the joiner; the MoTD line only when one is set.
 function chat.joinLines(_, motd)

@@ -678,5 +678,6 @@
   "Trailer Key": "Ключ от прицепа",
   "%s Trunk": "Багажник: %s",
   "Vehicle": "Транспорт",
-  " >  #B8B8B8%s#FFFFFF has joined": " >  #B8B8B8%s#FFFFFF присоединился/лась"
+  " >  #B8B8B8%s#FFFFFF has joined": " >  #B8B8B8%s#FFFFFF присоединился/лась",
+  " >  #B8B8B8%s#FFFFFF has joined (%s)": " >  #B8B8B8%s#FFFFFF присоединился/лась (%s)"
 }

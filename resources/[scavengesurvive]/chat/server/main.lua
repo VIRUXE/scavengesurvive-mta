@@ -483,8 +483,7 @@ addEventHandler("playerJoinAnnounced", root, function(code)
     local name = getPlayerName(source)
     local langName = exports.data:languageName(code)
     for _, recipient in ipairs(getElementsByType("player")) do
-        local joined = exports.data:t(langOf(recipient), logic.JOINED, name)
-        outputChatBox(logic.joinedLine(joined, langName), recipient, 255, 255, 255, true)
+        outputChatBox(lang.formatFor(recipient, logic.JOINED, name, langName), recipient, 255, 255, 255, true)
     end
 end)
 

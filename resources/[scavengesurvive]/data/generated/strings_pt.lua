@@ -1,6 +1,7 @@
 -- Derived from Southclaws/ScavengeSurvive (MPL-2.0). See THIRD_PARTY_NOTICES.md
 -- Ported once from upstream by tools/convert, which is retired: edit this file by hand, never regenerate it.
 return {
+    [" >  #B8B8B8%s#FFFFFF has joined (%s)"] = " >  #B8B8B8%s#FFFFFF entrou (%s)",
     ["#008080Please take some time to look at the #33CCFF/rules #008080and #33CCFF/help #008080before diving into the game."] = "#008080Reserva um momento para ler #33CCFF/rules #008080e #33CCFF/help #008080antes de mergulhares no jogo.",
     ["%.1f%% Unconscious"] = "%.1f%% de inconsciência",
     ["%d minutes %d seconds"] = "%d minutos %d segundos",

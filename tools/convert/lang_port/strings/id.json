@@ -678,5 +678,6 @@
   "Trailer Key": "Kunci Trailer",
   "%s Trunk": "Bagasi %s",
   "Vehicle": "Kendaraan",
-  " >  #B8B8B8%s#FFFFFF has joined": " >  #B8B8B8%s#FFFFFF telah bergabung"
+  " >  #B8B8B8%s#FFFFFF has joined": " >  #B8B8B8%s#FFFFFF telah bergabung",
+  " >  #B8B8B8%s#FFFFFF has joined (%s)": " >  #B8B8B8%s#FFFFFF telah bergabung (%s)"
 }

@@ -678,5 +678,6 @@
   "Trailer Key": "Chave de trailer",
   "%s Trunk": "Porta-malas: %s",
   "Vehicle": "Veículo",
-  " >  #B8B8B8%s#FFFFFF has joined": " >  #B8B8B8%s#FFFFFF entrou"
+  " >  #B8B8B8%s#FFFFFF has joined": " >  #B8B8B8%s#FFFFFF entrou",
+  " >  #B8B8B8%s#FFFFFF has joined (%s)": " >  #B8B8B8%s#FFFFFF entrou (%s)"
 }
