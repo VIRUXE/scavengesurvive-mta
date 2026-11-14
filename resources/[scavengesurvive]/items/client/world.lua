@@ -453,11 +453,15 @@ return function(ctx)
     -- turned onto the slope it lies on (ground_nx / ground_ny, set by the death drop and /dropall; false when flat).
     local function orient(obj, r, t)
         -- loose items are walked through; a built defence is a wall (upstream's defence objects collide), and so are a
-        -- Locker, which stands as tall as a player, and the furniture (#148)
+        -- Locker, which stands as tall as a player, the furniture (#148) and any type marked `collides`
         local def = builtDefence(r)
         setElementCollisionsEnabled(
             obj,
-            def ~= nil or r.uname == small.LOCKER.uname or furniture.is(r.uname) or vending.is(r.uname)
+            def ~= nil
+                or (t and t.collides == true)
+                or r.uname == small.LOCKER.uname
+                or furniture.is(r.uname)
+                or vending.is(r.uname)
         )
         if def then
             -- its row already holds the raised z and full heading, data the pose
