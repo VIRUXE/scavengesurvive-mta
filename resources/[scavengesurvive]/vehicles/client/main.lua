@@ -24,6 +24,9 @@ end
 local activeAction = nil
 local lastPos = nil
 local releaseTimer = nil
+local refuelVehicle = nil -- the vehicle being poured into from a Petrol Can, while that hold lasts
+local refuelAsked = nil -- { vehicle, tick } of the last refuel request (tryRefuel), until its hold starts
+local REFUEL_ASK_WINDOW_MS = 1500
 
 -- A hold-action that one press of the interact key started goes on only while that key stays down: letting go cancels
 -- it, so a long job (taking a defence down, pouring petrol) can be stopped half done. An action that did not come
@@ -64,12 +67,20 @@ local function cancelAction()
     end
     activeAction = nil
     lastPos = nil
+    refuelVehicle = nil
     exports.ui:progressCancel()
     triggerServerEvent("holdActionCancelRequested", localPlayer)
 end
 
 addEventHandler("vehicleHoldStarted", root, function(actionType, durationMs)
     activeAction = actionType
+    -- the hold a refuel request just started pours only while the player stays at the cap (onClientRender below)
+    refuelVehicle = refuelAsked
+            and getTickCount() - refuelAsked.tick <= REFUEL_ASK_WINDOW_MS
+            and isElement(refuelAsked.vehicle)
+            and refuelAsked.vehicle
+        or nil
+    refuelAsked = nil
     local x, y, z = getElementPosition(localPlayer)
     lastPos = { x = x, y = y, z = z }
     exports.ui:progressStart(actionType, durationMs)
@@ -93,6 +104,7 @@ addEventHandler("vehicleHoldStopped", root, function()
     stopReleaseWatch()
     activeAction = nil
     lastPos = nil
+    refuelVehicle = nil
     exports.ui:progressCancel()
 end)
 
@@ -100,19 +112,104 @@ end)
 -- explicit visibility flag. Re-enable the matching dummy after fitting so a previously hidden wheel renders.
 local WHEEL_COMPONENTS = { "wheel_lf_dummy", "wheel_lb_dummy", "wheel_rf_dummy", "wheel_rb_dummy" }
 addEventHandler("vehicleWheelInstalled", root, function(wheel)
-    if not isElement(source) or getElementType(source) ~= "vehicle" then return end
+    if not isElement(source) or getElementType(source) ~= "vehicle" then
+        return
+    end
     local component = WHEEL_COMPONENTS[tonumber(wheel)]
     if component then
         setVehicleComponentVisible(source, component, true)
     end
 end)
 
--- Cancel if the player moves or dies while performing a hold-action
+-- The fuel cap: refuelling happens only standing at it, facing it and looking at it (vlogic.atFuelCap/lookingAt).
+-- Its position is the model's gas_cap dummy; a model without one gets a spot on the left flank behind the middle.
+local capOffsets = {} -- model -> { x, y, z } in the vehicle's frame
+
+local function fuelCapOffset(vehicle)
+    local model = getElementModel(vehicle)
+    local off = capOffsets[model]
+    if not off then
+        local x, y, z = getVehicleModelDummyPosition(model, "gas_cap")
+        if x and (x ~= 0 or y ~= 0 or z ~= 0) then
+            off = { x, y, z }
+        else
+            local minX, minY = getElementBoundingBox(vehicle)
+            off = { minX or -1.0, (minY or -2.0) * 0.5, 0.0 }
+        end
+        capOffsets[model] = off
+    end
+    return off
+end
+
+-- The cap of vehicle in world coordinates, and its offset in the vehicle's frame.
+local function fuelCapWorld(vehicle)
+    local off = fuelCapOffset(vehicle)
+    local cx, cy, cz = vlogic.toWorld(getElementMatrix(vehicle), off[1], off[2], off[3])
+    return cx, cy, cz, off
+end
+
+-- The local player stands at vehicle's fuel cap, faces it and looks at it (hold: the looser limits while pouring).
+local function aimsAtFuelCap(vehicle, hold)
+    if not isElement(vehicle) or getPedOccupiedVehicle(localPlayer) or isPedDead(localPlayer) then
+        return false
+    end
+    local cx, cy, cz, off = fuelCapWorld(vehicle)
+    local px, py, pz = getElementPosition(localPlayer)
+    local _, _, prz = getElementRotation(localPlayer)
+    local reach = hold and vlogic.FUEL_CAP_HOLD_REACH or vlogic.FUEL_CAP_REACH
+    local face = hold and vlogic.FUEL_CAP_HOLD_FACE_DEG or vlogic.FUEL_CAP_FACE_DEG
+    if not vlogic.atFuelCap(px, py, pz, prz, cx, cy, cz, reach, face) then
+        return false
+    end
+    local camX, camY, camZ, lookX, lookY, lookZ = getCameraMatrix()
+    local look = hold and vlogic.FUEL_CAP_HOLD_LOOK_DEG or vlogic.FUEL_CAP_LOOK_DEG
+    if not vlogic.lookingAt(camX, camY, camZ, lookX, lookY, lookZ, cx, cy, cz, look) then
+        return false
+    end
+    return off
+end
+
+-- export: the vehicle whose fuel cap the local player stands at, faces and looks at, or false (the HUD's F line and
+-- the interact key with a Petrol Can in hand)
+function nearbyFuelCap()
+    if getPedOccupiedVehicle(localPlayer) then
+        return false
+    end
+    local px, py, pz = getElementPosition(localPlayer)
+    for _, v in ipairs(getElementsByType("vehicle", root, true)) do
+        local vx, vy, vz = getElementPosition(v)
+        if
+            getDistanceBetweenPoints3D(px, py, pz, vx, vy, vz) < 9
+            and getElementDimension(v) == getElementDimension(localPlayer)
+            and aimsAtFuelCap(v, false)
+        then
+            return v
+        end
+    end
+    return false
+end
+
+-- export: the interact key with a Petrol Can in hand: at a fuel cap it asks to pour; true when it asked
+function tryRefuel()
+    local v = nearbyFuelCap()
+    if not v then
+        return false
+    end
+    local off = fuelCapOffset(v)
+    refuelAsked = { vehicle = v, tick = getTickCount() }
+    triggerServerEvent("vehicleInteractRequested", localPlayer, v, off[1], off[2], off[3])
+    return true
+end
+
+-- Cancel if the player moves or dies while performing a hold-action, or turns or looks away from the fuel cap
 addEventHandler("onClientRender", root, function()
     if not activeAction or not lastPos then
         return
     end
     if isPedDead(localPlayer) then
+        return cancelAction()
+    end
+    if refuelVehicle and not aimsAtFuelCap(refuelVehicle, true) then
         return cancelAction()
     end
     local x, y, z = getElementPosition(localPlayer)
@@ -162,7 +259,8 @@ function nearbyTrailerDoor()
     local px, py, pz = getElementPosition(localPlayer)
     for _, v in ipairs(getElementsByType("vehicle", root, true)) do
         if hasWalkInDoor(v) then
-            local component = vlogic.CABIN_DOOR_MODELS[getElementModel(v)] and vlogic.CABIN_DOOR_COMPONENT or "door_lf_dummy"
+            local component = vlogic.CABIN_DOOR_MODELS[getElementModel(v)] and vlogic.CABIN_DOOR_COMPONENT
+                or "door_lf_dummy"
             local hx, hy, hz = getVehicleComponentPosition(v, component, "world")
             local d = hx and getDistanceBetweenPoints3D(px, py, pz, hx, hy, hz)
             if d and d < vlogic.DOOR_REACH then
@@ -383,8 +481,15 @@ addEventHandler("onClientRender", root, function()
             if d2 < 60 * 60 then
                 local sx, sy = getScreenFromWorldPosition(s.x, s.y, s.z + 3.3, 0.06)
                 if sx then
-                    local head = string.format("#%d  %s  [%s%s]  fleet %s/%s", s.id, s.what, s.cats or "",
-                        (s.sizes or "") ~= "" and (" " .. s.sizes) or "", tostring(vAlive or "?"), tostring(vCap or "?"))
+                    local head = string.format(
+                        "#%d  %s  [%s%s]  fleet %s/%s",
+                        s.id,
+                        s.what,
+                        s.cats or "",
+                        (s.sizes or "") ~= "" and (" " .. s.sizes) or "",
+                        tostring(vAlive or "?"),
+                        tostring(vCap or "?")
+                    )
                     vOutlined(head, sx, sy, { 255, 255, 255 }, 0.9)
                     local line = vStateText(s)
                     if (s.driven or 0) > 0 then
@@ -405,8 +510,10 @@ local interactionLang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua
 
 -- The shared chooser combines these target-specific actions with nearby world items.
 function interactionActions(heldUname)
-    if getPedOccupiedVehicle(localPlayer)
-        or (heldUname and heldUname ~= "Ratchet" and heldUname ~= "Battery" and heldUname ~= "StarterMotor") then
+    if
+        getPedOccupiedVehicle(localPlayer)
+        or (heldUname and heldUname ~= "Ratchet" and heldUname ~= "Battery" and heldUname ~= "StarterMotor")
+    then
         return {}
     end
     local lang = interactionLang

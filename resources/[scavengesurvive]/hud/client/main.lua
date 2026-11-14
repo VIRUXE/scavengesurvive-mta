@@ -583,6 +583,7 @@ local function drawKeyActions(driver)
         bayMenu = bayMenuHint(held),
         fitPart = fitPartHint(held),
         installPart = installPartHint(held),
+        atFuelCap = held and held.uname == "GasCan" and exports.vehicles:nearbyFuelCap() ~= false or false,
         cuffedNearby = not held and hasCuffedPlayerNearby() or false,
         hasHolster = getElementData(localPlayer, "items.holster") ~= false,
         supports = SUPPORTS,

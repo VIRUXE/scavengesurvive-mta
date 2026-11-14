@@ -871,10 +871,18 @@ local function cancelHoldAction(player)
     end
 end
 
--- Refuelling from a Petrol Can pours REFUEL_LITRES_PER_TICK every tick while the player holds the key. commitRefuel
--- writes what has poured to the vehicle and the can (only while that same can is still in hand: otherwise the
--- petrol is dropped, never created).
-local REFUEL_LITRES_PER_TICK, REFUEL_TICK_MS, REFUEL_REACH = 0.5, 100, 8.0
+-- Refuelling from a Petrol Can pours REFUEL_LITRES_PER_TICK every tick while the player holds the key, standing at
+-- the fuel cap and facing it (vlogic.atFuelCap). commitRefuel writes what has poured to the vehicle and the can (only
+-- while that same can is still in hand: otherwise the petrol is dropped, never created).
+local REFUEL_LITRES_PER_TICK, REFUEL_TICK_MS = 0.5, 100
+
+-- The player stands at the vehicle's fuel cap (offset lx, ly, lz in its frame, from the client) and faces it.
+local function atFuelCap(player, vehicle, lx, ly, lz, reach, faceDeg)
+    local cx, cy, cz = vlogic.toWorld(getElementMatrix(vehicle), lx, ly, lz)
+    local px, py, pz = getElementPosition(player)
+    local _, _, prz = getElementRotation(player)
+    return vlogic.atFuelCap(px, py, pz, prz, cx, cy, cz, reach, faceDeg)
+end
 
 local function commitRefuel(player, act)
     local moved = act.poured
@@ -911,9 +919,8 @@ local function refuelTick(player)
     local current = isElement(player) and exports.items:getHeld(player)
     local ok = vinf and current and current.id == act.canId and not isPedDead(player)
     if ok then
-        local px, py, pz = getElementPosition(player)
-        local vx, vy, vz = getElementPosition(veh)
-        ok = getDistanceBetweenPoints3D(px, py, pz, vx, vy, vz) <= REFUEL_REACH
+        local cap = act.cap
+        ok = atFuelCap(player, veh, cap[1], cap[2], cap[3], vlogic.FUEL_CAP_HOLD_REACH, vlogic.FUEL_CAP_HOLD_FACE_DEG)
     end
     if ok then
         local step = math.min(REFUEL_LITRES_PER_TICK, act.canLeft, act.maxFuel - vinf.fuel - act.poured)
@@ -2304,7 +2311,7 @@ net.handler("vehiclePartRemoveRequested", function(player, vehicle)
 end, { rate = 3 })
 
 -- Roadside interaction: repair, locksmith, lock-breaking, trunk container, refuelling, headlights, wheels
-net.handler("vehicleInteractRequested", function(player, vehicle)
+net.handler("vehicleInteractRequested", function(player, vehicle, capX, capY, capZ)
     if not isElement(vehicle) or not info[vehicle] or isPedDead(player) then
         return
     end
@@ -2329,6 +2336,43 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
     local held = exports.items:getHeld(player)
     local uname = held and held.uname
     local hp = getElementHealth(vehicle)
+
+    -- Case F: a Petrol Can at the fuel cap, facing it (the client also had the player looking at it) pours into the
+    -- tank; it comes before the trunk, as some caps sit at the rear
+    local capLx, capLy, capLz = vlogic.fuelCapOffset(capX, capY, capZ)
+    if
+        uname == "GasCan"
+        and capLx
+        and atFuelCap(player, vehicle, capLx, capLy, capLz, vlogic.FUEL_CAP_HOLD_REACH, vlogic.FUEL_CAP_FACE_DEG)
+    then
+        local maxFuel = vt and vt.maxFuel or 60.0
+        if inf.fuel >= maxFuel then
+            return toast(player, "TANKFULL")
+        end
+        local canFuel = tonumber(held.data and held.data.amount) or 20.0
+        if canFuel <= 0 then
+            return toast(player, "EMPTY")
+        end
+        cancelHoldAction(player)
+        setPedAnimation(player, "PED", "DRIVE_BOAT", -1, true, false, false, false)
+        local total = math.min(canFuel, maxFuel - inf.fuel)
+        local ms = math.max(500, math.ceil(total / REFUEL_LITRES_PER_TICK) * REFUEL_TICK_MS)
+        triggerClientEvent(player, "vehicleHoldStarted", player, lang.textFor(player, "Refuelling"), ms)
+        -- the petrol moves a tick at a time while the key is held; letting go keeps what has poured so far
+        local timer = setTimer(refuelTick, REFUEL_TICK_MS, 0, player)
+        activeActions[player] = {
+            actionType = "refuel",
+            vehicle = vehicle,
+            timer = timer,
+            canId = held.id,
+            maxFuel = maxFuel,
+            canLeft = canFuel,
+            poured = 0,
+            cap = { capLx, capLy, capLz },
+            onCancel = commitRefuel,
+        }
+        return
+    end
 
     -- a part that does not fit at the rear is carried cargo: it falls through to the trunk (Case 3)
     if bodySrv.isPart(uname) then
@@ -2732,34 +2776,16 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
         return
     end
 
-    -- Case 4: Refuelling with Petrol Can
+    -- Case 4: a Petrol Can anywhere but at the fuel cap (Case F) refuels nothing; at a pump the pump's own request
+    -- fills the can, so the hint stays quiet there
     if uname == "GasCan" then
-        local maxFuel = vt and vt.maxFuel or 60.0
-        if inf.fuel >= maxFuel then
-            return toast(player, "TANKFULL")
+        for _, pump in ipairs(fuelPumps) do
+            if getDistanceBetweenPoints3D(px, py, pz, pump.x, pump.y, pump.z) < PUMP_REACH then
+                return
+            end
         end
-        local canFuel = tonumber(held.data and held.data.amount) or 20.0
-        if canFuel <= 0 then
-            return toast(player, "EMPTY")
-        end
-        cancelHoldAction(player)
-        setPedAnimation(player, "PED", "DRIVE_BOAT", -1, true, false, false, false)
-        local total = math.min(canFuel, maxFuel - inf.fuel)
-        local ms = math.max(500, math.ceil(total / REFUEL_LITRES_PER_TICK) * REFUEL_TICK_MS)
-        triggerClientEvent(player, "vehicleHoldStarted", player, lang.textFor(player, "Refuelling"), ms)
-        -- the petrol moves a tick at a time while the key is held; letting go keeps what has poured so far
-        local timer = setTimer(refuelTick, REFUEL_TICK_MS, 0, player)
-        activeActions[player] = {
-            actionType = "refuel",
-            vehicle = vehicle,
-            timer = timer,
-            canId = held.id,
-            maxFuel = maxFuel,
-            canLeft = canFuel,
-            poured = 0,
-            onCancel = commitRefuel,
-        }
-        return
+        log.event("vehicle.refuelRefused", vehicleLine(vehicle, { player = player, ok = false, code = "FUEL_CAP" }))
+        return toast(player, lang.textFor(player, "Refuel at the fuel cap: stand at it, face it and look at it"))
     end
 end, { rate = 3 })
 

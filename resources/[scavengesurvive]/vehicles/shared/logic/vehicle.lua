@@ -47,6 +47,59 @@ function M.facingVehicle(px, py, prz, vx, vy)
     return (-math.sin(heading) * dx + math.cos(heading) * dy) / distance >= math.cos(math.rad(45))
 end
 
+-- Refuelling happens only at the fuel cap: the player stands within FUEL_CAP_REACH of it (flat distance), faces it
+-- within FUEL_CAP_FACE_DEG and (client only: the server has no camera) looks at it within FUEL_CAP_LOOK_DEG. The cap is
+-- the model's gas_cap dummy, which only a client can read, so the client sends its offset in the vehicle's frame and
+-- the server checks the stand and the facing again on every pour tick, with the HOLD slack for sync lag.
+M.FUEL_CAP_REACH, M.FUEL_CAP_FACE_DEG, M.FUEL_CAP_LOOK_DEG = 1.4, 45, 35
+M.FUEL_CAP_HOLD_REACH, M.FUEL_CAP_HOLD_FACE_DEG, M.FUEL_CAP_HOLD_LOOK_DEG = 1.9, 70, 50
+M.FUEL_CAP_HEIGHT = 1.8 -- the cap is at most this far above or below the player's centre
+
+-- A cap offset as sent by a client: three finite numbers inside a vehicle's extent, or nil.
+function M.fuelCapOffset(lx, ly, lz)
+    lx, ly, lz = tonumber(lx), tonumber(ly), tonumber(lz)
+    if not lx or not ly or not lz or lx ~= lx or ly ~= ly or lz ~= lz then
+        return nil
+    end
+    if math.abs(lx) > 3 or math.abs(ly) > 8 or math.abs(lz) > 3 then
+        return nil
+    end
+    return lx, ly, lz
+end
+
+-- A point in an element's frame to world coordinates (m = getElementMatrix).
+function M.toWorld(m, lx, ly, lz)
+    return lx * m[1][1] + ly * m[2][1] + lz * m[3][1] + m[4][1],
+        lx * m[1][2] + ly * m[2][2] + lz * m[3][2] + m[4][2],
+        lx * m[1][3] + ly * m[2][3] + lz * m[3][3] + m[4][3]
+end
+
+-- The ped at (px, py, pz) with heading prz is at the point (cx, cy, cz) and faces it.
+function M.atFuelCap(px, py, pz, prz, cx, cy, cz, reach, faceDeg)
+    local dx, dy = cx - px, cy - py
+    local distance = math.sqrt(dx * dx + dy * dy)
+    if distance > reach or math.abs(cz - pz) > M.FUEL_CAP_HEIGHT then
+        return false
+    end
+    if distance < 0.15 then -- standing on top of it: any heading reaches it
+        return true
+    end
+    local heading = math.rad(prz)
+    return (-math.sin(heading) * dx + math.cos(heading) * dy) / distance >= math.cos(math.rad(faceDeg))
+end
+
+-- The camera at (camX, camY, camZ) looking at (lookX, lookY, lookZ) has the point (cx, cy, cz) within lookDeg.
+function M.lookingAt(camX, camY, camZ, lookX, lookY, lookZ, cx, cy, cz, lookDeg)
+    local fx, fy, fz = lookX - camX, lookY - camY, lookZ - camZ
+    local tx, ty, tz = cx - camX, cy - camY, cz - camZ
+    local fl = math.sqrt(fx * fx + fy * fy + fz * fz)
+    local tl = math.sqrt(tx * tx + ty * ty + tz * tz)
+    if fl < 0.001 or tl < 0.001 then
+        return false
+    end
+    return (fx * tx + fy * ty + fz * tz) / (fl * tl) >= math.cos(math.rad(lookDeg))
+end
+
 function M.isDriverSide(angle)
     return angle > 225 and angle < 315
 end
@@ -355,8 +408,18 @@ function M.towReach(truckModel, trailerModel)
 end
 
 -- Per-model wheel fasteners; ordinary passenger vehicles default to five.
-M.LUG_NUTS = { [496] = 4, [549] = 4, [422] = 6, [554] = 6, [470] = 8,
-    [403] = 10, [514] = 10, [515] = 10, [431] = 10, [437] = 10 }
+M.LUG_NUTS = {
+    [496] = 4,
+    [549] = 4,
+    [422] = 6,
+    [554] = 6,
+    [470] = 8,
+    [403] = 10,
+    [514] = 10,
+    [515] = 10,
+    [431] = 10,
+    [437] = 10,
+}
 function M.lugNutCount(model)
     return M.LUG_NUTS[model] or 5
 end

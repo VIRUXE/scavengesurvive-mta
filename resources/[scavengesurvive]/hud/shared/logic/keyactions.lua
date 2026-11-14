@@ -74,6 +74,7 @@ M.BUTTON_LABELS = {
 --   fitPart ("Fit battery" / "Fit starter motor", already in the reader's language: that part in hand at the open
 --     bonnet with its slot empty),
 --   installPart (a held body part is at its matching empty vehicle slot),
+--   atFuelCap (a Petrol Can in hand at a vehicle's fuel cap, facing it and looking at it),
 --   held = false | { uname, category, isWeapon },
 --   nearCooker,                           -- uncooked food in hand next to a campfire or barbecue (#95): "Cook"
 --   nearMachine,                          -- a machine in reach (#145): "Access machine" / "(Hold) Machine menu"
@@ -204,6 +205,10 @@ function M.lines(ctx, keys)
     -- a Battery or Starter Motor in hand at the open bonnet: F fits it into the empty slot
     if ctx.fitPart and not busyF then
         add("interact", ctx.fitPart)
+    end
+    -- a Petrol Can in hand at a vehicle's fuel cap, facing it and looking at it: hold F pours into the tank
+    if ctx.atFuelCap and not busyF then
+        add("interact", tr("(Hold) Refuel"))
     end
     -- a machine (items, #145): upstream's button "Press F to access machine / Hold F to open menu"; a Crowbar in
     -- hand takes it down instead (Deconstruct, a port deviation: upstream left it a TODO)

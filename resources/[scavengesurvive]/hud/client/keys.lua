@@ -56,7 +56,6 @@ return function(ctx)
         Ratchet = true,
         Screwdriver = true,
         Hammer = true,
-        GasCan = true,
         Key = true,
         LocksmithKit = true,
         WheelLock = true,
@@ -366,6 +365,11 @@ return function(ctx)
                 return triggerServerEvent("vehicleInteractRequested", localPlayer, doorVeh)
             end
         end
+        -- a Petrol Can pours into a vehicle only at its fuel cap, the player facing it and looking at it
+        if uname == "GasCan" and exports.vehicles:tryRefuel() then
+            blockEnterUntil = getTickCount() + TRUNK_ENTER_BLOCK_MS
+            return
+        end
         if nearVeh and nearDist <= 5.5 then
             local px, py = getElementPosition(localPlayer)
             local vx, vy = getElementPosition(nearVeh)
@@ -444,7 +448,12 @@ return function(ctx)
         end
         -- a Petrol Can fills at a pump and pours into an Empty Molotov lying within reach (#136): the server's pickup
         -- with a can in hand only reaches for that bottle, so both requests go and the one with a target acts
+        -- (a Petrol Can at a vehicle's rear opened the trunk above; anywhere else by it but the fuel cap the server
+        -- says where to stand, unless a pump is in reach)
         if uname == "GasCan" then
+            if nearVeh and nearDist <= 5.5 then
+                triggerServerEvent("vehicleInteractRequested", localPlayer, nearVeh)
+            end
             triggerServerEvent("fuelPumpInteractRequested", localPlayer)
             return triggerServerEvent("itemPickupRequested", localPlayer)
         end
