@@ -23,8 +23,42 @@ do
 end
 local activeAction = nil
 local lastPos = nil
+local releaseTimer = nil
+
+-- A hold-action that one press of the interact key started goes on only while that key stays down: letting go cancels
+-- it, so a long job (taking a defence down, pouring petrol) can be stopped half done. An action that did not come
+-- from a fresh press (a menu pick, the body-part hold that waited out its own 500 ms) keeps its old rules. The key's
+-- last press is noted from the key event; a start arriving later than HOLD_PRESS_WINDOW_MS after it was not this press's.
+local HOLD_PRESS_WINDOW_MS = 450
+local lastInteractPress = -math.huge
+
+local function interactKey()
+    return string.lower(getKeyBoundToCommand("interact") or "f")
+end
+
+local function isKeyHeld(key, cmd)
+    if getKeyState(key) then
+        return true
+    end
+    local dev = getResourceFromName("dev")
+    return dev and getResourceState(dev) == "running" and exports.dev:isHeld(cmd or key) == true
+end
+
+addEventHandler("onClientKey", root, function(button, press)
+    if press and button == interactKey() then
+        lastInteractPress = getTickCount()
+    end
+end)
+
+local function stopReleaseWatch()
+    if isTimer(releaseTimer) then
+        killTimer(releaseTimer)
+    end
+    releaseTimer = nil
+end
 
 local function cancelAction()
+    stopReleaseWatch()
     if not activeAction then
         return
     end
@@ -39,9 +73,24 @@ addEventHandler("vehicleHoldStarted", root, function(actionType, durationMs)
     local x, y, z = getElementPosition(localPlayer)
     lastPos = { x = x, y = y, z = z }
     exports.ui:progressStart(actionType, durationMs)
+    stopReleaseWatch()
+    local key = interactKey()
+    local held = isKeyHeld(key, "interact")
+    if not held and getTickCount() - lastInteractPress > HOLD_PRESS_WINDOW_MS then
+        return
+    end
+    if not held then
+        return cancelAction()
+    end
+    releaseTimer = setTimer(function()
+        if not isKeyHeld(key, "interact") then
+            cancelAction()
+        end
+    end, 100, 0)
 end)
 
 addEventHandler("vehicleHoldStopped", root, function()
+    stopReleaseWatch()
     activeAction = nil
     lastPos = nil
     exports.ui:progressCancel()

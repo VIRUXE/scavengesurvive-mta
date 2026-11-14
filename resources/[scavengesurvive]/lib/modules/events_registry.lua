@@ -45,6 +45,7 @@ return {
     workbenchCraftRequested = true,
     craftHoldStarted = true,
     craftHoldStopped = true,
+    craftHoldCancelRequested = true,
     buildingInteractRequested = true,
     keypadSubmitted = true,
     keypadInstallRequested = true,

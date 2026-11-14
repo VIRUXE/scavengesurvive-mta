@@ -988,7 +988,8 @@ return function(ctx)
                 end
                 local label = lang.textFor(c.player, "Pitching tent")
                 triggerClientEvent(c.player, "vehicleHoldStarted", c.player, label, 3000)
-                setTimer(function(pl, itId, rx, ry, rz)
+                local pitchTimer = setTimer(function(pl, itId, rx, ry, rz)
+                    state.holdCancel[pl] = nil
                     if not isElement(pl) then
                         return
                     end
@@ -1017,6 +1018,11 @@ return function(ctx)
                         end
                     end, { player = pl, itemId = itId })
                 end, 3000, 1, c.player, row.id, row.x, row.y, row.z)
+                state.holdCancel[c.player] = function()
+                    if isTimer(pitchTimer) then
+                        killTimer(pitchTimer)
+                    end
+                end
             end,
             { player = player }
         )
@@ -1065,7 +1071,8 @@ return function(ctx)
                     packing[row.id] = c.player
                     local label = lang.textFor(c.player, "Packing tent")
                     triggerClientEvent(c.player, "vehicleHoldStarted", c.player, label, 3000)
-                    setTimer(function(pl, itId, cId, rx, ry, rz)
+                    local packTimer = setTimer(function(pl, itId, cId, rx, ry, rz)
+                        state.holdCancel[pl] = nil
                         local function abort()
                             if packing[itId] == pl then
                                 packing[itId] = nil
@@ -1103,6 +1110,15 @@ return function(ctx)
                             end
                         end, { player = pl })
                     end, 3000, 1, c.player, row.id, row.cont_id, row.x, row.y, row.z)
+                    local packingId = row.id
+                    state.holdCancel[c.player] = function()
+                        if isTimer(packTimer) then
+                            killTimer(packTimer)
+                        end
+                        if packing[packingId] then
+                            packing[packingId] = nil
+                        end
+                    end
                 end
                 if row.cont_id then
                     db.one(

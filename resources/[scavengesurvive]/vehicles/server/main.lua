@@ -861,11 +861,71 @@ local function cancelHoldAction(player)
     if isTimer(act.timer) then
         killTimer(act.timer)
     end
+    activeActions[player] = nil
+    if act.onCancel then
+        act.onCancel(player, act)
+    end
     if isElement(player) then
         setPedAnimation(player, nil)
         triggerClientEvent(player, "vehicleHoldStopped", player)
     end
-    activeActions[player] = nil
+end
+
+-- Refuelling from a Petrol Can pours REFUEL_LITRES_PER_TICK every tick while the player holds the key. commitRefuel
+-- writes what has poured to the vehicle and the can (only while that same can is still in hand: otherwise the
+-- petrol is dropped, never created).
+local REFUEL_LITRES_PER_TICK, REFUEL_TICK_MS, REFUEL_REACH = 0.5, 100, 8.0
+
+local function commitRefuel(player, act)
+    local moved = act.poured
+    act.poured = 0
+    if moved <= 0 or not isElement(player) then
+        return
+    end
+    local veh = act.vehicle
+    local vinf = isElement(veh) and info[veh]
+    local current = exports.items:getHeld(player)
+    if not vinf or not current or current.id ~= act.canId then
+        return
+    end
+    local canNow = tonumber(current.data and current.data.amount) or 20.0
+    moved = math.min(moved, canNow, act.maxFuel - vinf.fuel)
+    if moved <= 0 then
+        return
+    end
+    vinf.fuel = vinf.fuel + moved
+    setElementData(veh, "vehicles.fuel", vinf.fuel, "broadcast", "deny")
+    db.exec("UPDATE vehicles SET fuel = ? WHERE id = ?", { vinf.fuel, vinf.id })
+    exports.items:updateHeldData(player, { amount = math.max(0, canNow - moved) })
+    toast(player, "REFUELLED")
+    log.event("vehicle.refuelled", vehicleLine(veh, { player = player, litres = moved, fuel = vinf.fuel }))
+end
+
+local function refuelTick(player)
+    local act = activeActions[player]
+    if not act or act.actionType ~= "refuel" then
+        return
+    end
+    local veh = act.vehicle
+    local vinf = isElement(veh) and info[veh]
+    local current = isElement(player) and exports.items:getHeld(player)
+    local ok = vinf and current and current.id == act.canId and not isPedDead(player)
+    if ok then
+        local px, py, pz = getElementPosition(player)
+        local vx, vy, vz = getElementPosition(veh)
+        ok = getDistanceBetweenPoints3D(px, py, pz, vx, vy, vz) <= REFUEL_REACH
+    end
+    if ok then
+        local step = math.min(REFUEL_LITRES_PER_TICK, act.canLeft, act.maxFuel - vinf.fuel - act.poured)
+        if step > 0 then
+            act.poured = act.poured + step
+            act.canLeft = act.canLeft - step
+        end
+        if step > 0 and act.canLeft > 0 and vinf.fuel + act.poured < act.maxFuel then
+            return
+        end
+    end
+    cancelHoldAction(player)
 end
 
 -- Fuel pumps (upstream world/fuel.pwn): holding interact at a pump with a Petrol Can fills it from the pump's stock.
@@ -2684,31 +2744,21 @@ net.handler("vehicleInteractRequested", function(player, vehicle)
         end
         cancelHoldAction(player)
         setPedAnimation(player, "PED", "DRIVE_BOAT", -1, true, false, false, false)
-        triggerClientEvent(player, "vehicleHoldStarted", player, lang.textFor(player, "Refuelling"), 3000)
-        local timer = setTimer(function(p, veh, gcan)
-            activeActions[p] = nil
-            if not isElement(p) or not isElement(veh) then
-                return
-            end
-            setPedAnimation(p, nil)
-            local vinf = info[veh]
-            if not vinf then
-                return
-            end
-            local curCanFuel = tonumber(gcan.data and gcan.data.amount) or 20.0
-            local space = maxFuel - vinf.fuel
-            local transfer = math.min(curCanFuel, space, 10.0)
-            local nextCanFuel = math.max(0, curCanFuel - transfer)
-            local nextVehFuel = vinf.fuel + transfer
-            vinf.fuel = nextVehFuel
-            setElementData(veh, "vehicles.fuel", nextVehFuel, "broadcast", "deny")
-            db.exec("UPDATE vehicles SET fuel = ? WHERE id = ?", { nextVehFuel, vinf.id })
-            gcan.data = { amount = nextCanFuel }
-            exports.items:updateHeldData(p, gcan.data)
-            toast(p, "REFUELLED")
-            log.event("vehicle.refuelled", vehicleLine(veh, { player = p, litres = transfer, fuel = nextVehFuel }))
-        end, 3000, 1, player, vehicle, held)
-        activeActions[player] = { actionType = "refuel", vehicle = vehicle, timer = timer }
+        local total = math.min(canFuel, maxFuel - inf.fuel)
+        local ms = math.max(500, math.ceil(total / REFUEL_LITRES_PER_TICK) * REFUEL_TICK_MS)
+        triggerClientEvent(player, "vehicleHoldStarted", player, lang.textFor(player, "Refuelling"), ms)
+        -- the petrol moves a tick at a time while the key is held; letting go keeps what has poured so far
+        local timer = setTimer(refuelTick, REFUEL_TICK_MS, 0, player)
+        activeActions[player] = {
+            actionType = "refuel",
+            vehicle = vehicle,
+            timer = timer,
+            canId = held.id,
+            maxFuel = maxFuel,
+            canLeft = canFuel,
+            poured = 0,
+            onCancel = commitRefuel,
+        }
         return
     end
 end, { rate = 3 })

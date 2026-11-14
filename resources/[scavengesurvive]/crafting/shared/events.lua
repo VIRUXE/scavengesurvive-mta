@@ -3,6 +3,7 @@ addEvent("combineRequested", true)
 addEvent("groundCraftRequested", true)
 addEvent("deconstructRequested", true)
 addEvent("workbenchCraftRequested", true)
+addEvent("craftHoldCancelRequested", true)
 
 -- server to client / client-local
 addEvent("craftHoldStarted", true)

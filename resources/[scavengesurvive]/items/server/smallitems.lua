@@ -388,7 +388,8 @@ return function(ctx)
         local label = lang.textFor(player, "Harvesting")
         triggerClientEvent(player, "vehicleHoldStarted", player, label, small.HARVEST_MS)
         setPedAnimation(player, "BOMBER", "BOM_Plant_Loop", small.HARVEST_MS, true, false, false, false)
-        setTimer(function(pl, bodyId)
+        local harvestTimer = setTimer(function(pl, bodyId)
+            state.holdCancel[pl] = nil
             if not isElement(pl) then
                 return
             end
@@ -403,6 +404,11 @@ return function(ctx)
                 end
             end, { player = pl })
         end, small.HARVEST_MS, 1, player, row.id)
+        state.holdCancel[player] = function()
+            if isTimer(harvestTimer) then
+                killTimer(harvestTimer)
+            end
+        end
         return true
     end
 

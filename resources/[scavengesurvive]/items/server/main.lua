@@ -41,6 +41,7 @@ local state = {
     settings = {}, -- gamemode settings map (db.settings)
     sent = {}, -- player -> set of world item ids the client shows; nil until the character spawned
     held = {}, -- player -> { id, uname, hp, data } in hand
+    holdCancel = {}, -- player -> function undoing the timed hold (tent, harvest) the interact key let go of
     worn = {}, -- player -> { id, uname, hp, data } bag on the back
     hat = {}, -- player -> { id, uname, hp, data } worn hat
     mask = {}, -- player -> { id, uname, hp, data } worn mask
@@ -248,6 +249,19 @@ local drinking = loadFile("server/drinking.lua")({
     toast = toast,
     writeHeldData = writeHeldData,
 })
+-- the interact key released (or the player walked off) during a tent or harvest hold: its timer was never tracked
+-- anywhere else, so each hold leaves a function that undoes it
+net.handler("holdActionCancelRequested", function(player)
+    local undo = state.holdCancel[player]
+    if not undo then
+        return
+    end
+    state.holdCancel[player] = nil
+    undo()
+    setPedAnimation(player)
+    triggerClientEvent(player, "vehicleHoldStopped", player)
+end, { rate = 5 })
+
 -- the interact key released during a treatment or a drink (items/client/main.lua)
 net.handler("treatmentCancelRequested", function(player)
     medical.cancel(player)

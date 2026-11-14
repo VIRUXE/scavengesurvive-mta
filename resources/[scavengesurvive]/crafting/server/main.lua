@@ -132,6 +132,11 @@ local function cancelHold(player)
     end
 end
 
+-- the client lets go of the interact key (or walks off) mid-hold: the job stops where it is
+net.handler("craftHoldCancelRequested", function(player)
+    cancelHold(player)
+end, { rate = 5 })
+
 addEventHandler("onPlayerQuit", root, function()
     cancelHold(source)
 end)
