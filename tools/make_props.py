@@ -42,6 +42,11 @@ then runs itself in Blender (DragonFF) for each prop's dff and col.
                      centre), a round head toward +Y, a reversing lever on the head and a square drive under it with a
                      socket fitted; vanilla textures (RATCHET_TEXTURES, found with gta-scout). One box of collision.
 
+    locksmith_kit 20257  a lock-pick case, 0.26 x 0.18 x 0.045 m, its lid open on a hinge along +Y: picks, tension wrenches,
+                     a brass practice padlock and key blanks in the base's foam, two spare picks under a strap on the lid's
+                     red lining, latches on the front (-Y); vanilla textures (KIT_TEXTURES, found with gta-scout). Two
+                     boxes of collision, the base and the open lid. The Locksmith Kit item.
+
 Origin (except welder_torch, grinder and ratchet): the centre of the base (x, y) with z = 0 at the lowest point; the front faces +Y.
 """
 from __future__ import annotations
@@ -422,6 +427,122 @@ def build_ratchet(ctx):
     return [((0.0, -0.007, -0.0195), (0.026, 0.125, 0.0405))]
 
 
+KIT_W, KIT_D, KIT_H = 0.26, 0.18, 0.04  # locksmith_kit: the base shell (x, y, z)
+KIT_LID_H = 0.016  # the lid: the base's footprint, this deep, hinged along the back
+KIT_FOAM_Z = 0.031  # the top of the base's foam insert
+KIT_LID_OPEN = 100  # degrees the lid stands open from shut
+# (source TXD, texture) per locksmith_kit material, all vanilla and found with gta-scout: black plastic shell, the airport's
+# dark rubber (the foam), the counter's red (the lid lining), chrome pipe (picks and wrenches), a brass bullet casing (the
+# practice padlock and key blanks), dull aluminium (latches and hinge)
+KIT_TEXTURES = [
+    ("ballys01.txd", "CJ_blackplastic"),
+    ("cj_airprt.txd", "CJ_RUBBER"),
+    ("cj_airprt.txd", "CJ_red_COUNTER"),
+    ("cj_airprt.txd", "cj_chromepipe"),
+    ("light_fit_ext.txd", "CJ_BULLETBRASS"),
+    ("hubprops2_sfse.txd", "Alumox64b"),
+]
+
+
+def build_locksmith_kit(ctx):
+    """A lock-pick case, 0.26 x 0.18 m, 0.056 deep shut: a black shell with its lid open KIT_LID_OPEN degrees on a hinge along
+    the back edge. In the base's dark foam lie a fan of picks (black handles toward the front), two tension wrenches, a
+    brass practice padlock with its chrome shackle and three brass key blanks; the lid's red lining holds two more picks
+    under a black strap. Two latches on the front. Built with the front toward +Y, then turned so it faces -Y. Origin at
+    the base's centre, z = 0 underneath."""
+    bm, box = ctx["bm"], ctx["box"]
+    shell, foam, lining, chrome, brass, alum = 0, 1, 2, 3, 4, 5
+    white, dim, dark = (0.92, 0.92, 0.93, 1.0), (0.62, 0.62, 0.64, 1.0), (0.4, 0.4, 0.42, 1.0)
+    w, d, h, wall = KIT_W, KIT_D, KIT_H, 0.005
+    fz = KIT_FOAM_Z
+
+    def tray(z0, z1, floor_z):
+        """A shell half between z0 and z1: four walls and a floor `wall` thick centred on floor_z."""
+        box((0.0, 0.0, floor_z), (w, d, wall), shell, dim)
+        cz, hz = (z0 + z1) / 2, z1 - z0
+        for y in (d / 2 - wall / 2, -d / 2 + wall / 2):
+            box((0.0, y, cz), (w, wall, hz), shell, dim)
+        for x in (w / 2 - wall / 2, -w / 2 + wall / 2):
+            box((x, 0.0, cz), (wall, d - 2 * wall, hz), shell, dim)
+
+    def pick(x, y0, length, tip, mat=chrome, z=fz, handle=True):
+        """A pick lying along Y on the foam: a flat shaft from y0 toward -Y, a black handle at y0 and a `tip` at the far
+        end ("hook", "diamond", "rake", "ball")."""
+        t = 0.0014
+        y1 = y0 - length
+        box((x, (y0 + y1) / 2, z + t / 2), (0.0028, length, t), mat, white)
+        if handle:
+            box((x, y0 - 0.025, z + 0.0025), (0.008, 0.055, 0.005), shell, dark)
+        if tip == "hook":
+            box((x, y1 + 0.001, z + 0.0035), (0.0028, 0.0024, 0.006), mat, white)
+        elif tip == "diamond":
+            box((x, y1 + 0.003, z + t / 2), (0.006, 0.006, t), mat, white)
+        elif tip == "rake":
+            for i in range(3):
+                box((x, y1 + 0.003 + i * 0.006, z + 0.0025), (0.0028, 0.0022, 0.004), mat, white)
+        elif tip == "ball":
+            box((x, y1 + 0.002, z + 0.002), (0.005, 0.005, 0.004), mat, white)
+
+    # the base: shell, a foam insert inside its walls and two latches on the front
+    tray(0.0, h, wall / 2)
+    box((0.0, 0.0, (wall + fz) / 2), (w - 2 * wall - 0.001, d - 2 * wall - 0.001, fz - wall), foam, white)
+    for x in (-0.075, 0.075):
+        box((x, d / 2 + 0.003, h - 0.008), (0.026, 0.006, 0.016), alum, white)
+        box((x, d / 2 + 0.0065, h - 0.004), (0.012, 0.002, 0.01), shell, dark)
+    # picks fanned across the left of the foam, handles toward the front
+    tips = ["hook", "hook", "diamond", "rake", "rake", "ball", "diamond", "hook"]
+    for i, tip in enumerate(tips):
+        pick(-0.112 + i * 0.0125, 0.068, 0.105, tip)
+    # two tension wrenches: an L of flat chrome each, in front of the padlock
+    for i in range(2):
+        y = 0.052 - i * 0.014
+        box((0.035, y, fz + 0.0008), (0.07, 0.003, 0.0016), chrome, white)
+        box((0.0015, y - 0.006, fz + 0.0008), (0.003, 0.012, 0.0016), chrome, white)
+    # the practice padlock lying on its back: a brass body, its chrome shackle and a keyway, right of centre
+    px, py = 0.035, -0.025
+    box((px, py, fz + 0.009), (0.05, 0.04, 0.018), brass, white)
+    box((px, py + 0.0205, fz + 0.011), (0.006, 0.001, 0.012), shell, dark)  # the keyway on the +Y face
+    for sx in (-0.016, 0.016):
+        box((px + sx, py - 0.032, fz + 0.009), (0.007, 0.026, 0.007), chrome, white)
+    box((px, py - 0.0485, fz + 0.009), (0.039, 0.007, 0.007), chrome, white)
+    # three cut keys along the right edge: a round brass bow, a blade toward -X and its bitting on the +Y edge
+    for i in range(3):
+        kx, ky = 0.103, -0.058 + i * 0.03
+        ctx["tube"]((kx, ky, fz), (kx, ky, fz + 0.002), 0.0115, 12, brass, white, False)
+        box((kx - 0.03, ky - 0.001, fz + 0.001), (0.04, 0.006, 0.002), brass, white)
+        for j in range(4):
+            box((kx - 0.044 + j * 0.008, ky + 0.0028, fz + 0.001), (0.004, 0.003 + 0.0015 * ((i + j) % 3), 0.002), brass, white)
+
+    # the lid, built shut over the base (its outside up), then swung open on the hinge
+    before = set(bm.verts)
+    lz = h + KIT_LID_H  # the lid's outer face when shut
+    tray(h, lz, lz - wall / 2)
+    lining_z = lz - wall - 0.004
+    box((0.0, 0.0, lining_z), (w - 2 * wall - 0.001, d - 2 * wall - 0.001, 0.008), lining, white)
+    for i, tip in enumerate(("rake", "hook")):  # two spare picks on the lining, face down while shut
+        pick(-0.03 + i * 0.06, 0.06, 0.1, tip, z=lining_z - 0.004 - 0.0014, handle=False)
+        box((-0.03 + i * 0.06, 0.035, lining_z - 0.006), (0.008, 0.055, 0.004), shell, dark)
+    box((0.0, -0.01, lining_z - 0.0055), (w - 2 * wall - 0.02, 0.018, 0.003), shell, dark)  # the strap
+    lid = [v for v in bm.verts if v not in before]
+    # the hinge: rotate about the X axis through the back edge at the rim (y = -d/2, z = h)
+    a = math.radians(KIT_LID_OPEN)
+    ca, sa = math.cos(a), math.sin(a)
+    for v in lid:
+        y, z = v.co.y + d / 2, v.co.z - h
+        v.co.y, v.co.z = -d / 2 + y * ca - z * sa, h + y * sa + z * ca
+    # the hinge barrel along the back edge
+    ctx["tube"]((-w / 2 + 0.02, -d / 2 - 0.002, h), (w / 2 - 0.02, -d / 2 - 0.002, h), 0.004, 8, alum, white)
+    # turned half round so the open side faces -Y, toward the item renders' camera (tools/render_item_models.py)
+    for v in bm.verts:
+        v.co.x, v.co.y = -v.co.x, -v.co.y
+    # collision: the base, and the open lid as a slab standing behind the hinge (+Y)
+    lid_top, lid_y = h + d * sa, d / 2 - min(d * ca, 0.0) + KIT_LID_H * sa
+    return [
+        ((0.0, 0.0, h / 2), (w / 2, d / 2, h / 2)),
+        ((0.0, (lid_y + d / 2) / 2, (h + lid_top) / 2), (w / 2, (lid_y - d / 2) / 2, (lid_top - h) / 2)),
+    ]
+
+
 PROPS_TABLE = [
     {"name": "ls_hatch", "id": 20201, "dist": 150, "source": "zombtest1.txd", "textures": ["pave_manhole1"], "build": build_ls_hatch},
     {"name": "welder", "id": 20202, "dist": 100, "source": "dynbarrels.txd", "textures": ["redmetal", "yellowmetal", "alumplat64"], "build": build_welder},
@@ -433,6 +554,7 @@ PROPS_TABLE = [
     {"name": "car_battery", "id": 20208, "dist": 60, "sources": BATTERY_TEXTURES, "build": build_car_battery},
     {"name": "tool_battery", "id": 20209, "dist": 40, "sources": TOOL_BATTERY_TEXTURES, "build": build_tool_battery},
     {"name": "ratchet", "id": 20236, "dist": 40, "sources": RATCHET_TEXTURES, "build": build_ratchet},
+    {"name": "locksmith_kit", "id": 20257, "dist": 40, "sources": KIT_TEXTURES, "build": build_locksmith_kit},
 ]
 
 

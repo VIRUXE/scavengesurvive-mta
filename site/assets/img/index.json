@@ -271,17 +271,6 @@
    }
   }
  },
- "items/1210_briefcase": {
-  "caption": "briefcase",
-  "sizes": {
-   "256": {
-    "bytes": 1196,
-    "file": "items/1210_briefcase.webp",
-    "h": 256,
-    "w": 256
-   }
-  }
- },
  "items/1212_money": {
   "caption": "money",
   "sizes": {
@@ -1905,6 +1894,17 @@
    "256": {
     "bytes": 1410,
     "file": "items/20236_ratchet.webp",
+    "h": 256,
+    "w": 256
+   }
+  }
+ },
+ "items/20257_locksmith_kit": {
+  "caption": "locksmith_kit",
+  "sizes": {
+   "256": {
+    "bytes": 3346,
+    "file": "items/20257_locksmith_kit.webp",
     "h": 256,
     "w": 256
    }
