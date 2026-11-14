@@ -43,6 +43,8 @@ SINGLES = [
     ("bobcat_parts_1.png", "shots/bobcat-parts-1", (1400, 700), 85, "The twelve Bobcat salvage parts, good and bad"),
     ("bobcat_parts_2.png", "shots/bobcat-parts-2", (1400, 700), 85, "Bobcat salvage parts fitted and loose"),
     ("bobcat_tailgate_logo.png", "shots/bobcat-tailgate", (1500, 750), 85, "The Bobcat tailgate"),
+    ("action-menu-huntley.jpg", "shots/action-menu", (1600, 800), 82, "The contextual action menu at an open engine bay (Portuguese client)"),
+    ("wheels-stock.png", "shots/wheels-stock", (1352, 676), 88, "Stock wheels as loot items: inflated and flat, in five styles"),
     ("vehicles/sheet_1.png", "vehicles/sheet-1", (1600, 800), 82, "Vehicle renders, sheet 1"),
     ("vehicles/sheet_2.png", "vehicles/sheet-2", (1600, 800), 82, "Vehicle renders, sheet 2"),
     ("items/boxes/sheet_1.png", "items/boxes-sheet", (1600, 800), 82, "GTA's own boxes and crates, cut into items"),

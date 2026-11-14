@@ -293,5 +293,7 @@
  "wel.2.t": "Chat na tua língua",
  "wel.2.p": "As linhas do chat são traduzidas para a língua de cada leitor, usando a conversa até ali como contexto. A linha de entrada mostra a língua de quem acabou de acordar, para saberes como responder.",
  "wel.3.t": "Um email, uma vez",
- "wel.3.p": "O registo pede um endereço de email e envia-te um código de 6 dígitos. Ninguém entra até o escrever de volta; o código dura 15 minutos, e um endereço serve no máximo três contas."
+ "wel.3.p": "O registo pede um endereço de email e envia-te um código de 6 dígitos. Ninguém entra até o escrever de volta; o código dura 15 minutos, e um endereço serve no máximo três contas.",
+ "drv.f3": "O menu de ações contextual num compartimento do motor aberto (cliente em português)",
+ "drv.f4": "Rodas de série como itens de loot: cheias e furadas, em cinco estilos"
 }

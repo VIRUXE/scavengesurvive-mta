@@ -1899,6 +1899,17 @@
    }
   }
  },
+ "items/20236_ratchet": {
+  "caption": "ratchet",
+  "sizes": {
+   "256": {
+    "bytes": 1410,
+    "file": "items/20236_ratchet.webp",
+    "h": 256,
+    "w": 256
+   }
+  }
+ },
  "items/20301_imcmptrkdrl_las_def": {
   "caption": "imcmptrkdrl_las_def",
   "sizes": {
@@ -3678,6 +3689,23 @@
    }
   }
  },
+ "shots/action-menu": {
+  "caption": "The contextual action menu at an open engine bay (Portuguese client)",
+  "sizes": {
+   "1600": {
+    "bytes": 134676,
+    "file": "shots/action-menu.webp",
+    "h": 900,
+    "w": 1600
+   },
+   "800": {
+    "bytes": 49630,
+    "file": "shots/action-menu-800.webp",
+    "h": 450,
+    "w": 800
+   }
+  }
+ },
  "shots/apparel-armour": {
   "caption": "The 14 spawn skins in body armour, pistol holstered",
   "sizes": {
@@ -3947,6 +3975,23 @@
     "file": "shots/studio-800.webp",
     "h": 450,
     "w": 800
+   }
+  }
+ },
+ "shots/wheels-stock": {
+  "caption": "Stock wheels as loot items: inflated and flat, in five styles",
+  "sizes": {
+   "1352": {
+    "bytes": 45714,
+    "file": "shots/wheels-stock.webp",
+    "h": 379,
+    "w": 1352
+   },
+   "676": {
+    "bytes": 24564,
+    "file": "shots/wheels-stock-676.webp",
+    "h": 190,
+    "w": 676
    }
   }
  },
