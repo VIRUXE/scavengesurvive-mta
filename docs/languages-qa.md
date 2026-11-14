@@ -15,6 +15,7 @@ English has 556 keys.
 | `id` | Indonesian | 556 | 0 | 0 | 0 | 0 | 0 |
 | `bhs` | Bosanski-Hrvatski-Srpski | 556 | 0 | 0 | 0 | 0 | 0 |
 | `cs` | Čeština | 556 | 0 | 0 | 0 | 0 | 0 |
+| `lv` | Latviešu | 556 | 0 | 0 | 0 | 0 | 0 |
 
 ## Placeholder mismatches
 
@@ -34,26 +35,37 @@ None: the converter replaced every `~x~`, `{C_*}`, `~k~` and `%P` token.
 
 Item type, ammo kind, calibre, liquid and seed kind names, and the item UI's labels, messages and format templates, are English in the data and the code; lib's `lang` module shows them in the player's language from the hand-edited `data/generated/strings_<code>.lua` tables. The English texts are collected from the item data and the code (`tr("…")`, `L("…")`, `lang.text/format("…")`, `lang.textFor/formatFor(player, "…")` and `-- lang:begin` … `-- lang:end` blocks). A text a language lacks shows in English; one whose placeholders differ from English is formatted in English. Texts kept identical to English are model names, brands, acronyms and the like.
 
-English has 1086 texts.
+English has 1087 texts.
 
 | Code | Language | Missing (shown in English) | Kept as in English | Placeholder mismatches | Not in English (stale) |
 | --- | --- | ---: | ---: | ---: | ---: |
-| `es` | Español | 2 | 39 | 0 | 0 |
-| `fr` | Français | 2 | 59 | 0 | 0 |
-| `pt` | Português | 2 | 35 | 0 | 0 |
-| `ptbr` | Português do Brasil | 2 | 39 | 0 | 0 |
-| `ru` | Russian | 2 | 16 | 0 | 0 |
-| `ro` | Romanian | 2 | 44 | 0 | 0 |
-| `id` | Indonesian | 2 | 38 | 0 | 0 |
-| `bhs` | Bosanski-Hrvatski-Srpski | 2 | 35 | 0 | 0 |
-| `cs` | Čeština | 2 | 36 | 0 | 0 |
+| `es` | Español | 2 | 39 | 0 | 1 |
+| `fr` | Français | 2 | 59 | 0 | 1 |
+| `pt` | Português | 2 | 35 | 0 | 1 |
+| `ptbr` | Português do Brasil | 2 | 39 | 0 | 1 |
+| `ru` | Russian | 2 | 16 | 0 | 1 |
+| `ro` | Romanian | 2 | 44 | 0 | 1 |
+| `id` | Indonesian | 2 | 38 | 0 | 1 |
+| `bhs` | Bosanski-Hrvatski-Srpski | 2 | 35 | 0 | 1 |
+| `cs` | Čeština | 2 | 36 | 0 | 1 |
+| `lv` | Latviešu | 0 | 32 | 0 | 1 |
 
 - `es` lacks: `No clear space nearby. Make room before removing this defence.`, `Blocked by a wall. Move around to reach the item.`
+- `es` has texts no longer in English: `Usage: /lang <%s> (now %s)`
 - `fr` lacks: `No clear space nearby. Make room before removing this defence.`, `Blocked by a wall. Move around to reach the item.`
+- `fr` has texts no longer in English: `Usage: /lang <%s> (now %s)`
 - `pt` lacks: `No clear space nearby. Make room before removing this defence.`, `Blocked by a wall. Move around to reach the item.`
+- `pt` has texts no longer in English: `Usage: /lang <%s> (now %s)`
 - `ptbr` lacks: `No clear space nearby. Make room before removing this defence.`, `Blocked by a wall. Move around to reach the item.`
+- `ptbr` has texts no longer in English: `Usage: /lang <%s> (now %s)`
 - `ru` lacks: `No clear space nearby. Make room before removing this defence.`, `Blocked by a wall. Move around to reach the item.`
+- `ru` has texts no longer in English: `Usage: /lang <%s> (now %s)`
 - `ro` lacks: `No clear space nearby. Make room before removing this defence.`, `Blocked by a wall. Move around to reach the item.`
+- `ro` has texts no longer in English: `Usage: /lang <%s> (now %s)`
 - `id` lacks: `No clear space nearby. Make room before removing this defence.`, `Blocked by a wall. Move around to reach the item.`
+- `id` has texts no longer in English: `Usage: /lang <%s> (now %s)`
 - `bhs` lacks: `No clear space nearby. Make room before removing this defence.`, `Blocked by a wall. Move around to reach the item.`
+- `bhs` has texts no longer in English: `Usage: /lang <%s> (now %s)`
 - `cs` lacks: `No clear space nearby. Make room before removing this defence.`, `Blocked by a wall. Move around to reach the item.`
+- `cs` has texts no longer in English: `Usage: /lang <%s> (now %s)`
+- `lv` has texts no longer in English: `Usage: /lang <%s> (now %s)`
