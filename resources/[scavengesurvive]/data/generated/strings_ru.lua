@@ -561,6 +561,7 @@ return {
     Never = "Никогда",
     ["Next you will need a VALID email address: we send a code to it and you cannot play until you confirm it."] = "Далее понадобится ДЕЙСТВУЮЩИЙ адрес email: мы отправим на него код, и играть можно будет только после подтверждения.",
     ["Night Vision"] = "Прибор ночного видения",
+    ["No one nearby saw your message."] = "Никто поблизости не увидел ваше сообщение.",
     ["No skills yet"] = "Навыков пока нет",
     ["No staff yet."] = "Персонала пока нет.",
     ["No welded panel within reach to grind"] = "Рядом нет приваренной панели, которую можно срезать",
