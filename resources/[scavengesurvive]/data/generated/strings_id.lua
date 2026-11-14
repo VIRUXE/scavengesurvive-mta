@@ -561,6 +561,7 @@ return {
     Never = "Tidak pernah",
     ["Next you will need a VALID email address: we send a code to it and you cannot play until you confirm it."] = "Selanjutnya kamu perlu alamat email yang VALID: kami akan mengirim kode ke sana dan kamu tidak bisa bermain sebelum mengonfirmasinya.",
     ["Night Vision"] = "Teropong Malam",
+    ["No one nearby saw your message."] = "Tidak ada yang melihat pesanmu di sekitar.",
     ["No skills yet"] = "Belum ada keahlian",
     ["No staff yet."] = "Belum ada staf.",
     ["No welded panel within reach to grind"] = "Tidak ada panel las yang terjangkau untuk digerinda",

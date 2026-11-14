@@ -563,6 +563,7 @@ return {
     ["Next you will need a VALID email address: we send a code to it and you cannot play until you confirm it."] = "Tālāk tev vajadzēs DERĪGU e-pasta adresi: mēs tai nosūtīsim kodu, un kamēr to neapstiprināsi, spēlēt nevarēsi.",
     ["Night Vision"] = "Nakts redze",
     ["No clear space nearby. Make room before removing this defence."] = "Apkārt nav brīvas vietas. Atbrīvo vietu, pirms noņem šo aizsargbarjeru.",
+    ["No one nearby saw your message."] = "Neviens tuvumā neredzēja tavu ziņu.",
     ["No skills yet"] = "Vēl nav prasmju",
     ["No staff yet."] = "Personāla vēl nav.",
     ["No welded panel within reach to grind"] = "Tuvumā nav neviena sametināta paneļa, ko nogriezt",

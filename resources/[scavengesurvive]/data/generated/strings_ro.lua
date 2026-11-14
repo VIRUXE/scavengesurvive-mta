@@ -561,6 +561,7 @@ return {
     Never = "Niciodată",
     ["Next you will need a VALID email address: we send a code to it and you cannot play until you confirm it."] = "În continuare vei avea nevoie de o adresă de email VALIDĂ: îți trimitem un cod și nu poți juca până nu o confirmi.",
     ["Night Vision"] = "Vedere nocturnă",
+    ["No one nearby saw your message."] = "Nimeni din apropiere nu ți-a văzut mesajul.",
     ["No skills yet"] = "Nicio abilitate încă",
     ["No staff yet."] = "Încă nu există staff.",
     ["No welded panel within reach to grind"] = "Niciun panou sudat la îndemână de tăiat",
