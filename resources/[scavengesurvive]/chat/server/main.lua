@@ -195,11 +195,11 @@ end
 local trCache = tr.newCache()
 local trPausedUntil = 0
 
-local function showTranslation(res, target, name, readers, rgb)
+local function showTranslation(res, target, format, readers, rgb)
     if not res or tr.sameLanguage(res.source, target) then
         return
     end
-    local l1, l2 = logic.split(tr.line(name, res.text))
+    local l1, l2 = logic.split(format(tr.line(res.text)))
     for _, pl in ipairs(readers) do
         if isElement(pl) then
             outputChatBox(l1, pl, rgb[1], rgb[2], rgb[3], true)
@@ -217,7 +217,7 @@ end
 
 -- relay is called once with the English text for Discord (the original when it is English already, nothing to
 -- translate, or the call failed); English is then requested even when no English reader is in the audience.
-local function translateFor(speaker, name, text, players, rgb, relay)
+local function translateFor(speaker, format, text, players, rgb, relay)
     local key = getSetting("translate_key")
     local plain = tr.stripColours(text)
     if type(key) ~= "string" or key == "" or getTickCount() < trPausedUntil or not tr.worthTranslating(plain) then
@@ -238,7 +238,7 @@ local function translateFor(speaker, name, text, players, rgb, relay)
         byTarget.en = byTarget.en or {}
     end
     local function done(target, res)
-        showTranslation(res, target, name, byTarget[target], rgb)
+        showTranslation(res, target, format, byTarget[target], rgb)
         if relay and target == "en" then
             relay(tr.relayText(text, res))
         end
@@ -313,7 +313,10 @@ local function deliver(p, text, mode)
             end
         end
     end
-    translateFor(p, name, text, players, rgb, relay)
+    local function format(translated)
+        return logic.format(mode, name, translated, st.freq, colourHex)
+    end
+    translateFor(p, format, text, players, rgb, relay)
     outputServerLog(string.format("[CHAT] [%s] %s: %s", tag, name, text))
     logMessage(p, text, mode, st.freq)
 end
@@ -644,16 +647,12 @@ end
 
 -- A global line from outside the game (discordchat: Discord messages), shown to everyone not /quiet.
 function sendGlobalExternal(tag, name, text)
-    local line = string.format("#5865F2[%s] #FFFFFF%s#FFFFFF: %s", tostring(tag), tostring(name), tostring(text))
+    local function format(t)
+        return string.format("#5865F2[%s] #FFFFFF%s#FFFFFF: %s", tostring(tag), tostring(name), t)
+    end
     local players = audience(nil, MODE.GLOBAL)
-    send(line, players, logic.COLOURS[MODE.GLOBAL])
-    translateFor(
-        nil,
-        "[" .. tostring(tag) .. "] " .. tostring(name),
-        tostring(text),
-        players,
-        logic.COLOURS[MODE.GLOBAL]
-    )
+    send(format(tostring(text)), players, logic.COLOURS[MODE.GLOBAL])
+    translateFor(nil, format, tostring(text), players, logic.COLOURS[MODE.GLOBAL])
     outputServerLog(string.format("[CHAT] [%s] %s: %s", tostring(tag), tostring(name), tostring(text)))
     return true
 end
