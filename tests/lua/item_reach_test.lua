@@ -4,6 +4,7 @@ localPlayer, root, resourceRoot = {}, {}, {}
 local now, mode, size, heldTool = 0, "blocked", 9, nil
 exports = { lib = { getModule = function() return 'return { onChange = function() end }' end } }
 function addEventHandler() end
+function setTimer() end
 function getElementsByType() return {} end
 function getTickCount() return now end
 function getElementPosition() return 0, 0, 0 end
