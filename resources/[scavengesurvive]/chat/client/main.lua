@@ -95,40 +95,6 @@ end
 local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")()
 local L = lang.text
 
--- Local chat: the server says who is within earshot; if none of them has a clear line of sight to the speaker
--- (nobody there, or all behind walls), the speaker is told no one saw the line.
-local HEAD_BONE = 8
-addEventHandler("chatLocalAudienceChecked", root, function(others)
-    local sx, sy, sz = getPedBonePosition(localPlayer, HEAD_BONE)
-    for _, o in ipairs(type(others) == "table" and others or {}) do
-        if isElement(o) then
-            local tx, ty, tz = getPedBonePosition(o, HEAD_BONE)
-            if
-                tx
-                and isLineOfSightClear(
-                    sx,
-                    sy,
-                    sz,
-                    tx,
-                    ty,
-                    tz,
-                    true,
-                    false,
-                    false,
-                    true,
-                    false,
-                    true,
-                    false,
-                    localPlayer
-                )
-            then
-                return
-            end
-        end
-    end
-    outputChatBox("#AAAAAA" .. L("No one nearby saw your message."), 255, 255, 255, true)
-end)
-
 local function askFrequency()
     typing = true
     local body = lang.format("Enter a frequency between %.1f and %.1f", logic.FREQ_MIN, logic.FREQ_MAX)

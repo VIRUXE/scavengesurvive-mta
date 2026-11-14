@@ -302,15 +302,9 @@ local function deliver(p, text, mode)
     end
     local players = audience(p, mode)
     send(logic.format(mode, name, text, st.freq, colourHex), players, rgb)
-    if mode == MODE.LOCAL or mode == "me" then
-        -- the walls are only known to clients: the speaker's client checks sight to each listener
-        local others = {}
-        for _, o in ipairs(players) do
-            if o ~= p then
-                others[#others + 1] = o
-            end
-        end
-        triggerClientEvent(p, "chatLocalAudienceChecked", p, others)
+    if (mode == MODE.LOCAL or mode == "me") and #players <= 1 then
+        -- the speaker is in the list too: no one else within range
+        outputChatBox("#AAAAAA" .. lang.textFor(p, "No one nearby saw your message."), p, 255, 255, 255, true)
     end
     local relay = nil
     if mode == MODE.GLOBAL then

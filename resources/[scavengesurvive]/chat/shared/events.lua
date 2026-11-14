@@ -11,6 +11,5 @@ addEvent("chatModeRequested", true)
 addEvent("chatRadioChanged", true)
 addEvent("chatRadioOpened", true)
 addEvent("chatVoiceBlocked", true)
-addEvent("chatLocalAudienceChecked", true)
 -- client-local
 addEvent("uiDialogResponded", false)
