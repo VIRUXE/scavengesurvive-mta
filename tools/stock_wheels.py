@@ -1,15 +1,17 @@
-"""Stock wheel items: the ten GTA SA meshes in models/generic/wheels.dff, inflated and flat.
+"""Stock wheel items: one wheel per GTA SA wheel style, inflated and flat.
 
     python -m tools.stock_wheels
 
-Writes prop_models/files/wheel_<type>.dff and wheel_<type>_flat.dff (face up, origin on the
-ground), one shared stock_wheels.txd, a box collision each, then props.lua and meta.xml.
-Item rows go into data/generated/item_types.lua and sql/seed/0001_item_types.sql. The converter
-is retired, so those two files are edited in place.
+Models each wheel in Blender as a lathe (rounded tyre, dished rim, open barrel at the back) at the size of the
+vehicles that drop it, and writes prop_models/files/wheel_<type>.dff and wheel_<type>_flat.dff (face up, origin on
+the ground) with day and night vertex colours, one shared stock_wheels.txd holding the textures of
+models/generic/wheels.txd, a box collision each, then props.lua and meta.xml. Item rows go into
+data/generated/item_types.lua and sql/seed/0001_item_types.sql. The converter is retired, so those two files are
+edited in place.
 
-Ids 20237-20246 are the inflated wheels. 20247-20256 are the same meshes collapsed into a disc.
-The generic Wheel item (20222) is unchanged. Both sets lie face-up: that is how a wheel item
-rests, so rotx/roty/rotz stay 0 and modelz stays 0.
+Ids 20237-20246 are the inflated wheels. 20247-20256 are the same wheels with the tyre caved in. The generic Wheel
+item (20222) is unchanged. Both sets lie face-up: that is how a wheel item rests, so rotx/roty/rotz stay 0 and
+modelz stays 0.
 """
 from __future__ import annotations
 
@@ -24,12 +26,11 @@ FILES = ROOT / "resources" / "[scavengesurvive]" / "prop_models" / "files"
 ITEM_LUA = ROOT / "resources" / "[scavengesurvive]" / "data" / "generated" / "item_types.lua"
 ITEM_SQL = ROOT / "sql" / "seed" / "0001_item_types.sql"
 GTA = Path("/gta/sa/gamefiles/GTA San Andreas/models/generic")
-DFF = GTA / "wheels.DFF"
 TXD = GTA / "wheels.txd"
 TXD_NAME = "stock_wheels"
 FIRST_ID = 20237
 
-# key in wheels.dff, display label, uname stem (Wheel + stem, Wheel + stem + Flat)
+# style key, display label, uname stem (Wheel + stem, Wheel + stem + Flat)
 TYPES = [
     ("smallcar", "Small Car", "Smallcar"),
     ("offroad", "Offroad", "Offroad"),
@@ -71,175 +72,95 @@ def props_rows() -> list[dict]:
     return [{"id": w["id"], "name": w["asset"], "dist": w["dist"], "prop_txd": w["txd"]} for w in catalog()]
 
 
-def _chunks(data: bytes):
-    o = 0
-    out = []
-    while o + 12 <= len(data):
-        kind, size, _ver = struct.unpack_from("<III", data, o)
-        body = data[o + 12:o + 12 + size]
-        out.append((kind, body))
-        o += 12 + size
-    return out
+# Per style: diameter and width in metres (the median wheel of the vehicles that drop it, measured from their
+# DFFs), where the rim ends in the face texture as a fraction of the radius, and how deep the rim's dish is as a
+# fraction of the width.
+SPECS = {
+    "smallcar": (0.64, 0.21, 0.77, 0.10),
+    "offroad": (0.86, 0.29, 0.60, 0.22),
+    "truck": (1.02, 0.33, 0.63, 0.24),
+    "rim": (0.58, 0.20, 0.75, 0.20),
+    "alloy": (0.72, 0.25, 0.81, 0.12),
+    "lightvan": (0.72, 0.24, 0.67, 0.18),
+    "lighttruck": (0.78, 0.26, 0.66, 0.20),
+    "classic": (0.70, 0.24, 0.77, 0.10),
+    "saloon": (0.70, 0.24, 0.75, 0.10),
+    "sport": (0.70, 0.27, 0.78, 0.15),
+}
+SEGMENTS = 20
+TYRE_TEX = "tyre64a"
+BARREL_COLOUR = (0.3, 0.3, 0.31)
+# The game draws a prelit prop at about 2.8 times texture x vertex colour (measured in game on the tread), so the
+# near-black 2001 tyre texture wants nearly full light and the bright wheel faces about half of it.
+SURFACE_LIGHT = {"barrel": 0.8, "tread": 1.0, "face": 0.55}
 
 
-def parse_dff(data: bytes):
-    """l0 atomics from wheels.dff. UVs are stored Blender-up (v flipped); DragonFF flips them back."""
-    import numpy as np
-
-    clump_parts = _chunks(_chunks(data)[0][1])
-    frame_body = clump_parts[1][1]
-    st = _chunks(frame_body)[0][1]
-    nframes = struct.unpack_from("<i", st, 0)[0]
-    o = 4
-    frames = []
-    for _ in range(nframes):
-        vals = struct.unpack_from("<12fii", st, o)
-        o += 56
-        frames.append({
-            "right": np.array(vals[0:3], np.float64),
-            "up": np.array(vals[3:6], np.float64),
-            "at": np.array(vals[6:9], np.float64),
-            "pos": np.array(vals[9:12], np.float64),
-            "parent": vals[12],
-            "name": "",
-        })
-    fi = 0
-    for t, b in _chunks(frame_body):
-        if t != 0x03:
-            continue
-        for tt, bb in _chunks(b):
-            if tt == 0x0253F2FE:
-                frames[fi]["name"] = bb.split(b"\0", 1)[0].decode("latin1")
-        fi += 1
-
-    geos = []
-    for t, b in _chunks(clump_parts[2][1]):
-        if t != 0x0F:
-            continue
-        parts = _chunks(b)
-        gst = parts[0][1]
-        flags, ntri, nvert, _nm = struct.unpack_from("<IIII", gst, 0)
-        o = 16
-        if flags & 0x8:
-            o += nvert * 4
-        uvs = np.zeros((nvert, 2), np.float64)
-        if flags & 0x84:
-            sets = 2 if flags & 0x80 else 1
-            for i in range(nvert):
-                u, v = struct.unpack_from("<ff", gst, o)
-                o += 8
-                uvs[i] = (u, 1.0 - v)
-                if sets == 2:
-                    o += 8
-        faces, mats = [], []
-        for _ in range(ntri):
-            v2, v1, mat, v3 = struct.unpack_from("<HHHH", gst, o)
-            o += 8
-            faces.append((v1, v2, v3))
-            mats.append(mat)
-        o += 24
-        verts = np.zeros((nvert, 3), np.float64)
-        for i in range(nvert):
-            verts[i] = struct.unpack_from("<fff", gst, o)
-            o += 12
-        materials = []
-        for mt, mb in parts:
-            if mt != 0x08:
-                continue
-            for t2, b2 in _chunks(mb):
-                if t2 != 0x07:
-                    continue
-                ms = _chunks(b2)[0][1]
-                col = ms[4:8]
-                tex = None
-                for tt, bb in _chunks(b2):
-                    if tt != 0x06:
-                        continue
-                    for t3, b3 in _chunks(bb):
-                        if t3 == 0x02:
-                            s = b3.split(b"\0", 1)[0].decode("latin1")
-                            if s:
-                                tex = s
-                                break
-                materials.append({"color": (col[0] / 255, col[1] / 255, col[2] / 255, 1), "texture": tex})
-        geos.append({"verts": verts, "uvs": uvs, "faces": faces, "mat_index": mats, "materials": materials})
-
-    atomics = []
-    for t, b in clump_parts:
-        if t != 0x14:
-            continue
-        ast = _chunks(b)[0][1]
-        frame_i, geo_i = struct.unpack_from("<ii", ast, 0)
-        atomics.append((frame_i, geo_i))
-    return frames, geos, atomics
+def face_texture(key: str) -> str:
+    return "whee_rim64" if key == "rim" else f"wheel_{key}64"
 
 
-def frame_matrix(frames, i, cache):
-    import numpy as np
+def wheel_profile(key: str) -> list[tuple[float, float, str, float]]:
+    """The lathe profile of a wheel lying face-up, back centre to front centre: (radius, height, surface, light).
 
-    if i in cache:
-        return cache[i]
-    f = frames[i]
-    local = np.eye(4)
-    local[:3, 0] = f["right"]
-    local[:3, 1] = f["up"]
-    local[:3, 2] = f["at"]
-    local[:3, 3] = f["pos"]
-    parent = f["parent"]
-    world = local if parent < 0 else frame_matrix(frames, parent, cache) @ local
-    cache[i] = world
-    return world
+    `surface` is what the band from this point to the next is drawn with: "barrel" (bare metal, untextured),
+    "face" (the style's wheel texture, projected straight down) or "tread" (the tyre texture, wrapped round).
+    `light` is the day vertex colour, darker where the wheel shades itself.
+    """
+    import math
 
-
-def _kind(mi, materials):
-    tex = ""
-    if 0 <= mi < len(materials) and materials[mi]["texture"]:
-        tex = materials[mi]["texture"].lower()
-    if "tyre" in tex:
-        return "tyre"
-    if tex.startswith("wheel") or tex.startswith("whee"):
-        return "rim"
-    return "other"
-
-
-def align_rim_out(verts, faces, mat_index, materials):
-    """Axle along +Y, the textured rim facing +Y."""
-    import numpy as np
-
-    center = (verts.min(0) + verts.max(0)) * 0.5
-    v = verts - center
-    _evals, evecs = np.linalg.eigh(np.cov(v.T))
-    normal = evecs[:, 0].copy()
-    z_axis = evecs[:, 2].copy()
-    x_axis = np.cross(z_axis, normal)
-    x_axis /= np.linalg.norm(x_axis)
-    z_axis = np.cross(normal, x_axis)
-    src = np.stack([x_axis, normal, z_axis], axis=1)
-    if np.linalg.det(src) < 0:
-        x_axis *= -1
-        src = np.stack([x_axis, normal, z_axis], axis=1)
-    v = (src.T @ v.T).T
-    pos = neg = 0
-    for (a, b, c), mi in zip(faces, mat_index):
-        if _kind(mi, materials) != "rim":
-            continue
-        cy = (v[a, 1] + v[b, 1] + v[c, 1]) / 3.0
-        if cy > 0.02:
-            pos += 1
-        elif cy < -0.02:
-            neg += 1
-    if neg > pos:
-        v[:, 1] *= -1
-        faces = [(c, b, a) for a, b, c in faces]
-    return v, faces
+    dia, w, k, dish = SPECS[key]
+    r = dia / 2
+    rim = k * r
+    t = r - rim  # the tyre's section height
+    s = min(0.5 * t, 0.22 * w)  # shoulder radius
+    lo, hi = 0.02 * w, 0.98 * w
+    barrel = rim * 0.86
+    bulge = (rim + 0.06 * t + r - s) / 2  # the sidewall is widest midway between bead and shoulder
+    pts = [
+        (0.0, 0.58 * w, "face", 0.5),  # the back of the wheel face, seen down the barrel
+        (barrel, 0.58 * w, "barrel", 0.5),
+        (barrel, 0.07 * w, "barrel", 0.85),
+        (rim, lo, "face", 0.8),
+        (rim + 0.06 * t, 0.06 * w, "face", 0.62),
+        (bulge, 0.0, "face", 0.7),
+        (r - s, lo, "tread", 0.72),
+    ]
+    for a in (30, 60):
+        pts.append((r - s + s * math.sin(math.radians(a)), lo + s - s * math.cos(math.radians(a)), "tread", 0.78))
+    pts.append((r, lo + s, "tread", 0.84))
+    pts.append((r, hi - s, "tread", 0.9))
+    for a in (60, 30):
+        pts.append((r - s + s * math.sin(math.radians(a)), hi - s + s * math.cos(math.radians(a)), "tread", 0.95))
+    pts += [
+        (r - s, hi, "face", 1.0),
+        (bulge, w, "face", 1.0),
+        (rim + 0.06 * t, 0.94 * w, "face", 0.82),
+        (rim, hi, "face", 1.0),
+        (rim - 0.05 * r, 0.965 * w, "face", 0.9),
+        (rim * 0.66, w * (1 - dish), "face", 0.72),
+        (rim * 0.42, w * (1 - dish * 0.8), "face", 0.82),
+        (rim * 0.3, 0.96 * w, "face", 0.97),
+        (0.0, 0.97 * w, "face", 1.0),
+    ]
+    return pts
 
 
-def lay_flat(verts):
-    """Turn the rim from +Y onto +Z so the wheel lies face-up."""
-    import numpy as np
+def deflated(key: str, radius: float, height: float, angle: float) -> tuple[float, float]:
+    """Where a tyre point ends up once the air is out: the upper sidewall caves in unevenly round the wheel
+    and the carcass slumps outward at the ground. The rim does not move."""
+    import math
 
-    x, y, z = verts[:, 0], verts[:, 1], verts[:, 2]
-    return np.stack([x, -z, y], axis=1)
+    dia, w, k, _dish = SPECS[key]
+    r = dia / 2
+    rim = k * r
+    if radius <= rim + 1e-6:
+        return radius, height
+    out = min((radius - rim) / (0.5 * (r - rim)), 1.0)  # 0 at the bead, 1 from mid-sidewall out
+    up = height / w
+    sag = 0.24 * w * (1.0 + 0.22 * math.sin(2 * angle + 1.0) + 0.14 * math.sin(5 * angle + 0.4))
+    height = height - sag * out * up
+    radius = radius + r * out * (0.045 * (1.0 - up) - 0.012 * up + 0.01 * math.sin(3 * angle + 2.0))
+    return radius, max(height, 0.0)
 
 
 def sync_items() -> None:
@@ -330,140 +251,107 @@ def _export_in_blender(out_dir: str) -> None:
 
     import bmesh
     import bpy
-    import numpy as np
-    from mathutils import Vector
 
     out = Path(out_dir)
     bpy.ops.wm.read_factory_settings(use_empty=True)
     bpy.ops.preferences.addon_enable(module="DragonFF")
-    frames, geos, atomics = parse_dff(DFF.read_bytes())
-    cache = {}
-    by_name = {frames[i]["name"]: (i, g) for i, g in atomics}
 
-    def placeholder(tex):
-        name = tex + ".png"
-        img = bpy.data.images.get(name)
-        if img is None:
-            img = bpy.data.images.new(name, 4, 4)
-        return img
-
-    def make_material(tex, color):
-        mat = bpy.data.materials.new(tex or "untextured")
+    def material(name, texture, colour):
+        mat = bpy.data.materials.new(name)
         mat.use_nodes = True
         bsdf = next(n for n in mat.node_tree.nodes if n.type == "BSDF_PRINCIPLED")
-        bsdf.inputs["Base Color"].default_value = (color[0], color[1], color[2], 1)
-        if tex:
+        bsdf.inputs["Base Color"].default_value = (colour[0], colour[1], colour[2], 1)
+        if texture:
             node = mat.node_tree.nodes.new("ShaderNodeTexImage")
-            node.image = placeholder(tex)
+            node.image = bpy.data.images.new(texture + ".png", 4, 4)  # DragonFF writes the name; the TXD has the pixels
             mat.node_tree.links.new(node.outputs["Color"], bsdf.inputs["Base Color"])
         return mat
 
-    def build(name, verts, uvs, faces, mat_index, materials):
-        mesh = bpy.data.meshes.new(name)
-        mesh.from_pydata(verts.tolist(), [], [tuple(f) for f in faces])
-        mesh.validate()
-        mesh.update()
-        uv_layer = mesh.uv_layers.new(name="UV")
-        for poly in mesh.polygons:
-            for li, vi in zip(poly.loop_indices, poly.vertices):
-                uv_layer.data[li].uv = uvs[vi]
-        built = []
-        for m in materials:
-            built.append(make_material(m["texture"], m["color"]))
-        if not built:
-            built.append(make_material(None, (0.7, 0.7, 0.7, 1)))
-        for m in built:
-            mesh.materials.append(m)
-        for poly, mi in zip(mesh.polygons, mat_index):
-            poly.material_index = mi if mi < len(built) else 0
+    def build(w):
+        key, flat = w["key"], w["flat"]
+        dia, width, _k, _dish = SPECS[key]
+        r = dia / 2
+        profile = wheel_profile(key)
+        tread = [i for i, p in enumerate(profile) if p[2] == "tread"]
+        first, last = tread[0], tread[-1] + 1
+        # the tread texture spans the band once across, by distance, and repeats round it at the same scale
+        along = [0.0]
+        for i in range(first, last):
+            along.append(along[-1] + math.dist(profile[i][:2], profile[i + 1][:2]))
+        repeats = max(1, round(2 * math.pi * r / along[-1]))
+
+        mesh = bpy.data.meshes.new(w["asset"])
         bm = bmesh.new()
-        bm.from_mesh(mesh)
+        uv = bm.loops.layers.uv.new("UVMap")
+        day = bm.loops.layers.color.new("Day")
+        night = bm.loops.layers.color.new("Night")
+        rings = []
+        for radius, height, _surface, _light in profile:
+            if radius < 1e-6:
+                rings.append([bm.verts.new((0.0, 0.0, height))] * SEGMENTS)
+                continue
+            ring = []
+            for s in range(SEGMENTS):
+                angle = 2 * math.pi * s / SEGMENTS
+                pr, pz = deflated(key, radius, height, angle) if flat else (radius, height)
+                ring.append(bm.verts.new((pr * math.cos(angle), pr * math.sin(angle), pz)))
+            rings.append(ring)
+
+        slot = {"barrel": 0, "tread": 1, "face": 2}
+        for i in range(len(profile) - 1):
+            surface = profile[i][2]
+            for s in range(SEGMENTS):
+                n = (s + 1) % SEGMENTS
+                corners = [(i, s, s), (i, n, s + 1), (i + 1, n, s + 1), (i + 1, s, s)]
+                verts, keep = [], []
+                for c in corners:
+                    v = rings[c[0]][c[1]]
+                    if v not in verts:
+                        verts.append(v)
+                        keep.append(c)
+                if len(verts) < 3:
+                    continue
+                face = bm.faces.new(verts)
+                face.material_index = slot[surface]
+                face.smooth = True
+                for loop, (pi, si, turn) in zip(face.loops, keep):
+                    # the undeformed position maps the texture, so a flat tyre's sidewall keeps its lettering
+                    radius = profile[pi][0]
+                    angle = 2 * math.pi * si / SEGMENTS
+                    if surface == "tread":
+                        # the texture's ribs run up it, so v goes round the tyre and u across the tread
+                        loop[uv].uv = (along[pi - first] / along[-1], turn * repeats / SEGMENTS)
+                    else:
+                        loop[uv].uv = (0.5 + 0.5 * radius * math.cos(angle) / r, 0.5 + 0.5 * radius * math.sin(angle) / r)
+                    light = profile[pi][3] * SURFACE_LIGHT[surface]
+                    if flat and surface != "barrel" and radius > SPECS[key][2] * r:
+                        light *= 0.92
+                    loop[day] = (light, light, light, 1.0)
+                    loop[night] = (light * 0.3, light * 0.3, light * 0.32, 1.0)
         bmesh.ops.recalc_face_normals(bm, faces=list(bm.faces))
+        bm.normal_update()
         bm.to_mesh(mesh)
         bm.free()
-        mesh.update()
-        ob = bpy.data.objects.new(name, mesh)
+        mesh.set_sharp_from_angle(angle=math.radians(50))
+        mesh.materials.append(material("wheel_barrel", None, BARREL_COLOUR))
+        mesh.materials.append(material(TYRE_TEX, TYRE_TEX, (1, 1, 1)))
+        mesh.materials.append(material(face_texture(key), face_texture(key), (1, 1, 1)))
+        ob = bpy.data.objects.new(w["asset"], mesh)
+        ob.dff.type = "OBJ"
+        ob.dff.day_cols = True
+        ob.dff.night_cols = True
         bpy.context.scene.collection.objects.link(ob)
         return ob
-
-    def deflate(ob):
-        me = ob.data
-        coords = np.empty(len(me.vertices) * 3, dtype=np.float64)
-        me.vertices.foreach_get("co", coords)
-        coords = coords.reshape(-1, 3)
-        radii = np.hypot(coords[:, 0], coords[:, 1])
-        outer = float(np.percentile(radii, 98)) or 1.0
-        group = ob.vertex_groups.new(name="Tyre")
-        for i, r in enumerate(radii):
-            group.add([i], 0.55 + 0.45 * min(float(r) / outer, 1.0), "REPLACE")
-        bpy.context.view_layer.update()
-        corners = [Vector(c) for c in ob.bound_box]
-        lo = Vector((min(c.x for c in corners), min(c.y for c in corners), min(c.z for c in corners)))
-        hi = Vector((max(c.x for c in corners), max(c.y for c in corners), max(c.z for c in corners)))
-        centre = (lo + hi) * 0.5
-        size = hi - lo
-        lat = bpy.data.lattices.new(ob.name + "_lattice")
-        lat.points_u = lat.points_v = 4
-        lat.points_w = 3
-        lat.interpolation_type_u = lat.interpolation_type_v = lat.interpolation_type_w = "KEY_LINEAR"
-        lat_ob = bpy.data.objects.new(lat.name, lat)
-        bpy.context.scene.collection.objects.link(lat_ob)
-        lat_ob.location = ob.matrix_world @ centre
-        lat_ob.scale = (size.x * 0.55, size.y * 0.55, size.z * 0.7)
-        for point in lat.points:
-            co = point.co_deform
-            radial = math.hypot(co.x, co.y)
-            co.z = -0.5 + (co.z + 0.5) * 0.42
-            if radial > 1e-5:
-                spread = 1.0 + 0.06 * min(radial / 0.5, 1.0)
-                co.x *= spread
-                co.y *= spread
-            point.co_deform = co
-        mod = ob.modifiers.new("Deflate", "LATTICE")
-        mod.object = lat_ob
-        mod.vertex_group = "Tyre"
-        with bpy.context.temp_override(object=ob, active_object=ob, selected_objects=[ob], selected_editable_objects=[ob]):
-            result = bpy.ops.object.modifier_apply(modifier=mod.name)
-        if result != {"FINISHED"}:
-            raise RuntimeError(f"lattice apply failed on {ob.name}: {result}")
-        bpy.data.objects.remove(lat_ob, do_unlink=True)
-        bpy.data.lattices.remove(lat)
-        bm = bmesh.new()
-        bm.from_mesh(ob.data)
-        bmesh.ops.recalc_face_normals(bm, faces=list(bm.faces))
-        bm.to_mesh(ob.data)
-        bm.free()
-        ob.data.update()
-
-    def seat(ob):
-        me = ob.data
-        verts = np.empty(len(me.vertices) * 3, dtype=np.float64)
-        me.vertices.foreach_get("co", verts)
-        verts = verts.reshape(-1, 3)
-        centre_xy = (verts[:, :2].min(0) + verts[:, :2].max(0)) * 0.5
-        verts[:, 0] -= centre_xy[0]
-        verts[:, 1] -= centre_xy[1]
-        verts[:, 2] -= verts[:, 2].min()
-        me.vertices.foreach_set("co", verts.reshape(-1))
-        me.update()
 
     for w in catalog():
         for obj in list(bpy.data.objects):
             bpy.data.objects.remove(obj, do_unlink=True)
-        frame_i, geo_i = by_name[f"wheel_{w['key']}_l0"]
-        g = geos[geo_i]
-        matrix = frame_matrix(frames, frame_i, cache)
-        verts = (matrix[:3, :3] @ g["verts"].T).T + matrix[:3, 3]
-        faces = list(g["faces"])
-        verts, faces = align_rim_out(verts, faces, g["mat_index"], g["materials"])
-        verts = lay_flat(verts)
-        ob = build(w["asset"], verts, g["uvs"], faces, g["mat_index"], g["materials"])
-        if w["flat"]:
-            deflate(ob)
-        seat(ob)
-        ob.location = (0, 0, 0)
-        ob.rotation_euler = (0, 0, 0)
-        ob.scale = (1, 1, 1)
+        # a texture an earlier wheel used would come back as "name.png.001", and DragonFF writes that name into the DFF
+        for block in (bpy.data.meshes, bpy.data.materials, bpy.data.images):
+            for item in list(block):
+                block.remove(item)
+        ob = build(w)
+        bpy.context.view_layer.update()
         bpy.ops.export_dff.scene(
             filepath=str(out / f"{w['asset']}.dff"),
             export_coll=False,
@@ -471,7 +359,7 @@ def _export_in_blender(out_dir: str) -> None:
             export_version="0x36003",
         )
         dims = tuple(round(v, 3) for v in ob.dimensions)
-        print(f"stock_wheels: {w['asset']} tris={len(ob.data.polygons)} size={dims}")
+        print(f"stock_wheels: {w['asset']} tris={sum(len(p.vertices) - 2 for p in ob.data.polygons)} size={dims}")
     os._exit(0)
 
 
