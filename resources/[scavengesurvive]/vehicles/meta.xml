@@ -38,6 +38,7 @@
     <export function="spawnTransientVehicle" type="server"/>
     <export function="destroyTransientVehicle" type="server"/>
     <export function="respawnAll" type="server"/>
+    <export function="fillToCap" type="server"/>
     <export function="getVehicleFuel" type="server"/>
     <export function="setVehicleFuel" type="server"/>
     <export function="flattenVehicleBattery" type="server"/>

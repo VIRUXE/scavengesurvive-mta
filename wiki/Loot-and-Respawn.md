@@ -51,7 +51,7 @@ Loot nobody touches disappears from its point after 24 hours, and its share goes
 
 ### The first roll and restarts
 
-When the server has no vehicles at all, every vehicle spawn point is rolled once (4 % chance per point by default, then the vehicle type's own spawn chance, see [Vehicles](Vehicles)). The number of vehicles that results is the fleet capacity. From then on, restarts rebuild the vehicles from the database, where they were, with their fuel, damage and trunk contents.
+When the server has no vehicles at all, every vehicle spawn point is rolled once (4 % chance per point by default, then the vehicle type's own spawn chance, see [Vehicles](Vehicles)). The fleet capacity is three times the number of vehicles that roll. From then on, restarts rebuild the vehicles from the database, where they were, with their fuel, damage and trunk contents.
 
 ### Refill
 

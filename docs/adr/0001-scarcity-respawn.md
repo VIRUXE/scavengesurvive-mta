@@ -17,8 +17,9 @@ must come back, but slowly, and never beyond what the world can carry.
 One mechanism for loot items and vehicles: a carrying capacity per category with refill proportional to the
 deficit, per-point cooldowns, and placement away from players.
 
-1. **Cap (carrying capacity).** `cap = initial_roll × cap_multiplier` (setting, default 1.0). Vehicles: the size
-   of the first roll over the 2,017 points (about 80). Loot: per zone, the item count the seed produced on its
+1. **Cap (carrying capacity).** `cap = initial_roll × cap_multiplier` (vehicles default 3.0, so the fleet target is
+   three times the first roll; loot default 0.15). Vehicles: the size
+   of the first roll over the 2,017 points (about 80, cap about 240). Loot: per zone, the item count the seed produced on its
    first roll. Everything alive counts: world items, items in containers, items players carry, vehicles players
    parked. Hoarding reduces what respawns for everyone.
 2. **Refill proportional to the deficit, with a floor.** Every `refill_interval` (5 min): `deficit = cap − alive`;

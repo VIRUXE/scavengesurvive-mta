@@ -559,7 +559,12 @@ local function rollAll(cb)
             if pending == 0 then
                 rolling = false
                 local cap = budget.cap(created, settings["vehicles.cap_multiplier"])
-                db.exec(UPSERT_BUDGET, { cap })
+                db.exec(UPSERT_BUDGET, { cap }, function()
+                    -- cap_multiplier above 1 leaves the roll short of the fleet target; place the rest now
+                    if cap > created then
+                        fillToCap()
+                    end
+                end)
                 log.event("vehicle.rolled", { spawns = #rows, created = created, cap = cap })
                 triggerEvent("vehiclesSpawned", resourceRoot, created)
                 if cb then
@@ -585,31 +590,48 @@ local function rollAll(cb)
     return true
 end
 
--- Spawns up to n vehicles on random cooled points clear of players; cb(spawned) when the rolls are in.
-local function refillSpawns(n, cb)
+-- Spawns up to n vehicles on random cooled points clear of players.
+-- quiet: a manual top-up, so nothing is posted per vehicle. cb(spawned) runs after the inserts land.
+local function spawnBatch(n, quiet, cb)
     local minDist = setting("world.min_player_distance", 150)
-    db.query(SELECT_COOLED_SPAWNS, { n * 8 }, function(rows)
+    db.query(SELECT_COOLED_SPAWNS, { math.max(8, n * 8) }, function(rows)
         if not rows then
             return cb(0)
         end
-        local spawned = 0
-        for _, s in ipairs(budget.pickClear(rows, playerPositions(), minDist, n * 4, math.random)) do
-            if spawned >= n then
-                break
-            end
-            local started = spawnAt(s, 100, function(v)
-                if v then
-                    coolPoint(info[v].spawnId)
-                    log.event("vehicle.spawned", vehicleLine(v, { uname = info[v].uname, reason = "refill" }))
-                    triggerEvent("vehicleRefillSpawned", v)
-                end
-            end)
-            if started then
-                spawned = spawned + 1
+        local pending, spawned, started = 0, 0, 0
+        local function finish()
+            if pending == 0 then
+                cb(spawned)
             end
         end
-        cb(spawned)
+        for _, s in ipairs(budget.pickClear(rows, playerPositions(), minDist, n * 4, math.random)) do
+            if started >= n then
+                break
+            end
+            local placed = spawnAt(s, 100, function(v)
+                pending = pending - 1
+                if v then
+                    spawned = spawned + 1
+                    coolPoint(info[v].spawnId)
+                    if not quiet then
+                        log.event("vehicle.spawned", vehicleLine(v, { uname = info[v].uname, reason = "refill" }))
+                        triggerEvent("vehicleRefillSpawned", v)
+                    end
+                end
+                finish()
+            end)
+            if placed then
+                started = started + 1
+                pending = pending + 1
+            end
+        end
+        finish()
     end)
+end
+
+-- Spawns up to n vehicles on random cooled points clear of players; cb(spawned) when the rolls are started.
+local function refillSpawns(n, cb)
+    spawnBatch(n, false, cb)
 end
 
 -- The ADR 0001 refill tick: retire abandoned vehicles, then spend the refill the deficit earned this interval.
@@ -3111,6 +3133,40 @@ function respawnAll()
     for v in pairs(info) do
         if isElement(v) then
             destroyElement(v)
+-- Tops the fleet up to the stored carrying capacity. One-shot: the five-minute refill stays paced.
+-- Returns false when a roll or refill is already running. The count lands in vehicle.filledToCap.
+function fillToCap()
+    if rolling or refilling or not types then
+        return false
+    end
+    refilling = true
+    local total = 0
+    local function step()
+        db.query(SELECT_BUDGET, {}, function(brows)
+            local b = brows and brows[1]
+            local cap = b and tonumber(b.cap) or 0
+            local alive = b and tonumber(b.alive) or 0
+            local need = cap - alive
+            if not b or need <= 0 then
+                refilling = false
+                log.event("vehicle.filledToCap", { cap = cap, alive = alive, spawned = total })
+                return
+            end
+            spawnBatch(need, true, function(n)
+                total = total + n
+                if n <= 0 then
+                    refilling = false
+                    log.event("vehicle.filledToCap", { cap = cap, alive = alive, spawned = total, short = need })
+                    return
+                end
+                step()
+            end)
+        end)
+    end
+    step()
+    return true
+end
+
             removed = removed + 1
         end
     end

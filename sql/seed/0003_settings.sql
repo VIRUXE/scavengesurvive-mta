@@ -44,7 +44,7 @@ INSERT INTO settings (skey, svalue) VALUES
 ('staff.max_warnings','5'),
 ('staff.warn_ban_hours','24'),
 ('vehicles.abandon_days','3'),
-('vehicles.cap_multiplier','1.0'),
+('vehicles.cap_multiplier','3.0'),
 ('vehicles.cooldown_hours','6'),
 ('vehicles.cooldown_jitter','0.33'),
 ('vehicles.damage_bleed_mult','1.0'),
