@@ -9,6 +9,28 @@ def version(start, end, *, item=1, spawn=7, holder=None, container=None, x=20, c
     return (item, "Bottle", 7, "ls", spawn, holder, container, x, 30, 0, 0, created, start, end)
 
 
+class PlayerTrackTests(unittest.TestCase):
+    def test_live_trail_window_uses_timestamp_with_or_without_seat(self):
+        old = [10, 20, 3, 0, 0, 422, 699, 1]
+        legacy = [10, 20, 3, 0, 0, 422, 700]
+        driver = [10, 20, 3, 0, 0, 422, 950, 0]
+        passenger = [10, 20, 3, 0, 0, 422, 999, 1]
+        snapshot = {"at": 1000, "players": [{"char": 1, "trail": [old, legacy, driver, passenger]}]}
+        with patch.object(server, "read_snapshot", return_value=snapshot), \
+                patch.object(server, "session_starts", return_value={}), \
+                patch.object(server.time, "time", return_value=1000):
+            result = server.api_live({"trail": "300"})
+        self.assertEqual(result["players"][0]["trail"], [legacy, driver, passenger])
+
+    def test_track_preserves_driver_passenger_and_unknown_seats(self):
+        rows = [(10, 20, 3, 0, 0, 422, 950, seat) for seat in (0, 1, None)]
+        with patch.object(server, "query", return_value=rows), \
+                patch.object(server, "sparse_points", return_value=[]):
+            result = server.api_track({"account": "1", "from": "900", "to": "1000"})
+        self.assertEqual([point[7] for point in result["points"]], [0, 1, None])
+        self.assertEqual([point[6] for point in result["points"]], [950, 950, 950])
+
+
 class LootHistoryTests(unittest.TestCase):
     def test_tracks_loot_after_spawn_link_is_cleared(self):
         rows = [

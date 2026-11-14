@@ -99,6 +99,7 @@ CREATE TABLE IF NOT EXISTS `character_track` (
   `interior` tinyint(4) NOT NULL DEFAULT 0,
   `dimension` int(11) NOT NULL DEFAULT 0,
   `vehicle` smallint(6) DEFAULT NULL,
+  `vehicle_seat` tinyint(3) unsigned DEFAULT NULL,
   PRIMARY KEY (`char_id`,`at`),
   KEY `ix_character_track_account_at` (`account_id`,`at`),
   KEY `ix_character_track_at` (`at`)
@@ -823,14 +824,14 @@ BEGIN
   SET v_n = ROW_COUNT();
   -- trail points the server buffered since the last flush (staff dashboard); "ago" is milliseconds before now,
   -- so the game server and the database need no shared clock
-  INSERT IGNORE INTO character_track (char_id, account_id, at, x, y, z, interior, dimension, vehicle)
+  INSERT IGNORE INTO character_track (char_id, account_id, at, x, y, z, interior, dimension, vehicle, vehicle_seat)
     SELECT c.id, c.account_id, NOW(1) - INTERVAL (p.ago * 1000) MICROSECOND, p.x, p.y, p.z, p.interior, p.dimension,
-      NULLIF(p.vehicle, 0)
+      NULLIF(p.vehicle, 0), NULLIF(p.seat, -1)
     FROM JSON_TABLE(p_rows, '$[0][*]' COLUMNS (
       id INT PATH '$.id',
       NESTED PATH '$.path[*]' COLUMNS (
         ago INT PATH '$[0]', x FLOAT PATH '$[1]', y FLOAT PATH '$[2]', z FLOAT PATH '$[3]',
-        interior INT PATH '$[4]', dimension INT PATH '$[5]', vehicle INT PATH '$[6]'))) p
+        interior INT PATH '$[4]', dimension INT PATH '$[5]', vehicle INT PATH '$[6]', seat INT PATH '$[7]'))) p
     JOIN characters c ON c.id = p.id
     WHERE p.x IS NOT NULL;
   COMMIT;

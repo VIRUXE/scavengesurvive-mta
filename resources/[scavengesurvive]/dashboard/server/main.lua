@@ -7,7 +7,7 @@ local SAMPLE_MS = 1000
 local MIN_MOVE = 1.5 -- metres between two trail points
 local KEEP = 300 -- trail points per player (5 min at a point a second)
 
-local trails = {} -- player -> { { x, y, z, int, dim, veh, t }, ... } oldest first
+local trails = {} -- player -> { { x, y, z, int, dim, veh, t, seat }, ... } oldest first; seat -1 when on foot
 
 local function round(n, places)
     local m = 10 ^ (places or 0)
@@ -32,6 +32,7 @@ local function snapshot()
             local _, _, rz = getElementRotation(p)
             local vehicle = getPedOccupiedVehicle(p)
             local veh = vehicle and getElementModel(vehicle) or nil
+            local seat = vehicle and getPedOccupiedVehicleSeat(p) or -1
 
             local trail = trails[p]
             if not trail then
@@ -43,9 +44,11 @@ local function snapshot()
                 not last
                 or last[4] ~= int
                 or last[5] ~= dim
+                or last[6] ~= (veh or 0)
+                or last[8] ~= seat
                 or (x - last[1]) ^ 2 + (y - last[2]) ^ 2 + (z - last[3]) ^ 2 >= MIN_MOVE * MIN_MOVE
             then
-                trail[#trail + 1] = { round(x, 1), round(y, 1), round(z, 1), int, dim, veh or 0, now }
+                trail[#trail + 1] = { round(x, 1), round(y, 1), round(z, 1), int, dim, veh or 0, now, seat }
                 if #trail > KEEP then
                     table.remove(trail, 1)
                 end
@@ -61,6 +64,7 @@ local function snapshot()
                 int = int,
                 dim = dim,
                 veh = veh,
+                seat = seat,
                 hp = round(getElementHealth(p), 0),
                 zone = exports.maps:getPlayerZone(p) or false,
                 duty = getElementData(p, "staff.duty") == true,

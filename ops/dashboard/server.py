@@ -140,7 +140,7 @@ def api_live(params):
     starts = session_starts([int(p["char"]) for p in snap["players"] if isinstance(p.get("char"), int)])
     for p in snap["players"]:
         p["sessionStart"] = starts.get(p.get("char"))
-        p["trail"] = [pt for pt in p.get("trail", []) if pt and pt[-1] >= now - keep]
+        p["trail"] = [pt for pt in p.get("trail", []) if len(pt) >= 7 and pt[6] >= now - keep]
     at = snap.get("at")
     return {"at": at, "live": at is not None and now - at <= STALE_AFTER, "players": snap["players"]}
 
@@ -203,10 +203,10 @@ def api_track(params):
     else:
         who, who_id = "account_id", need_int(params, "account")
     sql = (
-        "SELECT x, y, z, interior, dimension, COALESCE(vehicle, 0), UNIX_TIMESTAMP(at) FROM character_track "
+        "SELECT x, y, z, interior, dimension, COALESCE(vehicle, 0), UNIX_TIMESTAMP(at), vehicle_seat FROM character_track "
         f"WHERE {who} = %s AND at >= FROM_UNIXTIME(%s) AND at <= FROM_UNIXTIME(%s) ORDER BY at"
     )
-    rows = [[round(r[0], 1), round(r[1], 1), round(r[2], 1), r[3], r[4], r[5], float(r[6])] for r in query(sql, (who_id, start, end))]
+    rows = [[round(r[0], 1), round(r[1], 1), round(r[2], 1), r[3], r[4], r[5], float(r[6]), r[7]] for r in query(sql, (who_id, start, end))]
     total = len(rows)
     return {"points": downsample(rows, TRACK_LIMIT), "total": total, "sparse": sparse_points(who, who_id, start, end)}
 

@@ -75,6 +75,11 @@ body {
 .check { display: flex; align-items: center; gap: 8px; padding: 4px 0; cursor: pointer; }
 .check input { accent-color: var(--ember); width: 16px; height: 16px; margin: 0; }
 
+.trail-legend { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; list-style: none; margin: 8px 0; padding: 0; font-size: 12px; }
+.trail-legend li { display: flex; align-items: center; gap: 7px; }
+.trail-legend li::before { content: ""; width: 23px; height: 4px; flex-shrink: 0; border-radius: 2px; background: var(--swatch); box-shadow: 0 0 0 2px #0b1015; }
+.trail-note { margin: 0 0 8px; }
+
 .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .chip {
   display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border: 1px solid var(--line-strong);

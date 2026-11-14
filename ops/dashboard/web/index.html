@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Survey map</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
-<link rel="stylesheet" href="style.css?v=loot-history-1">
+<link rel="stylesheet" href="style.css?v=travel-traces-1">
 </head>
 <body>
 <header class="bar">
@@ -27,6 +27,8 @@
     <section class="block">
       <h2>Layers</h2>
       <label class="check"><input type="checkbox" id="layerPlayers" checked> Players and trails</label>
+      <ul id="trailLegend" class="trail-legend" aria-label="Player trail colours"></ul>
+      <p class="note trail-note">Riding: bikes, quads and passengers. Flying: aircraft, including passengers. Older vehicle traces may have no seat data.</p>
       <label class="check"><input type="checkbox" id="layerLoot" checked> Loot spawns</label>
       <div id="lootChips" class="chips" role="group" aria-label="Loot spawn filter"></div>
       <p id="lootNote" class="note"></p>
@@ -111,7 +113,7 @@
 </main>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
-<script src="app.js?v=loot-history-1"></script>
+<script src="app.js?v=terrain-original-restored-1"></script>
 <script src="loot-history.js?v=1"></script>
 </body>
 </html>

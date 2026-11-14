@@ -24,11 +24,6 @@ const LOOT_STATES = [
 
 const $ = (id) => document.getElementById(id);
 const ll = (x, y) => L.latLng(y, x);
-const mix = (a, b, t) => {
-  const p = (c) => [1, 3, 5].map((i) => parseInt(c.slice(i, i + 2), 16));
-  const [r, g, bl] = p(a).map((v, i) => Math.round(v + (p(b)[i] - v) * t));
-  return `rgb(${r},${g},${bl})`;
-};
 const clock = (unix) => new Date(unix * 1000).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit" });
 const duration = (s) => {
   s = Math.max(0, Math.round(s));
@@ -49,7 +44,7 @@ map.attributionControl.setPrefix(false);
 map.attributionControl.addAttribution("Map art © Rockstar Games; satellite render by the community");
 
 const radar = L.imageOverlay("radar.webp", BOUNDS);
-const terrain = L.tileLayer("tiles/{z}/{x}/{y}.jpg", { minZoom: 0, maxZoom: 7, maxNativeZoom: 5, noWrap: true, bounds: BOUNDS, errorTileUrl: "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" });
+const terrain = L.tileLayer("tiles/{z}/{x}/{y}.jpg?v=terrain-original-restored-1", { minZoom: 0, maxZoom: 7, maxNativeZoom: 5, noWrap: true, bounds: BOUNDS, errorTileUrl: "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" });
 radar.addTo(map);
 const baseControl = L.control.layers({ Radar: radar, Terrain: terrain }, {}, { collapsed: false, position: "topright" }).addTo(map);
 fetch("tiles/0/0/0.jpg", { method: "HEAD" }).then((r) => {
@@ -85,11 +80,41 @@ map.on("mousemove", (e) => { $("coords").textContent = `x ${Math.round(e.latlng.
 /* ---------- trails ---------- */
 
 const BUCKETS = 10;
+const TRAVEL_MODES = [
+  { name: "On foot", color: "#35e5ff" },
+  { name: "Driving", color: "#ffe45c" },
+  { name: "Riding", color: "#82ff63" },
+  { name: "Flying", color: "#ff70ed" },
+  { name: "Seat unknown", color: COLOR.bone },
+];
+// GTA SA vehicle models, including staff-spawned vehicles. The Vortex (539) is a hovercraft, not an aircraft.
+const RIDING_MODELS = new Set([448, 461, 462, 463, 468, 471, 481, 509, 510, 521, 522, 523, 581, 586]);
+const FLYING_MODELS = new Set([417, 425, 447, 460, 464, 465, 469, 476, 487, 488, 497, 501, 511, 512, 513, 519, 520, 548, 553, 563, 577, 592, 593]);
 
-/* Points are [x, y, z, interior, dimension, vehicleModel, unix]. A segment is drawn only between two outdoor points
+function travelMode(vehicle, seat) {
+  if (!vehicle) return 0;
+  if (FLYING_MODELS.has(vehicle)) return 3;
+  if (RIDING_MODELS.has(vehicle) || seat > 0) return 2;
+  return seat === 0 ? 1 : 4; // old traces did not record seats; do not guess that a passenger was driving
+}
+
+TRAVEL_MODES.forEach((mode) => {
+  const item = el("li", { textContent: mode.name });
+  item.style.setProperty("--swatch", mode.color);
+  $("trailLegend").append(item);
+});
+
+// Keep traces above the dense loot dots, and player markers above their traces.
+map.createPane("trails").style.zIndex = 410;
+map.createPane("players").style.zIndex = 420;
+const trailCanvas = L.canvas({ pane: "trails", padding: 0.3 });
+const playerCanvas = L.canvas({ pane: "players", padding: 0.3 });
+const canvas = L.canvas({ padding: 0.3 });
+
+/* Points are [x, y, z, interior, dimension, vehicleModel, unix, seat]. A segment is drawn only between two outdoor points
    that are close in space and time (a teleport or a respawn must not leave a line across the map). Segments are
-   grouped by age bucket and on-foot/in-vehicle so a trail is a handful of polylines, not hundreds. */
-function trailLines(points, colorAt, fraction, weight) {
+   grouped by age bucket and travel mode so a trail is a handful of polylines, not hundreds. */
+function trailLines(points, fraction, weight) {
   const groups = new Map();
   for (let i = 1; i < points.length; i++) {
     const a = points[i - 1], b = points[i];
@@ -97,22 +122,24 @@ function trailLines(points, colorAt, fraction, weight) {
     if (Math.abs(a[0] - b[0]) > 400 || Math.abs(a[1] - b[1]) > 400 || b[6] - a[6] > 60) continue;
     const f = fraction(b[6]);
     const bucket = Math.min(BUCKETS - 1, Math.max(0, Math.floor(f * BUCKETS)));
-    const key = bucket * 2 + (b[5] ? 1 : 0);
+    const key = bucket * TRAVEL_MODES.length + travelMode(a[5], a[7]);
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key).push([ll(a[0], a[1]), ll(b[0], b[1])]);
   }
-  const lines = [];
+  const outlines = [], lines = [];
   for (const [key, segs] of groups) {
-    const bucket = key >> 1, vehicle = key & 1;
+    const bucket = Math.floor(key / TRAVEL_MODES.length), mode = key % TRAVEL_MODES.length;
+    const age = (bucket + 0.5) / BUCKETS;
+    const style = { lineCap: "round", interactive: false, renderer: trailCanvas };
+    outlines.push(L.polyline(segs, {
+      ...style, color: "#0b1015", weight: weight + 3, opacity: 0.7 + 0.2 * age,
+    }));
     lines.push(L.polyline(segs, {
-      color: colorAt((bucket + 0.5) / BUCKETS), weight: weight * (vehicle ? 1.6 : 1),
-      opacity: 0.12 + 0.88 * ((bucket + 0.5) / BUCKETS), lineCap: "round", interactive: false, renderer: canvas,
+      ...style, color: TRAVEL_MODES[mode].color, weight, opacity: 0.6 + 0.4 * age,
     }));
   }
-  return lines;
+  return [...outlines, ...lines]; // all outlines underneath all coloured segments
 }
-
-const canvas = L.canvas({ padding: 0.3 });
 
 /* ---------- live players ---------- */
 
@@ -126,8 +153,8 @@ function lengthForPx(px) { return px / (K * Math.pow(2, map.getZoom())); }
 function ensureMarker(p) {
   let m = live.players.get(p.char);
   if (m) return m;
-  const dot = L.circleMarker(ll(p.x, p.y), { radius: 6, color: "#141614", weight: 2, fillColor: COLOR.ember, fillOpacity: 1, renderer: canvas, interactive: false });
-  const heading = L.polyline([ll(p.x, p.y), ll(p.x, p.y)], { color: COLOR.bone, weight: 2, opacity: 0.9, renderer: canvas, interactive: false });
+  const dot = L.circleMarker(ll(p.x, p.y), { radius: 6, color: "#141614", weight: 2, fillColor: TRAVEL_MODES[travelMode(p.veh, p.seat)].color, fillOpacity: 1, renderer: playerCanvas, interactive: false });
+  const heading = L.polyline([ll(p.x, p.y), ll(p.x, p.y)], { color: COLOR.bone, weight: 2, opacity: 0.9, renderer: playerCanvas, interactive: false });
   dot.bindTooltip(p.name, { permanent: true, direction: "right", offset: [8, 0], className: "player-label" });
   m = { dot, heading, trail: [], cur: ll(p.x, p.y), from: ll(p.x, p.y), to: ll(p.x, p.y), t0: 0, rz: p.rz, data: p, pulse: REDUCED ? 0 : performance.now() };
   playerLayer.addLayer(heading).addLayer(dot);
@@ -144,14 +171,15 @@ function applyLive(data) {
     const inside = p.int || p.dim;
     m.data = p;
     m.from = m.cur; m.to = ll(p.x, p.y); m.t0 = performance.now(); m.rz = p.rz;
-    m.dot.setStyle({ fillColor: inside ? COLOR.ash : COLOR.ember, fillOpacity: p.duty ? 0.25 : 1, color: p.duty ? COLOR.ember : "#141614" });
+    const color = TRAVEL_MODES[travelMode(p.veh, p.seat)].color;
+    m.dot.setStyle({ fillColor: inside ? COLOR.ash : color, fillOpacity: p.duty ? 0.25 : 1, color: p.duty ? color : "#141614" });
     m.dot.setTooltipContent(p.name);
     m.trail.forEach((l) => playerLayer.removeLayer(l));
     const now = data.at || Date.now() / 1000;
     const span = 300;
-    const weight = live.follow === p.char ? 4 : 2.5;
-    m.trail = trailLines(p.trail || [], (t) => mix(COLOR.rust, COLOR.ember, t), (u) => 1 - Math.min(1, Math.max(0, (now - u) / span)), weight);
-    m.trail.forEach((l) => { playerLayer.addLayer(l); l.bringToBack && l.bringToBack(); });
+    const weight = live.follow === p.char ? 4.5 : 3.5;
+    m.trail = trailLines(p.trail || [], (u) => 1 - Math.min(1, Math.max(0, (now - u) / span)), weight);
+    m.trail.forEach((l) => playerLayer.addLayer(l));
   }
   for (const [char, m] of live.players) {
     if (!seen.has(char)) {
@@ -178,7 +206,7 @@ function frame(now) {
       const age = (now - m.pulse) / 1200;
       if (age >= 1) { m.pulse = 0; if (m.ring) { playerLayer.removeLayer(m.ring); m.ring = null; } }
       else {
-        if (!m.ring) { m.ring = L.circleMarker(m.cur, { radius: 6, color: COLOR.ember, weight: 2, fill: false, renderer: canvas, interactive: false }).addTo(playerLayer); }
+        if (!m.ring) { m.ring = L.circleMarker(m.cur, { radius: 6, color: TRAVEL_MODES[travelMode(m.data.veh, m.data.seat)].color, weight: 2, fill: false, renderer: playerCanvas, interactive: false }).addTo(playerLayer); }
         m.ring.setLatLng(m.cur).setRadius(6 + 22 * age).setStyle({ opacity: 1 - age });
       }
     }
@@ -215,7 +243,7 @@ function renderRoster(data) {
     const elapsed = p.sessionStart && data.at ? data.at - p.sessionStart + (performance.now() - live.receivedAt) / 1000 : null;
     r.time.textContent = elapsed === null ? "" : duration(elapsed);
     const where = p.int || p.dim ? `inside (int ${p.int})` : p.zone || "outside";
-    r.meta.textContent = `${where} · ${p.hp} hp · ${p.ping} ms${p.veh ? " · in a vehicle" : ""}`;
+    r.meta.textContent = `${where} · ${p.hp} hp · ${p.ping} ms · ${TRAVEL_MODES[travelMode(p.veh, p.seat)].name.toLowerCase()}`;
   }
   for (const [char, r] of rows) if (!keep.has(char)) { r.li.remove(); rows.delete(char); }
   paintFollow();
@@ -383,14 +411,14 @@ async function openSession(s, button) {
   const t0 = trackPoints[0][6], t1 = trackPoints[trackPoints.length - 1][6], span = Math.max(1, t1 - t0);
   if (sparse) {
     const out = trackPoints.filter((p) => !p[3] && !p[4]);
-    L.polyline(out.map((p) => ll(p[0], p[1])), { color: COLOR.bone, weight: 3, dashArray: "8 7", opacity: 0.85, renderer: canvas, interactive: false }).addTo(sessionLayer);
+    L.polyline(out.map((p) => ll(p[0], p[1])), { color: COLOR.bone, weight: 3, dashArray: "8 7", opacity: 0.85, renderer: trailCanvas, interactive: false }).addTo(sessionLayer);
     for (const p of trackPoints) {
-      const stop = L.circleMarker(ll(p[0], p[1]), { radius: 7, color: COLOR.bone, weight: 2, fillColor: "#3f5a4b", fillOpacity: 1, renderer: canvas });
+      const stop = L.circleMarker(ll(p[0], p[1]), { radius: 7, color: COLOR.bone, weight: 2, fillColor: "#3f5a4b", fillOpacity: 1, renderer: playerCanvas });
       stop.bindTooltip(`${p[7]}, ${clock(p[6])}${p[3] || p[4] ? " (inside)" : ""}`);
       stop.addTo(sessionLayer);
     }
-  } else trailLines(trackPoints, (t) => mix(COLOR.lichen, COLOR.bone, t), (u) => (u - t0) / span, 3).forEach((l) => sessionLayer.addLayer(l));
-  trackDot = L.circleMarker(ll(trackPoints[0][0], trackPoints[0][1]), { radius: 10, color: "#141614", weight: 3, fillColor: COLOR.ember, fillOpacity: 1, renderer: canvas, interactive: false }).addTo(sessionLayer);
+  } else trailLines(trackPoints, (u) => (u - t0) / span, 4).forEach((l) => sessionLayer.addLayer(l));
+  trackDot = L.circleMarker(ll(trackPoints[0][0], trackPoints[0][1]), { radius: 10, color: "#141614", weight: 3, fillColor: COLOR.ember, fillOpacity: 1, renderer: playerCanvas, interactive: false }).addTo(sessionLayer);
   const range = $("scrubRange");
   range.max = trackPoints.length - 1; range.value = 0;
   scrubTo(0);
@@ -404,7 +432,10 @@ function scrubTo(i) {
   const p = trackPoints[i];
   if (!p) return;
   trackDot.setLatLng(ll(p[0], p[1]));
-  $("scrubLabel").textContent = (p[7] ? p[7] + ", " : "") + clock(p[6]) + (p[3] || p[4] ? " (inside)" : "");
+  const sparse = typeof p[7] === "string";
+  const mode = TRAVEL_MODES[travelMode(p[5], p[7])];
+  trackDot.setStyle({ fillColor: sparse ? COLOR.ember : mode.color });
+  $("scrubLabel").textContent = (sparse ? p[7] : mode.name) + ", " + clock(p[6]) + (p[3] || p[4] ? " (inside)" : "");
 }
 $("scrubRange").addEventListener("input", (e) => scrubTo(+e.target.value));
 $("backToLive").addEventListener("click", backToLive);

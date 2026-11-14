@@ -43,6 +43,21 @@ python3 -I ops/dashboard/make_tiles.py --source-tiles src/satellite_tiles --out 
 ```
 Checked against the radar (docs/images/map/base.png): roads and coastlines coincide at zero offset.
 
+## Player traces
+Live trails and recorded sessions use cyan for on foot, yellow for driving, lime for riding (bikes, motorbikes,
+quads and passengers), and pink for flying (all aircraft occupants). Lines have a dark outline, stay above loot
+markers, and fade with age without changing their travel colour. Player dots and the session scrubber use the
+same colours; the layer panel includes a key.
+
+New points record the vehicle seat as well as its model, including stationary vehicle/seat changes. Live and
+session points are `[x, y, z, interior, dimension, vehicleModel, unix, seat]`; seat 0 is the driver, positive seats
+are passengers, and -1/null means no recorded seat. Older car/boat traces appear in bone as **Seat unknown**;
+bikes and aircraft can still be identified by model. Sparse historical stops retain their existing labels.
+
+Existing databases need `ALTER TABLE character_track ADD COLUMN vehicle_seat TINYINT UNSIGNED NULL AFTER vehicle`
+and the updated `character_flush` procedure from `sql/schema.sql` before restarting the API and the `character`
+and `dashboard` resources. The column is nullable so earlier traces remain readable.
+
 ## Loot timeline
 Open **History → Loot timeline**, or click a loot point and choose **View loot timeline**. Choose a 1-hour,
 6-hour, 24-hour or 7-day window ending at any past time, then play or drag the slider. Zone and spawn filters

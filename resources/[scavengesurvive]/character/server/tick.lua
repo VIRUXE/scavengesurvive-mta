@@ -92,16 +92,20 @@ return function(ctx)
     end
 
     -- Trail for the staff dashboard: a point every TRAIL_MS when the character moved TRAIL_MIN metres (or changed
-    -- interior/dimension), buffered per player and sent with the next flush as
-    -- { msAgo, x, y, z, int, dim, vehicleModel }.
+    -- interior/dimension, vehicle or seat), buffered per player and sent with the next flush as
+    -- { msAgo, x, y, z, int, dim, vehicleModel, seat }. Seat -1 means on foot.
     local TRAIL_MS, TRAIL_MIN, TRAIL_KEEP = 2000, 1.5, 60
-    local trail = {} -- player -> { last = { x, y, z, int, dim }, points = { { tick, x, y, z, int, dim, veh } } }
+    -- player -> last place/vehicle/seat and buffered { tick, x, y, z, int, dim, veh, seat } points
+    local trail = {}
 
     local function sampleTrail()
         local now = getTickCount()
         for player, st in pairs(state.byPlayer) do
             if isElement(player) and st.hp > 0 and not st.dead then
                 local x, y, z, int, dim = placeOf(player)
+                local vehicle = getPedOccupiedVehicle(player)
+                local veh = vehicle and getElementModel(vehicle) or 0
+                local seat = vehicle and getPedOccupiedVehicleSeat(player) or -1
                 local t = trail[player]
                 if not t then
                     t = { points = {} }
@@ -111,11 +115,12 @@ return function(ctx)
                 local moved = not l
                     or l[4] ~= int
                     or l[5] ~= dim
+                    or l[6] ~= veh
+                    or l[7] ~= seat
                     or (x - l[1]) ^ 2 + (y - l[2]) ^ 2 + (z - l[3]) ^ 2 >= TRAIL_MIN * TRAIL_MIN
                 if moved then
-                    local vehicle = getPedOccupiedVehicle(player)
-                    t.last = { x, y, z, int, dim }
-                    t.points[#t.points + 1] = { now, x, y, z, int, dim, vehicle and getElementModel(vehicle) or nil }
+                    t.last = { x, y, z, int, dim, veh, seat }
+                    t.points[#t.points + 1] = { now, x, y, z, int, dim, veh, seat }
                     if #t.points > TRAIL_KEEP then
                         table.remove(t.points, 1)
                     end
@@ -132,7 +137,7 @@ return function(ctx)
         end
         local now, out = getTickCount(), {}
         for i, p in ipairs(t.points) do
-            out[i] = { now - p[1], p[2], p[3], p[4], p[5], p[6], p[7] or false }
+            out[i] = { now - p[1], p[2], p[3], p[4], p[5], p[6], p[7], p[8] }
         end
         t.points = {}
         return out
