@@ -135,11 +135,12 @@ return function(ctx)
         end
     end
 
-    -- Asks `p` whether the vehicle goes along when `who` is driving; fn(withVehicle) runs at once for anyone else.
+    -- Asks `p` whether the vehicle goes along when `who` is driving; fn(withVehicle) runs at once with false for
+    -- anyone else (nothing to take along, so a free seat in the destination vehicle may be used).
     local function askVehicle(p, who, fn)
         local veh = getPedOccupiedVehicle(who)
         if not (veh and getVehicleOccupant(veh) == who) then
-            return fn(true)
+            return fn(false)
         end
         local body = "You are driving. Take your vehicle along?"
         if who ~= p then
