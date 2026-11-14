@@ -10,7 +10,7 @@ Press `F` at the front of an unlocked vehicle to open or shut the bonnet (a lock
 
 ## Battery
 
-A vehicle found in the world holds a charge of 15 to 100 %. The engine needs at least 10 % to turn over: below that the key gives *The battery is flat*, and a vehicle with no battery does not react. The headlights run off the battery too: with the engine off they only come on at 10 % or more, and go out when the charge falls below it.
+A vehicle found in the world holds a charge of 15 to 100 %, but about 35 % of them spawn with no battery at all (and about 30 % with no starter motor, rolled separately), so finding one that starts usually means bringing parts. The engine needs at least 10 % to turn over: below that the key gives *The battery is flat*, and a vehicle with no battery does not react. The headlights run off the battery too: with the engine off they only come on at 10 % or more, and go out when the charge falls below it.
 
 | Situation | Charge |
 |:--|:--|
@@ -20,11 +20,13 @@ A vehicle found in the world holds a charge of 15 to 100 %. The engine needs at 
 | Engine running, standing still | gains 2.5 % per minute |
 | Engine running, driving (above 5 km/h) | gains 10 % per minute, so an empty battery is full after about ten minutes on the road |
 
+Those rates are for a 60 Ah battery. Batteries come in sizes from 35 to 95 Ah, small ones more often: every rate scales with the size, so a 35 Ah battery drains and charges about 1.7 times as fast in percent and a 95 Ah one about 0.6 times as fast. The size travels with the battery and shows in its name (*Car Battery 45Ah (63%)*).
+
 A battery in the bay is **tight** (bolted, and the car can use it), **loose** (sitting there, and the car will not start until you tighten it) or missing. Nothing from the bay is dropped on the ground.
 
 **Unbolt and tighten:** hold a Ratchet at the open bonnet and press `F`. A menu lists only what applies: *Unbolt battery* when it is tight, *Tighten battery* when it is loose. Each is a 3 second job, shorter with the Repair [skill](Skills). Unbolting leaves the battery in the bay and stops the engine if it was running. A single available action runs directly; multiple actions wait for your selection. With empty hands, the menu also lists the applicable tightening and unbolting jobs, marked *(Ratchet)*. Equip a Ratchet to perform them; selecting one with empty hands tells you *You need a Ratchet*.
 
-**Taking it out:** only a loose battery. With empty hands, tap `F` at the open bonnet and the Car Battery goes into your hands, named with its charge (*Car Battery (63%)*). A tight battery has to be unbolted first.
+**Taking it out:** only a loose battery. With empty hands, tap `F` at the open bonnet and the Car Battery goes into your hands, named with its size and charge (*Car Battery 45Ah (63%)*). A tight battery has to be unbolted first.
 
 **Fitting one:** hold a Car Battery at the open bonnet, press `F`, and select *Fit battery*. It goes into an empty slot loose and your hands are freed. Tighten it from the action menu or the car will not start. A vehicle that already has one refuses it. The battery brings the charge it carries; one found as loot holds 15 to 100 %, and charge is kept while a battery is carried. A flat battery stays flat. Swapping a flat battery for a charged one from another vehicle is the quick way to get a car going.
 

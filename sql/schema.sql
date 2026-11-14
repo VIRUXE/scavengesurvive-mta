@@ -403,6 +403,7 @@ CREATE TABLE IF NOT EXISTS `vehicles` (
   `battery` float DEFAULT NULL,
   `battery_since` int(10) unsigned DEFAULT NULL,
   `battery_state` tinyint(3) unsigned NOT NULL DEFAULT 2,
+  `battery_capacity` tinyint(3) unsigned DEFAULT NULL,
   `starter` smallint(5) unsigned DEFAULT NULL,
   `starter_state` tinyint(3) unsigned NOT NULL DEFAULT 2,
   `transient` tinyint(1) NOT NULL DEFAULT 0,

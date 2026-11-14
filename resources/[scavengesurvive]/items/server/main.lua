@@ -462,7 +462,7 @@ addEventHandler("itemMoved", root, function(_, from, to)
             local level = math.floor(small.carBatteryCharge(item.id, item.data) + 0.5)
             -- a loot battery keeps the level it showed from here on: the vehicle reads it from the item's data
             if not small.hasCarBatteryCharge(item.data) then
-                hands.syncHeldData(source, item, { charge = level })
+                hands.syncHeldData(source, item, { charge = level, capacity = small.carBatteryCapacity(item.id) })
             end
             triggerClientEvent(source, "toastShown", source, string.format("BATTERY_LEVEL:%d", level))
         end

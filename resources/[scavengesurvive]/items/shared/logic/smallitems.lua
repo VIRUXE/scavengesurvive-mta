@@ -147,7 +147,30 @@ function M.hasCarBatteryCharge(data)
     return tonumber(unwrap(data).charge) ~= nil
 end
 
-function M.carBatteryLabel(name, charge)
+-- Car Battery capacity in amp-hours (vehicles/shared/logic/battery.lua: the same list and default). A loot battery
+-- without one has it rolled from its id like its charge; data with a charge but no capacity is the default size.
+M.CAR_BATTERY_CAPACITIES = { 35, 40, 45, 45, 55, 55, 60, 60, 70, 80, 95 }
+M.CAR_BATTERY_DEFAULT_CAPACITY = 60
+function M.carBatteryCapacity(itemId, data)
+    local d = unwrap(data)
+    local stored = tonumber(d.capacity)
+    if stored and stored > 0 then
+        return stored
+    end
+    if tonumber(d.charge) ~= nil then
+        return M.CAR_BATTERY_DEFAULT_CAPACITY
+    end
+    local s = (math.floor(tonumber(itemId) or 0) * 40503 + 12345) % 2147483647
+    s = (16807 * (s + 1)) % 2147483647
+    s = (16807 * s) % 2147483647
+    local list = M.CAR_BATTERY_CAPACITIES
+    return list[math.floor((s - 1) / 2147483646 * #list) + 1]
+end
+
+function M.carBatteryLabel(name, charge, capacity)
+    if capacity then
+        return string.format("%s %dAh (%d%%)", name, capacity, math.floor(charge + 0.5))
+    end
     return string.format("%s (%d%%)", name, math.floor(charge + 0.5))
 end
 

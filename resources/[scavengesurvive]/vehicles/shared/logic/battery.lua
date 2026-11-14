@@ -12,19 +12,38 @@ M.ACC_DRAIN_PER_H = 3.0 -- percent lost per hour by the key left in ACC (dash an
 M.CRANK_DRAIN = 2.0 -- percent one turn of the starter takes, whether the engine catches or not
 M.START_MIN = 10 -- under this the engine will not turn over
 M.SPAWN_MIN = 15
+M.SPAWN_MISSING_CHANCE = 0.35 -- share of spawned vehicles with no battery in the bay
+-- Capacity in amp-hours. Every rate above is for a DEFAULT_CAPACITY battery; a smaller one drains and charges
+-- faster in percent, a bigger one slower. NULL capacity (rows and items from before capacities) is the default.
+M.DEFAULT_CAPACITY = 60
+M.CAPACITIES = { 35, 40, 45, 45, 55, 55, 60, 60, 70, 80, 95 } -- spawn weights: small worn batteries are common
+
+-- a capacity as stored (number, numeric string, nil or false) -> amp-hours
+function M.capacityOf(cap)
+    cap = tonumber(cap)
+    if not cap or cap <= 0 then
+        return M.DEFAULT_CAPACITY
+    end
+    return cap
+end
+
+-- percent-per-unit rates scale with how small the battery is
+local function scale(cap)
+    return M.DEFAULT_CAPACITY / M.capacityOf(cap)
+end
 
 -- the level now of a battery stored at `stored` percent at `since`; nil: no battery
-function M.current(stored, since, now)
+function M.current(stored, since, now, cap)
     if not stored then
         return nil
     end
     local idle = math.max(0, (now or 0) - (since or now or 0) - M.GRACE_S)
-    return math.max(0, stored - idle / 3600 * M.DRAIN_PER_H)
+    return math.max(0, stored - idle / 3600 * M.DRAIN_PER_H * scale(cap))
 end
 
 -- the alternator: driving charges at the full rate, an engine idling at a quarter of it
-function M.recharge(level, dt, speedKmh)
-    local rate = M.RECHARGE_PER_S
+function M.recharge(level, dt, speedKmh, cap)
+    local rate = M.RECHARGE_PER_S * scale(cap)
     if (speedKmh or 0) <= M.DRIVING_KMH then
         rate = rate * M.IDLE_RECHARGE_FACTOR
     end
@@ -32,22 +51,35 @@ function M.recharge(level, dt, speedKmh)
 end
 
 -- headlights burning with the engine off
-function M.lightsDrain(level, dt)
-    return math.max(0, (level or 0) - M.LIGHTS_DRAIN_PER_H / 3600 * (dt or 1))
+function M.lightsDrain(level, dt, cap)
+    return math.max(0, (level or 0) - M.LIGHTS_DRAIN_PER_H * scale(cap) / 3600 * (dt or 1))
 end
 
 -- the key left in ACC with the engine off
-function M.accDrain(level, dt)
-    return math.max(0, (level or 0) - M.ACC_DRAIN_PER_H / 3600 * (dt or 1))
+function M.accDrain(level, dt, cap)
+    return math.max(0, (level or 0) - M.ACC_DRAIN_PER_H * scale(cap) / 3600 * (dt or 1))
 end
 
 -- one turn of the key to START: the starter motor's draw
-function M.crankDrain(level)
-    return math.max(0, (level or 0) - M.CRANK_DRAIN)
+function M.crankDrain(level, cap)
+    return math.max(0, (level or 0) - M.CRANK_DRAIN * scale(cap))
 end
 
 function M.spawnLevel(rng)
     return M.SPAWN_MIN + (rng or math.random)() * (100 - M.SPAWN_MIN)
+end
+
+function M.spawnCapacity(rng)
+    return M.CAPACITIES[math.floor((rng or math.random)() * #M.CAPACITIES) + 1]
+end
+
+-- a newly spawned vehicle's battery: charge, capacity; nil, nil when the bay is empty
+function M.spawnBattery(rng)
+    rng = rng or math.random
+    if rng() < M.SPAWN_MISSING_CHANCE then
+        return nil, nil
+    end
+    return M.spawnLevel(rng), M.spawnCapacity(rng)
 end
 
 -- a vehicle with an engine and a bonnet over it: bikes, boats and the open utility models (doorless) have none

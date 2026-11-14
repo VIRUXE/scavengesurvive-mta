@@ -320,7 +320,11 @@ return function(ctx)
         elseif small and it.uname == "StunGun" then
             name = small.stunLabel(name, it.data)
         elseif small and it.uname == "Battery" then
-            name = small.carBatteryLabel(name, small.carBatteryCharge(it.id, it.data))
+            name = small.carBatteryLabel(
+                name,
+                small.carBatteryCharge(it.id, it.data),
+                small.carBatteryCapacity(it.id, it.data)
+            )
         elseif small and it.uname == "Key" then
             name = small.keyLabel(name, it.data, vehicleTypeByModel)
         elseif small and it.uname == "WheelLock" then

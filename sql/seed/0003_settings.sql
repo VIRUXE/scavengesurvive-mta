@@ -52,7 +52,7 @@ INSERT INTO settings (skey, svalue) VALUES
 ('vehicles.leave_radius','100'),
 ('vehicles.refill_floor','0.02'),
 ('vehicles.refill_rate','0.10'),
-('vehicles.spawn_chance','4.0'),
+('vehicles.spawn_chance','12.0'),
 ('world.boxes_player_distance','60'),
 ('world.boxes_respawn_s','900'),
 ('world.min_player_distance','150'),

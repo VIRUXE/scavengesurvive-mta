@@ -115,7 +115,8 @@ local GLOVEBOX_LOOT = "vehicle_glovebox" -- loot table of a fresh vehicle's glov
 
 local SELECT_VEHICLES = "SELECT v.id, v.spawn_id, v.type_uname, v.model, v.x, v.y, v.z, v.rz, v.colors, "
     .. "v.health, v.fuel, v.locked, v.damage, v.carmour, v.gas_bottles, v.key_code, v.keypad_code, "
-    .. "v.trailer_id, v.left_spawn, v.battery, v.battery_since, v.battery_state, v.starter, v.starter_state, "
+    .. "v.trailer_id, v.left_spawn, v.battery, v.battery_since, v.battery_state, v.battery_capacity, v.starter, "
+    .. "v.starter_state, "
     .. "c.id AS container_id, g.id AS glovebox_id, "
     .. "s.x AS spawn_x, s.y AS spawn_y FROM vehicles v "
     .. "LEFT JOIN containers c ON c.owner_vehicle_id = v.id AND c.kind = 'vehicle' "
@@ -123,8 +124,8 @@ local SELECT_VEHICLES = "SELECT v.id, v.spawn_id, v.type_uname, v.model, v.x, v.
     .. "LEFT JOIN vehicle_spawns s ON s.id = v.spawn_id"
 
 local INSERT_VEHICLE = "INSERT INTO vehicles (spawn_id, type_uname, model, x, y, z, rz, "
-    .. "health, fuel, locked, damage, key_code, trailer_id, battery, battery_since, starter) "
-    .. "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    .. "health, fuel, locked, damage, key_code, trailer_id, battery, battery_since, battery_state, battery_capacity, "
+    .. "starter, starter_state) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 
 -- A tutorial vehicle (spawnTransientVehicle): a real row, so its trunk is a container like any other, but marked
 -- transient so it is never flushed, never counts toward the world budget and is deleted on every start.
@@ -223,7 +224,7 @@ end
 
 -- the battery's level now; nil: none in the bay
 local function batteryLevel(inf)
-    return battery.current(inf.battery, inf.batterySince, unixNow())
+    return battery.current(inf.battery, inf.batterySince, unixNow(), inf.batteryCapacity)
 end
 
 -- tight: the part is bolted and the car can use it. A loose part is in the bay but not connected.
@@ -443,6 +444,7 @@ local function create(row, fresh)
         battery = nil,
         batterySince = row.battery_since and tonumber(row.battery_since) or unixNow(),
         batteryState = bay.MISSING,
+        batteryCapacity = battery.capacityOf(row.battery_capacity), -- amp-hours; NULL is the default size
         -- starts left (0: dead). nil with a tight state is a fresh motor, including a row from before this was tracked.
         starter = nil,
         starterState = bay.TIGHT,
@@ -539,10 +541,19 @@ local function spawnAt(s, chance, cb)
         damage = damage and toJSON(damage) or nil,
         key_code = nil,
         trailer_id = nil,
-        battery = battery.spawnLevel(math.random),
         battery_since = unixNow(),
+        -- deviation from upstream: many spawn with the battery and/or the starter motor already taken out
+        battery_state = bay.TIGHT,
         starter = starter.spawnLife(math.random),
+        starter_state = bay.TIGHT,
     }
+    row.battery, row.battery_capacity = battery.spawnBattery(math.random)
+    if row.battery == nil then
+        row.battery_state = bay.MISSING
+    end
+    if starter.spawnMissing(math.random) then
+        row.starter, row.starter_state = nil, bay.MISSING
+    end
     local params = {
         row.spawn_id,
         row.type_uname,
@@ -559,8 +570,11 @@ local function spawnAt(s, chance, cb)
         row.trailer_id,
         row.battery,
         row.battery_since,
+        row.battery_state,
+        row.battery_capacity,
         row.starter,
-        n = 16,
+        row.starter_state,
+        n = 19,
     }
     db.exec(INSERT_VEHICLE, params, function(ok, ctx, _, insertId)
         local v = nil
@@ -911,7 +925,7 @@ local function tickSimulation()
             and getVehicleOverrideLights(v) == 2
         then
             -- headlights left on with the engine off flatten the battery; a flat one puts them out
-            local level = battery.lightsDrain(batteryLevel(inf), 1.0)
+            local level = battery.lightsDrain(batteryLevel(inf), 1.0, inf.batteryCapacity)
             inf.battery, inf.batterySince = level, unixNow()
             if level <= 0 then
                 setVehicleOverrideLights(v, 1)
@@ -919,7 +933,7 @@ local function tickSimulation()
         end
         if isElement(v) and inf.bay and batteryConnected(inf) and inf.acc and not getVehicleEngineState(v) then
             -- the key left in ACC with the engine off drains the battery on top of any headlights
-            inf.battery, inf.batterySince = battery.accDrain(batteryLevel(inf), 1.0), unixNow()
+            inf.battery, inf.batterySince = battery.accDrain(batteryLevel(inf), 1.0, inf.batteryCapacity), unixNow()
             publishBattery(v, inf)
         end
         if isElement(v) and getVehicleEngineState(v) then
@@ -927,7 +941,7 @@ local function tickSimulation()
             if inf.bay and batteryConnected(inf) then
                 local vx, vy, vz = getElementVelocity(v)
                 local kmh = math.sqrt(vx * vx + vy * vy + vz * vz) * 150
-                inf.battery = battery.recharge(batteryLevel(inf), 1.0, kmh)
+                inf.battery = battery.recharge(batteryLevel(inf), 1.0, kmh, inf.batteryCapacity)
                 inf.batterySince = unixNow()
             end
             if vt and not vt.noEngine and (vt.maxFuel or 0) > 0 then
@@ -1190,7 +1204,7 @@ net.handler("engineToggleRequested", function(player)
                 return
             end
             -- the starter draws current on every turn, whether or not the engine catches
-            inf.battery, inf.batterySince = battery.crankDrain(batteryLevel(inf)), unixNow()
+            inf.battery, inf.batterySince = battery.crankDrain(batteryLevel(inf), inf.batteryCapacity), unixNow()
             publishBattery(v, inf)
         end
         local ok, err = vlogic.canStartEngine(hp, inf.fuel, vt and vt.noEngine, vt and vt.maxFuel)
@@ -1971,12 +1985,10 @@ local function saveBattery(inf)
     if inf.battery == nil then
         db.exec("UPDATE vehicles SET battery = NULL, battery_state = ? WHERE id = ?", { inf.batteryState, inf.id })
     else
-        db.exec("UPDATE vehicles SET battery = ?, battery_since = ?, battery_state = ? WHERE id = ?", {
-            inf.battery,
-            inf.batterySince,
-            inf.batteryState,
-            inf.id,
-        })
+        db.exec(
+            "UPDATE vehicles SET battery = ?, battery_since = ?, battery_state = ?, battery_capacity = ? WHERE id = ?",
+            { inf.battery, inf.batterySince, inf.batteryState, inf.batteryCapacity, inf.id }
+        )
     end
 end
 
@@ -2031,6 +2043,7 @@ local function pickupBattery(player, vehicle)
     end
     local level = math.floor((batteryLevel(inf) or 0) + 0.5)
     level = math.max(0, math.min(100, level))
+    local capacity = inf.batteryCapacity
     inf.battery, inf.batteryState, inf.batterySince = nil, bay.MISSING, unixNow()
     saveBattery(inf)
     disconnectBattery(vehicle, inf)
@@ -2038,7 +2051,7 @@ local function pickupBattery(player, vehicle)
         local vinf = isElement(c.v) and info[c.v]
         if res and res.ok and isElement(c.p) then
             local newId = res.payload and res.payload.item_id
-            local data = { charge = level }
+            local data = { charge = level, capacity = capacity }
             db.exec("UPDATE items SET data = ? WHERE id = ?", { toJSON(data), newId })
             exports.items:setHeld(c.p, { id = newId, uname = "Battery", hp = 2, data = data })
             toast(c.p, string.format("BATTERY_LEVEL:%d", level))
@@ -2046,6 +2059,7 @@ local function pickupBattery(player, vehicle)
         else
             if vinf and vinf.batteryState == bay.MISSING and not vinf.battery then
                 vinf.battery, vinf.batteryState, vinf.batterySince = level, bay.LOOSE, unixNow()
+                vinf.batteryCapacity = capacity
                 saveBattery(vinf)
                 publishBattery(c.v, vinf)
             end
@@ -2146,6 +2160,7 @@ local function placeBattery(player, vehicle, held)
     local charge = math.max(0, math.min(100, tonumber(stored.charge) or battery.SPAWN_MIN))
     local itemId = held.id
     inf.battery, inf.batterySince, inf.batteryState = charge, unixNow(), bay.LOOSE
+    inf.batteryCapacity = battery.capacityOf(stored.capacity)
     saveBattery(inf)
     publishBattery(vehicle, inf)
     consumeHeld(player, itemId, "used", function(gone, code)
@@ -3169,8 +3184,11 @@ function spawnVehicle(player, query)
         nil,
         row.battery,
         row.battery_since,
+        bay.TIGHT,
+        nil,
         row.starter,
-        n = 16,
+        bay.TIGHT,
+        n = 19,
     }
     db.exec(INSERT_VEHICLE, params, function(ok, ctx, _, insertId)
         if not ok or not insertId then

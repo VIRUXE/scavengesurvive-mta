@@ -1,7 +1,9 @@
 -- Loot vehicle rolls (upstream core/vehicle/spawn.pwn + loot-vehicle.pwn GenerateVehicleData). Pure logic:
 -- rng() returns a float in [0,1); `types` is spawn.index(list of data vehicle types).
 local spawn = {}
-spawn.DEFAULT_CHANCE = 4.0 -- percent per spawn point (setting vehicles.spawn_chance)
+spawn.DEFAULT_CHANCE = 12.0 -- percent per spawn point (setting vehicles.spawn_chance; upstream 4)
+spawn.WHEELS_MISSING_CHANCE = 0.40 -- share of spawned cars and trucks with wheels taken off
+spawn.WHEELS_MISSING_COUNT = { 0.50, 0.30, 0.12, 0.08 } -- of those, the share missing 1, 2, 3 and all 4
 spawn.CATEGORY =
     { C = "car", T = "truck", M = "motorbike", B = "pushbike", H = "helicopter", P = "plane", S = "boat", L = "train" }
 spawn.SIZE = { S = "small", M = "medium", L = "large" }
@@ -93,17 +95,39 @@ local function randomList(n, states, rng)
     return out
 end
 
+-- How many wheels a spawned car or truck is missing (0..4).
+function spawn.missingWheels(rng)
+    if rng() >= spawn.WHEELS_MISSING_CHANCE then
+        return 0
+    end
+    local r, acc = rng(), 0
+    for n, share in ipairs(spawn.WHEELS_MISSING_COUNT) do
+        acc = acc + share
+        if r < acc then
+            return n
+        end
+    end
+    return #spawn.WHEELS_MISSING_COUNT
+end
+
 -- Visual damage for cars and trucks only (upstream: category below MOTORBIKE); nil for everything else.
 -- panels 7 x 0..3, doors 4 x 0..4, lights 4 x 0..1, tires 4 x 0..1 (MTA uses the same state scales).
+-- Deviation from upstream: some wheels are already taken off (tyre state 2), picked at random.
 function spawn.damage(category, rng)
     if category ~= "car" and category ~= "truck" then
         return nil
+    end
+    local tires = randomList(4, 2, rng)
+    local slots = { 1, 2, 3, 4 }
+    for _ = 1, spawn.missingWheels(rng) do
+        local pick = table.remove(slots, math.floor(rng() * #slots) + 1)
+        tires[pick] = 2
     end
     return {
         panels = randomList(7, 4, rng),
         doors = randomList(4, 5, rng),
         lights = randomList(4, 2, rng),
-        tires = randomList(4, 2, rng),
+        tires = tires,
     }
 end
 

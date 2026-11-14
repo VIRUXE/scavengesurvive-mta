@@ -98,7 +98,11 @@ return function(ctx)
             return small.stunLabel(t and t.name or r.uname, r.data)
         end
         if r.uname == "Battery" then
-            return small.carBatteryLabel(t and t.name or r.uname, small.carBatteryCharge(r.id, r.data))
+            return small.carBatteryLabel(
+                t and t.name or r.uname,
+                small.carBatteryCharge(r.id, r.data),
+                small.carBatteryCapacity(r.id, r.data)
+            )
         end
         if r.uname == "Key" then
             return small.keyLabel(t and t.name or r.uname, r.data, vehicleTypeByModel)
@@ -350,8 +354,9 @@ return function(ctx)
                 local tx, ty, tz = e.x, e.y, e.z + height
                 local distance = getDistanceBetweenPoints3D(sx, sy, sz, tx, ty, tz)
                 local inset = math.min(0.2 / math.max(distance, 0.001), 1)
-                if rayClear(sx, sy, sz,
-                    tx + (sx - tx) * inset, ty + (sy - ty) * inset, tz + (sz - tz) * inset, own) then
+                if
+                    rayClear(sx, sy, sz, tx + (sx - tx) * inset, ty + (sy - ty) * inset, tz + (sz - tz) * inset, own)
+                then
                     ok = true
                     break
                 end
@@ -365,18 +370,24 @@ return function(ctx)
             local m = getElementMatrix(own)
             if ax and m then
                 local samples = {
-                    {0.1, 0.5, 0.5}, {0.9, 0.5, 0.5}, {0.5, 0.1, 0.5},
-                    {0.5, 0.9, 0.5}, {0.5, 0.5, 0.1}, {0.5, 0.5, 0.9},
+                    { 0.1, 0.5, 0.5 },
+                    { 0.9, 0.5, 0.5 },
+                    { 0.5, 0.1, 0.5 },
+                    { 0.5, 0.9, 0.5 },
+                    { 0.5, 0.5, 0.1 },
+                    { 0.5, 0.5, 0.9 },
                 }
                 for _, sample in ipairs(samples) do
                     local lx = ax + (bx - ax) * sample[1]
                     local ly = ay + (by - ay) * sample[2]
                     local lz = az + (bz - az) * sample[3]
-                    local tx = m[4][1] + lx*m[1][1] + ly*m[2][1] + lz*m[3][1]
-                    local ty = m[4][2] + lx*m[1][2] + ly*m[2][2] + lz*m[3][2]
-                    local tz = m[4][3] + lx*m[1][3] + ly*m[2][3] + lz*m[3][3]
-                    if getDistanceBetweenPoints3D(sx, sy, sz, tx, ty, tz) <= 2.5
-                        and rayClear(sx, sy, sz, tx, ty, tz, own) then
+                    local tx = m[4][1] + lx * m[1][1] + ly * m[2][1] + lz * m[3][1]
+                    local ty = m[4][2] + lx * m[1][2] + ly * m[2][2] + lz * m[3][2]
+                    local tz = m[4][3] + lx * m[1][3] + ly * m[2][3] + lz * m[3][3]
+                    if
+                        getDistanceBetweenPoints3D(sx, sy, sz, tx, ty, tz) <= 2.5
+                        and rayClear(sx, sy, sz, tx, ty, tz, own)
+                    then
                         ok = true
                         break
                     end

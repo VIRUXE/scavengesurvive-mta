@@ -5,6 +5,7 @@ local M = {}
 M.LIFE_MIN = 60 -- starts a fresh starter motor lasts at least
 M.LIFE_MAX = 400 -- and at most
 M.SPAWN_BAD_CHANCE = 0.02 -- share of spawned vehicles whose starter motor is already dead
+M.SPAWN_MISSING_CHANCE = 0.30 -- share of spawned vehicles with no starter motor at all
 
 -- a fresh starter motor's life, rolled once when it goes in
 function M.freshLife(rng)
@@ -19,6 +20,11 @@ function M.spawnLife(rng)
         return 0
     end
     return M.freshLife(rng)
+end
+
+-- whether a newly spawned vehicle's bay has no starter motor (rolled apart from the battery)
+function M.spawnMissing(rng)
+    return (rng or math.random)() < M.SPAWN_MISSING_CHANCE
 end
 
 -- nil (a row from before starter motors were tracked, or a tight motor whose life was never rolled) counts as fresh.
