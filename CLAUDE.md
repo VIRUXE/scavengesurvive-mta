@@ -1,6 +1,8 @@
 # scavengesurvive-mta — conventions
 
-Scavenge & Survive ported to MTA:SA 1.6 (Lua 5.1) with MariaDB 13.1.1+ (`item_create_many` uses `JSON_TABLE ... FORMAT JSON`). Design spec:
+Scavenge & Survive ported to MTA:SA 1.6 (Lua 5.1) with MariaDB 13.1.1+ (`item_create_many` uses `JSON_TABLE ... FORMAT JSON`);
+production and the dev box run 13.2.0 outside packages (`docs/runbooks/upgrade-mariadb.md`), so keep the schema
+13.1-compatible unless a commit deliberately adopts 13.2-only syntax. Design spec:
 `docs/superpowers/specs/2026-09-27-scavengesurvive-mta-port-design.md` (Appendix A = upstream behaviour, Appendix B = verified MTA facts).
 
 ## Layout
