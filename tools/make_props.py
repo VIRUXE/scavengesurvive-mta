@@ -455,7 +455,7 @@ def render_props() -> str:
     from tools.make_vending import props_rows
     from tools.stock_wheels import props_rows as wheel_rows
     from tools.vanilla_props import COPIES
-    entries = PROPS_TABLE + [dict(id=p["model"], name=p["asset"], dist=80) for p in PARTS] + COPIES + props_rows() + wheel_rows()
+    entries = PROPS_TABLE + [dict(id=p["model"], name=p["asset"], dist=80, prop_txd="bobcat_parts") for p in PARTS] + COPIES + props_rows() + wheel_rows()
     def extra(p):  # a vanilla model whose physical properties it takes, IDE flags it is drawn with
         return "".join(f", {k} = {p[k]}" for k in ("parent", "ideFlags") if p.get(k) is not None)
 

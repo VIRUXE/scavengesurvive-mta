@@ -14,7 +14,6 @@
     <file src="files/dumpster_body.txd"/>
     <file src="files/dumpster_body.col"/>
     <file src="files/dumpster_lid.dff"/>
-    <file src="files/dumpster_lid.txd"/>
     <file src="files/dumpster_lid.col"/>
     <export function="nearbyDumpster" type="client"/>
     <export function="tryOpenDumpster" type="client"/>

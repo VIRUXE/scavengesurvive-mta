@@ -311,8 +311,11 @@ export_body = duplicate_joined(body, bags_obj, "dumpster_body_export")
 export(export_body, "dumpster_body", cbody)
 bpy.data.objects.remove(export_body, do_unlink=True)
 export(lid, "dumpster_lid", clid)
-for stem in ("dumpster_body", "dumpster_lid"):
-    for ext in ("dff", "txd", "col"):
+# The lid uses the body's textures, so the resource ships one TXD (the client loads the lid with dumpster_body.txd).
+if (OUT / "dumpster_lid.txd").read_bytes() != (OUT / "dumpster_body.txd").read_bytes():
+    raise SystemExit("dumpster_lid.txd differs from dumpster_body.txd: ship it and load the lid with it again")
+for stem, exts in (("dumpster_body", ("dff", "txd", "col")), ("dumpster_lid", ("dff", "col"))):
+    for ext in exts:
         shutil.copyfile(OUT / f"{stem}.{ext}", RESOURCE / "files" / f"{stem}.{ext}")
 
 def tri_count(o):

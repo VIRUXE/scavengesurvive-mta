@@ -44,7 +44,7 @@ end
 
 addEventHandler("onClientResourceStart", resourceRoot, function()
     local bodyModel, e1 = ldr.loadModel({ dff = "dumpster_body", txd = "dumpster_body", dist = 150 })
-    local lidModel, e2 = ldr.loadModel({ dff = "dumpster_lid", txd = "dumpster_lid", dist = 150 })
+    local lidModel, e2 = ldr.loadModel({ dff = "dumpster_lid", txd = "dumpster_body", dist = 150 }) -- same textures as the body
     if not bodyModel or not lidModel then
         return outputDebugString("dumpsters: models not loaded: " .. tostring(e1 or e2), 1)
     end

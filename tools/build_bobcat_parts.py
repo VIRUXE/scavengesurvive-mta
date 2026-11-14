@@ -82,10 +82,11 @@ for p in PARTS:
     obj.select_set(True); col.select_set(True); bpy.context.view_layer.objects.active=obj
     bpy.ops.export_dff.scene(filepath=str(out/(p['asset']+'.dff')),export_coll=False,only_selected=True,export_version='0x36003')
     bpy.ops.export_col.scene(filepath=str(out/(p['asset']+'.col')),export_version='3',only_selected=True)
-    (out/(p['asset']+'.txd')).write_bytes(txd)
     bpy.data.objects.remove(col,do_unlink=True)
     assets.append(obj)
     print('EXPORTED',p['asset'],len(obj.data.polygons),tuple(hi-lo))
+# Every part uses the same Bobcat textures: one shared TXD (make_props.py points the rows at it).
+(out/'bobcat_parts.txd').write_bytes(txd)
 for obj in list(bpy.data.objects):
     if obj not in assets: bpy.data.objects.remove(obj,do_unlink=True)
 # Editable comparison: good row, damaged row, all at original scale.
