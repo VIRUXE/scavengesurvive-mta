@@ -2,6 +2,7 @@
 return {
     playerAuthenticated = false,
     playerLoggedOut = false,
+    playerJoinAnnounced = false,
     loginRequested = true,
     registrationRequested = true,
     authPromptShown = true,

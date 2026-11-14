@@ -112,14 +112,16 @@ addEventHandler("globalChatSent", root, function(text)
     end
 end)
 
-addEventHandler("onPlayerJoin", root, function()
+-- Posted once auth knows the player's language (the join line shows it).
+addEventHandler("playerJoinAnnounced", root, function(code)
     local res = bridge()
     if not res then
         return
     end
     local name = getPlayerName(source)
+    local langName = exports.data:languageName(code)
     for _, channel in ipairs({ getJoinPartChannel(), getInGameChatChannel() }) do
-        local payload = logic.joinPayload(name, channel)
+        local payload = logic.joinPayload(name, channel, langName)
         if payload then
             call(res, "send", "player.join", payload)
         end

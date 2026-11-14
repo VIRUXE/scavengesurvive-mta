@@ -41,4 +41,5 @@
     <export function="translate" type="shared"/>
     <export function="itemName" type="shared"/>
     <export function="languages" type="shared"/>
+    <export function="languageName" type="shared"/>
 </meta>

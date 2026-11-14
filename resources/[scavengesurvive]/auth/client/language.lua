@@ -6,18 +6,6 @@
 -- luacheck: read_globals guiGridListSetItemText guiGridListSetItemData guiGridListGetItemData
 -- luacheck: read_globals guiGridListGetSelectedItem guiGridListSetSelectedItem guiGetInputMode
 -- luacheck: read_globals guiLabelSetHorizontalAlign
-local NAMES = {
-    en = "English",
-    es = "Español",
-    fr = "Français",
-    pt = "Português (Portugal)",
-    ptbr = "Português (Brasil)",
-    ru = "Русский",
-    ro = "Română",
-    id = "Bahasa Indonesia",
-    bhs = "Bosanski / Hrvatski / Srpski",
-    cs = "Čeština",
-}
 local WIN_W, WIN_H = 340, 360
 local win
 
@@ -60,7 +48,7 @@ addEventHandler("authLanguageOffered", root, function(codes)
     guiGridListAddColumn(grid, "Language", 0.9)
     for _, code in ipairs(codes) do
         local row = guiGridListAddRow(grid)
-        guiGridListSetItemText(grid, row, 1, NAMES[code] or code, false, false)
+        guiGridListSetItemText(grid, row, 1, exports.data:languageName(code), false, false)
         guiGridListSetItemData(grid, row, 1, code)
     end
     guiGridListSetSelectedItem(grid, 0, 1)

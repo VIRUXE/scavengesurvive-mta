@@ -100,6 +100,24 @@ function Data.languages()
     return LANGUAGES
 end
 
+-- Each language under its own name (the language window, the join line); the code itself for an unknown one.
+local LANGUAGE_NAMES = {
+    en = "English",
+    es = "Español",
+    fr = "Français",
+    pt = "Português (Portugal)",
+    ptbr = "Português (Brasil)",
+    ru = "Русский",
+    ro = "Română",
+    id = "Bahasa Indonesia",
+    bhs = "Bosanski / Hrvatski / Srpski",
+    cs = "Čeština",
+}
+
+function Data.languageName(code)
+    return LANGUAGE_NAMES[code] or tostring(code)
+end
+
 -- Upstream's language files carry "(REQUIRES TRANSLATION:'…')" where a line was never translated; the player
 -- gets the English line instead of the marker (docs/languages-qa.md counts them as untranslated).
 local UNTRANSLATED = "(REQUIRES TRANSLATION"
@@ -182,6 +200,10 @@ end
 
 function languages()
     return Data.languages()
+end
+
+function languageName(code)
+    return Data.languageName(code)
 end
 
 return Data

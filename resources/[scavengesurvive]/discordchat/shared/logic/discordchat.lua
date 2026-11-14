@@ -5,7 +5,7 @@ function discordchat.strip(s)
     return cleaned ~= "" and cleaned or tostring(s or "")
 end
 
-function discordchat.joinPayload(name, channel)
+function discordchat.joinPayload(name, channel, langName)
     local player = discordchat.strip(name)
     if player == "" then
         return nil
@@ -13,6 +13,9 @@ function discordchat.joinPayload(name, channel)
     local payload = { player = player }
     if channel then
         payload.channel = channel
+    end
+    if langName and langName ~= "" then
+        payload.lang = langName
     end
     return payload
 end

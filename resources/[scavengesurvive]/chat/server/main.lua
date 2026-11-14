@@ -473,23 +473,18 @@ playerCommand("motd", function(p)
 end)
 
 addEventHandler("onPlayerJoin", root, function()
+    for _, line in ipairs(logic.joinLines(getPlayerName(source), exports.staff:getMotd())) do
+        outputChatBox(line.text, source, line.r, line.g, line.b, true)
+    end
+end)
+
+-- The "has joined" line for everyone, in each reader's language, with the joiner's language after it.
+addEventHandler("playerJoinAnnounced", root, function(code)
     local name = getPlayerName(source)
-    for _, line in ipairs(logic.joinLines(name, exports.staff:getMotd())) do
-        if line.localized then
-            local template = " >  #B8B8B8%s#FFFFFF has joined"
-            for _, recipient in ipairs(getElementsByType("player")) do
-                outputChatBox(
-                    exports.data:t(langOf(recipient), template, name),
-                    recipient,
-                    line.r,
-                    line.g,
-                    line.b,
-                    true
-                )
-            end
-        else
-            outputChatBox(line.text, line.toAll and root or source, line.r, line.g, line.b, true)
-        end
+    local langName = exports.data:languageName(code)
+    for _, recipient in ipairs(getElementsByType("player")) do
+        local joined = exports.data:t(langOf(recipient), logic.JOINED, name)
+        outputChatBox(logic.joinedLine(joined, langName), recipient, 255, 255, 255, true)
     end
 end)
 

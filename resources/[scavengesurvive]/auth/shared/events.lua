@@ -1,6 +1,7 @@
 -- server-local (triggered and handled on one side, or between resources)
 addEvent("playerAuthenticated", false)
 addEvent("playerLoggedOut", false)
+addEvent("playerJoinAnnounced", false) -- player, language code: raised by auth once the language is known
 
 -- client to server (handlers registered with net.handler)
 addEvent("loginRequested", true)

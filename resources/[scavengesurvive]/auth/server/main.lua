@@ -29,6 +29,8 @@ local chosenLang = {} -- player -> code picked in the language window, saved on 
 local LANG_KEY = "auth.lang"
 -- Server-only state on the existing connection: survives resource reloads, disappears on disconnect.
 local SESSION_KEY = "auth.session"
+-- Server-only flag, same lifetime: the join line went out, so a re-prompt (auth restart) does not announce twice.
+local ANNOUNCED_KEY = "auth.joinAnnounced"
 local resumedCountdowns = {} -- player -> original whitelist deadline
 local whitelistEnabled = false
 local whitelistAuto = false
@@ -319,6 +321,7 @@ addEventHandler("onPlayerJoin", root, function()
         version = getPlayerVersion(source) or nil,
     })
     setElementData(source, SESSION_KEY, false, "local", "deny")
+    setElementData(source, ANNOUNCED_KEY, false, "local", "deny")
     checkBan(source)
 end)
 
@@ -380,6 +383,16 @@ local function offerLanguage(player)
     triggerClientEvent(player, "authLanguageOffered", player, exports.data:languages())
 end
 
+-- The join line (chat, Discord) waits for the language: it is only known once the account loads or the player
+-- picks one. Once per connection.
+local function announceJoin(player, code)
+    if getElementData(player, ANNOUNCED_KEY) == true then
+        return
+    end
+    setElementData(player, ANNOUNCED_KEY, true, "local", "deny")
+    triggerEvent("playerJoinAnnounced", player, code)
+end
+
 function prompt(player)
     if not accounts then
         if not warnedNoDb then
@@ -416,6 +429,7 @@ function prompt(player)
             return offerLanguage(player)
         end
         promptLang[player] = chosenLang[player] or row.lang
+        announceJoin(player, promptLang[player])
         if access.autoLoginAllowed(autoIpLogin, row, getPlayerIP(player), getPlayerSerial(player)) then
             pending[player] = true
             return accounts.loginTrusted(player, row, function(ok, code, account)
