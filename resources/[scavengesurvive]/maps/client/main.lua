@@ -64,7 +64,7 @@ local function place(o)
             local dim, int = placement.where(o[8], o[9])
             setElementDimension(e, dim)
             setElementInterior(e, int)
-            if placement.isBreakable(model) then
+            if placement.isBreakable(o[1]) then
                 setObjectBreakable(e, true)
             end
             if not (placement.isSwingDoor(o[1]) or placement.isMovable(model)) then
