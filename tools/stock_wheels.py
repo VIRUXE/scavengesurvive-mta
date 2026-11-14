@@ -15,6 +15,7 @@ modelz stays 0.
 """
 from __future__ import annotations
 
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -43,8 +44,50 @@ TYPES = [
     ("sport", "Sport", "Sport"),
 ]
 
-# The generic Wheel's hold, so these can be carried the same way until a studio pass retunes them.
-HOLD = dict(attrx=258.455596, attry=346.618103, attrz=354.313049, attx=-0.098016, atty=0.356168, attz=-0.309851)
+# How the generic Wheel (20222) is carried: upright in both hands, resting on them. Its axle is its own X and its
+# origin its centre; it is 0.984 m across.
+GENERIC_HOLD = dict(attrx=258.455596, attry=346.618103, attrz=354.313049, attx=-0.098016, atty=0.356168, attz=-0.309851)
+GENERIC_RADIUS = 0.492
+
+
+def _rotation(rx: float, ry: float, rz: float) -> list[list[float]]:
+    """items/client/attach.lua rotationMatrix: rows, a vertex is turned about Z, then Y, then X."""
+    import math
+
+    cx, sx = math.cos(math.radians(rx)), math.sin(math.radians(rx))
+    cy, sy = math.cos(math.radians(ry)), math.sin(math.radians(ry))
+    cz, sz = math.cos(math.radians(rz)), math.sin(math.radians(rz))
+    return [
+        [cz * cy, cz * sy * sx + sz * cx, -cz * sy * cx + sz * sx],
+        [-sz * cy, -sz * sy * sx + cz * cx, sz * sy * cx + cz * sx],
+        [sy, -cy * sx, cy * cx],
+    ]
+
+
+def hold(key: str) -> dict:
+    """The attach offsets that carry a stock wheel as the generic Wheel is carried.
+
+    A stock wheel lies face-up (axle on Z, origin on its back face), so it is first stood up with its face where
+    the generic one's is, about its own centre, and then lowered until the smaller tyre rests on the hands again
+    (the generic wheel's -Z is down in the carry).
+    """
+    import math
+
+    dia, width, _k, _dish = SPECS[key]
+    g = GENERIC_HOLD
+    r = _rotation(g["attrx"], g["attry"], g["attrz"])
+    # stock X, Y, Z in the generic wheel's axes: -Z, Y, X
+    turned = [[-r[2][i] for i in range(3)], r[1], r[0]]
+    drop = GENERIC_RADIUS - dia / 2
+    half = width / 2
+    pos = [(g["attx"], g["atty"], g["attz"])[i] - drop * r[2][i] - half * turned[2][i] for i in range(3)]
+    ry = math.degrees(math.asin(max(-1.0, min(1.0, turned[2][0]))))
+    rx = math.degrees(math.atan2(-turned[2][1], turned[2][2]))
+    rz = math.degrees(math.atan2(-turned[1][0], turned[0][0]))
+    return dict(
+        attrx=round(rx % 360, 6), attry=round(ry % 360, 6), attrz=round(rz % 360, 6),
+        attx=round(pos[0], 6), atty=round(pos[1], 6), attz=round(pos[2], 6),
+    )  # fmt: skip
 
 
 def catalog() -> list[dict]:
@@ -176,7 +219,7 @@ def sync_items() -> None:
                 'category = "generic", categoryData = nil, colour = -1, longPickup = false, '
                 "maxHitpoints = 5, model = {id}, modelz = 0.0, name = \"{name}\", price = 1, "
                 "rotx = 0.0, roty = 0.0, rotz = 0.0, size = 5, uname = \"{uname}\", useCarryAnim = true }}".format(
-                    **w, **HOLD
+                    **w, **hold(w["key"])
                 )
             )
         block = "\n".join(lines) + "\n"
@@ -191,6 +234,20 @@ def sync_items() -> None:
         print(f"stock_wheels: added {len(missing)} item types to item_types.lua")
     else:
         print("stock_wheels: item_types.lua already has the stock wheels")
+    # the carry offsets follow the model's size, so rows already there are brought up to date
+    lua = ITEM_LUA.read_text(encoding="utf-8")
+    fresh = lua
+    for w in rows:
+        offsets = ", ".join(f"{k} = {v}" for k, v in hold(w["key"]).items())
+        fresh = re.sub(
+            rf"(M\.byUname\.{w['uname']} = \{{ )attrx = [^,]+, attry = [^,]+, attrz = [^,]+, attx = [^,]+, "
+            r"atty = [^,]+, attz = [^,]+",
+            lambda m, offsets=offsets: m.group(1) + offsets,
+            fresh,
+        )
+    if fresh != lua:
+        ITEM_LUA.write_text(fresh, encoding="utf-8", newline="\n")
+        print("stock_wheels: carry offsets updated in item_types.lua")
 
     sql = ITEM_SQL.read_text(encoding="utf-8")
     missing_sql = [w for w in rows if f"('{w['uname']}'" not in sql]

@@ -48,6 +48,7 @@ local CAM_CLEARANCE = 0.3 -- the camera stays this far above the ground
 local WHEEL_MODEL = 20222 -- the generic Wheel item's model (prop_models), shown on the bare hub while fitting
 local WHEEL_MODEL_RADIUS = 0.49
 local WHEEL_MODEL_FACE = 0.20 -- its centre plane to the face of its hub, where the nuts seat
+local STOCK_HUB_SEAT = 0.46 -- a stock style's centre plane to its hub face, as a fraction of its thickness
 
 local session = nil
 local modelId = nil
@@ -232,9 +233,16 @@ local function placeNuts(frame)
     -- the ring runs clockwise as the player sees it, whichever side of the vehicle the wheel is on
     local across = frame.outward
     if isElement(session.wheelObject) then
-        -- the model's axle is its own X axis
         local fx, fy, fz = cross(u[1], u[2], u[3], a[1], a[2], a[3])
-        orient(session.wheelObject, frame.wx, frame.wy, frame.wz, a, { fx, fy, fz }, u)
+        local back = session.modelBack
+        if back then
+            -- a stock style lies face-up: its axle is its own Z axis and its origin is on its back face
+            local x, y, z = frame.wx - a[1] * back, frame.wy - a[2] * back, frame.wz - a[3] * back
+            orient(session.wheelObject, x, y, z, { fx, fy, fz }, u, a)
+        else
+            -- the generic Wheel's axle is its own X axis, through its centre
+            orient(session.wheelObject, frame.wx, frame.wy, frame.wz, a, { fx, fy, fz }, u)
+        end
     end
     for index = 1, #session.states do
         local progress = shown(index)
@@ -539,13 +547,15 @@ addEventHandler("lugnutsStarted", root, function(count, sign, turn, wheel, title
         local object = id and createObject(id, x, y, z)
         if object then
             -- the stock styles are measured from the object itself: a face-up disc, so its diameter is in X/Y
-            -- and half its thickness is where the nuts seat; the generic Wheel keeps its tuned constants
+            -- and the nuts seat on the hub, just under its top; the generic Wheel keeps its tuned constants
             session.modelRadius, session.modelFace = WHEEL_MODEL_RADIUS, WHEEL_MODEL_FACE
             if itemModel ~= WHEEL_MODEL then
                 local x1, y1, z1, x2, y2, z2 = getElementBoundingBox(object)
                 if x1 then
                     session.modelRadius = math.max(x2 - x1, y2 - y1) / 2
-                    session.modelFace = (z2 - z1) / 2
+                    session.modelFace = (z2 - z1) * STOCK_HUB_SEAT
+                    -- origin to the wheel's centre plane, at the size it is shown
+                    session.modelBack = (z1 + z2) / 2 * session.radius / session.modelRadius
                 end
             end
             setElementInterior(object, getElementInterior(vehicle))
