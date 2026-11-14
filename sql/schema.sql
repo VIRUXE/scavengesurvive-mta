@@ -386,6 +386,7 @@ CREATE TABLE IF NOT EXISTS `vehicles` (
   `y` float NOT NULL,
   `z` float NOT NULL,
   `rz` float NOT NULL DEFAULT 0,
+  `colors` varchar(64) DEFAULT NULL,
   `health` float NOT NULL DEFAULT 1000,
   `fuel` float NOT NULL DEFAULT 0,
   `locked` tinyint(1) NOT NULL DEFAULT 0,

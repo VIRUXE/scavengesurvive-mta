@@ -113,7 +113,7 @@ local USED_TICK_MS = 300000
 
 local GLOVEBOX_LOOT = "vehicle_glovebox" -- loot table of a fresh vehicle's glovebox (small items only)
 
-local SELECT_VEHICLES = "SELECT v.id, v.spawn_id, v.type_uname, v.model, v.x, v.y, v.z, v.rz, "
+local SELECT_VEHICLES = "SELECT v.id, v.spawn_id, v.type_uname, v.model, v.x, v.y, v.z, v.rz, v.colors, "
     .. "v.health, v.fuel, v.locked, v.damage, v.carmour, v.gas_bottles, v.key_code, v.keypad_code, "
     .. "v.trailer_id, v.left_spawn, v.battery, v.battery_since, v.battery_state, v.starter, v.starter_state, "
     .. "c.id AS container_id, g.id AS glovebox_id, "
@@ -368,12 +368,38 @@ local function applyDamage(v, d)
     end
 end
 
+-- Paint is stored as the 12 RGB values of getVehicleColor(v, true), comma separated; MTA picks random colours on
+-- every createVehicle, so without this a resource restart repaints every vehicle.
+local function parseColors(s)
+    if type(s) ~= "string" or s == "" then
+        return nil
+    end
+    local out = {}
+    for n in s:gmatch("%d+") do
+        n = tonumber(n)
+        if n > 255 then
+            return nil
+        end
+        out[#out + 1] = n
+    end
+    return #out == 12 and out or nil
+end
+
 -- row: a vehicles table row joined with containers; fresh: a vehicle that has just spawned (its glovebox is stocked)
 local function create(row, fresh)
     local v = createVehicle(row.model, row.x, row.y, row.z, 0, 0, row.rz)
     if not v then
         log.event("vehicle.createFailed", { vehicle_id = row.id, uname = row.type_uname, model = row.model }, "warn")
         return nil
+    end
+    local paint = parseColors(row.colors)
+    if paint then
+        setVehicleColor(v, unpack(paint))
+    else
+        db.exec(
+            "UPDATE vehicles SET colors = ? WHERE id = ?",
+            { table.concat({ getVehicleColor(v, true) }, ","), row.id }
+        )
     end
     setElementHealth(v, math.max(0, math.min(vlogic.HEALTH_MAX, tonumber(row.health) or vlogic.HEALTH_MAX)))
     setVehicleEngineState(v, false)
