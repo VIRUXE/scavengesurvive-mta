@@ -48,8 +48,8 @@ function translate.sourceTag(source)
     return tostring(source or "?"):lower()
 end
 
--- The extra line under the original: grey, the speaker and the translation (source is unused, kept for callers).
-function translate.line(source, name, text)
+-- The extra line under the original: grey, the speaker and the translation.
+function translate.line(name, text)
     return string.format("#B4B4B4  %s: %s", name, text)
 end
 

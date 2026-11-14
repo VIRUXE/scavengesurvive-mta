@@ -199,7 +199,7 @@ local function showTranslation(res, target, name, readers, rgb)
     if not res or tr.sameLanguage(res.source, target) then
         return
     end
-    local l1, l2 = logic.split(tr.line(res.source, name, res.text))
+    local l1, l2 = logic.split(tr.line(name, res.text))
     for _, pl in ipairs(readers) do
         if isElement(pl) then
             outputChatBox(l1, pl, rgb[1], rgb[2], rgb[3], true)
