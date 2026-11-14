@@ -9,7 +9,10 @@
 --   vanilla door cut out as a leaf of its own that swings, hung in every trailer of the world (the upright vanilla
 --   placements listed in trailers.lua, and the ones the maps resource builds, found once it has built them).
 -- * the houses (houses.lua, tools/house_shells): the Fort Carson houses des_bighus01-03 (models 3305-3303), rooms
---   behind their front, porch and side doors (and 01's garage behind its side door), each door a leaf that swings.
+--   behind their front, porch and side doors (and 01's garage behind its side door), each door a leaf that swings;
+--   the Verdant Meadows airstrip office des_byoffice (16326), its ground floor holding the game's own interior
+--   (airfieldhus1/2, fitted inside it) and furnished with the same stock props, its vanilla locked door
+--   (Gen_doorEXT03) removed and hung again as a leaf that swings.
 local function readLua(path)
     local f = fileOpen(path, true)
     local src = fileRead(f, fileGetSize(f))
@@ -27,6 +30,8 @@ local replaced = {} -- vanilla model -> true once its COL and DFF are replaced
 local doorModels = {} -- vanilla trailer model -> requested model id of its door leaf
 local requested = {} -- requested ids, freed on stop
 local doors = {} -- door objects created
+local props = {} -- furniture objects created
+local removed = {} -- { model, radius, x, y, z } of vanilla objects removed, restored on stop
 local hung = {} -- building or placement key -> true, so a trailer gets one door
 local keep = {} -- loaded COL/TXD/DFF elements
 
@@ -86,14 +91,33 @@ local function hangCabinDoors(id, x, y, z, rz)
     end
 end
 
--- A house's doors: one leaf model, hung at each of its hinges (x, y, z, rz in the model's frame).
+-- A house's doors: one leaf model, hung at each of its hinges (x, y, z, rz in the model's frame); then the vanilla
+-- objects it removes and the stock props it is furnished with, if any (also in the model's frame).
 local function hangHouseDoors(id, house, x, y, z, rz)
     local a = math.rad(rz)
     local c, s = math.cos(a), math.sin(a)
+    local function at(p)
+        return x + p[1] * c - p[2] * s, y + p[1] * s + p[2] * c, z + p[3]
+    end
+    for _, r in ipairs(house.remove or {}) do
+        local wx, wy, wz = at({ r[2], r[3], r[4] })
+        if removeWorldModel(r[1], r[5], wx, wy, wz) then
+            removed[#removed + 1] = { r[1], r[5], wx, wy, wz }
+        end
+    end
     for _, h in ipairs(house.hinges) do
-        local obj = createObject(id, x + h[1] * c - h[2] * s, y + h[1] * s + h[2] * c, z + h[3], 0, 0, rz + h[4])
+        local hx, hy, hz = at(h)
+        local obj = createObject(id, hx, hy, hz, 0, 0, rz + h[4])
         if obj then
             doors[#doors + 1] = obj
+        end
+    end
+    for _, p in ipairs(house.props or {}) do
+        local px, py, pz = at({ p[2], p[3], p[4] })
+        local obj = createObject(p[1], px, py, pz, 0, 0, rz + p[5])
+        if obj then
+            setElementFrozen(obj, true) -- client-side furniture: kept where it stands, the same for every player
+            props[#props + 1] = obj
         end
     end
 end
@@ -195,10 +219,15 @@ addEventHandler("mapsBuilt", root, function()
 end)
 
 addEventHandler("onClientResourceStop", resourceRoot, function()
-    for _, obj in ipairs(doors) do
-        if isElement(obj) then
-            destroyElement(obj)
+    for _, list in ipairs({ doors, props }) do
+        for _, obj in ipairs(list) do
+            if isElement(obj) then
+                destroyElement(obj)
+            end
         end
+    end
+    for _, r in ipairs(removed) do
+        restoreWorldModel(r[1], r[2], r[3], r[4], r[5])
     end
     for model in pairs(replaced) do
         engineRestoreModel(model)
