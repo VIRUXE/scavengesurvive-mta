@@ -273,6 +273,7 @@ CREATE TABLE IF NOT EXISTS `loot_spawns` (
   `dimension` int(11) NOT NULL DEFAULT 0,
   `zone` varchar(8) NOT NULL,
   `enabled` tinyint(1) NOT NULL DEFAULT 1,
+  `rooftop` tinyint(1) NOT NULL DEFAULT 0,
   `pos` point NOT NULL,
   PRIMARY KEY (`id`),
   SPATIAL KEY `sp_loot_spawns_pos` (`pos`),

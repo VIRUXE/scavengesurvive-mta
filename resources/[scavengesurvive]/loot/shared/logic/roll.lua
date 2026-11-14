@@ -10,22 +10,26 @@ local MILITARY_LOOT = {
     airdrop_military_weapons = true,
 }
 
-function roll.sampleList(entries, rng)
+-- Item types a rooftop loot point never rolls: a wheel on a roof is out of reach of any vehicle.
+roll.ROOF_BANNED = { Wheel = true }
+
+-- The entries that pass their weight roll; `exclude` (a set of unames, optional) leaves types out.
+function roll.sampleList(entries, rng, exclude)
     local out = {}
     for _, e in ipairs(entries) do
-        if rng() * 100 < e.weight then
+        if not (exclude and exclude[e.uname]) and rng() * 100 < e.weight then
             out[#out + 1] = e
         end
     end
     return out
 end
 
-function roll.pick(tbl, size, spawnWeight, mult, rng)
+function roll.pick(tbl, size, spawnWeight, mult, rng, exclude)
     if size == -1 then
         size = 3 + math.floor(rng() * 3)
     end
     size = math.min(size, roll.MAX_PER_SPAWN)
-    local sample = roll.sampleList(tbl.entries, rng)
+    local sample = roll.sampleList(tbl.entries, rng, exclude)
     local out = {}
     for _ = 1, size do
         if #sample == 0 then

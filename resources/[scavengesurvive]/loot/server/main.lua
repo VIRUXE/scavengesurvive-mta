@@ -243,7 +243,9 @@ local function rollSpawn(s)
         return nil
     end
     local mult = setting("loot.spawn_multiplier", 1.0)
-    local unames = roll.pick(tbl, s.size, s.weight, mult, math.random)
+    -- a rooftop point (loot_spawns.rooftop, tools/loot_rooftops.py) never rolls the types of roll.ROOF_BANNED
+    local banned = tonumber(s.rooftop) == 1 and roll.ROOF_BANNED or nil
+    local unames = roll.pick(tbl, s.size, s.weight, mult, math.random, banned)
     -- the zone pays for this roll (loot_roll spends it); a roll bigger than what is left is trimmed
     local left = allowance[s.zone] or 0
     while #unames > left do
@@ -441,7 +443,7 @@ function rollNear(x, y, radius, onDone)
         end
     end
     local batch = setting("loot.roll_batch", 300)
-    local sql = "SELECT s.id, s.x, s.y, s.z, s.zone, s.table_name, s.weight, s.size FROM loot_spawns s "
+    local sql = "SELECT s.id, s.x, s.y, s.z, s.zone, s.table_name, s.weight, s.size, s.rooftop FROM loot_spawns s "
         .. "JOIN loot_spawn_state st ON st.spawn_id = s.id WHERE s.enabled = 1 AND st.next_roll_at <= NOW() "
         .. "AND NOT EXISTS (SELECT 1 FROM items i WHERE i.loot_spawn_id = s.id) "
         .. string.format(
@@ -473,7 +475,7 @@ function rollNear(x, y, radius, onDone)
 end
 
 -- Due points of one zone in random order, from anywhere in the zone.
-local DUE_IN_ZONE = "SELECT s.id, s.x, s.y, s.z, s.zone, s.table_name, s.weight, s.size FROM loot_spawns s "
+local DUE_IN_ZONE = "SELECT s.id, s.x, s.y, s.z, s.zone, s.table_name, s.weight, s.size, s.rooftop FROM loot_spawns s "
     .. "JOIN loot_spawn_state st ON st.spawn_id = s.id WHERE s.enabled = 1 AND s.zone = ? "
     .. "AND st.next_roll_at <= NOW() AND NOT EXISTS (SELECT 1 FROM items i WHERE i.loot_spawn_id = s.id) "
     .. "ORDER BY RAND() LIMIT %d"
