@@ -221,3 +221,52 @@ end)
 function interactionActions()
     return world.interactionActions()
 end
+
+-- luacheck: globals getProductionRecipes
+-- luacheck: max line length 260
+-- Read-only production catalog for the recipe browser, derived from gameplay rules.
+function getProductionRecipes()
+    local out = {}
+    local function add(id, kind, result, inputs, equipment, instructions)
+        out[#out + 1] = { name = id, kind = kind, result = { uname = result, count = 1 },
+            ingredients = inputs or {}, tool = equipment, instructions = instructions }
+    end
+    local function ingredient(uname, count, keep)
+        return { uname = uname, count = count or 1, keep = keep }
+    end
+    local function seconds(n) return tostring(n) end
+    for uname, value in pairs(machines.SCRAP) do
+        add("scrap:" .. uname, "machines", machines.RESULTS.scrap, { ingredient(uname) }, "ScrapMachine",
+            lang.format("Scrap value: %s. Batch output capped at %s items.", value, machines.MAX_ITEMS - 1))
+    end
+    add("refine", "machines", "RefinedMetal", { ingredient("ScrapMetal") }, "RefineMachine",
+        lang.text("Each Scrap Metal produces one Refined Metal."))
+    add("purify", "machines", "Bottle", { ingredient("Bottle") }, "WaterMachine",
+        lang.text("Requires a bottle of sea water; produces purified water with the same volume."))
+    local machineHelp = lang.format("Load the machine, refuel with Petrol, then select Start. Uses %s fuel per input item; takes %s seconds per input plus up to %s seconds.", machines.FUEL_PER_ITEM, machines.COOK_S_PER_ITEM, machines.COOK_JITTER_S)
+    for _, r in ipairs(out) do r.instructions = r.instructions .. "\n\n" .. machineHelp end
+    for uname, t in pairs(exports.data:itemTypes()) do
+        if cooking.canCook(t) then
+            for _, cooker in ipairs({ "Campfire", "Barbecue" }) do
+                add("cook:" .. cooker .. ":" .. uname, "cooking", uname, { ingredient(uname) }, cooker,
+                    lang.format("Place uncooked food on the lit cooker. Produces cooked food in %s seconds.", seconds(cooker == "Campfire" and cooking.CAMPFIRE_COOK_S or cooking.BBQ_COOK_S))
+                    .. (cooker == "Barbecue" and "\n" .. lang.format("Two grill spots. Refuel with %s L Petrol for %s cooks.", cooking.PETROL_PER_FILL, cooking.FUEL_PER_FILL) or ""))
+            end
+        end
+    end
+    for i, seed in ipairs(gardening.SEEDS) do
+        if seed.crop then
+            add("grow:" .. i, "gathering", seed.crop, { ingredient(gardening.BAG), ingredient(gardening.POT, 1, true) }, "Knife",
+                lang.format("Use seeds of this crop in a Plant Pot, water it, and harvest the mature plant with a Knife. Growth: %s steps of %s seconds.", seed.grows, gardening.GROW_MS / 1000))
+        end
+    end
+    add("molotov:fill", "combine", small.MOLOTOV_TO, { ingredient(small.MOLOTOV_FROM) }, "GasCan",
+        lang.format("Use a Petrol Can on the empty Molotov; consumes %s L Petrol.", small.MOLOTOV_LITRES))
+    local fishing = loadModule("shared/logic/fishing.lua")
+    add("fishing", "gathering", fishing.CATCH, {}, fishing.ROD,
+        lang.format("Cast into water. Wait %s–%s seconds before skill modifiers, then reel in. A catch is not guaranteed.", fishing.MIN_WAIT_MS / 1000, fishing.MAX_WAIT_MS / 1000))
+    add("harvest:meat", "gathering", "Meat", {}, "Knife",
+        lang.text("Use a Knife on a Torso for 3 seconds to harvest raw meat. Each torso can be harvested once within a day."))
+    table.sort(out, function(a, b) return a.name < b.name end)
+    return out
+end

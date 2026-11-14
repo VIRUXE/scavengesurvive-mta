@@ -1,3 +1,5 @@
+-- luacheck: read_globals guiSetSize
+-- luacheck: max line length 180
 -- /recipes: a CEGUI recipe browser (upstream core/player/recipes.pwn). Tabs for combination, construction and
 -- workbench recipes, each a list of results with the tool and ingredients of the selected one, and a help tab.
 -- GUI functions that postdate the generated luacheck lists:
@@ -16,7 +18,7 @@ local craft = loadModule("shared/logic/craft.lua")
 local FONT, WIN_W, WIN_H = "default-normal", 620, 424
 local YELLOW, WHITE, GREEN, BLUE = { 255, 255, 0 }, { 255, 255, 255 }, { 51, 170, 51 }, { 51, 204, 255 }
 -- lang:begin
-local TAB_NAMES = { combine = "Combination", ground = "Construction", workbench = "Workbench" }
+local TAB_NAMES = { combine = "Combination", ground = "Construction", workbench = "Workbench", machines = "Machines", cooking = "Cooking", gathering = "Gathering" }
 
 -- upstream Dialog_ShowCraftHelp, with the port's controls: { colour, text } lines, "" for a gap
 local HELP = {
@@ -41,7 +43,7 @@ local HELP = {
     { WHITE, "Hold the Interact key while standing at the workbench" },
 }
 -- lang:end
-local TAB_KINDS = { "combine", "ground", "workbench" }
+local TAB_KINDS = { "combine", "ground", "workbench", "machines", "cooking", "gathering" }
 
 local win = nil
 
@@ -91,12 +93,16 @@ local function detailText(r)
     if r.removalTool then
         lines[#lines + 1] = lang.format("Can be taken down again with a %s.", itemName(r.removalTool))
     end
+    if r.instructions then lines[#lines + 1] = "\n" .. r.instructions end
     return table.concat(lines, "\n")
 end
 
 local function recipeTab(panel, name, kind)
     local tab = guiCreateTab(name, panel)
     local recipes = craft.ofKind(kind)
+    for _, r in ipairs(exports.items:getProductionRecipes()) do
+        if r.kind == kind then recipes[#recipes + 1] = r end
+    end
     local grid = guiCreateGridList(6, 6, 220, 292, false, tab)
     guiGridListSetSortingEnabled(grid, false)
     guiGridListAddColumn(grid, L("Recipe"), 0.85)
@@ -105,12 +111,15 @@ local function recipeTab(panel, name, kind)
         guiGridListSetItemText(grid, row, 1, itemName(r.result.uname), false, false)
     end
     local title = label(tab, 238, 8, 340, 20, "", YELLOW)
-    local body = label(tab, 238, 32, 340, 260, "", WHITE)
+    local pane = guiCreateScrollPane(238, 32, 340, 260, false, tab)
+    local body = label(pane, 0, 0, 315, 260, "", WHITE)
     local function show()
         local row = guiGridListGetSelectedItem(grid)
         local r = recipes[(row or -1) + 1]
         guiSetText(title, r and itemName(r.result.uname) or "")
-        guiSetText(body, r and detailText(r) or "")
+        local text = r and detailText(r) or ""
+        guiSetText(body, text)
+        guiSetSize(body, 315, math.max(260, #text * 0.6 + 120), false)
     end
     addEventHandler("onClientGUIClick", grid, show, false)
     guiGridListSetSelectedItem(grid, 0, 1)
@@ -158,4 +167,5 @@ local function open()
 end
 
 addCommandHandler("recipes", open)
+addCommandHandler("recipe", open)
 addEventHandler("onClientResourceStop", resourceRoot, close)
