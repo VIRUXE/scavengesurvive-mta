@@ -25,7 +25,9 @@ return function(ctx)
     end
 
     local function setDutyWeather(p, onDuty)
-        triggerClientEvent(p, "dutyWeatherChanged", resourceRoot, onDuty and 0 or exports.world:getWeather())
+        -- a weather the player was given in the /weather window outranks the duty sky
+        local own = exports.world:getPlayerWeather(p)
+        triggerClientEvent(p, "dutyWeatherChanged", resourceRoot, own or (onDuty and 0 or exports.world:getWeather()))
     end
 
     -- Duty staff get clear Los Santos weather locally. Keep it in place when the shared world weather rolls.

@@ -23,6 +23,7 @@ addEvent("treeRestored", true)
 addEvent("treesSynced", true)
 addEvent("treatmentStarted", true)
 addEvent("treatmentStopped", true)
+addEvent("playerWeatherChanged", true)
 
 -- server-local (triggered and handled on one side, or between resources)
 addEvent("weatherChanged", false)

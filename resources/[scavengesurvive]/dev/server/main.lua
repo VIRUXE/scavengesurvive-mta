@@ -344,16 +344,68 @@ command("sethp", setStat("hp", 100))
 command("setfood", setStat("food", 100))
 command("setbleed", setStat("bleed", 1))
 
-command("weather", function(p, idOrName)
-    if not idOrName then
-        return say(p, "weather = %s; usage: /weather <0..19|NAME>", tostring(exports.world:getWeather()))
+-- /weather takes no arguments: it opens the window (client/weather_window.lua), which asks for one weather, who gets
+-- it and for how long. Nothing is forever: the world rolls again when the time is up.
+local WEATHER_MINUTES = { [5] = true, [15] = true, [30] = true, [60] = true }
+
+command("weather", function(p)
+    if getElementType(p) ~= "player" then
+        local st = exports.world:getWeatherState(p)
+        return say(p, "weather = %s, locked %d s", tostring(st.current), math.floor(st.lockedMs / 1000))
     end
-    local id = exports.world:setGlobalWeather(idOrName)
-    if not id then
-        return say(p, "unknown weather %s", idOrName)
-    end
-    say(p, "weather = %d", id)
+    triggerClientEvent(p, "devWeatherWindowOpened", p, exports.world:getWeatherState(p))
 end, true)
+
+net.handler("devWeatherSetRequested", function(player, action, id, target, minutes)
+    local function answer(ok, text)
+        triggerClientEvent(player, "devWeatherAnswered", player, ok, text, exports.world:getWeatherState(player))
+    end
+    local args = tostring(action)
+        .. " "
+        .. tostring(id)
+        .. " "
+        .. (isElement(target) and getPlayerName(target) or tostring(target))
+        .. " "
+        .. tostring(minutes)
+    if not allowed(player) then
+        logCommand(player, "weather", args, true, "window")
+        return answer(false, "not allowed")
+    end
+    logCommand(player, "weather", args, false, "window")
+    minutes = tonumber(minutes)
+    if action == "set" and not WEATHER_MINUTES[minutes] then
+        return answer(false, "pick a duration")
+    end
+    local who
+    if target == "me" then
+        who = player
+    elseif target ~= "all" and isElement(target) and getElementType(target) == "player" then
+        who = target
+    elseif target ~= "all" then
+        return answer(false, "player is gone")
+    end
+    if action == "reset" then
+        if who then
+            exports.world:clearPlayerWeather(who)
+            return answer(true, "back to the world weather")
+        end
+        exports.world:clearGlobalWeather()
+        return answer(true, "world weather rolled again")
+    end
+    if action ~= "set" then
+        return answer(false, "unknown action")
+    end
+    local set
+    if who then
+        set = exports.world:setPlayerWeather(who, id, minutes)
+    else
+        set = exports.world:setGlobalWeather(id, minutes)
+    end
+    if not set then
+        return answer(false, "unknown weather")
+    end
+    answer(true, string.format("weather %d for %d min", set, minutes))
+end, { rate = 20 })
 
 command("zone", function(p, xArg, yArg)
     if xArg and yArg then

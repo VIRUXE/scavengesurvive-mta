@@ -14,6 +14,7 @@
     <script src="client/main.lua" type="client"/>
     <script src="client/studio.lua" type="client"/>
     <script src="client/item_picker.lua" type="client"/>
+    <script src="client/weather_window.lua" type="client"/>
     <file src="shared/logic/studio.lua"/>
     <file src="shared/logic/item_spawn.lua"/>
     <file src="shared/logic/item_picker.lua"/>

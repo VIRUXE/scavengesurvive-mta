@@ -110,12 +110,41 @@ end
 
 local current = 0
 local lastChange = 0
+local lockUntil = 0 -- tick until which a staff override holds the world weather (no natural rolls)
+local lockTimer = nil
+local personal = {} -- player -> { id, until, timer }: a weather only that player sees
+
+local function personalLeft(entry)
+    return math.max(0, entry.untilTick - getTickCount())
+end
 
 local function apply(id, why)
     current, lastChange = id, getTickCount()
     setWeather(id)
     log.event("world.weatherChanged", { weather_id = id, name = weather.name(id), why = why })
     triggerEvent("weatherChanged", resourceRoot, id)
+    -- setWeather above reaches every client, so a personal sky is sent again over it
+    for p, entry in pairs(personal) do
+        if isElement(p) then
+            triggerClientEvent(p, "playerWeatherChanged", p, entry.id)
+        end
+    end
+end
+
+local function dropPersonal(p, why)
+    local entry = personal[p]
+    if not entry then
+        return false
+    end
+    if isTimer(entry.timer) then
+        killTimer(entry.timer)
+    end
+    personal[p] = nil
+    if isElement(p) then
+        triggerClientEvent(p, "playerWeatherChanged", p, current)
+        log.event("world.playerWeatherEnded", { player = p, weather_id = entry.id, why = why })
+    end
+    return true
 end
 
 -- MTA keeps every client's weather and clock in sync on its own (setWeather/setTime are global and sent to
@@ -139,7 +168,7 @@ addEventHandler("onResourceStart", resourceRoot, function()
     apply(weather.initial(math.random), "at start")
     setTimer(syncClock, weather.CLOCK_SYNC_MS, 0)
     setTimer(function()
-        if weather.shouldChange(getTickCount() - lastChange, math.random) then
+        if getTickCount() >= lockUntil and weather.shouldChange(getTickCount() - lastChange, math.random) then
             apply(weather.pick(math.random, current), "rolled")
         end
     end, weather.CHECK_INTERVAL_MS or 60000, 0)
@@ -149,12 +178,95 @@ function getWeather()
     return current
 end
 
--- id or name ("RAINY_SF"); false when unknown. Used by dev /weather and, later, staff level 4.
-function setGlobalWeather(idOrName)
+local function clampMinutes(minutes)
+    local m = tonumber(minutes)
+    return m and math.max(1, math.min(240, m)) or 15
+end
+
+-- id or name ("RAINY_SF"); false when unknown. For `minutes` (default 15) the world weather holds and no natural
+-- roll happens; then the world rolls a new weather and carries on.
+function setGlobalWeather(idOrName, minutes)
     local id = weather.parse(idOrName)
     if not id then
         return false
     end
+    local m = clampMinutes(minutes)
+    if isTimer(lockTimer) then
+        killTimer(lockTimer)
+    end
     apply(id, "set")
+    lockUntil = getTickCount() + m * 60000
+    lockTimer = setTimer(function()
+        lockUntil, lockTimer = 0, nil
+        apply(weather.pick(math.random, current), "override ended")
+    end, m * 60000, 1)
     return id
 end
+
+-- drops the override and rolls a new weather now
+function clearGlobalWeather()
+    if isTimer(lockTimer) then
+        killTimer(lockTimer)
+    end
+    lockUntil, lockTimer = 0, nil
+    apply(weather.pick(math.random, current), "override cleared")
+    return current
+end
+
+-- a weather only `player` sees, for `minutes` (default 15), then the world weather again
+function setPlayerWeather(player, idOrName, minutes)
+    local id = weather.parse(idOrName)
+    if not id or not isElement(player) or getElementType(player) ~= "player" then
+        return false
+    end
+    local m = clampMinutes(minutes)
+    dropPersonal(player, "replaced")
+    personal[player] = {
+        id = id,
+        untilTick = getTickCount() + m * 60000,
+        timer = setTimer(function()
+            dropPersonal(player, "expired")
+        end, m * 60000, 1),
+    }
+    triggerClientEvent(player, "playerWeatherChanged", player, id)
+    log.event(
+        "world.weatherChanged",
+        { player = player, weather_id = id, name = weather.name(id), why = "set for player", minutes = m }
+    )
+    return id
+end
+
+function clearPlayerWeather(player)
+    return dropPersonal(player, "cleared")
+end
+
+function getPlayerWeather(player)
+    local entry = personal[player]
+    return entry and entry.id or nil
+end
+
+-- what the weather window shows: the world weather, minutes left on a lock, and the player's own override
+function getWeatherState(player)
+    local entry = personal[player]
+    local types = {}
+    for _, t in ipairs(weather.TYPES) do
+        types[#types + 1] = { id = t.id, name = t.name }
+    end
+    return {
+        current = current,
+        lockedMs = math.max(0, lockUntil - getTickCount()),
+        own = entry and entry.id or nil,
+        ownMs = entry and personalLeft(entry) or 0,
+        types = types,
+    }
+end
+
+addEventHandler("onPlayerQuit", root, function()
+    local entry = personal[source]
+    if entry then
+        if isTimer(entry.timer) then
+            killTimer(entry.timer)
+        end
+        personal[source] = nil
+    end
+end)

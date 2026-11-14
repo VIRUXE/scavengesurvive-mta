@@ -2,6 +2,7 @@
 addEvent("devFlyActiveChanged", true)
 addEvent("devChatLineReceived", true)
 addEvent("devItemSpawnRequested", true)
+addEvent("devWeatherSetRequested", true)
 
 -- server to client / client-local
 addEvent("devKeyPressed", true)
@@ -13,3 +14,5 @@ addEvent("devStudioPoseChanged", true)
 addEvent("devStudioModelsChanged", true)
 addEvent("devItemPickerOpened", true)
 addEvent("devItemSpawnAnswered", true)
+addEvent("devWeatherWindowOpened", true)
+addEvent("devWeatherAnswered", true)

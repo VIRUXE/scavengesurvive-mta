@@ -8,6 +8,7 @@
     <script src="client/features.lua" type="client"/>
     <script src="client/buttons.lua" type="client"/>
     <script src="client/trees.lua" type="client"/>
+    <script src="client/weather.lua" type="client"/>
     <file src="client/screen.fx"/>
     <file src="server/buttons.lua"/>
     <file src="server/boxes.lua"/>
@@ -28,6 +29,11 @@
     <file src="data/features.lua"/>
     <export function="getWeather" type="server"/>
     <export function="setGlobalWeather" type="server"/>
+    <export function="clearGlobalWeather" type="server"/>
+    <export function="setPlayerWeather" type="server"/>
+    <export function="clearPlayerWeather" type="server"/>
+    <export function="getPlayerWeather" type="server"/>
+    <export function="getWeatherState" type="server"/>
     <export function="tryInteract" type="client"/>
     <export function="nearbyFeature" type="client"/>
     <export function="interactionActions" type="client"/>

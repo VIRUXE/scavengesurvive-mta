@@ -11,7 +11,7 @@ details); bans and warnings write theirs inside the `staff_ban` / `staff_warn` p
 | 2 | Moderator | `/duty`, `/goto`, `/get`, `/gotopos`, `/takeback`, `/freeze`, `/unfreeze`, `/ban`, `/unban`, `/banlist`, `/banned`, `/spec`, `/free`, `/nametags`, `/profile`, `/setmotd`, `/deletereports`, `/field`, `/gender` |
 | 3 | Administrator | `/di <radius>` (port-only: delete loose world items around you), `/whitelist`, `/ip`, `/setactive`, `/resetpassword`, `/adminlist`, `/heal [player]` (port-only: full hp, bleeding stopped) |
 | 4 | Lead | `/players`, `/setadmin`, `/restart`, `/sc [type]` (supply crate here), `/wc` (weapons cache here) |
-| 5 | Developer | everything above, `/setskill <skill> <0-1> [player]`, `/knockout <ms> [player]` (0 wakes up); the debug toggles live in the `dev` resource (`/sethp`, `/setfood`, `/setbleed`, `/weather`, `/additem`, `/rr`, `/move`, `/fly`) |
+| 5 | Developer | everything above, `/setskill <skill> <0-1> [player]`, `/knockout <ms> [player]` (0 wakes up); the debug toggles live in the `dev` resource (`/sethp`, `/setfood`, `/setbleed`, `/weather` (a window: weather, who, for how long), `/additem`, `/rr`, `/move`, `/fly`) |
 | 0 | Player | `/report [name|near|killer] [reason]`, `/bug [description]`, `/issues` (level 2 deletes from the open report) |
 
 Durations (`/mute`, `/ban`): a bare number is seconds; `10m`, `2h`, `3d`, `2w`, `1mo` and the full words work;
