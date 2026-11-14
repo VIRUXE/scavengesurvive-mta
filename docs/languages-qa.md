@@ -48,7 +48,4 @@ English has 1085 texts.
 | `id` | Indonesian | 0 | 38 | 0 | 0 |
 | `bhs` | Bosanski-Hrvatski-Srpski | 0 | 35 | 0 | 0 |
 | `cs` | Čeština | 0 | 36 | 0 | 0 |
-| `lv` | Latviešu | 15 | 32 | 0 | 19 |
-
-- `lv` lacks: `All`, `Search:`, `You need:`, `used up`, `you have it`, `missing`, `How to make it:`, `Makes the lock cut, ready to lock a bike or other doorless vehicle.`, `Equip the %s, then choose Combine on the %s in your inventory.`, `Hold the %s.`, `Drop the items above on the ground, close together.`, `Stand next to them and hold [F] for about %d seconds.`, `Find a Workbench, or build one (see Construction).`, `Put only the items above in the Workbench.`, `Stand at the Workbench and hold [F] for about %d seconds.`
-- `lv` has texts no longer in English: `At a Workbench:`, `Crafting is a way to create new items from existing items.`, `Equip the 'Tool' item specified in the recipe page`, `Go back and open the options for another item`, `Help`, `Hold the Interact key while close to the ingredients`, `Hold the Interact key while standing at the workbench`, `If a recipe requires more than two items, just repeat.`, `In Inventory Screens (Aka: Crafting or Combining):`, `Ingredients:`, `On The Ground (Aka: Constructing):`, `Place all the ingredient items on the ground`, `Place the all ingredient items in the workbench (The workbench acts like a box)`, `Select 'Combine with ...' to combine the items together`, `Select 'Combine' from the item options`, `Takes about %.1f s.`, `There are three ways to combine items in Scavenge and Survive:`, `Usage: /lang <%s> (now %s)`, `While viewing your inventory or a container (vehicle trunk, box, bag, etc)`
+| `lv` | Latviešu | 0 | 32 | 0 | 0 |
