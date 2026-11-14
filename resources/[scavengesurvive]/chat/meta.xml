@@ -1,5 +1,5 @@
 <meta>
-    <info author="scavengesurvive-mta" type="script" name="chat" description="Chat modes (local, global, radio, admin), flood mute, radio panel" version="0.1.0"/>
+    <info author="scavengesurvive-mta" type="script" name="chat" description="Chat modes (local, global, radio, admin), flood mute, radio panel, chat translation" version="0.1.0"/>
     <min_mta_version server="1.6.0" client="1.6.0"/>
     <include resource="lib"/>
     <include resource="data"/>
@@ -11,6 +11,7 @@
     <script src="server/main.lua" type="server"/>
     <script src="client/main.lua" type="client"/>
     <file src="shared/logic/chat.lua"/>
+    <file src="shared/logic/translate.lua"/>
     <export function="getRadio" type="server"/>
     <export function="setChatMode" type="server"/>
     <export function="sendAs" type="server"/>
