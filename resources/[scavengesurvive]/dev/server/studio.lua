@@ -2,7 +2,7 @@
 -- them on an invisible floor slab and tells their client to draw the green box and place the camera; puts them
 -- back exactly where they were on /studio, death, quit or resource stop. Survival is held still meanwhile: a
 -- long shoot used to starve or bleed the frozen ped to death. Loaded by server/main.lua with
--- { logic = <shared/logic/studio.lua>, say = say }; returns { enter, leave, isIn, setCam, pose }.
+-- { logic = <shared/logic/studio.lua>, say = say }; returns { enter, leave, isIn, setCam, pose, setModels }.
 return function(ctx)
     local studio, say = ctx.logic, ctx.say
     local occupants = {} -- player -> { x, y, z, rz, interior, dimension, frozen, studioDim, floor, stats }
@@ -95,10 +95,25 @@ return function(ctx)
         triggerClientEvent(p, "devStudioPoseChanged", p, rz)
     end
 
+    -- list: studio.parseModels' result, or nil to put the ped back on the set. The ped waits under the floor
+    -- meanwhile: hiding it with alpha would leave what it wears and holds in the shot.
+    function M.setModels(p, list)
+        local o = occupants[p]
+        if not o then
+            return false
+        end
+        o.models = list and #list > 0 and list or nil
+        local c = studio.CENTRE
+        setElementPosition(p, c.x, c.y, c.z - (o.models and studio.MODEL_DROP or 0))
+        triggerClientEvent(p, "devStudioModelsChanged", p, o.models or {}, o.studioDim)
+        return true
+    end
+
     local function describeCam(cam)
         return string.format("yaw=%g dist=%g height=%g lookZ=%g", cam.yaw, cam.dist, cam.height, cam.lookZ)
     end
     M.describeCam = describeCam
+    M.parseModels = studio.parseModels
 
     ctx.command("studio", function(p, ...)
         local args = { ... }
@@ -124,6 +139,24 @@ return function(ctx)
         end
         local cam, err = M.setCam(p, { ... })
         say(p, "%s", cam and describeCam(cam) or err)
+    end)
+
+    ctx.command("studiomodel", function(p, ...)
+        local spec = table.concat({ ... }, ",")
+        if spec == "" then
+            return say(p, "usage: /studiomodel <model>[@rx/ry/rz][,<model>...] | off")
+        end
+        if spec == "off" then
+            M.setModels(p, nil)
+            return say(p, occupants[p] and "the ped is back on the set" or "not in the studio")
+        end
+        local list, err = studio.parseModels(spec)
+        if not list then
+            return say(p, "%s", err)
+        end
+        M.enter(p)
+        M.setModels(p, list)
+        say(p, "studio: %d model(s) on the set; /studiocam to move the camera, /studiomodel off for the ped", #list)
     end)
 
     ctx.command("studiopose", function(p, rz)

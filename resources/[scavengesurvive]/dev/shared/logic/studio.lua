@@ -119,6 +119,85 @@ function studio.presetNames()
     return table.concat(names, ", ")
 end
 
+-- Model mode: instead of the ped, one or more object models sit on the set (the ped waits out of sight under the
+-- floor). MODEL_DROP is how far under; PED_RADIUS is the size of subject the camera presets frame, so a model's
+-- camera is the same preset scaled by its own size.
+studio.MODEL_DROP = 30
+studio.PED_RADIUS = 2.0
+studio.MODEL_GAP = 0.15 -- between models in a row, as a fraction of the largest one
+studio.MODEL_LIMIT = 12
+
+-- "20245,1337@90/0/0" (or the same as separate words): model ids, each with an optional rotation rx/ry/rz.
+-- Returns { { model = id, rx = , ry = , rz = }, ... }, or nil and a message.
+function studio.parseModels(spec)
+    local list = {}
+    for word in tostring(spec or ""):gmatch("[^,%s]+") do
+        local id, rot = word:match("^(%d+)@?(.*)$")
+        local rx, ry, rz = 0, 0, 0
+        if rot and rot ~= "" then
+            rx, ry, rz = rot:match("^(-?[%d%.]+)/(-?[%d%.]+)/(-?[%d%.]+)$")
+            rx, ry, rz = tonumber(rx), tonumber(ry), tonumber(rz)
+        end
+        if not id or not rx or not ry or not rz then
+            return nil, "usage: <model>[@rx/ry/rz][,<model>...], e.g. 20245,20245@90/0/0"
+        end
+        list[#list + 1] = { model = tonumber(id), rx = rx, ry = ry, rz = rz }
+    end
+    if #list == 0 or #list > studio.MODEL_LIMIT then
+        return nil, "give 1 to " .. studio.MODEL_LIMIT .. " models"
+    end
+    return list
+end
+
+-- The axis-aligned extents, about the object's origin, of a model box (x1..z2) turned by `m`, an element matrix
+-- (rows right, forward, up). Returns { x1, y1, z1, x2, y2, z2 }.
+function studio.turnedBounds(x1, y1, z1, x2, y2, z2, m)
+    local lo, hi = { math.huge, math.huge, math.huge }, { -math.huge, -math.huge, -math.huge }
+    for _, x in ipairs({ x1, x2 }) do
+        for _, y in ipairs({ y1, y2 }) do
+            for _, z in ipairs({ z1, z2 }) do
+                for axis = 1, 3 do
+                    local v = x * m[1][axis] + y * m[2][axis] + z * m[3][axis]
+                    lo[axis] = math.min(lo[axis], v)
+                    hi[axis] = math.max(hi[axis], v)
+                end
+            end
+        end
+    end
+    return { lo[1], lo[2], lo[3], hi[1], hi[2], hi[3] }
+end
+
+-- Lines models up along x, the row centred on the origin in all three axes. `bounds` is a list of turnedBounds
+-- results; returns each model's origin as { x, y, z } and the radius of the sphere holding the whole row.
+function studio.layoutModels(bounds)
+    local largest, width = 0, 0
+    for _, b in ipairs(bounds) do
+        largest = math.max(largest, b[4] - b[1], b[5] - b[2], b[6] - b[3])
+        width = width + (b[4] - b[1])
+    end
+    local gap = largest * studio.MODEL_GAP
+    width = width + gap * (#bounds - 1)
+    local origins, x, depth, height = {}, -width / 2, 0, 0
+    for i, b in ipairs(bounds) do
+        origins[i] = { x - b[1], -(b[2] + b[5]) / 2, -(b[3] + b[6]) / 2 }
+        x = x + (b[4] - b[1]) + gap
+        depth = math.max(depth, b[5] - b[2])
+        height = math.max(height, b[6] - b[3])
+    end
+    return origins, math.sqrt(width * width + depth * depth + height * height) / 2
+end
+
+-- a ped preset scaled to a row of models of that radius, kept inside the box; returns yaw, dist, height, lookZ
+function studio.fitCam(cam, radius)
+    local scale = math.max(radius, 0.05) / studio.PED_RADIUS
+    local reach = studio.HALF - studio.MARGIN
+    local floor, ceiling = -studio.FEET + studio.MARGIN, studio.HEIGHT - studio.FEET - studio.MARGIN
+    return cam.yaw,
+        clamp(cam.dist * scale, 0.1, reach),
+        clamp(cam.height * scale, floor, ceiling),
+        clamp(cam.lookZ * scale, floor, ceiling)
+end
+
 -- the lowest studio dimension no occupant holds; used is a set of dimensions
 function studio.freeDimension(used)
     local d = studio.DIMENSION_BASE

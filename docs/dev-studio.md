@@ -47,6 +47,30 @@ pwsh server-config/rcon.ps1 screenshot VIRUXE            # -> resources/[scaveng
 pwsh server-config/rcon.ps1 studio VIRUXE off            # back to where they were
 ```
 
+## Models on their own
+
+The set also takes object models with no ped in the shot, for checking a prop, a port-made model or a map object:
+
+| Command | Effect |
+| :--- | :--- |
+| `/studiomodel <model>[@rx/ry/rz][,<model>...]` | Put up to 12 models on the set (entering the studio if needed). |
+| `/studiomodel off` | Put the ped back on the set. |
+
+```powershell
+pwsh server-config/rcon.ps1 studio VIRUXE model 20245,20245@0/90/0,20255 threequarter
+pwsh server-config/rcon.ps1 screenshot VIRUXE
+pwsh server-config/rcon.ps1 studio VIRUXE model off     # the ped again; `studio VIRUXE off` leaves
+```
+
+- Ids are stock GTA models or port ids (`prop_models`, `samp_models`, ...), resolved on the client through the `lib`
+  module `models`. `@rx/ry/rz` turns one model, so the same id can be shown from several sides in one shot.
+- The models are client-side objects lined up along x and centred, in all three axes, on the point the ped
+  stands at. The camera presets and `yaw dist height [lookZ]` work as for the ped, scaled to the size of the row
+  (a preset frames a 2 m subject), so `threequarter` or `top` fits a lug nut and a truck wheel alike. The box is
+  12 m wide: a model larger than that does not fit.
+- The ped waits 30 m under the floor meanwhile. Hiding it with alpha would leave what it wears and holds in view.
+- Objects take the game's own lighting (`createLight` never lights objects), pinned to noon like the rest of the set.
+
 ## How it works
 
 - **Set.** The client draws the box every frame with `dxDrawPrimitive3D("trianglelist", "postfx", …)`, so there are

@@ -483,6 +483,8 @@ local RCON_HELP = {
     "chat <player> [n|clear]       last n (20) chat lines that client received (screenshots omit the chat box)",
     "studio <player> [cam|off]     green-screen studio; cam = preset (front back left right threequarter top face",
     "                              hands) or yaw dist height [lookZ]; then screenshot <player>",
+    "studio <player> model <id>[@rx/ry/rz][,<id>...] [cam] | model off",
+    "                              object models alone on the set instead of the ped, the camera fitted to them",
     "attach <player> <slot> x y z rx ry rz [sx sy sz] | off | get",
     "                              preview attachment offsets (attachedit resource); get = last client report",
     "shutdown                      stop the server",
@@ -660,6 +662,25 @@ function rcon(line)
         elseif words[1] == "off" then
             ok = studio.leave(p)
             put(ok and "%s left the studio" or "%s was not in the studio", who)
+        elseif words[1] == "model" then
+            local list, err = nil, nil
+            if words[2] ~= "off" then
+                list, err = studio.parseModels(words[2])
+            end
+            if err then
+                ok = false
+                put("%s", err)
+            else
+                studio.enter(p)
+                studio.setModels(p, list)
+                local cam = #words > 2 and studio.setCam(p, { unpack(words, 3) })
+                put(
+                    "%s in the studio: %s%s",
+                    who,
+                    list and (#list .. " model(s) on the set") or "the ped is back on the set",
+                    cam and ("; " .. studio.describeCam(cam)) or ""
+                )
+            end
         else
             studio.enter(p)
             local cam, err = studio.setCam(p, words)
