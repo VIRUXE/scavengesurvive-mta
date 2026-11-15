@@ -15,6 +15,9 @@
 --   the Verdant Meadows airstrip office des_byoffice (16326), its ground floor holding the game's own interior
 --   (airfieldhus1/2, fitted inside it) and furnished with the same stock props, its vanilla locked door
 --   (Gen_doorEXT03) removed and hung again as a leaf that swings.
+--   the Shady Cabin logcabinn01 (18259) is not a shell of the vanilla model but a new one on its footprint: round
+--   log walls, framed and glazed windows, a roof on rafters, a stone chimney and fireplace, the porch, deck and
+--   lean-to rebuilt, its lighting baked; the vanilla log walls (18258, a model of their own) are removed.
 local function readLua(path)
     local f = fileOpen(path, true)
     local src = fileRead(f, fileGetSize(f))
