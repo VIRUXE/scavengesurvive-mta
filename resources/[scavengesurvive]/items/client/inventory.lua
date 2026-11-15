@@ -82,8 +82,12 @@ return function(ctx)
         LOCKNODOORS = "This vehicle does not have doors to lock",
         LOCKALREADY = "This vehicle already has a lock",
         LOCKCHNDOOR = "A lock and chain only fits a vehicle without doors, use a Locksmith Kit",
-        LOCKCHNOKEY = "That lock and chain has no key. Combine it with a Locksmith Kit.",
-        LOCKCHCUT = "That lock and chain is already cut",
+        LOCKCHNOKEY = "That lock and chain has no key.",
+        LOCKCHNREKEY = "The padlock is locked onto the chain and can't be re-keyed.",
+        LOCKCHN_LOCKED = "Locked with the lock and chain.",
+        LOCKPADNOKEY = "That padlock has no key. Use a Locksmith Kit on it first.",
+        COMBOSHUT = "Open the padlock first: its shackle goes through the chain.",
+        PADLOCK_CODE_SET = "Code set.",
         LOCKVNOLOCK = "This vehicle does not have a lock",
         LOCKKEYNCUT = "This key is not cut for any lock",
         LOCKKEYNFIT = "This key does not fit this lock",
@@ -327,8 +331,10 @@ return function(ctx)
             )
         elseif small and it.uname == "Key" then
             name = small.keyLabel(name, it.data, vehicleTypeByModel)
-        elseif small and it.uname == "WheelLock" then
+        elseif small and (it.uname == "WheelLock" or it.uname == "Padlock") then
             name = small.lockLabel(name, it.data)
+        elseif small and it.uname == "ComboPadlock" then
+            name = small.comboLabel(name, it.data)
         elseif gardening and it.uname == gardening.BAG then
             name = gardening.seedLabel(name, gardening.seedsFor(it.id, it.data))
         elseif gas and it.uname == gas.UNAME then
@@ -347,7 +353,7 @@ return function(ctx)
     -- Use acts on an item that is not in hand only for these (server/use.lua, the `fromHand == false` paths): food is
     -- eaten, Clothes change, a Note is read, a Locator traces, a HerpDerp is played. Everything else (drinks, treatments,
     -- tools, explosives, the phone) needs to be Equipped first and is used with the interact key, so it gets no Use row.
-    local INVENTORY_USABLE = { Clothes = true, Note = true, Locator = true, HerpDerp = true }
+    local INVENTORY_USABLE = { Clothes = true, Note = true, Locator = true, HerpDerp = true, ComboPadlock = true }
     local function usableFromInventory(uname, t)
         return INVENTORY_USABLE[uname] == true or (t ~= nil and t.category == "food")
     end

@@ -63,10 +63,40 @@ function M.codeLabel(name, data)
     return digit and (name .. " (" .. digit .. ")") or name
 end
 
--- A Lock and Chain (upstream locksmith.pwn SetItemNameExtra): "(Cut)" once combined with a Locksmith Kit, else
--- "(Uncut)"
+-- A Padlock or a Lock and Chain (upstream locksmith.pwn SetItemNameExtra): "(Keyed)" once a Locksmith Kit has cut a
+-- key to its padlock (data.code), else "(No key)"
 function M.lockLabel(name, data)
-    return name .. " (" .. (tonumber(unwrap(data).cut) == 1 and tr("Cut") or tr("Uncut")) .. ")"
+    local code = tonumber(unwrap(data).code)
+    return name .. " (" .. ((code and code ~= 0) and tr("Keyed") or tr("No key")) .. ")"
+end
+
+-- A Combination Padlock (data { combo = "0427", shut = 1, dials = "5831" }): its code, four digits as a string, or
+-- nil; whether it is shut; the digits its dials stand at (the code when nobody has turned them). A Combination Lock
+-- and Chain carries its padlock's combo.
+local function fourDigits(v)
+    v = v ~= nil and tostring(v) or nil
+    return v and v:match("^%d%d%d%d$") or nil
+end
+
+function M.comboCode(data)
+    return fourDigits(unwrap(data).combo)
+end
+
+function M.comboShut(data)
+    local shut = unwrap(data).shut
+    return shut == true or tonumber(shut) == 1
+end
+
+function M.comboDials(data)
+    return fourDigits(unwrap(data).dials) or M.comboCode(data)
+end
+
+M.fourDigits = fourDigits
+M.COMBO_SHUT_MODEL = 20263 -- prop_models combo_padlock_shut (the item's own model is the padlock open)
+
+-- "Combination Padlock (Unlocked)" / "(Locked)"
+function M.comboLabel(name, data)
+    return name .. " (" .. (M.comboShut(data) and tr("Locked") or tr("Unlocked")) .. ")"
 end
 
 -- A vehicle key: "Car Key", "Truck Key", "Trailer Key"... from the model it was cut for (data.model);
@@ -82,13 +112,17 @@ M.KEY_KINDS = {
     plane = "Plane Key",
 }
 M.TRAILER_KEY = "Trailer Key"
+M.PADLOCK_KEY = "Padlock Key"
 -- lang:end
 
+-- ...and a key cut to a padlock has a code but no vehicle model: "Padlock Key"
 function M.keyLabel(name, data, typeByModel)
-    local model = tonumber(unwrap(data).model)
-    local vt = model and typeByModel(model)
+    local d = unwrap(data)
+    local model = tonumber(d.model)
+    local vt = model and model ~= 0 and typeByModel(model)
     if not vt then
-        return name
+        local code = tonumber(d.code)
+        return (code and code ~= 0 and not (model and model ~= 0)) and tr(M.PADLOCK_KEY) or name
     end
     local kind = vt.trailer and M.TRAILER_KEY or M.KEY_KINDS[vt.category]
     return kind and tr(kind) or name

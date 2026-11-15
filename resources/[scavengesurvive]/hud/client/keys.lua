@@ -59,6 +59,7 @@ return function(ctx)
         Key = true,
         LocksmithKit = true,
         WheelLock = true,
+        ComboLockChain = true,
         Crowbar = true,
         LockBreaker = true,
         Headlight = true,
@@ -73,6 +74,7 @@ return function(ctx)
     end
 
     local LOCK_TOOLS = { Key = true, LocksmithKit = true, WheelLock = true, Crowbar = true, LockBreaker = true }
+    LOCK_TOOLS.ComboLockChain = true
     LOCK_TOOLS.Keypad, LOCK_TOOLS.AdvancedKeypad = true, true
 
     local TREATMENTS = { Bandage = true, AntiSepBandage = true, Medkit = true, DoctorBag = true, Pills = true }
@@ -514,6 +516,7 @@ return function(ctx)
                 or isExplosive
                 or held.uname == "MobilePhone"
                 or held.uname == "Note"
+                or held.uname == "ComboPadlock"
                 or held.uname == "Locator"
                 or held.uname == "Shield"
                 or held.uname == "HerpDerp"

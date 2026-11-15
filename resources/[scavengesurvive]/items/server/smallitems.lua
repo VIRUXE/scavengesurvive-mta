@@ -104,6 +104,77 @@ return function(ctx)
         end)
     end, { rate = 5 })
 
+    -- Combination Padlock ---------------------------------------------------------------------------------------
+    -- It comes open with a code of its own on its dials (the items_combo_code trigger). Use opens a close-up of it
+    -- (client/combo.lua) where the dials turn and the shackle is pushed, and every move comes back as
+    -- comboPadlockActed(itemId, action, dials), checked here against the item that was opened:
+    --   set   (open) the code becomes what the dials show, as a real resettable padlock's does;
+    --   push  (open) the shackle goes down and it is shut; (shut) it springs open if the dials show the code, else
+    --         it stays shut. The client never has the code;
+    --   leave the close-up is gone: the dials stay where they were turned (scrambled, or still on the code).
+
+    local openCombos = {} -- player -> { itemId, openContainerId }
+
+    function M.useComboPadlock(player, itemId, data, _, openContainerId)
+        openCombos[player] = { itemId = itemId, openContainerId = openContainerId }
+        triggerClientEvent(player, "comboPadlockOpened", player, itemId, small.comboShut(data), small.comboDials(data))
+    end
+
+    -- fn(player, fromHand, data) with the padlock the player opened, still theirs
+    local function withOpenCombo(player, itemId, fn)
+        local open = openCombos[player]
+        local cid = charId(player)
+        if not open or open.itemId ~= itemId or not cid then
+            return
+        end
+        local held = state.held[player]
+        if held and held.id == itemId then
+            return fn(player, true, held.data)
+        end
+        db.one(ctx.ownedSql, { itemId, cid, cid, cid, open.openContainerId or -1 }, function(row, c)
+            if isElement(c.player) and row and row.uname == "ComboPadlock" then
+                fn(c.player, false, decodeData(row.data))
+            end
+        end, { player = player })
+    end
+
+    net.handler("comboPadlockActed", function(player, itemId, action, dials)
+        itemId, dials = tonumber(itemId), small.fourDigits(dials)
+        if not itemId or not dials then
+            return
+        end
+        withOpenCombo(player, itemId, function(pl, fromHand, data)
+            local code = small.comboCode(data) or "0000"
+            local shut = small.comboShut(data)
+            local nextData = { combo = code, dials = dials, shut = shut and 1 or nil }
+            if action == "leave" then
+                openCombos[pl] = nil
+            elseif action == "set" then
+                if shut then
+                    return
+                end
+                nextData.combo = dials
+                log.event("item.codeSet", { player = pl, item_id = itemId, uname = "ComboPadlock", ok = true })
+                toast(pl, "PADLOCK_CODE_SET")
+            elseif action == "push" then
+                if not shut then
+                    nextData.shut = 1
+                elseif dials == code then
+                    nextData.shut = nil
+                else
+                    return triggerClientEvent(pl, "comboPadlockChanged", pl, itemId, true, false)
+                end
+                local opened = nextData.shut == nil
+                local line = { player = pl, item_id = itemId, uname = "ComboPadlock", shut = opened and 0 or 1 }
+                log.event("item.lockToggled", line)
+                triggerClientEvent(pl, "comboPadlockChanged", pl, itemId, not opened, true)
+            else
+                return
+            end
+            writeData(pl, itemId, nextData, fromHand)
+        end)
+    end, { rate = 10 })
+
     -- Sign ------------------------------------------------------------------------------------------------------
 
     local SIGN_ROW = "SELECT id, data, x, y, z, interior, dimension FROM items WHERE id = ? AND type_uname = 'Sign' "
@@ -494,6 +565,7 @@ return function(ctx)
 
     addEventHandler("onPlayerQuit", root, function()
         openNotes[source] = nil
+        openCombos[source] = nil
         openSigns[source] = nil
     end)
 

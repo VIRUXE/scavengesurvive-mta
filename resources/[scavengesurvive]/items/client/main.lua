@@ -49,6 +49,7 @@ inventoryCtx.small = small
 inventoryCtx.gardening = gardening
 loadModule("client/inventory.lua")(inventoryCtx)
 loadModule("client/text.lua")(machines)
+loadModule("client/combo.lua")({ models = models, lang = lang })
 loadModule("client/firework.lua")(loadModule("shared/logic/firework.lua"))
 loadModule("client/parachute.lua")(small)
 

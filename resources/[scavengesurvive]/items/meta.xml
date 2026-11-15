@@ -45,6 +45,7 @@
     <file src="server/vending.lua" download="false"/>
     <file src="client/vending.lua"/>
     <file src="client/text.lua"/>
+    <file src="client/combo.lua"/>
     <file src="client/models.lua"/>
     <file src="server/cooking.lua"/>
     <file src="server/fixed.lua"/>

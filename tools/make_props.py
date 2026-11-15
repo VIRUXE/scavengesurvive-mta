@@ -47,6 +47,22 @@ then runs itself in Blender (DragonFF) for each prop's dff and col.
                      red lining, latches on the front (-Y); vanilla textures (KIT_TEXTURES, found with gta-scout). Two
                      boxes of collision, the base and the open lid. The Locksmith Kit item.
 
+    chain    20258   about 0.6 m of steel chain lying in a loose S: oval links of 8 mm wire, 46 x 28 mm, flat and upright by
+                     turns, chrome pipe wrapped round the wire. The Chain item.
+    padlock  20259   a laminated steel padlock, 0.05 x 0.026 x 0.042 m body standing on its base: seven galvanised plates
+                     with grooves between them, rivets, a brass key cylinder and keyway underneath, a chrome shackle on
+                     top. The Padlock item.
+    lock_chain 20260 the chain closed into a 0.25 m loop by the padlock, which lies on its back with the shackle through the
+                     two end links. The Lock and Chain item (WheelLock).
+    combo_padlock 20261  a four-dial combination padlock, 0.046 x 0.024 x 0.05 m red die-cast body standing on its base:
+                     four steel dials across the front in a chrome bezel, a digit on each (the motel's door numbers from
+                     gta_int.img, alpha, so the prop is drawn last), a chrome shackle on top, open: raised and turned out
+                     on its long leg. The Combination Padlock item; combo_padlock_shut (20263) is the same lock shut.
+    combo_padlock_body 20264, combo_shackle 20265  the two parts of combo_padlock_shut apart, for the close-up the
+                     items client shows while the dials are set (it raises and turns the shackle).
+    combo_lock_chain 20262  the chain closed into a loop by the combination padlock lying dials up. The Combination
+                     Lock and Chain item (ComboLockChain).
+
 Origin (except welder_torch, grinder and ratchet): the centre of the base (x, y) with z = 0 at the lowest point; the front faces +Y.
 """
 from __future__ import annotations
@@ -543,6 +559,383 @@ def build_locksmith_kit(ctx):
     ]
 
 
+CHAIN_WIRE = 0.004  # chain, lock_chain: the links' wire radius
+CHAIN_LINK = (0.046, 0.028)  # a link's outside length and width; links interlock one inside length apart
+CHAIN_PITCH = CHAIN_LINK[0] - 4 * CHAIN_WIRE
+PAD_W, PAD_D, PAD_H = 0.05, 0.026, 0.042  # padlock: the laminated body (x, y, z)
+PAD_SHACKLE = (0.0042, 0.0155, 0.02)  # the shackle's wire radius, half its centre-line span and its legs' height above the body
+# (source TXD, texture) per chain / padlock material, all vanilla: chrome pipe (the links and the shackle), galvanised
+# steel (the padlock's plates), a brass bullet casing (its key cylinder), black plastic (the keyway)
+LOCK_TEXTURES = [
+    ("industrialext.txd", "cj_chromepipe"),
+    ("metalbarrier_cj.txd", "CJ_GALVANISED"),
+    ("light_fit_ext.txd", "CJ_BULLETBRASS"),
+    ("ballys01.txd", "CJ_blackplastic"),
+]
+CHAIN_TEXTURES = LOCK_TEXTURES[:1]
+
+
+def _sweep(ctx, path, radius, sides, material, col, closed=False, frames=None):
+    """A tube of `sides` round a centre-line `path` (Vectors), closed into a ring or capped at both ends; u runs round
+    the wire, so a striped chrome texture lights one side of it. `frames` gives each point's (normal, binormal)."""
+    from mathutils import Vector
+
+    bm, paint = ctx["bm"], ctx["paint"]
+    n = len(path)
+    rings = []
+    nrm = None
+    for i, p in enumerate(path):
+        if frames:
+            nrm, bin_ = frames[i]
+        else:  # parallel transport: each ring keeps the last one's turn, so a bend never twists the wire
+            a, b = path[(i - 1) % n if closed else max(i - 1, 0)], path[(i + 1) % n if closed else min(i + 1, n - 1)]
+            t = (b - a).normalized()
+            if nrm is None:
+                helper = Vector((0, 0, 1)) if abs(t.z) < 0.9 else Vector((1, 0, 0))
+                nrm = t.cross(helper).normalized()
+            else:
+                nrm = (nrm - t * nrm.dot(t)).normalized()
+            bin_ = t.cross(nrm).normalized()
+        rings.append([bm.verts.new(p + (nrm * math.cos(2 * math.pi * k / sides) + bin_ * math.sin(2 * math.pi * k / sides)) * radius) for k in range(sides)])
+    c = col or (0.9, 0.9, 0.9, 1.0)
+    night = (c[0] * 0.3, c[1] * 0.3, c[2] * 0.32, 1.0)
+    segs = n if closed else n - 1
+    for i in range(segs):
+        r0, r1 = rings[i], rings[(i + 1) % n]
+        for k in range(sides):
+            j = (k + 1) % sides
+            face = bm.faces.new((r0[k], r0[j], r1[j], r1[k]))
+            v0, v1 = i / segs * 2, (i + 1) / segs * 2
+            paint(face, [(k / sides, v0), ((k + 1) / sides, v0), ((k + 1) / sides, v1), (k / sides, v1)], c, night, material)
+    if not closed:
+        for ring in (rings[0], rings[-1]):
+            face = bm.faces.new(ring)
+            paint(face, [(0.5 + 0.5 * math.cos(2 * math.pi * k / sides), 0.5 + 0.5 * math.sin(2 * math.pi * k / sides)) for k in range(sides)], c, night, material)
+
+
+def _link(ctx, centre, along, normal, material=0, col=None):
+    """One oval chain link round `centre`: its long axis `along`, its plane's normal `normal` (unit Vectors)."""
+    r = CHAIN_WIRE
+    length, width = CHAIN_LINK[0] - 2 * r, CHAIN_LINK[1] - 2 * r  # the wire's centre line
+    a, straight = width / 2, length - width
+    side = normal.cross(along).normalized()
+    pts, frames = [], []
+    per_end, per_side = 4, 0
+    for end in (1, -1):  # a half circle round each end, then the straight side back
+        cy = end * straight / 2
+        for k in range(per_end + 1):
+            t = math.pi * k / per_end
+            dx, dy = a * math.cos(t) * end, a * math.sin(t) * end
+            pts.append((dx, cy + dy))
+        for k in range(1, per_side + 1):
+            pts.append((-a * end, cy - end * straight * k / (per_side + 1)))
+    # (x across, y along) -> world; the frame's normal points out of the oval in its plane, the binormal along `normal`
+    path = [centre + side * x + along * y for x, y in pts]
+    n = len(path)
+    for i in range(n):
+        t = (path[(i + 1) % n] - path[i - 1]).normalized()
+        frames.append((t.cross(normal).normalized(), normal))
+    _sweep(ctx, path, r, 6, material, col, closed=True, frames=frames)
+
+
+def _chain(ctx, centres, first_flat=True, ends=None):
+    """Links through `centres` (Vectors), each pointing at its neighbours, lying flat and standing upright by turns; a
+    flat one rests on z = wire radius, an upright one on its edge. `ends` {index: (along, normal)} fixes a link's frame."""
+    from mathutils import Vector
+
+    up = Vector((0, 0, 1))
+    n = len(centres)
+    for i, c in enumerate(centres):
+        if ends and i in ends:
+            along, normal = ends[i]
+        else:
+            along = (centres[min(i + 1, n - 1)] - centres[max(i - 1, 0)]).normalized()
+            flat = (i % 2 == 0) == first_flat
+            normal = (up - along * along.dot(up)).normalized() if flat else along.cross(up).normalized()
+            if not flat:
+                c = Vector((c.x, c.y, CHAIN_LINK[1] / 2))
+        _link(ctx, c, along, normal, 0, (0.88, 0.88, 0.9, 1.0) if i % 2 else (0.78, 0.78, 0.8, 1.0))
+
+
+def _spaced(points, step, count=None):
+    """Points along the polyline `points` `step` apart (or `count` of them spread over its whole length)."""
+    seg = [(points[i + 1] - points[i]).length for i in range(len(points) - 1)]
+    total = sum(seg)
+    if count:
+        step = total / (count - 1)
+    out, want, run = [], 0.0, 0.0
+    for i, s in enumerate(seg):
+        while want <= run + s + 1e-9 and (not count or len(out) < count):
+            f = (want - run) / s if s else 0.0
+            out.append(points[i].lerp(points[i + 1], f))
+            want += step
+        run += s
+    if count and len(out) < count:
+        out.append(points[-1].copy())
+    return out
+
+
+def _padlock(ctx, xf):
+    """The padlock in its own frame, mapped through xf(Vector) -> Vector: a laminated steel body PAD_W x PAD_D x PAD_H
+    with z = 0 underneath, a brass key cylinder and a black keyway in the bottom, four rivets on each face, and a
+    chrome shackle standing on the top, its arc in the x-z plane. Returns the shackle's centre line (local)."""
+    from mathutils import Vector
+
+    bm, paint = ctx["bm"], ctx["paint"]
+    chrome, steel, brass, black = 0, 1, 2, 3
+
+    def block(c, s, mat, col):
+        cx, cy, cz = c
+        hx, hy, hz = s[0] / 2, s[1] / 2, s[2] / 2
+        p = [bm.verts.new(xf(Vector((cx + sx * hx, cy + sy * hy, cz + sz * hz)))) for sz in (-1, 1) for sy in (-1, 1) for sx in (-1, 1)]
+        night = (col[0] * 0.3, col[1] * 0.3, col[2] * 0.32, 1.0)
+        for a, b, cc, d in ((0, 1, 3, 2), (4, 5, 7, 6), (0, 1, 5, 4), (2, 3, 7, 6), (0, 2, 6, 4), (1, 3, 7, 5)):
+            paint(bm.faces.new((p[a], p[b], p[cc], p[d])), [(0, 0), (1, 0), (1, 1), (0, 1)], col, night, mat)
+
+    def cyl(c0, c1, r, sides, mat, col):
+        _sweep(ctx, [xf(Vector(c0)), xf(Vector(c1))], r, sides, mat, col)
+
+    # seven plates, every other one a hair narrower: the grooves of a laminated lock
+    plates = 7
+    ph = PAD_H / plates
+    for i in range(plates):
+        inset = 0.0006 if i % 2 else 0.0
+        shade = (0.86, 0.86, 0.88, 1.0) if i % 2 else (0.7, 0.7, 0.72, 1.0)
+        block((0.0, 0.0, ph * (i + 0.5)), (PAD_W - 2 * inset, PAD_D - 2 * inset, ph), steel, shade)
+    for x in (-PAD_W / 2 + 0.006, PAD_W / 2 - 0.006):  # rivets through the plates
+        for z in (0.007, PAD_H - 0.007):
+            cyl((x, -PAD_D / 2 - 0.0008, z), (x, PAD_D / 2 + 0.0008, z), 0.0024, 8, chrome, (0.95, 0.95, 0.95, 1.0))
+    # the key cylinder and its keyway in the bottom face
+    cyl((0.0, 0.0, -0.0004), (0.0, 0.0, 0.0006), 0.0075, 12, brass, (0.92, 0.9, 0.86, 1.0))
+    block((0.0, 0.0, -0.0006), (0.0015, 0.0085, 0.0008), black, (0.25, 0.25, 0.26, 1.0))
+    # the shackle: two legs out of the top, joined by a half circle
+    r, a, legs = PAD_SHACKLE
+    top = PAD_H + legs
+    line = [Vector((-a, 0.0, PAD_H - 0.004)), Vector((-a, 0.0, PAD_H)), Vector((-a, 0.0, top))]
+    line += [Vector((-a * math.cos(math.pi * k / 10), 0.0, top + a * math.sin(math.pi * k / 10))) for k in range(1, 10)]
+    line += [Vector((a, 0.0, top)), Vector((a, 0.0, PAD_H)), Vector((a, 0.0, PAD_H - 0.004))]
+    _sweep(ctx, [xf(p) for p in line], r, 8, chrome, (0.95, 0.95, 0.96, 1.0))
+    return line
+
+
+def _ground(ctx):
+    """Moves the model so its base is centred on x and y with z = 0 at the lowest point; returns its half extents."""
+    vs = ctx["bm"].verts
+    lo = [min(v.co[i] for v in vs) for i in range(3)]
+    hi = [max(v.co[i] for v in vs) for i in range(3)]
+    shift = ((lo[0] + hi[0]) / 2, (lo[1] + hi[1]) / 2, lo[2])
+    for v in vs:
+        v.co.x, v.co.y, v.co.z = v.co.x - shift[0], v.co.y - shift[1], v.co.z - shift[2]
+    return [(hi[i] - lo[i]) / 2 for i in range(3)]
+
+
+def build_chain(ctx):
+    """About 0.6 m of steel chain lying in a loose S on the ground: 20 links, flat and upright by turns."""
+    from mathutils import Vector
+
+    curve = [Vector((-0.24 + 0.48 * t / 40, 0.07 * math.sin(t / 40 * 2 * math.pi) * (0.6 + 0.4 * t / 40), 0.0)) for t in range(41)]
+    centres = [Vector((p.x, p.y, CHAIN_WIRE)) for p in _spaced(curve, CHAIN_PITCH)][:20]
+    _chain(ctx, centres)
+    hx, hy, hz = _ground(ctx)
+    return [((0.0, 0.0, hz), (hx, hy, hz))]
+
+
+def build_padlock(ctx):
+    """A laminated steel padlock standing on its base, 0.05 x 0.026 m, 0.078 m to the top of its shackle."""
+    _padlock(ctx, lambda v: v)
+    _ground(ctx)
+    r, a, legs = PAD_SHACKLE
+    return [((0.0, 0.0, PAD_H / 2), (PAD_W / 2, PAD_D / 2, PAD_H / 2)), ((0.0, 0.0, PAD_H + (legs + a + r) / 2), (a + r, r, (legs + a + r) / 2))]
+
+
+def _lock_chain(ctx, padlock, depth):
+    """The chain closed into a loop on the ground by a padlock lying on its back (its front face up), the shackle through
+    the two end links. `padlock(ctx, xf)` builds the lock through xf and returns its shackle's centre line (two legs of
+    three points, a nine-point arc) and wire radius; `depth` is its body's front-to-back size."""
+    from mathutils import Vector
+
+    # the padlock on its back: local z (up the lock) -> world +y, its front (-y) -> world up
+    lift = depth / 2
+    base = Vector((0.0, -0.17, 0.0))
+    xf = lambda v: base + Vector((v.x, v.z, -v.y + lift))  # noqa: E731
+    line, r = padlock(ctx, xf)
+    # the end links sit on the shackle's arc either side of its crown, their holes round the wire
+    picks = (5, 9)  # 54 degrees round the arc from each leg
+    shackle = [xf(p) for p in line]
+    anchors = []
+    for k in picks:
+        p = shackle[k]
+        tangent = (shackle[k + 1] - shackle[k - 1]).normalized()
+        along = Vector((0, 0, 1)).cross(tangent).normalized()  # flat on the ground, square to the wire
+        if along.y < 0:
+            along = -along
+        anchors.append((p, along, tangent))
+    # the loop: from one end link out round a circle and back to the other
+    (p0, al0, t0), (p1, al1, t1) = anchors
+    centre, radius = Vector((0.0, 0.03, 0.0)), 0.12
+    ang0, ang1 = math.atan2(p0.y - centre.y, p0.x - centre.x), math.atan2(p1.y - centre.y, p1.x - centre.x)
+    if ang1 > ang0:
+        ang1 -= 2 * math.pi
+    # an end link hangs on the wire by its inner end, so its centre sits out from the shackle
+    hang = (CHAIN_LINK[0] - 4 * CHAIN_WIRE) / 2 - r
+    s0, s1 = p0 + al0 * hang, p1 + al1 * hang
+    steps = 48
+    arc = [s0]
+    for s in range(1, steps):
+        ang = ang0 + (ang1 - ang0) * s / steps
+        arc.append(Vector((centre.x + radius * math.cos(ang), centre.y + radius * math.sin(ang), 0.0)))
+    arc.append(s1)
+    total = sum((arc[i + 1] - arc[i]).length for i in range(len(arc) - 1))
+    count = max(3, round(total / CHAIN_PITCH) + 1)
+    if count % 2 == 0:
+        count += 1  # both end links stand upright on the shackle, so the count is odd
+    centres = [Vector((c.x, c.y, CHAIN_WIRE)) for c in _spaced(arc, 0, count)]
+    centres[0], centres[-1] = s0, s1
+    ends = {0: (al0, t0), count - 1: (al1, t1)}
+    _chain(ctx, centres, first_flat=False, ends=ends)
+    hx, hy, hz = _ground(ctx)
+    return [((0.0, 0.0, hz), (hx, hy, hz))]
+
+
+def build_lock_chain(ctx):
+    """The chain closed into a loop by the keyed padlock."""
+    return _lock_chain(ctx, lambda c, xf: (_padlock(c, xf), PAD_SHACKLE[0]), PAD_D)
+
+
+COMBO_W, COMBO_D, COMBO_H = 0.046, 0.024, 0.05  # combo_padlock: the die-cast body (x, y, z)
+COMBO_DIAL = (0.009, 0.0096, 0.0108, 0.018)  # a dial wheel's radius and width, the wheels' spacing and their axis' height
+COMBO_SHOWN = (2, 7, 4, 9)  # the digits the four wheels show to the front
+# (source TXD, texture) per combo_padlock material, all vanilla: chrome pipe (shackle, bezel), the counter's red (the
+# body), galvanised steel (the dials' cores), the motel's door numbers (black 1 to 9 over alpha, round the dials)
+COMBO_TEXTURES = [
+    ("industrialext.txd", "cj_chromepipe"),
+    ("cj_airprt.txd", "CJ_red_COUNTER"),
+    ("metalbarrier_cj.txd", "CJ_GALVANISED"),
+    ("imy_motel.txd", "mp_motel_numbers"),
+]
+
+
+COMBO_SHACKLE = (0.004, 0.0145, 0.022)  # the shackle's wire radius, half its span and its legs' height above the body
+# the shackle's long leg (-X) reaches COMBO_LONG_LEG into the body and turns there; the short one (+X) goes
+# COMBO_SHORT_LEG into its hole when shut. Open, the shackle stands COMBO_RAISE higher (the short leg clear of the body)
+# and has turned COMBO_TURN degrees on the long leg. items/client/combo.lua moves combo_shackle by the same numbers.
+COMBO_LONG_LEG, COMBO_SHORT_LEG, COMBO_RAISE, COMBO_TURN = 0.016, 0.004, 0.01, 90.0
+
+
+def _combo_padlock(ctx, xf, body=True, shackle=True, raise_=0.0, turn=0.0, shift=0.0):
+    """The four-dial combination padlock in its own frame, mapped through xf(Vector) -> Vector: a red die-cast body
+    COMBO_W x COMBO_D x COMBO_H with z = 0 underneath, its four dials across the front (-Y) in a chrome bezel, each a
+    nine-sided steel drum with its COMBO_SHOWN digit on the facet that faces the front, and a chrome shackle on top, its
+    arc in the x-z plane when shut. `body` / `shackle` leave either part out; the shackle stands `raise_` higher and has
+    turned `turn` degrees on its long leg, and moves `shift` along X (the shackle alone, its long leg on the origin).
+    Returns the shackle's centre line (local, shut) and its wire radius."""
+    from mathutils import Vector
+
+    bm, paint = ctx["bm"], ctx["paint"]
+    chrome, red, steel, digits = 0, 1, 2, 3
+    white = (0.92, 0.92, 0.92, 1.0)
+    night = (0.28, 0.28, 0.29, 1.0)
+    w, d, h = COMBO_W, COMBO_D, COMBO_H
+    r, dw, pitch, az = COMBO_DIAL
+
+    def block(c, s, mat, rect=(0, 0, 1, 1)):
+        cx, cy_, cz = c
+        hx, hy, hz = s[0] / 2, s[1] / 2, s[2] / 2
+        v = [bm.verts.new(xf(Vector((cx + sx * hx, cy_ + sy * hy, cz + sz * hz)))) for sz in (-1, 1) for sy in (-1, 1) for sx in (-1, 1)]
+        u0, v0, u1, v1 = rect
+        for a, b, cc, e in ((0, 1, 3, 2), (4, 5, 7, 6), (0, 1, 5, 4), (2, 3, 7, 6), (0, 2, 6, 4), (1, 3, 7, 5)):
+            paint(bm.faces.new((v[a], v[b], v[cc], v[e])), [(u0, v0), (u1, v0), (u1, v1), (u0, v1)], white, night, mat)
+
+    sr, sa, legs = COMBO_SHACKLE
+    top = h + legs
+    line = [Vector((-sa, 0.0, h - COMBO_LONG_LEG)), Vector((-sa, 0.0, h)), Vector((-sa, 0.0, top))]
+    line += [Vector((-sa * math.cos(math.pi * k / 10), 0.0, top + sa * math.sin(math.pi * k / 10))) for k in range(1, 10)]
+    line += [Vector((sa, 0.0, top)), Vector((sa, 0.0, h)), Vector((sa, 0.0, h - COMBO_SHORT_LEG))]
+    if shackle:
+        ca, sn = math.cos(math.radians(turn)), math.sin(math.radians(turn))
+
+        def moved(p):  # turned on the long leg's axis (x = -sa, y = 0), raised, shifted
+            x, y = p.x + sa, p.y
+            return Vector((-sa + x * ca - y * sn + shift, x * sn + y * ca, p.z + raise_))
+
+        _sweep(ctx, [xf(moved(p)) for p in line], sr, 8, chrome, (0.95, 0.95, 0.96, 1.0))
+    if not body:
+        return line, sr
+    block((0.0, 0.0, h / 2), (w, d, h), red)
+    sides = 9
+    step = 2 * math.pi / sides
+    # the dials: a wheel's axis along X, set into the body so the facet facing the front stands just proud of it
+    front = -d / 2
+    cy = front + r * math.cos(step / 2) - 0.0015
+    # the bezel: a chrome window round that row of facets, flatter than the dials stand out so it hides no digit
+    half = r * math.sin(step / 2)
+    for z in (az + half + 0.0016, az - half - 0.0016):
+        block((0.0, front - 0.0005, z), (4 * pitch + 0.004, 0.001, 0.0018), chrome)
+    for x in (-2 * pitch - 0.0008, 2 * pitch + 0.0008):
+        block((x, front - 0.0005, az), (0.0024, 0.001, 2 * half + 0.005), chrome)
+
+    def at(x, a, rad):  # a = 0 faces the front (-Y), growing upward
+        return xf(Vector((x, cy - rad * math.cos(a), az + rad * math.sin(a))))
+
+    for i, shown in enumerate(COMBO_SHOWN):
+        xc = (i - 1.5) * pitch
+        x0, x1 = xc - dw / 2, xc + dw / 2
+        # the wheel, a closed nine-sided steel drum with a facet square to the front
+        rings = [[bm.verts.new(at(x, (k - 0.5) * step, r)) for k in range(sides)] for x in (x0, x1)]
+        for k in range(sides):
+            j = (k + 1) % sides
+            face = bm.faces.new((rings[0][k], rings[1][k], rings[1][j], rings[0][j]))
+            paint(face, [(0, 0), (1, 0), (1, 0.25), (0, 0.25)], white, night, steel)
+        for ring in rings:
+            paint(bm.faces.new(ring), [(0.5, 0.5)] * sides, white, night, steel)
+        # its shown digit on that facet: one cell of the motel numbers (a 3 x 3 grid, each cell twice as tall as wide)
+        col, row = (shown - 1) % 3, (shown - 1) // 3
+        rect = (col / 3, 1 - (row + 1) / 3, (col + 1) / 3, 1 - row / 3)
+        facet_y = cy - r * math.cos(step / 2)
+        block((xc, facet_y - 0.0002, az), (half, 0.0003, 2 * half), digits, rect)
+    return line, sr
+
+
+def _combo_boxes(raise_=0.0):
+    w, d, h = COMBO_W, COMBO_D, COMBO_H
+    sr, sa, legs = COMBO_SHACKLE
+    tall = legs + sa + sr
+    return [((0.0, 0.0, h / 2), (w / 2, d / 2, h / 2)), ((0.0, 0.0, h + raise_ + tall / 2), (sa + sr, sa + sr, tall / 2))]
+
+
+def build_combo_padlock(ctx):
+    """The four-dial combination padlock standing on its base, its dials to the front (-Y), open: the shackle up and
+    turned out on its long leg. The item model; a shut one is combo_padlock_shut."""
+    _combo_padlock(ctx, lambda v: v, raise_=COMBO_RAISE, turn=COMBO_TURN)
+    return _combo_boxes(COMBO_RAISE)
+
+
+def build_combo_padlock_shut(ctx):
+    """The combination padlock shut: the shackle down, its short leg in its hole."""
+    _combo_padlock(ctx, lambda v: v)
+    return _combo_boxes()
+
+
+def build_combo_padlock_body(ctx):
+    """The combination padlock without its shackle, for the close-up that moves combo_shackle (items client)."""
+    _combo_padlock(ctx, lambda v: v, shackle=False)
+    return _combo_boxes()[:1]
+
+
+def build_combo_shackle(ctx):
+    """The combination padlock's shackle alone, shut, its long leg's axis on the origin (x = 0, y = 0) and z as the
+    body's: the close-up turns it about Z and raises it."""
+    _combo_padlock(ctx, lambda v: v, body=False, shift=COMBO_SHACKLE[1])
+    sr, sa, legs = COMBO_SHACKLE
+    tall = legs + sa + sr + COMBO_LONG_LEG
+    return [((sa, 0.0, COMBO_H - COMBO_LONG_LEG + tall / 2), (sa + sr, sr, tall / 2))]
+
+
+def build_combo_lock_chain(ctx):
+    """The chain closed into a loop by the combination padlock, its dials up."""
+    return _lock_chain(ctx, _combo_padlock, COMBO_D)
+
+
 PROPS_TABLE = [
     {"name": "ls_hatch", "id": 20201, "dist": 150, "source": "zombtest1.txd", "textures": ["pave_manhole1"], "build": build_ls_hatch},
     {"name": "welder", "id": 20202, "dist": 100, "source": "dynbarrels.txd", "textures": ["redmetal", "yellowmetal", "alumplat64"], "build": build_welder},
@@ -555,6 +948,15 @@ PROPS_TABLE = [
     {"name": "tool_battery", "id": 20209, "dist": 40, "sources": TOOL_BATTERY_TEXTURES, "build": build_tool_battery},
     {"name": "ratchet", "id": 20236, "dist": 40, "sources": RATCHET_TEXTURES, "build": build_ratchet},
     {"name": "locksmith_kit", "id": 20257, "dist": 40, "sources": KIT_TEXTURES, "build": build_locksmith_kit},
+    {"name": "chain", "id": 20258, "dist": 40, "sources": CHAIN_TEXTURES, "build": build_chain},
+    {"name": "padlock", "id": 20259, "dist": 30, "sources": LOCK_TEXTURES, "build": build_padlock},
+    {"name": "lock_chain", "id": 20260, "dist": 40, "sources": LOCK_TEXTURES, "build": build_lock_chain},
+    # drawn last (IDE flag 4) for the dials' alpha digits
+    {"name": "combo_padlock", "id": 20261, "dist": 30, "sources": COMBO_TEXTURES, "build": build_combo_padlock, "ideFlags": 4},
+    {"name": "combo_lock_chain", "id": 20262, "dist": 40, "sources": COMBO_TEXTURES, "build": build_combo_lock_chain, "ideFlags": 4},
+    {"name": "combo_padlock_shut", "id": 20263, "dist": 30, "sources": COMBO_TEXTURES, "build": build_combo_padlock_shut, "ideFlags": 4},
+    {"name": "combo_padlock_body", "id": 20264, "dist": 30, "sources": COMBO_TEXTURES, "build": build_combo_padlock_body, "ideFlags": 4},
+    {"name": "combo_shackle", "id": 20265, "dist": 30, "sources": COMBO_TEXTURES[:1], "build": build_combo_shackle},
 ]
 
 
@@ -793,13 +1195,18 @@ def main(argv=None) -> int:
         print("make_props: no Blender found (pass --blender)", file=sys.stderr)
         return 2
     names = args.names or [p["name"] for p in PROPS_TABLE]
-    index = read_img_index(img)
+    # a source TXD from gta3.img, else gta_int.img (interior props: the motel's door numbers)
+    archives = [(p, read_img_index(p)) for p in (img, gta / "models" / "gta_int.img") if p.is_file()]
+
+    def source_txd(source):
+        return next(read_img_entry(p, index[source]) for p, index in archives if source in index)
+
     for prop in PROPS_TABLE:
         if prop["name"] in names:
             parts = {}
             for source, texture in prop_sources(prop):
                 parts.setdefault(source, set()).add(texture.lower())
-            txds = [trim_txd(read_img_entry(img, index[source]), keep) for source, keep in parts.items()]
+            txds = [trim_txd(source_txd(source), keep) for source, keep in parts.items()]
             (FILES / f"{prop['name']}.txd").write_bytes(txds[0] if len(txds) == 1 else merge_txd(txds))
     PROPS.write_text(render_props(), encoding="ascii", newline="\n")
     write_meta(PROP_MODELS)

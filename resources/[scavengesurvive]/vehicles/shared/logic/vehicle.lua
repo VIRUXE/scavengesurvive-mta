@@ -262,22 +262,30 @@ function M.isDoorless(model, notLockable)
     return notLockable == true or M.DOORLESS_MODELS[model] == true
 end
 
--- a Lock and Chain's data (either JSON shape): cut once combined with a Locksmith Kit
-function M.isCutLock(data)
+-- a Lock and Chain's lock code (data either JSON shape): its padlock's, the code that padlock's key is cut to; nil
+-- for one made before padlocks had keys
+function M.lockCode(data)
     local t = type(data) == "table" and (type(data[1]) == "table" and data[1] or data) or {}
-    return tonumber(t.cut) == 1
+    local code = tonumber(t.code)
+    return code and code ~= 0 and code or nil
+end
+
+-- a Combination Lock and Chain's code, its padlock's four digits ("0427"), or nil
+function M.lockCombo(data)
+    local t = type(data) == "table" and (type(data[1]) == "table" and data[1] or data) or {}
+    local combo = t.combo ~= nil and tostring(t.combo) or ""
+    return combo:match("^%d%d%d%d$")
 end
 
 -- upstream locksmith.pwn: the Locksmith Kit refuses doorless vehicles; the Lock and Chain (WheelLock) is the lock
--- for them, and the port keeps it to them (upstream let it lock cars too). A Lock and Chain locks once cut: upstream
--- tests the cell the other way round (an uncut one locked, a cut one got LOCKCHNOKEY, "combine it with a Locksmith
--- Kit", which is what cut it), so the port follows the message.
+-- for them, and the port keeps it to them (upstream let it lock cars too). Upstream cut the Lock and Chain with the
+-- kit; here its padlock is keyed before it goes on the chain, so a lock without a code has no key to open it.
 function M.canCraftKey(lockState, itemUname, doorless, currentKeyCode, lockCut)
     if itemUname == "LocksmithKit" then
         if doorless then
             return false, "LOCKNODOORS"
         end
-    elseif itemUname == "WheelLock" then
+    elseif itemUname == "WheelLock" or itemUname == "ComboLockChain" then
         if not doorless then
             return false, "LOCKCHNDOOR"
         end

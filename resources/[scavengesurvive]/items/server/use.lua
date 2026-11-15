@@ -87,6 +87,9 @@ return function(ctx)
         if uname == "Locator" then
             return ctx.small.useLocator(player, itemId, data)
         end
+        if uname == "ComboPadlock" then
+            return ctx.small.useComboPadlock(player, itemId, data, fromHand, openContainerId)
+        end
         local wearSlot = ctx.apparel.slotFor(uname)
         if fromHand and (wearSlot == "hat" or wearSlot == "mask" or wearSlot == "armour") then
             return ctx.wear(player, itemId)

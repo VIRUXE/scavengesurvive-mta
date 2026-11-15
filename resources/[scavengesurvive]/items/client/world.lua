@@ -107,8 +107,11 @@ return function(ctx)
         if r.uname == "Key" then
             return small.keyLabel(t and t.name or r.uname, r.data, vehicleTypeByModel)
         end
-        if r.uname == "WheelLock" then
+        if r.uname == "WheelLock" or r.uname == "Padlock" then
             return small.lockLabel(t and t.name or r.uname, r.data)
+        end
+        if r.uname == "ComboPadlock" then
+            return small.comboLabel(t and t.name or r.uname, r.data)
         end
         if r.uname == gardening.BAG then
             return gardening.seedLabel(t and t.name or r.uname, gardening.seedsFor(r.id, r.data))
@@ -634,6 +637,10 @@ return function(ctx)
     local function modelFor(r, t)
         if r.uname == small.LOCKER.uname then
             return models.forSamp(small.lockerModel(lockersOpen[r.id])) or models.forType(t)
+        end
+        -- a shut Combination Padlock draws its shackle down
+        if r.uname == "ComboPadlock" and small.comboShut(r.data) then
+            return models.forSamp(small.COMBO_SHUT_MODEL) or models.forType(t)
         end
         return models.forType(t)
     end

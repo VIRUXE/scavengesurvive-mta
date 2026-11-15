@@ -1131,6 +1131,8 @@ end, { rate = 3 })
 -- Entry enforcement: no entering during a roadside hold (repair, refuel, locksmith, lock-break), nor into locked
 -- vehicles, nor with a carried item (wheel, box, panel: useCarryAnim) in hand. Upstream dropped the carried item on
 -- the spot (OnPlayerEnterVehicle); the port refuses instead so nothing is left behind by accident (#120).
+local openCombinationLock -- (player, vehicle) the code prompt of a combination-chained vehicle, set with the keypads
+
 addEventHandler("onVehicleStartEnter", root, function(player)
     if activeActions[player] then
         cancelEvent()
@@ -1146,6 +1148,10 @@ addEventHandler("onVehicleStartEnter", root, function(player)
     local inf = info[source]
     if inf and inf.locked and inf.locked > 0 then
         cancelEvent()
+        local vt = exports.data:vehicleType(inf.uname)
+        if (inf.keypad or "") ~= "" and not (vt and vt.door) then
+            return openCombinationLock(player, source)
+        end
         if inf.locked == vlogic.LOCK_EXTERNAL then
             toast(player, "LOCKCUSTOML")
         else
@@ -1701,6 +1707,16 @@ addEventHandler("onVehicleExit", resourceRoot, function(player, seat)
         unbindTow(player)
         driverSince[source] = nil
     end
+    local inf = info[source]
+    local vt = inf and exports.data:vehicleType(inf.uname)
+    if seat == 0 and inf and (inf.keypad or "") ~= "" and not (vt and vt.door) and inf.locked == vlogic.LOCK_OPEN then
+        inf.locked = vlogic.LOCK_EXTERNAL
+        setVehicleLocked(source, true)
+        setElementData(source, "vehicles.locked", 1, "broadcast", "deny")
+        db.exec("UPDATE vehicles SET locked = 1 WHERE id = ?", { inf.id })
+        log.event("vehicle.lockToggled", vehicleLine(source, { player = player, locked = 1, via = "combination" }))
+        toast(player, "LOCKCHN_LOCKED")
+    end
 end)
 
 addEventHandler("onPlayerQuit", root, function()
@@ -1797,6 +1813,13 @@ local function breakDoorLock(vehicle, player)
 end
 
 local pendingKeypad = {} -- player -> the vehicle whose keypad prompt is open (setup or entry)
+
+-- A Combination Lock and Chain on a doorless vehicle keeps its padlock's code as the keypad code: getting on asks
+-- for it, the right code takes the chain off for the ride, and it goes back on once the rider gets off.
+openCombinationLock = function(player, vehicle)
+    pendingKeypad[player] = vehicle
+    triggerClientEvent(player, "vehicleKeypadOpened", player, vehicle, false)
+end
 local lastKeypadTry = {} -- player -> tick of the last wrong code
 local keypadTries = {} -- player -> { vehicle, wrong codes since the last right one }
 
@@ -1852,7 +1875,17 @@ net.handler("vehicleKeypadSubmitted", function(player, vehicle, code)
         pendingKeypad[player] = nil
         lastKeypadTry[player] = nil
         triggerClientEvent(player, "keypadClosed", player)
-        setVehicleDoorOpenRatio(vehicle, vlogic.WALK_IN_DOOR, 1, 600)
+        local vt = exports.data:vehicleType(inf.uname)
+        if vt and vt.door then
+            setVehicleDoorOpenRatio(vehicle, vlogic.WALK_IN_DOOR, 1, 600)
+        else
+            inf.locked = vlogic.LOCK_OPEN
+            setVehicleLocked(vehicle, false)
+            setElementData(vehicle, "vehicles.locked", 0, "broadcast", "deny")
+            db.exec("UPDATE vehicles SET locked = 0 WHERE id = ?", { inf.id })
+            log.event("vehicle.lockToggled", vehicleLine(vehicle, { player = player, locked = 0, via = "combination" }))
+            toast(player, "UNLOCKED")
+        end
         markUsed(vehicle)
         local tries = keypadTries[player]
         local attempts = (tries and tries.vehicle == vehicle and tries.n or 0) + 1
@@ -2694,18 +2727,23 @@ net.handler("vehicleInteractRequested", function(player, vehicle, capX, capY, ca
             return
         end
 
-        if uname == "LocksmithKit" or uname == "WheelLock" then
+        if uname == "LocksmithKit" or uname == "WheelLock" or uname == "ComboLockChain" then
             if hasMissingDoor(vehicle) then
                 return toast(player, "LOCKNODOORS")
             end
             local doorless = vlogic.isDoorless(getElementModel(vehicle), vt and vt.notLockable)
-            local ok, err = vlogic.canCraftKey(inf.locked, uname, doorless, inf.keyCode, vlogic.isCutLock(held.data))
+            local fitted = (inf.keyCode or 0) ~= 0 and inf.keyCode or ((inf.keypad or "") ~= "" and 1 or 0)
+            local ready = uname == "ComboLockChain" and vlogic.lockCombo(held.data) or vlogic.lockCode(held.data)
+            local ok, err = vlogic.canCraftKey(inf.locked, uname, doorless, fitted, ready)
             if not ok then
                 return toast(player, err)
             end
             cancelHoldAction(player)
             setPedAnimation(player, "COP_AMBIENT", "COPBROWSE_LOOP", -1, true, false, false, false)
-            triggerClientEvent(player, "vehicleHoldStarted", player, lang.textFor(player, "Crafting key"), 3000)
+            local chained = uname == "WheelLock" or uname == "ComboLockChain"
+            local label = chained and lang.textFor(player, "Fitting the lock and chain")
+                or lang.textFor(player, "Crafting key")
+            triggerClientEvent(player, "vehicleHoldStarted", player, label, 3000)
             local timer = setTimer(function(p, veh, kitId)
                 activeActions[p] = nil
                 if not isElement(p) or not isElement(veh) then
@@ -2716,7 +2754,7 @@ net.handler("vehicleInteractRequested", function(player, vehicle, capX, capY, ca
                 if not cid then
                     return
                 end
-                -- the kit (or the cut lock) has to be in the hand still: one dropped during the hold would
+                -- the kit (or the lock and chain) has to be in the hand still: one dropped during the hold would
                 -- otherwise stay there and a key come out of nothing
                 local cur = exports.items:getHeld(p)
                 if not cur or cur.id ~= kitId then
@@ -2730,8 +2768,72 @@ net.handler("vehicleInteractRequested", function(player, vehicle, capX, capY, ca
                     return toast(p, "LOCKNODOORS")
                 end
                 -- another player may have keyed the vehicle during the hold
-                if (vinf.keyCode or 0) ~= 0 or vinf.locked == vlogic.LOCK_EXTERNAL then
+                if (vinf.keyCode or 0) ~= 0 or (vinf.keypad or "") ~= "" or vinf.locked == vlogic.LOCK_EXTERNAL then
                     return toast(p, "LOCKALREADY")
+                end
+                -- a Lock and Chain is used up and locks the vehicle to its padlock: a Combination one's code becomes
+                -- the vehicle's keypad code (asked for on getting on), a keyed one's code its key code (the
+                -- padlock's key, which the player already has, opens it)
+                if cur.uname == "ComboLockChain" then
+                    local combo = vlogic.lockCombo(cur.data)
+                    if not combo then
+                        return toast(p, "LOCKCHNOKEY")
+                    end
+                    return consumeHeld(p, kitId, "used", function(done, failCode)
+                        local vi = isElement(veh) and info[veh]
+                        if not done then
+                            if vi then
+                                local line =
+                                    vehicleLine(veh, { player = p, via = "combolock", ok = false, code = failCode })
+                                log.event("vehicle.lockToggled", line, "warn")
+                            end
+                            return isElement(p) and toast(p, failCode)
+                        end
+                        if vi then
+                            vi.locked = vlogic.LOCK_EXTERNAL
+                            vi.keypad = combo
+                            setVehicleLocked(veh, true)
+                            setElementData(veh, "vehicles.locked", 1, "broadcast", "deny")
+                            db.exec("UPDATE vehicles SET locked = 1, keypad_code = ? WHERE id = ?", { combo, vi.id })
+                            local line =
+                                vehicleLine(veh, { player = p, locked = 1, via = "combolock", item_id = kitId })
+                            log.event("vehicle.lockToggled", line)
+                        end
+                        if isElement(p) then
+                            toast(p, "LOCKCHN_LOCKED")
+                        end
+                    end)
+                end
+                if cur.uname == "WheelLock" then
+                    local chainCode = vlogic.lockCode(cur.data)
+                    if not chainCode then
+                        return toast(p, "LOCKCHNOKEY")
+                    end
+                    return consumeHeld(p, kitId, "used", function(done, failCode)
+                        local vi = isElement(veh) and info[veh]
+                        if not done then
+                            if vi then
+                                local line =
+                                    vehicleLine(veh, { player = p, via = "lockchain", ok = false, code = failCode })
+                                log.event("vehicle.lockToggled", line, "warn")
+                            end
+                            return isElement(p) and toast(p, failCode)
+                        end
+                        if vi then
+                            vi.locked = vlogic.LOCK_EXTERNAL
+                            vi.keyCode = chainCode
+                            setVehicleLocked(veh, true)
+                            shutWalkInDoor(veh)
+                            setElementData(veh, "vehicles.locked", 1, "broadcast", "deny")
+                            db.exec("UPDATE vehicles SET locked = 1, key_code = ? WHERE id = ?", { chainCode, vi.id })
+                            local line =
+                                vehicleLine(veh, { player = p, locked = 1, via = "lockchain", item_id = kitId })
+                            log.event("vehicle.lockToggled", line)
+                        end
+                        if isElement(p) then
+                            toast(p, "LOCKCHN_LOCKED")
+                        end
+                    end)
                 end
                 local code = math.random(100000, 999999)
                 local keyData = { code = code, model = vt and vt.model or 0 }

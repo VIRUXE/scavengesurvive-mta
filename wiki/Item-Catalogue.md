@@ -221,6 +221,8 @@ Several different items can share a name (there are, for example, three kinds of
 |:--|:--|--:|
 |  | [Accelerometer](Accelerometer) | 1 |
 |  | [Advanced Keypad](Advanced-Keypad) | 2 |
+|  | [Alloy Wheel](Alloy-Wheel) | 5 |
+|  | [Alloy Wheel (Flat)](Alloy-Wheel-Flat) | 5 |
 |  | [Angle Grinder](Angle-Grinder) | 3 |
 |  | [Antiseptic Bandage](Antiseptic-Bandage) | 2 |
 |  | [Armour](Armour) | 4 |
@@ -256,9 +258,14 @@ Several different items can share a name (there are, for example, three kinds of
 |  | [Campfire](Campfire) | 5 |
 |  | [Captain's Cap](Captains-Cap) | 1 |
 |  | [Car Battery](Car-Battery) | 2 |
+|  | [Chain](Chain) | 2 |
 |  | [Christmas Hat](Christmas-Hat) | 1 |
+|  | [Classic Wheel](Classic-Wheel) | 5 |
+|  | [Classic Wheel (Flat)](Classic-Wheel-Flat) | 5 |
 |  | [Clothes](Clothes) | 2 |
 |  | [Code](Code) | 1 |
+|  | [Combination Lock and Chain](Combination-Lock-and-Chain) | 1 |
+|  | [Combination Padlock](Combination-Padlock) | 1 |
 |  | [Computer](Computer) | 2 |
 |  | [Control Box](Control-Box) | 2 |
 |  | [Corrugated Metal](Corrugated-Metal) | 10 |
@@ -314,6 +321,10 @@ Several different items can share a name (there are, for example, three kinds of
 |  | [Large Frame](Large-Frame) | 20 |
 |  | [Laser Pointer](Laser-Pointer) | 1 |
 |  | [Leg](Leg) | 4 |
+|  | [Light Truck Wheel](Light-Truck-Wheel) | 5 |
+|  | [Light Truck Wheel (Flat)](Light-Truck-Wheel-Flat) | 5 |
+|  | [Light Van Wheel](Light-Van-Wheel) | 5 |
+|  | [Light Van Wheel (Flat)](Light-Van-Wheel-Flat) | 5 |
 |  | [Lighter](Lighter) | 1 |
 |  | [Locator](Locator) | 1 |
 |  | [Lock and Chain](Lock-and-Chain) | 1 |
@@ -331,6 +342,8 @@ Several different items can share a name (there are, for example, three kinds of
 |  | [Motorcycle Helmet](Motorcycle-Helmet) | 1 |
 |  | [Night Vision](Night-Vision) | 2 |
 |  | [Note](Note) | 1 |
+|  | [Offroad Wheel](Offroad-Wheel) | 5 |
+|  | [Offroad Wheel (Flat)](Offroad-Wheel-Flat) | 5 |
 |  | [Oil Drum](Oil-Drum) | 5 |
 |  | [Padlock](Padlock) | 1 |
 |  | [Pager](Pager) | 1 |
@@ -362,6 +375,8 @@ Several different items can share a name (there are, for example, three kinds of
 |  | [Red Panel](Red-Panel) | 5 |
 |  | [Refined Metal](Refined-Metal) | 1 |
 |  | [Refining Machine](Refining-Machine) | 12 |
+|  | [Saloon Wheel](Saloon-Wheel) | 5 |
+|  | [Saloon Wheel (Flat)](Saloon-Wheel-Flat) | 5 |
 |  | [Scrap Machine](Scrap-Machine) | 12 |
 |  | [Scrap Metal](Scrap-Metal) | 1 |
 |  | [Sebastian](Sebastian) | 2 |
@@ -372,10 +387,16 @@ Several different items can share a name (there are, for example, three kinds of
 |  | [Sign](Sign-Sign) | 6 |
 |  | [Sign](Sign-SignShot) | 3 |
 |  | [Small Amp](Small-Amp) | 8 |
+|  | [Small Car Wheel](Small-Car-Wheel) | 5 |
+|  | [Small Car Wheel (Flat)](Small-Car-Wheel-Flat) | 5 |
 |  | [Small Metal Panel](Small-Metal-Panel) | 11 |
 |  | [Small Table](Small-Table) | 10 |
 |  | [Spanner](Spanner) | 1 |
+|  | [Sport Wheel](Sport-Wheel) | 5 |
+|  | [Sport Wheel (Flat)](Sport-Wheel-Flat) | 5 |
 |  | [Starter Motor](Starter-Motor) | 2 |
+|  | [Steel Rim Wheel](Steel-Rim-Wheel) | 5 |
+|  | [Steel Rim Wheel (Flat)](Steel-Rim-Wheel-Flat) | 5 |
 |  | [Storage Unit](Storage-Unit) | 1 |
 |  | [Straw Hat](Straw-Hat) | 1 |
 |  | [Swat Helmet](Swat-Helmet) | 1 |
@@ -393,6 +414,8 @@ Several different items can share a name (there are, for example, three kinds of
 |  | [Trip Mine EMP](Trip-Mine-EMP) | 2 |
 |  | [Trip Mine IED](Trip-Mine-IED) | 2 |
 |  | [Trip Mine TNT](Trip-Mine-TNT) | 2 |
+|  | [Truck Wheel](Truck-Wheel) | 5 |
+|  | [Truck Wheel (Flat)](Truck-Wheel-Flat) | 5 |
 |  | [Trucker Cap](Trucker-Cap) | 1 |
 |  | [Unknown](Unknown) | 3 |
 |  | [Water Purifier](Water-Purifier) | 12 |

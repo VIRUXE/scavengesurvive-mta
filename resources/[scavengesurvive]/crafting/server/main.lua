@@ -184,6 +184,11 @@ net.handler("combineRequested", function(player, invItemId)
                         return exports.explosives:linkPhoneBomb(c.player, c.held, row)
                     end
                 end
+                -- a padlock locked onto its chain is past re-keying
+                local pair = { [c.held.uname] = true, [row.uname] = true }
+                if pair.WheelLock and pair.LocksmithKit then
+                    return toast(c.player, "LOCKCHNREKEY")
+                end
                 return toast(c.player, "NO_RECIPE")
             end
             local r = match.recipe
@@ -196,7 +201,32 @@ net.handler("combineRequested", function(player, invItemId)
                     input_ids = { c.held.id, row.id },
                     output_uname = r.result.uname,
                 })
-                return toast(c.player, r.result.uname == "WheelLock" and "LOCKCHCUT" or "NO_RECIPE")
+                return toast(c.player, "NO_RECIPE")
+            end
+            -- a lock code: the result takes the named ingredient's (copyData), or the named kept ingredient and the
+            -- result, a Key, both get a new one (rekey)
+            local resultData, kept, keptData = r.result.data, nil, nil
+            if r.copyData then
+                local src = dataTable((c.held.uname == r.copyData and c.held or row).data)
+                local code, combo = tonumber(src.code), src.combo and tostring(src.combo)
+                -- a keyed padlock needs its key cut; a combination one has its code, but goes on open
+                local refused = (r.copyData == "Padlock" and not code and "LOCKPADNOKEY")
+                    or (r.copyData == "ComboPadlock" and (tonumber(src.shut) == 1 or src.shut == true) and "COMBOSHUT")
+                if refused then
+                    logCraftRefused(c.player, refused, {
+                        recipe = r.name,
+                        mode = "combine",
+                        inputs = inputs,
+                        input_ids = { c.held.id, row.id },
+                        output_uname = r.result.uname,
+                    })
+                    return toast(c.player, refused)
+                end
+                resultData = code and { code = code } or { combo = combo or "0000" }
+            elseif r.rekey then
+                kept = c.held.uname == r.rekey and c.held or row
+                local code = math.random(100000, 999999)
+                resultData, keptData = { code = code }, { code = code }
             end
             local logFields = {
                 recipe = r.name,
@@ -205,11 +235,13 @@ net.handler("combineRequested", function(player, invItemId)
                 input_ids = { c.held.id, row.id },
                 output_uname = r.result.uname,
                 character_id = c.cid,
+                rekeyed_id = kept and kept.id or nil,
             }
-            local resultJson = r.result.data and toJSON(r.result.data) or nil
-            -- one craft_combine call: the used-up inputs go and the result appears (in the hand when the held one
-            -- is used up, else in the other's container) together, or nothing changes; two separate destroys and a
-            -- create could leave one input gone with no result, or a result with an input kept
+            local resultJson = resultData and toJSON(resultData) or nil
+            -- one craft_combine call: the used-up inputs go, a re-keyed one takes its new code and the result appears
+            -- (in the hand when the held one is used up, else in the other's container) together, or nothing changes;
+            -- two separate destroys and a create could leave one input gone with no result, or a result with an input
+            -- kept
             local params = {
                 c.cid,
                 c.held.id,
@@ -219,7 +251,9 @@ net.handler("combineRequested", function(player, invItemId)
                 match.consumeB and 1 or 0,
                 r.result.uname,
                 resultJson,
-                n = 8,
+                kept and kept.id or nil,
+                keptData and toJSON(keptData) or nil,
+                n = 10,
             }
             db.call("craft_combine", params, function(res, c2)
                 logCraft(c2.player, res, logFields)
@@ -246,11 +280,15 @@ net.handler("combineRequested", function(player, invItemId)
                         id = newId,
                         uname = r.result.uname,
                         hp = def and def.maxHitpoints or 5,
-                        data = r.result.data or {},
+                        data = resultData or {},
                     })
                 end
+                -- the hand's copy is written back when the item leaves it: it has to hold the new code too
+                if kept and kept.id == c.held.id then
+                    exports.items:updateHeldData(c2.player, keptData)
+                end
                 exports.items:sendInventory(c2.player)
-                toast(c2.player, "CRAFTED")
+                toast(c2.player, r.rekey and "KEY_CRAFTED" or "CRAFTED")
             end, { player = c.player })
         end,
         { player = player, held = held, cid = cid, openId = openId }

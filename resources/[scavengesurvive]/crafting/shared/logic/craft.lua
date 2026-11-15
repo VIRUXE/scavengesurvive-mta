@@ -27,7 +27,12 @@ local function addRecipe(r)
 end
 
 -- lang:begin
-local NOTES = { lockCut = "Makes the lock cut, ready to lock a bike or other doorless vehicle." }
+local NOTES = {
+    padlockKey = "Gives the padlock a new lock and you its key. The kit is kept; an older key no longer fits.",
+    lockChain = "The padlock needs its key first. The lock locks a bike or other doorless vehicle, "
+        .. "and the padlock's key opens it.",
+    comboChain = "The padlock has to be open. The lock locks a bike or other doorless vehicle, and its code opens it.",
+}
 -- the numbered steps the /recipes window shows (M.steps)
 local STEPS = {
     combine = "Equip the %s, then choose Combine on the %s in your inventory.",
@@ -40,21 +45,26 @@ local STEPS = {
 }
 -- lang:end
 
--- 1. Items created by hand: { result, consumed, kept, data = result data, note = text for the recipe page }
+-- 1. Items created by hand: { result, consumed, kept, data = result data, note = text for the recipe page,
+-- rekey = a kept ingredient that gets a new lock code the result (a Key) is cut to, copyData = the ingredient whose
+-- lock code the result takes }
 local COMBINE = {
     { "ParaBag", { Parachute = 1 }, { Knife = 1 } },
     { "MolotovEmpty", { Bottle = 1, Bandage = 1 } },
     { "Bandage", { Clothes = 1 }, { Knife = 1 } },
-    -- upstream locksmith.pwn OnPlayerCrafted: the kit cuts the lock (array data cell 0 = 1), here data.cut. Upstream
-    -- tested that cell the wrong way round on a vehicle, so its recipe broke the lock; the port reads cut = usable
-    { "WheelLock", { WheelLock = 1, LocksmithKit = 1 }, data = { cut = 1 }, note = NOTES.lockCut },
+    -- upstream locksmith.pwn cut the Lock and Chain itself with the kit; the port builds it from a Chain and a Padlock
+    -- the kit has keyed, so its key is the padlock's
+    { "Key", nil, { LocksmithKit = 1, Padlock = 1 }, rekey = "Padlock", note = NOTES.padlockKey },
+    { "WheelLock", { Chain = 1, Padlock = 1 }, copyData = "Padlock", note = NOTES.lockChain },
+    -- the combination padlock goes on open (its shackle through the end links) and carries its code to the chain
+    { "ComboLockChain", { Chain = 1, ComboPadlock = 1 }, copyData = "ComboPadlock", note = NOTES.comboChain },
     -- upstream's Bottle + Bottle keeps both and makes a third: the liquid merge it stood for is commented out in
     -- liquid-container.pwn, so all it does there is duplicate bottles; not ported
 }
 for _, c in ipairs(COMBINE) do
     local r = { name = c[1], kind = "combine", ingredients = ingredientRows(c[2], c[3]) }
     r.result = { uname = c[1], count = 1, data = c.data }
-    r.note = c.note
+    r.note, r.rekey, r.copyData = c.note, c.rekey, c.copyData
     addRecipe(r)
 end
 

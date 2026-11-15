@@ -69,7 +69,10 @@ The table lists the pieces of Scrap Metal each item yields. Many items are worth
 | [Big Ass Sword](Big-Ass-Sword) | 1 |
 | [Camera](Camera) | 1 |
 | [Car Battery](Car-Battery) | 1 |
+| [Chain](Chain) | 1 |
 | [Combat Knife](Combat-Knife) | 1 |
+| [Combination Lock and Chain](Combination-Lock-and-Chain) | 1 |
+| [Combination Padlock](Combination-Padlock) | 1 |
 | [Crowbar](Crowbar) | 1 |
 | [Data Interface](Data-Interface) | 1 |
 | [Derpification Unit](Derpification-Unit) | 1 |

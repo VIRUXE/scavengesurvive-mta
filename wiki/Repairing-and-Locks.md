@@ -47,11 +47,13 @@ The Electronic Lockpick is made at a [Workbench](Workbench).
 
 ### Locksmithing
 
-![Locksmith Kit](images/items/1210_briefcase.png) ![Key](images/items/11746_doorkey1.png)
+![Locksmith Kit](images/items/20257_locksmith_kit.png) ![Key](images/items/11746_doorkey1.png) ![Lock and Chain](images/items/20260_lock_chain.png) ![Combination Padlock](images/items/20261_combo_padlock.png)
 
 - **Locksmith Kit**: hold it at the driver's door of an unlocked or plainly locked vehicle that has doors and press `F`. After 3 seconds the kit is used up, the vehicle gets a custom lock and you are handed a **Key** cut to it. A vehicle that already has a custom lock is refused (*already locked*), as are vehicles without doors.
 - **Key**: hold the matching key at the driver's door and press `F` to lock or unlock. A key for another vehicle says it doesn't fit, a blank key says it is not cut. Extra copies are made by [Constructing](Constructing) a key copy.
-- **Lock and Chain**: the lock for vehicles with no doors (bikes, quads, boats, open vehicles), which a kit refuses. First combine it with a Locksmith Kit to cut it ([Combining](Combining)); an uncut one says *has no key*. It then shows as *Lock and Chain (Cut)*. Use it at the vehicle like a kit: it is used up and you get a Key. It does not work on vehicles with doors.
+- **Padlock**: combine it with a Locksmith Kit ([Combining](Combining)) to cut it a key: both are kept, the padlock shows as *Padlock (Keyed)* and you get a *Padlock Key*. Doing it again gives the padlock a new lock and a new key; older keys stop fitting.
+- **Lock and Chain**: the lock for vehicles with no doors (bikes, quads, boats, open vehicles), which a kit refuses. Combine a **Chain** with a keyed Padlock to make one (a padlock without a key is refused, and once on the chain it can't be re-keyed). Use it at the vehicle like a kit: after 3 seconds it is used up and the vehicle is locked to the padlock's key, which opens and locks it from then on. It does not work on vehicles with doors.
+- **Combination Padlock**: comes open, its own four-digit code on its dials. *Use* it to see it up close: Left/Right picks a dial, Up/Down or a digit turns it, `S` spins them all. While it is open, `R` makes the dials the new code and `Space` swings the shackle back and pushes it down to lock it; then turn the dials to hide the code. On a locked one `Space` pushes the shackle: with the code on the dials it springs up and turns out, otherwise it stays shut. Combine an open one with a Chain for a **Combination Lock and Chain**, fitted like a Lock and Chain: getting on the vehicle asks for the code, the right code unlocks it for the ride, and it locks again when the rider gets off. A Crowbar or Lock Breaker breaks it like any lock.
 - **Locksmith Kit** itself is made at a [Workbench](Workbench) from a Key and a Motor.
 
 ### From inside

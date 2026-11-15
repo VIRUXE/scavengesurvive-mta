@@ -1481,17 +1481,6 @@
    }
   }
  },
- "items/19804_padlock1": {
-  "caption": "padlock1",
-  "sizes": {
-   "256": {
-    "bytes": 1366,
-    "file": "items/19804_padlock1.webp",
-    "h": 256,
-    "w": 256
-   }
-  }
- },
  "items/19812_beerkeg1": {
   "caption": "beerkeg1",
   "sizes": {
@@ -1910,6 +1899,61 @@
    }
   }
  },
+ "items/20258_chain": {
+  "caption": "chain",
+  "sizes": {
+   "256": {
+    "bytes": 1002,
+    "file": "items/20258_chain.webp",
+    "h": 256,
+    "w": 256
+   }
+  }
+ },
+ "items/20259_padlock": {
+  "caption": "padlock",
+  "sizes": {
+   "256": {
+    "bytes": 1834,
+    "file": "items/20259_padlock.webp",
+    "h": 256,
+    "w": 256
+   }
+  }
+ },
+ "items/20260_lock_chain": {
+  "caption": "lock_chain",
+  "sizes": {
+   "256": {
+    "bytes": 1922,
+    "file": "items/20260_lock_chain.webp",
+    "h": 256,
+    "w": 256
+   }
+  }
+ },
+ "items/20261_combo_padlock": {
+  "caption": "combo_padlock",
+  "sizes": {
+   "256": {
+    "bytes": 1668,
+    "file": "items/20261_combo_padlock.webp",
+    "h": 256,
+    "w": 256
+   }
+  }
+ },
+ "items/20262_combo_lock_chain": {
+  "caption": "combo_lock_chain",
+  "sizes": {
+   "256": {
+    "bytes": 2004,
+    "file": "items/20262_combo_lock_chain.webp",
+    "h": 256,
+    "w": 256
+   }
+  }
+ },
  "items/20301_imcmptrkdrl_las_def": {
   "caption": "imcmptrkdrl_las_def",
   "sizes": {
@@ -2268,17 +2312,6 @@
    "256": {
     "bytes": 1790,
     "file": "items/2663_cj_bs_bag.webp",
-    "h": 256,
-    "w": 256
-   }
-  }
- },
- "items/2680_cj_padlock": {
-  "caption": "cj_padlock",
-  "sizes": {
-   "256": {
-    "bytes": 2132,
-    "file": "items/2680_cj_padlock.webp",
     "h": 256,
     "w": 256
    }

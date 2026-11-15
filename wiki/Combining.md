@@ -17,7 +17,9 @@ A recipe takes exactly two items. Ingredients marked *kept* stay with you; the o
 | Parachute Bag | Parachute, Combat Knife (kept) | |
 | Empty Molotov | Bottle, Dirty Bandage | Fill it with petrol to make a Molotov, see below |
 | Dirty Bandage | Clothes, Combat Knife (kept) | Cut up a spare set of [clothes](Clothes-and-Hats) |
-| Lock and Chain | Lock and Chain, Locksmith Kit | Cuts the lock so it can be used, see [Repairing & Locks](Repairing-and-Locks); a lock that is already cut is refused |
+| Key | Padlock, Locksmith Kit (both kept) | Cuts the padlock a new lock and you its key; an older key no longer fits, see [Repairing & Locks](Repairing-and-Locks) |
+| Lock and Chain | Chain, Padlock | The padlock needs its key first; the Lock and Chain carries it, and its key opens the lock |
+| Combination Lock and Chain | Chain, Combination Padlock | The padlock has to be open (its shackle goes through the chain); the lock carries its code |
 
 ## Filling a Molotov
 

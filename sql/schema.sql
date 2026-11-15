@@ -1332,11 +1332,12 @@ END//
 CREATE OR REPLACE PROCEDURE `craft_combine`(
   IN p_char_id INT, IN p_held_id INT, IN p_other_id INT, IN p_open_container_id INT,
   IN p_consume_held TINYINT, IN p_consume_other TINYINT,
-  IN p_result_uname VARCHAR(32), IN p_result_data LONGTEXT)
+  IN p_result_uname VARCHAR(32), IN p_result_data LONGTEXT, IN p_kept_id INT, IN p_kept_data LONGTEXT)
 BEGIN
   -- crafting/server/main.lua combineRequested: the item in hand with one in the inventory, worn bag or open side
   -- container; the used-up ones go and the result appears in the hand (the held one consumed) or in the other's
-  -- container, all in one transaction: no half craft when an input moved meanwhile
+  -- container, all in one transaction: no half craft when an input moved meanwhile. p_kept_id, a kept input
+  -- (the held or the other one), takes p_kept_data in the same transaction (a padlock's new lock code)
   DECLARE v_held INT DEFAULT 0;
   DECLARE v_cont INT DEFAULT NULL;
   DECLARE v_slot INT DEFAULT NULL;
@@ -1394,6 +1395,10 @@ BEGIN
             VALUES (p_result_uname, v_hp, p_result_data, v_cont, v_new_slot);
           SET v_item = LAST_INSERT_ID();
         END IF;
+      END IF;
+      IF v_item IS NOT NULL AND p_kept_id IS NOT NULL
+          AND ((p_kept_id = p_held_id AND p_consume_held = 0) OR (p_kept_id = p_other_id AND p_consume_other = 0)) THEN
+        UPDATE items SET data = p_kept_data WHERE id = p_kept_id;
       END IF;
       IF v_item IS NOT NULL THEN
         IF v_cat IN ('bag', 'safebox') THEN
@@ -2813,6 +2818,18 @@ BEGIN
         'ammo_item_id', CAST(v_ammo_id AS SIGNED)
       ) AS payload;
     END IF;
+  END IF;
+END//
+
+CREATE OR REPLACE TRIGGER `items_combo_code` BEFORE INSERT ON `items` FOR EACH ROW
+BEGIN
+  -- a Combination Padlock comes open with a code of its own on its dials, as a new one does: every way an item is
+  -- made (loot, box fills, drops, staff) passes here, so none of them hands out a padlock nobody can open. Data in either
+  -- JSON shape ({...} or MTA's [{...}]) that already holds a code keeps it.
+  IF NEW.type_uname = 'ComboPadlock'
+      AND JSON_VALUE(COALESCE(NEW.data, '{}'), '$.combo') IS NULL
+      AND JSON_VALUE(COALESCE(NEW.data, '{}'), '$[0].combo') IS NULL THEN
+    SET NEW.data = JSON_OBJECT('combo', LPAD(FLOOR(RAND() * 10000), 4, '0'));
   END IF;
 END//
 
