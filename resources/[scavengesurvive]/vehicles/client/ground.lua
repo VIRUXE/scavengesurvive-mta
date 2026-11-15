@@ -6,10 +6,13 @@
 --             a water surface within WATER metres of it (a boat or a sinking car under a bridge must not be lifted
 --             onto the bridge). Only that close: GTA's water areas run on under the land along the coasts, so a car
 --             under the coastal ground has water far above it too.
+--   "sunk"    fully under water: the sphere round its bounding box below a water surface, nothing solid between it
+--             and that surface, and a bed under it (a car under the coastal ground has none). Half in the water is not.
 local BELOW = 60
 local TOP = 1500
 local WATER = 10
 local MAX_DIST = 200 -- 2D from the camera; past it this client's collision may not be loaded
+local BED = 200 -- how deep under a sunk vehicle the sea or lake bed is looked for
 
 local function hitZ(x, y, fromZ, toZ)
     -- buildings and objects (map objects are ground too); no vehicles, peds or dummies
@@ -17,10 +20,29 @@ local function hitZ(x, y, fromZ, toZ)
     return hit and hz or nil
 end
 
-local function verdict(x, y, z)
+local function sunk(v, x, y, z)
+    local x0, y0, z0, x1, y1, z1 = false, 0, 0, 0, 0, 0
+    if isElement(v) then
+        x0, y0, z0, x1, y1, z1 = getElementBoundingBox(v)
+    end
+    if not x0 then
+        return false
+    end
+    local function far(a, b)
+        return math.max(math.abs(a), math.abs(b))
+    end
+    local r = math.sqrt(far(x0, x1) ^ 2 + far(y0, y1) ^ 2 + far(z0, z1) ^ 2) -- any rotation, the whole body
+    local hit, _, _, wz = testLineAgainstWater(x, y, z + r, x, y, TOP)
+    return hit and wz > z + r and not hitZ(x, y, z, wz) and hitZ(x, y, z, z - BED) ~= nil
+end
+
+local function verdict(v, x, y, z)
     local cx, cy = getCameraMatrix()
     if (x - cx) ^ 2 + (y - cy) ^ 2 > MAX_DIST * MAX_DIST then
         return "unknown"
+    end
+    if sunk(v, x, y, z) then
+        return "sunk"
     end
     if hitZ(x, y, z + 0.5, z - BELOW) then
         return "ok"
@@ -40,7 +62,7 @@ addEventHandler("vehicleGroundCheckRequested", resourceRoot, function(list)
     for _, e in ipairs(list) do
         local v, x, y, z = e[1], tonumber(e[2]), tonumber(e[3]), tonumber(e[4])
         if x and y and z then
-            local what, surface = verdict(x, y, z)
+            local what, surface = verdict(v, x, y, z)
             out[#out + 1] = { v, what, surface }
         end
     end

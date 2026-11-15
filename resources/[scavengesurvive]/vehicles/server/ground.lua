@@ -4,7 +4,8 @@
 -- each player the server positions of the empty vehicles near them that it has not yet seen standing on something;
 -- the client (client/ground.lua) answers per vehicle "ok" (ground under it), "unknown" (cannot tell: collision not
 -- loaded, water above it, mid-air) or "under" with the topmost surface over it. An "under" answer is checked against
--- what was asked and the vehicle is put back on that surface.
+-- what was asked and the vehicle is put back on that surface. "sunk" (fully under water) marks it sunk (ctx.setSunk):
+-- it stays there for staff to delete and the fleet refill replaces it; a later "ok" or "under" clears the mark.
 return function(ctx)
     local SCAN_MS = 10000
     local RADIUS = 150 -- 2D; the client's collision is loaded around it
@@ -104,10 +105,15 @@ return function(ctx)
                 pending[v] = nil
                 local x, y, z = getElementPosition(v)
                 if near(p, x, y, z) then
-                    if verdict == "ok" then
+                    if verdict == "sunk" then
                         verified[v] = { x = p.x, y = p.y, z = p.z }
+                        ctx.setSunk(v, true, player)
+                    elseif verdict == "ok" then
+                        verified[v] = { x = p.x, y = p.y, z = p.z }
+                        ctx.setSunk(v, false, player)
                     elseif verdict == "under" and surface and surface > p.z + 2 and surface < MAX_Z and empty(v) then
                         verified[v] = nil
+                        ctx.setSunk(v, false, player)
                         rescue(player, v, p, surface)
                     end
                 end

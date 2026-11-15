@@ -77,8 +77,8 @@ return function(ctx)
             end
             local list = rows and build(rows) or {}
             ctx.db.query(
-                "SELECT cap, (SELECT COUNT(*) FROM vehicles) AS alive FROM world_budget "
-                    .. "WHERE category = 'vehicles' AND zone = 'all'",
+                "SELECT cap, (SELECT COUNT(*) FROM vehicles WHERE transient = 0 AND sunk = 0) AS alive "
+                    .. "FROM world_budget WHERE category = 'vehicles' AND zone = 'all'",
                 {},
                 function(b)
                     s.pending = nil

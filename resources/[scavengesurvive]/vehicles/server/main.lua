@@ -116,7 +116,7 @@ local GLOVEBOX_LOOT = "vehicle_glovebox" -- loot table of a fresh vehicle's glov
 local SELECT_VEHICLES = "SELECT v.id, v.spawn_id, v.type_uname, v.model, v.x, v.y, v.z, v.rz, v.colors, "
     .. "v.health, v.fuel, v.locked, v.damage, v.carmour, v.gas_bottles, v.key_code, v.keypad_code, "
     .. "v.trailer_id, v.left_spawn, v.battery, v.battery_since, v.battery_state, v.battery_capacity, v.starter, "
-    .. "v.starter_state, "
+    .. "v.starter_state, v.sunk, "
     .. "c.id AS container_id, g.id AS glovebox_id, "
     .. "s.x AS spawn_x, s.y AS spawn_y FROM vehicles v "
     .. "LEFT JOIN containers c ON c.owner_vehicle_id = v.id AND c.kind = 'vehicle' "
@@ -148,14 +148,16 @@ local SELECT_COOLED_SPAWNS = SELECT_SPAWNS
 local COOL_SPAWN = "INSERT INTO vehicle_spawn_state (spawn_id, next_roll_at) "
     .. "VALUES (?, DATE_ADD(NOW(), INTERVAL ? SECOND)) ON DUPLICATE KEY UPDATE next_roll_at = VALUES(next_roll_at)"
 
-local SELECT_BUDGET = "SELECT cap, remainder, (SELECT COUNT(*) FROM vehicles WHERE transient = 0) AS alive "
+-- a sunk vehicle (server/ground.lua) stays in the water until staff delete it, but no longer holds a place in the fleet
+local SELECT_BUDGET = "SELECT cap, remainder, "
+    .. "(SELECT COUNT(*) FROM vehicles WHERE transient = 0 AND sunk = 0) AS alive "
     .. "FROM world_budget WHERE category = 'vehicles' AND zone = 'all'"
 
 local UPSERT_BUDGET = "INSERT INTO world_budget (category, zone, cap, remainder, allowance) "
     .. "VALUES ('vehicles', 'all', ?, 0, 0) ON DUPLICATE KEY UPDATE cap = VALUES(cap), remainder = 0"
 
 -- retires every abandoned vehicle in one statement; RETURNING hands back the ids whose elements go too
-local DELETE_ABANDONED = "DELETE FROM vehicles WHERE left_spawn = 1 "
+local DELETE_ABANDONED = "DELETE FROM vehicles WHERE left_spawn = 1 AND sunk = 0 "
     .. "AND COALESCE(last_used_at, updated_at) < DATE_SUB(NOW(), INTERVAL ? DAY) RETURNING id"
 
 local settings = {}
@@ -438,6 +440,7 @@ local function create(row, fresh)
         spawnX = row.spawn_x and tonumber(row.spawn_x) or nil,
         spawnY = row.spawn_y and tonumber(row.spawn_y) or nil,
         leftSpawn = (tonumber(row.left_spawn) or 0) > 0,
+        sunk = (tonumber(row.sunk) or 0) > 0,
         damage = row.damage and row.damage ~= "" and row.damage ~= false and fromJSON(row.damage) or {},
         usedTick = 0,
         bay = false,
@@ -514,7 +517,7 @@ end
 local function count()
     local n = 0
     for _, i in pairs(info) do
-        if not i.transient then
+        if not i.transient and not i.sunk then
             n = n + 1
         end
     end
@@ -3039,6 +3042,61 @@ addEventHandler("onVehicleExplode", resourceRoot, function()
     end, WRECK_MS, 1, source, i.id)
 end)
 
+-- A vehicle fully under water (server/ground.lua) is sunk: it stays where it lies, is never retired as abandoned, and
+-- leaves the fleet budget so the refill replaces it. Coming back up (salvaged, or a wrong answer) puts it back in.
+local function setSunk(v, sunk, player)
+    local i = info[v]
+    if not i or i.sunk == sunk then
+        return
+    end
+    i.sunk = sunk
+    local _, _, z = getElementPosition(v)
+    if sunk and not i.leftSpawn then
+        i.leftSpawn = true -- its spawn point is free again, after the cooldown a destroyed vehicle's would get
+        coolPoint(i.spawnId)
+        db.exec("UPDATE vehicles SET sunk = 1, left_spawn = 1 WHERE id = ?", { i.id })
+    else
+        db.exec("UPDATE vehicles SET sunk = ? WHERE id = ?", { sunk and 1 or 0, i.id })
+    end
+    -- player: the client whose answer marked it
+    log.event(
+        sunk and "vehicle.sunk" or "vehicle.surfaced",
+        vehicleLine(v, { uname = i.uname, player = player, z = z })
+    )
+end
+
+-- Staff removal of one vehicle (the only way a sunk one goes): row, trunk and element, as when a wreck is cleared.
+-- Returns the vehicle's id and type uname, or false when it is not one of ours.
+function deleteVehicle(vehicle, actor)
+    local i = info[vehicle]
+    if not i then
+        return false
+    end
+    local lost = destroyCargo(vehicle)
+    if not i.leftSpawn then
+        coolPoint(i.spawnId)
+    end
+    log.event(
+        "vehicle.removed",
+        vehicleLine(vehicle, { uname = i.uname, reason = "staff", actor = actor, sunk = i.sunk, cargo = lost or 0 })
+    )
+    db.exec("DELETE FROM vehicles WHERE id = ?", { i.id })
+    forget(vehicle)
+    destroyElement(vehicle)
+    return i.id, i.uname
+end
+
+-- The vehicle with database id id, or false.
+function getVehicleById(id)
+    id = tonumber(id)
+    for v, i in pairs(info) do
+        if i.id == id and isElement(v) then
+            return v
+        end
+    end
+    return false
+end
+
 local function loadCarmour()
     local f = fileOpen("server/carmour.lua", true)
     local src = fileRead(f, fileGetSize(f))
@@ -3470,5 +3528,6 @@ do
         net = net,
         log = log,
         vehicleLine = vehicleLine,
+        setSunk = setSunk,
     })
 end

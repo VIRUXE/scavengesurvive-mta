@@ -409,6 +409,7 @@ CREATE TABLE IF NOT EXISTS `vehicles` (
   `starter` smallint(5) unsigned DEFAULT NULL,
   `starter_state` tinyint(3) unsigned NOT NULL DEFAULT 2,
   `transient` tinyint(1) NOT NULL DEFAULT 0,
+  `sunk` tinyint(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
   KEY `ix_vehicles_spawn` (`spawn_id`),
   KEY `fk_vehicles_trailer` (`trailer_id`),

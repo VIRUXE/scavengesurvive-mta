@@ -9,7 +9,7 @@ details); bans and warnings write theirs inside the `staff_ban` / `staff_warn` p
 | --- | --- | --- |
 | 1 | Game Master | `/a`, `/mute`, `/unmute`, `/warn`, `/kick`, `/idlekick`, `/announce` (upstream `/msg`), `/tell <player> <message>` (port-only, partial names), `/clearchat`, `/aliases`, `/serial`, `/history`, `/reports`, `/acmds` |
 | 2 | Moderator | `/duty`, `/goto`, `/get`, `/gotopos`, `/takeback`, `/freeze`, `/unfreeze`, `/ban`, `/unban`, `/banlist`, `/banned`, `/spec`, `/free`, `/nametags`, `/profile`, `/setmotd`, `/deletereports`, `/field`, `/gender` |
-| 3 | Administrator | `/di <radius>` (port-only: delete loose world items around you), `/whitelist`, `/ip`, `/setactive`, `/resetpassword`, `/adminlist`, `/heal [player]` (port-only: full hp, bleeding stopped) |
+| 3 | Administrator | `/di <radius>` (port-only: delete loose world items around you), `/whitelist`, `/ip`, `/setactive`, `/resetpassword`, `/adminlist`, `/heal [player]` (port-only: full hp, bleeding stopped), `/delveh [vehicle id]` (alias `/dv`, port-only: delete a vehicle and its trunk by id, the one you sit in or the nearest within 10 m; the only way a sunk vehicle goes) |
 | 4 | Lead | `/players`, `/setadmin`, `/restart`, `/sc [type]` (supply crate here), `/wc` (weapons cache here) |
 | 5 | Developer | everything above, `/setskill <skill> <0-1> [player]`, `/knockout <ms> [player]` (0 wakes up); the debug toggles live in the `dev` resource (`/sethp`, `/setfood`, `/setbleed`, `/weather` (a window: weather, who, for how long), `/additem`, `/rr`, `/move`, `/fly`) |
 | 0 | Player | `/report [name|near|killer] [reason]`, `/bug [description]`, `/issues` (level 2 deletes from the open report) |

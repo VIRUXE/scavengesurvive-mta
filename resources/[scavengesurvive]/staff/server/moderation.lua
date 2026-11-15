@@ -586,6 +586,48 @@ return function(ctx)
         end,
     })
 
+    -- Not upstream: deletes one world vehicle with its trunk, the only way a sunk one goes (vehicles/server/ground).
+    -- By database id (the on-duty ESP label shows it), else the one the caller sits in, else the nearest within 10 m.
+    ctx.command({
+        name = "delveh",
+        aliases = { "dv" },
+        level = 3,
+        usage = "/delveh [vehicle id]",
+        help = "Delete a vehicle (by id, the one you are in, or the nearest)",
+        needsDb = false,
+        fn = function(p, args)
+            local veh
+            if args[1] then
+                local id = tonumber(args[1])
+                veh = id and exports.vehicles:getVehicleById(id)
+                if not veh then
+                    return ctx.say(p, " >  No vehicle with id %s.", args[1])
+                end
+            elseif isElement(p) then
+                veh = getPedOccupiedVehicle(p)
+                if not veh then
+                    local x, y, z = getElementPosition(p)
+                    local best = 10
+                    for _, v in ipairs(getElementsWithinRange(x, y, z, best, "vehicle")) do
+                        local d = getDistanceBetweenPoints3D(x, y, z, getElementPosition(v))
+                        if d <= best and getElementDimension(v) == getElementDimension(p) then
+                            veh, best = v, d
+                        end
+                    end
+                end
+            end
+            if not veh then
+                return ctx.say(p, " >  Usage: /delveh [vehicle id] (or stand within 10 m of one)")
+            end
+            local id, name = exports.vehicles:deleteVehicle(veh, isElement(p) and p or nil)
+            if not id then
+                return ctx.say(p, " >  That vehicle is not a world vehicle.")
+            end
+            ctx.say(p, " >  Deleted %s #%d", name, id)
+            ctx.log(p, "delveh", nil, nil, string.format("%s #%d", name, id))
+        end,
+    })
+
     -- After every login (upstream CheckForExtraAccounts): other names from this IP or serial, their highest staff
     -- level and whether any is banned. Catches a name banned while offline, whose bans row has no IP or serial yet.
     local ALIAS_LOGIN_SQL = "SELECT c.name, MAX(COALESCE(a.admin_level, 0)) AS lvl, MAX(EXISTS(SELECT 1 FROM bans b"
