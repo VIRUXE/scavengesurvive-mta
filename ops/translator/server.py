@@ -48,6 +48,7 @@ LANGUAGES = {
     "bhs": "Bosnian/Croatian/Serbian, Latin script",
     "cs": "Czech",
     "lv": "Latvian",
+    "ary": "Moroccan Darija, written in Latin script (Arabizi: 3, 7, 9 for ع ح ق)",
 }
 
 SYSTEM = """You translate the chat of Scavenge and Survive, a multiplayer survival server for GTA San Andreas \
@@ -176,9 +177,10 @@ session = Session()
 lock = threading.Lock()
 claude_paused_until = 0.0
 
-# the game's codes to Google's (Google's "pt" is Brazilian); and Google's detected source back to a game code
+# the game's codes to Google's (Google's "pt" is Brazilian; Google writes Darija/Arabic in Arabic script, which MTA
+# can't shape, so Darija readers get French); and Google's detected source back to a game code
 GOOGLE_TARGETS = {"en": "en", "es": "es", "fr": "fr", "pt": "pt-PT", "ptbr": "pt", "ru": "ru", "ro": "ro",
-                  "id": "id", "bhs": "hr", "cs": "cs", "lv": "lv"}
+                  "id": "id", "bhs": "hr", "cs": "cs", "lv": "lv", "ary": "fr"}
 GOOGLE_SOURCES = {"pt": "pt", "bs": "bhs", "hr": "bhs", "sr": "bhs"}
 
 

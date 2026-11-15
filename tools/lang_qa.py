@@ -23,9 +23,9 @@ RESOURCES = ROOT / "resources" / "[scavengesurvive]"
 # shown to players untranslated on purpose: placeholder types and bare calibre numbers
 NAME_SKIP = {"NULL", "<null>", "VEHICLE_WEAPON", ""}
 CALIBRE_RE = re.compile(r"[.\d]+(?:mm)?")
-CODES = ["en", "es", "fr", "pt", "ptbr", "ru", "ro", "id", "bhs", "cs", "lv"]
+CODES = ["en", "es", "fr", "pt", "ptbr", "ru", "ro", "id", "bhs", "cs", "lv", "ary"]
 NAMES = {"en": "English", "es": "Español", "fr": "Français", "pt": "Português", "ptbr": "Português do Brasil",
-         "ru": "Russian", "ro": "Romanian", "id": "Indonesian", "bhs": "Bosanski-Hrvatski-Srpski", "cs": "Čeština", "lv": "Latviešu"}
+         "ru": "Russian", "ro": "Romanian", "id": "Indonesian", "bhs": "Bosanski-Hrvatski-Srpski", "cs": "Čeština", "lv": "Latviešu", "ary": "Darija"}
 LINE_RE = re.compile(r'^\s{4}(?:([A-Za-z_][A-Za-z0-9_]*)|\["((?:[^"\\]|\\.)*)"\])\s*=\s*"((?:[^"\\]|\\.)*)",\s*$')
 PLACEHOLDER_RE = re.compile(r"%(?:\d+\$)?[-+ #0]*\d*(?:\.\d+)?([a-zA-Z%])")
 LEFTOVER_RE = re.compile(r"~[a-zA-Z]~|\{C_[A-Z]+\}|%P|~k~")

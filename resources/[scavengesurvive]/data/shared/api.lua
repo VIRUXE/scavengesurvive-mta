@@ -113,6 +113,7 @@ local LANGUAGE_NAMES = {
     bhs = "Bosanski / Hrvatski / Srpski",
     cs = "Čeština",
     lv = "Latviešu",
+    ary = "Darija (Maghribiya)",
 }
 
 function Data.languageName(code)

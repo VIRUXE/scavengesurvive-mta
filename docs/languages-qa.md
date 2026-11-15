@@ -16,6 +16,7 @@ English has 556 keys.
 | `bhs` | Bosanski-Hrvatski-Srpski | 556 | 0 | 0 | 0 | 0 | 0 |
 | `cs` | Čeština | 556 | 0 | 0 | 0 | 0 | 0 |
 | `lv` | Latviešu | 556 | 0 | 0 | 0 | 0 | 0 |
+| `ary` | Darija | 556 | 0 | 0 | 0 | 0 | 0 |
 
 ## Placeholder mismatches
 
@@ -49,3 +50,4 @@ English has 1086 texts.
 | `bhs` | Bosanski-Hrvatski-Srpski | 0 | 35 | 0 | 0 |
 | `cs` | Čeština | 0 | 36 | 0 | 0 |
 | `lv` | Latviešu | 0 | 32 | 0 | 0 |
+| `ary` | Darija | 0 | 67 | 0 | 0 |
