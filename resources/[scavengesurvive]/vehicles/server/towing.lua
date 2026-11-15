@@ -309,6 +309,12 @@ return function(ctx)
 
     local function ropeAt(player, vehicle, held, angle)
         if vlogic.isRear(angle) then
+            -- F again at the hitch the rope is tied to takes it back off, still in hand
+            local p = pending[player]
+            if p and p.tower == vehicle then
+                setPending(player, nil)
+                return toast(player, lang.textFor(player, "Rope untied"))
+            end
             if not M.hitch(vehicle) then
                 return toast(player, lang.textFor(player, "Fit a tow bar to tie a rope here"))
             end

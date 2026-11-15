@@ -42,7 +42,7 @@ end
 -- lang:begin
 M.CRATES = { supply = "Open supply crate", cache = "Open weapon cache", dumpster = "Open dumpster" }
 -- The interact verb with a Tow Bar or a Rope in hand at a vehicle, by vehicles' towHint.
-M.TOW = { fit = "(Hold) Fit tow bar", hitch = "Tie rope to tow bar", front = "Tie rope here" }
+M.TOW = { fit = "(Hold) Fit tow bar", hitch = "Tie rope to tow bar", front = "Tie rope here", untie = "Untie rope" }
 -- the world resource's button labels (puzzles.lua, area69.lua, doors.lua), listed so tools/lang_qa collects them
 M.BUTTON_LABELS = {
     "Activate",

@@ -281,7 +281,10 @@ function towHint(heldUname)
     if heldUname ~= "Rope" then
         return false
     end
-    if pendingTower and isElement(pendingTower) and best ~= pendingTower then
+    if pendingTower and isElement(pendingTower) then
+        if best == pendingTower then
+            return vlogic.isRear(angle) and "untie" or false
+        end
         return vlogic.isFront(angle) and not towerOf(best) and "front" or false
     end
     local free = not ropes[best] and not getVehicleTowedByVehicle(best)
