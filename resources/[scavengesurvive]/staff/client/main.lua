@@ -179,13 +179,13 @@ addEventHandler("staffEspChanged", root, function(list)
     esp = type(list) == "table" and list or {}
     if #esp > 0 and not espHinted then
         espHinted = true
-        outputChatBox(" >  Player ESP shown while on duty. /esp hides it.", 255, 255, 0)
+        outputChatBox(" >  Player and nearby vehicle ESP shown while on duty. /esp hides it.", 255, 255, 0)
     end
 end)
 
 addCommandHandler("esp", function()
     espShown = not espShown
-    outputChatBox(" >  Player ESP " .. (espShown and "shown" or "hidden"), 255, 255, 0)
+    outputChatBox(" >  ESP " .. (espShown and "shown" or "hidden"), 255, 255, 0)
 end)
 
 addEventHandler("onClientResourceStop", resourceRoot, function()
@@ -223,8 +223,14 @@ local function drawEsp()
             if sx and sx > 0 and sx < sw and sy > 0 and sy < sh then
                 dxDrawRectangle(sx - 3, sy + 10, 6, 6, colour)
                 if not (nametags and isElement(p) and isElementStreamedIn(p) and dist < TAG_DISTANCE) then
-                    local text = string.format("%s  %d%%%s  %dm%s", e.name, e.hp or 0,
-                        (e.armour or 0) > 0 and ("+" .. e.armour) or "", dist, e.veh and ("  [" .. e.veh .. "]") or "")
+                    local text = string.format(
+                        "%s  %d%%%s  %dm%s",
+                        e.name,
+                        e.hp or 0,
+                        (e.armour or 0) > 0 and ("+" .. e.armour) or "",
+                        dist,
+                        e.veh and ("  [" .. e.veh .. "]") or ""
+                    )
                     shadowText(text, sx, sy, colour, math.max(0.8, 1.4 - dist / 400), "default-bold")
                 end
             else
@@ -246,10 +252,51 @@ local function drawEsp()
                     end
                 end
                 local m = 40
-                local k = math.min((sw / 2 - m) / math.max(math.abs(dx), 1e-6), (sh / 2 - m) / math.max(math.abs(dy), 1e-6))
+                local k =
+                    math.min((sw / 2 - m) / math.max(math.abs(dx), 1e-6), (sh / 2 - m) / math.max(math.abs(dy), 1e-6))
                 local ex, ey = sw / 2 + dx * k, sh / 2 + dy * k
                 dxDrawRectangle(ex - 4, ey - 4, 8, 8, colour)
                 shadowText(string.format("%s  %dm", e.name, dist), ex, ey + 12, colour, 0.9, "default-bold")
+            end
+        end
+    end
+end
+
+-- Vehicle ESP: shown with the player ESP (on duty, /esp toggles both), only for streamed-in vehicles within
+-- VEH_ESP_DISTANCE of the camera. Label: model, DB id, health, fuel, lock state (vehicles element data).
+local VEH_ESP_DISTANCE = 120
+local LOCK_LABELS = { [0] = "open", [1] = "locked (ext)", [2] = "locked" }
+
+local function drawVehicleEsp()
+    if #esp == 0 or not espShown then
+        return
+    end
+    local cx, cy, cz = getCameraMatrix()
+    local interior, dimension = getElementInterior(localPlayer), getElementDimension(localPlayer)
+    local own = getPedOccupiedVehicle(localPlayer)
+    for _, v in ipairs(getElementsByType("vehicle", root, true)) do
+        if v ~= own and getElementInterior(v) == interior and getElementDimension(v) == dimension then
+            local x, y, z = getElementPosition(v)
+            local dist = getDistanceBetweenPoints3D(cx, cy, cz, x, y, z)
+            if dist < VEH_ESP_DISTANCE then
+                local sx, sy = getScreenFromWorldPosition(x, y, z + 1.2, 0.06)
+                if sx then
+                    local id = getElementData(v, "vehicles.id")
+                    local fuel = tonumber(getElementData(v, "vehicles.fuel"))
+                    local lock = LOCK_LABELS[tonumber(getElementData(v, "vehicles.locked")) or -1]
+                    local text = string.format(
+                        "%s%s  %d hp%s%s  %dm",
+                        getVehicleName(v),
+                        id and ("  #" .. id) or "",
+                        math.floor(getElementHealth(v)),
+                        fuel and string.format("  %.1f L", fuel) or "",
+                        lock and ("  " .. lock) or "",
+                        dist
+                    )
+                    local colour = isVehicleBlown(v) and tocolor(150, 150, 150, 255)
+                        or (id and tocolor(255, 170, 60, 255) or tocolor(200, 200, 200, 255))
+                    shadowText(text, sx, sy, colour, math.max(0.8, 1.2 - dist / 300), "default-bold")
+                end
             end
         end
     end
@@ -274,6 +321,7 @@ addEventHandler("onClientRender", root, function()
     end
     drawGhosts()
     drawEsp()
+    drawVehicleEsp()
     if spectating then
         drawSpectate()
     end
