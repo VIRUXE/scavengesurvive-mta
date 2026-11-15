@@ -73,6 +73,18 @@ return function(ctx)
         return type(def) == "table" and def.active == true and def or nil
     end
 
+    -- What empty hands do to a built defence (building handleDefenceInteract), which is never picked up again: a
+    -- motor moves it (behind its keypad's code when it has one), a Large Frame puts its covering on or takes it off,
+    -- anything else does nothing (nil)
+    local function defenceVerb(uname, def)
+        if def.motor then
+            return lang.text("Activate")
+        elseif uname == "LargeFrame" then
+            return lang.text("Use")
+        end
+        return nil
+    end
+
     local function formatName(t, r)
         -- upstream labels a built defence with its hitpoints (defences.pwn SetItemLabel "%d/%d")
         if t and builtDefence(r) then
@@ -1020,8 +1032,11 @@ return function(ctx)
         for id, e in pairs(objects) do
             local r, t = e.row, itemType(e.uname)
             local dx, dy, dz = e.x - px, e.y - py, e.z - pz
+            local def = e.defence and builtDefence(r)
+            local defVerb = def and defenceVerb(e.uname, def)
             if
                 t
+                and (not def or defVerb)
                 and (r.dimension or 0) == dim
                 and (r.interior or 0) == int
                 and dx * dx + dy * dy + dz * dz <= 4
@@ -1029,7 +1044,9 @@ return function(ctx)
             then
                 local verb = lang.text("Pick up")
                 local event = "itemPickupRequested"
-                if t.category == "bag" or t.category == "safebox" then
+                if def then
+                    verb = defVerb
+                elseif t.category == "bag" or t.category == "safebox" then
                     verb = lang.text("Open")
                     if t.category == "bag" then
                         event = "itemBagOpenRequested"
@@ -1057,7 +1074,8 @@ return function(ctx)
                     label = verb .. " · " .. t.name,
                     event = event,
                     target = id,
-                    item = true,
+                    -- not an item to pick up: the HUD shows this label on F instead of "Pick up"
+                    item = not def,
                 }
                 if
                     (t.category == "bag" or t.category == "safebox")
@@ -1087,7 +1105,10 @@ return function(ctx)
         local best = nil
         for id, e in pairs(objects) do
             local r = e.row
-            if (r.dimension or 0) == dim and (r.interior or 0) == int then
+            local def = e.defence and builtDefence(r)
+            -- a built defence F does nothing to is no item in reach
+            local inert = def and not defenceVerb(e.uname, def)
+            if not inert and (r.dimension or 0) == dim and (r.interior or 0) == int then
                 local dx, dy, dz = e.x - px, e.y - py, e.z - pz
                 local dist = dx * dx + dy * dy + dz * dz
                 if (not best or dist < best) and (dist > 9 or reachable(id, e)) then
