@@ -1185,6 +1185,7 @@ return {
     ["You will have a better chance in a group, but be careful who you trust."] = "Grupā tev būs lielākas izredzes, bet uzmanies, kam uzticies.",
     ["Your Scavenge & Survive confirmation code: %s"] = "Tavs Scavenge & Survive apstiprinājuma kods: %s",
     ["Your first bag is the best thing you can find. Look for one first."] = "Pirmā soma ir labākais, ko vari atrast. Meklē to vispirms.",
+    ["Your hands are up. Crouch to lower them."] = "Tavas rokas ir paceltas. Pietupies, lai tās nolaistu.",
     ["Your wound has become infected!"] = "Tavs ievainojums ir inficējies!",
     ["Zebra Bar"] = "Zebra batoniņš",
     ["Zorro Mask"] = "Zorro maska",

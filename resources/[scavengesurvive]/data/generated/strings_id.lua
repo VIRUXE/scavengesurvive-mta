@@ -1184,6 +1184,7 @@ return {
     ["You will have a better chance in a group, but be careful who you trust."] = "Peluangmu lebih besar dalam kelompok, tapi hati-hati siapa yang kamu percaya.",
     ["Your Scavenge & Survive confirmation code: %s"] = "Kode konfirmasi Scavenge & Survive kamu: %s",
     ["Your first bag is the best thing you can find. Look for one first."] = "Tas pertamamu adalah barang terbaik yang bisa kamu temukan. Cari tas dulu.",
+    ["Your hands are up. Crouch to lower them."] = "Tanganmu terangkat. Jongkok untuk menurunkannya.",
     ["Your wound has become infected!"] = "Lukamu terinfeksi!",
     ["Zebra Bar"] = "Cokelat batang Zebra",
     ["Zorro Mask"] = "Topeng Zorro",

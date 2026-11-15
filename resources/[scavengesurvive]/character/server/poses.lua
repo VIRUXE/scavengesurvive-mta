@@ -3,6 +3,14 @@
 -- foot, not knocked out or cuffed, standing still for a sit) and plays the animation so everyone sees it; the
 -- shout is the line /aimshout stored for the session, sent as the player's local chat.
 -- ctx = { net, state, poses, isKnockedOut, isPlayerCuffed, lang } built by server/main.lua.
+local log = loadstring(exports.lib:getModule("log"), "=lib/log.lua")()
+local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")()
+
+-- lang:begin
+local HANDS_TIP = "Your hands are up. Crouch to lower them."
+local TIP_FOOTER = "Type /tooltips to toggle these messages"
+-- lang:end
+
 return function(ctx)
     local net, state, poses = ctx.net, ctx.state, ctx.poses
     local posed = {} -- player -> "sitting" | "handsUp"
@@ -47,12 +55,26 @@ return function(ctx)
     end
 
     -- upstream played the hands-up animation frozen and position-locked, so the player stood still until the hands
-    -- came down again; sprint and crouch stay on, they lower the hands
+    -- came down again; sprint and crouch stay on: crouch lowers the hands (client/poses.lua), and so does the
+    -- animation ending some other way, so the controls never stay off once the hands look down (2026-11-15, a
+    -- player stood stuck with no animation and no idea that only sprint and crouch together undid it)
     local HOLD_CONTROLS = { "forwards", "backwards", "left", "right", "jump", "enter_exit" }
     local function hold(player, on)
         for _, ctrl in ipairs(HOLD_CONTROLS) do
             toggleControl(player, ctrl, not on)
         end
+        if on then
+            exports.ui:showTip(player, lang.textFor(player, HANDS_TIP), lang.textFor(player, TIP_FOOTER), 8000)
+        else
+            exports.ui:hideTip(player)
+        end
+    end
+
+    local function logPose(player, from, to, reason)
+        log.event(
+            "character.poseChanged",
+            { player = player, from = from or "standing", to = to or "standing", reason = reason }
+        )
     end
 
     local function stopSitTimer(player)
@@ -76,6 +98,9 @@ return function(ctx)
             if was == "handsUp" then
                 hold(player, false)
             end
+            if was then
+                logPose(player, was, nil, "cleared")
+            end
             triggerClientEvent(player, "poseChanged", player, false)
         end
     end
@@ -84,17 +109,20 @@ return function(ctx)
         if not able(player) then
             return
         end
-        if action ~= "stand" and not still(player) then
+        local lowering = action == "hands" and posed[player] == "handsUp"
+        if action ~= "stand" and not lowering and not still(player) then
             return
         end
-        local nextPose, anim = poses.next(posed[player], action)
+        local was = posed[player]
+        local nextPose, anim = poses.next(was, action)
         if not anim then
             return
         end
         stopSitTimer(player)
-        if (posed[player] == "handsUp") ~= (nextPose == "handsUp") then
+        if (was == "handsUp") ~= (nextPose == "handsUp") then
             hold(player, nextPose == "handsUp")
         end
+        logPose(player, was, nextPose, action)
         posed[player] = nextPose
         play(player, anim)
         triggerClientEvent(player, "poseChanged", player, nextPose or false)

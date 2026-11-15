@@ -1111,6 +1111,7 @@ return {
     ["You will have a better chance in a group, but be careful who you trust."] = "Terás mais hipóteses em grupo, mas cuidado com quem confias.",
     ["Your Scavenge & Survive confirmation code: %s"] = "O teu código de confirmação do Scavenge & Survive: %s",
     ["Your first bag is the best thing you can find. Look for one first."] = "A tua primeira mochila é a melhor coisa que podes encontrar. Procura uma antes de tudo.",
+    ["Your hands are up. Crouch to lower them."] = "Tens as mãos no ar. Agacha-te para as baixar.",
     ["Your wound has become infected!"] = "A tua ferida infetou!",
     ["Zebra Bar"] = "Barra Zebra",
     ["Zorro Mask"] = "Máscara do Zorro",

@@ -1184,6 +1184,7 @@ return {
     ["You will have a better chance in a group, but be careful who you trust."] = "В группе шансов больше, но будьте осторожны, кому вы доверяете.",
     ["Your Scavenge & Survive confirmation code: %s"] = "Ваш код подтверждения Scavenge & Survive: %s",
     ["Your first bag is the best thing you can find. Look for one first."] = "Первая сумка — лучшее, что можно найти. Ищите её в первую очередь.",
+    ["Your hands are up. Crouch to lower them."] = "Ваши руки подняты. Присядьте, чтобы опустить их.",
     ["Your wound has become infected!"] = "Ваша рана инфицирована!",
     ["Zebra Bar"] = "Батончик Zebra",
     ["Zorro Mask"] = "Маска Зорро",

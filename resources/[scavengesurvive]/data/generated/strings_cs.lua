@@ -1185,6 +1185,7 @@ return {
     ["You will have a better chance in a group, but be careful who you trust."] = "Ve skupině budeš mít větší šanci, ale dávej pozor, komu věříš.",
     ["Your Scavenge & Survive confirmation code: %s"] = "Tvůj potvrzovací kód pro Scavenge & Survive: %s",
     ["Your first bag is the best thing you can find. Look for one first."] = "Tvoje první taška je to nejlepší, co můžeš najít. Hledej ji jako první.",
+    ["Your hands are up. Crouch to lower them."] = "Máš ruce nahoře. Přikrč se, abys je spustil.",
     ["Your wound has become infected!"] = "Tvoje rána se nakazila!",
     ["Zebra Bar"] = "Tyčinka Zebra",
     ["Zorro Mask"] = "Zorrova maska",

@@ -1169,6 +1169,7 @@ return {
     ["You will have a better chance in a group, but be careful who you trust."] = "Ghadi tkoun 3endek forsa kbar m3a groupe, walakin 3ndak m3a mn kat9 fih.",
     ["Your Scavenge & Survive confirmation code: %s"] = "Code dyal confirmation dyal Scavenge & Survive: %s",
     ["Your first bag is the best thing you can find. Look for one first."] = "Awwel sac howa a7sen 7aja t9der tl9aha. 9elleb 3la wa7ed lewwel.",
+    ["Your hands are up. Crouch to lower them."] = "Yeddik l fo9. Dir crouch bach thbbethom.",
     ["Your wound has become infected!"] = "Jer7ek t3effen!",
     ["Zebra Bar"] = "Barre Zebra",
     ["Zorro Mask"] = "Masque dyal Zorro",

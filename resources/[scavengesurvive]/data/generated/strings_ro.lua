@@ -1184,6 +1184,7 @@ return {
     ["You will have a better chance in a group, but be careful who you trust."] = "Vei avea șanse mai bune într-un grup, dar ai grijă în cine ai încredere.",
     ["Your Scavenge & Survive confirmation code: %s"] = "Codul tău de confirmare Scavenge & Survive: %s",
     ["Your first bag is the best thing you can find. Look for one first."] = "Prima geantă e cel mai bun lucru pe care îl poți găsi. Caută una înainte de toate.",
+    ["Your hands are up. Crouch to lower them."] = "Ai mâinile sus. Ghemuiește-te ca să le cobori.",
     ["Your wound has become infected!"] = "Rana ți s-a infectat!",
     ["Zebra Bar"] = "Baton Zebra",
     ["Zorro Mask"] = "Mască Zorro",

@@ -1107,6 +1107,7 @@ return {
     ["You will have a better chance in a group, but be careful who you trust."] = "U grupi imaš više šanse, ali pazi kome vjeruješ.",
     ["Your Scavenge & Survive confirmation code: %s"] = "Tvoj Scavenge & Survive kod za potvrdu: %s",
     ["Your first bag is the best thing you can find. Look for one first."] = "Prva torba je najbolja stvar koju možeš naći. Prvo traži nju.",
+    ["Your hands are up. Crouch to lower them."] = "Ruke su ti podignute. Čučni da ih spustiš.",
     ["Your wound has become infected!"] = "Tvoja rana se inficirala!",
     ["Zebra Bar"] = "Čokoladica Zebra",
     ["Zorro Mask"] = "Zorro maska",

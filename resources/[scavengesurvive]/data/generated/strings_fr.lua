@@ -1184,6 +1184,7 @@ return {
     ["You will have a better chance in a group, but be careful who you trust."] = "Vous aurez plus de chances en groupe, mais faites attention à qui vous faites confiance.",
     ["Your Scavenge & Survive confirmation code: %s"] = "Votre code de confirmation Scavenge & Survive : %s",
     ["Your first bag is the best thing you can find. Look for one first."] = "Votre premier sac est la meilleure chose que vous puissiez trouver. Cherchez-en un en premier.",
+    ["Your hands are up. Crouch to lower them."] = "Vous avez les mains en l'air. Accroupissez-vous pour les baisser.",
     ["Your wound has become infected!"] = "Votre blessure s'est infectée !",
     ["Zebra Bar"] = "Barre Zebra",
     ["Zorro Mask"] = "Masque de Zorro",
