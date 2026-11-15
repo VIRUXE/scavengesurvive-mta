@@ -250,6 +250,7 @@ return {
     Drink = "Beber",
     Drive = "Conduz",
     Driving = "A conduzir",
+    Drop = "Largar",
     ["Drop item"] = "Largar item",
     ["Drop the items above on the ground, close together."] = "Larga no chão os itens acima, juntos uns dos outros.",
     Dynamite ="Dinamite",

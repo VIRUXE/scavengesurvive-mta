@@ -263,6 +263,7 @@ return {
     Drink = "Pít",
     Drive = "Jeď",
     Driving = "Řízení",
+    Drop = "Zahodit",
     ["Drop item"] = "Zahodit předmět",
     ["Drop the items above on the ground, close together."] = "Polož předměty výše na zem, blízko u sebe.",
     Dynamite ="Dynamit",

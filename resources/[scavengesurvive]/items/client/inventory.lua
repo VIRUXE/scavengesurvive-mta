@@ -354,13 +354,18 @@ return function(ctx)
 
     -- "[%02d]%s": the type size then the name, one "<Empty>" per free slot
     -- side: the side container is take-only (a snack machine) or a machine's, where Combine is not offered
-    local function rowsFor(list, cap, moveActions, emptyAction, side)
+    -- droppable: the inventory list, whose rows offer Drop after Equip and Use as inventory-dialog's did (a container's
+    -- list had Equip / Move to inventory only)
+    local function rowsFor(list, cap, moveActions, emptyAction, side, droppable)
         local rows = {}
         for _, it in ipairs(list or {}) do
             local t = itemType(it.uname)
             local actions = { { id = "take", label = lang.text("Equip") } }
             if usableFromInventory(it.uname, t) then
                 actions[#actions + 1] = { id = "use", label = lang.text("Use") }
+            end
+            if droppable then
+                actions[#actions + 1] = { id = "drop", label = lang.text("Drop") }
             end
             if (apparel and apparel.isWearable(it.uname)) or it.uname == "Clothes" then
                 actions[#actions + 1] = { id = "wear", label = lang.text("Wear") }
@@ -460,7 +465,7 @@ return function(ctx)
                     and last.held
                     and { id = "put_held:inventory", label = lang.text("Store in Inventory") }
                 or nil
-            rows = rowsFor(p.inventory, p.capacity.inv, #moveActions > 0 and moveActions or nil, emptyAction)
+            rows = rowsFor(p.inventory, p.capacity.inv, #moveActions > 0 and moveActions or nil, emptyAction, nil, true)
             if p.bag then
                 rows[#rows + 1] = { id = "nav:bag", label = bname .. " >" }
             end
@@ -528,6 +533,11 @@ return function(ctx)
             end
         elseif actionId == "take" then
             triggerServerEvent("itemTakeRequested", localPlayer, rowId)
+            quietUntil = getTickCount() + CLOSE_QUIET_MS
+            exports.ui:listClose()
+        elseif actionId == "drop" then
+            -- into the hand, then the drop key's drop (server/containers.lua)
+            triggerServerEvent("itemTakeRequested", localPlayer, rowId, "drop")
             quietUntil = getTickCount() + CLOSE_QUIET_MS
             exports.ui:listClose()
         elseif actionId == "use" then

@@ -263,6 +263,7 @@ return {
     Drink = "Minum",
     Drive = "Berkendara",
     Driving = "Mengemudi",
+    Drop = "Jatuhkan",
     ["Drop item"] = "Jatuhkan item",
     ["Drop the items above on the ground, close together."] = "Jatuhkan benda-benda di atas ke tanah, saling berdekatan.",
     Dynamite ="Dinamit",

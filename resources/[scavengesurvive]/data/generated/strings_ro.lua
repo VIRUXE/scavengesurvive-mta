@@ -263,6 +263,7 @@ return {
     Drink = "Bea",
     Drive = "Condu",
     Driving = "Condus",
+    Drop = "Aruncă",
     ["Drop item"] = "Aruncă obiectul",
     ["Drop the items above on the ground, close together."] = "Lasă pe jos obiectele de mai sus, unele lângă altele.",
     Dynamite ="Dinamită",

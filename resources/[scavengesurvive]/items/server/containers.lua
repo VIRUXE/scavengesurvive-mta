@@ -1166,8 +1166,9 @@ return function(ctx)
     end, { rate = 3 })
 
     -- container_take checks the reach itself (the character's inventory, worn or held bag, or the side container
-    -- they have open, while nobody carries it) and hands back the item row: one round trip
-    net.handler("itemTakeRequested", function(player, itemId)
+    -- they have open, while nobody carries it) and hands back the item row: one round trip.
+    -- after "drop" is the inventory's Drop: inventory-dialog put the row in the hand and called PlayerDropItem
+    net.handler("itemTakeRequested", function(player, itemId, after)
         local cid = charId(player)
         itemId = tonumber(itemId)
         if not cid or not itemId or isBadInteract(player) then
@@ -1204,7 +1205,10 @@ return function(ctx)
             triggerEvent("itemMoved", c.player, c.itemId, "container", "held")
             sideChanged(c.side, p.container_id)
             sendInventory(c.player)
-        end, { player = player, itemId = itemId, side = activeContainer[player] })
+            if c.drop then
+                hands.requestDrop(c.player)
+            end
+        end, { player = player, itemId = itemId, side = activeContainer[player], drop = after == "drop" })
     end, { rate = 5 })
 
     net.handler("itemContainerMoveRequested", function(player, itemId, target)

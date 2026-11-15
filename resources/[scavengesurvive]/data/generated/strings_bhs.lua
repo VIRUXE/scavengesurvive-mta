@@ -248,6 +248,7 @@ return {
     Drink = "Pij",
     Drive = "Vozi",
     Driving = "Vožnja",
+    Drop = "Baci",
     ["Drop item"] = "Baci predmet",
     ["Drop the items above on the ground, close together."] = "Spusti predmete odozgo na tlo, jedan blizu drugog.",
     Dynamite ="Dinamit",
