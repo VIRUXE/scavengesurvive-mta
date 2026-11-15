@@ -11,5 +11,6 @@ addEvent("chatModeRequested", true)
 addEvent("chatRadioChanged", true)
 addEvent("chatRadioOpened", true)
 addEvent("chatVoiceBlocked", true)
+addEvent("helpOpened", true) -- the /help window (client/help.lua)
 -- client-local
 addEvent("uiDialogResponded", false)

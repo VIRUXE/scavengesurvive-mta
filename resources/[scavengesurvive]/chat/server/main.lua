@@ -531,9 +531,11 @@ local function playerCommand(name, fn)
     end)
 end
 
--- the info commands open CEGUI windows (exports.ui:showInfo, specs from shared/logic/chat.lua)
+-- the info commands open CEGUI windows (exports.ui:showInfo, specs from shared/logic/chat.lua). /help typed in the
+-- chat never gets here (MTA's client core has a "help" command of its own): client/help.lua opens on
+-- onClientCoreCommand; this handler covers the console and executeCommandHandler.
 playerCommand("help", function(p)
-    exports.ui:showInfo(p, logic.helpWindow(exports.data:t(langOf(p), "GENCOMDHELP"), trFor(p)))
+    triggerClientEvent(p, "helpOpened", p)
 end)
 
 playerCommand("chatinfo", function(p)
