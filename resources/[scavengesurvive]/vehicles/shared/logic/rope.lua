@@ -3,8 +3,11 @@
 local M = {}
 
 M.LENGTH = 5.0 -- metres between the tower's hitch and the towed vehicle's front
-M.TIE_REACH = 12.0 -- the towed vehicle's front within this of the tower's hitch to tie the rope on
-M.PENDING_REACH = 15.0 -- a pending tie is dropped once the player walks this far from the tower
+-- The two vehicles' centres (3D, so a drop into water counts) within this to tie the rope on: about 11 m from hitch
+-- to bumper for two cars, so a car stays on dry land to pull one out of the water; the rope then draws taut to
+-- M.LENGTH, the overshoot taken back at no more than M.MAX_BIAS.
+M.TIE_REACH = 16.0
+M.PENDING_REACH = 21.0 -- a pending tie is dropped once the player walks this far from the tower (past TIE_REACH)
 M.PENDING_MS = 60000 -- or after this long
 -- The server unties a rope whose two vehicles' centres are further apart than this (a teleport, a respawn, the
 -- physics losing it): the rope falls to the ground by the tower.
