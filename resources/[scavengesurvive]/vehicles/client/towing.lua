@@ -5,7 +5,8 @@
 --   sagging while slack (shared/logic/rope.lua), and a pending tie drawn from the hitch to the player's hand;
 -- - the rope's pull, run by the client that syncs the towed vehicle (the tower's driver, while it has no driver of
 --   its own): past the rope's length the two anchors may not fly apart any further, an impulse at the towed vehicle's
---   front (and, when this client syncs it too, the opposite one at the tower's hitch) takes back the separating speed;
+--   front (and, when this client syncs the tower too and someone drives it, the opposite one at the tower's hitch)
+--   takes back the separating speed;
 -- - the interaction list's "Remove tow bar" and "Untie rope" entries (towingActions, through interactionActions).
 local vlogic, rope
 do
@@ -123,7 +124,9 @@ local function pull(tower, towed, ax, ay, az, bx, by, bz, dt)
     end
     local m2, i2 = massOf(towed)
     local inv = rope.inverseMass(m2, i2, brx, bry, nx, ny)
-    local both = isElementSyncer(tower) and not isElementFrozen(tower)
+    -- an empty tower is an anchor: pushing it every frame while the towed vehicle hangs down a slope dragged it
+    -- forever and kept anyone from getting in; only a driven one is pulled back
+    local both = isElementSyncer(tower) and not isElementFrozen(tower) and getVehicleController(tower)
     if both then
         local m1, i1 = massOf(tower)
         inv = inv + rope.inverseMass(m1, i1, arx, ary, nx, ny)
