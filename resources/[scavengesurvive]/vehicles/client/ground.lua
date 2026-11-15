@@ -3,9 +3,12 @@
 --   "ok"      world collision within BELOW metres under it
 --   "under"   nothing under it but a surface over it (the map is above it), with that topmost surface's z
 --   "unknown" anything else: nothing above either (collision not loaded, open sky over deep water, mid-air), or
---             water over it (a car sunk in deep water under a bridge must not be lifted onto the bridge)
+--             a water surface within WATER metres of it (a boat or a sinking car under a bridge must not be lifted
+--             onto the bridge). Only that close: GTA's water areas run on under the land along the coasts, so a car
+--             under the coastal ground has water far above it too.
 local BELOW = 60
 local TOP = 1500
+local WATER = 10
 local MAX_DIST = 200 -- 2D from the camera; past it this client's collision may not be loaded
 
 local function hitZ(x, y, fromZ, toZ)
@@ -23,7 +26,7 @@ local function verdict(x, y, z)
         return "ok"
     end
     local top = hitZ(x, y, TOP, z + 0.5)
-    if not top or testLineAgainstWater(x, y, z, x, y, TOP) then
+    if not top or testLineAgainstWater(x, y, z - WATER, x, y, z + WATER) then
         return "unknown"
     end
     return "under", top
