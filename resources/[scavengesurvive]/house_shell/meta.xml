@@ -1,5 +1,5 @@
 <meta>
-    <info author="scavengesurvive-mta" type="script" name="house_shell" description="Enterable replacements for vanilla buildings: des_westrn9_ (3250), the trailers (3167-3175), the log cabins (17067) and the Fort Carson houses des_bighus01-03 (3303-3305), the Bone County farmhouse des_farmhouse1_ (16280) and the Verdant Meadows airstrip office des_byoffice (16326)" version="0.3.0"/>
+    <info author="scavengesurvive-mta" type="script" name="house_shell" description="Enterable replacements for vanilla buildings: des_westrn9_ (3250), the trailers (3167-3175), the log cabins (17067) and the Fort Carson houses des_bighus01-03 (3303-3305), the Bone County farmhouse des_farmhouse1_ (16280), the desert concrete house conhoos2 (3241) and the Verdant Meadows airstrip office des_byoffice (16326)" version="0.3.0"/>
     <min_mta_version client="1.6.0-9.21695"/>
     <download_priority_group>90</download_priority_group>
     <script src="shared/events.lua" type="client"/>
@@ -36,6 +36,11 @@
     <file src="files/des_farmhouse1.col"/>
     <file src="files/des_farmhouse1_door.dff"/>
     <file src="files/des_farmhouse1_door.col"/>
+    <file src="files/conhoos2.txd"/>
+    <file src="files/conhoos2.dff"/>
+    <file src="files/conhoos2.col"/>
+    <file src="files/conhoos2_door.dff"/>
+    <file src="files/conhoos2_door.col"/>
     <file src="files/des_byoffice.txd"/>
     <file src="files/des_byoffice.dff"/>
     <file src="files/des_byoffice.col"/>

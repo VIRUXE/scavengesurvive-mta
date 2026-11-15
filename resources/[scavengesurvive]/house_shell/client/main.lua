@@ -11,6 +11,7 @@
 -- * the houses (houses.lua, tools/house_shells): the Fort Carson houses des_bighus01-03 (models 3305-3303), rooms
 --   behind their front, porch and side doors (and 01's garage behind its side door), each door a leaf that swings;
 --   the Bone County farmhouse des_farmhouse1_ (16280), four rooms behind its porch and back doors;
+--   the desert concrete house conhoos2 (3241), three rooms behind its porch door;
 --   the Verdant Meadows airstrip office des_byoffice (16326), its ground floor holding the game's own interior
 --   (airfieldhus1/2, fitted inside it) and furnished with the same stock props, its vanilla locked door
 --   (Gen_doorEXT03) removed and hung again as a leaf that swings.
