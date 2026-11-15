@@ -7,7 +7,7 @@ The screen shows only what your character would know: there is no map, no money,
 ## Top right
 
 - **Health bar**: GTA's own red bar, filled to your [health](Health).
-- **Hunger bar**: a green bar of the same width just above the health bar, filled to your hunger (see [Food & Drink](Food-and-Drink)).
+- **Thirst and hunger bars**: a blue bar (thirst) above a green bar (hunger), both the width of the health bar, stacked between the armour and health bars (see [Food & Drink](Food-and-Drink)).
 - **Weapon icon**: GTA's icon of what you hold. A loaded firearm shows `magazine/reserve` (for example `10/0`) underneath; see [Firearms](Firearms).
 - **No armour bar**: the points of a worn vest show only in the inventory's `TORSO` tile; see [Armour](Armour).
 - **Area name**: shown briefly when you enter a new district.

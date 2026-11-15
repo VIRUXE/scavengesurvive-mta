@@ -2,19 +2,20 @@
 local bars = {}
 
 -- CreatePlayerProgressBar(548, 36, 62, 3.2, 0x1FF81FFF, 100): the width of the stock health bar, above it (SA-MP's
--- health bar sits at 548..610 x 56). Drawn as GTA's own bar, the same height as MTA's stock health bar: at 1080p its
--- track is 1645..1817 x 222..236 px = 517.8 + 76.9 x 98.7 + 6.7 units right-anchored. The armour bar's frame ends
--- at 171 px and the health bar's starts at 216 px, so the needs bars' frames (180..207 px) sit centred between.
--- That gap holds one row only (below health is the key-actions column), so thirst and hunger share the health
--- bar's width side by side: thirst on the left, hunger on the right, 1.8 units between their frames.
-local NEEDS_GAP = 1.8
-local NEEDS_W = (76.9 - 4 * 6 / 2.25 - NEEDS_GAP) / 2
-bars.THIRST = { x = 517.8, y = 82.7, w = NEEDS_W, h = 6.7, r = 0x30, g = 0xB8, b = 0xF8, a = 0xFF, max = 100 }
+-- health bar sits at 548..610 x 56). Drawn as GTA's own bar: at 1080p the health track is 1645..1817 x 222..236 px
+-- = 517.8 + 76.9 x 98.7 + 6.7 units right-anchored. The armour bar's frame ends at 76 units (171 px) and the health
+-- bar's starts at 96 (216 px). That gap holds the two needs bars stacked at the health bar's full width, thirst
+-- above hunger, each frame 1 unit clear of its neighbour: 2h + 3 * border = 18 units, so h = 5.
+local BORDER = 6 / 2.25 -- canvas.BAR_BORDER
+local GAP_TOP, GAP_H = 77, 18
+local NEEDS_H = (GAP_H - 3 * BORDER) / 2
+bars.THIRST =
+    { x = 517.8, y = GAP_TOP + BORDER, w = 76.9, h = NEEDS_H, r = 0x30, g = 0xB8, b = 0xF8, a = 0xFF, max = 100 }
 bars.HUNGER = {
-    x = 517.8 + 76.9 - NEEDS_W,
-    y = 82.7,
-    w = NEEDS_W,
-    h = 6.7,
+    x = 517.8,
+    y = GAP_TOP + 2 * BORDER + NEEDS_H,
+    w = 76.9,
+    h = NEEDS_H,
     r = 0x1F,
     g = 0xF8,
     b = 0x1F,
