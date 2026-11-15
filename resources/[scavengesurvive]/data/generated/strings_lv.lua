@@ -263,6 +263,7 @@ return {
     Drink = "Dzert",
     Drive = "Brauc",
     Driving = "Vadīšana",
+    Drop = "Nomest",
     ["Drop item"] = "Nomest priekšmetu",
     ["Drop the items above on the ground, close together."] = "Nomet zemē augstāk minētos priekšmetus cieši kopā.",
     Dynamite ="Dinamīts",

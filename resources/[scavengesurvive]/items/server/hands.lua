@@ -1362,7 +1362,8 @@ return function(ctx)
         end
     end
 
-    net.handler("itemDropRequested", function(player)
+    -- the drop key, and the inventory's Drop once the row is in the hand (containers.lua)
+    function M.requestDrop(player)
         if dropSpotPending[player] then
             return
         end
@@ -1373,7 +1374,9 @@ return function(ctx)
             end
         end, 1000, 1)
         triggerClientEvent(player, "itemDropSpotRequested", player)
-    end, { rate = 5 })
+    end
+
+    net.handler("itemDropRequested", M.requestDrop, { rate = 5 })
 
     net.handler("itemDropSpotChosen", function(player, x, y)
         local timer = dropSpotPending[player]

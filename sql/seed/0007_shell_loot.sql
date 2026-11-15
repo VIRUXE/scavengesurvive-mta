@@ -401,6 +401,13 @@ INSERT INTO loot_spawns (x,y,z,table_name,weight,size,interior,dimension,zone,po
 (8.793,1119.862,19.962,'world_civilian',60.0,2,0,0,'bc',POINT(8.793, 1119.862)),
 (10.393,1123.612,19.962,'world_civilian',60.0,2,0,0,'bc',POINT(10.393, 1123.612)),
 (10.593,1127.062,19.962,'world_civilian',60.0,2,0,0,'bc',POINT(10.593, 1127.062)),
-(8.553,1128.052,19.962,'world_civilian',60.0,2,0,0,'bc',POINT(8.553, 1128.052));
+(8.553,1128.052,19.962,'world_civilian',60.0,2,0,0,'bc',POINT(8.553, 1128.052)),
+(298.109,1143.88,8.155,'world_civilian',60.0,2,0,0,'bc',POINT(298.109, 1143.88)),
+(295.409,1140.88,8.155,'world_civilian',60.0,2,0,0,'bc',POINT(295.409, 1140.88)),
+(291.609,1143.88,8.155,'world_civilian',60.0,2,0,0,'bc',POINT(291.609, 1143.88)),
+(293.609,1141.38,8.155,'world_civilian',60.0,2,0,0,'bc',POINT(293.609, 1141.38)),
+(300.609,1137.58,8.155,'world_civilian',60.0,2,0,0,'bc',POINT(300.609, 1137.58)),
+(295.809,1137.48,8.155,'world_civilian',60.0,2,0,0,'bc',POINT(295.809, 1137.48)),
+(293.609,1137.48,8.155,'world_civilian',60.0,2,0,0,'bc',POINT(293.609, 1137.48));
 
 INSERT IGNORE INTO loot_spawn_state (spawn_id, next_roll_at) SELECT id, NOW() FROM loot_spawns;

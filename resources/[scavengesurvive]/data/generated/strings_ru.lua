@@ -263,6 +263,7 @@ return {
     Drink = "Пить",
     Drive = "Прокатитесь",
     Driving = "Вождение",
+    Drop = "Выбросить",
     ["Drop item"] = "Выбросить предмет",
     ["Drop the items above on the ground, close together."] = "Выложите предметы выше на землю рядом друг с другом.",
     Dynamite ="Динамит",

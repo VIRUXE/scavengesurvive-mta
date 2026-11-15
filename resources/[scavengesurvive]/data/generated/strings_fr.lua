@@ -263,6 +263,7 @@ return {
     Drink = "Boire",
     Drive = "Conduisez",
     Driving = "Conduite",
+    Drop = "Jeter",
     ["Drop item"] = "Jeter l'objet",
     ["Dumpster"] = "Benne à ordures",
     ["Drop the items above on the ground, close together."] = "Posez les objets ci-dessus au sol, les uns près des autres.",
