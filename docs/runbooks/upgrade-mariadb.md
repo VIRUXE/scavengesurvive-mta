@@ -54,8 +54,10 @@ disk space for a full dump plus a cold copy of the datadir.
    -DPLUGIN_ROCKSDB=NO -DPLUGIN_MROONGA=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_COLUMNSTORE=NO`, then
    `cmake --build build` and, elevated, `cmake --install build`.
 3. Dump every database, then, elevated, `mariadb-upgrade-service.exe --service=MariaDB` from the new `bin`: it
-   repoints the existing service at the new binaries and upgrades its datadir in place. The datadir stays where the
-   first install put it (`C:\Program Files\MariaDB 12.2\data` on the dev box), so never uninstall that version.
+   repoints the existing service at the new binaries and upgrades its datadir in place. The datadir and its `my.ini`
+   live outside any version's folder, in `C:\ProgramData\MariaDB\data` (moved there 2026-11-15, with
+   `event_scheduler=ON` in the `my.ini`), so once the new version runs, the old one is uninstalled
+   (`msiexec /x <ProductCode>` for an MSI install) and the machine `PATH` points at the new `bin`.
 
 ## Rollback
 
