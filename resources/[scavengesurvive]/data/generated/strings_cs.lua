@@ -904,6 +904,7 @@ return {
     ["This vehicle has no glovebox"] = "Toto vozidlo nemá přihrádku",
     ["This vehicle has no trunk"] = "Toto vozidlo nemá kufr",
     ["This vehicle is locked, maybe you could break it with a crowbar"] = "Vozidlo je zamčené, možná by šlo vypáčit páčidlem",
+    ["This vehicle takes a %s"] = "Toto vozidlo bere: %s",
     ["This vehicle takes no defences"] = "Toto vozidlo zábrany nepřijímá",
     ["Tighten battery"] = "Utáhnout baterii",
     ["Tighten starter motor"] = "Utáhnout startér",

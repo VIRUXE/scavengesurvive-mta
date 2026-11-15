@@ -13,6 +13,41 @@ local MILITARY_LOOT = {
 -- Item types a rooftop loot point never rolls: a wheel on a roof is out of reach of any vehicle.
 roll.ROOF_BANNED = { Wheel = true }
 
+-- The generic "Wheel" in the loot tables stands for a wheel of any style; what lands in the world is one style, so it
+-- fits only the vehicles of that style. Weights are the vehicle types' spawnChance summed per style (data/generated/
+-- vehicle_types.lua, models by vehicles/shared/logic/wheels.lua), so wheels drop in step with the cars that need them.
+roll.WHEEL_STYLES = {
+    { "Saloon", 315 },
+    { "Lighttruck", 297 },
+    { "Lightvan", 170 },
+    { "Classic", 160 },
+    { "Truck", 135 },
+    { "Alloy", 135 },
+    { "Offroad", 121 },
+    { "Smallcar", 104 },
+    { "Sport", 25 },
+    { "Rim", 10 },
+}
+
+-- "Wheel" becomes an inflated "Wheel<Style>" picked by those weights; every other uname passes through.
+function roll.styleWheel(uname, rng)
+    if uname ~= "Wheel" then
+        return uname
+    end
+    local total = 0
+    for _, e in ipairs(roll.WHEEL_STYLES) do
+        total = total + e[2]
+    end
+    local r = rng() * total
+    for _, e in ipairs(roll.WHEEL_STYLES) do
+        r = r - e[2]
+        if r < 0 then
+            return "Wheel" .. e[1]
+        end
+    end
+    return "Wheel" .. roll.WHEEL_STYLES[1][1]
+end
+
 -- The entries that pass their weight roll; `exclude` (a set of unames, optional) leaves types out.
 function roll.sampleList(entries, rng, exclude)
     local out = {}
@@ -37,7 +72,7 @@ function roll.pick(tbl, size, spawnWeight, mult, rng, exclude)
         end
         if rng() * 100 <= spawnWeight * mult then -- upstream: skip when frandom(100) > weight * mult
             local idx = math.floor(rng() * #sample) + 1
-            out[#out + 1] = sample[idx].uname
+            out[#out + 1] = roll.styleWheel(sample[idx].uname, rng)
             table.remove(sample, idx)
         end
     end
@@ -51,7 +86,7 @@ function roll.fill(tbl, count, rng)
     for _ = 1, count do
         local sample = roll.sampleList(tbl.entries, rng)
         if #sample > 0 then
-            out[#out + 1] = sample[math.floor(rng() * #sample) + 1].uname
+            out[#out + 1] = roll.styleWheel(sample[math.floor(rng() * #sample) + 1].uname, rng)
         end
     end
     return out

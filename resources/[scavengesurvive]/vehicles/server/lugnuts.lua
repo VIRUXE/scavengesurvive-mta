@@ -184,9 +184,13 @@ return function(ctx)
         if removing then
             return start(player, vehicle, wheel, removing, held, px, py, pz, tires)
         end
+        -- only this vehicle's own wheel style fits: Truck wheels do not go on a Sport car
+        local stem = wheels.styleFor(getElementModel(vehicle), getVehicleType(vehicle) == "Automobile")
+        local near = " AND holder_char_id IS NULL AND container_id IS NULL AND interior = ? AND dimension = ?"
+            .. " AND POW(x - ?, 2) + POW(y - ?, 2) + POW(z - ?, 2) < 9"
         db.query(
             "SELECT id, type_uname FROM items WHERE type_uname IN ("
-                .. wheels.sqlList()
+                .. wheels.sqlListFor(stem)
                 .. ") AND holder_char_id IS NULL AND container_id IS NULL AND interior = ? AND dimension = ?"
                 .. " AND POW(x - ?, 2) + POW(y - ?, 2) + POW(z - ?, 2) < 9"
                 .. " ORDER BY type_uname LIKE '%Flat', POW(x - ?, 2) + POW(y - ?, 2) + POW(z - ?, 2) LIMIT 1",
@@ -206,7 +210,32 @@ return function(ctx)
                 end
                 local row = rows and rows[1]
                 if not row then
-                    return toast(player, "WHEEL_LAY")
+                    -- a wheel of another style lying there is told apart from no wheel at all
+                    db.query(
+                        "SELECT id FROM items WHERE type_uname IN (" .. wheels.sqlList() .. ")" .. near .. " LIMIT 1",
+                        { getElementInterior(player), getElementDimension(player), px, py, pz },
+                        function(other)
+                            if not isElement(player) then
+                                return
+                            end
+                            if other and other[1] then
+                                log.event(
+                                    "vehicle.wheelRefused",
+                                    vehicleLine(vehicle, { player = player, ok = false, code = "WRONG_STYLE" })
+                                )
+                                return toast(
+                                    player,
+                                    lang.formatFor(
+                                        player,
+                                        "This vehicle takes a %s",
+                                        lang.itemName("Wheel" .. stem, player)
+                                    )
+                                )
+                            end
+                            toast(player, "WHEEL_LAY")
+                        end
+                    )
+                    return
                 end
                 -- the player may have moved on, started other work or let go of the Wrench meanwhile
                 local current = isElement(vehicle) and info[vehicle]

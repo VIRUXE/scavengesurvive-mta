@@ -903,6 +903,7 @@ return {
     ["This vehicle has no glovebox"] = "Vehiculul acesta nu are torpedou",
     ["This vehicle has no trunk"] = "Vehiculul acesta nu are portbagaj",
     ["This vehicle is locked, maybe you could break it with a crowbar"] = "Vehiculul este încuiat, poate îl poți fora cu o rangă",
+    ["This vehicle takes a %s"] = "Acest vehicul folosește: %s",
     ["This vehicle takes no defences"] = "Vehiculul acesta nu primește apărări",
     ["Tighten battery"] = "Strânge bateria",
     ["Tighten starter motor"] = "Strânge electromotorul",

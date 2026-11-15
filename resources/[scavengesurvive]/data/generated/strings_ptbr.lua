@@ -903,6 +903,7 @@ return {
     ["This vehicle has no glovebox"] = "Este veículo não tem porta-luvas",
     ["This vehicle has no trunk"] = "Este veículo não tem porta-malas",
     ["This vehicle is locked, maybe you could break it with a crowbar"] = "Este veículo está trancado, talvez dê para arrombar com um pé de cabra",
+    ["This vehicle takes a %s"] = "Este veículo usa: %s",
     ["This vehicle takes no defences"] = "Este veículo não aceita defesas",
     ["Tighten battery"] = "Apertar a bateria",
     ["Tighten starter motor"] = "Apertar o motor de arranque",

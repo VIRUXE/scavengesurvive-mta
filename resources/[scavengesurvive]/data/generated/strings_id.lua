@@ -903,6 +903,7 @@ return {
     ["This vehicle has no glovebox"] = "Kendaraan ini tidak punya laci dasbor",
     ["This vehicle has no trunk"] = "Kendaraan ini tidak punya bagasi",
     ["This vehicle is locked, maybe you could break it with a crowbar"] = "Kendaraan ini terkunci, mungkin bisa dibobol dengan linggis",
+    ["This vehicle takes a %s"] = "Kendaraan ini memakai: %s",
     ["This vehicle takes no defences"] = "Kendaraan ini tidak bisa dipasangi pertahanan",
     ["Tighten battery"] = "Kencangkan aki",
     ["Tighten starter motor"] = "Kencangkan motor starter",

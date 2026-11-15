@@ -904,6 +904,7 @@ return {
     ["This vehicle has no glovebox"] = "Šim transportlīdzeklim nav cimdu nodalījuma",
     ["This vehicle has no trunk"] = "Šim transportlīdzeklim nav bagāžnieka",
     ["This vehicle is locked, maybe you could break it with a crowbar"] = "Transportlīdzeklis ir aizslēgts, varbūt to var uzlauzt ar lauzni",
+    ["This vehicle takes a %s"] = "Šim transportlīdzeklim der: %s",
     ["This vehicle takes no defences"] = "Šim transportlīdzeklim aizsargbarjeras neder",
     ["Tighten battery"] = "Pievilkt akumulatoru",
     ["Tighten starter motor"] = "Pievilkt starteri",

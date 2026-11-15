@@ -903,6 +903,7 @@ return {
     ["This vehicle has no glovebox"] = "У этого транспорта нет бардачка",
     ["This vehicle has no trunk"] = "У этого транспорта нет багажника",
     ["This vehicle is locked, maybe you could break it with a crowbar"] = "Транспорт заперт, возможно, его можно взломать ломом",
+    ["This vehicle takes a %s"] = "Этому транспорту подходит: %s",
     ["This vehicle takes no defences"] = "На этот транспорт нельзя ставить укрепления",
     ["Tighten battery"] = "Затянуть аккумулятор",
     ["Tighten starter motor"] = "Затянуть стартер",

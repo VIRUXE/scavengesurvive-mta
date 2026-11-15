@@ -50,6 +50,16 @@ function M.itemFor(model, flat, isCar)
     return "Wheel" .. M.styleFor(model, isCar) .. (flat and "Flat" or "")
 end
 
+-- true only for the inflated or flat wheel of exactly this style; the generic "Wheel" fits no vehicle
+function M.fitsStyle(uname, stem)
+    return uname == "Wheel" .. stem or uname == "Wheel" .. stem .. "Flat"
+end
+
+-- `'a','b'` for an SQL IN list: the inflated and the flat wheel of one style
+function M.sqlListFor(stem)
+    return "'Wheel" .. stem .. "','Wheel" .. stem .. "Flat'"
+end
+
 function M.isWheel(uname)
     return IS_WHEEL[uname] == true
 end

@@ -837,6 +837,7 @@ return {
     ["This vehicle has no glovebox"] = "Ovo vozilo nema pretinac",
     ["This vehicle has no trunk"] = "Ovo vozilo nema gepek",
     ["This vehicle is locked, maybe you could break it with a crowbar"] = "Vozilo je zaključano, možda ga možeš obiti pajserom",
+    ["This vehicle takes a %s"] = "Ovo vozilo prima: %s",
     ["This vehicle takes no defences"] = "Ovo vozilo ne prima obrane",
     ["Tighten battery"] = "Zategni akumulator",
     ["Tighten starter motor"] = "Zategni anlaser",

@@ -27,8 +27,8 @@ M.ITEMS = {
     { uname = "Spanner", x = 1078.7, y = 2125.35938 + KIT_SHIFT_Y, z = 9.85153, spin = true },
     { uname = "Screwdriver", x = 1076.52942, y = 2125.82959 + KIT_SHIFT_Y, z = 9.85156, spin = true },
     { uname = "Hammer", x = 1074.94214, y = 2126.51489 + KIT_SHIFT_Y, z = 9.85160, spin = true },
-    { uname = "Wheel", x = 1073.59448, y = 2127.05786 + KIT_SHIFT_Y, z = 9.85164, spin = true },
-    { uname = "Wheel", x = 1073.4965, y = 2125.6582 + KIT_SHIFT_Y, z = 9.8516, spin = true },
+    { uname = "WheelLighttruck", x = 1073.59448, y = 2127.05786 + KIT_SHIFT_Y, z = 9.85164, spin = true },
+    { uname = "WheelLighttruck", x = 1073.4965, y = 2125.6582 + KIT_SHIFT_Y, z = 9.8516, spin = true },
     -- a Petrol Can with 10 L: the Bobcat's tank starts all but empty. Keyed, as vehicles reads and writes a can's
     -- fill (data.amount); the Petrol Can holds only petrol (items/shared/logic/liquids.lua)
     { uname = "GasCan", x = 1071.55, y = 2124.92 + KIT_SHIFT_Y, z = 9.8516, spin = true, data = { amount = 10 } },
