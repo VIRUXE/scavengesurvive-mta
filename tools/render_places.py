@@ -151,12 +151,15 @@ def binary_ipl(data: bytes) -> list[tuple]:
     return entries
 
 
-def keep_world(entries: list[tuple], models: dict[int, dict]) -> list[tuple]:
-    """The entries of one IPL worth drawing by day in the open world: no interiors, no LOD twins, no night objects."""
-    twins = {e[10] for e in entries if e[10] >= 0}
+def keep_world(entries: list[tuple], models: dict[int, dict], twins: set[int] | None = None, everywhere: bool = False) -> list[tuple]:
+    """The entries of one IPL worth drawing by day in the open world: no interiors, no LOD twins, no night objects.
+    `twins` are the LOD entries' indices (default: the ones this list references); `everywhere` keeps interior 13, GTA's
+    "visible in every interior and outside" (Cranberry Station is placed that way)."""
+    if twins is None:
+        twins = {e[10] for e in entries if e[10] >= 0}
     out = []
     for i, e in enumerate(entries):
-        if i in twins or e[2] != 0:
+        if i in twins or e[2] not in ((0, 13) if everywhere else (0,)):
             continue
         m = models.get(e[0])
         name = (e[1] or (m["dff"] if m else "")).lower()
@@ -167,18 +170,24 @@ def keep_world(entries: list[tuple], models: dict[int, dict]) -> list[tuple]:
 
 
 def world_placements(gta: Path, models: dict[int, dict]) -> list[tuple]:
+    """Every text IPL with its binary streams from gta3.img (<name>_stream<n>.ipl). A stream entry's LOD index points into
+    its text IPL, never into the stream, so the text file's twins are the indices referenced by itself and its streams,
+    and a stream has none of its own (taking its indices as its own dropped ~2.8k real objects, terrain among them)."""
     from tools.extract_samp_models import read_img_entry, read_img_index
 
-    out = []
-    for path in sorted(glob.glob(str(gta / "data" / "maps" / "**" / "*.ipl"), recursive=True)):
-        out += keep_world(text_ipl(path), models)
+    texts = {Path(p).stem.lower(): text_ipl(p) for p in sorted(glob.glob(str(gta / "data" / "maps" / "**" / "*.ipl"), recursive=True))}
+    streams: dict[str, list[tuple]] = {}
     img = gta / "models" / "gta3.img"
-    index = read_img_index(img)
-    for name, entry in sorted(index.items()):
+    for name, entry in sorted(read_img_index(img).items()):
         if name.endswith(".ipl"):
             data = read_img_entry(img, entry)
             if data[:4] == b"bnry":
-                out += keep_world(binary_ipl(data), models)
+                streams.setdefault(name.rsplit("_stream", 1)[0], []).extend(binary_ipl(data))
+    out = []
+    for base in sorted(set(texts) | set(streams)):
+        text, stream = texts.get(base, []), streams.get(base, [])
+        out += keep_world(text, models, {e[10] for e in text + stream if e[10] >= 0}, everywhere=True)
+        out += keep_world(stream, models, set(), everywhere=True)
     return out
 
 
