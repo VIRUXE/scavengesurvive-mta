@@ -6,7 +6,7 @@
 --             a water surface within WATER metres of it (a boat or a sinking car under a bridge must not be lifted
 --             onto the bridge). Only that close: GTA's water areas run on under the land along the coasts, so a car
 --             under the coastal ground has water far above it too.
---   "sunk"    fully under water: the sphere round its bounding box below a water surface, nothing solid between it
+--   "sunk"    fully under water: every corner of its bounding box below a water surface, nothing solid between it
 --             and that surface, and a bed under it (a car under the coastal ground has none). Half in the water is not.
 local BELOW = 60
 local TOP = 1500
@@ -22,16 +22,22 @@ end
 
 local function sunk(v, x, y, z)
     local x0, y0, z0, x1, y1, z1 = false, 0, 0, 0, 0, 0
-    if isElement(v) then
+    local m = isElement(v) and getElementMatrix(v)
+    if m then
         x0, y0, z0, x1, y1, z1 = getElementBoundingBox(v)
     end
     if not x0 then
         return false
     end
-    local function far(a, b)
-        return math.max(math.abs(a), math.abs(b))
+    -- the highest corner of its bounding box as this client has it turned, over the server's position
+    local r = -math.huge
+    for _, cx in ipairs({ x0, x1 }) do
+        for _, cy in ipairs({ y0, y1 }) do
+            for _, cz in ipairs({ z0, z1 }) do
+                r = math.max(r, cx * m[1][3] + cy * m[2][3] + cz * m[3][3])
+            end
+        end
     end
-    local r = math.sqrt(far(x0, x1) ^ 2 + far(y0, y1) ^ 2 + far(z0, z1) ^ 2) -- any rotation, the whole body
     local hit, _, _, wz = testLineAgainstWater(x, y, z + r, x, y, TOP)
     return hit and wz > z + r and not hitZ(x, y, z, wz) and hitZ(x, y, z, z - BED) ~= nil
 end
