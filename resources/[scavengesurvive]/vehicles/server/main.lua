@@ -473,6 +473,12 @@ local function create(row, fresh)
                 if ok and insertId and isElement(v) and info[v] then
                     info[v].containerId = insertId
                     setElementData(v, "vehicles.containerId", insertId, "broadcast", "deny")
+                    -- upstream loot-vehicle.pwn: a vehicle that has just spawned gets random(trunksize / 3) items
+                    -- from its type's loot table in the trunk
+                    local most = math.floor(vt.trunkSize / 3) - 1
+                    if fresh and vt.lootTable and most > 0 then
+                        exports.loot:stockVehicleContainer(insertId, vt.lootTable, math.random(0, most))
+                    end
                 end
             end
         )
