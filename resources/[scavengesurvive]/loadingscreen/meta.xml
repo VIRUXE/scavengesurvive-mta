@@ -1,0 +1,11 @@
+<meta>
+    <info author="scavengesurvive-mta" type="script" name="loadingscreen" description="Key art and download bar from the first downloaded file until the character spawns" version="0.1.0"/>
+    <min_mta_version server="1.6.0" client="1.6.0"/>
+    <!-- above every other resource (lib is 100): its files arrive first, so it covers the rest of the download -->
+    <download_priority_group>110</download_priority_group>
+    <script src="server/main.lua" type="server"/>
+    <script src="client/main.lua" type="client"/>
+    <file src="shared/logic/screen.lua"/>
+    <file src="images/keyart.jpg"/>
+    <file src="images/logo.png"/>
+</meta>

@@ -76,3 +76,6 @@ files["resources/**/dev/client/item_picker.lua"] = { std = "lua51+mta_shared+mta
 files["resources/**/logs/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "write" }, read_globals = { "fetchRemote" } }
 
 files["resources/**/dumpsters/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "interactionActions", "nearbyDumpster", "tryOpenDumpster" }, read_globals = { "restoreWorldModel", "isPedInVehicle" } }
+-- the transfer box functions postdate the generated .luacheck/mta_client.lua list
+files["resources/**/loadingscreen/server/**"] = { std = "lua51+mta_shared+mta_server", read_globals = { "setTransferBoxVisible" } }
+files["resources/**/loadingscreen/client/**"] = { std = "lua51+mta_shared+mta_client", read_globals = { "setTransferBoxVisible", "isTransferBoxActive" } }
