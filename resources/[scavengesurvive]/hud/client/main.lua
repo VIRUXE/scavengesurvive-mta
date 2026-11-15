@@ -585,6 +585,8 @@ local function drawKeyActions(driver)
         bayMenu = bayMenuHint(held),
         fitPart = fitPartHint(held),
         installPart = installPartHint(held),
+        tow = held and (held.uname == "TowBar" or held.uname == "Rope") and exports.vehicles:towHint(held.uname)
+            or false,
         atFuelCap = held and held.uname == "GasCan" and exports.vehicles:nearbyFuelCap() ~= false or false,
         cuffedNearby = not held and hasCuffedPlayerNearby() or false,
         hasHolster = getElementData(localPlayer, "items.holster") ~= false,

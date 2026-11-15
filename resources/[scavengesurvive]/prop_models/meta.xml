@@ -78,6 +78,9 @@
     <file src="files/ratchet.col"/>
     <file src="files/ratchet.dff"/>
     <file src="files/ratchet.txd"/>
+    <file src="files/rope_coil.col"/>
+    <file src="files/rope_coil.dff"/>
+    <file src="files/rope_coil.txd"/>
     <file src="files/snack_beefjerky.col"/>
     <file src="files/snack_beefjerky.dff"/>
     <file src="files/snack_beefjerky.txd"/>
@@ -121,6 +124,9 @@
     <file src="files/tool_battery.col"/>
     <file src="files/tool_battery.dff"/>
     <file src="files/tool_battery.txd"/>
+    <file src="files/tow_bar.col"/>
+    <file src="files/tow_bar.dff"/>
+    <file src="files/tow_bar.txd"/>
     <file src="files/welder.col"/>
     <file src="files/welder.dff"/>
     <file src="files/welder.txd"/>

@@ -20,6 +20,8 @@ return {
     [20263] = { dff = "combo_padlock_shut", txd = "combo_padlock_shut", dist = 30, ideFlags = 4 },
     [20264] = { dff = "combo_padlock_body", txd = "combo_padlock_body", dist = 30, ideFlags = 4 },
     [20265] = { dff = "combo_shackle", txd = "combo_shackle", dist = 30 },
+    [20266] = { dff = "tow_bar", txd = "tow_bar", dist = 80 },
+    [20267] = { dff = "rope_coil", txd = "rope_coil", dist = 50 },
     [20210] = { dff = "bobcat_boot_ok", txd = "bobcat_parts", dist = 80 },
     [20211] = { dff = "bobcat_boot_dam", txd = "bobcat_parts", dist = 80 },
     [20212] = { dff = "bobcat_door_lf_ok", txd = "bobcat_parts", dist = 80 },

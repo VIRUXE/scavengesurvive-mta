@@ -104,6 +104,15 @@ local carmourSrv -- server/carmour.lua, built once the roadside helpers it needs
 local bodySrv -- Bobcat salvage part installation
 local lugSrv -- threading the lug nuts to take a wheel off or fit one
 local gasSrv -- server/gasbottles.lua, built with it
+local towSrv -- server/towing.lua: tow bars and ropes
+
+local rope
+do
+    local f = fileOpen("shared/logic/rope.lua", true)
+    local src = fileRead(f, fileGetSize(f))
+    fileClose(f)
+    rope = assert(loadstring(src, "=vehicles/rope.lua"))()
+end
 
 local FLUSH_MS = 60000
 local WRECK_MS = 30000
@@ -115,7 +124,8 @@ local GLOVEBOX_LOOT = "vehicle_glovebox" -- loot table of a fresh vehicle's glov
 
 local SELECT_VEHICLES = "SELECT v.id, v.spawn_id, v.type_uname, v.model, v.x, v.y, v.z, v.rz, v.colors, "
     .. "v.health, v.fuel, v.locked, v.damage, v.carmour, v.gas_bottles, v.key_code, v.keypad_code, "
-    .. "v.trailer_id, v.left_spawn, v.battery, v.battery_since, v.battery_state, v.battery_capacity, v.starter, "
+    .. "v.trailer_id, v.towbar, v.rope_tow_id, v.left_spawn, "
+    .. "v.battery, v.battery_since, v.battery_state, v.battery_capacity, v.starter, "
     .. "v.starter_state, v.sunk, "
     .. "c.id AS container_id, g.id AS glovebox_id, "
     .. "s.x AS spawn_x, s.y AS spawn_y FROM vehicles v "
@@ -464,6 +474,7 @@ local function create(row, fresh)
 
     carmourSrv.load(v, row.carmour)
     gasSrv.load(v, row.gas_bottles)
+    towSrv.load(v, row)
     bodySrv.restore(v, info[v]) -- body parts fitted by hand and not yet tightened
 
     -- If the vehicle has trunk capacity but no container row yet, create one
@@ -511,6 +522,7 @@ local function create(row, fresh)
 end
 
 local function forget(v)
+    towSrv.lost(v, "removed") -- a rope on it falls to the ground
     info[v] = nil
 end
 
@@ -857,6 +869,14 @@ local function loadOrRoll()
                 end
             end
         end
+        -- and the towing ropes
+        towSrv.restore(function(id)
+            for otherV, inf in pairs(info) do
+                if inf.id == id and isElement(otherV) then
+                    return otherV
+                end
+            end
+        end)
         if handoff then
             reseatHandoff(byId, motion)
         end
@@ -1589,13 +1609,13 @@ addEventHandler("onResourceStop", resourceRoot, function()
 end)
 
 -- The closest free trailer the truck can take within reach (upstream: both lengths and a metre), or nil.
-local function trailerInReach(v, inf)
-    local vt = exports.data:vehicleType(inf.uname)
+local function trailerInReach(v, _)
+    local hitch = not towSrv.roped(v) and towSrv.hitch(v) -- a rope on the hitch leaves no room for a trailer
     local px, py, pz = getElementPosition(v)
     local best, bestDist = nil, math.huge
     for otherV, otherInf in pairs(info) do
         local free = otherV ~= v and isElement(otherV) and not getVehicleTowingVehicle(otherV)
-        if free and vlogic.canAttachTrailer(vt, exports.data:vehicleType(otherInf.uname)) then
+        if free and vlogic.canAttachTrailer(hitch, exports.data:vehicleType(otherInf.uname)) then
             local tx, ty, tz = getElementPosition(otherV)
             local dist = getDistanceBetweenPoints3D(px, py, pz, tx, ty, tz)
             local reach = vlogic.towReach(getElementModel(v), getElementModel(otherV))
@@ -1644,9 +1664,7 @@ local function updateHitchHint(player)
 end
 
 local function bindTow(player, v)
-    local inf = info[v]
-    local vt = inf and exports.data:vehicleType(inf.uname)
-    if not (vt and vt.trailerHitch) then
+    if not towSrv.hitch(v) then -- the type's own hitch, or a fitted Tow Bar
         return
     end
     if not isKeyBound(player, TOW_KEY, "down", toggleTrailer) then
@@ -1747,7 +1765,7 @@ addEventHandler("onTrailerAttach", root, function(truck)
     if inf.trailerId == tinf.id then
         return
     end
-    if vlogic.canAttachTrailer(exports.data:vehicleType(inf.uname), exports.data:vehicleType(tinf.uname)) then
+    if vlogic.canAttachTrailer(towSrv.hitch(truck), exports.data:vehicleType(tinf.uname)) then
         setTrailerRecord(truck, tinf.id)
         markUsed(source)
         local driver = getVehicleController(truck)
@@ -2582,6 +2600,11 @@ net.handler("vehicleInteractRequested", function(player, vehicle, capX, capY, ca
         end
     end
 
+    -- Case T: a Tow Bar goes onto the rear, a Rope is tied to a hitch at the rear, then to another vehicle's front
+    if towSrv.interact(player, vehicle, held, angle) then
+        return
+    end
+
     -- Wheels need a tyre wrench in hand; a replacement wheel is laid beside the vehicle.
     -- (at the rear it falls through to the trunk, Case 3)
     if wheels.isWheel(uname) and not vlogic.isRear(angle) then
@@ -3130,6 +3153,7 @@ addEventHandler("onVehicleExplode", resourceRoot, function()
         return
     end
     local lost = destroyCargo(source) -- what was inside a walk-in trailer goes up with it
+    towSrv.lost(source, "exploded")
     log.event("vehicle.exploded", vehicleLine(source, { uname = i.uname, cargo = lost or 0 }))
     if not i.leftSpawn then
         coolPoint(i.spawnId)
@@ -3244,6 +3268,42 @@ local function loadGasBottles()
 end
 
 gasSrv = loadGasBottles()
+
+-- server/towing.lua: Tow Bars and towing ropes
+do
+    local f = fileOpen("server/towing.lua", true)
+    local src = fileRead(f, fileGetSize(f))
+    fileClose(f)
+    local make = assert(loadstring(src, "=vehicles/server/towing.lua"))()
+    local ctx = { db = db, info = info, toast = toast, activeActions = activeActions, log = log }
+    ctx.cancelHoldAction, ctx.vlogic, ctx.rope, ctx.toLocal = cancelHoldAction, vlogic, rope, toLocal
+    ctx.vehicleLine, ctx.charId = vehicleLine, charId
+    -- a fitted or removed bar changes the hitch of whoever drives the vehicle
+    ctx.rebindTow = function(v)
+        local driver = getVehicleController(v)
+        if driver then
+            unbindTow(driver)
+            bindTow(driver, v)
+        end
+    end
+    towSrv = make(ctx)
+end
+
+-- The interaction list's tow entries (client/towing.lua): "remove_towbar" at a vehicle's rear, "untie_rope" at either
+-- end of a rope.
+net.handler("vehicleTowActionRequested", function(player, vehicle, action)
+    if not isElement(vehicle) or not info[vehicle] or isPedDead(player) or type(action) ~= "string" then
+        return
+    end
+    local vt = exports.data:vehicleType(info[vehicle].uname)
+    local px, py, pz = getElementPosition(player)
+    local vx, vy, vz = getElementPosition(vehicle)
+    if getDistanceBetweenPoints3D(px, py, pz, vx, vy, vz) > vlogic.maxReachDistance(vt and vt.size) then
+        return
+    end
+    local _, _, vrz = getElementRotation(vehicle)
+    towSrv.action(player, vehicle, action, vlogic.angleToVehicle(px, py, vx, vy, vrz))
+end, { rate = 3 })
 
 -- The gas on a trailer's A-frame mounts, { l = { gas = kg, hp = n }, r = ... } with a key per occupied mount (false
 -- for a vehicle without mounts): what a stove or heater draws from

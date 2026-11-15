@@ -193,9 +193,6 @@ CREATE TABLE IF NOT EXISTS `felled_trees` (
   KEY `idx_felled_trees_regrow` (`regrow_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
--- world items whose stored z is not trusted (bulk-inserted rows, not placed from a player or a loot point): the
--- first client to draw one measures the ground under it and the server moves it there, while items.z still equals
--- the z recorded here (an item picked up and dropped again keeps its new spot)
 CREATE TABLE IF NOT EXISTS `item_ground_snap` (
   `item_id` int(11) NOT NULL,
   `z` float NOT NULL,
@@ -395,6 +392,8 @@ CREATE TABLE IF NOT EXISTS `vehicles` (
   `key_code` int(11) DEFAULT NULL,
   `keypad_code` char(4) DEFAULT NULL,
   `trailer_id` int(11) DEFAULT NULL,
+  `towbar` tinyint(1) NOT NULL DEFAULT 0,
+  `rope_tow_id` int(11) DEFAULT NULL,
   `damage` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`damage`)),
   `carmour` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`carmour`)),
   `gas_bottles` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`gas_bottles`)),
@@ -413,6 +412,8 @@ CREATE TABLE IF NOT EXISTS `vehicles` (
   PRIMARY KEY (`id`),
   KEY `ix_vehicles_spawn` (`spawn_id`),
   KEY `fk_vehicles_trailer` (`trailer_id`),
+  KEY `fk_vehicles_rope_tow` (`rope_tow_id`),
+  CONSTRAINT `fk_vehicles_rope_tow` FOREIGN KEY (`rope_tow_id`) REFERENCES `vehicles` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_vehicles_spawn` FOREIGN KEY (`spawn_id`) REFERENCES `vehicle_spawns` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_vehicles_trailer` FOREIGN KEY (`trailer_id`) REFERENCES `vehicles` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
@@ -2784,6 +2785,164 @@ main: BEGIN
   SET v_id = LAST_INSERT_ID();
   COMMIT;
   SELECT 1 AS ok, 'OK' AS code, JSON_OBJECT('id', CAST(v_id AS SIGNED)) AS payload;
+END//
+
+CREATE OR REPLACE PROCEDURE `vehicle_rope_tie`(IN p_tower_id INT, IN p_towed_id INT, IN p_item_id INT, IN p_char_id INT)
+BEGIN
+  
+  
+  
+  DECLARE v_found INT DEFAULT 0;
+  DECLARE v_busy INT DEFAULT 0;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
+  SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+  START TRANSACTION;
+  SELECT COUNT(*) INTO v_found FROM vehicles WHERE id IN (p_tower_id, p_towed_id) ORDER BY id FOR UPDATE;
+  IF p_tower_id = p_towed_id OR v_found < 2 THEN
+    ROLLBACK;
+    SELECT 0 AS ok, 'NO_VEHICLE' AS code, NULL AS payload;
+  ELSE
+    SELECT COUNT(*) INTO v_busy FROM vehicles
+      WHERE (id = p_tower_id AND (rope_tow_id IS NOT NULL OR trailer_id IS NOT NULL))
+         OR rope_tow_id = p_towed_id
+         OR (id = p_towed_id AND rope_tow_id = p_tower_id);
+    IF v_busy > 0 THEN
+      ROLLBACK;
+      SELECT 0 AS ok, 'ROPED' AS code, NULL AS payload;
+    ELSE
+      SELECT COUNT(*) INTO v_found FROM items
+        WHERE id = p_item_id AND type_uname = 'Rope' AND holder_char_id = p_char_id AND holder_kind = 'held' FOR UPDATE;
+      IF v_found = 0 THEN
+        ROLLBACK;
+        SELECT 0 AS ok, 'NO_ITEM' AS code, NULL AS payload;
+      ELSE
+        DELETE FROM items WHERE id = p_item_id;
+        UPDATE vehicles SET rope_tow_id = p_towed_id WHERE id = p_tower_id;
+        COMMIT;
+        SELECT 1 AS ok, 'OK' AS code, NULL AS payload;
+      END IF;
+    END IF;
+  END IF;
+END//
+
+CREATE OR REPLACE PROCEDURE `vehicle_rope_untie`(
+  IN p_tower_id INT, IN p_char_id INT,
+  IN p_x FLOAT, IN p_y FLOAT, IN p_z FLOAT, IN p_interior TINYINT, IN p_dimension INT)
+BEGIN
+  
+  
+  DECLARE v_found INT DEFAULT 0;
+  DECLARE v_rope INT DEFAULT NULL;
+  DECLARE v_alive INT DEFAULT 0;
+  DECLARE v_held INT DEFAULT 0;
+  DECLARE v_item INT DEFAULT 0;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
+  SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+  START TRANSACTION;
+  SELECT COUNT(*), MAX(rope_tow_id) INTO v_found, v_rope FROM vehicles WHERE id = p_tower_id FOR UPDATE;
+  IF v_found = 0 OR v_rope IS NULL THEN
+    ROLLBACK;
+    SELECT 0 AS ok, 'NO_ROPE' AS code, NULL AS payload;
+  ELSEIF p_char_id IS NULL THEN
+    INSERT INTO items (type_uname, hitpoints, x, y, z, rz, interior, dimension)
+      SELECT uname, max_hitpoints, p_x, p_y, p_z, 0, p_interior, p_dimension FROM item_types WHERE uname = 'Rope';
+    SET v_item = LAST_INSERT_ID();
+    UPDATE vehicles SET rope_tow_id = NULL WHERE id = p_tower_id;
+    COMMIT;
+    SELECT 1 AS ok, 'OK' AS code, JSON_OBJECT('item_id', CAST(v_item AS SIGNED), 'held', 0) AS payload;
+  ELSE
+    SELECT COUNT(*) INTO v_alive FROM characters WHERE id = p_char_id AND alive = 1 FOR UPDATE;
+    SELECT COUNT(*) INTO v_held FROM items WHERE holder_char_id = p_char_id AND holder_kind = 'held' FOR UPDATE;
+    IF v_alive = 0 THEN
+      ROLLBACK;
+      SELECT 0 AS ok, 'NO_CHARACTER' AS code, NULL AS payload;
+    ELSEIF v_held > 0 THEN
+      ROLLBACK;
+      SELECT 0 AS ok, 'HANDS_FULL' AS code, NULL AS payload;
+    ELSE
+      INSERT INTO items (type_uname, hitpoints, holder_char_id, holder_kind)
+        SELECT uname, max_hitpoints, p_char_id, 'held' FROM item_types WHERE uname = 'Rope';
+      SET v_item = LAST_INSERT_ID();
+      UPDATE vehicles SET rope_tow_id = NULL WHERE id = p_tower_id;
+      COMMIT;
+      SELECT 1 AS ok, 'OK' AS code, JSON_OBJECT('item_id', CAST(v_item AS SIGNED), 'held', 1) AS payload;
+    END IF;
+  END IF;
+END//
+
+CREATE OR REPLACE PROCEDURE `vehicle_towbar_fit`(IN p_vehicle_id INT, IN p_item_id INT, IN p_char_id INT)
+BEGIN
+  
+  
+  DECLARE v_found INT DEFAULT 0;
+  DECLARE v_towbar INT DEFAULT 0;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
+  SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+  START TRANSACTION;
+  SELECT COUNT(*), MAX(towbar) INTO v_found, v_towbar FROM vehicles WHERE id = p_vehicle_id FOR UPDATE;
+  IF v_found = 0 THEN
+    ROLLBACK;
+    SELECT 0 AS ok, 'NO_VEHICLE' AS code, NULL AS payload;
+  ELSEIF v_towbar = 1 THEN
+    ROLLBACK;
+    SELECT 0 AS ok, 'HAS_TOWBAR' AS code, NULL AS payload;
+  ELSE
+    SELECT COUNT(*) INTO v_found FROM items
+      WHERE id = p_item_id AND type_uname = 'TowBar' AND holder_char_id = p_char_id AND holder_kind = 'held' FOR UPDATE;
+    IF v_found = 0 THEN
+      ROLLBACK;
+      SELECT 0 AS ok, 'NO_ITEM' AS code, NULL AS payload;
+    ELSE
+      DELETE FROM items WHERE id = p_item_id;
+      UPDATE vehicles SET towbar = 1 WHERE id = p_vehicle_id;
+      COMMIT;
+      SELECT 1 AS ok, 'OK' AS code, NULL AS payload;
+    END IF;
+  END IF;
+END//
+
+CREATE OR REPLACE PROCEDURE `vehicle_towbar_remove`(IN p_vehicle_id INT, IN p_char_id INT)
+BEGIN
+  
+  DECLARE v_found INT DEFAULT 0;
+  DECLARE v_towbar INT DEFAULT 0;
+  DECLARE v_rope INT DEFAULT NULL;
+  DECLARE v_trailer INT DEFAULT NULL;
+  DECLARE v_alive INT DEFAULT 0;
+  DECLARE v_held INT DEFAULT 0;
+  DECLARE v_item INT DEFAULT 0;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
+  SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+  START TRANSACTION;
+  SELECT COUNT(*), MAX(towbar), MAX(rope_tow_id), MAX(trailer_id) INTO v_found, v_towbar, v_rope, v_trailer
+    FROM vehicles WHERE id = p_vehicle_id FOR UPDATE;
+  IF v_found = 0 THEN
+    ROLLBACK;
+    SELECT 0 AS ok, 'NO_VEHICLE' AS code, NULL AS payload;
+  ELSEIF v_towbar = 0 THEN
+    ROLLBACK;
+    SELECT 0 AS ok, 'NO_TOWBAR' AS code, NULL AS payload;
+  ELSEIF v_rope IS NOT NULL OR v_trailer IS NOT NULL THEN
+    ROLLBACK;
+    SELECT 0 AS ok, 'TOWING' AS code, NULL AS payload;
+  ELSE
+    SELECT COUNT(*) INTO v_alive FROM characters WHERE id = p_char_id AND alive = 1 FOR UPDATE;
+    SELECT COUNT(*) INTO v_held FROM items WHERE holder_char_id = p_char_id AND holder_kind = 'held' FOR UPDATE;
+    IF v_alive = 0 THEN
+      ROLLBACK;
+      SELECT 0 AS ok, 'NO_CHARACTER' AS code, NULL AS payload;
+    ELSEIF v_held > 0 THEN
+      ROLLBACK;
+      SELECT 0 AS ok, 'HANDS_FULL' AS code, NULL AS payload;
+    ELSE
+      INSERT INTO items (type_uname, hitpoints, holder_char_id, holder_kind)
+        SELECT uname, max_hitpoints, p_char_id, 'held' FROM item_types WHERE uname = 'TowBar';
+      SET v_item = LAST_INSERT_ID();
+      UPDATE vehicles SET towbar = 0 WHERE id = p_vehicle_id;
+      COMMIT;
+      SELECT 1 AS ok, 'OK' AS code, JSON_OBJECT('item_id', CAST(v_item AS SIGNED)) AS payload;
+    END IF;
+  END IF;
 END//
 
 CREATE OR REPLACE PROCEDURE `weapon_unload`(

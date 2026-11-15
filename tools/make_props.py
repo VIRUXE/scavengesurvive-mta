@@ -63,7 +63,14 @@ then runs itself in Blender (DragonFF) for each prop's dff and col.
     combo_lock_chain 20262  the chain closed into a loop by the combination padlock lying dials up. The Combination
                      Lock and Chain item (ComboLockChain).
 
-Origin (except welder_torch, grinder and ratchet): the centre of the base (x, y) with z = 0 at the lowest point; the front faces +Y.
+    tow_bar  20266   a ball-type receiver hitch, 0.45 m long: a 50 mm chrome ball on a galvanised ball mount, its shank in
+                     a black square receiver tube with a chrome hitch pin, and a mounting bar rising into the car. Origin
+                     at the ball's centre, the bar forward (+Y) from it: vehicles fit it at a model's trailer_attach
+                     dummy. Vanilla textures (TOWBAR_TEXTURES, found with gta-scout). The Tow Bar item.
+    rope_coil 20267  about 5 m of twisted hemp rope (gta_int.img's Gym_rope) in a 0.27 m coil lying on the ground, six
+                     hand-wound turns, the free end trailing out to +Y and a tie round the bundle. The Rope item.
+
+Origin (except welder_torch, grinder, ratchet and tow_bar): the centre of the base (x, y) with z = 0 at the lowest point; the front faces +Y.
 """
 from __future__ import annotations
 
@@ -936,6 +943,129 @@ def build_combo_lock_chain(ctx):
     return _lock_chain(ctx, _combo_padlock, COMBO_D)
 
 
+# (source TXD, texture) per tow_bar material, all vanilla (found with gta-scout): black steel (the receiver and its
+# mounting bar), galvanised steel (the ball mount), chrome pipe (the ball, its nut and the hitch pin)
+TOWBAR_TEXTURES = [("fences.txd", "blackmetal"), ("metalbarrier_cj.txd", "CJ_GALVANISED"), ("industrialext.txd", "cj_chromepipe")]
+TOWBAR_BALL = 0.025  # tow_bar: the ball's radius; its centre is the model's origin
+# rope_coil: a twisted hemp rope (gta_int.img's gym rope, its strands along u), wound into a coil
+ROPE_TEXTURES = [("dogsgym.txd", "Gym_rope")]
+ROPE_R = 0.012  # the rope's radius
+ROPE_BAND = (0.16, 0.84)  # the part of Gym_rope's height the rope fills (black above and below it)
+
+
+def _sphere(ctx, centre, radius, rings, sides, material, col):
+    """A UV sphere; its texture wraps once round it."""
+    bm, paint = ctx["bm"], ctx["paint"]
+    cx, cy, cz = centre
+    night = (col[0] * 0.3, col[1] * 0.3, col[2] * 0.32, 1.0)
+    grid = []
+    for i in range(rings + 1):
+        phi = math.pi * i / rings
+        z, r = -math.cos(phi) * radius, math.sin(phi) * radius
+        grid.append([bm.verts.new((cx + r * math.cos(2 * math.pi * k / sides), cy + r * math.sin(2 * math.pi * k / sides), cz + z)) for k in range(sides)])
+    for i in range(rings):
+        for k in range(sides):
+            j = (k + 1) % sides
+            quad = [grid[i][k], grid[i][j], grid[i + 1][j], grid[i + 1][k]]
+            uvs = [(k / sides, i / rings), ((k + 1) / sides, i / rings), ((k + 1) / sides, (i + 1) / rings), (k / sides, (i + 1) / rings)]
+            if i == 0:  # the poles' rings collapse to one point: drop the duplicate corner
+                quad, uvs = quad[1:], uvs[1:]
+            elif i == rings - 1:
+                quad, uvs = quad[:2] + quad[3:], uvs[:2] + uvs[3:]
+            paint(bm.faces.new(quad), uvs, col, night, material)
+    # the collapsed pole rings left duplicate vertices: merge them
+    import bmesh
+
+    bmesh.ops.remove_doubles(bm, verts=grid[0] + grid[-1], dist=1e-6)
+
+
+def build_tow_bar(ctx):
+    """A ball-type tow bar (class II receiver hitch), the ball at the origin and the bar running forward (+Y) under the
+    car from it: a 50 mm chrome ball on a neck and nut, a galvanised ball mount whose shank slides into a black square
+    receiver tube, a chrome hitch pin through the tube, and the receiver's mounting bar rising into the car's underside.
+    Fitted at a vehicle's trailer_attach dummy, so a hitched trailer's coupler lands on the ball."""
+    box, tube = ctx["box"], ctx["tube"]
+    black, galv, chrome = 0, 1, 2
+    white, dim = (0.95, 0.95, 0.96, 1.0), (0.62, 0.62, 0.64, 1.0)
+    _sphere(ctx, (0.0, 0.0, 0.0), TOWBAR_BALL, 8, 16, chrome, white)
+    tube((0.0, 0.0, -0.05), (0.0, 0.0, -0.012), 0.012, 12, chrome, white)  # the neck
+    tube((0.0, 0.0, -0.075), (0.0, 0.0, -0.062), 0.022, 6, chrome, dim)  # the nut under the mount
+    # the ball mount: a plate under the ball, dropping to a shank that runs forward into the receiver
+    box((0.0, 0.015, -0.056), (0.075, 0.11, 0.012), galv, None)
+    box((0.0, 0.08, -0.04), (0.05, 0.035, 0.045), galv, None)
+    box((0.0, 0.2, -0.04), (0.044, 0.25, 0.044), galv, None)
+    # the receiver tube round the shank, its square mouth a little bigger, the pin across it
+    box((0.0, 0.25, -0.04), (0.062, 0.24, 0.062), black, None)
+    box((0.0, 0.135, -0.04), (0.07, 0.012, 0.07), black, None)
+    tube((-0.05, 0.2, -0.04), (0.05, 0.2, -0.04), 0.007, 8, chrome, white)
+    tube((0.05, 0.2, -0.04), (0.05, 0.2, -0.06), 0.003, 6, chrome, dim)  # the pin's clip
+    # the mounting bar: up from the receiver's back end into the car, then across under the bumper
+    box((0.0, 0.39, 0.0), (0.06, 0.05, 0.14), black, None)
+    box((0.0, 0.39, 0.085), (0.34, 0.04, 0.04), black, None)
+    for x in (-0.15, 0.15):  # the brackets that bolt it to the chassis
+        box((x, 0.39, 0.125), (0.04, 0.07, 0.04), galv, None)
+    return [((0.0, 0.2, -0.02), (0.04, 0.22, 0.06))]
+
+
+def _rope_sweep(ctx, path, radius, sides, col):
+    """The rope along `path` (Vectors), capped at both ends: Gym_rope's strands run along it (u by arc length, one
+    tile per 2.8 radii) and its band of rope wraps once round it."""
+    from mathutils import Vector
+
+    bm, paint = ctx["bm"], ctx["paint"]
+    night = (col[0] * 0.3, col[1] * 0.3, col[2] * 0.32, 1.0)
+    rings, nrm, run, us = [], None, 0.0, []
+    for i, p in enumerate(path):
+        a, b = path[max(i - 1, 0)], path[min(i + 1, len(path) - 1)]
+        t = (b - a).normalized()
+        if nrm is None:
+            nrm = t.cross(Vector((0, 0, 1)) if abs(t.z) < 0.9 else Vector((1, 0, 0))).normalized()
+        else:
+            nrm = (nrm - t * nrm.dot(t)).normalized()
+        bin_ = t.cross(nrm).normalized()
+        rings.append([bm.verts.new(p + (nrm * math.cos(2 * math.pi * k / sides) + bin_ * math.sin(2 * math.pi * k / sides)) * radius) for k in range(sides)])
+        if i:
+            run += (p - path[i - 1]).length
+        us.append(run / (radius * 2.8))
+    v0, v1 = ROPE_BAND
+    for i in range(len(path) - 1):
+        for k in range(sides):
+            j = k + 1
+            va, vb = v0 + (v1 - v0) * k / sides, v0 + (v1 - v0) * j / sides
+            face = bm.faces.new((rings[i][k], rings[i][j % sides], rings[i + 1][j % sides], rings[i + 1][k]))
+            paint(face, [(us[i], va), (us[i], vb), (us[i + 1], vb), (us[i + 1], va)], col, night, 0)
+    for ring in (rings[0], rings[-1]):
+        face = bm.faces.new(ring)
+        paint(face, [(0.5 + 0.1 * math.cos(2 * math.pi * k / sides), 0.5 + 0.1 * math.sin(2 * math.pi * k / sides)) for k in range(sides)], col, night, 0)
+
+
+def build_rope_coil(ctx):
+    """About 5 m of hemp rope wound into a coil lying on the ground: six turns of 0.13 m, each one a little higher and
+    wider where it crosses the last, the outer end trailing out and its tail tied round the coil."""
+    from mathutils import Vector
+
+    turns, per_turn, r0 = 6, 24, 0.13
+    pts = []
+    for s in range(turns * per_turn + 1):
+        a = 2 * math.pi * s / per_turn
+        lap = s / per_turn
+        r = r0 + 0.011 * lap + 0.006 * math.sin(a * 2 + lap * 1.7)  # hand-wound: not quite round, turns apart
+        z = ROPE_R + 0.004 * lap + 0.014 * (0.5 + 0.5 * math.sin(a + lap * 2.1))  # each turn rides over the last somewhere
+        pts.append(Vector((r * math.cos(a), r * math.sin(a), z)))
+    # the free end runs out across the floor in a lazy curve
+    end = pts[-1]
+    for s in range(1, 13):
+        f = s / 12
+        pts.append(Vector((end.x + 0.03 * f, end.y + 0.22 * f, ROPE_R + (end.z - ROPE_R) * (1 - f) ** 2)) + Vector((0.04 * math.sin(f * math.pi), 0, 0)))
+    _rope_sweep(ctx, pts, ROPE_R, 8, (0.92, 0.86, 0.74, 1.0))
+    # a tie of the same rope round the coil's bundle on the -X side
+    mid, tr = r0 + 0.0055 * turns, 0.0055 * turns + 2.2 * ROPE_R  # round the bundle's middle
+    tie = [Vector((-mid + tr * math.cos(2 * math.pi * k / 16), 0.0, 0.03 + 0.8 * tr * math.sin(2 * math.pi * k / 16))) for k in range(17)]
+    _rope_sweep(ctx, tie, ROPE_R * 0.7, 6, (0.85, 0.79, 0.67, 1.0))
+    hx, hy, hz = _ground(ctx)
+    return [((0.0, 0.0, hz), (hx, hy, hz))]
+
+
 PROPS_TABLE = [
     {"name": "ls_hatch", "id": 20201, "dist": 150, "source": "zombtest1.txd", "textures": ["pave_manhole1"], "build": build_ls_hatch},
     {"name": "welder", "id": 20202, "dist": 100, "source": "dynbarrels.txd", "textures": ["redmetal", "yellowmetal", "alumplat64"], "build": build_welder},
@@ -957,6 +1087,8 @@ PROPS_TABLE = [
     {"name": "combo_padlock_shut", "id": 20263, "dist": 30, "sources": COMBO_TEXTURES, "build": build_combo_padlock_shut, "ideFlags": 4},
     {"name": "combo_padlock_body", "id": 20264, "dist": 30, "sources": COMBO_TEXTURES, "build": build_combo_padlock_body, "ideFlags": 4},
     {"name": "combo_shackle", "id": 20265, "dist": 30, "sources": COMBO_TEXTURES[:1], "build": build_combo_shackle},
+    {"name": "tow_bar", "id": 20266, "dist": 80, "sources": TOWBAR_TEXTURES, "build": build_tow_bar},
+    {"name": "rope_coil", "id": 20267, "dist": 50, "sources": ROPE_TEXTURES, "build": build_rope_coil},
 ]
 
 

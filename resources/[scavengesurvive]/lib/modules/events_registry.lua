@@ -113,6 +113,8 @@ return {
     accessoryToggleRequested = true,
     lightsToggleRequested = true,
     vehicleInteractRequested = true,
+    vehicleTowActionRequested = true,
+    vehicleRopeTieStarted = true,
     vehicleBatteryRequested = true,
     vehiclePartRemoveRequested = true,
     fuelPumpInteractRequested = true,

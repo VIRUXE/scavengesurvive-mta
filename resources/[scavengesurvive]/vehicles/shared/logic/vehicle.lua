@@ -315,17 +315,33 @@ function M.canUseKey(keyData, vehicleKeyCode)
     return true
 end
 
-function M.canAttachTrailer(truckType, trailerType, distance, maxDist)
-    if not truckType or not trailerType then
+-- The hitch a vehicle tows with: its type's own (trailerHitch, "small" or "large"), else the "small" one a fitted Tow
+-- Bar gives it (vehicles.towbar), else nil.
+function M.hitchOf(vehicleType, towbar)
+    if not vehicleType then
+        return nil
+    end
+    return vehicleType.trailerHitch or (towbar and "small") or nil
+end
+
+-- A Tow Bar fits the rear of a wheeled car or truck that came without a hitch (no bikes, boats or aircraft, no
+-- trailers, and no type that hitches already).
+function M.canFitTowbar(vehicleType)
+    if not vehicleType or vehicleType.trailerHitch or vehicleType.trailer then
         return false
     end
-    if not truckType.trailerHitch then
+    return vehicleType.category == "car" or vehicleType.category == "truck"
+end
+
+-- `hitch`: the truck's hitch, M.hitchOf of its type and tow bar
+function M.canAttachTrailer(hitch, trailerType, distance, maxDist)
+    if not hitch or not trailerType then
         return false
     end
     if not trailerType.trailer then
         return false
     end
-    if truckType.trailerHitch ~= trailerType.size then
+    if hitch ~= trailerType.size then
         return false
     end
     if distance and maxDist and distance > maxDist then

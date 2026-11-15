@@ -66,6 +66,8 @@ return function(ctx)
         Battery = true,
         StarterMotor = true,
         Wheel = true,
+        TowBar = true,
+        Rope = true,
     }
 
     for _, part in ipairs({ "Tailgate", "LeftDoor", "RightDoor", "Hood", "FrontBumper", "RearBumper" }) do

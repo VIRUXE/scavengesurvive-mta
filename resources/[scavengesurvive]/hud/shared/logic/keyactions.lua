@@ -41,6 +41,8 @@ end
 -- The interact verb next to a landed crate, by the loot resource's crate kind.
 -- lang:begin
 M.CRATES = { supply = "Open supply crate", cache = "Open weapon cache", dumpster = "Open dumpster" }
+-- The interact verb with a Tow Bar or a Rope in hand at a vehicle, by vehicles' towHint.
+M.TOW = { fit = "(Hold) Fit tow bar", hitch = "Tie rope to tow bar", front = "Tie rope here" }
 -- the world resource's button labels (puzzles.lua, area69.lua, doors.lua), listed so tools/lang_qa collects them
 M.BUTTON_LABELS = {
     "Activate",
@@ -74,6 +76,7 @@ M.BUTTON_LABELS = {
 --   fitPart ("Fit battery" / "Fit starter motor", already in the reader's language: that part in hand at the open
 --     bonnet with its slot empty),
 --   installPart (a held body part is at its matching empty vehicle slot),
+--   tow ("fit" / "hitch" / "front": vehicles' towHint, a Tow Bar or Rope in hand at a vehicle, M.TOW),
 --   atFuelCap (a Petrol Can in hand at a vehicle's fuel cap, facing it and looking at it),
 --   held = false | { uname, category, isWeapon },
 --   nearCooker,                           -- uncooked food in hand next to a campfire or barbecue (#95): "Cook"
@@ -205,6 +208,10 @@ function M.lines(ctx, keys)
     -- a Battery or Starter Motor in hand at the open bonnet: F fits it into the empty slot
     if ctx.fitPart and not busyF then
         add("interact", ctx.fitPart)
+    end
+    -- a Tow Bar at the rear of a car that takes one, a Rope at a free hitch or, once tied there, at another front
+    if M.TOW[ctx.tow] and not busyF then
+        add("interact", tr(M.TOW[ctx.tow]))
     end
     -- a Petrol Can in hand at a vehicle's fuel cap, facing it and looking at it: hold F pours into the tank
     if ctx.atFuelCap and not busyF then
