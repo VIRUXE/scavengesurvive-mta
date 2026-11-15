@@ -331,10 +331,10 @@ function pickItem(tableName)
     return def.uname, medical or roll.initialItemData(def, tostring(tableName), ammoTypes, math.random)
 end
 
--- Stocks a vehicle's glovebox container with up to `count` items rolled from tableName (small items only, the table
--- decides); one that does not fit is skipped. Returns the number rolled; loot.gloveboxStocked follows with how many
--- went in.
-function stockGlovebox(containerId, tableName, count)
+-- Stocks a vehicle's trunk or glovebox container with up to `count` items rolled from tableName (the glovebox's
+-- table holds small items only); one that does not fit is skipped. Returns the number rolled;
+-- loot.vehicleContainerStocked follows with how many went in.
+function stockVehicleContainer(containerId, tableName, count)
     containerId, count = tonumber(containerId), math.floor(tonumber(count) or 0)
     if not containerId or count < 1 then
         return 0
@@ -350,7 +350,10 @@ function stockGlovebox(containerId, tableName, count)
     local function place(i)
         local r = rolled[i]
         if not r then
-            return log.event("loot.gloveboxStocked", { container_id = containerId, rolled = #rolled, items = placed })
+            return log.event(
+                "loot.vehicleContainerStocked",
+                { container_id = containerId, rolled = #rolled, items = placed }
+            )
         end
         db.call("item_create_in_container", { r.uname, containerId }, function(res)
             if res and res.ok then
@@ -362,7 +365,7 @@ function stockGlovebox(containerId, tableName, count)
                 util.log(
                     "loot",
                     "warn",
-                    "glovebox %d: %s not added (%s)",
+                    "vehicle container %d: %s not added (%s)",
                     containerId,
                     r.uname,
                     res and res.code or "db"

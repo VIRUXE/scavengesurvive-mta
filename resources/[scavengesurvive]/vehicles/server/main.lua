@@ -490,7 +490,7 @@ local function create(row, fresh)
                     if ok and insertId and isElement(v) and info[v] then
                         info[v].gloveboxId = insertId
                         if fresh then
-                            exports.loot:stockGlovebox(insertId, GLOVEBOX_LOOT, math.random(0, 2))
+                            exports.loot:stockVehicleContainer(insertId, GLOVEBOX_LOOT, math.random(0, 2))
                         end
                     end
                 end
@@ -3278,7 +3278,7 @@ function spawnTransientVehicle(spec)
                     return
                 end
                 if info[v].containerId then
-                    return exports.loot:stockGlovebox(info[v].containerId, loot[1], loot[2])
+                    return exports.loot:stockVehicleContainer(info[v].containerId, loot[1], loot[2])
                 end
                 if tries < 20 then
                     setTimer(stock, 250, 1)
