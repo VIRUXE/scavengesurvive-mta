@@ -5,7 +5,7 @@ local net = loadstring(exports.lib:getModule("net"), "=lib/net.lua")()
 net.handler("hudStateRequested", function(player)
     local stats = exports.character:getStats(player)
     if stats then
-        local snapshot = { hp = stats.hp, food = stats.food, bleed = stats.bleed }
+        local snapshot = { hp = stats.hp, food = stats.food, thirst = stats.thirst, bleed = stats.bleed }
         triggerClientEvent(player, "characterStatsSynced", player, snapshot)
     end
     triggerClientEvent(player, "heldItemChanged", player, exports.items:getHeld(player) or false)

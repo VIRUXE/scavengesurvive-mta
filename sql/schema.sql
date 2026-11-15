@@ -114,6 +114,7 @@ CREATE TABLE IF NOT EXISTS `characters` (
   `hp` float NOT NULL DEFAULT 100,
   `armour` float NOT NULL DEFAULT 0,
   `food` float NOT NULL DEFAULT 80,
+  `thirst` float NOT NULL DEFAULT 80,
   `bleed` float NOT NULL DEFAULT 0,
   `wounds` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '[]' CHECK (json_valid(`wounds`)),
   `skills` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '[]' CHECK (json_valid(`skills`)),
@@ -703,7 +704,7 @@ END//
 
 CREATE OR REPLACE PROCEDURE `character_create`(
   IN p_account_id INT, IN p_skin SMALLINT, IN p_x FLOAT, IN p_y FLOAT, IN p_z FLOAT, IN p_rz FLOAT,
-  IN p_hp FLOAT, IN p_food FLOAT, IN p_bleed FLOAT)
+  IN p_hp FLOAT, IN p_food FLOAT, IN p_bleed FLOAT, IN p_thirst FLOAT)
 BEGIN
   DECLARE v_char INT;
   DECLARE v_cont INT;
@@ -711,8 +712,8 @@ BEGIN
   SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
   START TRANSACTION;
   UPDATE characters SET alive = 0, died_at = IFNULL(died_at, NOW()) WHERE account_id = p_account_id AND alive = 1;
-  INSERT INTO characters (account_id, skin, hp, food, bleed, x, y, z, rz)
-    VALUES (p_account_id, p_skin, p_hp, p_food, p_bleed, p_x, p_y, p_z, p_rz);
+  INSERT INTO characters (account_id, skin, hp, food, bleed, thirst, x, y, z, rz)
+    VALUES (p_account_id, p_skin, p_hp, p_food, p_bleed, p_thirst, p_x, p_y, p_z, p_rz);
   SET v_char = LAST_INSERT_ID();
   INSERT INTO containers (kind, size, owner_char_id) VALUES ('inventory', 6, v_char);
   SET v_cont = LAST_INSERT_ID();
@@ -815,11 +816,11 @@ BEGIN
   START TRANSACTION;
   UPDATE characters c
     JOIN JSON_TABLE(p_rows, '$[0][*]' COLUMNS (
-      id INT PATH '$.id', hp FLOAT PATH '$.hp', food FLOAT PATH '$.food', bleed FLOAT PATH '$.bleed',
+      id INT PATH '$.id', hp FLOAT PATH '$.hp', food FLOAT PATH '$.food', thirst FLOAT PATH '$.thirst', bleed FLOAT PATH '$.bleed',
       x FLOAT PATH '$.x', y FLOAT PATH '$.y', z FLOAT PATH '$.z', rz FLOAT PATH '$.rz',
       interior INT PATH '$.interior', dimension INT PATH '$.dimension',
       skills LONGTEXT PATH '$.skills', infection INT PATH '$.infection', drugs LONGTEXT PATH '$.drugs')) j ON j.id = c.id
-    SET c.hp = j.hp, c.food = j.food, c.bleed = j.bleed, c.x = j.x, c.y = j.y, c.z = j.z, c.rz = j.rz,
+    SET c.hp = j.hp, c.food = j.food, c.thirst = COALESCE(j.thirst, c.thirst), c.bleed = j.bleed, c.x = j.x, c.y = j.y, c.z = j.z, c.rz = j.rz,
       c.interior = COALESCE(j.interior, c.interior), c.dimension = COALESCE(j.dimension, c.dimension),
       c.skills = COALESCE(j.skills, c.skills), c.infection = COALESCE(j.infection, c.infection),
       c.drugs = COALESCE(j.drugs, c.drugs)

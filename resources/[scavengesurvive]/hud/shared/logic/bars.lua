@@ -1,11 +1,26 @@
--- Hunger bar (core/char/food.pwn, progress2) and the brightness overlay (core/player/brightness.pwn).
+-- Hunger/thirst bars (core/char/food.pwn, progress2) and the brightness overlay (core/player/brightness.pwn).
 local bars = {}
 
 -- CreatePlayerProgressBar(548, 36, 62, 3.2, 0x1FF81FFF, 100): the width of the stock health bar, above it (SA-MP's
--- health bar sits at 548..610 x 56). Drawn as GTA's own bar, the same size as MTA's stock health bar: at 1080p its
+-- health bar sits at 548..610 x 56). Drawn as GTA's own bar, the same height as MTA's stock health bar: at 1080p its
 -- track is 1645..1817 x 222..236 px = 517.8 + 76.9 x 98.7 + 6.7 units right-anchored. The armour bar's frame ends
--- at 171 px and the health bar's starts at 216 px, so the hunger bar's frame (180..207 px) sits centred between.
-bars.HUNGER = { x = 517.8, y = 82.7, w = 76.9, h = 6.7, r = 0x1F, g = 0xF8, b = 0x1F, a = 0xFF, max = 100 }
+-- at 171 px and the health bar's starts at 216 px, so the needs bars' frames (180..207 px) sit centred between.
+-- That gap holds one row only (below health is the key-actions column), so thirst and hunger share the health
+-- bar's width side by side: thirst on the left, hunger on the right, 1.8 units between their frames.
+local NEEDS_GAP = 1.8
+local NEEDS_W = (76.9 - 4 * 6 / 2.25 - NEEDS_GAP) / 2
+bars.THIRST = { x = 517.8, y = 82.7, w = NEEDS_W, h = 6.7, r = 0x30, g = 0xB8, b = 0xF8, a = 0xFF, max = 100 }
+bars.HUNGER = {
+    x = 517.8 + 76.9 - NEEDS_W,
+    y = 82.7,
+    w = NEEDS_W,
+    h = 6.7,
+    r = 0x1F,
+    g = 0xF8,
+    b = 0x1F,
+    a = 0xFF,
+    max = 100,
+}
 -- Upstream weapon.pwn:77 draws "%d/%d" at (520.41, 62.65) inside the bottom of SA-MP's weapon icon frame.
 -- At 1080p MTA's stock weapon icon sits at 1485..1637 x 25..194 px = 446.7..514.2 x 11.1..86.2 right-anchored units.
 bars.AMMO = { x = 480.4, y = 75.5 }

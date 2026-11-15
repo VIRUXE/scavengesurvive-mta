@@ -1,7 +1,8 @@
 local survival = {}
-survival.NEW = { hp = 90, food = 80, bleed = 0.0001 }
-survival.RESPAWN = { hp = 100, food = 40, bleed = 0 }
+survival.NEW = { hp = 90, food = 80, thirst = 80, bleed = 0.0001 }
+survival.RESPAWN = { hp = 100, food = 40, thirst = 40, bleed = 0 }
 survival.IDLE_FOOD_RATE = 0.004
+survival.IDLE_THIRST_RATE = 0.004
 survival.REGEN_PER_FOOD = 0.001925925
 survival.MAX_KNOCKOUT_MS = 120000
 survival.MIN_KNOCKOUT_MS = 1500
@@ -37,13 +38,16 @@ function survival.loadWounds(bleed, isNew)
 end
 
 -- The cause of a death in the survival tick: a tick drains HP through bleeding (bleed > 0 at its start), hunger
--- (food < 20) or the Air drug. Bleeding wins when several applied.
-function survival.deathCause(bleedBefore, food)
+-- (food < 20), dehydration (thirst < 20) or the Air drug. Bleeding wins when several applied.
+function survival.deathCause(bleedBefore, food, thirst)
     if bleedBefore > 0 then
         return "bleeding"
     end
     if food < 20 then
         return "starvation"
+    end
+    if (thirst or 100) < 20 then
+        return "dehydration"
     end
     return "drugs"
 end
@@ -52,7 +56,13 @@ end
 -- optional (#94): food infection adds one idle food rate, wound infection halves the regeneration, and the drug
 -- effects of bleed.pwn and drugfx.pwn apply once per tick (upstream ran Air and Adrenaline twice, ADR 0007).
 function survival.tick(state, movementMult, rng)
-    local s = { hp = state.hp, food = state.food, bleed = state.bleed, wounds = state.wounds or 0 }
+    local s = {
+        hp = state.hp,
+        food = state.food,
+        thirst = state.thirst or 80,
+        bleed = state.bleed,
+        wounds = state.wounds or 0,
+    }
     local events = {}
     local infection, drugs = state.infection or {}, state.drugs or {}
     local drain = survival.IDLE_FOOD_RATE * movementMult
@@ -62,6 +72,10 @@ function survival.tick(state, movementMult, rng)
     s.food = clamp(s.food - drain, 0, 100)
     if s.food < 20 then
         s.hp = s.hp - (20 - s.food) / 30
+    end
+    s.thirst = clamp(s.thirst - survival.IDLE_THIRST_RATE * movementMult, 0, 100)
+    if s.thirst < 20 then
+        s.hp = s.hp - (20 - s.thirst) / 30
     end
     if s.bleed > 0 then
         -- upstream computes the slow-down from HP before this second's bleed damage

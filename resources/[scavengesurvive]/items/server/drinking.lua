@@ -50,7 +50,8 @@ return function(ctx)
         end
         ctx.writeHeldData(player, held.id, nextData)
         if food ~= 0 then
-            exports.character:modifyStat(player, "food", food)
+            -- Positive drinks replenish hydration; harmful liquids keep their food penalty.
+            exports.character:modifyStat(player, food > 0 and "thirst" or "food", food)
         end
         if isTimer(a.timer) then
             killTimer(a.timer)

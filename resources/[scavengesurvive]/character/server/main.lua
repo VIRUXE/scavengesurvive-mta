@@ -22,7 +22,7 @@ local bleeding = loadFile("shared/logic/bleeding.lua")
 
 -- Every spawned character, shared with the tick and death modules (they capture this table).
 local state = {
-    byPlayer = {}, -- player -> { id, hp, food, bleed, wounds, infection, drugs, skills, skillsDirty, dirty, dead, ... }
+    byPlayer = {}, -- player -> character stats, skills, inventory and persistence state
     byId = {}, -- character id -> player
     lastSpawn = {}, -- player -> last spawnpoint index (no two spawns in a row at the same place)
     creating = {}, -- players with a character_create in flight
@@ -170,6 +170,7 @@ local function spawnFromRow(player, row, isNew)
         accountId = row.account_id,
         hp = row.hp,
         food = row.food,
+        thirst = tonumber(row.thirst) or 80,
         bleed = row.bleed,
         wounds = survival.loadWounds(row.bleed, isNew),
         skills = loadSkills(row.skills),
@@ -178,7 +179,7 @@ local function spawnFromRow(player, row, isNew)
         dirty = false,
         born = tonumber(row.born) or getRealTime().timestamp, -- unix time the character was created (death age)
         inventoryContainerId = row.inventory_container_id,
-        lastSent = { hp = -1, food = -1, bleed = -1 },
+        lastSent = { hp = -1, food = -1, thirst = -1, bleed = -1 },
     }
     state.byPlayer[player], state.byId[row.id] = st, player
     combatlog.reset(state.combat, player)
@@ -221,7 +222,7 @@ local function createAndSpawn(player, accountId, stats)
     -- upstream spawn.pwn picked from seven skins per gender; the port rolls every clothes type of the gender with
     -- its spawn chance (items/shared/logic/clothes.lua, #76), so a rare SWAT or Morgan Freeman spawn is possible
     local skin = exports.items:rollSpawnSkin(rngInt(2) == 2)
-    local params = { accountId, skin, x, y, z, rz, stats.hp, stats.food, stats.bleed }
+    local params = { accountId, skin, x, y, z, rz, stats.hp, stats.food, stats.bleed, stats.thirst }
     db.call("character_create", params, function(res, ctx)
         state.creating[ctx.player] = nil
         if not isElement(ctx.player) then
@@ -248,6 +249,7 @@ local function createAndSpawn(player, accountId, stats)
             inventory_container_id = res.payload.inventory_container_id,
             hp = stats.hp,
             food = stats.food,
+            thirst = stats.thirst,
             bleed = stats.bleed,
             x = x,
             y = y,
@@ -267,7 +269,8 @@ local function loadOrCreate(player, accountId)
         return
     end
     db.one(
-        "SELECT id, account_id, hp, food, bleed, skills, infection, drugs, x, y, z, rz, skin, interior, dimension,"
+        "SELECT id, account_id, hp, food, thirst, bleed, skills, infection, drugs, x, y, z, rz, skin,"
+            .. " interior, dimension,"
             .. " inventory_container_id, UNIX_TIMESTAMP(spawned_at) AS born"
             .. " FROM characters WHERE account_id = ? AND alive = 1",
         { accountId },
@@ -417,7 +420,14 @@ function getStats(player)
     if not st then
         return false
     end
-    return { hp = st.hp, food = st.food, bleed = st.bleed, wounds = st.wounds, infection = st.infection }
+    return {
+        hp = st.hp,
+        food = st.food,
+        thirst = st.thirst,
+        bleed = st.bleed,
+        wounds = st.wounds,
+        infection = st.infection,
+    }
 end
 
 -- Treatment (#94): items calls treatPlayer at the end of a medical, pill or injector hold; returns
@@ -460,7 +470,7 @@ end
 
 function modifyStat(player, key, delta)
     local st = state.byPlayer[player]
-    if not st or (key ~= "hp" and key ~= "food" and key ~= "bleed") then
+    if not st or (key ~= "hp" and key ~= "food" and key ~= "thirst" and key ~= "bleed") then
         return false
     end
     if getElementData(player, "auth.reauthProtection") then

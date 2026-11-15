@@ -152,6 +152,7 @@ local function revive(player, s)
         -- hp first: modifyStat kills at 0
         exports.character:modifyStat(player, "hp", 100 - stats.hp)
         exports.character:modifyStat(player, "food", math.max(0, 80 - stats.food))
+        exports.character:modifyStat(player, "thirst", math.max(0, 80 - stats.thirst))
         exports.character:modifyStat(player, "bleed", -stats.bleed)
     end
     if isPedDead(player) then

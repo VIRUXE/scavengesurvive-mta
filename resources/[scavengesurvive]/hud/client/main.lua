@@ -1,5 +1,5 @@
 -- The HUD as the SA-MP footage shows it (docs/ui-reference-samp.md): the stock GTA components upstream kept,
--- the hunger bar, the ammo text under the weapon icon, the key-actions column, the watch, the vehicle panel, the
+-- the hunger and thirst bars, ammo under the weapon icon, the key-actions column, the watch, the vehicle panel and
 -- driver's dashboard and the low-health brightness overlay. The canvas and text primitives come from the ui
 -- resource's files.
 local function loadFile(path, chunkName)
@@ -61,7 +61,7 @@ local SUPPORTS = {
 local state = {
     spawned = false,
     dead = false,
-    stats = { hp = 100, food = 100, bleed = 0 },
+    stats = { hp = 100, food = 100, thirst = 100, bleed = 0 },
     held = false, -- { id, uname, category }
     brightness = 0,
     combatUntil = 0, -- getTickCount() until which the watch is red (combatWindowChanged from character)
@@ -226,7 +226,9 @@ addEventHandler("heldItemChanged", root, function(item)
     end
 end)
 
-local function drawHunger()
+local function drawNeeds()
+    local T = bars.THIRST
+    draw.progressBar(T.x, T.y, T.w, T.h, bars.fill(state.stats.thirst, T.max), T.r, T.g, T.b, T.a, "right")
     local H = bars.HUNGER
     draw.progressBar(H.x, H.y, H.w, H.h, bars.fill(state.stats.food, H.max), H.r, H.g, H.b, H.a, "right")
 end
@@ -691,10 +693,10 @@ addEventHandler("onClientRender", root, function()
     end
     local vehicle = getPedOccupiedVehicle(localPlayer)
     local driver = vehicle and getVehicleOccupant(vehicle, 0) == localPlayer or false
-    -- duty staff have frozen stats, so no hunger bar, and no watch (bearing, clock, radio frequency)
+    -- duty staff have frozen stats, so no survival bars, and no watch (bearing, clock, radio frequency)
     local onDuty = getElementData(localPlayer, "staff.duty") == true
     if not onDuty then
-        drawHunger()
+        drawNeeds()
     end
     drawAmmo()
     drawKeyActions(driver)
