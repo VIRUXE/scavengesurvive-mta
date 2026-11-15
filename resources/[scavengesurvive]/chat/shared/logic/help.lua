@@ -12,7 +12,7 @@ local T = {
     back = "< Back",
     next = "Next >",
     close = "Close",
-    key = "Key",
+    key = "Keyboard key",
     action = "What it does",
     command = "Command",
     hold = "Hold %s",
@@ -23,10 +23,11 @@ local T = {
     startSteps = {
         "This is a survival game. You have one life.",
         "If you die, you lose everything you carry and start again with nothing.",
-        "Find what you need to stay alive: food, a bag, tools and weapons.",
+        "Find what you need to stay alive: food, drinks, a bag, tools and weapons.",
         "Search houses, yards, shops and cars. Items on the ground show a yellow name.",
         "Walk up to an item and press {interact} to pick it up.",
-        "Top right of the screen: the red bar is your health, the green bar is your hunger.",
+        "Top right of the screen: the red bar is your health, the blue bar is your thirst,"
+            .. " the green bar is your hunger.",
         "Other players can help you or kill you. Be careful who you trust.",
     },
     startTip = "Click the buttons on the left, or press Next, to read the rest. It only takes a minute.",
@@ -48,7 +49,8 @@ local T = {
     aliveTitle = "Stay alive",
     aliveSteps = {
         "When the green bar gets low, eat. Hold the food and press {interact}.",
-        "If hunger drops below 20, you start to lose health.",
+        "When the blue bar gets low, drink. Hold the drink and hold {interact} to take sips.",
+        "If hunger or thirst drops below 20, you start to lose health.",
         "Raw meat and raw fish make you sick. Cook them on a campfire first.",
         "Hit by a gun or a knife? You are bleeding and lose health every second.",
         "To stop bleeding: hold a bandage and hold {interact} for 4 seconds.",
