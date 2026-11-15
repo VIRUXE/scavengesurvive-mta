@@ -60,12 +60,12 @@ ROOF_T = 0.10
 EAVE, VERGE = 6.0, HY + 0.7  # the roof reaches |x| 6.0 and |y| 8.85
 # openings, on course joints: (u0, u1, z0, z1)
 WIN_LONG_Z, WIN_END_Z = (0.97, 2.25), (1.13, 2.41)
-DOOR_U, DOOR_Z = (0.32, 1.62), (F, 2.25)
+DOOR_U, DOOR_Z = (0.42, 1.52), (F, 2.25)
 WEST = [(-5.1, -4.0) + WIN_LONG_Z, DOOR_U + DOOR_Z, (5.05, 6.15) + WIN_LONG_Z]
 EAST = [(-5.1, -4.0) + WIN_LONG_Z, (5.05, 6.15) + WIN_LONG_Z]
 NORTH = [(-2.8, -1.7) + WIN_END_Z, (-0.6, 0.6, F, 1.45), (1.7, 2.8) + WIN_END_Z]  # the middle one is the firebox
 SOUTH = [(-2.8, -1.7) + WIN_END_Z, (1.7, 2.8) + WIN_END_Z]
-PART_Y, PART_DOOR = -1.8, (1.0, 2.1, F, 2.15)  # the partition and its doorway
+PART_Y, PART_DOOR = -1.8, (1.0, 2.1, F, 2.45)  # the partition and its doorway
 # west porch (roofed) and open deck, stairs down from the deck's north edge
 PORCH = (-9.15, -5.42, -4.0, 8.6)  # x0, x1, y0, y1
 DECK_OPEN = (-11.6, -5.42, -9.3, -4.0)
