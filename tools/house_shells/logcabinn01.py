@@ -60,7 +60,7 @@ ROOF_T = 0.10
 EAVE, VERGE = 6.0, HY + 0.7  # the roof reaches |x| 6.0 and |y| 8.85
 # openings, on course joints: (u0, u1, z0, z1)
 WIN_LONG_Z, WIN_END_Z = (0.97, 2.25), (1.13, 2.41)
-DOOR_U, DOOR_Z = (0.42, 1.52), (F, 2.25)
+DOOR_U, DOOR_Z = (0.32, 1.62), (F, 2.25)
 WEST = [(-5.1, -4.0) + WIN_LONG_Z, DOOR_U + DOOR_Z, (5.05, 6.15) + WIN_LONG_Z]
 EAST = [(-5.1, -4.0) + WIN_LONG_Z, (5.05, 6.15) + WIN_LONG_Z]
 NORTH = [(-2.8, -1.7) + WIN_END_Z, (-0.6, 0.6, F, 1.45), (1.7, 2.8) + WIN_END_Z]  # the middle one is the firebox
