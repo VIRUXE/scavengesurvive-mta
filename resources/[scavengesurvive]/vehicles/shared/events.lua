@@ -26,6 +26,7 @@ addEvent("carmourAttachRequested", true)
 addEvent("weldTorchGrabRequested", true)
 addEvent("weldTorchStowRequested", true)
 addEvent("weldCylinderHookRequested", true)
+addEvent("vehicleGroundChecked", true) -- answers to vehicleGroundCheckRequested (server/ground.lua)
 
 -- server to client / client-local
 addEvent("vehicleHoldStarted", true)
@@ -47,4 +48,5 @@ addEvent("vehicleKeypadOpened", true)
 addEvent("keypadClosed", true)
 addEvent("weldStarted", true)
 addEvent("grindStarted", true)
+addEvent("vehicleGroundCheckRequested", true) -- server positions of nearby empty vehicles to test against the map
 addEvent("vehicleSpotsChanged", true) -- vehicle spawn points around a dev-level staff member on duty (server/overlay.lua)

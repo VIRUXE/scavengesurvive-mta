@@ -3459,3 +3459,16 @@ do
         end,
     })
 end
+
+-- Under-map rescue: nearby clients test the server's vehicle positions against the world (server/ground.lua)
+do
+    local f = fileOpen("server/ground.lua", true)
+    local src = fileRead(f, fileGetSize(f))
+    fileClose(f)
+    assert(loadstring(src, "=vehicles/server/ground.lua"))()({
+        info = info,
+        net = net,
+        log = log,
+        vehicleLine = vehicleLine,
+    })
+end
