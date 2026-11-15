@@ -58,6 +58,18 @@ return {
         },
     },
     {
+        model = 16280,
+        dff = "des_farmhouse1",
+        door = "des_farmhouse1_door",
+        hinges = {
+            { -6.434, -5.960, -3.168, 180.0 },
+            { -9.521, 2.771, -3.168, 0.0 },
+        },
+        placements = {
+            { 293.609, 1148.180, 11.305, 90.0 },
+        },
+    },
+    {
         model = 16326,
         dff = "des_byoffice",
         door = "des_byoffice_door",

@@ -21,7 +21,7 @@ from tools.trailer_shells.doors import OUT as TRAILERS_OUT
 from tools.trailer_shells.doors import UPRIGHT, removals, removed
 from tools.trailer_shells.prep import BUILD
 
-HOUSES = {3303: "des_bighus03", 3304: "des_bighus02", 3305: "des_bighus01", 16326: "des_byoffice"}  # vanilla model -> shell
+HOUSES = {3303: "des_bighus03", 3304: "des_bighus02", 3305: "des_bighus01", 16280: "des_farmhouse1", 16326: "des_byoffice"}  # vanilla model -> shell
 OUT = TRAILERS_OUT.with_name("houses.lua")
 
 

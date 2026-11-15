@@ -76,6 +76,7 @@ class Opening:
         self.removed = []  # (texture, uv min, uv max) of the vanilla faces cut away
         self.patch = []  # (vertex coords, uvs, texture) of the outward vanilla faces cut away: a leaf cut from the skin
         self.door = None
+        self.frame_skin = None  # (texture, uv rect) of a textured window frame
 
     @property
     def normal(self):
@@ -204,8 +205,9 @@ class Shell:
             loop[self.night] = night
         return f
 
-    def box(self, lo, hi, material, light="in", scale=None, skip=()):
-        """An axis-aligned box, faces outward; `skip` names faces to leave off ('-x', '+z', ...)."""
+    def box(self, lo, hi, material, light="in", scale=None, skip=(), uv_rect=None):
+        """An axis-aligned box, faces outward; `skip` names faces to leave off ('-x', '+z', ...). `uv_rect`
+        (u0, v0, u1, v1): every face wears that patch of its texture, stretched, instead of planar mapping."""
         x0, y0, z0 = lo
         x1, y1, z1 = hi
         quads = {
@@ -217,7 +219,12 @@ class Shell:
             "-z": [(x0, y1, z0), (x1, y1, z0), (x1, y0, z0), (x0, y0, z0)],
         }
         for k, q in quads.items():
-            if k not in skip:
+            if k in skip:
+                continue
+            if uv_rect:
+                u0, v0, u1, v1 = uv_rect
+                self.face(q, material, uvs=[(u0, v0), (u1, v0), (u1, v1), (u0, v1)], light=light)
+            else:
                 self.face(q, material, light=light, scale=scale or SCALE.get(self._tex_name(material), 1.0))
 
     def _tex_name(self, material):
@@ -262,12 +269,14 @@ class Shell:
         bmesh.ops.delete(bm, geom=dead, context="FACES")
         return len(dead)
 
-    def opening(self, kind, axis, side, u0, u1, z0, z1, inner, outer=None, frame="slider", glass_inset=0.04, hinge="left", reveal=TRIM):
+    def opening(self, kind, axis, side, u0, u1, z0, z1, inner, outer=None, frame="slider", glass_inset=0.04, hinge="left", reveal=TRIM, frame_skin=None):
         """Declares and builds a hole in a wall. kind: 'window' (glazed, framed, sill), 'door' (a leaf of its own,
         `hinge` 'left'/'right' as seen from outside) or 'pass' (a plain hole between two rooms: give `outer`, the
         other room's inner face). `outer`: depth of the outer skin, measured per corner by raycast when None.
         frame: 'slider' (vertical meeting stile), 'sash' (horizontal meeting rail), 'fixed', or a list of
-        ('v'|'h', fraction) mullions."""
+        ('v'|'h', fraction[, width]) mullions and muntins (width defaults to the frame's bar). `frame_skin`
+        (texture, (u0, v0, u1, v1)): the frame is that patch of a texture (a painted wooden sash cut from the vanilla
+        window's own frame) instead of untextured aluminium."""
         o = Opening(kind, axis, side, u0, u1, z0, z1, inner)
         n, a = _axes(axis)
         corners = [(u0, z0), (u1, z0), (u1, z1), (u0, z1)]
@@ -296,6 +305,7 @@ class Shell:
                 quad.reverse()
             self.face(quad, trim, light="out", scale=SCALE[TRIM])
         if kind == "window":
+            o.frame_skin = frame_skin
             self._glaze(o, frame, glass_inset)
             self._sill(o)
         elif kind == "door":
@@ -305,17 +315,19 @@ class Shell:
 
     def _glaze(self, o, frame, inset):
         n, a = _axes(o.axis)
+        skin = o.frame_skin
         depth = {k: v - o.side * inset for k, v in o.outer.items()}
         d0 = sum(depth.values()) / 4
-        alu = self.mat(rgb=FRAME_RGB)
+        alu = self.mat(skin[0]) if skin else self.mat(rgb=FRAME_RGB)
+        rect = skin[1] if skin else None
         u0, u1, z0, z1 = o.u0, o.u1, o.z0, o.z1
         bar = 0.045
-        bars = [("v", 0.0), ("v", 1.0), ("h", 0.0), ("h", 1.0)]
         extra = {"slider": [("v", 0.5)], "sash": [("h", 0.5)], "fixed": []}[frame] if isinstance(frame, str) else frame
-        bars += list(extra)
+        extra = [(e[0], e[1], e[2] if len(e) > 2 else bar) for e in extra]
+        bars = [("v", 0.0, bar), ("v", 1.0, bar), ("h", 0.0, bar), ("h", 1.0, bar)] + extra
         # panes between the bars, both faces, so the glass is seen from inside and out
-        us = sorted({u0 + bar, u1 - bar} | {u0 + f * (u1 - u0) + s * bar / 2 for k, f in extra if k == "v" for s in (-1, 1)})
-        zs = sorted({z0 + bar, z1 - bar} | {z0 + f * (z1 - z0) + s * bar / 2 for k, f in extra if k == "h" for s in (-1, 1)})
+        us = sorted({u0 + bar, u1 - bar} | {u0 + f * (u1 - u0) + s * w / 2 for k, f, w in extra if k == "v" for s in (-1, 1)})
+        zs = sorted({z0 + bar, z1 - bar} | {z0 + f * (z1 - z0) + s * w / 2 for k, f, w in extra if k == "h" for s in (-1, 1)})
         for i in range(0, len(us) - 1, 2):
             for j in range(0, len(zs) - 1, 2):
                 pu0, pu1, pz0, pz1 = us[i], us[i + 1], zs[j], zs[j + 1]
@@ -323,10 +335,10 @@ class Shell:
                 uv = [((pu0 - u0) / (u1 - u0), (pz0 - z0) / (z1 - z0)), ((pu1 - u0) / (u1 - u0), (pz0 - z0) / (z1 - z0)), ((pu1 - u0) / (u1 - u0), (pz1 - z0) / (z1 - z0)), ((pu0 - u0) / (u1 - u0), (pz1 - z0) / (z1 - z0))]
                 outward = (o.side > 0) == (o.axis == "x")
                 self._glass_faces.append((q, uv, outward))
-        for k, f in bars:
+        for k, f, w in bars:
             if k == "v":
                 c = u0 + f * (u1 - u0)
-                b0, b1 = max(u0, c - bar / 2) if f > 0 else u0, min(u1, c + bar / 2) if f < 1 else u1
+                b0, b1 = max(u0, c - w / 2) if f > 0 else u0, min(u1, c + w / 2) if f < 1 else u1
                 if f == 0:
                     b1 = u0 + bar
                 if f == 1:
@@ -334,10 +346,10 @@ class Shell:
                 lo, hi = _point(o.axis, d0 - 0.03, b0, z0), _point(o.axis, d0 + 0.03, b1, z1)
             else:
                 c = z0 + f * (z1 - z0)
-                b0, b1 = (z0, z0 + bar) if f == 0 else (z1 - bar, z1) if f == 1 else (c - bar / 2, c + bar / 2)
+                b0, b1 = (z0, z0 + bar) if f == 0 else (z1 - bar, z1) if f == 1 else (c - w / 2, c + w / 2)
                 # a little shallower than the uprights, so the faces where they cross do not z-fight
                 lo, hi = _point(o.axis, d0 - 0.025, u0, b0), _point(o.axis, d0 + 0.025, u1, b1)
-            self.box([min(lo[i], hi[i]) for i in range(3)], [max(lo[i], hi[i]) for i in range(3)], alu, light="out")
+            self.box([min(lo[i], hi[i]) for i in range(3)], [max(lo[i], hi[i]) for i in range(3)], alu, light="out", uv_rect=rect)
 
     def _sill(self, o):
         """A trim ledge under the window on the room side."""

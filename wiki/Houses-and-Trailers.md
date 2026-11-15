@@ -12,6 +12,7 @@ Buildings you can walk into. They are scenery that the map places in the world: 
 |:--|--:|--:|:--|
 | Town houses | 12 | 237 | four designs in the Los Santos style (95 placed), four Las Vegas (80), four San Fierro (62) |
 | Old west house | 1 | 2 | on two farms; open doorway, no door |
+| Farmhouse | 1 | 1 | the farm east of Fort Carson, by the water tower; front and back doors |
 | Log cabins | 1 row of 6 | 1 | six one-room cabins side by side, Flint County |
 
 **Town houses.** Each has a modelled exterior and a hollow interior behind the entrance, so you can walk straight in from the street.
@@ -24,6 +25,8 @@ Buildings you can walk into. They are scenery that the map places in the world: 
 <!-- shot:shot-house-interior -->
 
 **Old west house.** A wooden house with a plastered interior, plank floor and ceiling and an open front doorway.
+
+**Farmhouse.** The board house with the porch on the farm east of Fort Carson. Four rooms joined by open doorways: a living room behind the front door on the porch, a kitchen behind it, a bedroom that takes in the little front annex, and a back room behind the north door. Both doors swing, the windows are glazed and curtained.
 
 **Log cabins.** Six one-room cabins in a row beside the Flint County road. Each has its own swinging door and glazed windows.
 
