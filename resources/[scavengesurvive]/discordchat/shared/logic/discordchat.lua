@@ -99,34 +99,93 @@ function discordchat.itemSpawnPayload(playerName, itemUname, itemId, zone, chann
     return "staff.log", payload
 end
 
--- Server-side getZoneName does not exist (client only), so a spawn is placed by the city boxes of the map.
-local CITIES = {
-    { name = "Los Santos", x1 = 44, y1 = -2892, x2 = 2997, y2 = -768 },
-    { name = "San Fierro", x1 = -2997, y1 = -1115, x2 = -1213, y2 = 1659 },
-    { name = "Las Venturas", x1 = 869, y1 = 596, x2 = 2997, y2 = 2993 },
+-- #spawns embeds -----------------------------------------------------------------------------------------------
+
+local WIKI = "https://github.com/VIRUXE/scavengesurvive-mta/wiki/"
+local FOOTER = "Scavenge & Survive"
+local CATEGORY = {
+    weapon = { colour = 0xC0392B },
+    ammo = { label = "Ammunition", colour = 0xD4AC0D },
+    food = { label = "Food", colour = 0x27AE60 },
+    liquid = { label = "Liquid", colour = 0x2E86C1 },
+    bag = { label = "Bag", colour = 0x8E44AD },
+    safebox = { label = "Storage", colour = 0x7F8C8D },
+    generic = { label = "Item", colour = 0x16A085 },
 }
 
-function discordchat.cityAt(x, y)
-    for _, c in ipairs(CITIES) do
-        if x >= c.x1 and x <= c.x2 and y >= c.y1 and y <= c.y2 then
-            return c.name
-        end
-    end
-    return ""
+local function titleCase(s)
+    return (tostring(s or ""):gsub("^%l", string.upper))
 end
 
-function discordchat.vehicleSpawnPayload(name, zone, channel)
-    local vehicle = discordchat.strip(name)
-    if vehicle == "" then
-        return nil, nil
+-- The item's type line: "Melee weapon", "Firearm · 7.62", "Ammunition · 9mm", "Food", ...
+function discordchat.itemTypeLabel(def, calibreName)
+    local cat = def and def.category or "generic"
+    local data = def and def.categoryData or {}
+    local cal = data.calibre and (calibreName and calibreName(data.calibre) or data.calibre)
+    if cat == "weapon" then
+        if data.melee then
+            return "Melee weapon"
+        end
+        return cal and ("Firearm · " .. cal) or "Weapon"
     end
-    local zoneClean = zone and discordchat.strip(zone) or ""
-    local zoneStr = (zoneClean ~= "" and zoneClean ~= "Unknown") and (" in **" .. zoneClean .. "**") or ""
-    local payload = { text = string.format(":red_car: A **%s** spawned%s", vehicle, zoneStr) }
-    if channel then
-        payload.channel = channel
+    local label = (CATEGORY[cat] or CATEGORY.generic).label
+    return cal and (label .. " · " .. cal) or label
+end
+
+-- calibreName: calibre id -> display name. images: the spawn_images.lua table (version, items = uname -> png,
+-- wiki = uname -> page). base: the renders' URL.
+function discordchat.itemSpawnEmbed(def, uname, region, images, base, calibreName)
+    local name = discordchat.strip(def and def.name or uname)
+    if name == "" then
+        return nil
     end
-    return "staff.log", payload
+    local file = images and images.items and images.items[uname]
+    local page = images and images.wiki and images.wiki[uname]
+    local fields = {
+        { name = "📍 Region", value = region ~= "" and region or "Unknown" },
+        { name = "🏷️ Type", value = discordchat.itemTypeLabel(def, calibreName) },
+    }
+    if def and tonumber(def.size) then
+        fields[#fields + 1] = { name = "🎒 Size", value = tostring(def.size) }
+    end
+    return {
+        author = "📦 Loot spawned",
+        title = name,
+        url = page and (WIKI .. page) or nil,
+        fields = fields,
+        thumbnail = file and (base .. "items/" .. file .. "?v=" .. tostring(images.version or "1")) or nil,
+        colour = (CATEGORY[def and def.category] or CATEGORY.generic).colour,
+        footer = FOOTER,
+    }
+end
+
+function discordchat.vehicleSpawnEmbed(vt, region)
+    local name = discordchat.strip(vt and vt.name or "")
+    if name == "" then
+        return nil
+    end
+    local class = titleCase(vt.category)
+    if vt.group and vt.group ~= "" then
+        class = class ~= "" and (class .. " · " .. vt.group) or vt.group
+    end
+    local fields = { { name = "📍 Region", value = region ~= "" and region or "Unknown" } }
+    if class ~= "" then
+        fields[#fields + 1] = { name = "🚙 Class", value = class }
+    end
+    if tonumber(vt.trunkSize) and vt.trunkSize > 0 then
+        fields[#fields + 1] = { name = "🧰 Trunk", value = tostring(vt.trunkSize) .. " slots" }
+    end
+    if not vt.noEngine and tonumber(vt.maxFuel) and vt.maxFuel > 0 then
+        fields[#fields + 1] = { name = "⛽ Fuel tank", value = string.format("%d L", vt.maxFuel) }
+    end
+    return {
+        author = "🚗 Vehicle spawned",
+        title = name,
+        url = WIKI .. "Vehicles",
+        fields = fields,
+        colour = 0xE67E22,
+        footer = FOOTER,
+    }
 end
 
 function discordchat.staffLogPayload(text, channel)

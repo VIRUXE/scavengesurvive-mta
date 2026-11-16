@@ -31,11 +31,6 @@ local function getStaffChannel()
     return (type(val) == "string" and val ~= "") and val or "1563498523507425421"
 end
 
-local function getGeneralChannel()
-    local val = get("generalChannel")
-    return (type(val) == "string" and val ~= "") and val or "general"
-end
-
 local function getDeathsChannel()
     local val = get("deathsChannel")
     return (type(val) == "string" and val ~= "") and val or "deaths"
@@ -62,18 +57,37 @@ addEventHandler("characterDeathLogged", root, function(playerName, cause, killer
     call(res, "send", "staff.log", { text = text, channel = getDeathsChannel() })
 end)
 
+local spawnImages = loadFile("shared/spawn_images.lua")
+
+local function calibreName(id)
+    return exports.data:calibreName(id)
+end
+
+local function getSpawnsChannel()
+    local val = get("spawnsChannel")
+    return (type(val) == "string" and val ~= "") and val or "1572010791199055962"
+end
+
+local function spawnImageBase()
+    local base = get("spawnImageBase")
+    return (type(base) == "string" and base ~= "") and base or "https://ss.flaviopereira.dev/reborn/images/"
+end
+
+local function postSpawn(res, embed)
+    if embed then
+        call(res, "send", "spawn.post", { channel = getSpawnsChannel(), embed = embed })
+    end
+end
+
+-- #spawns: one embed per vehicle or loot item, the region only (no coordinates).
 addEventHandler("vehicleRefillSpawned", root, function()
     local res = bridge()
     if not res or not isElement(source) then
         return
     end
+    local x, y, z = getElementPosition(source)
     local vt = exports.data:vehicleType(getElementData(source, "vehicles.type"))
-    local x, y = getElementPosition(source)
-    local zone = logic.cityAt(x, y)
-    local packet, payload = logic.vehicleSpawnPayload(vt and vt.name, zone, getGeneralChannel())
-    if packet and payload then
-        call(res, "send", packet, payload)
-    end
+    postSpawn(res, logic.vehicleSpawnEmbed(vt, getZoneName(x, y, z, true)))
 end)
 
 function logItemSpawn(playerName, itemUname, itemId, zone)
@@ -196,5 +210,6 @@ addEventHandler("lootSpawned", root, function(spawnId, _, spawnedItems)
             getRealTime().timestamp
         )
         call(res, "send", "staff.log", { text = text, channel = channel })
+        postSpawn(res, logic.itemSpawnEmbed(def, item.u, region, spawnImages, spawnImageBase(), calibreName))
     end
 end)
