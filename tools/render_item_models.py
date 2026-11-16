@@ -237,7 +237,8 @@ def build_in_blender(jobs_file: Path, out_dir: Path, size: int):
         scn = bpy.context.scene
         scn.render.engine = "BLENDER_WORKBENCH"
         scn.render.resolution_x = scn.render.resolution_y = size
-        scn.render.film_transparent = False
+        scn.render.film_transparent = True  # PNGs keep alpha (Discord #spawns embeds, sheets composite them)
+        scn.render.image_settings.color_mode = "RGBA"
         scn.display.shading.light = "STUDIO"
         scn.display.shading.color_type = "TEXTURE"
         scn.display.shading.show_cavity = False
@@ -306,8 +307,8 @@ def sheets(items: list[dict], out: Path, cols=4, rows=3, cell=384):
         d = ImageDraw.Draw(sheet)
         for i, it in enumerate(chunk):
             x, y = (i % cols) * cell, (i // cols) * (cell + 40)
-            im = Image.open(out / it["file"]).convert("RGB").resize((cell, cell))
-            sheet.paste(im, (x, y))
+            im = Image.open(out / it["file"]).convert("RGBA").resize((cell, cell))
+            sheet.paste(im, (x, y), im)
             d.text((x + 8, y + cell + 8), it["label"][:40], fill=(235, 235, 235), font=font)
         p = out / f"sheet_{n}.png"
         sheet.save(p)
