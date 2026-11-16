@@ -7,7 +7,7 @@ local PROPERTIES = {
     LightsOnGround = 0, -- the light pools those lamps cast on roads and walls
 }
 -- brightest a building's baked night colour may be once night has fully fallen (client/blackout.fx)
-local NIGHT_CAP = 0.3
+local NIGHT_CAP = 0.12
 
 local on = true
 local shader
