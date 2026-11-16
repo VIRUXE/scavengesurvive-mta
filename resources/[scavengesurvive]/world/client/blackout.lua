@@ -1,4 +1,4 @@
--- luacheck: read globals setWorldProperty resetWorldProperty getTime
+-- luacheck: read globals setWorldProperty resetWorldProperty getTime engineRemoveShaderFromWorldTexture
 -- The grid is dead: no street lamp, traffic light or neon glows, no lamp throws light on the ground, and no window is
 -- lit. Only what a player carries or burns lights the night (headlights, flashlights, fires). Staff can switch the
 -- city back on for themselves with /lights (staff moderation.lua) to look at something.
@@ -8,6 +8,24 @@ local PROPERTIES = {
 }
 -- brightest a building's baked night colour may be once night has fully fallen (client/blackout.fx)
 local NIGHT_CAP = 0.12
+-- hud.txd, fonts.txd and fronten*.txd textures (wildcards as engineRemoveShaderFromWorldTexture takes them)
+local HUD_TEXTURES = {
+    "font1",
+    "font2",
+    "fist",
+    "*icon",
+    "radar*",
+    "site*",
+    "arrow",
+    "skipicon",
+    "lockon*",
+    "back*",
+    "mouse",
+    "crosshair",
+    "fronten*",
+    "map*",
+    "hud*",
+}
 
 local on = true
 local shader
@@ -49,6 +67,11 @@ addEventHandler("onClientResourceStart", resourceRoot, function()
     shader = dxCreateShader("client/blackout.fx", -10, 0, false, "world,object")
     if shader then
         engineApplyShaderToWorldTexture(shader, "*")
+        -- GTA's own 2D drawing (HUD weapon icons, radar, zone and area names, the pause menu) counts as world
+        -- textures too; left in, every one of them went dark at night
+        for _, name in ipairs(HUD_TEXTURES) do
+            engineRemoveShaderFromWorldTexture(shader, name)
+        end
         setTimer(updateCap, 1000, 0)
     end
     apply()
