@@ -38,7 +38,7 @@ return function(kit)
         local s = f.s
         L.panel(X, Y, W, H)
         L.tape(X + 19 + 2 * PITCH, Y + 4, 96, 8.5, s.heading, f.glow, f.powered)
-        L.airspeed(CX[1], CY, R, logic.knots(f.shown.speed), KNOTS_TOP, 20, ARCS, f)
+        L.airspeed(CX[1], CY, R, logic.knots(f.kmh), KNOTS_TOP, 20, ARCS, f)
         L.horizon(CX[2], CY, R, s.pitch, s.roll, f.glow)
         L.altimeter(CX[3], CY, R, s.altitude, f)
         L.climb(CX[4], CY, R, s.climb, f)

@@ -30,7 +30,7 @@ return function(kit)
         revs = kit.ease(revs, f.cranking and f.rpmShare or logic.propShare(s.engine, throttle, brake), f.dt, 400)
 
         L.panel(X, Y, W, H)
-        L.airspeed(CX[1], CY, R, logic.knots(f.shown.speed), KNOTS_TOP, 30, ARCS, f)
+        L.airspeed(CX[1], CY, R, logic.knots(f.kmh), KNOTS_TOP, 30, ARCS, f)
         L.horizon(CX[2], CY, R, s.pitch, s.roll, f.glow)
         L.altimeter(CX[3], CY, R, s.altitude, f)
         L.gyro(CX[4], CY, R, s.heading, f)
