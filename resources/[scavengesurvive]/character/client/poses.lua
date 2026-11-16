@@ -82,9 +82,11 @@ local function stopSitTimer()
     sitTimer = nil
 end
 
+-- A bound control's key fires even while that control is switched off (staff /fly turns crouch and sprint off and
+-- reads C and Space itself), so a pose key only counts while its control is on.
 local function onCrouch(_, press)
     if press == "down" then
-        if not free() then
+        if not free() or not isControlEnabled("crouch") then
             return
         end
         if pose == "sitting" then
@@ -101,7 +103,7 @@ local function onCrouch(_, press)
         stopSitTimer()
         sitTimer = setTimer(function()
             sitTimer = nil
-            if free() and still() and pose == false then
+            if free() and isControlEnabled("crouch") and still() and pose == false then
                 triggerServerEvent("sitRequested", localPlayer)
             end
         end, poses.SIT_HOLD_MS, 1)
@@ -114,7 +116,7 @@ local function onCrouch(_, press)
 end
 
 local function onSprint()
-    if not free() then
+    if not free() or not isControlEnabled("sprint") then
         return
     end
     if pose == "sitting" then
