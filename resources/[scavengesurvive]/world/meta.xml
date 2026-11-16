@@ -11,6 +11,7 @@
     <script src="client/weather.lua" type="client"/>
     <script src="client/blackout.lua" type="client"/>
     <file src="client/screen.fx"/>
+    <file src="client/blackout.fx"/>
     <file src="server/buttons.lua"/>
     <file src="server/boxes.lua"/>
     <file src="server/vending.lua" download="false"/>
