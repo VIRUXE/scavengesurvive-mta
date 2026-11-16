@@ -9,6 +9,7 @@
     <script src="client/buttons.lua" type="client"/>
     <script src="client/trees.lua" type="client"/>
     <script src="client/weather.lua" type="client"/>
+    <script src="client/blackout.lua" type="client"/>
     <file src="client/screen.fx"/>
     <file src="server/buttons.lua"/>
     <file src="server/boxes.lua"/>

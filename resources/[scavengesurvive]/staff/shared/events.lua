@@ -12,6 +12,7 @@ addEvent("staffCommandIssued", true)
 addEvent("staffPanelRequested", true)
 
 -- server to client / client-local
+addEvent("playerBlackoutChanged", true) -- /lights; handled by world/client/blackout.lua
 addEvent("staffListOpened", true)
 addEvent("staffListDismissed", true)
 addEvent("staffDialogOpened", true)

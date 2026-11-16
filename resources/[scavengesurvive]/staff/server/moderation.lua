@@ -587,6 +587,26 @@ return function(ctx)
     })
 
     -- Not upstream: deletes one world vehicle with its trunk, the only way a sunk one goes (vehicles/server/ground).
+    -- The world is blacked out for everyone (world/client/blackout.lua); this lights the city for the caller only, to
+    -- look at something, until they toggle it again or reconnect.
+    local litFor = {}
+    ctx.command({
+        name = "lights",
+        level = 1,
+        playerOnly = true,
+        usage = "/lights",
+        help = "Toggle the city lights for yourself (the world is blacked out)",
+        needsDb = false,
+        fn = function(p)
+            litFor[p] = not litFor[p] or nil
+            triggerClientEvent(p, "playerBlackoutChanged", p, not litFor[p])
+            ctx.say(p, " >  City lights %s for you.", litFor[p] and "on" or "off")
+        end,
+    })
+    addEventHandler("onPlayerQuit", root, function()
+        litFor[source] = nil
+    end)
+
     -- By database id (the on-duty ESP label shows it), else the one the caller sits in, else the nearest within 10 m.
     ctx.command({
         name = "delveh",
