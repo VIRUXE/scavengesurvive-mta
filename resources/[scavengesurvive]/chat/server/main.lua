@@ -233,7 +233,9 @@ local function translateFor(speaker, modeName, format, text, players, rgb, relay
     for code in pairs(langs) do
         targets[#targets + 1] = code
     end
-    if #targets < 2 or getTickCount() < trPausedUntil or not tr.worthTranslating(plain) then
+    -- a player's line needs a second language in the audience; a Discord line's language is unknown, so any reader
+    -- language is worth asking for (the translator leaves out the ones it is already written in)
+    if #targets < (speaker and 2 or 1) or getTickCount() < trPausedUntil or not tr.worthTranslating(plain) then
         if relay then
             relay(text)
         end
