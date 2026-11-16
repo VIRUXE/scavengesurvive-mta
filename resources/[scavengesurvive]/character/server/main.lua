@@ -87,7 +87,7 @@ tickCtx.bleeding = bleeding
 tickCtx.blood = loadFile("server/blood.lua")({ bleeding = bleeding, net = net })
 tickCtx.die = death.die
 local tick = loadFile("server/tick.lua")(tickCtx)
-local medicalCtx = { medical = medical, state = state, sendStats = tick.sendStats }
+local medicalCtx = { medical = medical, survival = survival, state = state, sendStats = tick.sendStats }
 medicalCtx.wake = function(p)
     return wakeUpPlayer(p)
 end
@@ -172,14 +172,18 @@ local function spawnFromRow(player, row, isNew)
         food = row.food,
         thirst = tonumber(row.thirst) or 80,
         bleed = row.bleed,
-        wounds = survival.loadWounds(row.bleed, isNew),
+        wounds = survival.decodeWounds(
+            not isNew and type(row.wounds) == "string" and fromJSON("[" .. row.wounds .. "]") or nil,
+            row.bleed,
+            isNew
+        ),
         skills = loadSkills(row.skills),
         infection = medical.decodeInfection(row.infection),
         drugs = loadDrugs(row.drugs),
         dirty = false,
         born = tonumber(row.born) or getRealTime().timestamp, -- unix time the character was created (death age)
         inventoryContainerId = row.inventory_container_id,
-        lastSent = { hp = -1, food = -1, thirst = -1, bleed = -1 },
+        lastSent = { hp = -1, food = -1, thirst = -1, bleed = -1, wounds = -1 },
     }
     state.byPlayer[player], state.byId[row.id] = st, player
     combatlog.reset(state.combat, player)
@@ -269,7 +273,7 @@ local function loadOrCreate(player, accountId)
         return
     end
     db.one(
-        "SELECT id, account_id, hp, food, thirst, bleed, skills, infection, drugs, x, y, z, rz, skin,"
+        "SELECT id, account_id, hp, food, thirst, bleed, wounds, skills, infection, drugs, x, y, z, rz, skin,"
             .. " interior, dimension,"
             .. " inventory_container_id, UNIX_TIMESTAMP(spawned_at) AS born"
             .. " FROM characters WHERE account_id = ? AND alive = 1",
@@ -425,7 +429,8 @@ function getStats(player)
         food = st.food,
         thirst = st.thirst,
         bleed = st.bleed,
-        wounds = st.wounds,
+        wounds = #st.wounds,
+        woundParts = survival.woundsPerPart(st.wounds),
         infection = st.infection,
     }
 end
@@ -483,8 +488,9 @@ function modifyStat(player, key, delta)
     local hi = key == "bleed" and 1 or 100
     st[key] = math.max(0, math.min(hi, st[key] + delta))
     st.dirty = true
-    if key == "bleed" and delta > 0 then
-        st.wounds = st.wounds + 1
+    -- a stat edit is not a wound (upstream SetPlayerBleedRate), but bleeding with none stops on the next tick
+    if key == "bleed" and delta > 0 and #st.wounds == 0 then
+        survival.addWound(st.wounds, 3, delta, "stat", getRealTime().timestamp)
     end
     if key == "hp" then
         setElementHealth(player, math.max(1, st.hp))
@@ -537,18 +543,24 @@ function killCharacter(player, cause, killer)
     return death.die(player, cause, killer)
 end
 
-function applyWound(player, bleedAdd, hpLoss, killer, cause)
+-- bodypart (GTA's 3-9) records a wound on the character (upstream PlayerInflictWound); without one the damage
+-- (fire, drowning) only costs hp and bleed. A wound past survival.MAX_WOUNDS kills, as upstream did.
+function applyWound(player, bleedAdd, hpLoss, killer, cause, bodypart)
     local st = state.byPlayer[player]
     if not st or st.dead or getElementData(player, "auth.reauthProtection") or onDuty(player) then
         return false
     end
     bleedAdd = math.max(0, tonumber(bleedAdd) or 0)
     hpLoss = math.max(0, tonumber(hpLoss) or 0)
-    -- only a bleeding wound counts: the survival tick stops bleeding at wounds == 0
-    if bleedAdd > 0 then
-        st.bleed = math.min(1.0, st.bleed + bleedAdd)
-        st.wounds = st.wounds + 1
+    if bodypart then
+        if not survival.addWound(st.wounds, bodypart, bleedAdd, cause, getRealTime().timestamp) then
+            hpLoss = st.hp
+        end
+    elseif bleedAdd > 0 and #st.wounds == 0 then
+        -- bleeding with no wound stops on the next tick (survival.tick)
+        survival.addWound(st.wounds, 3, bleedAdd, cause, getRealTime().timestamp)
     end
+    st.bleed = math.min(1.0, st.bleed + bleedAdd)
     st.hp = math.max(0, st.hp - hpLoss)
     st.dirty = true
     local byPlayer = isElement(killer) and getElementType(killer) == "player" and killer ~= player

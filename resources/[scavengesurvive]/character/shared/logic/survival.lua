@@ -27,14 +27,86 @@ function survival.movementMultiplier(speed, inVehicle)
     return 2.2
 end
 
--- Wound count for a character loaded from the DB. Only the bleed rate is persisted, and the tick
--- stops bleeding at wounds == 0, so a bleeding character gets one wound back instead of a free cure
--- on relog. A new character's seed bleed (NEW.bleed) is not a wound.
-function survival.loadWounds(bleed, isNew)
-    if isNew then
-        return 0
+-- Wounds (upstream weapon/damage.pwn wnd_Data): every wound the character carries, oldest first, each
+-- { part = GTA body part 3-9, bleed, source = the cause, at = unix time }. Healing takes the oldest first
+-- (RemovePlayerWounds), the inventory counts them per body part (GetPlayerWoundsPerBodypart), a wound past
+-- MAX_WOUNDS kills (PlayerInflictWound) and a new character starts with none. The tick stops bleeding at no wounds.
+survival.MAX_WOUNDS = 32
+survival.BODYPARTS = { 3, 4, 5, 6, 7, 8, 9 } -- torso, groin, left arm, right arm, left leg, right leg, head
+
+local function bodypart(p)
+    p = tonumber(p)
+    if p and p >= 3 and p <= 9 and p == math.floor(p) then
+        return p
     end
-    return (tonumber(bleed) or 0) > 0 and 1 or 0
+    return 3
+end
+
+-- false when the character already carries MAX_WOUNDS (the caller kills them, as upstream did)
+function survival.addWound(list, part, bleed, source, at)
+    if #list >= survival.MAX_WOUNDS then
+        return false
+    end
+    list[#list + 1] = {
+        part = bodypart(part),
+        bleed = math.max(0, tonumber(bleed) or 0),
+        source = tostring(source or "unknown"):gsub("[^%w_]", ""):sub(1, 16),
+        at = math.floor(tonumber(at) or 0),
+    }
+    return true
+end
+
+-- removes the n oldest wounds; returns how many went
+function survival.removeWounds(list, n)
+    n = math.min(#list, math.max(0, math.floor(tonumber(n) or 0)))
+    for _ = 1, n do
+        table.remove(list, 1)
+    end
+    return n
+end
+
+-- { count per body part } in BODYPARTS order
+function survival.woundsPerPart(list)
+    local out, index = {}, {}
+    for i, p in ipairs(survival.BODYPARTS) do
+        out[i], index[p] = 0, i
+    end
+    for _, w in ipairs(list) do
+        local i = index[w.part]
+        if i then
+            out[i] = out[i] + 1
+        end
+    end
+    return out
+end
+
+-- characters.wounds: [[part, bleed, "source", at], ...]
+function survival.encodeWounds(list)
+    local parts = {}
+    for _, w in ipairs(list) do
+        parts[#parts + 1] = string.format('[%d,%.6f,"%s",%d]', w.part, w.bleed, w.source, w.at)
+    end
+    return "[" .. table.concat(parts, ",") .. "]"
+end
+
+-- decoded = the column decoded (nil for a new character). A character saved before the column was kept ([] with
+-- bleed > 0) gets one torso wound, so its bleeding slows instead of stopping on the first tick.
+function survival.decodeWounds(decoded, bleed, isNew)
+    local list = {}
+    if isNew then
+        return list
+    end
+    if type(decoded) == "table" then
+        for _, w in ipairs(decoded) do
+            if type(w) == "table" then
+                survival.addWound(list, w[1], w[2], w[3], w[4])
+            end
+        end
+    end
+    if #list == 0 and (tonumber(bleed) or 0) > 0 then
+        survival.addWound(list, 3, bleed, "unknown", 0)
+    end
+    return list
 end
 
 -- The cause of a death in the survival tick: a tick drains HP through bleeding (bleed > 0 at its start), hunger
@@ -61,7 +133,7 @@ function survival.tick(state, movementMult, rng)
         food = state.food,
         thirst = state.thirst or 80,
         bleed = state.bleed,
-        wounds = state.wounds or 0,
+        wounds = type(state.wounds) == "table" and #state.wounds or tonumber(state.wounds) or 0,
     }
     local events = {}
     local infection, drugs = state.infection or {}, state.drugs or {}

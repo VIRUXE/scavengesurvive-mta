@@ -242,16 +242,11 @@ return function(ctx)
     local view = "inventory" -- which dialog is up: "inventory", "bag" or "trunk"
     local last = nil -- the last payload, re-rendered when the view switches
     local charStats = { hp = 100, food = 100, bleed = 0, wounds = 0 }
-    local lastHitPart = nil
 
     addEventHandler("characterStatsSynced", root, function(s)
         if s then
             charStats = s
         end
-    end)
-
-    addEventHandler("woundInflicted", root, function(_, _, bodypart)
-        lastHitPart = bodypart
     end)
 
     addEventHandler("heldItemChanged", root, function()
@@ -667,20 +662,23 @@ return function(ctx)
         local wounds = charStats.wounds or 0
         local bleed = charStats.bleed or 0
         local food = charStats.food or 100
+        -- the wounds the character carries on each body part (upstream GetPlayerWoundsPerBodypart): woundParts
+        -- counts torso, groin, left arm, right arm, left leg, right leg, head
+        local wp = type(charStats.woundParts) == "table" and charStats.woundParts or {}
+        local function on(i)
+            return tonumber(wp[i]) or 0
+        end
         -- lang:begin
         local parts = {
-            { name = "Head", count = (lastHitPart == 9 and 1 or 0) },
-            { name = "Torso", count = (lastHitPart == 3 and wounds or 0) },
-            { name = "Arm R", count = (lastHitPart == 6 and 1 or 0) },
-            { name = "Arm L", count = (lastHitPart == 5 and 1 or 0) },
-            { name = "Groin", count = (lastHitPart == 4 and 1 or 0) },
-            { name = "Leg R", count = (lastHitPart == 8 and 1 or 0) },
-            { name = "Leg L", count = (lastHitPart == 7 and 1 or 0) },
+            { name = "Head", count = on(7) },
+            { name = "Torso", count = on(1) },
+            { name = "Arm R", count = on(4) },
+            { name = "Arm L", count = on(3) },
+            { name = "Groin", count = on(2) },
+            { name = "Leg R", count = on(6) },
+            { name = "Leg L", count = on(5) },
         }
         -- lang:end
-        if wounds > 0 and lastHitPart == nil then
-            parts[2].count = wounds
-        end
 
         local startY = py + 22 * s
         for i, pt in ipairs(parts) do

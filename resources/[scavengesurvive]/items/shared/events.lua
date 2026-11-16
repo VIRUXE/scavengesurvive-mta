@@ -79,4 +79,3 @@ addEvent("sampModelsChanged", false) -- fired by the models resource on every cl
 addEvent("uiListActionSelected", false)
 addEvent("uiListClosed", false)
 addEvent("characterStatsSynced", true)
-addEvent("woundInflicted", true)

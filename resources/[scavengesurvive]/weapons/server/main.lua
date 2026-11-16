@@ -135,7 +135,7 @@ local function nonFirearm(victim, attacker, weapon, loss)
     if w.hp <= 0 and w.bleed <= 0 then
         return
     end
-    exports.character:applyWound(victim, w.bleed, w.hp, credit or false, w.cause)
+    exports.character:applyWound(victim, w.bleed, w.hp, credit or false, w.cause, w.wound and w.bodypart or nil)
     rollKnockout(victim, w.knockMult, w.bodypart, credit)
     report(victim, w.bleed, w.hp, w.bodypart)
     if credit and log.enabled("debug") then
@@ -289,7 +289,8 @@ net.handler("weaponHitReported", function(victim, attacker, weapon, bodypart, lo
         end
     end
     local hp = wound.hpLoss(bleed)
-    exports.character:applyWound(victim, bleed, hp, attacker, wound.killCause(weapon)) -- the body's reason (#139)
+    -- the body's reason (#139)
+    exports.character:applyWound(victim, bleed, hp, attacker, wound.killCause(weapon), bodypart)
     rollKnockout(victim, knockMult, bodypart, attacker)
     report(victim, bleed, hp, bodypart)
     if bodypart == 9 then

@@ -6,6 +6,7 @@ net.handler("hudStateRequested", function(player)
     local stats = exports.character:getStats(player)
     if stats then
         local snapshot = { hp = stats.hp, food = stats.food, thirst = stats.thirst, bleed = stats.bleed }
+        snapshot.wounds, snapshot.woundParts = stats.wounds, stats.woundParts
         triggerClientEvent(player, "characterStatsSynced", player, snapshot)
     end
     triggerClientEvent(player, "heldItemChanged", player, exports.items:getHeld(player) or false)

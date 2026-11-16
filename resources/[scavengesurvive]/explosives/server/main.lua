@@ -370,7 +370,9 @@ detonateItem = function(itemId)
                             end
                             if logic.isItemInRange(px, py, pz, x, y, z, preset.bleedRange) then
                                 addVictim(p)
-                                exports.character:applyWound(p, preset.bleedRate, preset.hpLoss, nil, "Explosion")
+                                -- upstream damage-explosive.pwn: the torso or either leg
+                                local part = math.random() < 0.5 and 3 or (math.random() < 0.5 and 8 or 7)
+                                exports.character:applyWound(p, preset.bleedRate, preset.hpLoss, nil, "Explosion", part)
                             end
                         end
                     end

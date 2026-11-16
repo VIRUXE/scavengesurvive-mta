@@ -107,8 +107,9 @@ end
 -- damage never counted there: these wounds were the whole effect. loss is GTA's health loss (upstream's amount),
 -- ctx.velocity the ramming vehicle's speed from wound.velocity, ctx.bleedMult / ctx.knockMult the
 -- vehicles.damage_* settings (upstream vehicle.damage/bleed-mult and knock-mult, 1.0), rnd draws in [0, 1).
--- Returns nil when nothing happens, else { hp, bleed, knockMult, knockoutMs, bodypart, cause }: hp and bleed make
--- the wound, knockMult feeds the wound's knockout roll, knockoutMs is a knockout of its own (drowning, a fast ram).
+-- Returns nil when nothing happens, else { hp, bleed, knockMult, knockoutMs, bodypart, cause, wound }: hp and bleed
+-- make the damage, wound = true where upstream called PlayerInflictWound (the character carries it on bodypart),
+-- knockMult feeds the wound's knockout roll, knockoutMs is a knockout of its own (drowning, a fast ram).
 wound.FALL_MIN_LOSS = 10 -- damage-world.pwn:38: amount > 10.0
 wound.RAM_KNOCK_VELOCITY = 55 -- damage-vehicle.pwn:57
 wound.DROWN_MAX_HP = 10 -- port: GTA's drowning tick, capped (upstream's resync made drowning cost no hp)
@@ -148,6 +149,7 @@ function wound.nonFirearm(weaponId, loss, ctx, rnd)
             knockMult = mult * 0.9,
             bodypart = rnd() < 0.5 and 7 or 8,
             cause = "fall",
+            wound = true,
         }
     elseif weaponId == 53 then
         -- damage-world.pwn: KnockOutPlayer(1500 + random(1500)) and no wound; the port keeps GTA's drowning hp loss
@@ -176,6 +178,7 @@ function wound.nonFirearm(weaponId, loss, ctx, rnd)
             knockoutMs = koMs,
             bodypart = wound.torsoOrLeg(rnd),
             cause = "vehicle",
+            wound = true,
         }
     elseif weaponId == 51 then
         -- damage-explosive.pwn _DoExplosiveDamage: a burn wound, knockmult 150 + amount
@@ -186,6 +189,7 @@ function wound.nonFirearm(weaponId, loss, ctx, rnd)
             knockMult = 150.0 + loss,
             bodypart = wound.torsoOrLeg(rnd),
             cause = "explosion",
+            wound = true,
         }
     end
     -- anything else without a player behind it (upstream let GTA's damage vanish; the port takes it, capped)

@@ -18,10 +18,12 @@ return function(ctx)
             or math.abs(st.food - st.lastSent.food) >= 0.5
             or math.abs(st.thirst - st.lastSent.thirst) >= 0.5
             or math.abs(st.bleed - st.lastSent.bleed) >= 0.01
+            or #st.wounds ~= st.lastSent.wounds
         if not changed then
             return
         end
-        local payload = { hp = st.hp, food = st.food, thirst = st.thirst, bleed = st.bleed, wounds = st.wounds }
+        local payload = { hp = st.hp, food = st.food, thirst = st.thirst, bleed = st.bleed, wounds = #st.wounds }
+        payload.woundParts = survival.woundsPerPart(st.wounds)
         payload.infection, payload.drugs = st.infection, st.drugs
         st.lastSent = payload
         triggerClientEvent(player, "characterStatsSynced", player, payload)
@@ -155,12 +157,26 @@ return function(ctx)
         local x, y, z, int, dim = placeOf(player)
         local _, _, rz = getElementRotation(player)
         local sql = "UPDATE characters SET hp = ?, food = ?, thirst = ?, bleed = ?, x = ?, y = ?, z = ?, rz = ?,"
-            .. " interior = ?, dimension = ?, skills = ?, infection = ?, drugs = ? WHERE id = ? AND alive = 1"
+            .. " interior = ?, dimension = ?, skills = ?, infection = ?, drugs = ?, wounds = ?"
+            .. " WHERE id = ? AND alive = 1"
         local inf, drugs = medical.encodeInfection(st.infection), medical.encodeDrugs(st.drugs)
-        db.exec(
-            sql,
-            { st.hp, st.food, st.thirst, st.bleed, x, y, z, rz, int, dim, skills.encode(st.skills), inf, drugs, st.id }
-        )
+        db.exec(sql, {
+            st.hp,
+            st.food,
+            st.thirst,
+            st.bleed,
+            x,
+            y,
+            z,
+            rz,
+            int,
+            dim,
+            skills.encode(st.skills),
+            inf,
+            drugs,
+            survival.encodeWounds(st.wounds),
+            st.id,
+        })
         st.dirty, st.skillsDirty = false, false
     end
 
@@ -184,6 +200,7 @@ return function(ctx)
                 -- skills change a few times a minute at most: sent only when they did (the procedure keeps the column)
                 row.skills = st.skillsDirty and skills.encode(st.skills) or nil
                 row.infection, row.drugs = medical.encodeInfection(st.infection), medical.encodeDrugs(st.drugs)
+                row.wounds = survival.encodeWounds(st.wounds)
                 row.interior, row.dimension = int, dim
                 row.path = takeTrail(player)
                 rows[#rows + 1] = row

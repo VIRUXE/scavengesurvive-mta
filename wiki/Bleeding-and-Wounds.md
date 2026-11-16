@@ -15,9 +15,11 @@ Drowning leaves no wound: every mouthful costs up to 10 health and knocks you ou
 
 Every wound shows as action text, `Wounded: <body part>  -N hp`, with `(bleeding)` when it added to your bleed rate; the inventory's Health Status panel counts your wounds per body part.
 
-Wounds do not heal by themselves. They make a knockout more likely (see [Health](Health)) and slow how fast a bleed clots. A Medkit or Doctor's Bag removes wounds.
+Wounds do not heal by themselves. They make a knockout more likely (see [Health](Health)) and slow how fast a bleed clots. A Medkit or Doctor's Bag removes wounds, the oldest first: you cannot pick a body part to treat, so a leg wound goes once the wounds taken before it are gone.
 
-Only the bleed rate is saved when you log out. If you log back in still bleeding you come back with one wound.
+You can carry at most 32 wounds. A 33rd kills you, however much health you have left.
+
+Your wounds are saved with your character: logging out does not heal them. Dying clears them.
 
 ## Bleed rate
 

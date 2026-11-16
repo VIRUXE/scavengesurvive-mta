@@ -1,8 +1,8 @@
 -- Infection, drugs and the end of a treatment (#94, shared/logic/medical.lua). items runs the hold actions and calls
 -- treat(); the drugs count down here once a second and wear off with upstream's "%s has worn off" line.
--- ctx = { medical, state, sendStats, wake, isKnockedOut } built by server/main.lua.
+-- ctx = { medical, survival, state, sendStats, wake, isKnockedOut } built by server/main.lua.
 return function(ctx)
-    local medical, state = ctx.medical, ctx.state
+    local medical, survival, state = ctx.medical, ctx.survival, ctx.state
     local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")() -- notices in the player's language
     local M = {}
 
@@ -70,7 +70,7 @@ return function(ctx)
         then
             return { used = false }
         end
-        local view = { bleed = st.bleed, wounds = st.wounds, infection = st.infection }
+        local view = { bleed = st.bleed, wounds = #st.wounds, infection = st.infection }
         view.knockedOut = ctx.isKnockedOut(patient)
         local r = medical.treat(uname, data, view, healer == patient, math.random, math.random)
         if not r.used then
@@ -80,7 +80,7 @@ return function(ctx)
             st.bleed = r.bleed
         end
         if r.removeWounds then
-            st.wounds = math.max(0, st.wounds - r.removeWounds)
+            survival.removeWounds(st.wounds, r.removeWounds) -- the oldest first (RemovePlayerWounds)
         end
         for kind, on in pairs(r.infect) do
             st.infection[kind] = on

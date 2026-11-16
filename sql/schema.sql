@@ -821,11 +821,11 @@ BEGIN
       id INT PATH '$.id', hp FLOAT PATH '$.hp', food FLOAT PATH '$.food', thirst FLOAT PATH '$.thirst', bleed FLOAT PATH '$.bleed',
       x FLOAT PATH '$.x', y FLOAT PATH '$.y', z FLOAT PATH '$.z', rz FLOAT PATH '$.rz',
       interior INT PATH '$.interior', dimension INT PATH '$.dimension',
-      skills LONGTEXT PATH '$.skills', infection INT PATH '$.infection', drugs LONGTEXT PATH '$.drugs')) j ON j.id = c.id
+      skills LONGTEXT PATH '$.skills', infection INT PATH '$.infection', drugs LONGTEXT PATH '$.drugs', wounds LONGTEXT PATH '$.wounds')) j ON j.id = c.id
     SET c.hp = j.hp, c.food = j.food, c.thirst = COALESCE(j.thirst, c.thirst), c.bleed = j.bleed, c.x = j.x, c.y = j.y, c.z = j.z, c.rz = j.rz,
       c.interior = COALESCE(j.interior, c.interior), c.dimension = COALESCE(j.dimension, c.dimension),
       c.skills = COALESCE(j.skills, c.skills), c.infection = COALESCE(j.infection, c.infection),
-      c.drugs = COALESCE(j.drugs, c.drugs)
+      c.drugs = COALESCE(j.drugs, c.drugs), c.wounds = COALESCE(j.wounds, c.wounds)
     WHERE c.alive = 1;
   SET v_n = ROW_COUNT();
   -- trail points the server buffered since the last flush (staff dashboard); "ago" is milliseconds before now,
