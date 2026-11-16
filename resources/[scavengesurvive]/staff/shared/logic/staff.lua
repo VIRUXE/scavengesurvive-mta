@@ -478,6 +478,23 @@ function staff.panelCommands(reg, level)
     return out
 end
 
+-- The /acmds window's filter: the commands whose name, usage or help contains the text (case-insensitive,
+-- plain match), in their order; a blank filter keeps them all.
+function staff.filterCommands(commands, text)
+    local needle = staff.trim(text):lower()
+    if needle == "" then
+        return commands
+    end
+    local out = {}
+    for _, c in ipairs(commands) do
+        local hay = (c.name .. " " .. c.usage .. " " .. c.help):lower()
+        if hay:find(needle, 1, true) then
+            out[#out + 1] = c
+        end
+    end
+    return out
+end
+
 -- Bug reports (upstream admin/bug-report.pwn). /issues lists the oldest 32 as "name: reason", the reason cut to the
 -- 31 characters upstream's list buffer held and marked "[...]" when it ran that long.
 staff.BUG_REASON_MAX = 128

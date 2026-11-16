@@ -623,26 +623,8 @@ return function(ctx)
         help = "This list",
         needsDb = false,
         fn = function(p, _, lvl)
-            local rows = {
-                {
-                    id = "panel",
-                    label = "P or /staffpanel opens the staff panel with a form per command",
-                    empty = true,
-                },
-            }
-            for _, group in ipairs(logic.commandsFor(ctx.reg, lvl)) do
-                rows[#rows + 1] = {
-                    id = "lvl" .. group.level,
-                    label = string.format("%s (level %d)", group.name, group.level),
-                    empty = true,
-                }
-                for _, c in ipairs(group.commands) do
-                    rows[#rows + 1] = { id = c.name, label = string.format("%s - %s", c.usage, c.help) }
-                end
-            end
-            ctx.openList(p, "acmds", "Staff commands", rows, { "Close", "Close" }, function()
-                ctx.closeList(p)
-            end)
+            -- the client draws the reference window (client/commands.lua) from the panel's command list
+            triggerClientEvent(p, "staffCommandsShown", p, logic.panelCommands(ctx.reg, lvl))
         end,
     })
 

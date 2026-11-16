@@ -26,9 +26,13 @@ built from each command's usage line (`client/panel.lua`): `<...>` is a text fie
 `<player...>` is a text field with a picker of the players online, `[...]` is optional. **Run** sends the line
 through `staffCommandIssued`, which applies the same level gate as chat (`dispatch` in `server/main.lua`), so the
 panel adds no permissions; the replies arrive in the chat box and are echoed in the panel's output box. The list,
-message and input dialogs the commands open (`/acmds`, `/banlist`, `/reports`, `/ban <name>`, `/report`, …) are
+message and input dialogs the commands open (`/banlist`, `/reports`, `/ban <name>`, `/report`, …) are
 CEGUI windows too (`client/dialogs.lua`): a grid list with two buttons, a row's actions in the same window, Enter
 and Escape for the two buttons. Players (level 0) get nothing from the key, as they get nothing from `/acmds`.
+
+`/acmds` has its own window (`client/commands.lua`): the commands of the player's level grouped under a section
+row per level, usage and description in columns, and a filter box that matches name, usage and description.
+Double-clicking a command (or **Open in panel**) opens the staff panel on that command's form.
 
 ## Rules carried over from upstream
 

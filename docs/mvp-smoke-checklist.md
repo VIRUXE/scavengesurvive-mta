@@ -144,7 +144,7 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
     immunity, the kick request and the MOTD on login still need the second PC). Driving A by script: replies are read
     with `rcon.ps1 chat A`, since screenshots never include the chat box.
     - a. **Boot and gate.** `scripts.log` has no `Access denied` for `staff`; B types `/acmds` and gets MTA's unknown
-      command notice; A's `/acmds` opens the CEGUI list with the Lead, Administrator, Moderator and Game Master groups.
+      command notice; A's `/acmds` opens the command window with the Lead, Administrator, Moderator and Game Master sections.
       B presses P: nothing opens; A presses P: the staff panel lists the same commands; picking `/goto` shows a
       player field with B in the picker, Run with it blank says `Fill in player.`, with B picked it teleports (on
       duty) and the reply shows in the panel's output box; Escape closes the panel.

@@ -1,6 +1,7 @@
--- Client half of staff: the CEGUI dialogs the server opens (client/dialogs.lua) and the staff panel
--- (client/panel.lua), the spectate banner with arrow-key cycling, and name tags over players when the server
--- turns them on. This resource shows the cursor itself while one of its windows is open.
+-- Client half of staff: the CEGUI dialogs the server opens (client/dialogs.lua), the staff panel
+-- (client/panel.lua) and the command reference (client/commands.lua), the spectate banner with arrow-key
+-- cycling, and name tags over players when the server turns them on. This resource shows the cursor itself
+-- while one of its windows is open.
 local function loadFile(path)
     local f = fileOpen(path, true)
     local src = fileRead(f, fileGetSize(f))
@@ -33,6 +34,8 @@ function ctx.cursor(delta)
 end
 local dialogs = loadFile("client/dialogs.lua")(ctx)
 local panel = loadFile("client/panel.lua")(ctx)
+ctx.panel = panel
+local commands = loadFile("client/commands.lua")(ctx)
 
 addEventHandler("staffListOpened", root, function(key, title, rows, buttons)
     dialogs.listOpen(key, title, rows, buttons)
@@ -46,9 +49,10 @@ addEventHandler("staffDialogOpened", root, function(key, style, title, body, lef
     dialogs.dialogOpen(key, style, title, body, left, right)
 end)
 
--- Escape answers the open dialog or closes the list, then the panel; swallowed so the main menu stays shut.
+-- Escape answers the open dialog or closes the list, then the command reference, then the panel; swallowed so
+-- the main menu stays shut.
 addEventHandler("onClientKey", root, function(button, press)
-    if press and button == "escape" and (dialogs.escape() or panel.escape()) then
+    if press and button == "escape" and (dialogs.escape() or commands.escape() or panel.escape()) then
         cancelEvent()
     end
 end)

@@ -2,7 +2,7 @@
 -- from the chosen command's usage (text fields, choice drop-downs, a player picker filled with who is online) and
 -- a Run button that sends the line through staffCommandIssued. The replies land in the chat box as before and are
 -- echoed into the panel's output box while it is open. The server sends the command list (staffPanelShown) on
--- every open, so a level change needs no relog.
+-- every open, so a level change needs no relog. /acmds (client/commands.lua) opens it on a chosen command.
 return function(ctx)
     local logic = ctx.logic
     local M = {}
@@ -142,7 +142,7 @@ return function(ctx)
         buildForm(def)
     end
 
-    local function open(commands)
+    local function open(commands, selectName)
         destroyPanel()
         ctx.cursor(1)
         local sw, sh = guiGetScreenSize()
@@ -183,6 +183,13 @@ return function(ctx)
         addEventHandler("onClientGUIClick", grid, selectCommand, false)
         addEventHandler("onClientGUIClick", runBtn, run, false)
         addEventHandler("onClientGUIClick", close, destroyPanel, false)
+        for i, def in ipairs(commands) do
+            if def.name == selectName then
+                guiGridListSetSelectedItem(grid, i - 1, 1)
+                selectCommand()
+                break
+            end
+        end
     end
 
     addEventHandler("staffPanelShown", root, function(commands)
@@ -214,6 +221,11 @@ return function(ctx)
             return
         end
         triggerServerEvent("staffPanelRequested", localPlayer)
+    end
+
+    -- opens the panel on a command's form (the /acmds window hands over its list and the chosen command)
+    function M.show(commands, name)
+        open(commands, name)
     end
 
     function M.escape()
