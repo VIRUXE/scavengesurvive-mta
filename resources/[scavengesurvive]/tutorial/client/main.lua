@@ -28,11 +28,11 @@ local STEP_LABELS = {
 }
 -- what to do now, by the hint key the server sends (%s is the item's name)
 local HINTS = {
-    BONNET_OPEN = "Stand in front of the truck, hands empty, and press [F] to open the bonnet.",
-    BONNET_EMPTY = "Put down what you hold with [N]. Then stand in front of the truck and press [F] to open the bonnet.",
+    BONNET_OPEN = "Stand in front of the truck, hands empty, and press [E] to open the bonnet.",
+    BONNET_EMPTY = "Put down what you hold with [N]. Then stand in front of the truck and press [E] to open the bonnet.",
     PICK_UP = "Pick up the %s from the ground: stand over it and press [F].",
     PUT_DOWN = "Put down what you hold with [N]. Then pick up the %s.",
-    ENGINE_FIX = "With the %s in hand, stand at the open bonnet and press [F]. Wait until it is repaired.",
+    ENGINE_FIX = "With the %s in hand, stand at the open bonnet and press [E]. Wait until it is repaired.",
     TYRES_ENGINE_OFF = "The engine is on. Sit in the truck and press [Y] to turn it off.",
     TYRES_REMOVE = "Stand beside a flat wheel and press [F]. Click a nut and hold the mouse button until it is off. Do all 6.",
     TYRES_HUB = "The wheel is off. Pick up a spare Wheel and put it down beside the hub with [N]. Then hold the %s and press [F].",
@@ -46,7 +46,7 @@ local HINTS = {
 }
 -- a tip for the toast the game just showed, when a newcomer is likely to need more than the toast says
 local TOAST_TIPS = {
-    BONNET_SHUT = "Empty your hands first with [N]. Then press [F] in front of the truck to open the bonnet.",
+    BONNET_SHUT = "Empty your hands first with [N]. Then press [E] in front of the truck to open the bonnet.",
     NEEDANOTOOL = "That tool has done its part. The checklist shows which one you need now.",
     WHEEL_LAY = "Press [N] to put the wheel on the ground beside the truck. Then hold the Tyre Wrench and press [F].",
     NO_FUEL = "The tank is empty. Fill it with the Petrol Can first.",

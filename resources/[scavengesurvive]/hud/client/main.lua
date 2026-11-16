@@ -145,6 +145,7 @@ local function refreshKeys()
         drop = keyName("dropitem", "n"),
         inventory = keyName("inventory", "h"),
         glovebox = keyName("glovebox", "e"),
+        bay = keyName("enginebay", "e"),
         reload = keyName("reloadweapon", "r"),
         engine = "Y",
         lights = "N",
@@ -400,7 +401,8 @@ local BODY_PART_NAMES = {
 }
 -- lang:end
 
--- the open bonnet the local player is standing at, if any (same front cone as the interact key)
+-- the open bonnet (or cowl, or uncovered engine) the local player is standing at, if any: the same spot as the
+-- interact key's
 local function openBonnetVehicle()
     if getPedOccupiedVehicle(localPlayer) then
         return nil
@@ -419,18 +421,10 @@ local function openBonnetVehicle()
     if not best then
         return nil
     end
-    local vx, vy = getElementPosition(best)
-    local _, _, vrz = getElementRotation(best)
-    local rad = math.rad(vrz or 0)
-    local dx, dy = px - vx, py - vy
-    local localX = dx * math.cos(rad) + dy * math.sin(rad)
-    local localY = -dx * math.sin(rad) + dy * math.cos(rad)
-    local angle = (math.deg(math.atan2(localX, localY)) + 360) % 360
-    if angle >= 25 and angle <= 335 then
+    if not exports.vehicles:atEngine(best, px, py) then
         return nil
     end
-    local open = getVehicleDoorState(best, 0) == 4 or getVehicleDoorOpenRatio(best, 0) > 0.5
-    return open and best or nil
+    return exports.vehicles:engineReachable(best) and best or nil
 end
 
 local function bodyPartHint(held)
@@ -512,22 +506,12 @@ local function nearBonnetHint(held)
     if not nearVeh or not exports.vehicles:hasBatteryBay(nearVeh) then
         return nil
     end
-    -- the bonnet was taken off (door state 4): nothing left to open or close
-    if getVehicleDoorState(nearVeh, 0) == 4 then
+    if not exports.vehicles:atEngine(nearVeh, px, py) then
         return nil
     end
-    local vx, vy = getElementPosition(nearVeh)
-    local _, _, vrz = getElementRotation(nearVeh)
-    local rad = math.rad(vrz or 0)
-    local dx, dy = px - vx, py - vy
-    local angle = (
-        math.deg(math.atan2(dx * math.cos(rad) + dy * math.sin(rad), -dx * math.sin(rad) + dy * math.cos(rad))) + 360
-    ) % 360
-    if angle >= 25 and angle <= 335 then
-        return nil
-    end
-    if getVehicleDoorOpenRatio(nearVeh, 0) <= 0.5 then
-        return "closed"
+    local cowl = exports.vehicles:engineCoverKind(nearVeh) == "cowl"
+    if not exports.vehicles:engineReachable(nearVeh) then
+        return cowl and "cowl_closed" or "closed"
     end
     -- empty hands at the open bonnet lift a loose battery or a loose starter motor
     local battery, starter = exports.vehicles:bayStates(nearVeh)
@@ -537,7 +521,11 @@ local function nearBonnetHint(held)
     if starter == 1 then
         return "pickup_starter"
     end
-    return "open"
+    -- no cover (an aircraft without a cowl), or the bonnet taken off (door state 4): nothing to open or close
+    if exports.vehicles:engineCoverFixed(nearVeh) then
+        return nil
+    end
+    return cowl and "cowl_open" or "open"
 end
 
 -- a bag or box in reach: true, or "fixed" for one that is never picked up (the snack machine), else false
@@ -565,7 +553,12 @@ local function drawKeyActions(driver)
     local itemDist = not held and exports.items:nearestItemDistance() or false
     local nearItem = itemDist and itemDist <= 2.0
     local _, inspectUname = exports.items:nearbyInspectable()
-    local choices = interactionActions(held)
+    -- the engine's entries are the engine key's list (enginebay), the rest the interact key's
+    local choices, engineChoices = {}, {}
+    for _, action in ipairs(interactionActions(held)) do
+        local list = action.engine == true and engineChoices or choices
+        list[#list + 1] = action
+    end
     local lines = keyactions.lines({
         spawned = true,
         uiOpen = uiListIsOpen(),
@@ -608,6 +601,16 @@ local function drawKeyActions(driver)
             1,
             { key = interactKey, text = #choices > 1 and lang.text("Choose action") or choices[1].label }
         )
+    end
+    if #engineChoices > 0 and #lines > 0 then
+        local bayKey = state.keys.bay or "E"
+        for i = #lines, 1, -1 do
+            if lines[i].key == bayKey then
+                table.remove(lines, i)
+            end
+        end
+        local text = #engineChoices > 1 and lang.text("Engine actions") or engineChoices[1].label
+        table.insert(lines, 1, { key = bayKey, text = text })
     end
     local scale = canvas.textScale(c, 1.5, 1)
     local font = canvas.font(1)

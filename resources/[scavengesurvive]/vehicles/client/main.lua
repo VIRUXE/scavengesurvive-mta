@@ -528,11 +528,12 @@ function interactionActions(heldUname)
             and getElementInterior(vehicle) == getElementInterior(localPlayer)
             and getPedContactElement(localPlayer) ~= vehicle
             and getDistanceBetweenPoints3D(px, py, pz, vx, vy, vz) <= 5.5
-            and vlogic.isFront(vlogic.angleToVehicle(px, py, vx, vy, rz))
+            and vlogic.atEngine(getElementModel(vehicle), px, py, vx, vy, rz)
             and (tonumber(getElementData(vehicle, "vehicles.locked")) or 0) == 0
         then
-            local gone = getVehicleDoorState(vehicle, 0) == 4
-            local open = gone or getVehicleDoorOpenRatio(vehicle, 0) > 0.5
+            local gone = engineCoverFixed(vehicle) -- no cover, or the bonnet taken off
+            local open = engineReachable(vehicle)
+            local cowl = engineCoverKind(vehicle) == "cowl"
             local battery, starter = bayStates(vehicle)
             local vehicleType = exports.data:vehicleType(getElementData(vehicle, "vehicles.type"))
             local name = vehicleType and lang.text(vehicleType.name) or getVehicleName(vehicle)
@@ -543,10 +544,15 @@ function interactionActions(heldUname)
                     event = "vehicleBayActionRequested",
                     target = vehicle,
                     action = id,
+                    engine = true, -- the engine key's list (hud: enginebay, E), not the interact key's
                 }
             end
             if not gone then
-                add(open and "close_bonnet" or "open_bonnet", open and "Close Bonnet" or "Open Bonnet")
+                if cowl then
+                    add(open and "close_bonnet" or "open_bonnet", open and "Close Engine Cover" or "Open Engine Cover")
+                else
+                    add(open and "close_bonnet" or "open_bonnet", open and "Close Bonnet" or "Open Bonnet")
+                end
             end
             if open and battery and heldUname == "Battery" and battery == bay.MISSING then
                 add("fit_battery", "Fit battery")

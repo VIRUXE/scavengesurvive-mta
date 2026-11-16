@@ -36,6 +36,39 @@ function M.isRear(angle)
     return angle > 155 and angle < 205
 end
 
+-- Engine covers. A car's engine sits under its bonnet (door 0). An aircraft has no bonnet. The Maverick's engine
+-- sits under a cowl: two panels on the hump behind the rotor mast (frames cowl_l and cowl_r of files/maverick.dff,
+-- built by tools/build_maverick_cowl.py). Each panel turns about its frame's Y (the ridge) by side * openDeg. It is
+-- reached from beside the hump, within reach of (x, y) in the vehicle's frame. The other aircraft have no cover yet:
+-- their engine is reached at the nose and is never shut.
+M.COWLS = {
+    [487] = { frames = { cowl_l = 1, cowl_r = -1 }, openDeg = 90, x = 0, y = -0.72, reach = 2.2 },
+}
+
+-- "bonnet", "cowl", or nil for an engine with nothing over it (vt.category: the vehicle type's)
+function M.engineCover(model, category)
+    if M.COWLS[model] then
+        return "cowl"
+    end
+    if category == "helicopter" or category == "plane" then
+        return nil
+    end
+    return "bonnet"
+end
+
+-- A player at (px, py) is at this vehicle's engine: beside its cowl, or else in the front cone.
+function M.atEngine(model, px, py, vx, vy, vrz)
+    local cowl = M.COWLS[model]
+    if not cowl then
+        return M.isFront(M.angleToVehicle(px, py, vx, vy, vrz))
+    end
+    local rad = math.rad(vrz or 0)
+    local sinR, cosR = math.sin(rad), math.cos(rad)
+    local dx, dy = px - vx, py - vy
+    local lx, ly = dx * cosR + dy * sinR, -dx * sinR + dy * cosR
+    return (lx - cowl.x) ^ 2 + (ly - cowl.y) ^ 2 <= cowl.reach ^ 2
+end
+
 -- Ped heading uses the same rotation as vehicles: forward is (-sin(rz), cos(rz)).
 function M.facingVehicle(px, py, prz, vx, vy)
     local dx, dy = vx - px, vy - py

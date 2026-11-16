@@ -24,7 +24,8 @@ local SELECTED, NORMAL = "FFFFC83C", "FFFFFFFF"
 local FIXED_KEYS = { radio = "r" }
 -- hud's default item keys (hud/client/keys.lua DEFAULTS): putaway stays unbound on purpose (hud answers Y itself,
 -- MTA's team chat holds the key), so an unbound command shows its default
-local DEFAULT_KEYS = { interact = "f", dropitem = "n", putaway = "y", inventory = "h", reloadweapon = "r", chat = "t" }
+local DEFAULT_KEYS =
+    { interact = "f", dropitem = "n", putaway = "y", inventory = "h", reloadweapon = "r", chat = "t", enginebay = "e" }
 
 local ui = nil -- the open window: { window, buttons, content = {elements}, page, inputMode }
 local lastPage = 1

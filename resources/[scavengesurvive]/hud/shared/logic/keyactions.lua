@@ -62,8 +62,8 @@ M.BUTTON_LABELS = {
 
 -- ctx = {
 --   spawned, uiOpen, knockedOut, hudOff, driver, hitch ("hitch" / "unhitch"), nearTrunk,
---   nearBonnet ("open" / "closed" / "pickup_battery" / "pickup_starter": an engine bonnet in reach with empty hands,
---     the last two when a loose part lies in the bay), nearPlayer,
+--   nearBonnet ("open" / "closed" / "cowl_open" / "cowl_closed" / "pickup_battery" / "pickup_starter": an engine
+--     bonnet or cowl in reach with empty hands, the last two when a loose part lies in the bay), nearPlayer,
 --   nearItem (a loose world item in pickup reach),
 --   nearInspectable (the uname of a nearby sign, plant pot or body),
 --   cuffedNearby, hasBag,
@@ -91,7 +91,8 @@ M.BUTTON_LABELS = {
 --   supports = { [capability] = true },   -- eat, drink, openbag, wearbag, special, holster, reload, unload, give,
 --                                         -- removebag, uncuff, trunk, repair, engine, lights, doors, radio
 -- }
--- keys = { interact, putaway, drop, inventory, reload, engine, lights, doors, radio, hitch, glovebox } (display names)
+-- keys = { interact, putaway, drop, inventory, reload, engine, lights, doors, radio, hitch, glovebox, bay } (display
+-- names; bay is the engine key, E: bonnet, cowl and the engine's parts)
 -- Returns { { key = "F", text = "Open Trunk" }, ... } in upstream order.
 function M.lines(ctx, keys)
     local out = {}
@@ -201,13 +202,13 @@ function M.lines(ctx, keys)
     if ctx.bodyPart and not busyF then
         add("interact", ctx.bodyPart)
     end
-    -- a Ratchet at the open bonnet: hold F opens the bay menu (engine repair, battery, starter motor)
+    -- a Ratchet at the open bonnet: the engine key (E) opens the bay menu (engine repair, battery, starter motor)
     if ctx.bayMenu and not busyF then
-        add("interact", ctx.bayMenu)
+        add("bay", ctx.bayMenu)
     end
-    -- a Battery or Starter Motor in hand at the open bonnet: F fits it into the empty slot
+    -- a Battery or Starter Motor in hand at the open bonnet: the engine key fits it into the empty slot
     if ctx.fitPart and not busyF then
-        add("interact", ctx.fitPart)
+        add("bay", ctx.fitPart)
     end
     -- a Tow Bar at the rear of a car that takes one, a Rope at a free hitch or, once tied there, at another front
     if M.TOW[ctx.tow] and not busyF then
@@ -234,10 +235,12 @@ function M.lines(ctx, keys)
     if ctx.nearBonnet and not busyF then
         local bonnetText = {
             open = tr("Close Bonnet"),
+            cowl_open = tr("Close Engine Cover"),
+            cowl_closed = tr("Open Engine Cover"),
             pickup_battery = tr("Take out battery"),
             pickup_starter = tr("Take out starter motor"),
         }
-        add("interact", bonnetText[ctx.nearBonnet] or tr("Open Bonnet"))
+        add("bay", bonnetText[ctx.nearBonnet] or tr("Open Bonnet"))
     end
     local h = ctx.held
     if not h then

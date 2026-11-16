@@ -7,6 +7,12 @@ local M = {}
 M.MISSING = 0
 M.LOOSE = 1
 M.TIGHT = 2
+M.NONE = 3 -- no starter-motor slot at all (aircraft): never loose, missing or worn, never in a menu
+
+-- helicopters and planes have no starter motor to take out, fit or wear (vt.category: the vehicle type's)
+function M.hasStarter(category)
+    return category ~= "helicopter" and category ~= "plane"
+end
 
 M.REPAIR = "repair_engine"
 M.UNBOLT_BATTERY = "unbolt_battery"

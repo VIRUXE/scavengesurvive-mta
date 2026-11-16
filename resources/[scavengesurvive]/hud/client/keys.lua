@@ -11,16 +11,6 @@ return function(ctx)
     local BAY_FOOTER = "Wheel: select    Click: confirm    Escape: close"
     -- lang:end
 
-    local function bonnetIsOpen(veh)
-        if not isElement(veh) then
-            return false
-        end
-        if getVehicleDoorState(veh, 0) == 4 then
-            return true
-        end
-        return getVehicleDoorOpenRatio(veh, 0) > 0.5
-    end
-
     local function closeBayMenu()
         bayMenu = nil
     end
@@ -197,6 +187,47 @@ return function(ctx)
 
     local confirmBayMenu
 
+    -- The engine (bonnet, cowl, battery, starter motor, engine repair) has a key of its own, E: beside a helicopter
+    -- the interact key boards it. Vehicles marks its engine entries of the interaction list with `engine`.
+    local function pickActions(engine)
+        local out = {}
+        for _, action in ipairs(ctx.interactionActions(ctx.getHeld(), true)) do
+            if (action.engine == true) == engine then
+                out[#out + 1] = action
+            end
+        end
+        return out
+    end
+    -- a tool whose tap at the engine is the repair (the server picks the one the damage needs)
+    local ENGINE_TOOLS = { Spanner = true, Screwdriver = true, Hammer = true, Ratchet = true }
+
+    addCommandHandler("enginebay", function()
+        if not guard() or listIsOpen() or getPedOccupiedVehicle(localPlayer) or tweaking() then
+            return
+        end
+        if bayMenu and bayMenu.generic then
+            closeBayMenu()
+            return
+        end
+        local choices = pickActions(true)
+        if #choices > 0 then
+            bayMenu = { entries = choices, index = 1, generic = true, engine = true }
+            if #choices == 1 then
+                confirmBayMenu()
+            end
+            return
+        end
+        local held = ctx.getHeld()
+        local nearVeh, nearDist = getNearbyVehicle()
+        if not (held and ENGINE_TOOLS[held.uname] and nearVeh and nearDist <= 5.5) then
+            return
+        end
+        local px, py = getElementPosition(localPlayer)
+        if getPedContactElement(localPlayer) ~= nearVeh and exports.vehicles:atEngine(nearVeh, px, py) == true then
+            triggerServerEvent("vehicleInteractRequested", localPlayer, nearVeh)
+        end
+    end)
+
     addCommandHandler("interact", function()
         if not guard() or listIsOpen() then
             return
@@ -212,7 +243,7 @@ return function(ctx)
             closeBayMenu()
             return
         end
-        local choices = ctx.interactionActions(ctx.getHeld(), true)
+        local choices = pickActions(false)
         if #choices > 1 or (#choices == 1 and not choices[1].item) then
             blockEnterUntil = getTickCount() + TRUNK_ENTER_BLOCK_MS
             bayMenu = { entries = choices, index = 1, generic = true }
@@ -386,15 +417,15 @@ return function(ctx)
             -- standing on the vehicle (a boat's deck, the Marquis helm at its stern) is not standing at its bonnet or
             -- trunk: F there takes the wheel
             local onBoard = getPedContactElement(localPlayer) == nearVeh
-            local isFront = not onBoard and (angle < 25 or angle > 335)
+            local isFront = not onBoard and exports.vehicles:atEngine(nearVeh, px, py) == true
             -- At the open bonnet, empty hands or a Ratchet can hold to choose an engine-bay action.
             -- at a body part on the side, or at the front while the bonnet is still shut: a tap is the
             -- repair, a hold tightens or takes the part off.
             if not uname or uname == "Ratchet" then
                 local partName, condition = exports.vehicles:bodyPartSlot(nearVeh)
                 local partOn = uname == "Ratchet" and partName ~= nil and condition ~= "missing"
-                local atBay = isFront and bonnetIsOpen(nearVeh) and exports.vehicles:hasBatteryBay(nearVeh)
-                local atBonnet = not uname and isFront and exports.vehicles:hasBatteryBay(nearVeh)
+                -- the engine is the engine key's (enginebay): the interact key leaves the bonnet and the bay alone
+                local atBay, atBonnet = false, false
                 if atBay or partOn or atBonnet then
                     blockEnterUntil = getTickCount() + TRUNK_ENTER_BLOCK_MS
                     if isTimer(interactHoldTimer) then
@@ -445,6 +476,10 @@ return function(ctx)
             end
             local isRear = not onBoard and angle > 155 and angle < 205
             local isPart = uname and exports.vehicles:isBodyPart(uname)
+            -- a repair tool at the engine repairs on the engine key, not this one
+            if isFront and ENGINE_TOOLS[uname] and exports.vehicles:hasBatteryBay(nearVeh) then
+                return
+            end
             if (uname and VEHICLE_TOOLS[uname]) or isPart or isRear then
                 blockEnterUntil = getTickCount() + TRUNK_ENTER_BLOCK_MS
                 return triggerServerEvent("vehicleInteractRequested", localPlayer, nearVeh)
@@ -647,7 +682,8 @@ return function(ctx)
         triggerServerEvent("inventoryOpenRequested", localPlayer)
     end)
 
-    local DEFAULTS = { interact = "f", dropitem = "n", inventory = "h", reloadweapon = "r", glovebox = "e" }
+    local DEFAULTS =
+        { interact = "f", dropitem = "n", inventory = "h", reloadweapon = "r", glovebox = "e", enginebay = "e" }
     -- MTA binds Y to team chat in the core, which unbindKey cannot remove (it only touches this resource's binds);
     -- the gamemode has no teams, so an unbound putaway answers Y itself and swallows the key before the chat sees it
     addEventHandler("onClientKey", root, function(key, press)
@@ -783,7 +819,7 @@ return function(ctx)
         end
         if menu.generic and (not menu.refreshedAt or getTickCount() - menu.refreshedAt >= 200) then
             local selected = menu.entries[menu.index] and menu.entries[menu.index].id
-            menu.entries = ctx.interactionActions(ctx.getHeld(), true)
+            menu.entries = pickActions(menu.engine == true)
             menu.refreshedAt = getTickCount()
             menu.index = 1
             for i, entry in ipairs(menu.entries) do

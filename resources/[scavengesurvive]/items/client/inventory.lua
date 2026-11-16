@@ -130,6 +130,8 @@ return function(ctx)
         NO_BATTERY_IN = "There is no battery under the bonnet",
         BATTERY_ALREADY = "There is already a battery under the bonnet",
         BONNET_SHUT = "Open the bonnet first",
+        COWL_LOCKED = "The engine cover is locked: unlock the vehicle first",
+        COWL_SHUT = "Open the engine cover first",
         BATTERY_FITTED = "Battery fitted",
         BATTERY_PLACED = "Battery placed loose: tighten it with a Ratchet",
         BATTERY_UNBOLTED = "Battery unbolted: the car will not start until you tighten it",

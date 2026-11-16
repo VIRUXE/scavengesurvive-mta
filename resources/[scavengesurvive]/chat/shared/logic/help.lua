@@ -1,8 +1,8 @@
 -- The /help window's content (client/help.lua draws it): short topics in plain words for a player who has never
 -- played a survival game. Upstream's /help was only the GENCOMDHELP command list (core/player/commands.pwn) and
 -- its crafting help sat behind /recipes (core/player/recipes.pwn Dialog_ShowCraftHelp); the port gathers the basics
--- in one place. {interact}, {putaway}, {dropitem}, {inventory}, {reloadweapon} and {chat} stand for the key the
--- player has bound to that command, so the text names the key they really press.
+-- in one place. {interact}, {putaway}, {dropitem}, {inventory}, {reloadweapon}, {enginebay} and {chat} stand for
+-- the key the player has bound to that command, so the text names the key they really press.
 local help = {}
 
 -- lang:begin
@@ -43,6 +43,7 @@ local T = {
     keyCarEngine = "In a car: hold it to start the engine",
     keyCarLights = "In a car: lights on and off",
     keyCarRadio = "In a car: radio",
+    keyEngine = "At a vehicle's engine: open the bonnet, fit parts, repair",
     keysTip = "Not sure what a key does? Look at the yellow keys at the top right of the screen."
         .. " They show what each key does right now.",
 
@@ -86,8 +87,8 @@ local T = {
         "Get in with {interact}. Then hold {putaway} to start the engine.",
         "The engine needs fuel and a battery.",
         "No fuel? Fill a Petrol Can at a petrol station pump, then pour it in at the side of the car.",
-        "Battery or engine: stand at the front with empty hands and press {interact} to open the bonnet.",
-        "To repair: open the bonnet, hold a tool at the front and press {interact}."
+        "Battery or engine: stand at the front with empty hands and press {enginebay} to open the bonnet.",
+        "To repair: open the bonnet, hold a tool at the front and press {enginebay}."
             .. " Very broken cars need a Spanner first.",
         "At the back of a car, press {interact} to open the trunk. You can store items in it.",
         "Lock the doors from inside with /lock before you leave the car.",
@@ -163,6 +164,7 @@ help.KEY_ROWS = {
     { "putaway", T.keyCarEngine, hold = true },
     { "dropitem", T.keyCarLights },
     { "radio", T.keyCarRadio },
+    { "enginebay", T.keyEngine },
 }
 
 -- the port's commands upstream's GENCOMDHELP list does not name

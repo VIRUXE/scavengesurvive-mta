@@ -469,6 +469,17 @@ local function create(row, fresh)
     local bayType = exports.data:vehicleType(row.type_uname)
     info[v].bay = battery.hasBay(row.model, bayType, vlogic.DOORLESS_MODELS)
     setElementData(v, "vehicles.bay", info[v].bay, "broadcast", "deny")
+    local category = bayType and bayType.category
+    if not bay.hasStarter(category) then
+        info[v].starter, info[v].starterState = nil, bay.NONE
+    end
+    -- what lies over the engine: the bonnet (door 0), a cowl the clients turn (vehicles.cowl), or nothing
+    info[v].cover = vlogic.engineCover(row.model, category)
+    setElementData(v, "vehicles.cover", info[v].cover or false, "broadcast", "deny")
+    if info[v].cover == "cowl" then
+        info[v].cowlOpen = false
+        setElementData(v, "vehicles.cowl", false, "broadcast", "deny")
+    end
     publishBattery(v, info[v])
     publishBayState(info[v])
 
@@ -572,7 +583,9 @@ local function spawnAt(s, chance, cb)
     if row.battery == nil then
         row.battery_state = bay.MISSING
     end
-    if starter.spawnMissing(math.random) then
+    if not bay.hasStarter(t.category) then
+        row.starter = nil -- aircraft: no starter motor (the row's state is ignored on load)
+    elseif starter.spawnMissing(math.random) then
         row.starter, row.starter_state = nil, bay.MISSING
     end
     local params = {
@@ -1252,7 +1265,7 @@ net.handler("engineToggleRequested", function(player)
             end
             return
         end
-        if inf.bay then
+        if inf.bay and inf.starterState ~= bay.NONE then
             -- a loose motor is in the bay but not bolted; an empty slot clicks the same as a dead one
             if inf.starterState == bay.LOOSE then
                 engineCranked(player, v, "STARTER_BAD")
@@ -2008,14 +2021,41 @@ function flattenVehicleBattery(vehicle)
     return true
 end
 
--- the engine is reachable: a car's bonnet stands open or has been taken off (door state 4); a vehicle without one
--- (bikes, boats, the doorless utility models) always is
+-- the engine is reachable: a car's bonnet stands open or has been taken off (door state 4), a cowl stands open; a
+-- vehicle without either (bikes, boats, the doorless utility models, aircraft other than the Maverick) always is
 local function engineReachable(vehicle)
     local inf = info[vehicle]
-    if not (inf and inf.bay) then
+    if not (inf and inf.bay and inf.cover) then
         return true
     end
+    if inf.cover == "cowl" then
+        return inf.cowlOpen == true
+    end
     return getVehicleDoorState(vehicle, 0) == 4 or getVehicleDoorOpenRatio(vehicle, 0) > 0.5
+end
+
+-- a toast code for the engine's cover: BONNET_<what>, or COWL_<what> for a cowl (what: LOCKED, SHUT)
+local function coverCode(inf, what)
+    return (inf and inf.cover == "cowl" and "COWL_" or "BONNET_") .. what
+end
+
+-- nothing to open or shut: no cover at all, or a bonnet taken off
+local function coverFixed(vehicle, inf)
+    return not inf.cover or (inf.cover == "bonnet" and getVehicleDoorState(vehicle, 0) == 4)
+end
+
+-- opens or shuts the engine cover: a bonnet swings on door 0, a cowl's panels turn on each client (vehicles.cowl)
+local function setCoverOpen(vehicle, inf, open)
+    if coverFixed(vehicle, inf) then
+        return
+    end
+    if inf.cover == "cowl" then
+        inf.cowlOpen = open
+        setElementData(vehicle, "vehicles.cowl", open, "broadcast", "deny")
+    else
+        setVehicleDoorOpenRatio(vehicle, 0, open and 1 or 0, 500)
+    end
+    markUsed(vehicle)
 end
 
 local function atBonnet(player, vehicle)
@@ -2027,7 +2067,7 @@ local function atBonnet(player, vehicle)
     local vx, vy, vz = getElementPosition(vehicle)
     local _, _, vrz = getElementRotation(vehicle)
     local near = getDistanceBetweenPoints3D(px, py, pz, vx, vy, vz) <= vlogic.maxReachDistance("medium")
-    return near and vlogic.isFront(vlogic.angleToVehicle(px, py, vx, vy, vrz))
+    return near and vlogic.atEngine(getElementModel(vehicle), px, py, vx, vy, vrz)
 end
 
 local function heldRecord(cur)
@@ -2293,7 +2333,7 @@ local function startEngineRepair(player, vehicle, held)
     end
     local inf = info[vehicle]
     if not engineReachable(vehicle) then
-        return toast(player, inf and inf.locked > 0 and "BONNET_LOCKED" or "BONNET_SHUT")
+        return toast(player, coverCode(inf, inf and inf.locked > 0 and "LOCKED" or "SHUT"))
     end
     cancelHoldAction(player)
     setPedAnimation(player, "INT_SHOP", "SHOP_CASHIER", -1, true, false, false, false)
@@ -2308,7 +2348,7 @@ local function startEngineRepair(player, vehicle, held)
         end
         setPedAnimation(p, nil)
         if not engineReachable(veh) then
-            return toast(p, "BONNET_SHUT") -- shut on them mid-repair
+            return toast(p, coverCode(info[veh], "SHUT")) -- shut on them mid-repair
         end
         local curHp = getElementHealth(veh)
         local nextHp = math.min(vlogic.HEALTH_MAX, curHp + 150)
@@ -2424,10 +2464,10 @@ net.handler("vehicleBayMenuRequested", function(player, vehicle)
         return
     end
     if inf.locked > 0 then
-        return toast(player, "BONNET_LOCKED")
+        return toast(player, coverCode(inf, "LOCKED"))
     end
     if not engineReachable(vehicle) then
-        return toast(player, "BONNET_SHUT")
+        return toast(player, coverCode(inf, "SHUT"))
     end
     local held = exports.items:getHeld(player)
     if held and held.uname ~= "Ratchet" then
@@ -2452,17 +2492,13 @@ net.handler("vehicleBayActionRequested", function(player, vehicle, actionId)
         return
     end
     if inf.locked > 0 then
-        return toast(player, "BONNET_LOCKED")
+        return toast(player, coverCode(inf, "LOCKED"))
     end
     if actionId == "close_bonnet" or actionId == "open_bonnet" then
-        if getVehicleDoorState(vehicle, 0) ~= 4 then
-            setVehicleDoorOpenRatio(vehicle, 0, actionId == "open_bonnet" and 1 or 0, 500)
-            markUsed(vehicle)
-        end
-        return
+        return setCoverOpen(vehicle, inf, actionId == "open_bonnet")
     end
     if not engineReachable(vehicle) then
-        return toast(player, "BONNET_SHUT")
+        return toast(player, coverCode(inf, "SHUT"))
     end
     local held = exports.items:getHeld(player)
     if actionId == "fit_battery" then
@@ -2665,14 +2701,15 @@ net.handler("vehicleInteractRequested", function(player, vehicle, capX, capY, ca
         return
     end
 
-    -- Case 1c: the bonnet of an unlocked car opens and shuts with empty hands. A tap on a loose battery or a
-    -- loose starter motor lifts that part into the hands. A Car Battery in hand
+    -- Case 1c: the bonnet (or the Maverick's cowl) of an unlocked vehicle opens and shuts with empty hands. A tap
+    -- on a loose battery or a loose starter motor lifts that part into the hands. A Car Battery in hand
     -- goes into an empty slot loose.
-    if vlogic.isFront(angle) and inf.bay and (not held or uname == "Battery") then
+    local atEngine = vlogic.atEngine(getElementModel(vehicle), px, py, vx, vy, vrz)
+    if atEngine and inf.bay and (not held or uname == "Battery") then
         if inf.locked > 0 then
-            return toast(player, "BONNET_LOCKED")
+            return toast(player, coverCode(inf, "LOCKED"))
         end
-        local gone = getVehicleDoorState(vehicle, 0) == 4 -- bonnet taken off: nothing to open or shut
+        local gone = coverFixed(vehicle, inf) -- no cover, or the bonnet taken off: nothing to open or shut
         local open = engineReachable(vehicle)
         if not held then
             if open and bay.pickup(inf.batteryState, inf.starterState) then
@@ -2690,12 +2727,10 @@ net.handler("vehicleInteractRequested", function(player, vehicle, capX, capY, ca
                     return
                 end
             end
-            setVehicleDoorOpenRatio(vehicle, 0, open and 0 or 1, 500)
-            markUsed(vehicle)
-            return
+            return setCoverOpen(vehicle, inf, not open)
         end
         if not open then
-            return toast(player, "BONNET_SHUT")
+            return toast(player, coverCode(inf, "SHUT"))
         end
         if activeActions[player] or not atBonnet(player, vehicle) then
             return
@@ -2704,12 +2739,12 @@ net.handler("vehicleInteractRequested", function(player, vehicle, capX, capY, ca
     end
 
     -- Case 1d: a Starter Motor in hand goes in loose into an empty starter slot
-    if vlogic.isFront(angle) and inf.bay and uname == "StarterMotor" then
+    if atEngine and inf.bay and inf.starterState ~= bay.NONE and uname == "StarterMotor" then
         if inf.locked > 0 then
-            return toast(player, "BONNET_LOCKED")
+            return toast(player, coverCode(inf, "LOCKED"))
         end
         if not engineReachable(vehicle) then
-            return toast(player, "BONNET_SHUT")
+            return toast(player, coverCode(inf, "SHUT"))
         end
         if activeActions[player] or not atBonnet(player, vehicle) then
             return
@@ -2719,7 +2754,7 @@ net.handler("vehicleInteractRequested", function(player, vehicle, capX, capY, ca
 
     -- Case 1b: engine repair at the front. The bonnet only has to be open.
     local repairTool = uname == "Spanner" or uname == "Screwdriver" or uname == "Hammer" or uname == "Ratchet"
-    if vlogic.isFront(angle) and repairTool then
+    if atEngine and repairTool then
         return startEngineRepair(player, vehicle, held)
     end
 
