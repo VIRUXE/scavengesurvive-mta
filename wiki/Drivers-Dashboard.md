@@ -4,6 +4,8 @@ While you drive a vehicle with an engine and a fuel tank, an instrument cluster 
 
 <!-- shot:shot-dashboard -->
 
+What is described below is the car's and the truck's cluster. Other kinds of vehicle have a dashboard of their own, listed under [Other vehicles](#other-vehicles); the ignition switch, the backlight, the bulb check and the way a start or a stall plays out are the same on all of them. A bicycle has none.
+
 ## The dials
 
 - **Speedometer** (left): km/h over a 240 degree scale, numbered every 20 km/h (every 40 on faster vehicles). The scale's end follows the vehicle's top speed, from 120 up to 320 km/h. A green digital readout under the needle shows the speed in figures.
@@ -51,3 +53,15 @@ The battery is checked first, then damage and fuel, then the starter motor, so a
 ## Stalling
 
 When the engine dies under you, the rev needle drops, the engine lamp lights for a second and a half (not for an empty tank, which is no fault), and the lamp for the cause flashes red for 4 seconds: the fuel lamp for an empty tank, the engine lamp for damage, a plain stall, or a battery pulled or flattened by an [EMP](Explosives).
+
+## Other vehicles
+
+Each has the ignition switch at its left end and lights up with the key like the car's.
+
+- **Motorbikes**: two chrome pods on a bracket. The speedometer with its digital readout in the large one, the rev counter in the small one, and between them the fuel level as a row of eight LCD bars (the last bar turns red and blinks at 15 % or less) over three lamps: engine, fuel and headlamp. A bike has no door lamp and no voltmeter.
+- **Boats**: a navy helm console with a brass rim and white-faced dials. The log on the left reads **knots**, its scale following the boat's top speed; the rev counter is on the right. Between them a compass strip slides under a fixed red line (`N`, `E`, `S`, `W` and the tens of degrees between: `3` is 30 degrees), over the fuel gauge and the engine, fuel and headlamp lamps.
+- **Helicopters**: a flat panel. A compass strip runs over five instruments: airspeed in knots (0 to 120, green in the normal range), the artificial horizon (blue sky over brown ground, tilting against your bank and sinking as the nose rises), the altimeter in feet above sea level (the long hand turns once per 1,000 ft, the short one once per 10,000 ft, with the figure in digits), vertical speed in thousands of feet a minute (level at nine o'clock, up for a climb), and rotor speed in percent with a green band from 90 to 110. On the right the fuel gauge sits over a panel of captions: `ENG`, `FUEL`, `LTS` and `DOOR` light like the car's lamps, and `ROTOR` flashes red while the engine runs and the rotor turns under 80 %, too slowly to fly.
+- **Planes**: the same panel with airspeed to 180 knots, the horizon, the altimeter, a directional gyro (the compass card turns under a fixed aircraft) and vertical speed. On the right the fuel gauge and an engine rev gauge, which rises on the throttle, sit over the captions; `GEAR` is green while the undercarriage is down and dark with it up.
+- **Sports cars**: a low carbon binnacle with a red lip. The rev counter is the large dial in the middle, reading to 9, with the gear in a window on its face (`R` in reverse) and a shift light that flashes red as the needle reaches the red at the top of a gear. The speedometer sits smaller on the left; the fuel gauge, voltmeter and the five lamps are on the right. No vehicle in the world uses it yet.
+
+The flight and compass instruments are mechanical and keep reading with the key off; only their backlight and digits need power.

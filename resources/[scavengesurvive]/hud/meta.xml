@@ -18,6 +18,12 @@
     <file src="client/interactions.lua"/>
     <file src="client/voice.lua"/>
     <file src="client/dashboard.lua"/>
+    <file src="client/dashboards/standard.lua"/>
+    <file src="client/dashboards/sports.lua"/>
+    <file src="client/dashboards/motorbike.lua"/>
+    <file src="client/dashboards/boat.lua"/>
+    <file src="client/dashboards/helicopter.lua"/>
+    <file src="client/dashboards/plane.lua"/>
     <file src="shared/logic/bars.lua"/>
     <file src="shared/logic/keyactions.lua"/>
     <file src="shared/logic/watch.lua"/>

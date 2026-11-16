@@ -81,8 +81,12 @@ local voiceClient = loadFile("client/voice.lua", "=hud/voice.lua")({
     end,
     voiceLogic = voiceLogic,
 })
-local dashboard =
-    loadFile("client/dashboard.lua", "=hud/dashboard.lua")({ canvas = canvas, c = c, logic = dashboardLogic })
+local dashboard = loadFile("client/dashboard.lua", "=hud/dashboard.lua")({
+    canvas = canvas,
+    c = c,
+    logic = dashboardLogic,
+    load = loadFile,
+})
 local SKILL_NOTICE_MS = 5000
 local GREEN = tocolor(0, 255, 0, 255) -- upstream skl_PlayerNotification colour 16711935 (0x00FF00FF)
 local typeCache, vehicleTypeCache = {}, {}
@@ -706,11 +710,11 @@ addEventHandler("onClientRender", root, function()
         drawWatch(vehicle)
     end
     local vt = driver and vehicleType(getElementData(vehicle, "vehicles.type")) or nil
-    local dash = vt and not vt.noEngine and (vt.maxFuel or 0) > 0
-    drawSkillNotice(dash and dashboard.TOP - 16 or nil)
+    local dashTop = vt and dashboard.top(vt) or nil -- nil: this vehicle has no dashboard (a bicycle, a trailer)
+    drawSkillNotice(dashTop and dashTop - 16 or nil)
     if driver then
         drawVehiclePanel(vehicle)
-        if dash then
+        if dashTop then
             dashboard.draw(vehicle, vt)
         end
     end
@@ -725,7 +729,8 @@ end
 
 -- export: dev preview of the driver's dashboard (client/dashboard.lua), e.g. over rcon
 -- `clua <player> exports.hud:dashboardPreview({ battery = 18 })` (a low battery's slow flash) or
--- `exports.hud:dashboardPreview(nil, "crank", "DAMAGED")` (the starter grinding); false clears the overrides
+-- `exports.hud:dashboardPreview(nil, "crank", "DAMAGED")` (the starter grinding); `{ design = "sports" }` shows
+-- another class's dashboard in the vehicle driven; false clears the overrides
 function dashboardPreview(overrides, kind, code)
     return dashboard.preview(overrides, kind, code)
 end

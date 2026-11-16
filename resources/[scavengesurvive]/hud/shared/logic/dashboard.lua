@@ -37,6 +37,67 @@ function M.kmh(vx, vy, vz)
     return math.sqrt((vx or 0) ^ 2 + (vy or 0) ^ 2 + (vz or 0) ^ 2) * 180
 end
 
+-- Which dashboard a vehicle type's driver sees (hud/client/dashboards/<name>.lua), nil for none: a vehicle with no
+-- engine or no tank (a bicycle, a trailer) has no instruments. A type names its own with `dash` (a sports car:
+-- dash = "sports"), else its category decides. Trucks share the car's cluster until they have one of their own.
+M.DESIGN_BY_CATEGORY = {
+    car = "standard",
+    truck = "standard",
+    motorbike = "motorbike",
+    boat = "boat",
+    helicopter = "helicopter",
+    plane = "plane",
+}
+function M.design(vt)
+    if not vt or vt.noEngine or (vt.maxFuel or 0) <= 0 then
+        return nil
+    end
+    return vt.dash or M.DESIGN_BY_CATEGORY[vt.category]
+end
+
+-- Marine and flight units: knots from km/h, feet from metres, feet per minute from an element's z velocity.
+function M.knots(kmh)
+    return (kmh or 0) / 1.852
+end
+
+function M.feet(metres)
+    return (metres or 0) * 3.28084
+end
+
+function M.verticalFpm(vz)
+    return (vz or 0) * 50 * 196.85
+end
+
+-- A knots dial's full scale and numbered step for a handling top speed in km/h: never under 40.
+function M.knotScale(maxKmh)
+    local top = math.max(40, M.knots((maxKmh or 100) * 1.1))
+    local step = top > 80 and 20 or 10
+    return math.ceil(top / step) * step, step
+end
+
+-- An attitude from an element matrix's right, forward and up rows: pitch (degrees, nose up positive), roll (degrees,
+-- right wing down positive) and compass heading (0 .. 360, clockwise from north).
+function M.attitude(right, forward, up)
+    local pitch = math.deg(math.asin(math.max(-1, math.min(1, forward[3]))))
+    local roll = math.deg(math.atan2(-right[3], up[3]))
+    local heading = math.deg(math.atan2(forward[1], forward[2])) % 360
+    return pitch, roll, heading
+end
+
+-- A helicopter's rotor speed as a share of its flying speed (getHelicopterRotorSpeed: 0.2 at full speed).
+M.ROTOR_FULL, M.ROTOR_LOW = 0.2, 0.8
+function M.rotorShare(speed)
+    return math.max(0, (tonumber(speed) or 0) / M.ROTOR_FULL)
+end
+
+-- A propeller engine's revs as a share of its scale: idling, opened up on the throttle, eased back on the brake.
+function M.propShare(engine, throttle, brake)
+    if not engine then
+        return 0
+    end
+    return throttle and 0.88 or brake and 0.22 or 0.45
+end
+
 -- The speedometer's full scale for a handling top speed: rounded up to a step, never under 120 or over 320.
 function M.speedScale(maxKmh)
     local top = math.max(120, math.min(320, (maxKmh or 160) * 1.1))
