@@ -49,6 +49,8 @@ local disabled = {} -- controls this script switched off
 local keys = {} -- control -> list of bound keys, read when flying starts
 local landingUntil = 0
 local heading = 0
+local px, py, pz -- where the flight holds the ped; GTA's gravity pulls it down between frames
+local TELEPORT_GAP = 5 -- metres off that point: something else moved the ped (a staff teleport), follow it
 
 local function readBinds()
     keys = {}
@@ -106,6 +108,7 @@ local function setFlying(on, quiet)
         vx, vy, vz = 0, 0, 0
         local _, _, rz = getElementRotation(localPlayer)
         heading = rz
+        px, py, pz = getElementPosition(localPlayer)
         for _, control in ipairs(CONTROLS) do
             if isControlEnabled(control) then
                 toggleControl(control, false)
@@ -174,8 +177,12 @@ addEventHandler("onClientPreRender", root, function(slice)
     vx, vy, vz = vx + (tx - vx) * k, vy + (ty - vy) * k, vz + (tz - vz) * k
 
     local x, y, z = getElementPosition(localPlayer)
+    if getDistanceBetweenPoints3D(x, y, z, px, py, pz) > TELEPORT_GAP then
+        px, py, pz = x, y, z
+    end
+    px, py, pz = px + vx * dt, py + vy * dt, pz + vz * dt
     setElementVelocity(localPlayer, 0, 0, 0)
-    setElementPosition(localPlayer, x + vx * dt, y + vy * dt, z + vz * dt, false)
+    setElementPosition(localPlayer, px, py, pz, false)
     setElementRotation(localPlayer, 0, 0, heading, "default", true)
 end)
 
