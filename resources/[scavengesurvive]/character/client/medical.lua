@@ -9,17 +9,25 @@ local function loadModule(path)
 end
 local medical = loadModule("shared/logic/medical.lua")
 medical.tr = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")().text -- labels in the player's language
+local hunger = loadModule("shared/logic/hunger.lua") -- the thirst sway shares the drunk level (client/hunger.lua)
 
-local stats = { hp = 100, infection = {}, drugs = {} }
+local stats = { hp = 100, food = 100, thirst = 100, infection = {}, drugs = {} }
 local drunk, lastShake = 0, 0
+local aimFloor = 0 -- hunger and thirst sway the aim: the level the camera keeps at least while aiming
+
+local function applyCamera()
+    setCameraDrunkLevel(math.min(255, math.floor(math.max(drunk, aimFloor) / 200)))
+end
 
 local function setDrunk(level)
     drunk = level
-    setCameraDrunkLevel(math.min(255, math.floor(level / 200)))
+    applyCamera()
 end
 
 addEventHandler("characterStatsSynced", localPlayer, function(s)
     stats.hp = tonumber(s.hp) or stats.hp
+    stats.food = tonumber(s.food) or stats.food
+    stats.thirst = tonumber(s.thirst) or stats.thirst
     stats.infection = type(s.infection) == "table" and s.infection or {}
     stats.drugs = type(s.drugs) == "table" and s.drugs or {}
 end)
@@ -35,12 +43,19 @@ end)
 
 local function update()
     if isPedDead(localPlayer) or getElementData(localPlayer, "staff.duty") == true then
+        aimFloor = 0
         if drunk ~= 0 then
             setDrunk(0)
         end
         return
     end
     local held = medical.drugDrunk(stats.drugs)
+    local aiming = not held and not getPedOccupiedVehicle(localPlayer) and getPedControlState(localPlayer, "aim_weapon")
+    local nextAim = aiming and hunger.aimDrunk(stats.food, stats.thirst, stats.drugs) or 0
+    if nextAim ~= aimFloor then
+        aimFloor = nextAim
+        applyCamera()
+    end
     if held then
         if drunk ~= held then
             setDrunk(held)
@@ -51,11 +66,17 @@ local function update()
         end
         local now = getTickCount()
         local nextLevel = medical.infectionShake(stats.infection, stats.drugs, stats.hp, drunk, now - lastShake)
+        local infected = (stats.infection.food or stats.infection.wound) and not stats.drugs.Adrenaline
         if nextLevel then
             lastShake = now
             setDrunk(nextLevel)
-        elseif drunk ~= 0 and (stats.drugs.Adrenaline or not (stats.infection.food or stats.infection.wound)) then
-            setDrunk(0)
+        elseif not infected then
+            -- no infection holding the camera: thirst sways it now and then (shared/logic/hunger.lua)
+            local thirsty = hunger.thirstDrunk(stats.thirst, stats.drugs, drunk, now - lastShake)
+            if thirsty then
+                lastShake = now
+                setDrunk(thirsty)
+            end
         end
     end
     -- the world resource's clock sync and weather rolls are global: the drug sky is put back every tick

@@ -15,12 +15,17 @@
     <script src="client/travel.lua" type="client"/>
     <script src="client/poses.lua" type="client"/>
     <script src="client/blood.lua" type="client"/>
+    <script src="client/hunger.lua" type="client"/>
+    <file src="client/hunger.fx"/>
+    <file src="files/growl.ogg"/>
+    <file src="files/cough.ogg"/>
     <file src="shared/logic/survival.lua"/>
     <file src="shared/logic/spawnpoints.lua"/>
     <file src="shared/logic/combatlog.lua"/>
     <file src="shared/logic/drop.lua"/>
     <file src="shared/logic/skills.lua"/>
     <file src="shared/logic/medical.lua"/>
+    <file src="shared/logic/hunger.lua"/>
     <file src="shared/logic/travel.lua"/>
     <file src="shared/logic/bodies.lua"/>
     <file src="server/travel.lua"/>
