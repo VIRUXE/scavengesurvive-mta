@@ -12,6 +12,7 @@
     <script src="shared/events.lua" type="shared"/>
     <script src="server/main.lua" type="server"/>
     <script src="client/main.lua" type="client"/>
+    <script src="client/fly.lua" type="client"/>
     <script src="client/studio.lua" type="client"/>
     <script src="client/item_picker.lua" type="client"/>
     <script src="client/weather_window.lua" type="client"/>

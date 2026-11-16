@@ -473,20 +473,9 @@ command("move", function(p, dir, distArg)
     setElementPosition(elem, x, y, z)
 end)
 
-command("fly", function(p, arg)
-    if arg == "now" then
-        useFly[p] = true
-        triggerClientEvent(p, "devFlyStateChanged", p, true, true)
-        return say(p, "fly activated")
-    end
+command("fly", function(p)
     useFly[p] = not useFly[p]
-    triggerClientEvent(p, "devFlyStateChanged", p, useFly[p], false)
-    if useFly[p] then
-        say(p, "fly mode enabled: press Jump and Enter/Exit together to fly")
-    else
-        say(p, "fly mode disabled")
-        setPedAnimation(p)
-    end
+    triggerClientEvent(p, "devFlyStateChanged", p, useFly[p]) -- the client says whether it took off
 end)
 
 addEventHandler("onPlayerQuit", root, function()
@@ -497,6 +486,7 @@ addEventHandler("devFlyActiveChanged", root, function(isFlying)
     if not isElement(client) or client ~= source then
         return
     end
+    useFly[client] = isFlying == true or nil
     if isFlying then
         setPedAnimation(client, "PARACHUTE", "FALL_SKYDIVE", -1, true, false, false, false)
     else
