@@ -2,15 +2,18 @@
 -- between base - 1 and top + 2, climb velocity 0.1 up / 0.07 down / 0.01 idle, auto-exit near the ends after 1 s)
 -- and samp-zipline (grab within 2 m of the start or the line, ride 1.2 below the rope with a speed multiplier
 -- ramping 0.2 -> 0.5 by 0.01 per 50 ms tick, let go at the 6 m end sphere, when 5 m off the line, or with F).
+-- Upstream pushed the rider with SetPlayerVelocity; a ped standing on a roof ignores a velocity push in MTA, so
+-- here the rider is carried along the rope each frame at the same speeds (0.2 -> 0.5 units per 1/50 s frame).
 local F = {}
 
 F.LADDER_RADIUS = 1.0
 F.CLIMB_SPEED, F.DESCEND_SPEED, F.IDLE_SPEED = 0.1, 0.07, 0.01
 F.LADDER_EXIT_DELAY_MS = 1000
-F.ZIP_GRAB_RADIUS, F.ZIP_END_RADIUS, F.ZIP_DROP_DISTANCE = 2.0, 6.0, 5.0
+F.ZIP_GRAB_RADIUS, F.ZIP_END_RADIUS = 2.0, 6.0
 F.ZIP_HANG_BELOW = 1.2
 F.ZIP_SPEED_START, F.ZIP_SPEED_MAX, F.ZIP_SPEED_STEP, F.ZIP_EXIT_BOOST = 0.2, 0.5, 0.01, 0.03
 F.ZIP_TICK_MS = 50
+F.ZIP_FRAME_MS = 20 -- MTA velocity units are per 1/50 s
 
 local function dist2(ax, ay, bx, by)
     return math.sqrt((ax - bx) ^ 2 + (ay - by) ^ 2)
@@ -107,23 +110,19 @@ function F.ziplineRiderPos(zl, t)
     return x, y, z, angle
 end
 
--- Next speed multiplier and the velocity to apply (per tick) along the rope.
-function F.ziplineStep(zl, mult)
-    mult = math.min(F.ZIP_SPEED_MAX, (mult or F.ZIP_SPEED_START) + F.ZIP_SPEED_STEP)
-    local ux, uy, uz = F.ziplineVector(zl)
-    return mult, ux * mult, uy * mult, uz * mult
+-- Speed multiplier after riding for elapsedMs (0.2 ramping by 0.01 per 50 ms tick to 0.5).
+function F.ziplineMult(elapsedMs)
+    return math.min(F.ZIP_SPEED_MAX, F.ZIP_SPEED_START + F.ZIP_SPEED_STEP * (elapsedMs / F.ZIP_TICK_MS))
 end
 
--- Let go when the end sphere is reached or the rider drifted off the rope.
-function F.ziplineShouldExit(zl, x, y, z)
-    if math.sqrt((x - zl[4]) ^ 2 + (y - zl[5]) ^ 2 + (z - zl[6]) ^ 2) <= F.ZIP_END_RADIUS then
-        return true, "end"
+-- Fraction along the rope after dtMs at the given multiplier, and whether the end sphere was reached.
+function F.ziplineAdvance(zl, t, mult, dtMs)
+    local _, _, _, len = F.ziplineVector(zl)
+    if len == 0 then
+        return 1, true
     end
-    local _, d = F.ziplineProject(zl, x, y, z + F.ZIP_HANG_BELOW)
-    if d > F.ZIP_DROP_DISTANCE then
-        return true, "drift"
-    end
-    return false
+    t = math.min(1, t + mult * (dtMs / F.ZIP_FRAME_MS) / len)
+    return t, (1 - t) * len <= F.ZIP_END_RADIUS
 end
 
 return F

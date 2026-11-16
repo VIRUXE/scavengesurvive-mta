@@ -13,7 +13,7 @@ local data = loadFile("data/features.lua", "=world/features_data.lua")
 local ladders, ziplines = data.ladders, data.ziplines
 
 local onLadder = nil -- { idx, since, animUp }
-local onZip = nil -- { idx, mult, timer }
+local onZip = nil -- { idx, t, mult, since }
 local CLIMB_CONTROLS =
     { "forwards", "backwards", "left", "right", "sprint", "jump", "fire", "aim_weapon", "enter_exit" }
 
@@ -108,9 +108,6 @@ exitZipline = function(boost)
         return
     end
     local zl = ziplines[onZip.idx]
-    if isTimer(onZip.timer) then
-        killTimer(onZip.timer)
-    end
     local mult = onZip.mult
     onZip = nil
     setPedAnimation(localPlayer)
@@ -119,22 +116,23 @@ exitZipline = function(boost)
         local ux, uy, uz = F.ziplineVector(zl)
         local m = mult + F.ZIP_EXIT_BOOST
         setElementVelocity(localPlayer, ux * m, uy * m, uz * m)
+    else
+        setElementVelocity(localPlayer, 0, 0, 0)
     end
 end
 
-local function zipTick()
-    if not onZip then
-        return
-    end
+-- carried along the rope every frame: a velocity push leaves a ped standing on the roof
+local function zipFrame(dt)
     local zl = ziplines[onZip.idx]
-    local x, y, z = getElementPosition(localPlayer)
-    local leave = F.ziplineShouldExit(zl, x, y, z)
-    if leave then
-        return exitZipline(true)
+    onZip.mult = F.ziplineMult(getTickCount() - onZip.since)
+    local t, atEnd = F.ziplineAdvance(zl, onZip.t, onZip.mult, math.min(dt, 100))
+    onZip.t = t
+    local px, py, pz = F.ziplineRiderPos(zl, t)
+    setElementPosition(localPlayer, px, py, pz, false)
+    setElementVelocity(localPlayer, 0, 0, 0)
+    if atEnd then
+        exitZipline(true)
     end
-    local mult, vx, vy, vz = F.ziplineStep(zl, onZip.mult)
-    onZip.mult = mult
-    setElementVelocity(localPlayer, vx, vy, vz)
 end
 
 local function enterZipline(idx)
@@ -147,8 +145,7 @@ local function enterZipline(idx)
     setElementRotation(localPlayer, 0, 0, angle)
     setPedAnimation(localPlayer, "PED", "CLIMB_IDLE", -1, true, false, false, true)
     setClimbControls(false)
-    onZip = { idx = idx, mult = F.ZIP_SPEED_START }
-    onZip.timer = setTimer(zipTick, F.ZIP_TICK_MS, 0)
+    onZip = { idx = idx, t = t, mult = F.ZIP_SPEED_START, since = getTickCount() }
 end
 
 -- Shared ------------------------------------------------------------------------------------------------------
@@ -156,6 +153,12 @@ end
 addEventHandler("onClientRender", root, function()
     if onLadder then
         ladderFrame()
+    end
+end)
+
+addEventHandler("onClientPreRender", root, function(dt)
+    if onZip then
+        zipFrame(dt)
     end
 end)
 
