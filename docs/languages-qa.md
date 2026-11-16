@@ -16,7 +16,7 @@ English has 562 keys.
 | `bhs` | Bosanski-Hrvatski-Srpski | 562 | 0 | 0 | 0 | 0 | 0 |
 | `cs` | Čeština | 562 | 0 | 0 | 0 | 0 | 0 |
 | `lv` | Latviešu | 562 | 0 | 0 | 0 | 0 | 0 |
-| `ary` | Darija | 556 | 6 | 0 | 0 | 0 | 0 |
+| `ary` | Darija | 562 | 0 | 0 | 0 | 0 | 0 |
 
 ## Placeholder mismatches
 
@@ -50,7 +50,4 @@ English has 1224 texts.
 | `bhs` | Bosanski-Hrvatski-Srpski | 0 | 35 | 0 | 0 |
 | `cs` | Čeština | 0 | 37 | 0 | 0 |
 | `lv` | Latviešu | 0 | 32 | 0 | 0 |
-| `ary` | Darija | 21 | 67 | 0 | 5 |
-
-- `ary` lacks: `Chain`, `Combination Padlock`, `Combination Lock and Chain`, `Gives the padlock a new lock and you its key. The kit is kept; an older key no longer fits.`, `The padlock needs its key first. The lock locks a bike or other doorless vehicle, and the padlock's key opens it.`, `The padlock has to be open. The lock locks a bike or other doorless vehicle, and its code opens it.`, `Left/Right: dial   Up/Down or 0-9: turn   S: scramble`, `Space: push the shackle down   R: make this the code   Esc: done`, `Space: push the shackle (it opens on the right code)   Esc: done`, `Drop`, `That lock and chain has no key.`, `The padlock is locked onto the chain and can't be re-keyed.`, `Locked with the lock and chain.`, `That padlock has no key. Use a Locksmith Kit on it first.`, `Open the padlock first: its shackle goes through the chain.`, `Code set.`, `Keyed`, `No key`, `Unlocked`, `Padlock Key`, `Fitting the lock and chain`
-- `ary` has texts no longer in English: `Cut`, `Makes the lock cut, ready to lock a bike or other doorless vehicle.`, `That lock and chain has no key. Combine it with a Locksmith Kit.`, `That lock and chain is already cut`, `Uncut`
+| `ary` | Darija | 0 | 67 | 0 | 0 |
