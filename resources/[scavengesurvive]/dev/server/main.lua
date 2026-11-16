@@ -319,18 +319,17 @@ command("vehrespawn", function(p)
     )
 end, true)
 
-local function spawnVeh(p, ...)
+-- /veh itself is the staff resource's (spawn plus upstream's /vehicle controls, level 3); this is the dev-gated spawn.
+command("spawnveh", function(p, ...)
     local query = table.concat({ ... }, " ")
     if query == "" then
-        return say(p, "usage: /veh <name|model>  e.g. /veh sultan, /veh 560")
+        return say(p, "usage: /spawnveh <name|model>  e.g. /spawnveh sultan, /spawnveh 560")
     end
     local ok, res = exports.vehicles:spawnVehicle(p, query)
     if not ok then
-        say(p, "veh: %s", tostring(res))
+        say(p, "spawnveh: %s", tostring(res))
     end
-end
-command("veh", spawnVeh)
-command("spawnveh", spawnVeh)
+end)
 
 command("stats", function(p)
     local st = exports.character:getStats(p)

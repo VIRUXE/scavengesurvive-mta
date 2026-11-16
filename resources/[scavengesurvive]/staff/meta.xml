@@ -22,6 +22,7 @@
     <file src="server/ghosts.lua"/>
     <file src="server/esp.lua"/>
     <file src="server/fields.lua"/>
+    <file src="server/vehicles.lua"/>
     <export function="getLevel" type="server"/>
     <export function="getMotd" type="server"/>
     <export function="isOnDuty" type="server"/>
