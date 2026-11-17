@@ -1,7 +1,8 @@
--- Ground under the drop spots for the server (server/death.lua): collision is client-only. A ray straight down at
--- each spot, from a little above the player's Z so a floor under the feet wins over a ceiling, reports the hit's
--- height and surface normal; false when nothing is hit. Vehicles and peds are skipped (an item lying on them would
--- float once they move); world items have no collision. The server checks every hit before using it.
+-- Ground under the drop spots for the server (server/death.lua) where its own world (lib geom.lua) does not reach:
+-- interiors, house shells, or before that world is ready. A ray straight down at each spot, from a little above the
+-- player's Z so a floor under the feet wins over a ceiling, reports the hit's height and surface normal; false when
+-- nothing is hit. Vehicles and peds are skipped (an item lying on them would float once they move); world items have
+-- no collision. The server checks every hit before using it.
 local PROBE_ABOVE, PROBE_BELOW = 1.0, 6.0
 
 addEventHandler("groundSurfaceRequested", localPlayer, function(id, spots, z)

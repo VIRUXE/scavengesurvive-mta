@@ -1,12 +1,15 @@
 -- Death and /dropall: the character_death_drop / character_drop_all procedures, the kill animation and the death
 -- screen. ctx = { db, net, util, drop, state, bodies } built by server/main.lua; state.byPlayer / state.byId are
--- shared with it. Both drops put items on the ground and slope the player's client measured under each spot
--- (drop.lua). The body itself is a Torso item (shared/logic/bodies.lua, #139) created after the drop.
+-- shared with it. Both drops put items on the ground and slope measured under each spot (drop.lua): by the server's
+-- own world (lib geom.lua) in the main world, by the player's client elsewhere (interiors, house shells). The body
+-- itself is a Torso item (shared/logic/bodies.lua, #139) created after the drop.
 return function(ctx)
     local db, net, util, drop, state, bodies = ctx.db, ctx.net, ctx.util, ctx.drop, ctx.state, ctx.bodies
     local log = ctx.log
     local M = {}
     local GROUND_WAIT_MS = 1000
+    local PROBE_ABOVE, PROBE_BELOW = 1.0, 6.0 -- as client/ground.lua: a floor under the feet wins over a ceiling
+    local geom = assert(loadstring(exports.lib:getModule("geom"), "=lib/geom.lua"))()
     local BODY_HP, BODY_DROP = 6, 0.9 -- the Torso type's hitpoints; items lie this far below the ped's origin
 
     -- upstream CreateGravestone: the Torso where the character died, named, with how they died
@@ -24,8 +27,10 @@ return function(ctx)
         end)
     end
 
-    -- Ground and slope under the drop spots: the client answers groundSurfaceReported, or after GROUND_WAIT_MS
-    -- (or at once when measure is false) every spot takes the fallback height. One question per player at a time.
+    -- Ground and slope under the drop spots. In the main world the server's world answers at once, whoever the player
+    -- is (a combat logger and a studio-held ped too). Elsewhere, or while that world is not ready, the client answers
+    -- groundSurfaceReported, or after GROUND_WAIT_MS (or at once when measure is false) every spot takes the fallback
+    -- height. One question per player at a time.
     local pending = {} -- player -> { id, spots, z, cb, timer }
     local nextId = 0
 
@@ -41,9 +46,17 @@ return function(ctx)
         q.cb(drop.settle(q.spots, hits, q.z))
     end
 
-    local function groundSpots(player, x, y, z, measure, cb)
+    local function groundSpots(player, x, y, z, int, dim, measure, cb)
         answer(player, nil)
         local spots = drop.spots(x, y)
+        if int == 0 and dim == 0 and geom.ready() then
+            local hits = {}
+            for i, s in ipairs(spots) do
+                local hz, nx, ny, nz = geom.below(s[1], s[2], z, PROBE_ABOVE, PROBE_ABOVE + PROBE_BELOW)
+                hits[i] = hz and { hz, nx, ny, nz } or false
+            end
+            return cb(drop.settle(spots, hits, z))
+        end
         if not measure or not isElement(player) then
             return cb(drop.settle(spots, nil, z))
         end
@@ -100,7 +113,7 @@ return function(ctx)
             isElement(killer) and getElementType(killer) == "player" and getPlayerName(killer) or false
         )
         local _, _, rz = getElementRotation(player)
-        groundSpots(player, x, y, z, measure, function(spots)
+        groundSpots(player, x, y, z, int, dim, measure, function(spots)
             local ring, clothes = drop.split(spots)
             local params = { c.charId, x, y, z, int, dim, toJSON(ring, true), toJSON(clothes, true) }
             db.call("character_death_drop", params, function(res)
@@ -194,7 +207,7 @@ return function(ctx)
         end
         local x, y, z = getElementPosition(player)
         local int, dim = getElementInterior(player), getElementDimension(player)
-        groundSpots(player, x, y, z, true, function(spots)
+        groundSpots(player, x, y, z, int, dim, true, function(spots)
             local params = { st.id, toJSON((drop.split(spots)), true), int, dim }
             db.call("character_drop_all", params, function(res)
                 if not isElement(player) then
