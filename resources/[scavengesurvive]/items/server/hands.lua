@@ -1352,8 +1352,38 @@ return function(ctx)
     end
 
     -- The server has no bounding boxes, so the client picks the first spot clear of vehicles and other world items
-    -- (client/main.lua) and answers; no answer within a second drops at the default spot
+    -- (client/main.lua) and answers. In the main world the server checks the pick against walls in its own world
+    -- (lib geom.lua) and, when it is behind one or no answer comes within a second, takes the first freeSpot ring spot
+    -- no wall hides; elsewhere no answer drops at the default spot.
+    local geom = assert(loadstring(exports.lib:getModule("geom"), "=lib/geom.lua"))()
     local dropSpotPending = {}
+
+    local function mainWorld(player)
+        return getElementInterior(player) == 0 and getElementDimension(player) == 0
+    end
+
+    -- false only when the server's world sees a wall in the way
+    local function reachable(player, x, y)
+        if not mainWorld(player) then
+            return true
+        end
+        -- as the client's dropSpotReachable: chest to the spot at ground height, low or a little higher
+        local px, py, pz = getElementPosition(player)
+        local sz, gz = pz + 0.5, pz - 0.9
+        return geom.clear(px, py, sz, x, y, gz + 0.15) ~= false or geom.clear(px, py, sz, x, y, gz + 0.6) ~= false
+    end
+
+    local function serverSpot(player)
+        if not mainWorld(player) or not geom.ready() then
+            return nil
+        end
+        local px, py = getElementPosition(player)
+        local _, _, rz = getElementRotation(player)
+        local cx, cy = geometry.freeSpot(px, py, rz, 1.0, function(sx, sy)
+            return not reachable(player, sx, sy)
+        end)
+        return cx and { cx, cy } or nil
+    end
 
     local function dropAt(player, spot)
         local ok, err = M.dropHeld(player, spot and { spot = spot } or nil)
@@ -1370,7 +1400,7 @@ return function(ctx)
         dropSpotPending[player] = setTimer(function()
             dropSpotPending[player] = nil
             if isElement(player) then
-                dropAt(player)
+                dropAt(player, serverSpot(player))
             end
         end, 1000, 1)
         triggerClientEvent(player, "itemDropSpotRequested", player)
@@ -1390,11 +1420,11 @@ return function(ctx)
         local _, _, rz = getElementRotation(player)
         local spot
         if type(x) == "number" and type(y) == "number" and x == x and y == y then
-            if geometry.isDropSpot(px, py, rz, 1.0, x, y, 0.35, 10) then
+            if geometry.isDropSpot(px, py, rz, 1.0, x, y, 0.35, 10) and reachable(player, x, y) then
                 spot = { x, y }
             end
         end
-        dropAt(player, spot)
+        dropAt(player, spot or serverSpot(player))
     end, { rate = 5 })
 
     addEventHandler("onPlayerQuit", root, function()

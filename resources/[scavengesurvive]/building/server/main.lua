@@ -451,8 +451,10 @@ function finishTweak(player)
     return tweak.commit(player)
 end
 
--- A completed crowbar action asks the existing client drop search for a clear spot.
--- Never fall back to the old wall position if the search fails or the client disappears.
+-- A completed crowbar action asks the existing client drop search for a clear spot; in the main world the server
+-- also checks it against walls in its own world (lib geom.lua). Never fall back to the old wall position if the
+-- search fails or the client disappears.
+local geom = assert(loadstring(exports.lib:getModule("geom"), "=lib/geom.lua"))()
 local removalSpots = {}
 local function clearRemovalSpot(player)
     local pending = removalSpots[player]
@@ -490,6 +492,16 @@ net.handler("defenceRemovalSpotChosen", function(player, id, x, y)
         or getDistanceBetweenPoints3D(px, py, pz, row.x, row.y, row.z) > 3
     then
         return
+    end
+    -- a wall between the player's chest and the spot at ground height, low and a little higher (items' drop check)
+    local sz, gz = pz + 0.5, pz - 0.9
+    if
+        (row.interior or 0) == 0
+        and (row.dimension or 0) == 0
+        and geom.clear(px, py, sz, x, y, gz + 0.15) == false
+        and geom.clear(px, py, sz, x, y, gz + 0.6) == false
+    then
+        return toast(player, "DEFENCE_NO_DROP_SPACE")
     end
     pending.finish(x, y, pz - 0.9)
 end, { rate = 5 })
