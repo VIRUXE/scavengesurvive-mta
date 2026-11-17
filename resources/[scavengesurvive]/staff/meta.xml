@@ -24,6 +24,7 @@
     <file src="server/esp.lua"/>
     <file src="server/fields.lua"/>
     <file src="server/vehicles.lua"/>
+    <file src="server/spawncheck.lua"/>
     <export function="getLevel" type="server"/>
     <export function="getMotd" type="server"/>
     <export function="isOnDuty" type="server"/>

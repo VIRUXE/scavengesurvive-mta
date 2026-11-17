@@ -370,6 +370,16 @@ CREATE TABLE IF NOT EXISTS `vehicle_spawn_removed` (
   `type_uname` varchar(32) NOT NULL,
   `reason` varchar(16) NOT NULL COMMENT 'blocked, propped or steep (tools/spawn_ground.py)',
   `detail` varchar(255) NOT NULL DEFAULT '',
+  `ground_z` float DEFAULT NULL COMMENT 'ground under the point (for the spawncheck overlay)',
+  `box_x0` float DEFAULT NULL,
+  `box_x1` float DEFAULT NULL,
+  `box_y0` float DEFAULT NULL,
+  `box_y1` float DEFAULT NULL,
+  `box_h` float DEFAULT NULL COMMENT 'the type''s box: rect in its own frame, height, origin above its bottom',
+  `box_base` float DEFAULT NULL,
+  `block_x` float DEFAULT NULL,
+  `block_y` float DEFAULT NULL,
+  `block_z` float DEFAULT NULL COMMENT 'where the first obstacle was found',
   PRIMARY KEY (`spawn_id`,`model`),
   CONSTRAINT `fk_vehicle_spawn_removed_spawn` FOREIGN KEY (`spawn_id`) REFERENCES `vehicle_spawns` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='Vehicle types that fit a spawn point neither way: the point never rolls them';
