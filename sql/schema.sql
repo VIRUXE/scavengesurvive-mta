@@ -273,6 +273,7 @@ CREATE TABLE IF NOT EXISTS `loot_spawns` (
   `enabled` tinyint(1) NOT NULL DEFAULT 1,
   `rooftop` tinyint(1) NOT NULL DEFAULT 0,
   `pos` point NOT NULL,
+  `ground` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`ground`)),
   PRIMARY KEY (`id`),
   SPATIAL KEY `sp_loot_spawns_pos` (`pos`),
   KEY `ix_loot_spawns_zone` (`zone`)
@@ -349,6 +350,30 @@ CREATE TABLE IF NOT EXISTS `vehicle_events` (
   KEY `ix_vehicle_events_character` (`character_id`,`at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
+CREATE TABLE IF NOT EXISTS `vehicle_spawn_poses` (
+  `spawn_id` int(11) NOT NULL,
+  `model` smallint(6) NOT NULL,
+  `flip` tinyint(4) NOT NULL,
+  `x` float NOT NULL,
+  `y` float NOT NULL,
+  `z` float NOT NULL,
+  `rx` float NOT NULL,
+  `ry` float NOT NULL,
+  `rz` float NOT NULL,
+  PRIMARY KEY (`spawn_id`,`model`,`flip`),
+  CONSTRAINT `fk_vehicle_spawn_poses_spawn` FOREIGN KEY (`spawn_id`) REFERENCES `vehicle_spawns` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+
+CREATE TABLE IF NOT EXISTS `vehicle_spawn_removed` (
+  `spawn_id` int(11) NOT NULL,
+  `model` smallint(6) NOT NULL,
+  `type_uname` varchar(32) NOT NULL,
+  `reason` varchar(16) NOT NULL COMMENT 'blocked, propped or steep (tools/spawn_ground.py)',
+  `detail` varchar(255) NOT NULL DEFAULT '',
+  PRIMARY KEY (`spawn_id`,`model`),
+  CONSTRAINT `fk_vehicle_spawn_removed_spawn` FOREIGN KEY (`spawn_id`) REFERENCES `vehicle_spawns` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='Vehicle types that fit a spawn point neither way: the point never rolls them';
+
 CREATE TABLE IF NOT EXISTS `vehicle_spawn_state` (
   `spawn_id` int(11) NOT NULL,
   `next_roll_at` datetime NOT NULL,
@@ -384,6 +409,8 @@ CREATE TABLE IF NOT EXISTS `vehicles` (
   `x` float NOT NULL,
   `y` float NOT NULL,
   `z` float NOT NULL,
+  `rx` float NOT NULL DEFAULT 0,
+  `ry` float NOT NULL DEFAULT 0,
   `rz` float NOT NULL DEFAULT 0,
   `colors` varchar(64) DEFAULT NULL,
   `health` float NOT NULL DEFAULT 1000,
@@ -413,9 +440,9 @@ CREATE TABLE IF NOT EXISTS `vehicles` (
   KEY `ix_vehicles_spawn` (`spawn_id`),
   KEY `fk_vehicles_trailer` (`trailer_id`),
   KEY `fk_vehicles_rope_tow` (`rope_tow_id`),
-  CONSTRAINT `fk_vehicles_rope_tow` FOREIGN KEY (`rope_tow_id`) REFERENCES `vehicles` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_vehicles_spawn` FOREIGN KEY (`spawn_id`) REFERENCES `vehicle_spawns` (`id`) ON DELETE SET NULL,
-  CONSTRAINT `fk_vehicles_trailer` FOREIGN KEY (`trailer_id`) REFERENCES `vehicles` (`id`) ON DELETE SET NULL
+  CONSTRAINT `fk_vehicles_trailer` FOREIGN KEY (`trailer_id`) REFERENCES `vehicles` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_vehicles_rope_tow` FOREIGN KEY (`rope_tow_id`) REFERENCES `vehicles` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
 CREATE TABLE IF NOT EXISTS `weapon_cache_points` (
@@ -2384,7 +2411,7 @@ END//
 
 CREATE OR REPLACE PROCEDURE `loot_roll`(IN p_rolls JSON, IN p_despawn_minutes INT)
 BEGIN
-  -- p_rolls: MTA's toJSON of [{s = spawn id, cd = cooldown seconds, items = [{u, data (JSON text or nil), x, y, z, rz}]}],
+  -- p_rolls: MTA's toJSON of [{s = spawn id, cd = cooldown seconds, items = [{u, data (JSON text or nil), x, y, z, rz, nx?, ny? (ground normal, tools/spawn_ground.py)}]}],
   -- wrapped in an outer array; one transaction places every item (bags get their container, the trigger the
   -- world position), spends each zone's allowance and cools every point.
   DECLARE v_n INT DEFAULT 0;
@@ -2392,11 +2419,11 @@ BEGIN
   DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
   SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
   START TRANSACTION;
-  INSERT INTO items (type_uname, hitpoints, data, x, y, z, rz, interior, dimension, loot_spawn_id, loot_zone, despawn_at)
-    SELECT j.u, t.max_hitpoints, j.data, j.x, j.y, j.z, j.rz, s.interior, s.dimension, s.id, s.zone, NOW() + INTERVAL p_despawn_minutes MINUTE
+  INSERT INTO items (type_uname, hitpoints, data, x, y, z, rz, ground_nx, ground_ny, interior, dimension, loot_spawn_id, loot_zone, despawn_at)
+    SELECT j.u, t.max_hitpoints, j.data, j.x, j.y, j.z, j.rz, j.nx, j.ny, s.interior, s.dimension, s.id, s.zone, NOW() + INTERVAL p_despawn_minutes MINUTE
     FROM JSON_TABLE(p_rolls, '$[0][*]' COLUMNS (sid INT PATH '$.s', NESTED PATH '$.items[*]' COLUMNS (
       u VARCHAR(32) COLLATE utf8mb4_uca1400_ai_ci PATH '$.u', data LONGTEXT PATH '$.data', x FLOAT PATH '$.x', y FLOAT PATH '$.y', z FLOAT PATH '$.z',
-      rz FLOAT PATH '$.rz'))) j
+      rz FLOAT PATH '$.rz', nx FLOAT PATH '$.nx', ny FLOAT PATH '$.ny'))) j
     JOIN loot_spawns s ON s.id = j.sid
     JOIN item_types t ON t.uname = j.u;
   SET v_n = ROW_COUNT();
@@ -2663,10 +2690,11 @@ BEGIN
   START TRANSACTION;
   UPDATE vehicles v
     JOIN JSON_TABLE(p_rows, '$[0][*]' COLUMNS (
-      id INT PATH '$.id', x FLOAT PATH '$.x', y FLOAT PATH '$.y', z FLOAT PATH '$.z', rz FLOAT PATH '$.rz',
+      id INT PATH '$.id', x FLOAT PATH '$.x', y FLOAT PATH '$.y', z FLOAT PATH '$.z',
+      rx FLOAT PATH '$.rx' DEFAULT '0' ON EMPTY, ry FLOAT PATH '$.ry' DEFAULT '0' ON EMPTY, rz FLOAT PATH '$.rz',
       health FLOAT PATH '$.health', fuel FLOAT PATH '$.fuel', locked TINYINT PATH '$.locked',
       damage LONGTEXT PATH '$.damage', battery FLOAT PATH '$.battery', battery_since INT UNSIGNED PATH '$.since')) j ON j.id = v.id
-    SET v.x = j.x, v.y = j.y, v.z = j.z, v.rz = j.rz, v.health = j.health, v.fuel = j.fuel, v.locked = j.locked,
+    SET v.x = j.x, v.y = j.y, v.z = j.z, v.rx = j.rx, v.ry = j.ry, v.rz = j.rz, v.health = j.health, v.fuel = j.fuel, v.locked = j.locked,
         v.damage = COALESCE(j.damage,v.damage), v.battery = j.battery, v.battery_since = j.battery_since;
   SET v_n = ROW_COUNT();
   COMMIT;

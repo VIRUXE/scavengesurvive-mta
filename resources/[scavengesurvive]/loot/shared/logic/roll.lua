@@ -169,4 +169,19 @@ function roll.liquidData(def, rng)
     return string.format('{"amount":%.3f,"liquid":%q}', rng() * capacity, candidates[rng(1, #candidates)])
 end
 
+-- Where an item of a loot roll lies, from its slot's measured ground (tools/spawn_ground.py: { dx, dy, z, nx, ny },
+-- the slot's offset from the point and the ground's height and normal there) and its type's rest height (metres its
+-- origin sits above its lowest point in its rest rotation, loot/shared/item_rest.lua). The origin goes that far out
+-- along the normal, so the item tilted to the ground (items/client/world.lua turns it by ground_nx/ny about its origin)
+-- touches it; the client adds modelz back. Returns x, y, z, nx, ny (nx, ny nil on flat ground, as a drop stores).
+function roll.laySlot(px, py, slot, rest, modelz)
+    local dx, dy, gz, nx, ny = slot[1], slot[2], slot[3], slot[4], slot[5]
+    local nz = math.sqrt(math.max(0, 1 - nx * nx - ny * ny))
+    local x, y, z = px + dx + nx * rest, py + dy + ny * rest, gz + nz * rest - modelz
+    if nx * nx + ny * ny < 0.0025 then
+        return x, y, z, nil, nil
+    end
+    return x, y, z, nx, ny
+end
+
 return roll

@@ -122,7 +122,7 @@ local USED_TICK_MS = 300000
 
 local GLOVEBOX_LOOT = "vehicle_glovebox" -- loot table of a fresh vehicle's glovebox (small items only)
 
-local SELECT_VEHICLES = "SELECT v.id, v.spawn_id, v.type_uname, v.model, v.x, v.y, v.z, v.rz, v.colors, "
+local SELECT_VEHICLES = "SELECT v.id, v.spawn_id, v.type_uname, v.model, v.x, v.y, v.z, v.rx, v.ry, v.rz, v.colors, "
     .. "v.health, v.fuel, v.locked, v.damage, v.carmour, v.gas_bottles, v.key_code, v.keypad_code, "
     .. "v.trailer_id, v.towbar, v.rope_tow_id, v.left_spawn, "
     .. "v.battery, v.battery_since, v.battery_state, v.battery_capacity, v.starter, "
@@ -133,9 +133,34 @@ local SELECT_VEHICLES = "SELECT v.id, v.spawn_id, v.type_uname, v.model, v.x, v.
     .. "LEFT JOIN containers g ON g.owner_vehicle_id = v.id AND g.kind = 'glovebox' "
     .. "LEFT JOIN vehicle_spawns s ON s.id = v.spawn_id"
 
-local INSERT_VEHICLE = "INSERT INTO vehicles (spawn_id, type_uname, model, x, y, z, rz, "
+local INSERT_VEHICLE = "INSERT INTO vehicles (spawn_id, type_uname, model, x, y, z, rx, ry, rz, "
     .. "health, fuel, locked, damage, key_code, trailer_id, battery, battery_since, battery_state, battery_capacity, "
-    .. "starter, starter_state) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    .. "starter, starter_state) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+
+-- Where each vehicle type stands on each point (vehicle_spawn_poses, tools/spawn_ground.py): wheels on the ground and
+-- tilted to it, for both headings a point can face. key spawn id * 4096 + model * 2 + flip -> { x, y, z, rx, ry, rz }
+-- in "ZXY" order. A point or type without one spawns at the point's own height, level, as upstream.
+local poses = {}
+local function poseKey(spawnId, model, flip)
+    return spawnId * 4096 + (model - 400) * 2 + flip
+end
+-- (spawn id, model) pairs that fit the point neither way (vehicle_spawn_removed): the point never rolls them
+local removed = {}
+local function loadPoses(cb)
+    db.query("SELECT spawn_id, model, flip, x, y, z, rx, ry, rz FROM vehicle_spawn_poses", {}, function(rows)
+        poses = {}
+        for _, r in ipairs(rows or {}) do
+            poses[poseKey(r.spawn_id, r.model, r.flip)] = { r.x, r.y, r.z, r.rx, r.ry, r.rz }
+        end
+        db.query("SELECT spawn_id, model FROM vehicle_spawn_removed", {}, function(gone)
+            removed = {}
+            for _, r in ipairs(gone or {}) do
+                removed[poseKey(r.spawn_id, r.model, 0)] = true
+            end
+            cb(rows and #rows or 0, gone and #gone or 0)
+        end)
+    end)
+end
 
 -- A tutorial vehicle (spawnTransientVehicle): a real row, so its trunk is a container like any other, but marked
 -- transient so it is never flushed, never counts toward the world budget and is deleted on every start.
@@ -401,6 +426,10 @@ end
 -- row: a vehicles table row joined with containers; fresh: a vehicle that has just spawned (its glovebox is stocked)
 local function create(row, fresh)
     local v = createVehicle(row.model, row.x, row.y, row.z, 0, 0, row.rz)
+    local rx, ry = tonumber(row.rx) or 0, tonumber(row.ry) or 0
+    if v and (rx ~= 0 or ry ~= 0) then -- tilted to its slope; stored in "ZXY" order (the GTA object convention)
+        setElementRotation(v, rx, ry, tonumber(row.rz) or 0, "ZXY")
+    end
     if not v then
         log.event("vehicle.createFailed", { vehicle_id = row.id, uname = row.type_uname, model = row.model }, "warn")
         return nil
@@ -550,7 +579,9 @@ end
 -- Rolls one spawn point (a vehicle_spawns row) with the given per-point chance. Returns true when a vehicle is
 -- being inserted; cb(vehicle or nil) when the insert is in.
 local function spawnAt(s, chance, cb)
-    local r = spawn.roll(s, types, chance, math.random)
+    local r = spawn.roll(s, types, chance, math.random, function(t)
+        return not removed[poseKey(s.id, t.model, 0)]
+    end)
     if not r then
         return false
     end
@@ -579,6 +610,12 @@ local function spawnAt(s, chance, cb)
         starter = starter.spawnLife(math.random),
         starter_state = bay.TIGHT,
     }
+    local flip = math.abs(((r.rz - s.rz) % 360) - 180) < 1 and 1 or 0
+    -- a type that fits only one way always faces that way
+    local pose = poses[poseKey(s.id, t.model, flip)] or poses[poseKey(s.id, t.model, 1 - flip)]
+    if pose then
+        row.x, row.y, row.z, row.rx, row.ry, row.rz = pose[1], pose[2], pose[3], pose[4], pose[5], pose[6]
+    end
     row.battery, row.battery_capacity = battery.spawnBattery(math.random)
     if row.battery == nil then
         row.battery_state = bay.MISSING
@@ -595,6 +632,8 @@ local function spawnAt(s, chance, cb)
         row.x,
         row.y,
         row.z,
+        row.rx or 0,
+        row.ry or 0,
         row.rz,
         row.health,
         row.fuel,
@@ -608,7 +647,7 @@ local function spawnAt(s, chance, cb)
         row.battery_capacity,
         row.starter,
         row.starter_state,
-        n = 19,
+        n = 21,
     }
     db.exec(INSERT_VEHICLE, params, function(ok, ctx, _, insertId)
         local v = nil
@@ -904,7 +943,7 @@ local function flushAll()
     for v, i in pairs(info) do
         if isElement(v) and not i.transient then
             local x, y, z = getElementPosition(v)
-            local _, _, rz = getElementRotation(v)
+            local rx, ry, rz = getElementRotation(v, "ZXY")
             -- the first time a vehicle is driven away from its point, the point becomes free and cools down
             if not i.leftSpawn and i.spawnX and util.dist2(x, y, i.spawnX, i.spawnY) > leaveRadius then
                 i.leftSpawn = true
@@ -918,6 +957,8 @@ local function flushAll()
                 x = x,
                 y = y,
                 z = z,
+                rx = rx,
+                ry = ry,
                 rz = rz,
                 damage = bodySrv and not bodySrv.busy(v) and toJSON(bodySrv.snapshot(v), true):sub(2, -2) or nil,
                 health = getElementHealth(v),
@@ -3162,7 +3203,10 @@ addEventHandler("onResourceStart", resourceRoot, function()
     end
     db.settings(function(map)
         settings = map
-        loadOrRoll()
+        loadPoses(function(n, gone)
+            log.event("vehicle.posesLoaded", { count = n, removed = gone })
+            loadOrRoll()
+        end)
         if isTimer(refillTimer) then
             killTimer(refillTimer)
         end
@@ -3436,6 +3480,8 @@ function spawnVehicle(player, query)
         row.x,
         row.y,
         row.z,
+        row.rx or 0,
+        row.ry or 0,
         row.rz,
         row.health,
         row.fuel,
@@ -3449,7 +3495,7 @@ function spawnVehicle(player, query)
         nil,
         row.starter,
         bay.TIGHT,
-        n = 19,
+        n = 21,
     }
     db.exec(INSERT_VEHICLE, params, function(ok, ctx, _, insertId)
         if not ok or not insertId then

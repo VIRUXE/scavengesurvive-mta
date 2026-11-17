@@ -27,12 +27,19 @@ local function letterSet(text, map)
 end
 
 -- Candidates for a group spawn: the group's types whose category and size are allowed, each kept only when its own
--- spawn chance hits (upstream PickRandomVehicleTypeFromGroup).
-function spawn.candidates(row, types, rng)
+-- spawn chance hits (upstream PickRandomVehicleTypeFromGroup). fits(t), when given, drops the types that do not fit
+-- the point (vehicle_spawn_removed, tools/spawn_ground.py).
+function spawn.candidates(row, types, rng, fits)
     local cats, sizes = letterSet(row.categories, spawn.CATEGORY), letterSet(row.sizes, spawn.SIZE)
     local out = {}
     for _, t in ipairs(types.list) do
-        if t.group == row.group_name and cats[t.category] and sizes[t.size] and rng() * 100 < t.spawnChance then
+        if
+            t.group == row.group_name
+            and cats[t.category]
+            and sizes[t.size]
+            and (not fits or fits(t))
+            and rng() * 100 < t.spawnChance
+        then
             out[#out + 1] = t
         end
     end
@@ -42,7 +49,7 @@ end
 -- One spawn point (a vehicle_spawns row) -> { type = t, rz = rz } or nil when nothing spawns.
 -- Deviation from upstream: when no candidate passes its chance, upstream reads list[0] of a zeroed array and spawns
 -- type 0 (a Bobcat) even at a military spawn; here the point stays empty.
-function spawn.roll(row, types, chance, rng)
+function spawn.roll(row, types, chance, rng, fits)
     if rng() * 100 < 100 - (chance or spawn.DEFAULT_CHANCE) then
         return nil
     end
@@ -50,11 +57,11 @@ function spawn.roll(row, types, chance, rng)
     local t
     if row.type_name and row.type_name ~= false then
         t = types.byUname[row.type_name]
-        if not t or rng() * 100 >= t.spawnChance then
+        if not t or (fits and not fits(t)) or rng() * 100 >= t.spawnChance then
             return nil
         end
     else
-        local list = spawn.candidates(row, types, rng)
+        local list = spawn.candidates(row, types, rng, fits)
         if #list == 0 then
             return nil
         end

@@ -10,6 +10,7 @@ local function loadFile(path)
     return assert(loadstring(src, "=loot/" .. path))()
 end
 local roll = loadFile("shared/logic/roll.lua")
+local itemRest = loadFile("shared/item_rest.lua")
 local dropsLogic = loadFile("shared/logic/drops.lua")
 local settings = {}
 local tableCache = {}
@@ -229,8 +230,8 @@ local drops = loadFile("server/drops.lua")({
     end,
 })
 
--- One spawn's roll for loot_roll: { s = id, cd = cooldown seconds, items = { { u, data, x, y, z, rz } } }, or nil
--- for a spawn whose loot table is unknown (disabled instead).
+-- One spawn's roll for loot_roll: { s = id, cd = cooldown seconds, items = { { u, data, x, y, z, rz, nx, ny } } },
+-- or nil for a spawn whose loot table is unknown (disabled instead).
 local function rollSpawn(s)
     local tbl = lootTable(s.table_name)
     if not tbl then
@@ -252,22 +253,30 @@ local function rollSpawn(s)
         unames[#unames] = nil
     end
     allowance[s.zone] = left - #unames
+    -- the ground under each slot of a roll of this size (loot_spawns.ground, tools/spawn_ground.py):
+    -- { dx, dy, z, nx, ny } per item
+    local ground = type(s.ground) == "string" and fromJSON(s.ground) or nil
+    local slots = type(ground) == "table" and type(ground.s) == "table" and ground.s[#unames] or nil
     local items = {}
     for i, uname in ipairs(unames) do
         local def = exports.data:itemType(uname)
         if def then
-            local ang = math.rad(i * (360 / #unames))
             local cal = def.categoryData and def.categoryData.calibre
             local ammoTypes = cal and exports.data:ammoTypesForCalibre(cal) or nil
             local medical = roll.MEDICAL_DATA[uname] and exports.character:medicalLootData(uname)
-            items[#items + 1] = {
+            local item = {
                 u = uname,
                 data = medical or roll.initialItemData(def, s.table_name, ammoTypes, math.random), -- JSON text or nil
-                x = s.x + math.cos(ang) * 0.6,
-                y = s.y + math.sin(ang) * 0.6,
-                z = s.z + 0.1032,
                 rz = math.random(0, 359),
             }
+            local slot, rest = slots and slots[i], itemRest[uname]
+            if type(slot) == "table" and #slot == 5 and rest then
+                item.x, item.y, item.z, item.nx, item.ny = roll.laySlot(s.x, s.y, slot, rest, def.modelz or 0)
+            else -- no measured ground (or no shape for the type): as upstream, on a ring at the point's height
+                local ang = math.rad(i * (360 / #unames))
+                item.x, item.y, item.z = s.x + math.cos(ang) * 0.6, s.y + math.sin(ang) * 0.6, s.z + 0.1032
+            end
+            items[#items + 1] = item
         end
     end
     -- the point cools down from the roll: loot.cooldown_minutes ± jitter before it may roll again
@@ -446,7 +455,8 @@ function rollNear(x, y, radius, onDone)
         end
     end
     local batch = setting("loot.roll_batch", 300)
-    local sql = "SELECT s.id, s.x, s.y, s.z, s.zone, s.table_name, s.weight, s.size, s.rooftop FROM loot_spawns s "
+    local sql = "SELECT s.id, s.x, s.y, s.z, s.zone, s.table_name, s.weight, s.size, s.rooftop, s.ground "
+        .. "FROM loot_spawns s "
         .. "JOIN loot_spawn_state st ON st.spawn_id = s.id WHERE s.enabled = 1 AND st.next_roll_at <= NOW() "
         .. "AND NOT EXISTS (SELECT 1 FROM items i WHERE i.loot_spawn_id = s.id) "
         .. string.format(
@@ -478,7 +488,8 @@ function rollNear(x, y, radius, onDone)
 end
 
 -- Due points of one zone in random order, from anywhere in the zone.
-local DUE_IN_ZONE = "SELECT s.id, s.x, s.y, s.z, s.zone, s.table_name, s.weight, s.size, s.rooftop FROM loot_spawns s "
+local DUE_IN_ZONE = "SELECT s.id, s.x, s.y, s.z, s.zone, s.table_name, s.weight, s.size, s.rooftop, s.ground "
+    .. "FROM loot_spawns s "
     .. "JOIN loot_spawn_state st ON st.spawn_id = s.id WHERE s.enabled = 1 AND s.zone = ? "
     .. "AND st.next_roll_at <= NOW() AND NOT EXISTS (SELECT 1 FROM items i WHERE i.loot_spawn_id = s.id) "
     .. "ORDER BY RAND() LIMIT %d"
