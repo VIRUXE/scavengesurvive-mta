@@ -11,6 +11,14 @@ return function(ctx)
     local FROZEN_MOVE = 1.0
     local REPORT_GAP_MS = 10000
 
+    local geom = assert(loadstring(exports.lib:getModule("geom"), "=lib/geom.lua"))()
+    local SWIM_ABOVE = 2.0 -- metres over a water surface a swimmer (a jump, a wave) may still claim water
+
+    local function inGameWater(x, y, z)
+        local wz = geom.water(x, y)
+        return wz ~= nil and z <= wz + SWIM_ABOVE
+    end
+
     local function sample(player, now)
         local x, y, z = getElementPosition(player)
         if not ctx.spawnReady(player, x, y, z) then
@@ -61,11 +69,15 @@ return function(ctx)
             return
         end
 
-        -- swim-fly: the client says it is in water, the map says it is not
+        -- swim-fly: the client says it is in water, the map says it is not. The map is upstream's table of pools,
+        -- lakes and sea (shared/logic/water.lua) and, where the server's world is ready (lib geom.lua), GTA's own water
+        -- surfaces: either one finding water within SWIM_ABOVE of the player clears them, so the server's world only
+        -- ever takes strikes away
         if
             getElementInterior(player) == 0
             and isElementInWater(player)
             and not water.isWater(x, y, z, insidePolygon)
+            and not inGameWater(x, y, z)
         then
             swimStrikes[player] = (swimStrikes[player] or 0) + 1
             if swimStrikes[player] >= SWIM_STRIKES then
