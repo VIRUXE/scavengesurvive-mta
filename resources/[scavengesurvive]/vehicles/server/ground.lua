@@ -1,22 +1,31 @@
 -- Under-map rescue. A vehicle that falls through the world (spawned into a slope, or before its syncer's collision had
 -- loaded) keeps that position on the server even after GTA puts the client's copy back on a road, so F on what the
--- player sees is refused (2026-11-15, Sandking #318 at z -93). The server has no collision, so every SCAN_MS it hands
--- each player the server positions of the empty vehicles near them that it has not yet seen standing on something;
--- the client (client/ground.lua) answers per vehicle "ok" (ground under it), "unknown" (cannot tell: collision not
--- loaded, water above it, mid-air) or "under" with the topmost surface over it. An "under" answer is checked against
--- what was asked and the vehicle is put back on that surface. "sunk" (fully under water) marks it sunk (ctx.setSunk):
--- it stays there for staff to delete and the fleet refill replaces it; a later "ok" or "under" clears the mark.
+-- player sees is refused (2026-11-15, Sandking #318 at z -93). Every SCAN_MS the server tests each empty vehicle it
+-- has not yet seen standing on something against its own copy of the world (lib geom.lua, ml_sageom):
+--   ok      a surface within BELOW metres under it
+--   sunk    fully under water: its top (TOP_ABOVE by size class over its origin) under the water surface, nothing
+--           solid between it and that surface, and a bed under it; it stays there for staff to delete and the fleet
+--           refill replaces it (ctx.setSunk); a later ok or rescue clears the mark
+--   under   nothing under it but a surface over it: it is put back on that topmost surface, unless water lies within
+--           WATER metres of it (a boat or a sinking car under a bridge must not be lifted onto the bridge; GTA's water
+--           areas run on under the land along the coasts, so a car under the coastal ground has water far above it)
+--   anything else (mid-air, open sky over deep water) is left alone.
+-- Main world only. While the server's world is not ready (lib geom.lua) nothing is tested.
 return function(ctx)
+    local geom = ctx.geom
     local SCAN_MS = 10000
-    local RADIUS = 150 -- 2D; the client's collision is loaded around it
-    local MAX_PER_ASK = 40
-    local ASK_TTL_MS = 15000
     local MOVED = 1.0 -- metres a vehicle may drift before its last "ok" stops counting
     local LIFT = 1.0 -- metres above the surface the vehicle is put back at
-    local MAX_Z = 1500
+    local BELOW = 60
+    local TOP = 1500
+    local WATER = 10
+    local BED = 200 -- how deep under a sunk vehicle the sea or lake bed is looked for
+    -- how far a vehicle's highest point sits over its origin, by vehicle_types size; generous, so a vehicle half in
+    -- the water is never called sunk
+    local TOP_ABOVE = { small = 1.5, medium = 2.0, large = 3.0 }
 
     local verified = setmetatable({}, { __mode = "k" }) -- vehicle -> { x, y, z } of its last "ok"
-    local pending = setmetatable({}, { __mode = "k" }) -- vehicle -> { player, x, y, z, at }
+    local sizes = {} -- type uname -> size class
 
     local function near(a, x, y, z)
         return a and math.abs(a.x - x) <= MOVED and math.abs(a.y - y) <= MOVED and math.abs(a.z - z) <= MOVED
@@ -26,108 +35,73 @@ return function(ctx)
         return next(getVehicleOccupants(v) or {}) == nil and not getVehicleTowingVehicle(v)
     end
 
-    local function candidate(v, now)
-        if not isElement(v) or getElementInterior(v) ~= 0 or getElementDimension(v) ~= 0 then
-            return nil
+    local function topAbove(v)
+        local uname = ctx.info[v] and ctx.info[v].uname
+        if uname and sizes[uname] == nil then
+            local vt = exports.data:vehicleType(uname)
+            sizes[uname] = type(vt) == "table" and vt.size or false
         end
-        local p = pending[v]
-        if p and now - p.at < ASK_TTL_MS then
-            return nil
-        end
-        local x, y, z = getElementPosition(v)
-        if near(verified[v], x, y, z) or not empty(v) then
-            return nil
-        end
-        return x, y, z
+        return TOP_ABOVE[uname and sizes[uname] or "medium"] or TOP_ABOVE.medium
     end
 
-    local function scan()
-        local now = getTickCount()
-        local players = {}
-        for _, p in ipairs(getElementsByType("player")) do
-            if getElementInterior(p) == 0 and getElementDimension(p) == 0 then
-                local px, py = getElementPosition(p)
-                players[#players + 1] = { p = p, x = px, y = py, list = {} }
-            end
-        end
-        if #players == 0 then
-            return
-        end
-        local r2 = RADIUS * RADIUS
-        for v in pairs(ctx.info) do
-            local x, y, z = candidate(v, now)
-            if x then
-                for _, pl in ipairs(players) do
-                    local dx, dy = x - pl.x, y - pl.y
-                    if dx * dx + dy * dy <= r2 and #pl.list < MAX_PER_ASK then
-                        pl.list[#pl.list + 1] = { v, x, y, z }
-                        pending[v] = { player = pl.p, x = x, y = y, z = z, at = now }
-                        break
-                    end
-                end
-            end
-        end
-        for _, pl in ipairs(players) do
-            if #pl.list > 0 then
-                triggerClientEvent(pl.p, "vehicleGroundCheckRequested", resourceRoot, pl.list)
-            end
-        end
+    local function sunk(v, x, y, z)
+        local wz = geom.water(x, y)
+        local top = z + topAbove(v)
+        return wz ~= nil and wz > top and geom.clear(x, y, z, x, y, wz) == true and geom.below(x, y, z, 0, BED) ~= nil
     end
 
-    local function rescue(player, v, p, surface)
+    local function verdict(v, x, y, z)
+        if sunk(v, x, y, z) then
+            return "sunk"
+        end
+        if geom.below(x, y, z, 0.5, BELOW) then
+            return "ok"
+        end
+        local surface = geom.below(x, y, TOP, 0, TOP - z - 0.5)
+        local wz = geom.water(x, y)
+        if not surface or (wz and math.abs(wz - z) <= WATER) then
+            return "unknown"
+        end
+        return "under", surface
+    end
+
+    local function rescue(v, x, y, z, surface)
         local _, _, rz = getElementRotation(v)
         setElementVelocity(v, 0, 0, 0)
         setElementAngularVelocity(v, 0, 0, 0)
-        setElementPosition(v, p.x, p.y, surface + LIFT)
+        setElementPosition(v, x, y, surface + LIFT)
         setElementRotation(v, 0, 0, rz)
         ctx.log.event(
             "vehicle.rescued",
-            -- player: the client whose answer moved it
-            ctx.vehicleLine(v, { from_z = p.z, to_z = surface + LIFT, player = player, reason = "under_map" }),
+            ctx.vehicleLine(v, { from_z = z, to_z = surface + LIFT, reason = "under_map" }),
             "warn"
         )
     end
 
-    ctx.net.handler("vehicleGroundChecked", function(player, results)
-        if type(results) ~= "table" then
+    local function scan()
+        if not geom.ready() then
             return
         end
-        for n, r in ipairs(results) do
-            if n > MAX_PER_ASK then
-                break
-            end
-            local v, verdict, surface
-            if type(r) == "table" then
-                v, verdict, surface = r[1], r[2], tonumber(r[3])
-            end
-            local p = isElement(v) and pending[v]
-            if p and p.player == player then
-                pending[v] = nil
+        for v in pairs(ctx.info) do
+            if isElement(v) and getElementInterior(v) == 0 and getElementDimension(v) == 0 then
                 local x, y, z = getElementPosition(v)
-                if near(p, x, y, z) then
-                    if verdict == "sunk" then
-                        verified[v] = { x = p.x, y = p.y, z = p.z }
-                        ctx.setSunk(v, true, player)
-                    elseif verdict == "ok" then
-                        verified[v] = { x = p.x, y = p.y, z = p.z }
-                        ctx.setSunk(v, false, player)
-                    elseif verdict == "under" and surface and surface > p.z + 2 and surface < MAX_Z and empty(v) then
+                if not near(verified[v], x, y, z) and empty(v) then
+                    local what, surface = verdict(v, x, y, z)
+                    if what == "sunk" then
+                        verified[v] = { x = x, y = y, z = z }
+                        ctx.setSunk(v, true)
+                    elseif what == "ok" then
+                        verified[v] = { x = x, y = y, z = z }
+                        ctx.setSunk(v, false)
+                    elseif what == "under" and surface > z + 2 then
                         verified[v] = nil
-                        ctx.setSunk(v, false, player)
-                        rescue(player, v, p, surface)
+                        ctx.setSunk(v, false)
+                        rescue(v, x, y, z, surface)
                     end
                 end
             end
         end
-    end, { rate = 2 })
-
-    addEventHandler("onPlayerQuit", root, function()
-        for v, p in pairs(pending) do
-            if p.player == source then
-                pending[v] = nil
-            end
-        end
-    end)
+    end
 
     setTimer(scan, SCAN_MS, 0)
 end

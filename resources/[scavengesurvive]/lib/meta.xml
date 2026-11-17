@@ -13,6 +13,7 @@
     <file src="modules/spawn_guard.lua"/>
     <file src="modules/events_registry.lua"/>
     <file src="modules/surface.lua"/>
+    <file src="modules/geom.lua" download="false"/>
     <file src="modules/model_loader.lua"/>
     <file src="modules/models.lua"/>
     <file src="modules/lang.lua"/>

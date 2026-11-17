@@ -26,7 +26,6 @@ addEvent("carmourAttachRequested", true)
 addEvent("weldTorchGrabRequested", true)
 addEvent("weldTorchStowRequested", true)
 addEvent("weldCylinderHookRequested", true)
-addEvent("vehicleGroundChecked", true) -- answers to vehicleGroundCheckRequested (server/ground.lua)
 addEvent("vehicleTowActionRequested", true) -- the list's "Remove tow bar" / "Untie rope" (server/towing.lua)
 
 -- server to client / client-local
@@ -49,7 +48,6 @@ addEvent("vehicleKeypadOpened", true)
 addEvent("keypadClosed", true)
 addEvent("weldStarted", true)
 addEvent("grindStarted", true)
-addEvent("vehicleGroundCheckRequested", true) -- server positions of nearby empty vehicles to test against the map
 addEvent("vehicleRopeTieStarted", true) -- a Rope is tied to this hitch, its other end not yet (false: given up)
 addEvent("sampModelsChanged", false) -- fired by the model resources on every client (the tow bar's model)
 addEvent("vehicleSpotsChanged", true) -- vehicle spawn points around a dev-level staff member on duty (server/overlay.lua)

@@ -3263,7 +3263,7 @@ local function setSunk(v, sunk, player)
     else
         db.exec("UPDATE vehicles SET sunk = ? WHERE id = ?", { sunk and 1 or 0, i.id })
     end
-    -- player: the client whose answer marked it
+    -- player: who marked it, nil for the server's own ground check (server/ground.lua)
     log.event(
         sunk and "vehicle.sunk" or "vehicle.surfaced",
         vehicleLine(v, { uname = i.uname, player = player, z = z })
@@ -3761,14 +3761,14 @@ do
     })
 end
 
--- Under-map rescue: nearby clients test the server's vehicle positions against the world (server/ground.lua)
+-- Under-map rescue: the server tests its vehicle positions against its own copy of the world (server/ground.lua)
 do
     local f = fileOpen("server/ground.lua", true)
     local src = fileRead(f, fileGetSize(f))
     fileClose(f)
     assert(loadstring(src, "=vehicles/server/ground.lua"))()({
         info = info,
-        net = net,
+        geom = assert(loadstring(exports.lib:getModule("geom"), "=lib/geom.lua"))(),
         log = log,
         vehicleLine = vehicleLine,
         setSunk = setSunk,

@@ -5,7 +5,8 @@
 -- An overlay stays in the module for as long as the server runs, across resource restarts, and cannot be taken out:
 -- root element data "geom.overlay" holds the hash of the one applied, and a restart of this resource with the same
 -- files does nothing. Changed files are not stacked over the old ones (the old removals and objects would stay):
--- geom.overlayStale is logged and the server has to restart for them.
+-- geom.overlayStale is logged, root element data "geom.stale" is set (lib geom.lua then reports the world not ready,
+-- so callers fall back instead of trusting a map that no longer matches) and the server has to restart for them.
 -- ctx = { log }
 return function(ctx)
     local log = ctx.log
@@ -30,8 +31,10 @@ return function(ctx)
     local digest = hash("md5", table.concat(parts))
     local applied = getElementData(root, "geom.overlay")
     if applied == digest then
+        setElementData(root, "geom.stale", false, false)
         return
     elseif applied then
+        setElementData(root, "geom.stale", true, false)
         log.event("geom.overlayStale", { applied = applied, current = digest }, "warn")
         return
     end

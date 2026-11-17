@@ -27,4 +27,5 @@ before rebuilding. A module built with world format v2 also reads mesh shapes, s
 
 - Collision only for the main world (dimension 0, interior 0) as the map puts it: no house shells or other
   dimensions, and breakables (fences, bins) stay where the map placed them even after they are knocked over.
-- Each query blocks the server thread. Queries are microseconds; applying the overlay takes about 2.5 s at start.
+- Each query blocks the server thread: a short ray (a few to tens of metres) costs about 0.015 ms, one crossing
+  hundreds of metres of map up to 0.5 ms; applying the overlay takes about 2.5 s at start.
