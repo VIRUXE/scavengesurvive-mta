@@ -230,10 +230,42 @@ local drops = loadFile("server/drops.lua")({
     end,
 })
 
+-- An item type whose mesh sa-geom has no shape for: laid as upstream did, 0.1032 m up plus its modelz
+local UNSHAPED = { 0.1032, 0, 0, 0, 0, 0.4, 0.4 }
+
+-- Variety: uname -> { n, t }, how many of the type loot spawned lately (n decays with loot.repeat_halflife_minutes
+-- from time t); roll.pick weighs each pick by roll.repeatFactor so the same few types do not fill the map.
+local recentSpawns = {}
+local function repeatFactorFn()
+    local k = setting("loot.repeat_k", 2)
+    local halfLife = setting("loot.repeat_halflife_minutes", 90) * 60
+    if k <= 0 or halfLife <= 0 then
+        return nil
+    end
+    local now = getRealTime().timestamp
+    return function(uname)
+        local r = recentSpawns[uname]
+        return roll.repeatFactor(r and roll.decay(r.n, r.t, now, halfLife) or 0, k)
+    end
+end
+local function countSpawn(uname)
+    local now = getRealTime().timestamp
+    local halfLife = setting("loot.repeat_halflife_minutes", 90) * 60
+    local r = recentSpawns[uname]
+    recentSpawns[uname] = { n = (r and roll.decay(r.n, r.t, now, halfLife) or 0) + 1, t = now }
+end
+
 -- One spawn's roll for loot_roll: { s = id, cd = cooldown seconds, items = { { u, data, x, y, z, rz, nx, ny } } },
--- or nil for a spawn whose loot table is unknown (disabled instead).
-local function rollSpawn(s)
-    local tbl = lootTable(s.table_name)
+-- or nil for a spawn whose loot table is unknown (disabled instead). `placed` holds the footprints already on the
+-- ground around (the batch so far and items lying nearby): an item takes a free spot of the point when there is one,
+-- else it leans on what it touches (roll.placeItem); `leaning` counts those.
+local function rollSpawn(s, placed)
+    -- now and then a point rolls a related table instead of its own (roll.CROSS_TABLES)
+    local tableName = roll.crossTable(s.table_name, math.random, setting("loot.cross_table_multiplier", 1.0))
+    if not lootTable(tableName) then
+        tableName = s.table_name
+    end
+    local tbl = lootTable(tableName)
     if not tbl then
         -- disable the spawn so it is never re-selected; warn once per table name
         if not warnedTables[s.table_name] then
@@ -246,18 +278,19 @@ local function rollSpawn(s)
     local mult = setting("loot.spawn_multiplier", 1.0)
     -- a rooftop point (loot_spawns.rooftop, tools/loot_rooftops.py) never rolls the types of roll.ROOF_BANNED
     local banned = tonumber(s.rooftop) == 1 and roll.ROOF_BANNED or nil
-    local unames = roll.pick(tbl, s.size, s.weight, mult, math.random, banned)
+    local unames = roll.pick(tbl, s.size, s.weight, mult, math.random, banned, repeatFactorFn())
     -- the zone pays for this roll (loot_roll spends it); a roll bigger than what is left is trimmed
     local left = allowance[s.zone] or 0
     while #unames > left do
         unames[#unames] = nil
     end
     allowance[s.zone] = left - #unames
-    -- the ground under each slot of a roll of this size (loot_spawns.ground, tools/spawn_ground.py):
-    -- { dx, dy, z, nx, ny } per item
+    -- the ground under every slot of the point (loot_spawns.ground, tools/spawn_ground.py)
     local ground = type(s.ground) == "string" and fromJSON(s.ground) or nil
-    local slots = type(ground) == "table" and type(ground.s) == "table" and ground.s[#unames] or nil
-    local items = {}
+    if type(ground) ~= "table" or type(ground.s) ~= "table" then
+        ground = nil
+    end
+    local items, leaning = {}, 0
     for i, uname in ipairs(unames) do
         local def = exports.data:itemType(uname)
         if def then
@@ -266,23 +299,33 @@ local function rollSpawn(s)
             local medical = roll.MEDICAL_DATA[uname] and exports.character:medicalLootData(uname)
             local item = {
                 u = uname,
-                data = medical or roll.initialItemData(def, s.table_name, ammoTypes, math.random), -- JSON text or nil
+                data = medical or roll.initialItemData(def, tableName, ammoTypes, math.random), -- JSON text or nil
                 rz = math.random(0, 359),
             }
-            local slot, rest = slots and slots[i], itemRest[uname]
-            if type(slot) == "table" and #slot == 5 and rest then
-                item.x, item.y, item.z, item.nx, item.ny = roll.laySlot(s.x, s.y, slot, rest, def.modelz or 0)
-            else -- no measured ground (or no shape for the type): as upstream, on a ring at the point's height
-                local ang = math.rad(i * (360 / #unames))
-                item.x, item.y, item.z = s.x + math.cos(ang) * 0.6, s.y + math.sin(ang) * 0.6, s.z + 0.1032
+            local rest = itemRest[uname]
+            local modelz = rest and (def.modelz or 0) or 0
+            local x, y, z, rz, nx, ny, lean
+            if ground then
+                x, y, z, rz, nx, ny, lean =
+                    roll.placeItem(s.x, s.y, ground, #unames, i, rest or UNSHAPED, modelz, math.random, placed)
             end
+            if not x then -- no measured ground: as upstream, on a ring at the point's height
+                local ang = math.rad(i * (360 / #unames))
+                x, y, z, rz = s.x + math.cos(ang) * 0.6, s.y + math.sin(ang) * 0.6, s.z + 0.1032, item.rz
+                placed[#placed + 1] = roll.footprint(x, y, s.z, rz, rest or UNSHAPED)
+            end
+            item.x, item.y, item.z, item.rz, item.nx, item.ny = x, y, z, rz, nx, ny
             items[#items + 1] = item
+            countSpawn(uname)
+            if lean then
+                leaning = leaning + 1
+            end
         end
     end
     -- the point cools down from the roll: loot.cooldown_minutes ± jitter before it may roll again
     local base = setting("loot.cooldown_minutes", 360) * 60
     local secs = budget.cooldown(base, setting("loot.cooldown_jitter", 0.5), math.random)
-    return { s = s.id, cd = secs, items = items }
+    return { s = s.id, cd = secs, items = items, leaning = leaning }
 end
 
 -- A Heart Shaped Box that loot spawns comes with these inside (upstream item/heartshapedbox.pwn, #143): after a
@@ -391,13 +434,57 @@ end
 -- is left) while their zone has allowance and no player is within world.min_player_distance, and places the batch
 -- with one loot_roll call. done(ok, spots, items): ok false when the call failed (the caller reloads the allowance),
 -- spots and items what was placed. A quiet batch emits no lootSpawned. The caller holds budgetBusy.
-local function placeRolls(rows, done, quiet)
+-- Footprints of the items lying within NEAR metres of any of `rows` (one query; the batch's own rolls add theirs as
+-- they are laid), so a roll never lays an item touching one already on the ground. NEAR covers the furthest a new
+-- item's footprint reaches from its point (outer ring 1.3 m, nudge 0.45 m, centring and half a clamped 3 m
+-- footprint: 4 m) plus the furthest a lying item's footprint reaches from its origin (~2.2 m). cb(placed).
+local NEAR = 6.5
+local function lyingNear(rows, cb)
+    local polys = {}
+    for _, s in ipairs(rows) do
+        polys[#polys + 1] = string.format(
+            "((%g %g,%g %g,%g %g,%g %g,%g %g))",
+            s.x - NEAR,
+            s.y - NEAR,
+            s.x + NEAR,
+            s.y - NEAR,
+            s.x + NEAR,
+            s.y + NEAR,
+            s.x - NEAR,
+            s.y + NEAR,
+            s.x - NEAR,
+            s.y - NEAR
+        )
+    end
+    if #polys == 0 then
+        return cb({})
+    end
+    local sql = "SELECT i.type_uname, i.x, i.y, i.z, i.rz FROM world_items_pos p JOIN items i ON i.id = p.item_id "
+        .. "WHERE ST_Contains(ST_GeomFromText('MULTIPOLYGON("
+        .. table.concat(polys, ",")
+        .. ")'), p.pos) AND IFNULL(i.interior, 0) = 0 AND IFNULL(i.dimension, 0) = 0"
+    db.query(sql, {}, function(lying)
+        local placed = {}
+        for _, r in ipairs(lying or {}) do
+            local x, y, z = tonumber(r.x), tonumber(r.y), tonumber(r.z)
+            if x and y and z then
+                -- its stored z is its origin: the ground under it is `base` (its rest data) lower
+                local rest = itemRest[r.type_uname]
+                placed[#placed + 1] = roll.footprint(x, y, z - (rest and rest[1] or 0.1), tonumber(r.rz) or 0, rest)
+            end
+        end
+        cb(placed)
+    end)
+end
+
+local function placeRollsAmong(rows, done, quiet, placed)
     local players, minDist = playerPositions(), setting("world.min_player_distance", 150)
-    local rolls, zoneOf = {}, {}
+    local rolls, zoneOf, leaning = {}, {}, 0
     for _, s in ipairs(rows) do
         local clear = (allowance[s.zone] or 0) > 0 and budget.clearOfPlayers(s.x, s.y, players, minDist)
         if clear and not busy[s.id] then
-            local r = rollSpawn(s)
+            local r = rollSpawn(s, placed)
+            leaning = leaning + (r and r.leaning or 0)
             if r then
                 busy[s.id] = true
                 zoneOf[s.id] = s.zone
@@ -422,7 +509,8 @@ local function placeRolls(rows, done, quiet)
                 zoneCount = zoneCount + 1
             end
         end
-        local line = { zones = zoneCount, spots = #sent, items = itemCount, ms = getTickCount() - started }
+        local line =
+            { zones = zoneCount, spots = #sent, items = itemCount, leaning = leaning, ms = getTickCount() - started }
         if not res or not res.ok then
             line.ok, line.code = false, res and res.code or "DB_ERROR"
             log.event("loot.rolled", line, "warn")
@@ -437,6 +525,12 @@ local function placeRolls(rows, done, quiet)
         fillLoveBoxes(sent)
         done(true, #sent, itemCount)
     end, rolls)
+end
+
+local function placeRolls(rows, done, quiet)
+    lyingNear(rows, function(placed)
+        placeRollsAmong(rows, done, quiet, placed)
+    end)
 end
 
 -- Rolls the due points inside a box around (x, y) (the dev /rollloot), with the guards of the world fill.

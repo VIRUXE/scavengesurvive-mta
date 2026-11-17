@@ -59,7 +59,86 @@ function roll.sampleList(entries, rng, exclude)
     return out
 end
 
-function roll.pick(tbl, size, spawnWeight, mult, rng, exclude)
+-- Index of one entry of `sample`: uniform (upstream) without `factor`, otherwise weighted by factor(uname) (> 0).
+function roll.choose(sample, rng, factor)
+    if not factor then
+        return math.floor(rng() * #sample) + 1
+    end
+    local ws, total = {}, 0
+    for i, e in ipairs(sample) do
+        ws[i] = math.max(tonumber(factor(e.uname)) or 1, 0.001)
+        total = total + ws[i]
+    end
+    local r = rng() * total
+    for i = 1, #sample do
+        r = r - ws[i]
+        if r < 0 then
+            return i
+        end
+    end
+    return #sample
+end
+
+-- Variety: a type that spawned a lot lately is picked less. `recent` is its decayed spawn count, `k` how many recent
+-- spawns halve its chance (1 / (1 + recent / k)).
+function roll.repeatFactor(recent, k)
+    k = tonumber(k) or 0
+    if k <= 0 then
+        return 1
+    end
+    return 1 / (1 + math.max(tonumber(recent) or 0, 0) / k)
+end
+
+-- A count that halves every `halfLife` seconds: decayed from `n` at time `t` to time `now`.
+function roll.decay(n, t, now, halfLife)
+    if not halfLife or halfLife <= 0 then
+        return 0
+    end
+    return n * 0.5 ^ (math.max(now - t, 0) / halfLife)
+end
+
+-- Variety: a point of one of these tables now and then rolls another table instead (percent chances), so the rare
+-- medical, police and military loot also turns up away from its 250 or so points.
+roll.CROSS_TABLES = {
+    world_civilian = {
+        { "world_survivor", 3 },
+        { "world_medical", 2.5 },
+        { "world_industrial", 2.5 },
+        { "world_police", 1.5 },
+        { "world_military", 0.5 },
+    },
+    world_industrial = {
+        { "world_civilian", 4 },
+        { "world_survivor", 3 },
+        { "world_military", 1.5 },
+        { "world_medical", 1 },
+    },
+    world_survivor = {
+        { "world_military", 4 },
+        { "world_medical", 4 },
+        { "world_police", 3 },
+    },
+}
+
+-- The table a point of `name` rolls this time: `name`, or now and then one of its CROSS_TABLES (chances x `mult`).
+function roll.crossTable(name, rng, mult)
+    local list = roll.CROSS_TABLES[name]
+    if not list then
+        return name
+    end
+    mult = tonumber(mult) or 1
+    local r = rng() * 100
+    for _, e in ipairs(list) do
+        r = r - e[2] * mult
+        if r < 0 then
+            return e[1]
+        end
+    end
+    return name
+end
+
+-- `factor` (optional): uname -> weight for the pick among the entries that passed their roll (roll.repeatFactor).
+function roll.pick(tbl, size, spawnWeight, mult, rng, exclude, factor)
     if size == -1 then
         size = 3 + math.floor(rng() * 3)
     end
@@ -71,7 +150,7 @@ function roll.pick(tbl, size, spawnWeight, mult, rng, exclude)
             break
         end
         if rng() * 100 <= spawnWeight * mult then -- upstream: skip when frandom(100) > weight * mult
-            local idx = math.floor(rng() * #sample) + 1
+            local idx = roll.choose(sample, rng, factor)
             out[#out + 1] = roll.styleWheel(sample[idx].uname, rng)
             table.remove(sample, idx)
         end
@@ -169,19 +248,204 @@ function roll.liquidData(def, rng)
     return string.format('{"amount":%.3f,"liquid":%q}', rng() * capacity, candidates[rng(1, #candidates)])
 end
 
--- Where an item of a loot roll lies, from its slot's measured ground (tools/spawn_ground.py: { dx, dy, z, nx, ny },
--- the slot's offset from the point and the ground's height and normal there) and its type's rest height (metres its
--- origin sits above its lowest point in its rest rotation, loot/shared/item_rest.lua). The origin goes that far out
--- along the normal, so the item tilted to the ground (items/client/world.lua turns it by ground_nx/ny about its origin)
--- touches it; the client adds modelz back. Returns x, y, z, nx, ny (nx, ny nil on flat ground, as a drop stores).
-function roll.laySlot(px, py, slot, rest, modelz)
+-- Laying loot items (tools/spawn_ground.py writes the data). ground.s[n] are the slots of a roll of n items (item i
+-- at angle i * 360 / n, 0.6 m out), ground.s[MAX_PER_SPAWN + 1] an outer ring with room for crowded rolls (false where
+-- it leaves the point's surface). A slot is { dx, dy, z, nx, ny, small, medium, long, large }: its offset from the
+-- point, the ground's height and normal there, and per item size class a bitmask of the 16 headings k * 22.5 in which
+-- an item of that class fits without touching a wall, step or pole. An item type's rest data
+-- (loot/shared/item_rest.lua) is { base, cx, cy, class, longX, sx, sy, sz }: how far its origin sits above its lowest
+-- point, its footprint's centre and size in its own frame, its size class (0: bigger than the checks), whether its
+-- long side is its own x axis, and its height.
+roll.HEADINGS = 16
+roll.GAP = 0.03 -- metres kept between two items' footprints
+roll.LEVEL = 1.0 -- items further apart than this vertically are on different floors and never conflict
+roll.LEAN_MAX = 35 -- degrees: an item that would lean steeper than this lies flat on top of what it touches
+roll.TILT_MAX = math.sin(math.rad(45)) -- the lean and the ground's slope together tilt an item at most 45 degrees
+local DEFAULT_REST = { 0, 0, 0, 0, 0, 0.4, 0.4, 0.3 }
+
+-- Headings (degrees) an item may take on a slot: the free ones of its class, each also turned around; nil when its
+-- class has none or it has no class (any heading is as good).
+function roll.freeHeadings(slot, rest)
+    local class, longX = rest[4] or 0, rest[5] or 0
+    local mask = class > 0 and tonumber(slot[5 + class]) or 0
+    local out = {}
+    for k = 0, roll.HEADINGS - 1 do
+        if math.floor(mask / 2 ^ k) % 2 == 1 then
+            -- the box was tested with its length along the heading; an item long on its own x axis turns 90 more
+            local h = k * 360 / roll.HEADINGS + (longX == 1 and 90 or 0)
+            out[#out + 1] = h % 360
+            out[#out + 1] = (h + 180) % 360
+        end
+    end
+    return #out > 0 and out or nil
+end
+
+-- The item's origin when it lies on `slot` at heading rz: footprint centred on the slot (when its class was checked),
+-- its origin `base` out along the normal so the item tilted to the ground (items/client/world.lua turns it by
+-- ground_nx/ny about its origin) touches it; the client adds modelz back. Returns x, y, z, nx, ny (nil on flat ground).
+function roll.layAt(px, py, slot, rest, modelz, rz, centred)
     local dx, dy, gz, nx, ny = slot[1], slot[2], slot[3], slot[4], slot[5]
+    local base, cx, cy = rest[1], centred and rest[2] or 0, centred and rest[3] or 0
+    local r = math.rad(rz)
+    local c, s = math.cos(r), math.sin(r)
+    -- right = (cos rz, sin rz), forward = (-sin rz, cos rz)
+    local ox, oy = cx * c - cy * s, cx * s + cy * c
     local nz = math.sqrt(math.max(0, 1 - nx * nx - ny * ny))
-    local x, y, z = px + dx + nx * rest, py + dy + ny * rest, gz + nz * rest - modelz
+    local x, y, z = px + dx - ox + nx * base, py + dy - oy + ny * base, gz + nz * base - modelz
     if nx * nx + ny * ny < 0.0025 then
         return x, y, z, nil, nil
     end
     return x, y, z, nx, ny
+end
+
+-- An item's footprint on the ground plan: its rectangle around origin (x, y) at heading rz, with z (the ground it lies
+-- on) for the floor test and `top`, the height of its highest point (z plus its height unless given).
+function roll.footprint(x, y, z, rz, rest, top)
+    rest = rest or DEFAULT_REST
+    local r = math.rad(rz or 0)
+    local c, s = math.cos(r), math.sin(r)
+    local cx, cy = rest[2] or 0, rest[3] or 0
+    return {
+        x = x + cx * c - cy * s,
+        y = y + cx * s + cy * c,
+        z = z or 0,
+        top = top or ((z or 0) + (rest[8] or 0.3)),
+        hx = (rest[6] or 0.4) / 2,
+        hy = (rest[7] or 0.4) / 2,
+        c = c,
+        s = s,
+    }
+end
+
+-- Do two footprints come within `gap` of each other (separating axis test on their four edge directions)?
+function roll.overlaps(a, b, gap)
+    if math.abs(a.z - b.z) > roll.LEVEL then
+        return false
+    end
+    local dx, dy = b.x - a.x, b.y - a.y
+    for _, ax in ipairs({ { a.c, a.s }, { -a.s, a.c }, { b.c, b.s }, { -b.s, b.c } }) do
+        local function radius(f)
+            return f.hx * math.abs(f.c * ax[1] + f.s * ax[2]) + f.hy * math.abs(-f.s * ax[1] + f.c * ax[2])
+        end
+        if math.abs(dx * ax[1] + dy * ax[2]) > radius(a) + radius(b) + gap then
+            return false
+        end
+    end
+    return true
+end
+
+-- Lay an item on `slot` at heading rz leaning on the tallest footprint of `placed` it overlaps: the end nearest it
+-- goes up onto its top, the far end stays on the ground, and the lean is folded into the slope normal the client
+-- turns the item by. Steeper than LEAN_MAX (a small item against a tall one) it lies flat on that item's top instead.
+-- Returns x, y, z, rz, nx, ny and its footprint.
+function roll.leanOn(px, py, slot, rest, modelz, rz, centred, placed)
+    local x, y, z, nx, ny = roll.layAt(px, py, slot, rest, modelz, rz, centred)
+    local gz = slot[3]
+    local fp = roll.footprint(x, y, gz, rz, rest)
+    local under
+    for _, o in ipairs(placed) do
+        if roll.overlaps(fp, o, 0) and (not under or o.top > under.top) then
+            under = o
+        end
+    end
+    local h = under and under.top - gz or 0
+    if h <= 0.02 then
+        return x, y, z, rz, nx, ny, fp
+    end
+    local base, height = rest[1] or 0, rest[8] or 0.3
+    -- the item's long axis, pointing towards what it leans on
+    local r = math.rad(rz)
+    local c, sn = math.cos(r), math.sin(r)
+    local longX = (rest[5] or 0) == 1
+    local ux, uy = longX and c or -sn, longX and sn or c
+    local len = longX and (rest[6] or 0.4) or (rest[7] or 0.4)
+    local d = (under.x - fp.x) * ux + (under.y - fp.y) * uy
+    if d < 0 then
+        ux, uy, d = -ux, -uy, -d
+    end
+    -- where along the item (from its low end) it first meets the other one
+    local reach = under.hx * math.abs(under.c * ux + under.s * uy) + under.hy * math.abs(-under.s * ux + under.c * uy)
+    local run = math.max(0.05, math.min(len, d - reach + len / 2))
+    local angle = math.atan2(h, run)
+    if angle > math.rad(roll.LEAN_MAX) then
+        -- on top of it, flat
+        fp.z, fp.top = under.top, under.top + height
+        return x, y, under.top + base - modelz, rz, nil, nil, fp
+    end
+    -- the lean's normal tips away from what it leans on; add the ground's own slope (both small)
+    local sa = math.sin(angle)
+    nx, ny = -ux * sa + (slot[4] or 0), -uy * sa + (slot[5] or 0)
+    local tilt = math.sqrt(nx * nx + ny * ny)
+    if tilt > roll.TILT_MAX then -- a lean on a steep slope: never past TILT_MAX in all
+        nx, ny = nx * roll.TILT_MAX / tilt, ny * roll.TILT_MAX / tilt
+    end
+    local nz = math.sqrt(math.max(0, 1 - nx * nx - ny * ny))
+    -- the origin sits on the leaning plane, `base` out along its normal
+    local along = (x - fp.x) * ux + (y - fp.y) * uy + len / 2
+    local plane = gz + math.tan(angle) * math.max(0, along)
+    fp.top = under.top + height
+    return x, y, plane + nz * base - modelz, rz, nx, ny, fp
+end
+
+-- Lay one item of a roll so it touches nothing in `placed` (footprints already on the ground: this roll, the batch,
+-- and items lying nearby). Its own slot first (slot i of the roll's ring), then the point's other slots nearest first;
+-- on each, its free headings in random order (eight random ones when its class is unchecked). When nothing is free it
+-- leans on what it overlaps on its own slot (roll.leanOn): items may touch, they never vanish. Appends its footprint
+-- to `placed` and returns x, y, z, rz, nx, ny, leaning (true when it had to lean).
+function roll.placeItem(px, py, ground, n, i, rest, modelz, rng, placed)
+    rest = rest or DEFAULT_REST
+    local own = ground.s[n] and ground.s[n][i]
+    local cands = {}
+    for _, ring in ipairs(ground.s) do
+        for _, slot in ipairs(ring) do
+            if type(slot) == "table" and #slot >= 5 then
+                local d = own and ((slot[1] - own[1]) ^ 2 + (slot[2] - own[2]) ^ 2) or 0
+                cands[#cands + 1] = { slot = slot, d = slot == own and -1 or d }
+            end
+        end
+    end
+    table.sort(cands, function(a, b)
+        return a.d < b.d
+    end)
+    for _, cand in ipairs(cands) do
+        local slot = cand.slot
+        local heads = roll.freeHeadings(slot, rest)
+        local centred = heads ~= nil
+        if not heads then
+            heads = {}
+            for k = 1, 8 do
+                heads[k] = math.floor(rng() * 360)
+            end
+        end
+        for k = #heads, 2, -1 do -- shuffle
+            local j = math.floor(rng() * k) + 1
+            heads[k], heads[j] = heads[j], heads[k]
+        end
+        for _, rz in ipairs(heads) do
+            local x, y, z, nx, ny = roll.layAt(px, py, slot, rest, modelz, rz, centred)
+            local fp = roll.footprint(x, y, slot[3], rz, rest)
+            local clear = true
+            for _, other in ipairs(placed) do
+                if roll.overlaps(fp, other, roll.GAP) then
+                    clear = false
+                    break
+                end
+            end
+            if clear then
+                placed[#placed + 1] = fp
+                return x, y, z, rz, nx, ny, false
+            end
+        end
+    end
+    local slot = (cands[1] or {}).slot or own
+    if not slot then
+        return nil
+    end
+    local heads = roll.freeHeadings(slot, rest)
+    local rz = heads and heads[math.floor(rng() * #heads) + 1] or math.floor(rng() * 360)
+    local x, y, z, lrz, nx, ny, fp = roll.leanOn(px, py, slot, rest, modelz, rz, heads ~= nil, placed)
+    placed[#placed + 1] = fp
+    return x, y, z, lrz, nx, ny, true
 end
 
 return roll
