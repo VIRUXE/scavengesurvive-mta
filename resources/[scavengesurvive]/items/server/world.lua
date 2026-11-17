@@ -149,17 +149,64 @@ return function(ctx)
         end
     end
 
-    -- A client measured the ground under a flagged item (sync row `snap`): the item is laid on it, 10 cm up as a
-    -- drop lies, tilted to the slope, if the player is near it and the ground is within reach of the stored z.
+    -- Flagged items (item_ground_snap: z untrusted since it was flagged) are laid on the ground under them, 10 cm up as
+    -- a drop lies, tilted to the slope, if that ground is within reach of the stored z. In the main world the server's
+    -- own world measures them (every SNAP_SCAN_MS, lib geom.lua); elsewhere the client that draws one reports it
+    -- (itemGroundMeasured), if the player is near it.
+    local geom = assert(loadstring(exports.lib:getModule("geom"), "=lib/geom.lua"))()
     local SNAP_SQL = "SELECT i.x, i.y, i.z, i.interior, i.dimension FROM items i"
         .. " JOIN item_ground_snap s ON s.item_id = i.id AND s.z = i.z WHERE i.id = ? AND i.x IS NOT NULL"
-    local SNAP_RANGE, SNAP_MAX_DZ = 80, 4
+    local SNAP_MAIN_SQL = "SELECT i.id, i.x, i.y, i.z FROM items i JOIN item_ground_snap s ON s.item_id = i.id"
+        .. " AND s.z = i.z WHERE i.x IS NOT NULL AND i.interior = 0 AND i.dimension = 0 LIMIT 100"
+    local SNAP_RANGE, SNAP_MAX_DZ, SNAP_SCAN_MS = 80, 4, 30000
+    local SNAP_ABOVE, SNAP_DEPTH = 1.5, 6 -- as the client: from 1.5 m over the stored z to 6 m under it
+
+    local function snap(id, fromZ, gz, nx, ny, by)
+        local z = gz + 0.1
+        if math.abs(z - fromZ) > SNAP_MAX_DZ then
+            return
+        end
+        if nx * nx + ny * ny < 0.0025 then -- flat: no tilt (NULL, as a drop on flat ground stores)
+            nx, ny = nil, nil
+        end
+        db.exec(
+            "UPDATE items i JOIN item_ground_snap s ON s.item_id = i.id AND s.z = i.z"
+                .. " SET i.z = ?, i.ground_nx = ?, i.ground_ny = ? WHERE i.id = ? AND i.x IS NOT NULL",
+            { z, nx, ny, id, n = 4 },
+            function(ok)
+                db.exec("DELETE FROM item_ground_snap WHERE item_id = ?", { id })
+                if ok then
+                    M.resendEverywhere(id)
+                    ctx.log.event("items.groundSnapped", { id = id, from = fromZ, to = z, by = by })
+                end
+            end
+        )
+    end
+
+    local function snapMainWorld()
+        if not geom.ready() then
+            return
+        end
+        db.query(SNAP_MAIN_SQL, {}, function(rows)
+            for _, r in ipairs(rows or {}) do
+                local id, x, y, z = math.floor(tonumber(r.id)), tonumber(r.x), tonumber(r.y), tonumber(r.z)
+                local gz, nx, ny = geom.below(x, y, z, SNAP_ABOVE, SNAP_ABOVE + SNAP_DEPTH)
+                if gz then
+                    snap(id, z, gz, nx, ny, "server")
+                end
+            end
+        end)
+    end
+    setTimer(snapMainWorld, SNAP_SCAN_MS, 0)
+    setTimer(snapMainWorld, 5000, 1)
+
     ctx.net.handler("itemGroundMeasured", function(player, id, gz, nx, ny)
         id, gz, nx, ny = tonumber(id), tonumber(gz), tonumber(nx) or 0, tonumber(ny) or 0
         if not id or not gz or gz ~= gz or math.abs(gz) > 3000 or math.abs(nx) > 1 or math.abs(ny) > 1 then
             return
         end
-        db.one(SNAP_SQL, { math.floor(id) }, function(row)
+        id = math.floor(id)
+        db.one(SNAP_SQL, { id }, function(row)
             if not row or not isElement(player) then
                 return
             end
@@ -171,25 +218,7 @@ return function(ctx)
             then
                 return
             end
-            local z = gz + 0.1
-            if math.abs(z - row.z) > SNAP_MAX_DZ then
-                return
-            end
-            if nx * nx + ny * ny < 0.0025 then -- flat: no tilt (NULL, as a drop on flat ground stores)
-                nx, ny = nil, nil
-            end
-            db.exec(
-                "UPDATE items i JOIN item_ground_snap s ON s.item_id = i.id AND s.z = i.z"
-                    .. " SET i.z = ?, i.ground_nx = ?, i.ground_ny = ? WHERE i.id = ? AND i.x IS NOT NULL",
-                { z, nx, ny, math.floor(id), n = 4 },
-                function(ok)
-                    db.exec("DELETE FROM item_ground_snap WHERE item_id = ?", { math.floor(id) })
-                    if ok then
-                        M.resendEverywhere(math.floor(id))
-                        ctx.log.event("items.groundSnapped", { id = math.floor(id), from = row.z, to = z })
-                    end
-                end
-            )
+            snap(id, row.z, gz, nx, ny, "client")
         end)
     end, { rate = 10 })
 
