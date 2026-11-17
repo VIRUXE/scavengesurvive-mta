@@ -17,6 +17,9 @@
     <file src="server/vending.lua" download="false"/>
     <file src="data/vending.lua" download="false"/>
     <file src="server/trees.lua" download="false"/>
+    <file src="server/geom.lua" download="false"/>
+    <file src="geom/overlay.toml" download="false"/>
+    <file src="geom/port.map" download="false"/>
     <file src="shared/logic/trees.lua" download="false"/>
     <file src="data/trees.lua" download="false"/>
     <file src="shared/logic/weather.lua"/>

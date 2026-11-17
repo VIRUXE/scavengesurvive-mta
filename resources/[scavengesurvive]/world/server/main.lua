@@ -80,6 +80,9 @@ loadFile("server/trees.lua", "=world/server/trees.lua")({
     end,
 })
 
+-- the port's map objects in the server's collision (ml_sageom), for the lib module geom
+loadFile("server/geom.lua", "=world/server/geom.lua")({ log = log })
+
 -- upstream creates the zone files' fixed items and the puzzle items on every start; here the ones gone from the
 -- world are made again, with no despawn time, a puzzle item carrying its tag (shared/logic/fixtures.lua)
 local function placeFixtures()

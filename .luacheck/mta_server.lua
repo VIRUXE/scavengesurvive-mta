@@ -11,4 +11,7 @@ return { read_globals = {
     "resendPlayerACInfo", "getPlayerVersion", "setPlayerWantedLevel", "restartResource", "startResource",
     "stopResource", "shutdown", "executeCommandHandler", "getAccount", "addAccount", "setAccountPassword",
     "takePlayerScreenShot", "fileCreate", "fileWrite",
+    -- ml_sageom (x64/modules), loaded in mtaserver.conf
+    "sageomIsReady", "sageomGround", "sageomGroundMany", "sageomRaycast", "sageomPlace", "sageomPlaceModel",
+    "sageomGetModelBounds", "sageomWaterLevel", "sageomAddOverlay", "getResourceOrganizationalPath",
 } }
