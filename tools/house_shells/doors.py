@@ -1,7 +1,8 @@
 """Writes house_shell/houses.lua: per enterable house, the DFF/COL/TXD replacing the vanilla model, its door leaf,
 where each of its leaves hangs in the model's frame (tools/trailer_shells/build/<name>_doors.json, written by the
 house's Blender script in tools/house_shells), the vanilla objects it removes and the stock props it furnishes the
-rooms with (both optional in that file, also in the model's frame) and every upright vanilla placement of the model
+rooms with (both optional in that file, also in the model's frame), whether it wears another shell's dictionary (TXD) or
+has copies in the maps (MAPS, whose doors the client hangs at run time) and every upright vanilla placement of the model
 in the world (the text and binary IPLs), less the ones upstream's maps remove (RemoveBuildingForPlayer rows in
 maps/data/*.lua).
 
@@ -21,7 +22,9 @@ from tools.trailer_shells.doors import OUT as TRAILERS_OUT
 from tools.trailer_shells.doors import UPRIGHT, removals, removed
 from tools.trailer_shells.prep import BUILD
 
-HOUSES = {3241: "conhoos2", 3303: "des_bighus03", 3304: "des_bighus02", 3305: "des_bighus01", 16280: "des_farmhouse1", 16326: "des_byoffice", 18259: "logcabinn01"}  # vanilla model -> shell
+HOUSES = {3241: "conhoos2", 3303: "des_bighus03", 3304: "des_bighus02", 3305: "des_bighus01", 16280: "des_farmhouse1", 16326: "des_byoffice", 18259: "logcabinn01", 18267: "logcabinn"}  # vanilla model -> shell
+TXD = {"logcabinn": "logcabinn01"}  # a shell wearing another one's dictionary (files/<txd>.txd)
+MAPS = {"logcabinn"}  # shells upstream's maps place copies of: the client hangs their doors once the maps are built
 OUT = TRAILERS_OUT.with_name("houses.lua")
 
 
@@ -43,7 +46,7 @@ def main(argv=None) -> int:
         "-- and TXD replacing it (files/<dff>.*), its door leaf (files/<door>.*), each leaf's hinge as x, y, z, rz in the",
         "-- model's frame, the vanilla objects it removes as { model, x, y, z, radius } and the stock props it is furnished",
         "-- with as { model, x, y, z, rz } (both in the model's frame), then each upright vanilla placement the maps keep,",
-        "-- as { x, y, z, rz }.",
+        "-- as { x, y, z, rz }. txd: the dictionary it wears when not its own; maps: the maps place copies of it too.",
         "return {",
     ]
     for model, name in sorted(HOUSES.items()):
@@ -54,6 +57,12 @@ def main(argv=None) -> int:
             f"        model = {model},",
             f'        dff = "{name}",',
             f'        door = "{name}_door",',
+        ]
+        if name in TXD:
+            lines += [f'        txd = "{TXD[name]}",']
+        if name in MAPS:
+            lines += ["        maps = true,"]
+        lines += [
             "        hinges = {",
         ]
         lines += [f"            {{ {d['hinge'][0]:.3f}, {d['hinge'][1]:.3f}, {d['hinge'][2]:.3f}, {d['rz']:.1f} }}," for d in doors]

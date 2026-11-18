@@ -2,7 +2,7 @@
 -- and TXD replacing it (files/<dff>.*), its door leaf (files/<door>.*), each leaf's hinge as x, y, z, rz in the
 -- model's frame, the vanilla objects it removes as { model, x, y, z, radius } and the stock props it is furnished
 -- with as { model, x, y, z, rz } (both in the model's frame), then each upright vanilla placement the maps keep,
--- as { x, y, z, rz }.
+-- as { x, y, z, rz }. txd: the dictionary it wears when not its own; maps: the maps place copies of it too.
 return {
     {
         model = 3241,
@@ -134,6 +134,24 @@ return {
         },
         placements = {
             { -1633.227, -2238.836, 30.391, 0.0 },
+        },
+    },
+    {
+        model = 18267,
+        dff = "logcabinn",
+        door = "logcabinn_door",
+        txd = "logcabinn01",
+        maps = true,
+        hinges = {
+            { -4.950, 5.075, 0.095, 90.0 },
+            { 4.950, -0.255, 0.095, 90.0 },
+            { 4.950, 5.245, 0.095, 90.0 },
+        },
+        remove = {
+            { 18230, 5.150, 0.370, 0.360, 3.00 },
+        },
+        placements = {
+            { -2816.180, -1524.281, 139.766, 0.0 },
         },
     },
 }

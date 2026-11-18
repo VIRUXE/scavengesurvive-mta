@@ -18,6 +18,10 @@
 --   the Shady Cabin logcabinn01 (18259) is not a shell of the vanilla model but a new one on its footprint: round
 --   log walls, framed and glazed windows, a roof on rafters, a stone chimney and fireplace, the porch, deck and
 --   lean-to rebuilt, its lighting baked; the vanilla log walls (18258, a model of their own) are removed.
+--   the Chiliad log cabin logcabinn (18267) the same way (round logs, tin roof on rafters, chimney, the east porch,
+--   deck and ramp, the west stoop, the north lean-to; its log walls 18230 removed), wearing the Shady Cabin's
+--   dictionary; the two copies upstream's maps place (Flint County, the island off the south coast) get their
+--   doors once the maps have built them.
 local function readLua(path)
     local f = fileOpen(path, true)
     local src = fileRead(f, fileGetSize(f))
@@ -33,6 +37,7 @@ local UPRIGHT = 0.999
 
 local replaced = {} -- vanilla model -> true once its COL and DFF are replaced
 local doorModels = {} -- vanilla trailer model -> requested model id of its door leaf
+local mapHouses = {} -- vanilla model of a house the maps place copies of -> { id = its leaf's model, house = its row }
 local requested = {} -- requested ids, freed on stop
 local doors = {} -- door objects created
 local props = {} -- furniture objects created
@@ -141,8 +146,42 @@ local function hangDoor(model, x, y, z, rz)
     end
 end
 
+-- The doors of a house the maps built (a building, or an object beyond the building limit), which may stand tilted:
+-- each hinge and the leaf's heading are carried through the copy's matrix.
+local function hangMapHouseDoors(entry, element)
+    local m = getElementMatrix(element) -- rows: right, forward, up, position
+    local right, fwd, up, pos = m[1], m[2], m[3], m[4]
+    for _, h in ipairs(entry.house.hinges) do
+        local x = pos[1] + right[1] * h[1] + fwd[1] * h[2] + up[1] * h[3]
+        local y = pos[2] + right[2] * h[1] + fwd[2] * h[2] + up[2] * h[3]
+        local z = pos[3] + right[3] * h[1] + fwd[3] * h[2] + up[3] * h[3]
+        local obj = createObject(entry.id, x, y, z)
+        if obj then
+            local a = math.rad(h[4])
+            local c, s = math.cos(a), math.sin(a)
+            setElementMatrix(obj, {
+                { c * right[1] + s * fwd[1], c * right[2] + s * fwd[2], c * right[3] + s * fwd[3], 0 },
+                { c * fwd[1] - s * right[1], c * fwd[2] - s * right[2], c * fwd[3] - s * right[3], 0 },
+                { up[1], up[2], up[3], 0 },
+                { x, y, z, 1 },
+            })
+            doors[#doors + 1] = obj
+        end
+    end
+end
+
 local function hangMapDoors()
     local count = 0
+    for _, kind in ipairs({ "building", "object" }) do
+        for _, e in ipairs(getElementsByType(kind)) do
+            local entry = mapHouses[getElementModel(e)]
+            if entry and not hung[e] then
+                hung[e] = true
+                hangMapHouseDoors(entry, e)
+                count = count + 1
+            end
+        end
+    end
     for _, b in ipairs(getElementsByType("building")) do
         local model = getElementModel(b)
         if doorModels[model] and not hung[b] then
@@ -199,12 +238,20 @@ addEventHandler("onClientResourceStart", resourceRoot, function()
     else
         outputDebugString("house_shell: failed to load the log cabins", 1)
     end
+    local houseTxds = {} -- dictionary name -> TXD: a house may wear another one's
     for _, house in ipairs(houses) do
-        local houseTxd = engineLoadTXD("files/" .. house.dff .. ".txd", true)
+        local name = house.txd or house.dff
+        local houseTxd = houseTxds[name] or engineLoadTXD("files/" .. name .. ".txd", true)
         if houseTxd and replaceModel(house.model, house.dff, houseTxd, house.dff) then
-            keep[#keep + 1] = houseTxd
+            if not houseTxds[name] then
+                houseTxds[name] = houseTxd
+                keep[#keep + 1] = houseTxd
+            end
             engineSetModelFlag(house.model, "draw_last", true)
             local id = requestDoor(house.door, houseTxd)
+            if id and house.maps then
+                mapHouses[house.model] = { id = id, house = house }
+            end
             for _, p in ipairs(house.placements) do
                 if id then
                     hangHouseDoors(id, house, p[1], p[2], p[3], p[4])

@@ -103,11 +103,18 @@ def zu(x):
 
 
 class Cabin:
-    def __init__(self):
+    """The builder: the primitives (faces, timbers, log walls, windows, railings, tin sheets), the collision, the
+    light bake and the renders serve any log cabin (tools/house_shells/logcabinn.py builds on them); the parts below
+    them are the Shady Cabin's."""
+
+    GROUND_PLANE = (-1.25, -math.atan(0.1))  # the renders' ground: height at the origin, tilt about x
+
+    def __init__(self, name=NAME):
+        self.name = name
         bpy.ops.wm.read_factory_settings(use_empty=True)
         bpy.ops.preferences.addon_enable(module="DragonFF")
-        self.mesh = bpy.data.meshes.new(NAME)
-        self.obj = bpy.data.objects.new(NAME, self.mesh)
+        self.mesh = bpy.data.meshes.new(name)
+        self.obj = bpy.data.objects.new(name, self.mesh)
         bpy.context.scene.collection.objects.link(self.obj)
         self.bm = bmesh.new()
         self.uv = self.bm.loops.layers.uv.new("UVMap")
@@ -116,7 +123,7 @@ class Cabin:
         self.glass = []  # (verts, uvs), made last so the game draws the panes after what shows through them
         self.col = bmesh.new()
         self.col_mats = {}
-        self.col_mesh = bpy.data.meshes.new(NAME + "_col")
+        self.col_mesh = bpy.data.meshes.new(name + "_col")
 
     # ---- materials -------------------------------------------------------------------------------------------
     def mat(self, key):
@@ -956,8 +963,7 @@ class Cabin:
             gbm.to_mesh(ground)
             gbm.free()
             g = bpy.data.objects.new("ground", ground)
-            g.location.z = -1.25  # the measured slope: level with the floor at the south end, falling north
-            g.rotation_euler.x = -math.atan(0.1)
+            g.location.z, g.rotation_euler.x = self.GROUND_PLANE  # the Shady Cabin's: the measured slope, falling north
             gm = bpy.data.materials.new("ground")
             gm.use_nodes = True
             next(n for n in gm.node_tree.nodes if n.type == "BSDF_PRINCIPLED").inputs["Base Color"].default_value = (0.13, 0.12, 0.07, 1)
@@ -974,7 +980,7 @@ class Cabin:
             scene.cycles.device, scene.cycles.samples = "CPU", int(os.environ.get("SHELL_SAMPLES", "24"))
             scene.cycles.use_denoising = True
         scene.render.resolution_x, scene.render.resolution_y = size
-        path = os.path.join(RENDERS, NAME, view + ".png")
+        path = os.path.join(RENDERS, self.name, view + ".png")
         os.makedirs(os.path.dirname(path), exist_ok=True)
         scene.render.filepath = path
         bpy.ops.render.render(write_still=True)
@@ -996,48 +1002,49 @@ class Cabin:
         print(f"export: {NAME} ({len(self.mesh.polygons)} faces, {len(self.mesh.loops)} corners, {len(self.col_mesh.polygons)} collision triangles)")
 
 
-c = Cabin()
-c.foundation()
-c.floor()
-c.walls()
-c.roof()
-c.chimney()
-c.partition()
-c.furniture()
-c.porch()
-c.stairs()
-c.carport()
-c.extras()
-c.finish()
+if __name__ == "__main__":
+    c = Cabin()
+    c.foundation()
+    c.floor()
+    c.walls()
+    c.roof()
+    c.chimney()
+    c.partition()
+    c.furniture()
+    c.porch()
+    c.stairs()
+    c.carport()
+    c.extras()
+    c.finish()
 
-if "--no-render" not in args():
-    only = [a.split("=", 1)[1] for a in args() if a.startswith("--views=")]
-    only = only[0].split(",") if only else None
-    if "--prelit" in args():
-        c.prelit_materials()
-    views = {
-        "front_sw": ((-21.0, -19.0, 2.6), (-3.0, -3.0, 1.2), 28, 0),
-        "porch_w": ((-17.0, 4.5, 1.6), (-5.0, 1.0, 1.4), 30, 0),
-        "back_ne": ((16.0, 19.0, 3.2), (0.0, 1.0, 2.0), 28, 0),
-        "carport_se": ((14.0, -22.0, 1.2), (0.0, -7.0, 1.2), 28, 0),
-        "door": ((-8.9, -1.6, 1.75), (-5.3, 1.6, 1.25), 24, 55),
-        "window": ((-7.6, 4.2, 1.6), (-5.3, 5.6, 1.6), 35, 0),
-        "deck": ((-10.9, -8.6, 1.8), (-6.0, 3.0, 1.0), 20, 0),
-        "inside_main": ((3.6, -0.9, 1.7), (-1.5, 8.0, 1.5), 16, 0),
-        "inside_back": ((-3.8, -2.6, 1.7), (3.5, -8.0, 1.2), 16, 0),
-        "roof_frame": ((-3.8, 6.4, 0.9), (2.5, -3.0, 5.0), 16, 0),
-    }
-    lamps = []
-    for name, eye in (("lamp_main", (0.0, 3.0, 2.6)), ("lamp_back", (0.0, -5.0, 2.6))):
-        lamp = bpy.data.objects.new(name, bpy.data.lights.new(name, "POINT"))
-        lamp.data.energy, lamp.data.color = 260, (1.0, 0.82, 0.6)
-        lamp.location = eye
-        bpy.context.scene.collection.objects.link(lamp)
-        lamps.append(lamp)
-    for view, (eye, target, lens, door_open) in views.items():
-        if only is None or view in only:
-            c.render(view + ("_prelit" if "--prelit" in args() else ""), eye, target, lens=lens, door_open=door_open)
-    for lamp in lamps:
-        bpy.data.objects.remove(lamp)
-if "--prelit" not in args():
-    c.export()
+    if "--no-render" not in args():
+        only = [a.split("=", 1)[1] for a in args() if a.startswith("--views=")]
+        only = only[0].split(",") if only else None
+        if "--prelit" in args():
+            c.prelit_materials()
+        views = {
+            "front_sw": ((-21.0, -19.0, 2.6), (-3.0, -3.0, 1.2), 28, 0),
+            "porch_w": ((-17.0, 4.5, 1.6), (-5.0, 1.0, 1.4), 30, 0),
+            "back_ne": ((16.0, 19.0, 3.2), (0.0, 1.0, 2.0), 28, 0),
+            "carport_se": ((14.0, -22.0, 1.2), (0.0, -7.0, 1.2), 28, 0),
+            "door": ((-8.9, -1.6, 1.75), (-5.3, 1.6, 1.25), 24, 55),
+            "window": ((-7.6, 4.2, 1.6), (-5.3, 5.6, 1.6), 35, 0),
+            "deck": ((-10.9, -8.6, 1.8), (-6.0, 3.0, 1.0), 20, 0),
+            "inside_main": ((3.6, -0.9, 1.7), (-1.5, 8.0, 1.5), 16, 0),
+            "inside_back": ((-3.8, -2.6, 1.7), (3.5, -8.0, 1.2), 16, 0),
+            "roof_frame": ((-3.8, 6.4, 0.9), (2.5, -3.0, 5.0), 16, 0),
+        }
+        lamps = []
+        for name, eye in (("lamp_main", (0.0, 3.0, 2.6)), ("lamp_back", (0.0, -5.0, 2.6))):
+            lamp = bpy.data.objects.new(name, bpy.data.lights.new(name, "POINT"))
+            lamp.data.energy, lamp.data.color = 260, (1.0, 0.82, 0.6)
+            lamp.location = eye
+            bpy.context.scene.collection.objects.link(lamp)
+            lamps.append(lamp)
+        for view, (eye, target, lens, door_open) in views.items():
+            if only is None or view in only:
+                c.render(view + ("_prelit" if "--prelit" in args() else ""), eye, target, lens=lens, door_open=door_open)
+        for lamp in lamps:
+            bpy.data.objects.remove(lamp)
+    if "--prelit" not in args():
+        c.export()
