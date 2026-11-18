@@ -28,6 +28,8 @@ addEvent("weldTorchGrabRequested", true)
 addEvent("weldTorchStowRequested", true)
 addEvent("weldCylinderHookRequested", true)
 addEvent("vehicleTowActionRequested", true) -- the list's "Remove tow bar" / "Untie rope" (server/towing.lua)
+addEvent("vehiclePushRequested", true) -- the list's "Push" at a vehicle's front or rear (server/push.lua)
+addEvent("vehiclePushEnded", true) -- "Stop pushing", or the pusher walked off
 
 -- server to client / client-local
 addEvent("vehicleHoldStarted", true)
@@ -51,4 +53,6 @@ addEvent("weldStarted", true)
 addEvent("grindStarted", true)
 addEvent("vehicleRopeTieStarted", true) -- a Rope is tied to this hitch, its other end not yet (false: given up)
 addEvent("sampModelsChanged", false) -- fired by the model resources on every client (the tow bar's model)
+addEvent("vehiclePushStarted", true) -- the push was allowed (source: the vehicle); args: top speed m/s, +1/-1
+addEvent("vehiclePushStopped", true) -- the push is over (source: the player)
 addEvent("vehicleSpotsChanged", true) -- vehicle spawn points around a dev-level staff member on duty (server/overlay.lua)

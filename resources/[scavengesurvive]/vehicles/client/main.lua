@@ -525,6 +525,9 @@ local interactionLang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua
 -- The shared chooser combines these target-specific actions with nearby world items.
 function interactionActions(heldUname)
     local actions = towingActions(heldUname) -- client/towing.lua: tow bar and rope entries
+    for _, entry in ipairs(pushActions(heldUname)) do -- client/push.lua: "Push" / "Stop pushing"
+        actions[#actions + 1] = entry
+    end
     if
         getPedOccupiedVehicle(localPlayer)
         or (heldUname and heldUname ~= "Ratchet" and heldUname ~= "Battery" and heldUname ~= "StarterMotor")

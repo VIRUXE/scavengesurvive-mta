@@ -405,6 +405,11 @@ return function(ctx)
         return towOf[v] ~= nil
     end
 
+    -- the other end of a rope: nobody pushes it by hand
+    function M.towed(v)
+        return towerOf[v] ~= nil
+    end
+
     -- snaps, stale pending ties
     setTimer(function()
         for tower, towed in pairs(towOf) do

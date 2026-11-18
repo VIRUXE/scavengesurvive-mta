@@ -62,6 +62,12 @@ A truck with a hitch can tow a trailer of the same size class: the small hitch (
 
 The Airstream is a walk-in caravan with a door and a lock, room for cargo that rides along, two gas bottle mounts and a shell that takes [Vehicle Armour](Vehicle-Armour), which slows the towing vehicle. It is described on [Houses & Trailers](Houses-and-Trailers), together with the trailers standing around the map that can be entered but not towed.
 
+## Pushing
+
+Running or walking into a parked vehicle does not move it. To move one without driving it, stand at its front or rear with empty hands and pick `Push` from the interaction list (`F`), then walk into it: you put both hands on it and it rolls straight along its length, forwards from the rear or backwards from the front, while you keep walking. You can push only an empty car, quad, trailer or light plane of up to 3000 kg that nobody else is pushing; bikes, boats, helicopters and heavy trucks do not move by hand. `Stop pushing` in the same list, walking off its end or round its side, jumping, aiming or someone getting in ends it.
+
+The speed is `(0.8 + Strength) x (0.4 + 0.6 x health / 100)` metres a second, times a weight factor of `√(1400 / mass)` kept between 0.35 and 1.3: an untrained player in full health moves a 1400 kg car at 0.8 m/s, a Master at 1.8 m/s, and a badly hurt one at under half that. A push that moved the vehicle at least 3 m trains [Strength](Skills), a full gain from 15 m on.
+
 ## Overheating
 
 The Rhino's gun overheats. A red heat bar appears at the bottom of the screen while you drive it. With the engine running every shot adds 20 heat, and heat falls by 10 a second at all times. Above 32 the bar reads *Overheating!*; above 40 an explosion goes off on the vehicle and the heat starts again from zero, so fire in short bursts.

@@ -3408,6 +3408,39 @@ net.handler("vehicleTowActionRequested", function(player, vehicle, action)
     towSrv.action(player, vehicle, action, vlogic.angleToVehicle(px, py, vx, vy, vrz))
 end, { rate = 3 })
 
+-- server/push.lua: pushing a vehicle by hand ("Push" / "Stop pushing" in the interaction list)
+local pushSrv
+do
+    local f = fileOpen("shared/logic/push.lua", true)
+    local src = fileRead(f, fileGetSize(f))
+    fileClose(f)
+    local plogic = assert(loadstring(src, "=vehicles/push.lua"))()
+    f = fileOpen("server/push.lua", true)
+    src = fileRead(f, fileGetSize(f))
+    fileClose(f)
+    local make = assert(loadstring(src, "=vehicles/server/push.lua"))()
+    pushSrv = make({
+        info = info,
+        vlogic = vlogic,
+        plogic = plogic,
+        log = log,
+        vehicleLine = vehicleLine,
+        isTowed = function(v)
+            return towSrv.towed(v)
+        end,
+    })
+end
+
+net.handler("vehiclePushRequested", function(player, vehicle)
+    if isElement(vehicle) and getElementType(vehicle) == "vehicle" and info[vehicle] then
+        pushSrv.start(player, vehicle)
+    end
+end, { rate = 3 })
+
+net.handler("vehiclePushEnded", function(player)
+    pushSrv.stop(player, "ended")
+end, { rate = 5 })
+
 -- The gas on a trailer's A-frame mounts, { l = { gas = kg, hp = n }, r = ... } with a key per occupied mount (false
 -- for a vehicle without mounts): what a stove or heater draws from
 function getGasBottles(vehicle)

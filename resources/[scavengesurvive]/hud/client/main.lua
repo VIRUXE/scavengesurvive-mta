@@ -210,6 +210,7 @@ local SKILL_NAMES = {
     Forestry = "Forestry",
     Medical = "Medical",
     Repair = "Repair",
+    Strength = "Strength",
 }
 -- lang:end
 
