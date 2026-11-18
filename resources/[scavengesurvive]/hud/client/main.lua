@@ -704,7 +704,8 @@ addEventHandler("onClientRender", root, function()
     local driver = vehicle and getVehicleOccupant(vehicle, 0) == localPlayer or false
     -- duty staff have frozen stats, so no survival bars, and no watch (bearing, clock, radio frequency)
     local onDuty = getElementData(localPlayer, "staff.duty") == true
-    if not onDuty then
+    -- nor while a defence's ghost is aimed at a vehicle (carmour attach mode): the bars sit over the view
+    if not onDuty and not exports.vehicles:attachModeActive() then
         drawNeeds()
     end
     drawAmmo()
