@@ -779,9 +779,10 @@ addEventHandler("onClientRender", root, function()
     local driver = vehicle and getVehicleOccupant(vehicle, 0) == localPlayer or false
     -- duty staff have frozen stats, so no survival bars, and no watch (bearing, clock, radio frequency)
     local onDuty = getElementData(localPlayer, "staff.duty") == true
-    -- nor while a defence is being set: the building tweak pad sits where the bars are, and a carmour defence's ghost
-    -- aimed at a vehicle wants a clear view
-    if not onDuty and not settingDefence() then
+    -- no needs or skill bars while a defence is being set either: the building tweak pad sits where they are, and a
+    -- carmour defence's ghost aimed at a vehicle wants a clear view
+    local setting = settingDefence()
+    if not onDuty and not setting then
         drawNeeds()
     end
     drawAmmo()
@@ -792,7 +793,9 @@ addEventHandler("onClientRender", root, function()
     local vt = driver and vehicleType(getElementData(vehicle, "vehicles.type")) or nil
     local dashTop = vt and dashboard.top(vt) or nil -- nil: this vehicle has no dashboard (a bicycle, a trailer)
     drawSkillNotice(dashTop and dashTop - 16 or nil)
-    drawSkillBars(driver)
+    if not setting then
+        drawSkillBars(driver)
+    end
     if driver then
         drawVehiclePanel(vehicle)
         if dashTop then
