@@ -231,6 +231,15 @@ addEventHandler("heldItemChanged", root, function(item)
     end
 end)
 
+-- a defence being nudged into place (building's tweak pad) or aimed at a vehicle (vehicles' carmour attach mode)
+local function settingDefence()
+    local building = getResourceFromName("building")
+    if building and getResourceState(building) == "running" and exports.building:tweakIsOpen() == true then
+        return true
+    end
+    return exports.vehicles:attachModeActive() == true
+end
+
 local function drawNeeds()
     local T = bars.THIRST
     draw.progressBar(T.x, T.y, T.w, T.h, bars.fill(state.stats.thirst, T.max), T.r, T.g, T.b, T.a, "right")
@@ -704,8 +713,9 @@ addEventHandler("onClientRender", root, function()
     local driver = vehicle and getVehicleOccupant(vehicle, 0) == localPlayer or false
     -- duty staff have frozen stats, so no survival bars, and no watch (bearing, clock, radio frequency)
     local onDuty = getElementData(localPlayer, "staff.duty") == true
-    -- nor while a defence's ghost is aimed at a vehicle (carmour attach mode): the bars sit over the view
-    if not onDuty and not exports.vehicles:attachModeActive() then
+    -- nor while a defence is being set: the building tweak pad sits where the bars are, and a carmour defence's ghost
+    -- aimed at a vehicle wants a clear view
+    if not onDuty and not settingDefence() then
         drawNeeds()
     end
     drawAmmo()
