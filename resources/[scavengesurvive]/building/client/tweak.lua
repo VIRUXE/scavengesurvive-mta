@@ -50,7 +50,7 @@ local function close()
     state = nil
 end
 
-addEventHandler("itemTweakStarted", localPlayer, function(id, x, y, z, heading, arrow, labels)
+addEventHandler("itemTweakStarted", localPlayer, function(id, x, y, z, heading, arrow, labels, lift)
     close()
     state = {
         id = id,
@@ -59,6 +59,7 @@ addEventHandler("itemTweakStarted", localPlayer, function(id, x, y, z, heading, 
         z = z,
         heading = heading or 0,
         arrow = arrow == true,
+        lift = lift == true,
         labels = labels or {},
         cursor = false,
     }
@@ -79,11 +80,20 @@ addEventHandler("onClientRender", root, function()
         return
     end
     for i, b in ipairs(tweak.BUTTONS) do
-        local label = b.id == "done" and lang.text(b.label) or b.label
-        if b.id == "toggle" then
-            label = state.cursor and (state.labels.move or "Move") or (state.labels.edit or "Edit: LALT")
+        if not b.lift or state.lift then
+            local label = b.label
+            if b.id == "done" then
+                label = lang.text("Done")
+            elseif b.id == "up" then
+                label = lang.text("Up")
+            elseif b.id == "down" then
+                label = lang.text("Down")
+            end
+            if b.id == "toggle" then
+                label = state.cursor and (state.labels.move or "Move") or (state.labels.edit or "Edit: LALT")
+            end
+            draw.pxButton(rects[i], label)
         end
-        draw.pxButton(rects[i], label)
     end
     if state.arrow then
         for _, l in ipairs(tweak.arrow(state.x, state.y, state.z, state.heading)) do
@@ -105,7 +115,7 @@ addEventHandler("onClientClick", root, function(btn, pressState, ax, ay)
     elseif id == "done" then
         send("done")
         close()
-    elseif id and tweak.ACTIONS[id] then
+    elseif id and tweak.ACTIONS[id] and (state.lift or (id ~= "up" and id ~= "down")) then
         send(id)
         stopRepeat()
         repeatTimer = setTimer(send, REPEAT_MS, 0, id)

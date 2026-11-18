@@ -10,15 +10,30 @@ M.MAX_RANGE = 1.5 -- MAX_MOVEMENT_RANGE from the build position
 M.NO_GO = 2.2 -- NO_GO_ZONE_SIZE: no player this close to the item while it moves
 M.REACH = 10.0 -- the builder further away than this is no longer tweaking (no upstream rule; guards the request)
 
--- action -> { distance, direction (degrees from the item's front, counter-clockwise), rotation }
+M.LIFT_RANGE = 0.5 -- a frame's height may differ this much from where it was built (not upstream)
+M.LIFTABLE = { LargeFrame = true, TallFrame = true, MetalFrame = true }
+
+-- whether the type's built defence gets the Up and Down buttons
+function M.canLift(uname)
+    return M.LIFTABLE[uname] == true
+end
+
+-- action -> { distance, direction (degrees from the item's front, counter-clockwise), rotation, height change }
 M.ACTIONS = {
-    forward = { M.STEP, 0, 0 },
-    back = { M.STEP, 180, 0 },
-    left = { M.STEP, 90, 0 },
-    right = { M.STEP, -90, 0 },
-    rotl = { 0, 0, M.TURN },
-    rotr = { 0, 0, -M.TURN },
+    forward = { M.STEP, 0, 0, 0 },
+    back = { M.STEP, 180, 0, 0 },
+    left = { M.STEP, 90, 0, 0 },
+    right = { M.STEP, -90, 0, 0 },
+    rotl = { 0, 0, M.TURN, 0 },
+    rotr = { 0, 0, -M.TURN, 0 },
+    up = { 0, 0, 0, M.STEP },
+    down = { 0, 0, 0, -M.STEP },
 }
+
+-- Whether a height z still lies within LIFT_RANGE of the build height oz.
+function M.inLift(z, oz)
+    return math.abs(z - oz) <= M.LIFT_RANGE + 1e-4
+end
 
 -- The heading the item's front faces: its stored rz less the pose rotation of its defence type
 -- (building/shared/logic/defences.lua isBehind uses the same reference). def = type.defence or nil.
@@ -31,16 +46,17 @@ function M.heading(rz, def, pose)
     return ((rz or 0) - poseRz) % 360
 end
 
--- Applies one action to a position and heading. Returns the new x, y, heading, or nil for an unknown action.
+-- Applies one action to a position and heading. Returns the new x, y, heading and the height change, or nil for an
+-- unknown action.
 -- GTA's heading h faces (-sin h, cos h): h = 0 is north, turning counter-clockwise.
 function M.apply(action, x, y, heading)
     local a = M.ACTIONS[action]
     if not a then
         return nil
     end
-    local dist, dir, turn = a[1], a[2], a[3]
+    local dist, dir, turn, dz = a[1], a[2], a[3], a[4]
     local rad = math.rad(heading + dir)
-    return x - dist * math.sin(rad), y + dist * math.cos(rad), (heading + turn) % 360
+    return x - dist * math.sin(rad), y + dist * math.cos(rad), (heading + turn) % 360, dz
 end
 
 -- Whether (x, y) still lies within MAX_RANGE of the build position.
@@ -81,8 +97,11 @@ M.BUTTONS = {
     { id = "left", label = "<", x = 556, y = 340, w = 20, h = 20 },
     { id = "right", label = ">", x = 604, y = 340, w = 20, h = 20 },
     { id = "back", label = "v", x = 580, y = 360, w = 20, h = 20 },
-    { id = "toggle", label = "Move", x = 550, y = 390, w = 80, h = 20 },
-    { id = "done", label = "Done", x = 550, y = 420, w = 80, h = 20 }, -- the client shows it through lang.text
+    -- Up and Down only on a built frame (canLift); the client shows them through lang.text
+    { id = "up", label = "Up", x = 550, y = 390, w = 38, h = 20, lift = true },
+    { id = "down", label = "Down", x = 592, y = 390, w = 38, h = 20, lift = true },
+    { id = "toggle", label = "Move", x = 550, y = 420, w = 80, h = 20 },
+    { id = "done", label = "Done", x = 550, y = 450, w = 80, h = 20 }, -- the client shows it through lang.text
 }
 
 -- Pixel rectangles of the buttons for a canvas instance c (ui/shared/logic/canvas.lua).

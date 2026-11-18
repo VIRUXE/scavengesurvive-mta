@@ -52,6 +52,7 @@ return function(ctx)
             interior = row.interior or 0,
             dimension = row.dimension or 0,
             arrow = arrow == true,
+            lift = arrow == true and tweak.canLift(row.type_uname),
         }
         util.log("building", "info", "[TWEAK] %s tweaks item %d (%s)", getPlayerName(player), row.id, row.type_uname)
         local labels = { move = text(player, "ITEMTWKBTNM"), edit = text(player, "ITEMTWKBTNE") }
@@ -65,7 +66,8 @@ return function(ctx)
             row.z,
             headingOf(row),
             arrow == true,
-            labels
+            labels,
+            tweaks[player].lift
         )
         exports.ui:showTip(player, text(player, arrow and "TIPTWEAKDEF" or "TIPTWEAKITM"), false, 10000)
         return true
@@ -122,15 +124,16 @@ return function(ctx)
             return
         end
         local heading = headingOf(row)
-        local nx, ny, nh = tweak.apply(action, row.x, row.y, heading)
-        if not tweak.inRange(nx, ny, tw.ox, tw.oy) then
+        local nx, ny, nh, dz = tweak.apply(action, row.x, row.y, heading)
+        local nz = row.z + dz
+        if not tweak.inRange(nx, ny, tw.ox, tw.oy) or not tweak.inLift(nz, tw.oz) then
             return toast(player, "ITEMTWKTFAR")
         end
         local nrz = ((row.rz or 0) + (nh - heading)) % 360
         db.exec(
-            "UPDATE items SET x = ?, y = ?, rz = ? WHERE id = ? AND x IS NOT NULL "
+            "UPDATE items SET x = ?, y = ?, z = ?, rz = ? WHERE id = ? AND x IS NOT NULL "
                 .. "AND container_id IS NULL AND holder_char_id IS NULL",
-            { nx, ny, nrz, row.id },
+            { nx, ny, nz, nrz, row.id },
             function(ok, c)
                 if not ok then
                     return M.commit(c.player)
@@ -140,7 +143,7 @@ return function(ctx)
                     triggerClientEvent(c.player, "itemTweakUpdated", c.player, c.id, c.x, c.y, c.z, c.heading)
                 end
             end,
-            { player = player, id = row.id, x = nx, y = ny, z = row.z, heading = nh }
+            { player = player, id = row.id, x = nx, y = ny, z = nz, heading = nh }
         )
     end
 
@@ -152,7 +155,7 @@ return function(ctx)
         if action == "done" then
             return M.commit(player)
         end
-        if not tweak.ACTIONS[action] then
+        if not tweak.ACTIONS[action] or ((action == "up" or action == "down") and not tw.lift) then
             return
         end
         db.one(ctx.DEFENCE_ROW, { tw.id }, function(row, c)
