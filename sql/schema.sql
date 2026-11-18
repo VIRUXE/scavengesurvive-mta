@@ -2084,14 +2084,14 @@ BEGIN
 END//
 
 CREATE OR REPLACE PROCEDURE `item_drop`(IN p_item_id INT, IN p_char_id INT, IN p_x FLOAT, IN p_y FLOAT, IN p_z FLOAT,
-  IN p_rz FLOAT, IN p_interior TINYINT, IN p_dimension INT)
+  IN p_rz FLOAT, IN p_interior TINYINT, IN p_dimension INT, IN p_nx FLOAT, IN p_ny FLOAT)
 BEGIN
   DECLARE v_rows INT DEFAULT 0;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
   SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
   START TRANSACTION;
   UPDATE items SET holder_char_id = NULL, holder_kind = NULL, x = p_x, y = p_y, z = p_z, rz = p_rz,
-    interior = p_interior, dimension = p_dimension
+    ground_nx = p_nx, ground_ny = p_ny, interior = p_interior, dimension = p_dimension
     WHERE id = p_item_id AND holder_char_id = p_char_id AND holder_kind = 'held';
   SET v_rows = ROW_COUNT();
   IF v_rows = 0 THEN

@@ -477,6 +477,41 @@ local function lyingNear(rows, cb)
     end)
 end
 
+-- Where an item dropped by hand comes to rest (items/server/hands.lua): on the ground at (x, y) (height gz, slope
+-- normal snx, sny, from the server's world) with heading rz, flush as loot lies, and when its footprint lands on items
+-- already lying there (`lying`: rows of type_uname, x, y, z, rz, ground_nx, ground_ny) it lies on top of them or leans on them
+-- (roll.leanOn). Things taller than a metre are stepped around, not climbed. Returns z, nx, ny (false when flat), or
+-- false for a type without rest data.
+local CLIMB_MAX = 1.0
+function restPose(uname, x, y, gz, snx, sny, rz, lying)
+    local rest = itemRest[uname]
+    x, y, gz, rz = tonumber(x), tonumber(y), tonumber(gz), tonumber(rz)
+    if not rest or not x or not y or not gz or not rz then
+        return false
+    end
+    local def = exports.data:itemType(uname)
+    local placed = {}
+    for _, r in ipairs(type(lying) == "table" and lying or {}) do
+        local other = itemRest[r.type_uname]
+        local ox, oy, oz = tonumber(r.x), tonumber(r.y), tonumber(r.z)
+        if other and ox and oy and oz and (other[8] or 0) <= CLIMB_MAX then
+            -- its stored z is its origin less its type's modelz: its lowest point is `base` under the origin
+            local odef = exports.data:itemType(r.type_uname)
+            local bottom = oz + (odef and odef.modelz or 0) - other[1]
+            -- tilted (to a slope, or leaning itself), its high end stands that much over its middle
+            local tnx, tny = tonumber(r.ground_nx) or 0, tonumber(r.ground_ny) or 0
+            local rise = math.sqrt(tnx * tnx + tny * tny) * math.max(other[6] or 0.4, other[7] or 0.4) / 2
+            local top = bottom + (other[8] or 0.3) + rise
+            if top - gz <= CLIMB_MAX then -- a pile grows no taller than that either
+                placed[#placed + 1] = roll.footprint(ox, oy, bottom, tonumber(r.rz) or 0, other, top)
+            end
+        end
+    end
+    local slot = { 0, 0, gz, tonumber(snx) or 0, tonumber(sny) or 0 }
+    local _, _, z, _, nx, ny = roll.leanOn(x, y, slot, rest, def and def.modelz or 0, rz, false, placed)
+    return z, nx or false, ny or false
+end
+
 local function placeRollsAmong(rows, done, quiet, placed)
     local players, minDist = playerPositions(), setting("world.min_player_distance", 150)
     local rolls, zoneOf, leaning = {}, {}, 0

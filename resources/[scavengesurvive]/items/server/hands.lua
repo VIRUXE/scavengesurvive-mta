@@ -1126,6 +1126,55 @@ return function(ctx)
         )
     end
 
+    -- Where a dropped item comes to rest. In the main world the server's own world (lib geom.lua) gives the ground
+    -- under the spot, and loot's rest data lays the item flush on it, tilted to the slope; when its footprint lands
+    -- on items already lying there it lies on top of them or leans on them (exports.loot:restPose), whatever they
+    -- are. Built defences are walls, not a pile. Elsewhere, and for a type without rest data, it lies at feet height
+    -- as before. cb(z, nx, ny).
+    local geom = assert(loadstring(exports.lib:getModule("geom"), "=lib/geom.lua"))()
+    local LYING_REACH = 4.5 -- metres: the furthest two lying items' footprints reach towards each other
+    local LYING_SQL = "SELECT i.type_uname, i.x, i.y, i.z, i.rz, i.ground_nx, i.ground_ny"
+        .. " FROM world_items_pos p JOIN items i ON i.id = p.item_id"
+        .. " WHERE ST_Contains(ST_GeomFromText(?), p.pos) AND IFNULL(i.interior, 0) = 0"
+        .. " AND IFNULL(i.dimension, 0) = 0 AND (i.data IS NULL OR i.data NOT LIKE '%\"defence\"%')"
+    local function restOnGround(player, uname, x, y, z, rz, cb)
+        local loot = getResourceFromName("loot")
+        if
+            getElementInterior(player) ~= 0
+            or getElementDimension(player) ~= 0
+            or not geom.ready()
+            or not loot
+            or getResourceState(loot) ~= "running"
+        then
+            return cb(z)
+        end
+        local gz, snx, sny = geom.below(x, y, z, 1.0, 2.5)
+        if not gz then
+            return cb(z)
+        end
+        local r = LYING_REACH
+        local box = string.format(
+            "POLYGON((%g %g,%g %g,%g %g,%g %g,%g %g))",
+            x - r,
+            y - r,
+            x + r,
+            y - r,
+            x + r,
+            y + r,
+            x - r,
+            y + r,
+            x - r,
+            y - r
+        )
+        db.query(LYING_SQL, { box }, function(rows)
+            local lz, nx, ny = exports.loot:restPose(uname, x, y, gz, snx, sny, rz, rows or {})
+            if not lz then
+                return cb(z)
+            end
+            cb(lz, nx or nil, ny or nil)
+        end)
+    end
+
     -- opts (placing an item, server/smallitems.lua's shield): { ahead, below, turn, data }, spot = { x, y } (a free
     -- spot clear of vehicles and items, chosen by the client), or at = { x, y, z, rz }
     -- for a spot of the server's (on a table, server/furniture.lua); a plain drop lands 1 m ahead at the feet with
@@ -1137,6 +1186,9 @@ return function(ctx)
         end
         if not item then
             return false, "NOT_HELD"
+        end
+        if item.dropping then -- its resting place is being worked out
+            return true
         end
         opts = opts or {}
         local x, y, z = getElementPosition(player)
@@ -1162,46 +1214,62 @@ return function(ctx)
             M.queueData(item)
         end
         M.flushData(item.id)
-        local params = { item.id, cid, dx, dy, dz, drz, getElementInterior(player), getElementDimension(player) }
-        db.call("item_drop", params, function(res, c)
-            logProc("item.dropped", c.player, res, {
-                item_id = c.itemId,
-                uname = c.uname,
-                x = math.floor(c.x),
-                y = math.floor(c.y),
-                z = math.floor(c.z),
-                int = c.int,
-                dim = c.dim,
-                character_id = cid,
+        local int, dim = getElementInterior(player), getElementDimension(player)
+        local function drop(lz, nx, ny)
+            local params = { item.id, cid, dx, dy, lz, drz, int, dim, nx, ny, n = 10 }
+            db.call("item_drop", params, function(res, c)
+                item.dropping = nil
+                logProc("item.dropped", c.player, res, {
+                    item_id = c.itemId,
+                    uname = c.uname,
+                    x = math.floor(c.x),
+                    y = math.floor(c.y),
+                    z = math.floor(c.z),
+                    int = c.int,
+                    dim = c.dim,
+                    character_id = cid,
+                })
+                if res and res.ok then
+                    markLitter(c.itemId, c.uname, c.data)
+                end
+                if not isElement(c.player) then
+                    return
+                end
+                if not res or not res.ok then
+                    return toast(c.player, res and res.code or "DB_ERROR")
+                end
+                M.setHeld(c.player, nil)
+                M.dropAnim(c.player, c.uname)
+                if small then
+                    small.onDropped(c.player, { id = c.itemId, uname = c.uname }, c.x, c.y, c.z, c.rz) -- dice roll on
+                end
+                world.syncPlayer(c.player) -- the dropped item appears without waiting for the next tick
+                triggerEvent("itemMoved", c.player, c.itemId, "held", "world")
+            end, {
+                player = player,
+                itemId = item.id,
+                uname = item.uname,
+                data = item.data,
+                x = dx,
+                y = dy,
+                z = lz,
+                rz = drz,
+                int = int,
+                dim = dim,
             })
-            if res and res.ok then
-                markLitter(c.itemId, c.uname, c.data)
-            end
-            if not isElement(c.player) then
-                return
-            end
-            if not res or not res.ok then
-                return toast(c.player, res and res.code or "DB_ERROR")
-            end
-            M.setHeld(c.player, nil)
-            M.dropAnim(c.player, c.uname)
-            if small then
-                small.onDropped(c.player, { id = c.itemId, uname = c.uname }, c.x, c.y, c.z, c.rz) -- dice roll on
-            end
-            world.syncPlayer(c.player) -- the dropped item appears without waiting for the next tick
-            triggerEvent("itemMoved", c.player, c.itemId, "held", "world")
-        end, {
-            player = player,
-            itemId = item.id,
-            uname = item.uname,
-            data = item.data,
-            x = dx,
-            y = dy,
-            z = dz,
-            rz = drz,
-            int = params[7],
-            dim = params[8],
-        })
+        end
+        if opts.at or opts.data then -- placed by the server (on a table) or standing (a shield): as asked
+            drop(dz)
+        else
+            item.dropping = true
+            restOnGround(player, item.uname, dx, dy, dz, drz, function(lz, nx, ny)
+                if not isElement(player) or state.held[player] ~= item then
+                    item.dropping = nil
+                    return
+                end
+                drop(lz, nx, ny)
+            end)
+        end
         return true
     end
 
@@ -1234,7 +1302,7 @@ return function(ctx)
         end
         M.flushData(item.id)
         local int = getElementInterior(player)
-        db.call("item_drop", { item.id, cid, dx, dy, dz, rz, int, dim }, function(res, c)
+        db.call("item_drop", { item.id, cid, dx, dy, dz, rz, int, dim, nil, nil, n = 10 }, function(res, c)
             log.event("item.dropped", {
                 item_id = c.itemId,
                 uname = c.uname,
@@ -1388,7 +1456,6 @@ return function(ctx)
     -- (client/main.lua) and answers. In the main world the server checks the pick against walls in its own world
     -- (lib geom.lua) and, when it is behind one or no answer comes within a second, takes the first freeSpot ring spot
     -- no wall hides; elsewhere no answer drops at the default spot.
-    local geom = assert(loadstring(exports.lib:getModule("geom"), "=lib/geom.lua"))()
     local dropSpotPending = {}
 
     local function mainWorld(player)

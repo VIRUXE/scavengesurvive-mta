@@ -334,10 +334,13 @@ function roll.overlaps(a, b, gap)
     return true
 end
 
--- Lay an item on `slot` at heading rz leaning on the tallest footprint of `placed` it overlaps: the end nearest it
--- goes up onto its top, the far end stays on the ground, and the lean is folded into the slope normal the client
--- turns the item by. Steeper than LEAN_MAX (a small item against a tall one) it lies flat on that item's top instead.
--- Returns x, y, z, rz, nx, ny and its footprint.
+-- Lay an item on `slot` at heading rz against the tallest footprint of `placed` it overlaps. It leans when it can rest
+-- that way: its low end on the ground, propped on the other item's near edge, which must lie past its own middle (its
+-- weight between the two supports) along one of its two axes; the gentler of the two wins, and the lean is folded into
+-- the slope normal the client turns the item by. Overlapping by more than that, or steeper than LEAN_MAX (a small item
+-- against a tall one), it would tip over onto the other one, so it lies flat on its top: two gates dropped on the same
+-- spot stack instead of one standing half up through the other. Returns x, y, z, rz, nx, ny and its footprint, whose
+-- `top` is its highest point, so what lands next stacks above it.
 function roll.leanOn(px, py, slot, rest, modelz, rz, centred, placed)
     local x, y, z, nx, ny = roll.layAt(px, py, slot, rest, modelz, rz, centred)
     local gz = slot[3]
@@ -353,25 +356,31 @@ function roll.leanOn(px, py, slot, rest, modelz, rz, centred, placed)
         return x, y, z, rz, nx, ny, fp
     end
     local base, height = rest[1] or 0, rest[8] or 0.3
-    -- the item's long axis, pointing towards what it leans on
-    local r = math.rad(rz)
-    local c, sn = math.cos(r), math.sin(r)
-    local longX = (rest[5] or 0) == 1
-    local ux, uy = longX and c or -sn, longX and sn or c
-    local len = longX and (rest[6] or 0.4) or (rest[7] or 0.4)
-    local d = (under.x - fp.x) * ux + (under.y - fp.y) * uy
-    if d < 0 then
-        ux, uy, d = -ux, -uy, -d
+    -- its two axes (the footprint's x and y), each pointing towards what it leans on
+    local best
+    for _, axis in ipairs({ { fp.c, fp.s, fp.hx * 2 }, { -fp.s, fp.c, fp.hy * 2 } }) do
+        local ux, uy, len = axis[1], axis[2], axis[3]
+        local d = (under.x - fp.x) * ux + (under.y - fp.y) * uy
+        if d < 0 then
+            ux, uy, d = -ux, -uy, -d
+        end
+        -- where along the item (from its low end) the other one's near edge props it up
+        local reach = under.hx * math.abs(under.c * ux + under.s * uy)
+            + under.hy * math.abs(-under.s * ux + under.c * uy)
+        local run = d - reach + len / 2
+        if len > 0 and run >= len / 2 then
+            local angle = math.atan2(h, run)
+            if angle <= math.rad(roll.LEAN_MAX) and (not best or angle < best.angle) then
+                best = { ux = ux, uy = uy, len = len, angle = angle }
+            end
+        end
     end
-    -- where along the item (from its low end) it first meets the other one
-    local reach = under.hx * math.abs(under.c * ux + under.s * uy) + under.hy * math.abs(-under.s * ux + under.c * uy)
-    local run = math.max(0.05, math.min(len, d - reach + len / 2))
-    local angle = math.atan2(h, run)
-    if angle > math.rad(roll.LEAN_MAX) then
+    if not best then
         -- on top of it, flat
         fp.z, fp.top = under.top, under.top + height
         return x, y, under.top + base - modelz, rz, nil, nil, fp
     end
+    local ux, uy, len, angle = best.ux, best.uy, best.len, best.angle
     -- the lean's normal tips away from what it leans on; add the ground's own slope (both small)
     local sa = math.sin(angle)
     nx, ny = -ux * sa + (slot[4] or 0), -uy * sa + (slot[5] or 0)
@@ -383,7 +392,7 @@ function roll.leanOn(px, py, slot, rest, modelz, rz, centred, placed)
     -- the origin sits on the leaning plane, `base` out along its normal
     local along = (x - fp.x) * ux + (y - fp.y) * uy + len / 2
     local plane = gz + math.tan(angle) * math.max(0, along)
-    fp.top = under.top + height
+    fp.top = gz + math.tan(angle) * len + height -- its raised end
     return x, y, plane + nz * base - modelz, rz, nx, ny, fp
 end
 
