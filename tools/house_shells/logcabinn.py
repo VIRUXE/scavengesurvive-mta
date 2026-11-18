@@ -82,6 +82,11 @@ def zu(x):
 
 class LogCabin(shady.Cabin):
     GROUND_PLANE = (GL, 0.0)
+    # The vanilla definition draws this model from both sides (countryS.ide flag 2097152), and the game copies that
+    # onto each placement when it creates it, so clearing the flag later does not reach the cabins already standing:
+    # two faces back to back in one plane would both be drawn and flicker. Each two-sided sheet's back stands this far
+    # behind its front instead.
+    BACK_GAP = 0.015
 
     def __init__(self):
         super().__init__(NAME)
@@ -481,7 +486,8 @@ class LogCabin(shady.Cabin):
         uvs = [(0, 0), ((x1 - x0) / 2.2, 0), ((x1 - x0) / 2.2, height / 2.2), (0, height / 2.2)]
         n = Vector((0, y_foot - y_head, 0.3))
         self.poly(q, tex, uvs=uvs, facing=n)
-        self.poly(q, tex, uvs=uvs, facing=-n)
+        back = n.normalized() * self.BACK_GAP
+        self.poly([Vector(p) - back for p in q], tex, uvs=uvs, facing=-n)
 
     def leanto(self):
         x0, x1, yw, ye, zw, fall = LEANTO
@@ -548,8 +554,9 @@ class LogCabin(shady.Cabin):
     # ---- output ----------------------------------------------------------------------------------------------
     def finish(self):
         for q, uv in self.glass:
-            for vs, uvs in ((q, uv), (list(reversed(q)), list(reversed(uv)))):
-                self.poly(vs, GLASS, uvs=uvs)
+            n = (q[1] - q[0]).cross(q[2] - q[1]).normalized() * 0.006  # the pane's two faces, a hair apart
+            self.poly([p + n for p in q], GLASS, uvs=uv)
+            self.poly([p - n for p in reversed(q)], GLASS, uvs=list(reversed(uv)))
         self.bake()
         glass = self.mat(GLASS)
         for f in self.bm.faces:

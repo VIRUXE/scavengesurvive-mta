@@ -108,6 +108,7 @@ class Cabin:
     them are the Shady Cabin's."""
 
     GROUND_PLANE = (-1.25, -math.atan(0.1))  # the renders' ground: height at the origin, tilt about x
+    BACK_GAP = 0.0  # how far the other side of a two-sided sheet stands behind its front (see logcabinn.py)
 
     def __init__(self, name=NAME):
         self.name = name
@@ -196,7 +197,8 @@ class Cabin:
                 q = [o + du * (a / nu) + dv * (b / nv) for a, b in ((i, j), (i + 1, j), (i + 1, j + 1), (i, j + 1))]
                 faces.append(self.poly(q, tex, facing=facing, **kw))
                 if two:
-                    self.poly(q, two, facing=-Vector(facing), **kw)
+                    back = Vector(facing).normalized() * self.BACK_GAP
+                    self.poly([p - back for p in q], two, facing=-Vector(facing), **kw)
         return faces
 
     def box(self, lo, hi, tex, scale=1.0, skip=(), **kw):
@@ -747,7 +749,7 @@ class Cabin:
                 rl = run.length
                 uvs = [(u0, 1 - j * rl / 4.4), (u0 + w / 2.2, 1 - j * rl / 4.4), (u0 + w / 2.2, 1 - (j + 1) * rl / 4.4), (u0, 1 - (j + 1) * rl / 4.4)]
                 self.poly(q, tex, uvs=uvs, facing=normal)
-                self.poly(q, tex, uvs=uvs, facing=-normal)
+                self.poly([p - normal * self.BACK_GAP for p in q], tex, uvs=uvs, facing=-normal)
 
     def stairs(self):
         x0, x1, y0, rise, run = STAIR
