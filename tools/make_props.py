@@ -70,6 +70,14 @@ then runs itself in Blender (DragonFF) for each prop's dff and col.
     rope_coil 20267  about 5 m of twisted hemp rope (gta_int.img's Gym_rope) in a 0.27 m coil lying on the ground, six
                      hand-wound turns, the free end trailing out to +Y and a tie round the bundle. The Rope item.
 
+    Crafting parts and gadgets (20268-20283), every surface a vanilla texture found with gta-scout, cylinders through _tube
+    (the texture wrapped once round): motor (blue finned induction motor), starter_motor (car starter with solenoid),
+    power_supply (ATX box with its loom), fluctuator (coil and rod on a project box), tnt (seven taped sticks), ied (pipe
+    bomb with clock and battery), fireworks (open carton of rockets and cakes), emp (pancake coil, capacitor bank and
+    tool battery on a board), storage_unit (3.5 inch hard drive), io_unit (phone keypad in a project box), flux_cap (three
+    can capacitors in a tray), hack_device (rugged netbook with clip leads), advanced_keypad (access-control keypad, face
+    +Y), lockpick (electric pick gun, origin at the grip's foot), clothes (three folded garments), pills (pharmacy vial).
+
 Origin (except welder_torch, grinder, ratchet and tow_bar): the centre of the base (x, y) with z = 0 at the lowest point; the front faces +Y.
 """
 from __future__ import annotations
@@ -1066,6 +1074,1014 @@ def build_rope_coil(ctx):
     return [((0.0, 0.0, hz), (hx, hy, hz))]
 
 
+def _tube(ctx):
+    """ctx["tube"] with the texture wrapped once round the cylinder (u round, v along) instead of whole on every side face,
+    so paper, plated and painted cylinders read as one surface. Same arguments: (start, end, radius, segs, material, col,
+    extend=True)."""
+    from mathutils import Vector
+    bm, paint = ctx["bm"], ctx["paint"]
+
+    def tube(start, end, radius, segs, material, col, extend=True):
+        a, b = Vector(start), Vector(end)
+        axis = (b - a).normalized()
+        if extend:
+            a, b = a - axis * radius * 0.5, b + axis * radius * 0.5
+        helper = Vector((0, 0, 1)) if abs(axis.z) < 0.9 else Vector((1, 0, 0))
+        u = axis.cross(helper).normalized()
+        w = axis.cross(u)
+        c = col or (0.9, 0.9, 0.9, 1.0)
+        night = (c[0] * 0.3, c[1] * 0.3, c[2] * 0.32, 1.0)
+        rings = [[bm.verts.new(p + (u * math.cos(2 * math.pi * i / segs) + w * math.sin(2 * math.pi * i / segs)) * radius) for i in range(segs)] for p in (a, b)]
+        for i in range(segs):
+            j = (i + 1) % segs
+            paint(bm.faces.new((rings[0][i], rings[0][j], rings[1][j], rings[1][i])), [(i / segs, 0), ((i + 1) / segs, 0), ((i + 1) / segs, 1), (i / segs, 1)], c, night, material)
+        disc = [(0.5 + 0.5 * math.cos(2 * math.pi * i / segs), 0.5 + 0.5 * math.sin(2 * math.pi * i / segs)) for i in range(segs)]
+        for ring in rings:
+            paint(bm.faces.new(ring), disc, c, night, material)
+
+    return tube
+
+
+def _torus(ctx, centre, big, small, segs, sides, material, col, axis="z"):
+    """A ring of tube `small` round a circle of radius `big` about `centre`, its plane normal to Z (or Y), the texture wrapped
+    once round the tube and `segs` times along the ring."""
+    from mathutils import Vector
+    bm, paint = ctx["bm"], ctx["paint"]
+    c = col or (0.9, 0.9, 0.9, 1.0)
+    night = (c[0] * 0.3, c[1] * 0.3, c[2] * 0.32, 1.0)
+    o = Vector(centre)
+    up = Vector((0, 0, 1)) if axis == "z" else Vector((0, 1, 0))
+    def at(i, k):
+        a, b = 2 * math.pi * i / segs, 2 * math.pi * k / sides
+        radial = Vector((math.cos(a), math.sin(a), 0.0)) if axis == "z" else Vector((math.cos(a), 0.0, math.sin(a)))
+        return o + radial * (big + small * math.cos(b)) + up * small * math.sin(b)
+    grid = [[bm.verts.new(at(i, k)) for k in range(sides)] for i in range(segs)]
+    for i in range(segs):
+        for k in range(sides):
+            i2, k2 = (i + 1) % segs, (k + 1) % sides
+            paint(bm.faces.new((grid[i][k], grid[i2][k], grid[i2][k2], grid[i][k2])), [(0, k / sides), (1, k / sides), (1, (k + 1) / sides), (0, (k + 1) / sides)], c, night, material)
+
+
+def _obox(ctx, centre, axes, size, material, col, rect=None):
+    """A box along three orthonormal `axes` (Vectors), `size` measured along them, every face mapped to `rect`."""
+    from mathutils import Vector
+    bm, paint = ctx["bm"], ctx["paint"]
+    c = Vector(centre)
+    h = [a * (s / 2) for a, s in zip(axes, size)]
+    v = [bm.verts.new(c + sx * h[0] + sy * h[1] + sz * h[2]) for sz in (-1, 1) for sy in (-1, 1) for sx in (-1, 1)]
+    col = col or (0.9, 0.9, 0.9, 1.0)
+    u0, v0, u1, v1 = rect or (0, 0, 1, 1)
+    for a, b, cc, d in ((0, 1, 3, 2), (4, 5, 7, 6), (0, 1, 5, 4), (2, 3, 7, 6), (0, 2, 6, 4), (1, 3, 7, 5)):
+        paint(bm.faces.new((v[a], v[b], v[cc], v[d])), [(u0, v0), (u1, v0), (u1, v1), (u0, v1)], col, (col[0] * 0.3, col[1] * 0.3, col[2] * 0.32, 1.0), material)
+
+
+def _radial(angle, axis="y"):
+    """The (radial, tangential, axial) unit vectors at `angle` (degrees) round an axis along Y or Z."""
+    from mathutils import Vector
+    a = math.radians(angle)
+    if axis == "y":
+        return Vector((math.cos(a), 0.0, math.sin(a))), Vector((-math.sin(a), 0.0, math.cos(a))), Vector((0.0, 1.0, 0.0))
+    return Vector((math.cos(a), math.sin(a), 0.0)), Vector((-math.sin(a), math.cos(a), 0.0)), Vector((0.0, 0.0, 1.0))
+
+
+MOTOR_AXIS_Z = 0.085  # motor.dff: the shaft's height above the feet
+# (source TXD, texture) per motor material, all vanilla and found with gta-scout: the blue container paint (its ribs read as
+# the frame's cooling fins), a cast end bell, chrome shaft, black fan cowl, the bistro's louvre on the cowl, rubber gland
+MOTOR_TEXTURES = [("continx.txd", "frate64_blue"), ("hubprops2_sfse.txd", "Alumox64b"), ("industrialext.txd", "cj_chromepipe"), ("ballys01.txd", "CJ_blackplastic"), ("bistro.txd", "vent_64"), ("cj_airprt.txd", "CJ_RUBBER")]
+
+
+def build_motor(ctx):
+    """A small three-phase induction motor, 0.31 m: a blue finned frame along Y on two cast feet, a terminal box on top with
+    a cable gland out of +X, the cast drive-end bell and a keyed chrome shaft out of +Y, a black fan cowl with a louvred
+    end on -Y and an aluminium rating plate on -X. Origin at the base's centre."""
+    from mathutils import Vector
+
+    box, tube = ctx["box"], _tube(ctx)
+    blue, cast, chrome, black, vent, rubber = 0, 1, 2, 3, 4, 5
+    white, dim, dark = (0.9, 0.9, 0.9, 1.0), (0.65, 0.65, 0.65, 1.0), (0.4, 0.4, 0.42, 1.0)
+    z = MOTOR_AXIS_Z
+    tube((0.0, -0.1, z), (0.0, 0.08, z), 0.066, 16, blue, None, False)
+    for k in range(16):  # cooling fins round the frame, none over the feet
+        angle = k * 22.5 + 11.25
+        if 225 < angle < 315:
+            continue
+        radial, tangent, axial = _radial(angle)
+        _obox(ctx, (radial * 0.074) + Vector((0.0, -0.01, z)), (radial, tangent, axial), (0.018, 0.005, 0.17), blue, dim)
+    for y in (-0.065, 0.045):  # the feet: a pad and a web up to the frame
+        box((0.0, y, 0.008), (0.15, 0.035, 0.016), blue, dim)
+        box((0.0, y, 0.03), (0.09, 0.028, 0.04), blue, dim)
+    tube((0.0, 0.08, z), (0.0, 0.102, z), 0.062, 16, cast, None, False)
+    tube((0.0, 0.102, z), (0.0, 0.114, z), 0.032, 12, cast, dim, False)
+    for k in range(4):  # the bell's through-bolts
+        radial, _, _ = _radial(45 + k * 90)
+        p = radial * 0.05
+        tube((p.x, 0.1, z + p.z), (p.x, 0.106, z + p.z), 0.006, 6, chrome, dim, False)
+    tube((0.0, 0.114, z), (0.0, 0.165, z), 0.011, 10, chrome, white, False)
+    box((0.0, 0.142, z + 0.0105), (0.006, 0.04, 0.003), black, None)  # the key
+    tube((0.0, -0.1, z), (0.0, -0.145, z), 0.068, 16, black, dark, False)
+    tube((0.0, -0.145, z), (0.0, -0.147, z), 0.06, 16, vent, white, False)  # the cowl's louvred end
+    tz = z + 0.066 + 0.016
+    box((0.0, 0.005, tz), (0.07, 0.08, 0.04), blue, None)
+    box((0.0, 0.005, tz + 0.022), (0.076, 0.086, 0.006), blue, dim)
+    for x, y in ((-0.03, -0.034), (0.03, -0.034), (-0.03, 0.044), (0.03, 0.044)):
+        tube((x, y, tz + 0.025), (x, y, tz + 0.028), 0.004, 6, chrome, dim, False)
+    tube((0.035, 0.005, tz - 0.002), (0.055, 0.005, tz - 0.002), 0.011, 10, rubber, None, False)  # the gland
+    tube((0.055, 0.005, tz - 0.002), (0.075, 0.005, tz - 0.012), 0.006, 8, rubber, dark)
+    box((-0.0745, -0.01, z + 0.01), (0.002, 0.06, 0.035), cast, white)  # the rating plate
+    return [((0.0, 0.0, 0.095), (0.085, 0.155, 0.095))]
+
+
+STARTER_AXIS_Z = 0.045  # starter_motor.dff: the armature's height above the lowest point
+# (source TXD, texture) per starter_motor material, all vanilla and found with gta-scout: black-painted field frame,
+# cast aluminium nose and end cap, zinc-plated solenoid and bolts, copper studs and strap (the strip club's gold), red boot
+STARTER_TEXTURES = [("ballys01.txd", "CJ_blackplastic"), ("hubprops2_sfse.txd", "Alumox64b"), ("industrialext.txd", "cj_chromepipe"), ("lee_strip2.txd", "Strip_Gold"), ("cj_airprt.txd", "CJ_red_COUNTER")]
+
+
+def build_starter_motor(ctx):
+    """A car's pre-engaged starter motor, 0.25 m along Y: the black field frame between a cast end cap (-Y) and the cast
+    drive housing (+Y) with a two-ear mounting flange and the pinion gear in its open snout, the zinc solenoid riding on
+    top with two copper studs (the battery one in a red boot) and a copper strap down into the frame. Origin at the
+    base's centre."""
+    from mathutils import Vector
+
+    box, tube = ctx["box"], _tube(ctx)
+    black, cast, zinc, copper, red = 0, 1, 2, 3, 4
+    white, dim = (0.9, 0.9, 0.9, 1.0), (0.6, 0.6, 0.6, 1.0)
+    z = STARTER_AXIS_Z
+    tube((0.0, -0.085, z), (0.0, 0.035, z), 0.045, 16, black, dim, False)
+    tube((0.0, -0.103, z), (0.0, -0.085, z), 0.04, 16, cast, None, False)
+    tube((0.0, -0.11, z), (0.0, -0.103, z), 0.016, 10, cast, dim, False)
+    for x in (-0.028, 0.028):  # through-bolt heads on the end cap
+        tube((x, -0.106, z + 0.02), (x, -0.101, z + 0.02), 0.005, 6, zinc, white, False)
+    tube((0.0, 0.035, z), (0.0, 0.07, z), 0.043, 16, cast, None, False)
+    box((0.0, 0.058, z), (0.15, 0.012, 0.042), cast, dim)  # the flange's ears
+    for x in (-0.06, 0.06):
+        tube((x, 0.046, z), (x, 0.072, z), 0.007, 8, zinc, white, False)
+    tube((0.0, 0.07, z), (0.0, 0.1, z), 0.03, 14, cast, None, False)
+    box((0.0, 0.115, z + 0.018), (0.05, 0.03, 0.02), cast, dim)  # the snout, open underneath
+    tube((0.0, 0.1, z), (0.0, 0.128, z), 0.016, 12, zinc, white, False)
+    for k in range(10):  # the pinion's teeth
+        radial, tangent, axial = _radial(k * 36)
+        _obox(ctx, radial * 0.018 + Vector((0.0, 0.114, z)), (radial, tangent, axial), (0.006, 0.005, 0.026), zinc, white)
+    sz = z + 0.045 + 0.022
+    tube((0.0, -0.035, sz), (0.0, 0.07, sz), 0.024, 14, zinc, None, False)
+    tube((0.0, -0.047, sz), (0.0, -0.035, sz), 0.026, 14, black, None, False)  # the solenoid's moulded cap
+    for x, boot in ((-0.011, True), (0.011, False)):
+        tube((x, -0.047, sz + 0.004), (x, -0.062, sz + 0.004), 0.004, 8, copper, white, False)
+        tube((x, -0.05, sz + 0.004), (x, -0.053, sz + 0.004), 0.0065, 6, copper, white, False)  # the nut
+        if boot:
+            tube((x, -0.054, sz + 0.004), (x, -0.066, sz + 0.004), 0.008, 10, red, None, False)
+    box((0.011, -0.07, sz - 0.012), (0.008, 0.004, 0.032), copper, white)  # the strap into the frame
+    box((0.011, -0.075, z + 0.03), (0.008, 0.012, 0.004), copper, white)
+    tube((0.0, 0.0, z + 0.04), (0.0, 0.0, sz - 0.018), 0.008, 8, zinc, dim, False)  # the solenoid's saddle
+    return [((0.0, -0.005, 0.05), (0.075, 0.12, 0.05))]
+
+
+PSU_W, PSU_D, PSU_H = 0.15, 0.14, 0.086  # power_supply.dff, an ATX box (x, y, z)
+CJ_PANEL_DANGER = (0.5, 0.58, 0.98, 0.96)  # industrialext CJ_PANEL: the "DANGER HIGH VOLTAGE" plate
+SWATCH_RED, SWATCH_YELLOW = (0.04, 0.7, 0.29, 0.96), (0.04, 0.37, 0.29, 0.63)
+# (source TXD, texture) per power_supply material, all vanilla and found with gta-scout: galvanised sheet metal, black
+# plastic (fan, sockets, plug), chrome fan guard, the bistro's louvre, the substation's danger plate, red switch, wire colours
+PSU_TEXTURES = [("industrialext.txd", "cj_sheetmetal"), ("ballys01.txd", "CJ_blackplastic"), ("industrialext.txd", "cj_chromepipe"), ("bistro.txd", "vent_64"), ("industrialext.txd", "CJ_PANEL"), ("texttest.txd", "kb_red"), ("helixbarrier.txd", "colourboxes")]
+
+
+def build_power_supply(ctx):
+    """A computer power supply, 0.15 x 0.14 x 0.086 m: a galvanised box with a 120 mm fan under a chrome wire guard on
+    top, the mains socket, red rocker switch and a louvre on the back (-Y), a danger plate on +X and a loom of red,
+    yellow and black wires out of the front (+Y) into a 24-pin plug lying on the floor. Origin at the base's centre."""
+    box, tube = ctx["box"], _tube(ctx)
+    metal, black, chrome, vent, danger, red, colours = 0, 1, 2, 3, 4, 5, 6
+    white, dim = (0.9, 0.9, 0.9, 1.0), (0.6, 0.6, 0.6, 1.0)
+    w, d, h = PSU_W, PSU_D, PSU_H
+    box((0.0, 0.0, h / 2), (w, d, h), metal, None)
+    tube((0.0, 0.0, h - 0.002), (0.0, 0.0, h + 0.001), 0.056, 24, black, dim, False)  # the fan
+    tube((0.0, 0.0, h + 0.001), (0.0, 0.0, h + 0.004), 0.018, 12, black, white, False)  # its hub sticker
+    for i in range(-5, 6):  # the guard's wires
+        half = math.sqrt(max(0.0, 0.057 ** 2 - (i * 0.0095) ** 2))
+        box((i * 0.0095, 0.0, h + 0.004), (0.0018, 2 * half, 0.0018), chrome, white)
+    box((0.0, 0.0, h + 0.004), (0.114, 0.0018, 0.0018), chrome, white)
+    for x, y in ((-0.06, -0.06), (0.06, -0.06), (-0.06, 0.06), (0.06, 0.06)):
+        tube((x, y, h), (x, y, h + 0.003), 0.004, 6, chrome, dim, False)
+    by = -d / 2
+    box((-0.03, by - 0.001, 0.045), (0.07, 0.002, 0.055), vent, white)  # the louvre
+    box((0.035, by - 0.004, 0.05), (0.028, 0.008, 0.022), black, None)  # the mains socket
+    box((0.035, by - 0.009, 0.05), (0.018, 0.002, 0.012), black, dim)
+    box((0.055, by - 0.004, 0.024), (0.014, 0.008, 0.018), red, None)  # the rocker switch
+    box((w / 2 + 0.001, 0.0, h / 2), (0.002, 0.08, 0.06), danger, white, CJ_PANEL_DANGER)
+    # the loom: wires out of a grommet on +Y, down to the floor and along it into the plug
+    gy = d / 2
+    tube((0.0, gy, 0.06), (0.0, gy + 0.008, 0.06), 0.016, 12, black, None, False)
+    for i, rect in enumerate([SWATCH_RED, SWATCH_YELLOW, None] * 2):
+        x = -0.0125 + i * 0.005
+        mat, col = (colours, white) if rect else (black, None)
+        pts = [(x, gy + 0.006, 0.06), (x, gy + 0.035, 0.052), (x, gy + 0.055, 0.025), (x, gy + 0.065, 0.004), (x, gy + 0.11, 0.004)]
+        for a, b in zip(pts, pts[1:]):
+            _wire(ctx, a, b, 0.0022, mat, col, rect)
+    box((0.0, gy + 0.125, 0.008), (0.05, 0.03, 0.016), black, None)  # the plug
+    return [((0.0, 0.0, h / 2 + 0.002), (w / 2, d / 2, h / 2 + 0.002))]
+
+
+def _wire(ctx, a, b, radius, material, col, rect=None):
+    """A thin six-sided wire from a to b, every face mapped to `rect`."""
+    from mathutils import Vector
+    a, b = Vector(a), Vector(b)
+    axis = (b - a).normalized()
+    helper = Vector((0, 0, 1)) if abs(axis.z) < 0.9 else Vector((1, 0, 0))
+    u = axis.cross(helper).normalized()
+    w = axis.cross(u)
+    length = (b - a).length + radius
+    _obox(ctx, (a + b) / 2, (u, w, axis), (radius * 2, radius * 2, length), material, col, rect)
+
+
+# (source TXD, texture) per fluctuator material, all vanilla and found with gta-scout: black project box, the substation's
+# knob-and-meter panel, copper windings, chrome rod and electrodes, the keypad's green lamp, pale ceramic, red wire
+FLUCT_TEXTURES = [("ballys01.txd", "CJ_blackplastic"), ("industrialext.txd", "CJ_Panel2"), ("lee_strip2.txd", "Strip_Gold"), ("industrialext.txd", "cj_chromepipe"), ("kmb_keypadx.txd", "keypad_light"), ("des_telescopestuff.txd", "dish_panel_a"), ("cj_airprt.txd", "CJ_red_COUNTER")]
+
+
+def build_fluctuator(ctx):
+    """The Fluctuator Unit, a stun gun's guts and a radio pole bodged into a project box, 0.16 x 0.09 m and 0.25 m tall: a
+    knob-and-meter panel across the front (+Y), a copper-wound coil on a ceramic foot standing on the lid with the
+    radio's chrome rod and ball out of it, a green lamp and a toggle beside it, and the stun gun's two prongs out of +X.
+    Origin at the base's centre."""
+    box, tube = ctx["box"], _tube(ctx)
+    black, panel, copper, chrome, lamp, ceramic, red = 0, 1, 2, 3, 4, 5, 6
+    white, dim = (0.9, 0.9, 0.9, 1.0), (0.6, 0.6, 0.6, 1.0)
+    box((0.0, 0.0, 0.03), (0.16, 0.09, 0.06), black, None)
+    box((0.0, 0.0, 0.0615), (0.164, 0.094, 0.004), black, dim)  # the lid
+    box((0.0, 0.0455, 0.03), (0.15, 0.002, 0.052), panel, white, (1.0, 0.0, 0.0, 1.0))
+    for x in (-0.076, 0.076):  # feet
+        for y in (-0.04, 0.04):
+            tube((x * 0.9, y * 0.85, 0.0), (x * 0.9, y * 0.85, 0.004), 0.006, 8, black, dim, False)
+    cx = -0.035
+    for z0, r in ((0.0635, 0.03), (0.07, 0.024), (0.0765, 0.03)):  # the ceramic foot's sheds
+        tube((cx, 0.0, z0), (cx, 0.0, z0 + 0.0065), r, 16, ceramic, white, False)
+    tube((cx, 0.0, 0.083), (cx, 0.0, 0.145), 0.018, 14, black, None, False)
+    for i in range(9):  # the windings
+        z0 = 0.087 + i * 0.0062
+        tube((cx, 0.0, z0), (cx, 0.0, z0 + 0.0048), 0.0215, 16, copper, white, False)
+    tube((cx, 0.0, 0.145), (cx, 0.0, 0.151), 0.024, 16, ceramic, white, False)
+    tube((cx, 0.0, 0.151), (cx, 0.0, 0.235), 0.0035, 8, chrome, white, False)
+    tube((cx, 0.0, 0.235), (cx, 0.0, 0.249), 0.008, 10, chrome, white, False)
+    _wire(ctx, (cx + 0.02, 0.0, 0.09), (0.012, 0.012, 0.0635), 0.0022, red, None)
+    tube((0.04, 0.02, 0.0635), (0.04, 0.02, 0.071), 0.007, 10, chrome, dim, False)
+    tube((0.04, 0.02, 0.071), (0.04, 0.02, 0.078), 0.0055, 10, lamp, white, False)
+    tube((0.06, -0.018, 0.0635), (0.06, -0.018, 0.068), 0.006, 8, chrome, dim, False)
+    _wire(ctx, (0.06, -0.018, 0.068), (0.064, -0.018, 0.083), 0.0018, chrome, white)  # the toggle
+    for y in (-0.016, 0.016):
+        tube((0.08, y, 0.03), (0.084, y, 0.03), 0.007, 8, black, dim, False)
+        tube((0.084, y, 0.03), (0.108, y, 0.03), 0.0028, 6, chrome, white, False)
+    return [((-0.005, 0.0, 0.035), (0.085, 0.047, 0.035)), ((cx, 0.0, 0.16), (0.03, 0.03, 0.09))]
+
+
+def _cone(ctx, base, radius, height, segs, material, col):
+    """An upright cone from a ring at `base` (its centre) up to a point `height` above."""
+    bm, paint = ctx["bm"], ctx["paint"]
+    x, y, z = base
+    ring = [bm.verts.new((x + radius * math.cos(2 * math.pi * i / segs), y + radius * math.sin(2 * math.pi * i / segs), z)) for i in range(segs)]
+    tip = bm.verts.new((x, y, z + height))
+    night = (col[0] * 0.3, col[1] * 0.3, col[2] * 0.32, 1.0)
+    for i in range(segs):
+        paint(bm.faces.new((ring[i], ring[(i + 1) % segs], tip)), [(i / segs, 0), ((i + 1) / segs, 0), (0.5, 1)], col, night, material)
+    paint(bm.faces.new(ring), [(0.5 + 0.5 * math.cos(2 * math.pi * i / segs), 0.5 + 0.5 * math.sin(2 * math.pi * i / segs)) for i in range(segs)], col, night, material)
+
+
+# The explosives' triggers (Timed, Trip Mine, Proximity, Phone Remote): each variant is its explosive with the trigger device
+# taped on and leads to its detonator. (source TXD, texture) per trigger material, all vanilla and found with gta-scout:
+# black plastic, the keypad's dark LCD glass, red LED, pale sensor housing, the payphone's keys, chrome, grey tape, wire colours
+TRIGGER_TEXTURES = [("ballys01.txd", "CJ_blackplastic"), ("kmb_keypadx.txd", "keypad_glass"), ("texttest.txd", "kb_red"), ("des_telescopestuff.txd", "dish_panel_a"), ("keypad.txd", "nt_phone3"), ("industrialext.txd", "cj_chromepipe"), ("cj_airprt.txd", "CJ_RUBBER"), ("helixbarrier.txd", "colourboxes")]
+TRIGGERS = {"timer": "Timebomb", "trip": "TripMine", "prox": "ProxMine", "phone": "PhoneBomb"}
+
+
+def with_triggers(sources):
+    """An explosive's sources plus the trigger textures it lacks (a texture twice would export as name.png.001)."""
+    have = {t.lower() for _, t in sources}
+    return list(sources) + [s for s in TRIGGER_TEXTURES if s[1].lower() not in have]
+
+
+def _trigger(ctx, kind, at, sources):
+    """Builds trigger `kind` sitting on the point `at` (x, y, z), lengthwise along X; returns the point its leads leave."""
+    from mathutils import Vector
+    box, tube = ctx["box"], _tube(ctx)
+    names = [t.lower() for _, t in sources]
+    m = lambda tex: names.index(tex.lower())
+    black, glass, led, pale, keys, chrome, tape = (m(n) for n in ("CJ_blackplastic", "keypad_glass", "kb_red", "dish_panel_a", "nt_phone3", "cj_chromepipe", "CJ_RUBBER"))
+    white, dim = (0.9, 0.9, 0.9, 1.0), (0.6, 0.6, 0.6, 1.0)
+    x, y, z = at
+    if kind == "timer":  # a digital countdown timer: red LED digits behind dark glass, three buttons, taped down at the ends
+        box((x, y, z + 0.011), (0.064, 0.036, 0.022), black, None)
+        box((x, y + 0.004, z + 0.0225), (0.046, 0.018, 0.001), glass, white)
+        for dx in (-0.017, -0.007, 0.007, 0.017):
+            box((x + dx, y + 0.004, z + 0.0232), (0.007, 0.012, 0.0006), led, white)
+        for dz in (-0.003, 0.003):
+            box((x, y + 0.004 + dz, z + 0.0232), (0.0015, 0.0015, 0.0006), led, white)
+        for dx in (-0.012, 0.0, 0.012):
+            tube((x + dx, y - 0.012, z + 0.022), (x + dx, y - 0.012, z + 0.0245), 0.0028, 8, black, dim, False)
+        for dx in (-0.029, 0.029):
+            box((x + dx, y, z + 0.011), (0.009, 0.038, 0.0235), tape, None)
+        return Vector((x + 0.033, y, z + 0.01))
+    if kind == "phone":  # an old candybar phone face up: green screen, the keypad, a stub aerial, a band of tape round it
+        box((x, y, z + 0.009), (0.105, 0.046, 0.018), black, None)
+        box((x + 0.03, y, z + 0.0185), (0.032, 0.034, 0.001), glass, white)
+        box((x - 0.024, y, z + 0.0185), (0.045, 0.036, 0.001), keys, white, PHONE_KEYS)
+        tube((x + 0.052, y + 0.014, z + 0.011), (x + 0.066, y + 0.014, z + 0.011), 0.004, 8, black, dim, False)
+        box((x + 0.006, y, z + 0.009), (0.012, 0.048, 0.0195), tape, None)
+        return Vector((x - 0.053, y, z + 0.006))
+    if kind == "prox":  # a PIR motion sensor: pale housing, the faceted lens looking out of +Y, a red LED, taped down
+        box((x, y, z + 0.017), (0.05, 0.042, 0.034), pale, None)
+        tube((x, y + 0.021, z + 0.019), (x, y + 0.029, z + 0.019), 0.013, 12, pale, white, False)
+        tube((x, y + 0.029, z + 0.019), (x, y + 0.033, z + 0.019), 0.011, 12, pale, white, False)
+        tube((x, y + 0.033, z + 0.019), (x, y + 0.035, z + 0.019), 0.007, 12, pale, white, False)
+        tube((x + 0.017, y + 0.021, z + 0.029), (x + 0.017, y + 0.023, z + 0.029), 0.002, 6, led, white, False)
+        for dx in (-0.019, 0.019):
+            box((x + dx, y, z + 0.017), (0.008, 0.044, 0.0355), tape, None)
+        return Vector((x - 0.026, y, z + 0.01))
+    if kind == "trip":  # a tilt switch box with a pull pin; the tripwire runs off +Y to a stake in the ground
+        box((x, y, z + 0.011), (0.042, 0.032, 0.022), black, None)
+        box((x, y, z + 0.011), (0.01, 0.034, 0.0235), tape, None)
+        _wire(ctx, (x + 0.012, y + 0.016, z + 0.012), (x + 0.012, y + 0.026, z + 0.012), 0.0012, chrome, white)
+        _torus(ctx, (x + 0.012, y + 0.033, z + 0.012), 0.007, 0.0012, 12, 4, chrome, white)
+        sx, sy = x + 0.03, y + 0.24
+        _wire(ctx, (x + 0.012, y + 0.04, z + 0.012), (sx, sy, 0.035), 0.0005, chrome, white)
+        tube((sx, sy, 0.0), (sx, sy, 0.04), 0.003, 6, chrome, dim, False)
+        return Vector((x - 0.021, y, z + 0.01))
+    raise ValueError(kind)
+
+
+def _leads(ctx, a, b, sources, arch=0.012):
+    """A red and a black lead from `a` to `b`, arched up over the gap."""
+    from mathutils import Vector
+    names = [t.lower() for _, t in sources]
+    colours, black = names.index("colourboxes"), names.index("cj_blackplastic")
+    a, b = Vector(a), Vector(b)
+    for k, (mat, rect) in enumerate(((colours, SWATCH_RED), (black, None))):
+        off = Vector((0.0, -0.002 + 0.004 * k, 0.0))
+        mid = (a + b) / 2 + Vector((0.0, 0.0, arch)) + off
+        for p, q in ((a + off, mid), (mid, b + off)):
+            _wire(ctx, tuple(p), tuple(q), 0.0014, mat, (0.9, 0.9, 0.9, 1.0) if rect else (0.6, 0.6, 0.6, 1.0), rect)
+
+
+STICK_R = 0.0145  # tnt.dff: a stick of dynamite's radius
+# (source TXD, texture) per tnt material, all vanilla and found with gta-scout: the dynamite pickup's red paper, grey
+# rubber for the tape, a chrome blasting cap, wire colours
+TNT_TEXTURES = [("dynamite.txd", "redcan"), ("cj_airprt.txd", "CJ_RUBBER"), ("industrialext.txd", "cj_chromepipe"), ("helixbarrier.txd", "colourboxes")]
+SWATCH_BLUE = (0.71, 0.04, 0.96, 0.29)
+
+
+def build_tnt(ctx, trigger=None, sources=None):
+    """A bundle of seven 0.2 m sticks of dynamite lying along X, bound by two bands of grey tape, a blasting cap in the
+    middle stick's +X end with a red and a blue lead trailing out of it; with a `trigger` (and its `sources`) the device
+    sits on top and the cap's leads run up to it. Origin at the base's centre."""
+    tube = _tube(ctx)
+    paper, tape, cap, colours = 0, 1, 2, 3
+    white = (0.9, 0.9, 0.9, 1.0)
+    r = STICK_R
+    cz = 3 * r
+    for k in range(7):
+        a = math.radians(90 + 60 * k)
+        y, z = (0.0, cz) if k == 6 else (2 * r * math.cos(a), cz + 2 * r * math.sin(a))
+        tube((-0.1, y, z), (0.1, y, z), r, 10, paper, None, False)
+    for x in (-0.055, 0.055):
+        tube((x - 0.013, 0.0, cz), (x + 0.013, 0.0, cz), 3 * r + 0.0012, 14, tape, None, False)
+    tube((0.1, 0.0, cz), (0.118, 0.0, cz), 0.004, 8, cap, white, False)
+    if trigger:
+        end = _trigger(ctx, trigger, (-0.02, 0.0, 6 * r), sources)
+        _leads(ctx, end, (0.118, 0.0, cz), sources, 0.03)
+        return [((0.0, 0.0, cz), (0.1, 3 * r, cz))]
+    for dy, rect in ((-0.002, SWATCH_RED), (0.002, SWATCH_BLUE)):
+        pts = [(0.118, dy, cz), (0.14, dy, cz - 0.004), (0.155, dy + 0.012, 0.012), (0.165, dy + 0.04, 0.002), (0.17, dy + 0.09, 0.002)]
+        for a, b in zip(pts, pts[1:]):
+            _wire(ctx, a, b, 0.0013, colours, white, rect)
+    return [((0.0, 0.0, cz), (0.1, 3 * r, cz))]
+
+
+# (source TXD, texture) per ied material, all vanilla and found with gta-scout: galvanised pipe and caps, grey tape, black
+# plastic, wire colours, the "dude" brand label on the battery
+IED_TEXTURES = [("industrialext.txd", "cj_chromepipe"), ("cj_airprt.txd", "CJ_RUBBER"), ("ballys01.txd", "CJ_blackplastic"), ("helixbarrier.txd", "colourboxes"), ("hubprops2_sfse.txd", "welder")]
+
+
+def build_ied(ctx, trigger=None, sources=None):
+    """A pipe bomb, 0.26 m along X: a galvanised pipe between two hex caps, a 9 V battery taped on top with grey tape and
+    red and yellow leads from it into a hole in the +X cap; with a `trigger` (and its `sources`) the device is taped on
+    the -X half and its leads run to the cap too. Origin at the base's centre."""
+    box, tube = ctx["box"], _tube(ctx)
+    pipe, tape, black, colours, label = 0, 1, 2, 3, 4
+    white, dim, galv = (0.9, 0.9, 0.9, 1.0), (0.6, 0.6, 0.6, 1.0), (0.55, 0.56, 0.58, 1.0)
+    z = 0.03
+    tube((-0.1, 0.0, z), (0.1, 0.0, z), 0.024, 14, pipe, galv, False)
+    for x0, x1 in ((-0.13, -0.098), (0.098, 0.13)):
+        tube((x0, 0.0, z), (x1, 0.0, z), 0.03, 6, pipe, dim, False)
+    for x in (-0.06, 0.035):
+        tube((x - 0.012, 0.0, z), (x + 0.012, 0.0, z), 0.0255, 14, tape, None, False)
+    box((0.05, 0.0, z + 0.024 + 0.009), (0.048, 0.026, 0.017), black, None)  # the battery, lying down
+    box((0.05, 0.0131, z + 0.033), (0.04, 0.0012, 0.013), label, white, DUDE_LOGO)
+    for dy in (-0.006, 0.006):
+        tube((0.074, dy, z + 0.033), (0.08, dy, z + 0.033), 0.0035, 6, pipe, white, False)
+    for dy, rect in ((-0.003, SWATCH_RED), (0.003, SWATCH_YELLOW)):
+        pts = [(0.08, dy - 0.006, z + 0.033), (0.1, dy, z + 0.04), (0.124, dy, z + 0.02), (0.131, dy, z)]
+        for a, b in zip(pts, pts[1:]):
+            _wire(ctx, a, b, 0.0014, colours, white, rect)
+    if trigger:
+        end = _trigger(ctx, trigger, (-0.04, 0.0, z + 0.0235), sources)
+        _leads(ctx, end, (0.131, 0.0, z + 0.008), sources, 0.04)
+    return [((0.0, 0.0, 0.036), (0.13, 0.03, 0.036))]
+
+
+FIREWORKS_W, FIREWORKS_D, FIREWORKS_H = 0.26, 0.18, 0.1
+# (source TXD, texture) per fireworks material, all vanilla and found with gta-scout: cardboard, the drug packets' glossy
+# red, blue, green and yellow wraps for the tubes, the barrels' hazard sticker, black fuse
+FIREWORKS_TEXTURES = [("cj_banner2.txd", "CJ_CARDBOARD"), ("dyn_drugs.txd", "drugs6"), ("dyn_drugs.txd", "drugs5"), ("dyn_drugs.txd", "drugs4"), ("dyn_drugs.txd", "drugs3"), ("dynbarrels.txd", "yellowmetal"), ("ballys01.txd", "CJ_blackplastic")]
+
+
+def build_fireworks(ctx):
+    """A cardboard box of fireworks, 0.26 x 0.18 x 0.1 m with its two long flaps folded out: rockets with cone heads and
+    stick tails, fat roman candles and cake tubes inside, wrapped in red, blue, green and yellow, black fuses, a hazard
+    sticker on the front (+Y). Origin at the base's centre."""
+    from mathutils import Vector
+    box, tube = ctx["box"], _tube(ctx)
+    card, red, blue, green, yellow, hazard, fuse = 0, 1, 2, 3, 4, 5, 6
+    white, dim = (0.9, 0.9, 0.9, 1.0), (0.65, 0.65, 0.65, 1.0)
+    w, d, h, t = FIREWORKS_W, FIREWORKS_D, FIREWORKS_H, 0.004
+    box((0.0, 0.0, t / 2), (w, d, t), card, dim)
+    for y in (-d / 2 + t / 2, d / 2 - t / 2):
+        box((0.0, y, h / 2), (w, t, h), card, None)
+    for x in (-w / 2 + t / 2, w / 2 - t / 2):
+        box((x, 0.0, h / 2), (t, d, h), card, None)
+    for s in (-1, 1):  # the flaps, folded out and down
+        a = math.radians(35)
+        out = Vector((0.0, s * math.cos(a), -math.sin(a)))
+        _obox(ctx, Vector((0.0, s * d / 2, h)) + out * 0.045, (Vector((1, 0, 0)), out, Vector((0.0, s * math.sin(a), math.cos(a)))), (w - 0.004, 0.09, t), card, dim)
+    box((0.0, d / 2 + 0.0005, 0.05), (0.06, 0.001, 0.06), hazard, white, HAZARD)
+    wraps = [red, blue, green, yellow]
+    k = 0
+    for i, x in enumerate((-0.09, -0.045, 0.0, 0.045, 0.09)):  # cakes and candles: tubes standing in two rows
+        for j, y in enumerate((-0.04, 0.04)):
+            r = 0.02 if (i + j) % 2 else 0.014
+            top = 0.12 + 0.035 * ((i * 3 + j) % 3)
+            tube((x, y, t), (x, y, top), r, 10, wraps[k % 4], None, False)
+            tube((x, y, top), (x, y, top + 0.003), r * 0.8, 10, fuse, dim, False)
+            _wire(ctx, (x, y, top + 0.003), (x + 0.004, y, top + 0.022), 0.0015, fuse, None)
+            k += 1
+    for x, y, top in ((-0.068, 0.0, 0.2), (0.022, 0.0, 0.24), (0.11, 0.0, 0.22)):  # rockets, their sticks down into the box
+        tube((x, y, top - 0.09), (x, y, top), 0.011, 10, wraps[k % 4], None, False)
+        _cone(ctx, (x, y, top), 0.013, 0.03, 10, wraps[(k + 1) % 4], white)
+        _wire(ctx, (x + 0.012, y, t), (x + 0.012, y, top - 0.05), 0.0025, card, dim)
+        k += 1
+    return [((0.0, 0.0, h / 2), (w / 2, d / 2, h / 2))]
+
+
+# (source TXD, texture) per emp material, all vanilla and found with gta-scout: black hard-case plastic, the barber's bumpy
+# rubber as egg-crate foam, copper winding and bus bars, cast aluminium can tops and panel, the keypad's green lamp, chrome
+# toggles, wire colours, the "dude" label on the battery, the substation's danger plate
+EMP_TEXTURES = [("ballys01.txd", "CJ_blackplastic"), ("genintintbarb.txd", "CJ_BLACK_RUB2"), ("lee_strip2.txd", "Strip_Gold"), ("hubprops2_sfse.txd", "Alumox64b"), ("kmb_keypadx.txd", "keypad_light"), ("industrialext.txd", "cj_chromepipe"), ("helixbarrier.txd", "colourboxes"), ("hubprops2_sfse.txd", "welder"), ("industrialext.txd", "CJ_PANEL")]
+EMP_W, EMP_D, EMP_H = 0.34, 0.24, 0.085  # emp.dff: the hard case's base (x, y, z)
+EMP_FOAM = 0.05  # the foam bed's top
+EMP_LID = 0.07  # the lid's depth: the coil and bank stand up into it when the case is shut
+EMP_FOAM_COL = (0.75, 0.75, 0.78, 1.0)
+
+
+def build_emp(ctx, trigger=None, sources=None):
+    """An EMP charge built into an open black hard case, 0.34 x 0.24 m, its lid up at 100 degrees on the back (-Y) hinge:
+    egg-crate foam holding a sealed 12 V battery, a 2 x 2 bank of capacitors on copper bus bars and a copper-wound
+    solenoid coil lying along Y, heavy red and black cables between them; the lid's foam carries an aluminium switch
+    panel (two toggles, a green armed lamp, a danger plate). The front foam slot holds a coiled spare lead, or the
+    `trigger` (with its `sources`) wired to the bus bars. Latches and a carry handle on the front (+Y). Origin at the
+    base's centre."""
+    from mathutils import Vector
+    box, tube = ctx["box"], _tube(ctx)
+    case, foam, copper, alu, lamp, chrome, colours, label, danger = range(9)
+    white, dim = (0.9, 0.9, 0.9, 1.0), (0.6, 0.6, 0.6, 1.0)
+    w, d, h, t = EMP_W, EMP_D, EMP_H, 0.006
+    box((0.0, 0.0, t / 2), (w, d, t), case, None)
+    for y in (-d / 2 + t / 2, d / 2 - t / 2):
+        box((0.0, y, h / 2), (w, t, h), case, None)
+    for x in (-w / 2 + t / 2, w / 2 - t / 2):
+        box((x, 0.0, h / 2), (t, d, h), case, None)
+    for z in (0.02, 0.065):  # moulded bumper ribs round the outside
+        box((0.0, 0.0, z), (w + 0.006, d + 0.006, 0.008), case, dim)
+    f = EMP_FOAM
+    box((0.0, 0.0, (t + f) / 2), (w - 2 * t, d - 2 * t, f - t), foam, EMP_FOAM_COL)
+    for x in (-0.1, 0.1):  # latches and the handle on the front
+        box((x, d / 2 + 0.006, h - 0.015), (0.03, 0.008, 0.03), case, dim)
+    for x in (-0.04, 0.04):
+        box((x, d / 2 + 0.01, h - 0.02), (0.012, 0.016, 0.014), case, dim)
+    tube((-0.045, d / 2 + 0.02, h - 0.02), (0.045, d / 2 + 0.02, h - 0.02), 0.008, 10, case, None)
+    # the sealed battery, back left
+    bx, by = -0.11, -0.045
+    box((bx, by, f + 0.032), (0.09, 0.065, 0.064), case, None)
+    box((bx, by + 0.0326, f + 0.032), (0.08, 0.0012, 0.045), label, white, DUDE_LOGO)
+    for dx in (-0.03, 0.03):
+        box((bx + dx, by - 0.015, f + 0.068), (0.012, 0.004, 0.008), copper, white)
+    # the capacitor bank, 2 x 2, bus bars across the tops
+    for x in (-0.035, 0.012):
+        for y in (-0.05, -0.004):
+            tube((x, y, f), (x, y, f + 0.058), 0.02, 16, case, dim, False)
+            tube((x, y, f + 0.058), (x, y, f + 0.06), 0.019, 16, alu, white, False)
+            for dx in (-0.007, 0.007):
+                tube((x + dx, y, f + 0.06), (x + dx, y, f + 0.065), 0.0025, 6, copper, white, False)
+    for dx in (-0.007, 0.007):
+        for y in (-0.05, -0.004):
+            box((-0.0115 + dx, y, f + 0.066), (0.06, 0.006, 0.002), copper, white)
+    # the coil: a black former along Y wound with copper, flanged ends, in two saddles on the right
+    cx, cz, r = 0.1, f + 0.04, 0.03
+    tube((cx, -0.085, cz), (cx, 0.065, cz), r, 20, case, dim, False)
+    for y in (-0.08, 0.06):
+        tube((cx, y - 0.003, cz), (cx, y + 0.003, cz), r + 0.01, 20, case, None, False)
+    for k in range(17):
+        _torus(ctx, (cx, -0.072 + k * 0.0078, cz), r + 0.004, 0.0038, 20, 6, copper, white, axis="y")
+    for y in (-0.03, 0.03):
+        box((cx, y, f + 0.006), (0.06, 0.012, 0.012), case, dim)
+    # heavy cables: battery to the bank, the bank to the coil's ends
+    cables = [
+        ([(bx - 0.03, by - 0.015, f + 0.072), (-0.09, -0.07, f + 0.09), (-0.042, -0.05, f + 0.068)], SWATCH_RED),
+        ([(bx + 0.03, by - 0.015, f + 0.072), (-0.05, 0.02, f + 0.085), (-0.028, -0.004, f + 0.068)], None),
+        ([(0.019, -0.05, f + 0.068), (0.06, -0.085, f + 0.07), (cx - 0.02, -0.08, cz + 0.02)], SWATCH_RED),
+        ([(0.019, -0.004, f + 0.068), (0.055, 0.04, f + 0.075), (cx - 0.02, 0.06, cz + 0.02)], None),
+    ]
+    for pts, rect in cables:
+        for a, b in zip(pts, pts[1:]):
+            _wire(ctx, a, b, 0.0035, colours if rect else case, white if rect else dim, rect)
+    if trigger:  # the trigger in the front slot, wired to the bus bars
+        end = _trigger(ctx, trigger, (-0.09, 0.07, f), sources)
+        _leads(ctx, end, (-0.0115, -0.004, f + 0.067), sources, 0.03)
+    else:  # a coiled spare lead in the front slot
+        for k in range(4):
+            _torus(ctx, (-0.09, 0.07, f + 0.003 + k * 0.004), 0.028, 0.0028, 20, 6, colours, white)
+    # the lid, open 100 degrees about the back hinge
+    a = math.radians(100)
+    ex, ey, ez = Vector((1, 0, 0)), Vector((0.0, math.cos(a), math.sin(a))), Vector((0.0, -math.sin(a), math.cos(a)))
+    lh = EMP_LID
+    lid = Vector((0.0, -d / 2, h)) + ey * (d / 2) + ez * (lh / 2)
+    _obox(ctx, lid, (ex, ey, ez), (w, d, lh), case, None)
+    _obox(ctx, lid, (ex, ey, ez), (w + 0.006, d + 0.006, 0.008), case, dim)
+    _obox(ctx, lid - ez * (lh / 2 + 0.0005 - 0.0035), (ex, ey, ez), (w - 0.012, d - 0.012, 0.007), foam, EMP_FOAM_COL)
+    panel = lid - ez * (lh / 2 + 0.002) + ey * 0.01
+    _obox(ctx, panel, (ex, ey, ez), (0.16, 0.09, 0.003), alu, white)
+    _obox(ctx, panel - ez * 0.002 + ex * 0.045, (-ex, ey, -ez), (0.05, 0.04, 0.001), danger, white, CJ_PANEL_DANGER)
+    for dx in (-0.06, -0.035):  # the toggles
+        base = panel + ex * dx - ey * 0.015
+        tube(tuple(base), tuple(base - ez * 0.006), 0.005, 8, chrome, dim, False)
+        _wire(ctx, tuple(base - ez * 0.006), tuple(base - ez * 0.018 + ey * 0.004), 0.0015, chrome, white)
+    lp = panel - ex * 0.0475 + ey * 0.022
+    tube(tuple(lp), tuple(lp - ez * 0.006), 0.0055, 10, lamp, white, False)
+    return [((0.0, 0.0, h / 2), (w / 2, d / 2, h / 2)), (tuple(lid), (w / 2, lh / 2 + 0.01, d / 2))]
+
+
+CJ_PANEL_DANGER_FRONT = (0.98, 0.58, 0.5, 0.96)  # on a +Y face
+HAZARD_FRONT = (0.3, 0.6, 0.74, 0.88)  # on a -Y face
+
+
+PHONE_KEYS = (0.53, 0.28, 0.93, 0.97)  # keypad nt_phone3: the orange keys
+VEND_KEYS = (0.6, 0.38, 0.8, 0.95)  # keypad kb_vend1: the black key column
+DATA_ROWS = (0.02, 0.55, 0.48, 0.98)  # otb_machine ap_screens1: a departures board's rows, read as a terminal
+DIAL_FACE = (0.0, 0.0, 1.0, 1.0)
+
+
+def _flip(rect):
+    """A rect for a +Y face (whose u runs along -X seen from the front)."""
+    u0, v0, u1, v1 = rect
+    return (u1, v0, u0, v1)
+
+
+# (source TXD, texture) per storage_unit material, all vanilla and found with gta-scout: cast aluminium top, green circuit
+# board, black plastic connectors, chrome screws, the "dude" brand label
+STORAGE_TEXTURES = [("hubprops2_sfse.txd", "Alumox64b"), ("dkcargoshp_las2.txd", "green_64"), ("ballys01.txd", "CJ_blackplastic"), ("industrialext.txd", "cj_chromepipe"), ("hubprops2_sfse.txd", "welder")]
+
+
+def build_storage_unit(ctx):
+    """A 3.5 inch hard drive, 0.147 x 0.102 x 0.026 m lying label up: a cast aluminium base and lid, the brand label, six
+    lid screws, the green board underneath and the data and power sockets on the -Y end. Origin at the base's centre."""
+    box, tube = ctx["box"], _tube(ctx)
+    alu, board, black, chrome, label = 0, 1, 2, 3, 4
+    white, dim = (0.9, 0.9, 0.9, 1.0), (0.6, 0.6, 0.6, 1.0)
+    box((0.0, 0.0, 0.0015), (0.096, 0.14, 0.003), board, None)
+    box((0.0, 0.0, 0.014), (0.102, 0.147, 0.02), alu, dim)
+    box((0.0, 0.004, 0.0245), (0.098, 0.138, 0.002), alu, None)  # the lid
+    box((0.0, 0.025, 0.0256), (0.07, 0.065, 0.0004), label, white, (0.5, 0.25, 1.0, 0.85))
+    for x in (-0.044, 0.044):
+        for y in (-0.06, 0.0, 0.065):
+            tube((x, y, 0.0255), (x, y, 0.0262), 0.0025, 8, chrome, white, False)
+    tube((0.0, -0.035, 0.0255), (0.0, -0.035, 0.0262), 0.004, 10, chrome, white, False)  # the spindle screw
+    box((-0.02, -0.0745, 0.009), (0.03, 0.004, 0.007), black, None)  # data and power sockets
+    box((0.022, -0.0745, 0.009), (0.022, 0.004, 0.007), black, None)
+    return [((0.0, 0.0, 0.013), (0.051, 0.0735, 0.013))]
+
+
+# (source TXD, texture) per io_unit material, all vanilla and found with gta-scout: grey project box plastic, the payphone's
+# orange keys, the keypad's dark green LCD, black plastic, chrome connector shell, ribbon colours
+IO_TEXTURES = [("des_telescopestuff.txd", "dish_panel_a"), ("keypad.txd", "nt_phone3"), ("kmb_keypadx.txd", "keypad_glass"), ("ballys01.txd", "CJ_blackplastic"), ("industrialext.txd", "cj_chromepipe"), ("helixbarrier.txd", "colourboxes")]
+
+
+def build_io_unit(ctx):
+    """The I/O Unit, a phone's keypad and screen rehoused in a grey project box, 0.12 x 0.08 x 0.035 m: the orange keys and
+    a green LCD on the lid, a serial port and a ribbon cable out of +X, a stub aerial at the back. Origin at the base's
+    centre."""
+    box, tube = ctx["box"], _tube(ctx)
+    grey, keys, lcd, black, chrome, colours = 0, 1, 2, 3, 4, 5
+    white, dim = (0.9, 0.9, 0.9, 1.0), (0.6, 0.6, 0.6, 1.0)
+    box((0.0, 0.0, 0.0175), (0.12, 0.08, 0.035), grey, None)
+    box((0.0, 0.0, 0.0355), (0.116, 0.076, 0.001), grey, dim)
+    box((-0.018, 0.0, 0.0363), (0.045, 0.06, 0.001), keys, white, PHONE_KEYS)
+    box((0.032, 0.012, 0.0363), (0.04, 0.026, 0.001), lcd, white)
+    for i in range(3):
+        tube((0.02 + i * 0.012, -0.022, 0.036), (0.02 + i * 0.012, -0.022, 0.0385), 0.0035, 8, black, None, False)
+    box((0.0605, -0.01, 0.017), (0.003, 0.03, 0.012), chrome, white)  # the serial port
+    box((0.062, 0.022, 0.012), (0.006, 0.022, 0.004), black, None)
+    for k in range(4):  # the ribbon, flat and slack
+        x = 0.065 + k * 0.012
+        box((x, 0.022, 0.012 - k * 0.0028), (0.0125, 0.02, 0.0012), grey, dim)
+    tube((-0.045, -0.03, 0.035), (-0.045, -0.03, 0.075), 0.004, 8, black, None, False)
+    return [((0.0, 0.0, 0.018), (0.06, 0.04, 0.018))]
+
+
+# (source TXD, texture) per flux_cap material, all vanilla and found with gta-scout: galvanised case, the drug wraps' glossy
+# blue (the capacitors' sleeves), cast can tops, copper bus bars, black and red cable, the cooker's numbered dial, the
+# substation's danger plate
+FLUX_TEXTURES = [("otb_machine.txd", "mp_CJ_GALVANISED"), ("dyn_drugs.txd", "drugs5"), ("hubprops2_sfse.txd", "Alumox64b"), ("lee_strip2.txd", "Strip_Gold"), ("ballys01.txd", "CJ_blackplastic"), ("cj_airprt.txd", "CJ_red_COUNTER"), ("lee_kitch.txd", "Cooker_Dial"), ("industrialext.txd", "CJ_PANEL")]
+
+
+def build_flux_cap(ctx):
+    """The Flux Capacitor, a bank of three large screw-terminal capacitors (blue sleeves, cast tops) standing in a
+    galvanised tray, 0.21 x 0.12 m and 0.17 m tall: copper links across their terminals, heavy red and black leads out of
+    the end ones to studs on the tray, a selector dial and a danger plate on the front (+Y). Origin at the base's centre."""
+    box, tube = ctx["box"], _tube(ctx)
+    galv, sleeve, cast, copper, black, red, dial, danger = 0, 1, 2, 3, 4, 5, 6, 7
+    white, dim = (0.9, 0.9, 0.9, 1.0), (0.6, 0.6, 0.6, 1.0)
+    box((0.0, 0.0, 0.002), (0.21, 0.12, 0.004), galv, None)
+    for y in (-0.058, 0.058):
+        box((0.0, y, 0.025), (0.21, 0.004, 0.05), galv, None)
+    for x in (-0.103, 0.103):
+        box((x, 0.0, 0.025), (0.004, 0.12, 0.05), galv, None)
+    box((0.0, 0.0605, 0.025), (0.06, 0.001, 0.04), danger, white, _flip(CJ_PANEL_DANGER))
+    tube((0.06, 0.06, 0.025), (0.06, 0.068, 0.025), 0.013, 16, dial, white, False)
+    caps = (-0.065, 0.0, 0.065)
+    for x in caps:
+        tube((x, -0.008, 0.004), (x, -0.008, 0.15), 0.031, 24, sleeve, white, False)
+        tube((x, -0.008, 0.15), (x, -0.008, 0.156), 0.029, 24, cast, white, False)
+        for dx in (-0.012, 0.012):
+            tube((x + dx, -0.008, 0.156), (x + dx, -0.008, 0.162), 0.005, 8, cast, dim, False)
+            tube((x + dx, -0.008, 0.162), (x + dx, -0.008, 0.166), 0.0065, 6, copper, white, False)
+    for x0, x1 in ((-0.053, -0.012), (0.012, 0.053)):  # the links, + to -
+        box(((x0 + x1) / 2, -0.008, 0.167), (x1 - x0 + 0.014, 0.012, 0.003), copper, white)
+    leads = [((-0.077, -0.008, 0.167), (-0.095, -0.008, 0.12), (-0.09, -0.04, 0.05), (-0.08, -0.045, 0.012), red),
+             ((0.077, -0.008, 0.167), (0.095, -0.008, 0.12), (0.09, -0.04, 0.05), (0.08, -0.045, 0.012), black)]
+    for *pts, mat in leads:
+        for a, b in zip(pts, pts[1:]):
+            _wire(ctx, a, b, 0.0045, mat, None)
+        tube((pts[-1][0], pts[-1][1], 0.004), (pts[-1][0], pts[-1][1], 0.014), 0.006, 6, copper, white, False)
+    return [((0.0, 0.0, 0.085), (0.105, 0.06, 0.085))]
+
+
+# (source TXD, texture) per hack_device material, all vanilla and found with gta-scout: black rugged plastic, the keyboard,
+# the departures board as a terminal screen, rubber corners, chrome clips, red and black leads, the keypad's green lamp
+HACK_TEXTURES = [("ballys01.txd", "CJ_blackplastic"), ("a51_detailstuff.txd", "Gen_Keyboard"), ("otb_machine.txd", "ap_screens1"), ("cj_airprt.txd", "CJ_RUBBER"), ("industrialext.txd", "cj_chromepipe"), ("cj_airprt.txd", "CJ_red_COUNTER"), ("kmb_keypadx.txd", "keypad_glass")]
+
+
+def build_hack_device(ctx):
+    """The Hack Interface, a rugged netbook, 0.24 x 0.17 m, open with the screen at 110 degrees: a terminal on the screen,
+    the keyboard in the base, rubber corner bumpers, and a lead out of +X to a pair of alligator clips. Origin at the
+    base's centre; the screen hinges along the back (-Y) edge."""
+    from mathutils import Vector
+    box, tube = ctx["box"], _tube(ctx)
+    black, keyboard, screen, rubber, chrome, red, lcd = 0, 1, 2, 3, 4, 5, 6
+    white, dim = (0.9, 0.9, 0.9, 1.0), (0.6, 0.6, 0.6, 1.0)
+    w, d, h = 0.24, 0.17, 0.022
+    box((0.0, 0.0, h / 2), (w, d, h), black, None)
+    box((0.0, 0.018, h + 0.0005), (0.21, 0.085, 0.001), keyboard, white, (0.0, 0.55, 1.0, 1.0))
+    box((0.0, -0.06, h + 0.0005), (0.06, 0.035, 0.001), black, dim)  # the touchpad
+    for x in (-w / 2, w / 2):
+        for y in (-d / 2, d / 2):
+            box((x * 0.98, y * 0.98, h / 2), (0.016, 0.016, h + 0.002), rubber, None)
+    a = math.radians(110 - 90)
+    up = Vector((0.0, math.sin(a), math.cos(a)))  # along the lid, away from the hinge
+    up = Vector((0.0, -math.sin(a), math.cos(a)))
+    out = Vector((0.0, math.cos(a), math.sin(a)))  # the screen's normal, toward the user
+    hinge = Vector((0.0, d / 2 - 0.005, h))
+    hinge = Vector((0.0, -d / 2 + 0.005, h))
+    lid = hinge + up * 0.075
+    _obox(ctx, lid, (Vector((1, 0, 0)), out, up), (w, 0.012, 0.15), black, None)
+    _obox(ctx, lid + out * 0.0065, (Vector((1, 0, 0)), out, up), (0.2, 0.001, 0.12), screen, white, _flip(DATA_ROWS))
+    tube((-w / 2 + 0.02, -d / 2 + 0.005, h), (w / 2 - 0.02, -d / 2 + 0.005, h), 0.007, 10, black, dim, False)
+    box((0.09, 0.07, h + 0.0008), (0.012, 0.004, 0.0015), lcd, white)
+    tube((w / 2, 0.03, 0.011), (w / 2 + 0.01, 0.03, 0.011), 0.005, 8, black, None, False)
+    pts = [(w / 2 + 0.01, 0.03, 0.011), (w / 2 + 0.04, 0.045, 0.003), (w / 2 + 0.07, 0.07, 0.003)]
+    for a_, b_ in zip(pts, pts[1:]):
+        _wire(ctx, a_, b_, 0.003, black, None)
+    for k, (mat, y) in enumerate(((red, 0.06), (black, 0.085))):
+        _wire(ctx, (w / 2 + 0.07, 0.07, 0.003), (w / 2 + 0.1, y + 0.01, 0.003), 0.002, mat, None)
+        box((w / 2 + 0.115, y + 0.012, 0.004), (0.03, 0.008, 0.007), mat, None)  # the clip's sleeve
+        box((w / 2 + 0.136, y + 0.012, 0.004), (0.014, 0.007, 0.004), chrome, white)  # its jaws
+    return [((0.0, 0.0, h / 2), (w / 2, d / 2, h / 2)), ((0.0, -d / 2 + 0.03, 0.09), (w / 2, 0.03, 0.075))]
+
+
+# (source TXD, texture) per advanced_keypad material, all vanilla and found with gta-scout: brushed steel housing, the vending
+# machine's key column, the keypad's green LCD and lamp, black plastic, chrome screws
+ADV_KEYPAD_TEXTURES = [("otb_machine.txd", "mp_CJ_GALVANISED"), ("keypad.txd", "kb_vend1"), ("kmb_keypadx.txd", "keypad_glass"), ("kmb_keypadx.txd", "keypad_light"), ("ballys01.txd", "CJ_blackplastic"), ("industrialext.txd", "cj_chromepipe")]
+
+
+def build_advanced_keypad(ctx):
+    """An access-control keypad, 0.085 x 0.032 x 0.16 m, standing with its face to +Y: a steel housing, a recessed black
+    face with a green LCD, the key column, a card reader pad and a green status lamp, four tamper screws. Origin at the
+    base's centre (the back plate on -Y)."""
+    box, tube = ctx["box"], _tube(ctx)
+    steel, keys, lcd, lamp, black, chrome = 0, 1, 2, 3, 4, 5
+    white, dim = (0.9, 0.9, 0.9, 1.0), (0.6, 0.6, 0.6, 1.0)
+    box((0.0, 0.0, 0.08), (0.085, 0.032, 0.16), steel, None)
+    box((0.0, 0.0165, 0.08), (0.07, 0.002, 0.145), black, None)
+    box((0.0, 0.018, 0.128), (0.05, 0.001, 0.022), lcd, white)
+    box((0.0, 0.018, 0.07), (0.05, 0.001, 0.07), keys, white, _flip(VEND_KEYS))
+    box((0.0, 0.018, 0.022), (0.05, 0.001, 0.022), black, dim)  # the card pad
+    tube((0.0, 0.0165, 0.022), (0.0, 0.0185, 0.022), 0.008, 12, steel, dim, False)
+    tube((0.025, 0.0165, 0.148), (0.025, 0.02, 0.148), 0.003, 8, lamp, white, False)
+    for x in (-0.037, 0.037):
+        for z in (0.006, 0.154):
+            tube((x, 0.016, z), (x, 0.0175, z), 0.0025, 6, chrome, white, False)
+    return [((0.0, 0.0, 0.08), (0.0425, 0.016, 0.08))]
+
+
+# (source TXD, texture) per lockpick material, all vanilla and found with gta-scout: black plastic, rubber grip, chrome pick
+# and tension wrench, the keypad's green LCD and lamp, the grinder's yellow
+LOCKPICK_TEXTURES = [("ballys01.txd", "CJ_blackplastic"), ("cj_airprt.txd", "CJ_RUBBER"), ("industrialext.txd", "cj_chromepipe"), ("kmb_keypadx.txd", "keypad_glass"), ("kmb_keypadx.txd", "keypad_light"), ("helixbarrier.txd", "yellow")]
+
+
+def build_lockpick(ctx):
+    """An electric pick gun, 0.2 m: a black body along Y with a rubber pistol grip under its tail, a trigger, a tension
+    knob and a small LCD on top, a chrome needle pick out of the nose (+Y) and an L-shaped tension wrench clipped beside it,
+    a yellow battery cap under the grip. Origin at the grip's foot."""
+    from mathutils import Vector
+    box, tube = ctx["box"], _tube(ctx)
+    black, rubber, chrome, lcd, lamp, yellow = 0, 1, 2, 3, 4, 5
+    white, dim = (0.9, 0.9, 0.9, 1.0), (0.6, 0.6, 0.6, 1.0)
+    bz = 0.11
+    box((0.0, 0.0, bz), (0.032, 0.13, 0.045), black, None)
+    tube((0.0, 0.065, bz), (0.0, 0.085, bz), 0.012, 12, black, dim, False)
+    tube((0.0, 0.085, bz), (0.0, 0.095, bz), 0.006, 10, chrome, white, False)
+    _wire(ctx, (0.0, 0.095, bz), (0.0, 0.16, bz), 0.0012, chrome, white)  # the needle
+    _wire(ctx, (0.0, 0.16, bz), (0.0, 0.166, bz + 0.003), 0.0012, chrome, white)
+    _wire(ctx, (0.0, 0.07, bz - 0.02), (0.0, 0.13, bz - 0.02), 0.0012, chrome, white)  # the tension wrench
+    _wire(ctx, (0.0, 0.13, bz - 0.02), (0.0, 0.13, bz - 0.01), 0.0012, chrome, white)
+    tilt = math.radians(15)
+    up = Vector((0.0, math.sin(tilt), math.cos(tilt)))
+    _obox(ctx, Vector((0.0, -0.035, bz - 0.0225)) - up * 0.045, (Vector((1, 0, 0)), Vector((0.0, math.cos(tilt), -math.sin(tilt))), up), (0.03, 0.035, 0.09), rubber, None)
+    tube((0.0, -0.035 - math.sin(tilt) * 0.09, 0.0), (0.0, -0.035 - math.sin(tilt) * 0.09, 0.012), 0.017, 12, yellow, None, False)
+    _obox(ctx, (0.0, 0.0, bz - 0.032), (Vector((1, 0, 0)), Vector((0, 1, 0)), Vector((0, 0, 1))), (0.008, 0.012, 0.025), black, dim)  # the trigger
+    box((0.0, -0.02, bz + 0.0228), (0.024, 0.035, 0.001), lcd, white)
+    tube((0.0, 0.03, bz + 0.0225), (0.0, 0.03, bz + 0.032), 0.009, 12, black, dim, False)  # the tension knob
+    tube((0.01, 0.01, bz + 0.0225), (0.01, 0.01, bz + 0.025), 0.0025, 8, lamp, white, False)
+    return [((0.0, 0.0, 0.07), (0.016, 0.085, 0.07))]
+
+
+def _folded(ctx, centre, size, material, col, rect=None, round_front=0.45, round_back=0.15, sides=5):
+    """A folded garment: a soft slab `size` (x, y, z) about `centre`, its cross-section (Y-Z) a rectangle with the front
+    (+Y, the fold) corners rounded by `round_front` x the height and the back ones by `round_back`, extruded along X with
+    capped ends; every face mapped to `rect`, u along X."""
+    from mathutils import Vector
+    bm, paint = ctx["bm"], ctx["paint"]
+    cx, cy, cz = centre
+    w, d, h = size
+    prof = []
+    for (sy, sz, r, a0) in ((1, -1, round_front, -90), (1, 1, round_front, 0), (-1, 1, round_back, 90), (-1, -1, round_back, 180)):
+        rad = r * h
+        oy, oz = sy * (d / 2 - rad), sz * (h / 2 - rad)
+        for k in range(sides + 1):
+            a = math.radians(a0 + 90 * k / sides)
+            prof.append((oy + rad * math.cos(a), oz + rad * math.sin(a)))
+    c = col or (0.9, 0.9, 0.9, 1.0)
+    night = (c[0] * 0.3, c[1] * 0.3, c[2] * 0.32, 1.0)
+    u0, v0, u1, v1 = rect or (0, 0, 1, 1)
+    n = len(prof)
+    ends = [[bm.verts.new((cx + x, cy + py, cz + pz)) for py, pz in prof] for x in (-w / 2, w / 2)]
+    run = [0.0]  # distance round the profile, so the flat top and bottom carry most of the texture
+    for i in range(n):
+        (ya, za), (yb, zb) = prof[i], prof[(i + 1) % n]
+        run.append(run[-1] + math.hypot(yb - ya, zb - za))
+    for i in range(n):
+        j = (i + 1) % n
+        va, vb = v0 + (v1 - v0) * run[i] / run[-1], v0 + (v1 - v0) * run[i + 1] / run[-1]
+        paint(bm.faces.new((ends[0][i], ends[1][i], ends[1][j], ends[0][j])), [(u0, va), (u1, va), (u1, vb), (u0, vb)], c, night, material)
+    for ring in ends:
+        uvs = [(u0 + (u1 - u0) * (0.5 + py / d), v0 + (v1 - v0) * (0.5 + pz / h)) for py, pz in prof]
+        paint(bm.faces.new(ring), uvs, c, night, material)
+
+
+# (source TXD, texture) per clothes material, all vanilla and found with gta-scout: the clothes shops' white sweatshirt (its
+# body), the short-sleeved blue check shirt (its body), the blue trackies with their side stripes
+CLOTHES_TEXTURES = [("cloth_track_t.txd", "sweatrstar"), ("cloth_track_t.txd", "shirtshortblu"), ("cloth_trackies.txd", "trackTrblue")]
+
+
+def build_clothes(ctx):
+    """A pile of folded clothes, 0.33 x 0.26 m: blue track pants at the bottom, a blue check shirt on them, a white
+    sweatshirt on top, each a soft slab with its fold toward +Y, stacked a little askew. Origin at the base's centre."""
+    from mathutils import Matrix, Vector
+    sweat, check, pants = 0, 1, 2
+    z = 0.0
+    for mat, (w, d, h), rect, (dx, dy), turn in (
+        (pants, (0.32, 0.24, 0.034), (0.1, 0.05, 0.6, 0.95), (0.0, 0.0), 0),
+        (check, (0.3, 0.23, 0.028), (0.1, 0.08, 0.9, 0.5), (0.01, -0.006), 4),
+        (sweat, (0.29, 0.22, 0.036), (0.1, 0.05, 0.9, 0.5), (-0.008, 0.005), -3),
+    ):
+        first = len(ctx["bm"].verts)
+        _folded(ctx, (dx, dy, z + h / 2), (w, d, h), mat, (0.9, 0.9, 0.9, 1.0), rect, round_front=0.5, round_back=0.3)
+        ctx["bm"].verts.ensure_lookup_table()
+        rot = Matrix.Rotation(math.radians(turn), 3, "Z")
+        for v in ctx["bm"].verts[first:]:
+            v.co = rot @ v.co
+        z += h * 0.92  # the next one sinks in a little
+    return [((0.0, 0.0, z / 2), (0.165, 0.125, z / 2))]
+
+
+PILL_TEXTURES = [("dyn_drugs.txd", "drugs2"), ("dyn_drugs.txd", "drugs1"), ("lee_kitch.txd", "mp_snow"), ("icons.txd", "pill_32")]
+# (source TXD, texture) per pills material, all vanilla and found with gta-scout: the drug packets' glossy orange (an amber
+# pharmacy vial) and white (its cap), white paper for the label, the HUD's red-and-white capsule
+
+
+def build_pills(ctx):
+    """A pharmacy pill jar, 0.085 m tall: an amber vial with a white paper label round it, a white push-and-turn cap with
+    grip ribs, and three red-and-white capsules spilled beside it. Origin at the vial's base centre."""
+    from mathutils import Vector
+    tube = _tube(ctx)
+    amber, white_m, label, capsule = 0, 1, 2, 3
+    white, dim = (0.9, 0.9, 0.9, 1.0), (0.7, 0.7, 0.7, 1.0)
+    r = 0.019
+    tube((0.0, 0.0, 0.0), (0.0, 0.0, 0.066), r, 24, amber, white, False)
+    tube((0.0, 0.0, 0.066), (0.0, 0.0, 0.07), r - 0.002, 24, amber, dim, False)  # the neck
+    tube((0.0, 0.0, 0.016), (0.0, 0.0, 0.05), r + 0.0006, 24, label, white, False)
+    tube((0.0, 0.0, 0.068), (0.0, 0.0, 0.085), r + 0.0025, 24, white_m, white, False)
+    for k in range(24):  # the cap's grip ribs
+        radial, tangent, axial = _radial(k * 15, "z")
+        _obox(ctx, radial * (r + 0.0028) + Vector((0.0, 0.0, 0.0755)), (radial, tangent, axial), (0.0012, 0.0016, 0.013), white_m, dim)
+    for x, y, a in ((0.032, 0.012, 20), (0.04, -0.008, 75), (0.026, -0.022, 140)):
+        d = Vector((math.cos(math.radians(a)), math.sin(math.radians(a)), 0.0)) * 0.0085
+        tube((x - d.x, y - d.y, 0.0035), (x + d.x, y + d.y, 0.0035), 0.0035, 10, capsule, white, True)
+    return [((0.0, 0.0, 0.0425), (r + 0.003, r + 0.003, 0.0425))]
+
+
+def _prism(ctx, prof, x0, x1, material, col, uv_scale=(1.0, 1.0)):
+    """A closed prism: the Y-Z polygon `prof` (counter-clockwise seen from +X) from x0 to x1, the sides mapped by distance
+    round the profile (v) and along X (u), the end caps planar."""
+    bm, paint = ctx["bm"], ctx["paint"]
+    c = col or (0.9, 0.9, 0.9, 1.0)
+    night = (c[0] * 0.3, c[1] * 0.3, c[2] * 0.32, 1.0)
+    n = len(prof)
+    ends = [[bm.verts.new((x, y, z)) for y, z in prof] for x in (x0, x1)]
+    run = [0.0]
+    for i in range(n):
+        (ya, za), (yb, zb) = prof[i], prof[(i + 1) % n]
+        run.append(run[-1] + math.hypot(yb - ya, zb - za))
+    su, sv = uv_scale
+    for i in range(n):
+        j = (i + 1) % n
+        va, vb = run[i] / run[-1] * sv, run[i + 1] / run[-1] * sv
+        paint(bm.faces.new((ends[0][i], ends[1][i], ends[1][j], ends[0][j])), [(0, va), (su, va), (su, vb), (0, vb)], c, night, material)
+    ys, zs = [p[0] for p in prof], [p[1] for p in prof]
+    for ring in ends:
+        uvs = [((y - min(ys)) / (max(ys) - min(ys)), (z - min(zs)) / (max(zs) - min(zs))) for y, z in prof]
+        paint(bm.faces.new(ring), uvs, c, night, material)
+
+
+def _rounded(w, h, r, sides=4, cy=0.0, cz=0.0):
+    """A rounded rectangle w x h (corner radius r) centred on (cy, cz), counter-clockwise from the bottom right."""
+    pts = []
+    for sy, sz, a0 in ((1, -1, -90), (1, 1, 0), (-1, 1, 90), (-1, -1, 180)):
+        oy, oz = cy + sy * (w / 2 - r), cz + sz * (h / 2 - r)
+        for k in range(sides + 1):
+            a = math.radians(a0 + 90 * k / sides)
+            pts.append((oy + r * math.cos(a), oz + r * math.sin(a)))
+    return pts
+
+
+# (source TXD, texture) per medkit material, all vanilla and found with gta-scout: red moulded plastic, white (the cross),
+# grey latch plastic, black rubber
+MEDKIT_TEXTURES = [("cj_airprt.txd", "CJ_red_COUNTER"), ("crack_intkb.txd", "white"), ("des_telescopestuff.txd", "dish_panel_a"), ("cj_airprt.txd", "CJ_RUBBER")]
+
+
+def build_medkit(ctx):
+    """A first aid kit lying on its back, 0.26 x 0.18 x 0.085 m: a red moulded case with rounded edges and its lid seam,
+    a white cross on the lid, two grey snap latches and a fold-down black handle on the front (+Y), hinge knuckles on the
+    back. Origin at the base's centre."""
+    box, tube = ctx["box"], _tube(ctx)
+    red, white_m, grey, rubber = 0, 1, 2, 3
+    white, dim = (0.9, 0.9, 0.9, 1.0), (0.55, 0.55, 0.55, 1.0)
+    w, d, h = 0.26, 0.18, 0.085
+    _prism(ctx, _rounded(d, h, 0.012, 3, 0.0, h / 2), -w / 2, w / 2, red, None)
+    box((0.0, 0.0, 0.052), (w + 0.002, d + 0.002, 0.003), red, dim)  # the lid seam
+    box((0.0, 0.0, h + 0.0005), (0.075, 0.022, 0.001), white_m, white)
+    box((0.0, 0.0, h + 0.0005), (0.022, 0.075, 0.001), white_m, white)
+    for x in (-0.08, 0.08):
+        box((x, d / 2 + 0.003, 0.052), (0.024, 0.006, 0.022), grey, None)
+    for x in (-0.035, 0.035):
+        box((x, d / 2 + 0.004, 0.06), (0.01, 0.008, 0.012), rubber, None)
+    tube((-0.035, d / 2 + 0.008, 0.052), (0.035, d / 2 + 0.008, 0.052), 0.006, 10, rubber, None)
+    for x in (-0.09, 0.0, 0.09):
+        tube((x - 0.02, -d / 2 - 0.002, 0.052), (x + 0.02, -d / 2 - 0.002, 0.052), 0.0045, 8, red, dim, False)
+    return [((0.0, 0.0, h / 2), (w / 2, d / 2, h / 2))]
+
+
+DOCBAG_LEATHER = (0.62, 0.36, 0.26, 1.0)  # day colour over the red leather: an oxblood-brown hide
+# (source TXD, texture) per doctor's bag material, all vanilla and found with gta-scout: the ship's red leather (tinted
+# brown by its vertex colour), brass fittings, black leather for the handles, the frame's dull steel
+DOCBAG_TEXTURES = [("sfeship1.txd", "CJ_RED_LEATHER"), ("lee_strip2.txd", "Strip_Gold"), ("cj_airprt.txd", "CJ_RUBBER"), ("industrialext.txd", "cj_chromepipe")]
+
+
+def build_doctor_bag(ctx):
+    """A Gladstone doctor's bag, 0.4 m long, 0.26 m tall to its handles: a leather body flaring to a flat base, the hinged
+    metal frame closed along the top with a brass clasp and lock plate, two rolled leather handles, brass base studs, a
+    welt at each end. Origin at the base's centre, the bag lengthwise along X."""
+    from mathutils import Vector
+    box, tube = ctx["box"], _tube(ctx)
+    leather, brass, black, steel = 0, 1, 2, 3
+    white, dark = (0.9, 0.9, 0.9, 1.0), (0.35, 0.22, 0.17, 1.0)
+    L, base_d, top_d, H = 0.4, 0.2, 0.06, 0.2
+    half = [(base_d / 2 - 0.02, 0.0)]
+    for k in range(1, 4):  # the rounded bottom edge
+        a = math.radians(-90 + 90 * k / 4)
+        half.append((base_d / 2 - 0.02 + 0.02 * math.cos(a), 0.02 + 0.02 * math.sin(a)))
+    half += [(base_d / 2 + 0.006, 0.06), (base_d / 2 - 0.01, 0.13), (top_d / 2 + 0.012, H - 0.01), (top_d / 2, H)]
+    prof = half + [(-y, z) for y, z in reversed(half)]
+    _prism(ctx, prof, -L / 2, L / 2, leather, DOCBAG_LEATHER, (2.0, 2.0))
+    for x in (-L / 2 - 0.002, L / 2 + 0.002):  # the welts
+        box((x, 0.0, H / 2), (0.004, base_d * 0.9, 0.01), leather, dark)
+    box((0.0, 0.0, H + 0.004), (L - 0.02, top_d + 0.004, 0.008), steel, (0.5, 0.48, 0.45, 1.0))  # the frame
+    box((0.0, top_d / 2 + 0.003, H - 0.02), (0.05, 0.003, 0.03), brass, white)  # lock plate
+    box((0.0, top_d / 2 + 0.006, H - 0.003), (0.03, 0.006, 0.014), brass, white)  # clasp
+    for x in (-0.06, 0.06):  # the handles: posts in brass rings, a rolled grip arching between
+        for y in (-0.012, 0.012):
+            tube((x, y, H + 0.008), (x, y, H + 0.016), 0.005, 8, brass, white, False)
+    for y in (-0.012, 0.012):
+        pts = [Vector((-0.06 + 0.12 * k / 8, y, H + 0.016 + 0.045 * math.sin(math.pi * k / 8))) for k in range(9)]
+        for a, b in zip(pts, pts[1:]):
+            tube(tuple(a), tuple(b), 0.0065, 8, black, None, True)
+    for x in (-0.15, 0.15):  # base studs
+        for y in (-0.07, 0.07):
+            tube((x, y, -0.004), (x, y, 0.0), 0.006, 8, brass, white, False)
+    return [((0.0, 0.0, H / 2), (L / 2, base_d / 2, H / 2))]
+
+
+# (source TXD, texture) per bandage material, all vanilla and found with gta-scout: the clothes shop's white cloth (gauze),
+# and a red for the blood on the used one
+BANDAGE_TEXTURES = [("cj_exp.txd", "mp_cloth_wall"), ("texttest.txd", "kb_red")]
+GRIME, BLOOD = (0.78, 0.68, 0.5, 1.0), (0.42, 0.09, 0.08, 1.0)  # dirty_bandage day colours
+
+
+def _strip(ctx, path, width, material, col, waves=0.0, seed=0):
+    """A flat cloth strip `width` wide along the polyline `path`, both faces, its edges crumpled up by up to `waves`.
+    Mapped by length."""
+    from mathutils import Vector
+    import random
+    rnd = random.Random(seed)
+    bm, paint = ctx["bm"], ctx["paint"]
+    night = (col[0] * 0.3, col[1] * 0.3, col[2] * 0.32, 1.0)
+    pts = [Vector(p) for p in path]
+    rows, s = [], 0.0
+    for i, p in enumerate(pts):
+        a, b = pts[max(i - 1, 0)], pts[min(i + 1, len(pts) - 1)]
+        along = (b - a).normalized()
+        side = Vector((-along.y, along.x, 0.0)).normalized() * (width / 2)
+        if i:
+            s += (p - pts[i - 1]).length
+        rows.append((bm.verts.new(p - side + Vector((0, 0, rnd.uniform(0, waves)))), bm.verts.new(p + side + Vector((0, 0, rnd.uniform(0, waves)))), s))
+    drop = Vector((0.0, 0.0, -0.0004))  # the underside: its own vertices just below, so a flipped normal cannot z-fight
+    back = [(bm.verts.new(a.co + drop), bm.verts.new(b.co + drop), s) for a, b, s in rows]
+    for (a0, a1, s0), (b0, b1, s1) in zip(rows, rows[1:]):
+        paint(bm.faces.new((a0, b0, b1, a1)), [(0, s0 * 8), (0, s1 * 8), (1, s1 * 8), (1, s0 * 8)], col, night, material)
+    for (a0, a1, s0), (b0, b1, s1) in zip(back, back[1:]):
+        paint(bm.faces.new((a1, b1, b0, a0)), [(1, s0 * 8), (1, s1 * 8), (0, s1 * 8), (0, s0 * 8)], col, night, material)
+
+
+def build_bandage(ctx):
+    """A clean roll of gauze bandage, 75 mm wide, lying on its side along X: the roll, 0.055 m across, its end unrolled
+    about 0.13 m along the ground toward +Y. Origin at the base's centre."""
+    tube = _tube(ctx)
+    gauze = 0
+    white = (0.95, 0.95, 0.95, 1.0)
+    r, w = 0.0275, 0.075
+    tube((-w / 2, 0.0, r), (w / 2, 0.0, r), r, 24, gauze, white, False)
+    tube((-w / 2 - 0.0005, 0.0, r), (w / 2 + 0.0005, 0.0, r), 0.006, 12, gauze, (0.7, 0.7, 0.7, 1.0), False)  # the core
+    path = [(0.0, 0.004, 0.0006), (0.0, 0.03, 0.0008), (0.0, 0.07, 0.002), (0.0, 0.1, 0.0008), (0.0, 0.13, 0.0006)]
+    _strip(ctx, path, w * 0.98, gauze, white, 0.002, 1)
+    return [((0.0, 0.0, r), (w / 2, r, r))]
+
+
+def build_dirty_bandage(ctx):
+    """A used bandage, unwound and dropped: about 0.7 m of gauze lying in a loose crumpled loop, grimy yellow-brown, a
+    small roll left at the end, dried blood soaked through in patches. Origin at the base's centre."""
+    from mathutils import Vector
+    tube = _tube(ctx)
+    gauze, blood = 0, 1
+    w = 0.07
+    path = []
+    for k in range(48):  # a loose, lopsided loop that crosses itself, kinked where it was pulled off
+        s = k / 47
+        a = s * 2.2 * math.pi
+        rad = 0.045 + 0.08 * s + 0.018 * math.sin(a * 3.1 + 1.0)
+        path.append((rad * math.cos(a) * 1.25 - 0.02, rad * math.sin(a) * 0.85, 0.001 + 0.003 * k / 47 + 0.007 * abs(math.sin(a * 2.3))))
+    _strip(ctx, path, w, gauze, GRIME, 0.008, 7)
+    end = Vector(path[-1])
+    tube((end.x - w / 2, end.y, 0.016), (end.x + w / 2, end.y, 0.016), 0.016, 16, gauze, GRIME, False)
+    for k0, k1 in ((3, 7), (16, 19), (30, 35)):  # blood soaked through: a layer just over the cloth
+        _strip(ctx, [(p[0], p[1], p[2] + 0.0035) for p in path[k0:k1]], w * 0.7, blood, BLOOD, 0.0, 7)
+    return [((-0.02, 0.0, 0.01), (0.13, 0.13, 0.01))]
+
+
 PROPS_TABLE = [
     {"name": "ls_hatch", "id": 20201, "dist": 150, "source": "zombtest1.txd", "textures": ["pave_manhole1"], "build": build_ls_hatch},
     {"name": "welder", "id": 20202, "dist": 100, "source": "dynbarrels.txd", "textures": ["redmetal", "yellowmetal", "alumplat64"], "build": build_welder},
@@ -1089,6 +2105,39 @@ PROPS_TABLE = [
     {"name": "combo_shackle", "id": 20265, "dist": 30, "sources": COMBO_TEXTURES[:1], "build": build_combo_shackle},
     {"name": "tow_bar", "id": 20266, "dist": 80, "sources": TOWBAR_TEXTURES, "build": build_tow_bar},
     {"name": "rope_coil", "id": 20267, "dist": 50, "sources": ROPE_TEXTURES, "build": build_rope_coil},
+    {"name": "motor", "id": 20268, "dist": 60, "sources": MOTOR_TEXTURES, "build": build_motor},
+    {"name": "starter_motor", "id": 20269, "dist": 50, "sources": STARTER_TEXTURES, "build": build_starter_motor},
+    {"name": "power_supply", "id": 20270, "dist": 50, "sources": PSU_TEXTURES, "build": build_power_supply},
+    {"name": "fluctuator", "id": 20271, "dist": 50, "sources": FLUCT_TEXTURES, "build": build_fluctuator},
+    {"name": "tnt", "id": 20272, "dist": 50, "sources": TNT_TEXTURES, "build": build_tnt},
+    {"name": "ied", "id": 20273, "dist": 50, "sources": IED_TEXTURES, "build": build_ied},
+    {"name": "fireworks", "id": 20274, "dist": 60, "sources": FIREWORKS_TEXTURES, "build": build_fireworks},
+    {"name": "emp", "id": 20275, "dist": 60, "sources": EMP_TEXTURES, "build": build_emp},
+    {"name": "storage_unit", "id": 20276, "dist": 40, "sources": STORAGE_TEXTURES, "build": build_storage_unit},
+    {"name": "io_unit", "id": 20277, "dist": 40, "sources": IO_TEXTURES, "build": build_io_unit},
+    {"name": "flux_cap", "id": 20278, "dist": 50, "sources": FLUX_TEXTURES, "build": build_flux_cap},
+    {"name": "hack_device", "id": 20279, "dist": 50, "sources": HACK_TEXTURES, "build": build_hack_device},
+    {"name": "advanced_keypad", "id": 20280, "dist": 40, "sources": ADV_KEYPAD_TEXTURES, "build": build_advanced_keypad},
+    {"name": "lockpick", "id": 20281, "dist": 40, "sources": LOCKPICK_TEXTURES, "build": build_lockpick},
+    {"name": "clothes", "id": 20282, "dist": 50, "sources": CLOTHES_TEXTURES, "build": build_clothes},
+    {"name": "pills", "id": 20283, "dist": 30, "sources": PILL_TEXTURES, "build": build_pills},
+    {"name": "medkit", "id": 20296, "dist": 40, "sources": MEDKIT_TEXTURES, "build": build_medkit},
+    {"name": "doctor_bag", "id": 20297, "dist": 50, "sources": DOCBAG_TEXTURES, "build": build_doctor_bag},
+    {"name": "bandage", "id": 20298, "dist": 30, "sources": BANDAGE_TEXTURES[:1], "build": build_bandage},
+    {"name": "dirty_bandage", "id": 20299, "dist": 30, "sources": BANDAGE_TEXTURES, "build": build_dirty_bandage},
+    # the explosives' trigger variants (items <Base><TRIGGERS[kind]>, e.g. TntTimebomb)
+    {"name": "tnt_timer", "id": 20284, "dist": 50, "sources": with_triggers(TNT_TEXTURES), "build": lambda ctx, k="timer", s=with_triggers(TNT_TEXTURES): build_tnt(ctx, k, s)},
+    {"name": "tnt_trip", "id": 20285, "dist": 50, "sources": with_triggers(TNT_TEXTURES), "build": lambda ctx, k="trip", s=with_triggers(TNT_TEXTURES): build_tnt(ctx, k, s)},
+    {"name": "tnt_prox", "id": 20286, "dist": 50, "sources": with_triggers(TNT_TEXTURES), "build": lambda ctx, k="prox", s=with_triggers(TNT_TEXTURES): build_tnt(ctx, k, s)},
+    {"name": "tnt_phone", "id": 20287, "dist": 50, "sources": with_triggers(TNT_TEXTURES), "build": lambda ctx, k="phone", s=with_triggers(TNT_TEXTURES): build_tnt(ctx, k, s)},
+    {"name": "ied_timer", "id": 20288, "dist": 50, "sources": with_triggers(IED_TEXTURES), "build": lambda ctx, k="timer", s=with_triggers(IED_TEXTURES): build_ied(ctx, k, s)},
+    {"name": "ied_trip", "id": 20289, "dist": 50, "sources": with_triggers(IED_TEXTURES), "build": lambda ctx, k="trip", s=with_triggers(IED_TEXTURES): build_ied(ctx, k, s)},
+    {"name": "ied_prox", "id": 20290, "dist": 50, "sources": with_triggers(IED_TEXTURES), "build": lambda ctx, k="prox", s=with_triggers(IED_TEXTURES): build_ied(ctx, k, s)},
+    {"name": "ied_phone", "id": 20291, "dist": 50, "sources": with_triggers(IED_TEXTURES), "build": lambda ctx, k="phone", s=with_triggers(IED_TEXTURES): build_ied(ctx, k, s)},
+    {"name": "emp_timer", "id": 20292, "dist": 50, "sources": with_triggers(EMP_TEXTURES), "build": lambda ctx, k="timer", s=with_triggers(EMP_TEXTURES): build_emp(ctx, k, s)},
+    {"name": "emp_trip", "id": 20293, "dist": 50, "sources": with_triggers(EMP_TEXTURES), "build": lambda ctx, k="trip", s=with_triggers(EMP_TEXTURES): build_emp(ctx, k, s)},
+    {"name": "emp_prox", "id": 20294, "dist": 50, "sources": with_triggers(EMP_TEXTURES), "build": lambda ctx, k="prox", s=with_triggers(EMP_TEXTURES): build_emp(ctx, k, s)},
+    {"name": "emp_phone", "id": 20295, "dist": 50, "sources": with_triggers(EMP_TEXTURES), "build": lambda ctx, k="phone", s=with_triggers(EMP_TEXTURES): build_emp(ctx, k, s)},
 ]
 
 
