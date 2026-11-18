@@ -248,9 +248,6 @@ addEventHandler("onClientResourceStart", resourceRoot, function()
                 keep[#keep + 1] = houseTxd
             end
             engineSetModelFlag(house.model, "draw_last", true)
-            -- a vanilla paper box drawn from both sides (logcabinn) would draw the shell's two-sided parts twice
-            -- in one place (tin sheets, deck boards, glass), and they flicker
-            engineSetModelFlag(house.model, "disable_backface_culling", false)
             local id = requestDoor(house.door, houseTxd)
             if id and house.maps then
                 mapHouses[house.model] = { id = id, house = house }
