@@ -79,6 +79,7 @@ local traps = loadFile("server/traps.lua")(ctx)
 local movement = loadFile("server/movement.lua")(ctx)
 local vehicles = loadFile("server/vehicles.lua")(ctx)
 local accuracy = loadFile("server/accuracy.lua")(ctx)
+loadFile("server/network.lua")(ctx, loadFile("shared/logic/netstatus.lua"), log)
 
 addEventHandler("onPlayerJoin", root, function()
     pingSince[source] = getTickCount()
