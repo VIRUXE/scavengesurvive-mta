@@ -1805,6 +1805,24 @@ setTimer(function()
 end, HINT_MS, 0)
 
 -- A trailer went on, by the hitch key or a truck backed into one: keep it when the pair fits, as upstream's sync task.
+-- One line per hitch or unhitch: the truck's position and id, the trailer's id and model, the driver (if any) and what
+-- the server made of it (result), so a crash or an explosion with a trailer in tow can be traced.
+local function logTrailer(kind, truck, trailer, result)
+    local tinf = info[trailer]
+    local driver = getVehicleController(truck)
+    local vx, vy, vz = getElementVelocity(truck)
+    log.event(
+        kind,
+        vehicleLine(truck, {
+            player = driver or nil,
+            trailer_id = tinf and tinf.id or nil,
+            trailer_model = isElement(trailer) and getElementModel(trailer) or nil,
+            speed_kmh = math.floor(math.sqrt(vx * vx + vy * vy + vz * vz) * 150),
+            result = result,
+        })
+    )
+end
+
 addEventHandler("onTrailerAttach", root, function(truck)
     startCargo(source)
     if cargo[source] then
@@ -1812,20 +1830,23 @@ addEventHandler("onTrailerAttach", root, function(truck)
     end
     local inf, tinf = info[truck], info[source]
     if not inf or not tinf then
-        return
+        return logTrailer("vehicle.trailerAttached", truck, source, "untracked")
     end
     -- the tower pulls the trailer's armour whether the hitch is new or a known one put back (a restart, a re-hitch)
     carmourSrv.refreshTow(source)
     if inf.trailerId == tinf.id then
-        return
+        return logTrailer("vehicle.trailerAttached", truck, source, "known")
     end
     if vlogic.canAttachTrailer(towSrv.hitch(truck), exports.data:vehicleType(tinf.uname)) then
         setTrailerRecord(truck, tinf.id)
         markUsed(source)
+        logTrailer("vehicle.trailerAttached", truck, source, "kept")
         local driver = getVehicleController(truck)
         if driver then
             toast(driver, "TRAILER_ATTACHED")
         end
+    else
+        logTrailer("vehicle.trailerAttached", truck, source, "unfit")
     end
 end)
 
@@ -1836,16 +1857,19 @@ addEventHandler("onTrailerDetach", root, function(truck)
     carmourSrv.towEnded(truck)
     local inf, tinf = info[truck], info[source]
     if not inf or not tinf or inf.trailerId ~= tinf.id then
-        return
+        return logTrailer("vehicle.trailerDetached", truck, source, "untracked")
     end
     local driver = getVehicleController(truck)
     if driver and getTickCount() - (driverSince[truck] or 0) < ENTER_GRACE_MS then
+        logTrailer("vehicle.trailerDetached", truck, source, "rehitched")
         return triggerClientEvent(driver, "trailerHitchOrdered", driver, truck, source)
     end
     if driver then
+        logTrailer("vehicle.trailerDetached", truck, source, "dropped")
         setTrailerRecord(truck, nil)
         return toast(driver, "TRAILER_DETACHED")
     end
+    logTrailer("vehicle.trailerDetached", truck, source, "restored")
     local trailer = source
     setTimer(function()
         if isElement(truck) and isElement(trailer) and info[truck] and info[truck].trailerId == info[trailer].id then
