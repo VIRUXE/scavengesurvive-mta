@@ -315,6 +315,14 @@ addEventHandler("playerAuthenticated", root, function(accountId)
     loadOrCreate(source, accountId)
 end)
 
+-- a (re)started client asks for its skills: the ones sent at spawn are lost when the server side starts first
+net.handler("characterSkillsRequested", function(player)
+    local st = state.byPlayer[player]
+    if st then
+        sendSkills(player, st)
+    end
+end)
+
 net.handler("respawnRequested", function(player)
     -- only after a committed death: character_create would retire a character that is still alive in the DB (still
     -- loading, or its death drop failed) without dropping its items

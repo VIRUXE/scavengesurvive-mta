@@ -1,11 +1,11 @@
 # Skills
 
-Skills make the actions you repeat faster. Each skill is a value from 0 to 1, shown in the inventory under `Skills` (open the inventory with `H`, then choose `Skills`).
+Skills make the actions you repeat faster. Each skill is a value from 0 to 1, shown at the bottom right of the screen as its name and a thin white bar that fills as the skill grows (the ten highest when you have more than ten).
 
 ## How skills work
 
 - **Skills persist.** They are saved with your character (about every 10 seconds while they change, and when you log out), so they survive logging out and server restarts. Only death resets them: a new character starts with no skills.
-- A skill appears in your list after the first finished action, starting from 0. Finishing an action shows a `+Repair` style notice for five seconds.
+- A skill's bar appears after the first finished action, starting from 0. Finishing an action shows a `+Repair` style notice for five seconds.
 - Every time you **finish** an action tied to a skill, the skill closes 2 % of the gap to 1: the new value is `old + 0.02 x (1 - old)`. Early actions count the most, later ones less and less.
 - Every time you **start** such an action, its time is cut by half of the skill: `time x (1 - 0.5 x skill)`. At 1.0 a 3 second job takes 1.5 seconds. Nothing is ever faster than half time.
 - You can hold up to 50 different skills.
@@ -20,7 +20,7 @@ Skills make the actions you repeat faster. Each skill is a value from 0 to 1, sh
 
 ## Levels
 
-The list shows each skill with its level, coloured by level (for example `Repair (Novice)`):
+Each skill has a level by its value:
 
 | Level | Skill value |
 |:--|:--|

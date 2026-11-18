@@ -324,12 +324,13 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
       ground, and the look survives `rr items`.
 31. **Skills** (#93). One client.
     - a. **Gain.** Repair a damaged car at the bonnet with the right tool: green `+Repair` at the bottom centre for
-      5 s. Inventory > `Skills` lists `Repair (Novice)` in yellow; Back returns to the inventory, Close shuts it.
-    - b. **Time.** `/setskill Repair 1`, then repair again: the bar runs 1.5 s instead of 3 s and the list shows
-      `Repair (Master)` in pink. Workbench and ground construction train the skill named after the result's uname:
-      `/setskill <result uname> 1` halves that recipe's hold, and the list shows the item type's name.
-    - c. **Persistence.** Reconnect, or `rr character` (flush on stop): the list is unchanged
-      (`SELECT skills FROM characters WHERE alive = 1`). Die and respawn: `No skills yet`.
+      5 s. A `Repair` row appears bottom right: the name and a thin white bar filled to the skill (the inventory has
+      no `Skills` row any more).
+    - b. **Time.** `/setskill Repair 1`, then repair again: the bar runs 1.5 s instead of 3 s and the HUD's `Repair`
+      bar is full. Workbench and ground construction train the skill named after the result's uname:
+      `/setskill <result uname> 1` halves that recipe's hold, and its bar shows the item type's name.
+    - c. **Persistence.** Reconnect, or `rr character` (flush on stop): the bars are unchanged
+      (`SELECT skills FROM characters WHERE alive = 1`). Die and respawn: no skill bars.
 32. **Treatment, infection and drugs** (#94). a-g one client, h two clients (A treats B). `/additem` gives the
     zeroed data (`Pills (Antibiotics)`, `Injector (Empty)`, a Doctor's Bag without charges); the other pills and
     injections come from loot (`/rollloot` near a loot spot, or a supply crate). The holds need **F** physically held

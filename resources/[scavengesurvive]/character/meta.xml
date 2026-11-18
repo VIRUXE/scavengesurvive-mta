@@ -44,7 +44,7 @@
     <export function="setSkill" type="server"/>
     <export function="getSkill" type="server"/>
     <export function="skillTimeModifier" type="server"/>
-    <export function="skillsOpen" type="client"/>
+    <export function="skillRows" type="client"/>
     <export function="treatPlayer" type="server"/>
     <export function="setInfection" type="server"/>
     <export function="applyDrug" type="server"/>

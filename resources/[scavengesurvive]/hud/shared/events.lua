@@ -37,6 +37,7 @@ addEvent("chatRadioChanged", true)
 addEvent("chatVoiceBlocked", true)
 addEvent("combatWindowChanged", true)
 addEvent("skillGained", true)
+addEvent("characterSkillsSynced", true) -- sent by character: the skill bars' rows
 addEvent("trailerHitchHintChanged", true) -- sent by vehicles
 addEvent("lightsFlickered", true) -- sent by vehicles: lights asked for on a dead battery
 addEvent("engineCranked", true) -- sent by vehicles: the driver turned the key, with the reason it did not start

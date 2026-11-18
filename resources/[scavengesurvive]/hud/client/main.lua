@@ -71,6 +71,7 @@ local state = {
     keys = {},
     hidden = false, -- setHidden(true): the dev studio wants clean screenshots
     skillNotice = false, -- { text, untilTick }: "+Repair" after a skill gain (skillGained from character)
+    skills = {}, -- { { name, amount, level, colour }, ... } in learned order (characterSkillsSynced from character)
 }
 
 local voiceClient = loadFile("client/voice.lua", "=hud/voice.lua")({
@@ -190,6 +191,71 @@ addEventHandler("skillGained", root, function(name)
     local t = lang.itemType(name)
     state.skillNotice = { text = "+" .. (t and t.name or tostring(name)), untilTick = getTickCount() + SKILL_NOTICE_MS }
 end)
+
+-- The skill bars, bottom right (they replace upstream's inventory "Skills" list): one thin white bar per skill,
+-- filled to its 0..1 amount, its name to the left. More than MAX skills show the MAX highest.
+local SKILL_BARS = { right = 612, w = 56, h = 3, pitch = 11, max = 10, bottom = 470, driverBottom = 452 }
+local SKILL_LABEL = { lx = 0.22, ly = 0.95 }
+
+addEventHandler("characterSkillsSynced", localPlayer, function(list)
+    state.skills = type(list) == "table" and list or {}
+end)
+
+-- the skills not named after an item type (gainSkill callers: vehicles, items, crafting, world trees, character)
+-- lang:begin
+local SKILL_NAMES = {
+    Construction = "Construction",
+    Endurance = "Endurance",
+    Fishing = "Fishing",
+    Forestry = "Forestry",
+    Medical = "Medical",
+    Repair = "Repair",
+}
+-- lang:end
+
+local function skillName(name)
+    local t = lang.itemType(name)
+    return t and t.name or lang.text(SKILL_NAMES[name] or name)
+end
+
+local function drawSkillBars(driver)
+    local list = state.skills
+    if #list == 0 then
+        return
+    end
+    local B = SKILL_BARS
+    if #list > B.max then
+        local sorted = {}
+        for i, r in ipairs(list) do
+            sorted[i] = r
+        end
+        table.sort(sorted, function(a, b)
+            return (a.amount or 0) > (b.amount or 0)
+        end)
+        list = {}
+        for i = 1, B.max do
+            list[i] = sorted[i]
+        end
+    end
+    local x = B.right - B.w
+    local y = (driver and B.driverBottom or B.bottom) - B.pitch * #list
+    for _, r in ipairs(list) do
+        local barY = y + (B.pitch - B.h) / 2
+        draw.progressBar(x, barY, B.w, B.h, bars.fill(r.amount, 1), 0xFF, 0xFF, 0xFF, 0xFF, "right")
+        draw.text({
+            text = skillName(r.name),
+            x = x - 5,
+            y = barY + B.h / 2 - 5,
+            font = 1,
+            lx = SKILL_LABEL.lx,
+            ly = SKILL_LABEL.ly,
+            colour = WHITE,
+            align = "right",
+            outline = 1,
+        })
+        y = y + B.pitch
+    end
+end
 
 -- y: 430, or above the dashboard while it shows
 local function drawSkillNotice(y)
@@ -726,6 +792,7 @@ addEventHandler("onClientRender", root, function()
     local vt = driver and vehicleType(getElementData(vehicle, "vehicles.type")) or nil
     local dashTop = vt and dashboard.top(vt) or nil -- nil: this vehicle has no dashboard (a bicycle, a trailer)
     drawSkillNotice(dashTop and dashTop - 16 or nil)
+    drawSkillBars(driver)
     if driver then
         drawVehiclePanel(vehicle)
         if dashTop then
@@ -762,6 +829,10 @@ end
 addEventHandler("onClientResourceStart", resourceRoot, function()
     setPlayerHudComponentVisible("all", false)
     triggerServerEvent("hudStateRequested", localPlayer) -- a restarted hud asks for the stats and the hand
+    local ok, rows = pcall(function()
+        return exports.character:skillRows() -- and takes the skills character already holds
+    end)
+    state.skills = ok and type(rows) == "table" and rows or {}
     refreshKeys()
     setTimer(refreshKeys, 1000, 0)
     setTimer(function()

@@ -475,9 +475,9 @@ return function(ctx)
             if p.trunk then
                 rows[#rows + 1] = { id = "nav:trunk", label = tname .. " >" }
             end
-            -- upstream's extra list items (AddInventoryListItem): radio.pwn adds "Radio", skills.pwn "Skills"
+            -- upstream's extra list items (AddInventoryListItem): radio.pwn adds "Radio"; skills.pwn's "Skills" is
+            -- the HUD's skill bars instead (hud/client/main.lua)
             rows[#rows + 1] = { id = "extra:radio", label = lang.text("Radio") }
-            rows[#rows + 1] = { id = "extra:skills", label = lang.text("Skills") }
         end
         if refresh then
             return exports.ui:listUpdate("inventory", rows, title)
@@ -527,9 +527,6 @@ return function(ctx)
             elseif rowId == "extra:radio" then
                 exports.ui:listClose()
                 return exports.chat:radioOpen()
-            elseif rowId == "extra:skills" then
-                exports.ui:listClose()
-                return exports.character:skillsOpen()
             end
             if last then
                 open(last)

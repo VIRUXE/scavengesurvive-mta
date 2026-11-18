@@ -11,6 +11,7 @@ addEvent("itemCreated", false) -- items' event, triggered by death.lua for the b
 
 -- client to server (handlers registered with net.handler)
 addEvent("respawnRequested", true)
+addEvent("characterSkillsRequested", true) -- the client's skill rows, sent again (client/skills.lua)
 addEvent("groundSurfaceReported", true)
 addEvent("playerJumped", true)
 addEvent("sitRequested", true)
@@ -18,7 +19,6 @@ addEvent("standRequested", true)
 addEvent("handsUpRequested", true)
 addEvent("aimShoutRequested", true)
 addEvent("bloodPoolsRequested", true)
-addEvent("inventoryOpenRequested", true) -- handled by items (the Skills list's Back)
 
 -- server to client / client-local
 addEvent("characterStatsSynced", true)

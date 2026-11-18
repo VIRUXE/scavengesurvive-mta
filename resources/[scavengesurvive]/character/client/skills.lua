@@ -1,34 +1,17 @@
--- The inventory's Skills list (upstream skl_ShowSkillList, #93): each skill with its level name in the level's
--- colour, Back returns to the inventory. The server sends the rows on spawn and after every change
--- (characterSkillsSynced); a skill named after an item type shows that type's name.
+-- The character's skills for the HUD's skill bars (hud/client/main.lua, bottom right): the server sends the rows
+-- ({ name, amount, level, colour } in learned order, shared/logic/skills.lua M.rows) on spawn and after every change
+-- (characterSkillsSynced); the hud reads them through skillRows when it (re)starts.
 local rows = {}
-local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")()
 
 addEventHandler("characterSkillsSynced", localPlayer, function(list)
     rows = type(list) == "table" and list or {}
 end)
 
-local function displayName(name)
-    local t = lang.itemType(name)
-    return t and t.name or lang.text(name)
+function skillRows()
+    return rows
 end
 
-function skillsOpen()
-    local list = {}
-    for i, r in ipairs(rows) do
-        local label = string.format("%s (%s)", displayName(r.name), lang.text(r.level))
-        list[i] = { id = "skill:" .. r.name, label = label, colour = r.colour }
-    end
-    if #list == 0 then
-        list[1] = { id = "skill:none", label = lang.text("No skills yet") }
-    end
-    return exports.ui:listOpen("skills", lang.text("Skills"), list, { lang.text("Back"), lang.text("Close") })
-end
-
-addEventHandler("uiListActionSelected", root, function(listId)
-    if listId ~= "skills" then
-        return
-    end
-    exports.ui:listClose()
-    triggerServerEvent("inventoryOpenRequested", localPlayer)
+-- the spawn's rows are lost when the server side started before this script (a character restart)
+addEventHandler("onClientResourceStart", resourceRoot, function()
+    triggerServerEvent("characterSkillsRequested", localPlayer)
 end)
