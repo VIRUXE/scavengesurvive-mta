@@ -22,7 +22,7 @@ While you are muted ([Reports & Bans](Reports-and-Bans)), pressing the key does 
 
 While anyone you can hear is talking, a block of rows appears at the left of the screen, centred vertically:
 
-- When **you** talk, the top row is your indicator: a green bar, a pulsing speaker icon and `TALKING [LOCAL]`, `TALKING [GLOBAL]` or `TALKING [98.12]` with your frequency in radio mode, so you always know who is on the other end.
+- When **you** talk, the top row is your indicator: a green bar, a pulsing speaker icon and `TALKING [LOCAL]`, `TALKING [GLOBAL]` or `TALKING [98.12]` with your frequency in radio mode, so you always know who is on the other end. Behind it the server counts who hears you, `TALKING [LOCAL] - 3 hear you`, and keeps the count current while you talk. When nobody is in reach the row turns red and reads `NOBODY HEARS YOU [LOCAL]`: walk closer, or switch to global or a shared frequency. The count has no names, so it never tells you who is listening.
 - Under it, one row per player talking: your own row in yellow as `Name (You)`, the others in their name colour behind a blue bar. Your row comes first, then the others in the order they started talking.
 
 Over the head of every talking player within 40 m a speaker icon floats, green for you and in the player's name colour for the others. It is drawn only while you have a clear line of sight to them, never through a wall, and it shrinks with distance. Dead players show nothing. Rows and icons go as soon as the key is released.

@@ -476,20 +476,28 @@ end)
 -- their chat mode joined with the local range, re-chosen every VOICE_REFRESH_MS while they talk. Not logged in or
 -- muted: the voice start is cancelled, a muted player is told once per mute.
 local talking = {} -- player -> refresh timer while the voice key is held
+local heardBy = {} -- player -> listener count last sent to them (voiceAudienceChanged only on a change)
 
+-- Returns how many hear the speaker now.
 local function voiceRefresh(p)
     if not isElement(p) then
-        return
+        return 0
     end
     if not exports.auth:isAuthenticated(p) or isMuted(p) then
         setPlayerVoiceBroadcastTo(p, {})
-        return
+        return 0
     end
     local lists = {}
     for i, mode in ipairs(logic.voiceModes(get(p).mode)) do
         lists[i] = audience(p, mode)
     end
-    setPlayerVoiceBroadcastTo(p, logic.voiceRecipients(p, lists))
+    local recipients = logic.voiceRecipients(p, lists)
+    setPlayerVoiceBroadcastTo(p, recipients)
+    if heardBy[p] ~= #recipients then
+        heardBy[p] = #recipients
+        triggerClientEvent(p, "voiceAudienceChanged", p, #recipients)
+    end
+    return #recipients
 end
 
 local function voiceStopped(p)
@@ -497,6 +505,7 @@ local function voiceStopped(p)
         killTimer(talking[p])
     end
     talking[p] = nil
+    heardBy[p] = nil
 end
 
 addEventHandler("onPlayerVoiceStart", root, function()
@@ -511,7 +520,8 @@ addEventHandler("onPlayerVoiceStart", root, function()
         return
     end
     st.voiceWarned = nil
-    voiceRefresh(source)
+    local listeners = voiceRefresh(source)
+    log.event("chat.voiceStarted", { player = source, mode = logic.MODE_NAMES[st.mode], listeners = listeners })
     if not talking[source] then
         talking[source] = setTimer(voiceRefresh, logic.VOICE_REFRESH_MS, 0, source)
     end

@@ -35,6 +35,7 @@ addEvent("deathScreenShown", true)
 addEvent("heldItemChanged", true)
 addEvent("chatRadioChanged", true)
 addEvent("chatVoiceBlocked", true)
+addEvent("voiceAudienceChanged", true)
 addEvent("combatWindowChanged", true)
 addEvent("skillGained", true)
 addEvent("characterSkillsSynced", true) -- sent by character: the skill bars' rows

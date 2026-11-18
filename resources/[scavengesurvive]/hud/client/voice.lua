@@ -8,6 +8,7 @@ return function(ctx)
 
     local talkingPlayers = {} -- playerElement -> startTick
     local localPlayerTalking = false
+    local listeners = nil -- how many hear the local player (server's voiceAudienceChanged), nil until it says
 
     local BLACK = tocolor(0, 0, 0, 255)
     local BG_INDICATOR = tocolor(0, 0, 0, 175)
@@ -17,6 +18,7 @@ return function(ctx)
     local BLUE_ACCENT = tocolor(51, 204, 255, 210)
     local BLUE_ICON = tocolor(51, 204, 255, 240)
     local YELLOW_TEXT = tocolor(232, 232, 144, 255)
+    local RED_ACCENT = tocolor(255, 70, 70, 255)
 
     -- Event handlers to keep talkingPlayers state fresh and accurate
     addEventHandler("onClientPlayerVoiceStart", root, function()
@@ -33,6 +35,7 @@ return function(ctx)
         talkingPlayers[source] = nil
         if source == localPlayer then
             localPlayerTalking = false
+            listeners = nil
         end
     end)
 
@@ -40,6 +43,7 @@ return function(ctx)
         talkingPlayers[source] = nil
         if source == localPlayer then
             localPlayerTalking = false
+            listeners = nil
         end
     end)
 
@@ -57,6 +61,7 @@ return function(ctx)
         talkingPlayers[source] = nil
         if source == localPlayer then
             localPlayerTalking = false
+            listeners = nil
         end
     end)
 
@@ -65,6 +70,7 @@ return function(ctx)
             talkingPlayers[source] = nil
             if source == localPlayer then
                 localPlayerTalking = false
+                listeners = nil
             end
         end
     end)
@@ -73,6 +79,7 @@ return function(ctx)
         talkingPlayers[source] = nil
         if source == localPlayer then
             localPlayerTalking = false
+            listeners = nil
         end
     end)
 
@@ -81,6 +88,13 @@ return function(ctx)
         if source == localPlayer then
             talkingPlayers[localPlayer] = nil
             localPlayerTalking = false
+            listeners = nil
+        end
+    end)
+
+    addEventHandler("voiceAudienceChanged", root, function(count)
+        if source == localPlayer then
+            listeners = tonumber(count)
         end
     end)
 
@@ -160,6 +174,9 @@ return function(ctx)
         end
 
         localPlayerTalking = (talkingPlayers[localPlayer] ~= nil)
+        if not localPlayerTalking then
+            listeners = nil
+        end
         if #speakers == 0 then
             return
         end
@@ -182,7 +199,8 @@ return function(ctx)
 
         local hudState = getState()
         local hasIndicator = localPlayerTalking
-        local indicatorTitle = voiceLogic.indicatorTitle(hudState.chatMode or 0, hudState.frequency)
+        local indicatorTitle = voiceLogic.indicatorTitle(hudState.chatMode or 0, hudState.frequency, listeners)
+        local unheard = listeners == 0
 
         -- Determine the maximum width to keep all rows in the block cleanly aligned
         local maxRowW = canvas.len(c, voiceLogic.LAYOUT.minWidth)
@@ -205,15 +223,15 @@ return function(ctx)
             local indH = canvas.len(c, voiceLogic.LAYOUT.indicatorHeight)
             local indY = canvas.y(c, curYUnits)
             dxDrawRectangle(px, indY, maxRowW, indH, BG_INDICATOR)
-            dxDrawRectangle(px, indY, accentW, indH, GREEN_ACCENT)
+            dxDrawRectangle(px, indY, accentW, indH, unheard and RED_ACCENT or GREEN_ACCENT)
 
             local pulse = 200 + math.floor(math.sin(getTickCount() / 150) * 55)
-            local iconCol = tocolor(51, 255, 102, pulse)
+            local iconCol = unheard and tocolor(255, 70, 70, pulse) or tocolor(51, 255, 102, pulse)
             dxDrawImage(px + padPx, indY + (indH - iconPx) / 2, iconPx, iconPx, voiceLogic.ICON_PATH, 0, 0, 0, iconCol)
 
             local textX = px + padPx * 2 + iconPx
             local textY = indY + (indH - fontH) / 2
-            drawOutlinedText(indicatorTitle, textX, textY, scaleX, scaleY, font, GREEN_TEXT)
+            drawOutlinedText(indicatorTitle, textX, textY, scaleX, scaleY, font, unheard and RED_ACCENT or GREEN_TEXT)
 
             curYUnits = curYUnits + voiceLogic.LAYOUT.indicatorHeight + voiceLogic.LAYOUT.indicatorSpacing
         end

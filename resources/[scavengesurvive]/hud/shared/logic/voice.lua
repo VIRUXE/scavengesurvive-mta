@@ -28,13 +28,19 @@ voice.MODE_NAMES = {
     [3] = "ADMIN",
 }
 
--- Formats the indicator header text when the local player is talking
-function voice.indicatorTitle(mode, freq)
-    local modeName = voice.MODE_NAMES[mode] or "LOCAL"
+-- Formats the indicator header text when the local player is talking. listeners: how many hear them (the
+-- server's count), nil until it arrives; 0 says nobody does.
+function voice.indicatorTitle(mode, freq, listeners)
+    local channel = voice.MODE_NAMES[mode] or "LOCAL"
     if mode == 2 and freq then
-        return string.format("TALKING [%.2f]", tonumber(freq) or 98.12)
+        channel = string.format("%.2f", tonumber(freq) or 98.12)
     end
-    return string.format("TALKING [%s]", modeName)
+    if listeners == 0 then
+        return string.format("NOBODY HEARS YOU [%s]", channel)
+    elseif listeners then
+        return string.format("TALKING [%s] - %d %s you", channel, listeners, listeners == 1 and "hears" or "hear")
+    end
+    return string.format("TALKING [%s]", channel)
 end
 
 -- Formats nickname for display in the centre-left list

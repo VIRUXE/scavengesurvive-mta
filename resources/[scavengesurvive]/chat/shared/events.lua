@@ -11,6 +11,7 @@ addEvent("chatModeRequested", true)
 addEvent("chatRadioChanged", true)
 addEvent("chatRadioOpened", true)
 addEvent("chatVoiceBlocked", true)
+addEvent("voiceAudienceChanged", true) -- how many hear the talking player, sent to them when it changes
 addEvent("helpOpened", true) -- the /help window (client/help.lua)
 -- client-local
 addEvent("uiDialogResponded", false)
