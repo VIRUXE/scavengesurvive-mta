@@ -3,3 +3,6 @@ addEvent("anticheatFocusChanged", true)
 
 -- server-local, from items (cancellable: the pickup of a hacker trap is vetoed)
 addEvent("itemPickupAttempted", false)
+
+-- server-local, from vehicles: the under-map rescue moved this vehicle (source), not a player
+addEvent("vehicleRescued", false)

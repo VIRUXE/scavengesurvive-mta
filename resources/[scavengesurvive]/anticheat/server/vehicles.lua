@@ -94,6 +94,13 @@ return function(ctx)
         end
     end
 
+    -- the server's own move (vehicles' under-map rescue, e.g. after a model resource restart dropped a car through
+    -- the ground): the next sample starts from where it was put, and it settles like a car someone just left
+    addEventHandler("vehicleRescued", root, function()
+        samples[source] = nil
+        lastOccupied[source] = getTickCount()
+    end)
+
     addEventHandler("onElementDestroy", root, function()
         if getElementType(source) == "vehicle" then
             samples[source], lastOccupied[source] = nil, nil

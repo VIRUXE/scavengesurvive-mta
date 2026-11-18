@@ -71,6 +71,7 @@ return function(ctx)
         setElementAngularVelocity(v, 0, 0, 0)
         setElementPosition(v, x, y, surface + LIFT)
         setElementRotation(v, 0, 0, rz)
+        triggerEvent("vehicleRescued", v) -- the anticheat must not read the lift as a teleport by whoever stands near
         ctx.log.event(
             "vehicle.rescued",
             ctx.vehicleLine(v, { from_z = z, to_z = surface + LIFT, reason = "under_map" }),
