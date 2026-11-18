@@ -86,6 +86,25 @@ function M.decode(t, data)
     return amount, liquid
 end
 
+-- Containers something fills again once empty: the Petrol Can at a fuel pump (vehicles/server/main.lua
+-- fuelPumpInteractRequested). Nothing else refills a container (the upstream `reusable` flag in the type data is
+-- read by no code), so every other emptied drink is rubbish.
+M.REFILLABLE = { GasCan = true }
+
+-- An empty container that is only rubbish now: a liquid type that can hold something, that nothing refills, with
+-- nothing drinkable left. Types with no liquids at all (Ketchup, Mustard) are never empty "after use" and stay.
+function M.isLitter(t, data)
+    if not M.isContainer(t) or M.REFILLABLE[t.uname] then
+        return false
+    end
+    local list = t.categoryData and t.categoryData.liquids
+    if type(list) ~= "table" or #list == 0 then
+        return false
+    end
+    local _, liquid = M.decode(t, data)
+    return liquid == nil
+end
+
 function M.capacity(t)
     return tonumber(t and t.categoryData and t.categoryData.capacity) or 0
 end

@@ -1,6 +1,7 @@
 -- Derived from Southclaws/ScavengeSurvive (MPL-2.0). See THIRD_PARTY_NOTICES.md
 -- Ported once from upstream by tools/convert, which is retired: edit this file by hand, never regenerate it.
 INSERT INTO settings (skey, svalue) VALUES
+('items.empty_despawn_minutes','15'),
 ('items.pickup_radius','2.0'),
 ('items.sync_radius','150'),
 ('loot.cache_interval_s','1500'),

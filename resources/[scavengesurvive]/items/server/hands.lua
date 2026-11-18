@@ -1109,6 +1109,23 @@ return function(ctx)
         end, { player = player, charId = cid, radius = radius })
     end, { rate = 5 })
 
+    -- An emptied drink dropped on the ground (liquids.isLitter: nothing left, a type nothing refills) despawns after
+    -- items.empty_despawn_minutes like untouched loot (ev_despawn_items); 0 keeps it. Picking it up clears the timer
+    -- (item_pickup), and carried or stored empties are left alone.
+    local function markLitter(itemId, uname, data)
+        if not liquids or not liquids.isLitter(itemType(uname), data) then
+            return
+        end
+        local minutes = tonumber(state.settings["items.empty_despawn_minutes"]) or 15
+        if minutes <= 0 then
+            return
+        end
+        db.exec(
+            "UPDATE items SET despawn_at = NOW() + INTERVAL ? SECOND WHERE id = ? AND x IS NOT NULL",
+            { math.floor(minutes * 60), itemId }
+        )
+    end
+
     -- opts (placing an item, server/smallitems.lua's shield): { ahead, below, turn, data }, spot = { x, y } (a free
     -- spot clear of vehicles and items, chosen by the client), or at = { x, y, z, rz }
     -- for a spot of the server's (on a table, server/furniture.lua); a plain drop lands 1 m ahead at the feet with
@@ -1157,6 +1174,9 @@ return function(ctx)
                 dim = c.dim,
                 character_id = cid,
             })
+            if res and res.ok then
+                markLitter(c.itemId, c.uname, c.data)
+            end
             if not isElement(c.player) then
                 return
             end
@@ -1174,6 +1194,7 @@ return function(ctx)
             player = player,
             itemId = item.id,
             uname = item.uname,
+            data = item.data,
             x = dx,
             y = dy,
             z = dz,
@@ -1227,7 +1248,19 @@ return function(ctx)
                 dim = c.dim,
                 character_id = cid,
             })
-        end, { itemId = item.id, uname = item.uname, x = dx, y = dy, z = dz, int = int, dim = dim })
+            if res and res.ok then
+                markLitter(c.itemId, c.uname, c.data)
+            end
+        end, {
+            itemId = item.id,
+            uname = item.uname,
+            data = item.data,
+            x = dx,
+            y = dy,
+            z = dz,
+            int = int,
+            dim = dim,
+        })
         return true
     end
 
