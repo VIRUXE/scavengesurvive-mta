@@ -194,6 +194,8 @@ return function(ctx)
         DEFENCE_CHANGED = "The defence changed while you worked on it. Try again.",
         ITEM_WALL_BLOCKED = "Blocked by a wall. Move around to reach the item.",
         DEFENCE_FRONT = "You can only remove a defence from the inside",
+        DEFENCE_NOT_OWNER = "Only whoever built this frame can open or close its roof",
+        DEFENCE_ROOF_BELOW = "Open or close the roof from below it",
         DEFNOTMOVAB = "You cannot install a motor on that type of defence",
         DEFINSTMOTO = "Motor installed to defence",
         DEFNEEDMOTO = "You must install a motor before installing a keypad!",

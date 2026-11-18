@@ -235,18 +235,30 @@ end
 
 -- upstream largeframe.pwn: the covering goes on or comes off; it is part of the built state, so it stays across a
 -- restart (upstream's OnDefenceLoad) and goes with the defence when a Crowbar takes it down
-local function toggleCovering(itemId)
-    db.one(DEFENCE_ROW, { itemId }, function(row)
+-- Only its builder, from below the roof (defences.coveringAccess); the row is read again so the owner is current, and
+-- a frame with no owner yet (built before owners were stored) becomes the user's.
+local function toggleCovering(itemId, player, cid)
+    db.one(DEFENCE_ROW, { itemId }, function(row, c)
         local d = row and decodeData(row.data)
         local st = d and defences.state(d)
-        if not st then
+        if not st or not isElement(c.player) then
             return
         end
+        local _, _, pz = getElementPosition(c.player)
+        local ok, code = defences.coveringAccess(st, c.cid, pz, row.z)
+        if not ok then
+            log.event("building.coverDenied", defenceLine(row, { player = c.player, code = code }))
+            return toast(c.player, code)
+        end
         d.defence = defences.toggleCovering(st)
+        local claimed = d.defence.owner == nil
+        d.defence.owner = d.defence.owner or c.cid
         db.exec("UPDATE items SET data = ? WHERE id = ?", { encodeData(d), row.id }, function()
             exports.items:resendWorldItem(row.id)
+            local fields = { player = c.player, covered = d.defence.covered == true, claimed = claimed or nil }
+            log.event("building.covered", defenceLine(row, fields))
         end)
-    end)
+    end, { player = player, cid = cid })
 end
 
 local function handleDefenceInteract(player, row)
@@ -338,7 +350,7 @@ local function handleDefenceInteract(player, row)
 
     -- 3. Interacting (empty hand / any other item, or Motor/Keypad from front)
     if defences.isCoverable(row.type_uname or row.uname) then
-        toggleCovering(row.id)
+        toggleCovering(row.id, player, cid)
     end
     if not st.motor then
         -- Without a motor, interacting does nothing beyond upstream (no swing)
@@ -367,6 +379,8 @@ end
 local function activateDefence(row, t, pose, done, player)
     local x, y, z, rz, st = defences.build(t.defence, pose, row.x, row.y, row.z, row.rz, t.rotz)
     local d = decodeData(row.data)
+    -- the builder's character: only they work a Large Frame's covering (defences.coveringAccess)
+    st.owner = player and isElement(player) and charId(player) or nil
     d.defence = st
     local sql = "UPDATE items SET x = ?, y = ?, z = ?, rz = ?, data = ?, despawn_at = NULL, loot_spawn_id = NULL "
         .. "WHERE id = ? AND x IS NOT NULL"

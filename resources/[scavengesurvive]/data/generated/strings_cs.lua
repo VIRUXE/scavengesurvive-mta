@@ -654,6 +654,8 @@ return {
     ["Oil Drum"] = "Sud od oleje",
     Oilcan = "Olejnička",
     ["No clear space nearby. Make room before removing this defence."] = "Poblíž není volné místo. Než tuto obranu odstraníš, udělej místo.",
+    ["Only whoever built this frame can open or close its roof"] = "Střechu tohoto rámu může otevřít nebo zavřít jen ten, kdo ho postavil",
+    ["Open or close the roof from below it"] = "Střechu otevírej nebo zavírej zespodu",
     ["Repair"] = "Opravy",
     ["You are missing %d of %d."] = "Chybí vám %d z %d.",
     ["You badly need water"] = "Naléhavě potřebuješ vodu",

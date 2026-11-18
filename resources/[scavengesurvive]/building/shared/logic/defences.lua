@@ -169,6 +169,24 @@ function M.toggleCovering(state)
     return newState
 end
 
+-- Who may put the covering on or take it off (not upstream, where anyone could): only the character that
+-- built the frame (state.owner, stamped by the server when it is built; a frame built before that has none and the
+-- first player to use it from below claims it), and only from below the roof, never standing on it. The covering is
+-- drawn 2.6 m above the frame's origin and the frame is 4.1 m tall, so a player inside has their position (pelvis) at
+-- or below origin - 0.5 and one on the roof at about origin + 3.6.
+M.COVERING_REACH_Z = 1.5
+
+-- true, or false and the toast code saying why not
+function M.coveringAccess(state, cid, pz, z)
+    if state.owner ~= nil and tonumber(state.owner) ~= tonumber(cid) then
+        return false, "DEFENCE_NOT_OWNER"
+    end
+    if (pz or 0) >= (z or 0) + M.COVERING_REACH_Z then
+        return false, "DEFENCE_ROOF_BELOW"
+    end
+    return true
+end
+
 -- A crowbar, motor, or keypad only works from the defence's back side (upstream _InteractDefenceWithItem): the angle
 -- between the defence's facing and the direction to the player is between 90 and 270 degrees.
 function M.isBehind(def, rz, x, y, px, py, pose)

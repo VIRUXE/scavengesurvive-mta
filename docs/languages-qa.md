@@ -36,30 +36,30 @@ None: the converter replaced every `~x~`, `{C_*}`, `~k~` and `%P` token.
 
 Item type, ammo kind, calibre, liquid and seed kind names, and the item UI's labels, messages and format templates, are English in the data and the code; lib's `lang` module shows them in the player's language from the hand-edited `data/generated/strings_<code>.lua` tables. The English texts are collected from the item data and the code (`tr("…")`, `L("…")`, `lang.text/format("…")`, `lang.textFor/formatFor(player, "…")` and `-- lang:begin` … `-- lang:end` blocks). A text a language lacks shows in English; one whose placeholders differ from English is formatted in English. Texts kept identical to English are model names, brands, acronyms and the like.
 
-English has 1231 texts.
+English has 1236 texts.
 
 | Code | Language | Missing (shown in English) | Kept as in English | Placeholder mismatches | Not in English (stale) |
 | --- | --- | ---: | ---: | ---: | ---: |
-| `es` | Español | 0 | 39 | 0 | 5 |
-| `fr` | Français | 0 | 59 | 0 | 5 |
-| `pt` | Português | 0 | 35 | 0 | 5 |
-| `ptbr` | Português do Brasil | 0 | 39 | 0 | 5 |
-| `ru` | Russian | 0 | 16 | 0 | 5 |
-| `ro` | Romanian | 0 | 44 | 0 | 5 |
-| `id` | Indonesian | 0 | 38 | 0 | 5 |
-| `bhs` | Bosanski-Hrvatski-Srpski | 0 | 35 | 0 | 5 |
-| `cs` | Čeština | 0 | 37 | 0 | 5 |
-| `lv` | Latviešu | 0 | 32 | 0 | 5 |
-| `ary` | Darija | 0 | 67 | 0 | 5 |
+| `es` | Español | 0 | 39 | 0 | 7 |
+| `fr` | Français | 0 | 60 | 0 | 7 |
+| `pt` | Português | 0 | 35 | 0 | 7 |
+| `ptbr` | Português do Brasil | 0 | 39 | 0 | 7 |
+| `ru` | Russian | 0 | 16 | 0 | 7 |
+| `ro` | Romanian | 0 | 44 | 0 | 7 |
+| `id` | Indonesian | 0 | 38 | 0 | 7 |
+| `bhs` | Bosanski-Hrvatski-Srpski | 0 | 35 | 0 | 7 |
+| `cs` | Čeština | 0 | 37 | 0 | 7 |
+| `lv` | Latviešu | 0 | 32 | 0 | 7 |
+| `ary` | Darija | 0 | 67 | 0 | 7 |
 
-- `es` has texts no longer in English: `Recipe`, `Tool: %s`, `missing`, `used up`, `you have it`
-- `fr` has texts no longer in English: `Recipe`, `Tool: %s`, `missing`, `used up`, `you have it`
-- `pt` has texts no longer in English: `Recipe`, `Tool: %s`, `missing`, `used up`, `you have it`
-- `ptbr` has texts no longer in English: `Recipe`, `Tool: %s`, `missing`, `used up`, `you have it`
-- `ru` has texts no longer in English: `Recipe`, `Tool: %s`, `missing`, `used up`, `you have it`
-- `ro` has texts no longer in English: `Recipe`, `Tool: %s`, `missing`, `used up`, `you have it`
-- `id` has texts no longer in English: `Recipe`, `Tool: %s`, `missing`, `used up`, `you have it`
-- `bhs` has texts no longer in English: `Recipe`, `Tool: %s`, `missing`, `used up`, `you have it`
-- `cs` has texts no longer in English: `Recipe`, `Tool: %s`, `missing`, `used up`, `you have it`
-- `lv` has texts no longer in English: `Recipe`, `Tool: %s`, `missing`, `used up`, `you have it`
-- `ary` has texts no longer in English: `Recipe`, `Tool: %s`, `missing`, `used up`, `you have it`
+- `es` has texts no longer in English: `No skills yet`, `Recipe`, `Skills`, `Tool: %s`, `missing`, `used up`, `you have it`
+- `fr` has texts no longer in English: `No skills yet`, `Recipe`, `Skills`, `Tool: %s`, `missing`, `used up`, `you have it`
+- `pt` has texts no longer in English: `No skills yet`, `Recipe`, `Skills`, `Tool: %s`, `missing`, `used up`, `you have it`
+- `ptbr` has texts no longer in English: `No skills yet`, `Recipe`, `Skills`, `Tool: %s`, `missing`, `used up`, `you have it`
+- `ru` has texts no longer in English: `No skills yet`, `Recipe`, `Skills`, `Tool: %s`, `missing`, `used up`, `you have it`
+- `ro` has texts no longer in English: `No skills yet`, `Recipe`, `Skills`, `Tool: %s`, `missing`, `used up`, `you have it`
+- `id` has texts no longer in English: `No skills yet`, `Recipe`, `Skills`, `Tool: %s`, `missing`, `used up`, `you have it`
+- `bhs` has texts no longer in English: `No skills yet`, `Recipe`, `Skills`, `Tool: %s`, `missing`, `used up`, `you have it`
+- `cs` has texts no longer in English: `No skills yet`, `Recipe`, `Skills`, `Tool: %s`, `missing`, `used up`, `you have it`
+- `lv` has texts no longer in English: `No skills yet`, `Recipe`, `Skills`, `Tool: %s`, `missing`, `used up`, `you have it`
+- `ary` has texts no longer in English: `No skills yet`, `Recipe`, `Skills`, `Tool: %s`, `missing`, `used up`, `you have it`

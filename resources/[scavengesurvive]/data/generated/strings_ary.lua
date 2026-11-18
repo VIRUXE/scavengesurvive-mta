@@ -654,6 +654,8 @@ return {
     Oil = "Zit",
     ["Oil Drum"] = "Bermil dyal Zit",
     Oilcan = "Bidon Sghir dyal Zit",
+    ["Only whoever built this frame can open or close its roof"] = "Ghir lli bna had l'cadre li y9der y7el wla ysedd ssqef dyalo",
+    ["Open or close the roof from below it"] = "7el wla sedd ssqef mn ta7t",
     ["Open the padlock first: its shackle goes through the chain."] = "7ell l cadenas lwel: l7elqa dyalo katdouz f Snsla.",
     ["Padlock Key"] = "Sarout dyal Cadenas",
     ["Repair"] = "Tsli7",

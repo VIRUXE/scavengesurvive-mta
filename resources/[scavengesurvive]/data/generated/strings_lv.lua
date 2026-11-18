@@ -654,6 +654,8 @@ return {
     Oil = "Eļļa",
     ["Oil Drum"] = "Eļļas muca",
     Oilcan = "Eļļas kanniņa",
+    ["Only whoever built this frame can open or close its roof"] = "Tikai tas, kurš uzbūvēja šo rāmi, var atvērt vai aizvērt tā jumtu",
+    ["Open or close the roof from below it"] = "Atver vai aizver jumtu no apakšas",
     ["Repair"] = "Remonts",
     ["You are missing %d of %d."] = "Tev trūkst %d no %d.",
     ["You badly need water"] = "Tev steidzami vajag ūdeni",
