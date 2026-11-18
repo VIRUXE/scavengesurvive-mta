@@ -14,4 +14,5 @@
     <script src="client/main.lua" type="client"/>
     <file src="shared/logic/tutorial.lua"/>
     <export function="isInTutorial" type="server"/>
+    <export function="checklistShown" type="client"/>
 </meta>

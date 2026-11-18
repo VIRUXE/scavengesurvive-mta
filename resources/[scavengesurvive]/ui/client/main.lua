@@ -64,6 +64,11 @@ function tipHide()
     return tip.hide()
 end
 
+-- the help tip is on screen (hud steps its skill bars aside from it)
+function tipIsShown()
+    return tip.shown()
+end
+
 function progressStart(label, durationMs)
     return progress.start(label, durationMs)
 end

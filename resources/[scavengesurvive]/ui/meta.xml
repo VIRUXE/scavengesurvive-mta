@@ -21,6 +21,7 @@
     <export function="toast" type="client"/>
     <export function="tipShow" type="client"/>
     <export function="tipHide" type="client"/>
+    <export function="tipIsShown" type="client"/>
     <export function="showTip" type="server"/>
     <export function="hideTip" type="server"/>
     <export function="showInfo" type="server"/>

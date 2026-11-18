@@ -306,6 +306,21 @@ local function settingDefence()
     return exports.vehicles:attachModeActive() == true
 end
 
+local function running(name)
+    local res = getResourceFromName(name)
+    return res and getResourceState(res) == "running"
+end
+
+-- something else is drawn over the skill bars' corner: a window with the mouse up (inventory and other lists,
+-- help, recipes, staff panels, the lug nut view), the tutorial checklist on the right, or the help tip (whose
+-- right end meets long skill names on 4:3)
+local function skillCornerTaken()
+    return isCursorShowing()
+        or uiListIsOpen()
+        or (running("tutorial") and exports.tutorial:checklistShown() == true)
+        or (running("ui") and exports.ui:tipIsShown() == true)
+end
+
 local function drawNeeds()
     local T = bars.THIRST
     draw.progressBar(T.x, T.y, T.w, T.h, bars.fill(state.stats.thirst, T.max), T.r, T.g, T.b, T.a, "right")
@@ -793,7 +808,7 @@ addEventHandler("onClientRender", root, function()
     local vt = driver and vehicleType(getElementData(vehicle, "vehicles.type")) or nil
     local dashTop = vt and dashboard.top(vt) or nil -- nil: this vehicle has no dashboard (a bicycle, a trailer)
     drawSkillNotice(dashTop and dashTop - 16 or nil)
-    if not setting then
+    if not setting and not skillCornerTaken() then
         drawSkillBars(driver)
     end
     if driver then

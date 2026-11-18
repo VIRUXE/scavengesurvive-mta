@@ -35,6 +35,10 @@ return function(ctx)
         return true
     end
 
+    function M.shown()
+        return slot ~= nil and not (slot.until_ and getTickCount() > slot.until_)
+    end
+
     function M.draw()
         if not slot then
             return

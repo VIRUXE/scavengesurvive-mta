@@ -409,6 +409,11 @@ addEventHandler("onClientRender", root, function()
     drawChecklist(c)
 end)
 
+-- export: the checklist (or the completion box) is on screen, right-hand side (hud steps its skill bars aside)
+function checklistShown()
+    return active and not invOpen and (done or stage >= 1) or false
+end
+
 addEventHandler("tutorialStarted", root, function()
     active, done, invOpen, startedAt = true, false, false, getTickCount()
     stage, hint, tool = 0, nil, nil
