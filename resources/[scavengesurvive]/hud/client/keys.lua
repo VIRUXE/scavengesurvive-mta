@@ -172,6 +172,41 @@ return function(ctx)
         return nearest
     end
 
+    -- A Crowbar in hand with a built defence in its reach and a vehicle beside: true when the defence should take F.
+    -- An unlocked vehicle with no armour panel near has nothing for a Crowbar (no lock to force), so the defence wins;
+    -- when both have work, the one straight ahead of the player wins, else the one the player is turned more towards.
+    local CROWBAR_LOOK = 3.0
+    local function crowbarPrefersDefence(veh)
+        local defId, defObj, dx, dy = exports.items:nearbyCrowbarDefence()
+        if not defId then
+            return false
+        end
+        if exports.vehicles:crowbarWork(veh) ~= true then
+            return true
+        end
+        local px, py, pz = getElementPosition(localPlayer)
+        local _, _, rz = getElementRotation(localPlayer)
+        local fx, fy = -math.sin(math.rad(rz)), math.cos(math.rad(rz))
+        for _, h in ipairs({ 0.2, -0.3 }) do
+            local sz = pz + h
+            local tx, ty = px + fx * CROWBAR_LOOK, py + fy * CROWBAR_LOOK
+            local T, F = true, false -- buildings, vehicles and objects block the look; players do not
+            local hit, _, _, _, el = processLineOfSight(px, py, sz, tx, ty, sz, T, T, F, T, F, F, F, F, localPlayer)
+            if hit and el == veh then
+                return false
+            elseif hit and defObj and el == defObj then
+                return true
+            end
+        end
+        local function facing(tx, ty)
+            local vx, vy = tx - px, ty - py
+            local len = math.sqrt(vx * vx + vy * vy)
+            return len > 0.001 and (vx * fx + vy * fy) / len or 1
+        end
+        local vx, vy = getElementPosition(veh)
+        return facing(dx, dy) >= facing(vx, vy)
+    end
+
     -- From a front seat only the dedicated glovebox key (E) opens the glovebox in the dash.
     local function openGlovebox(seatedIn)
         if getPedOccupiedVehicleSeat(localPlayer) <= 1 and exports.vehicles:hasGlovebox(seatedIn) then
@@ -392,6 +427,15 @@ return function(ctx)
         local nearVeh, nearDist = getNearbyVehicle()
         local held = ctx.getHeld()
         local uname = held and held.uname
+        -- a Crowbar beside a built defence and a vehicle: the defence's pickup (building removeDefence) takes the key
+        -- unless the Crowbar has work at the vehicle and the player faces the vehicle rather than the defence
+        if uname == "Crowbar" then
+            local crowbarVeh = exports.vehicles:nearbyTrailerDoor() or (nearVeh and nearDist <= 5.5 and nearVeh)
+            if crowbarVeh and crowbarPrefersDefence(crowbarVeh) then
+                blockEnterUntil = getTickCount() + TRUNK_ENTER_BLOCK_MS
+                return triggerServerEvent("itemPickupRequested", localPlayer, exports.items:blockedItemsNear())
+            end
+        end
         -- a lock tool or key at a walk-in door (the towable Airstream's) is for that trailer, not a truck beside it
         if uname and LOCK_TOOLS[uname] then
             local doorVeh = exports.vehicles:nearbyTrailerDoor()

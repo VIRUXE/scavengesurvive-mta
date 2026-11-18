@@ -1131,6 +1131,28 @@ return function(ctx)
         return best and math.sqrt(best) or false
     end
 
+    -- the nearest built defence a Crowbar in hand reaches (the server's pickup radius, flat, as its nearest-item query;
+    -- no wall between): its object and position, else false. The hud's F weighs it against a vehicle beside it.
+    function M.crowbarDefence(reach)
+        local px, py, pz = getElementPosition(localPlayer)
+        local dim, int = getElementDimension(localPlayer), getElementInterior(localPlayer)
+        local best, bestDist, bestId = nil, reach * reach, nil
+        for id, e in pairs(objects) do
+            local r = e.row
+            if e.defence and builtDefence(r) and (r.dimension or 0) == dim and (r.interior or 0) == int then
+                local dx, dy = e.x - px, e.y - py
+                local dist = dx * dx + dy * dy
+                if dist <= bestDist and math.abs(e.z - pz) < 3 and reachable(id, e) then
+                    best, bestDist, bestId = e, dist, id
+                end
+            end
+        end
+        if not best then
+            return false
+        end
+        return bestId, best.obj, best.x, best.y, best.z
+    end
+
     -- the ids of the world items within reach that a wall hides (at most 32): the server leaves them out of a pickup
     function M.blockedNear(reach)
         local px, py, pz = getElementPosition(localPlayer)

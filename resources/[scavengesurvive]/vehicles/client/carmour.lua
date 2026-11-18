@@ -239,6 +239,27 @@ function nearbyWeldTarget()
     return best
 end
 
+-- a panel attached to the vehicle within a Crowbar's reach of the player (server carmour canPry/weldedNear: an
+-- unwelded one is pried off, a welded one only says so); the hud's F weighs it against a built defence beside
+function carmourPanelInReach(vehicle)
+    if not isElement(vehicle) or getElementModel(vehicle) ~= geo.model then
+        return false
+    end
+    local st = stateOf(vehicle)
+    if not st then
+        return false
+    end
+    local m = getElementMatrix(vehicle)
+    local px, py, pz = getElementPosition(localPlayer)
+    local dx, dy, dz = px - m[4][1], py - m[4][2], pz - m[4][3]
+    local me = {
+        dx * m[1][1] + dy * m[1][2] + dz * m[1][3],
+        dx * m[2][1] + dy * m[2][2] + dz * m[2][3],
+        dx * m[3][1] + dy * m[3][2] + dz * m[3][3],
+    }
+    return carmour.nearest(st, place, geo, me, carmour.WORK_REACH) ~= nil
+end
+
 -- the door's hitpoints as a built defence's label (items/client/world.lua) ------------------------------------
 local LABEL_RANGE = 10
 local labelSeen = {} -- vehicle -> { visible, checkedAt }

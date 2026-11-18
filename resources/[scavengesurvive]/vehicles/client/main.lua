@@ -250,6 +250,20 @@ local function hasWalkInDoor(vehicle)
     return doorTypes[uname]
 end
 
+-- export: whether a Crowbar has anything to do at this vehicle (server vehicleInteractRequested): a lock it can break
+-- (not the key lock, LOCKBREAKNO) or an armour panel within reach to pry off. An unlocked vehicle has none, so the
+-- hud's F leaves it for a built defence in reach.
+function crowbarWork(vehicle)
+    if not isElement(vehicle) then
+        return false
+    end
+    local locked = tonumber(getElementData(vehicle, "vehicles.locked")) or 0
+    if locked ~= vlogic.LOCK_OPEN and vlogic.canBreakLock(locked, "Crowbar") then
+        return true
+    end
+    return carmourPanelInReach(vehicle) == true
+end
+
 -- export: the walk-in door in reach and whether it is open (vehicle, open) or false; the HUD's F line. A world item
 -- lying nearer than the door wins, as with the world's buttons: the key picks it up instead.
 function nearbyTrailerDoor()

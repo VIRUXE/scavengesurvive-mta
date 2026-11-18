@@ -72,6 +72,7 @@
     <export function="atEngine" type="client"/>
     <export function="hasGlovebox" type="client"/>
     <export function="nearbyTrailerDoor" type="client"/>
+    <export function="crowbarWork" type="client"/>
     <export function="tryTrailerDoor" type="client"/>
     <export function="tryGasMount" type="client"/>
     <export function="nearbyFuelCap" type="client"/>

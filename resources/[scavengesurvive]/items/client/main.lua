@@ -107,6 +107,16 @@ function nearbyMachine()
     return world.nearbyMachine(2.0) or false
 end
 
+-- the nearest built defence a Crowbar reaches, as (id, object, x, y, z), else false: the hud's F picks it over a
+-- vehicle beside it the Crowbar has nothing to do at, or that the player is not facing
+function nearbyCrowbarDefence()
+    local id, obj, x, y, z = world.crowbarDefence(2.0)
+    if not id then
+        return false
+    end
+    return id, isElement(obj) and obj or false, x, y, z
+end
+
 -- the ids of the world items within reach that a wall hides: the hud sends them with a pickup so the server skips them
 function blockedItemsNear()
     return world.blockedNear(2.0)
