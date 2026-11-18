@@ -93,7 +93,19 @@ local function onWheel(_, _, dir)
     speed = math.max(MIN_SPEED, math.min(MAX_SPEED, dir > 0 and speed * WHEEL_STEP or speed / WHEEL_STEP))
 end
 
-local function setFlying(on, quiet)
+-- The floor under (x, y, z): the first surface straight down, else (under the map) the top of the world there; on
+-- water when that floor is under water.
+local function floorBelow(x, y, z)
+    local hit, _, _, hz =
+        processLineOfSight(x, y, z, x, y, z - 1000, true, true, false, true, false, false, false, false, localPlayer)
+    if not hit then
+        hz = getGroundPosition(x, y, 3000)
+    end
+    local wet, _, _, wz = testLineAgainstWater(x, y, math.max(z, hz) + 1, x, y, hz)
+    return wet and wz or hz
+end
+
+local function setFlying(on, quiet, land)
     if on == flying then
         return
     end
@@ -126,7 +138,14 @@ local function setFlying(on, quiet)
         setElementCollisionsEnabled(localPlayer, true)
         unbindKey("mouse_wheel_up", "down", onWheel)
         unbindKey("mouse_wheel_down", "down", onWheel)
-        setElementVelocity(localPlayer, vx / 50, vy / 50, math.min(0, vz / 50))
+        if land then
+            local x, y, z = getElementPosition(localPlayer)
+            setElementPosition(localPlayer, x, y, floorBelow(x, y, z) + 1, false)
+            setElementVelocity(localPlayer, 0, 0, 0)
+            vx, vy, vz = 0, 0, 0
+        else
+            setElementVelocity(localPlayer, vx / 50, vy / 50, math.min(0, vz / 50))
+        end
         landingUntil = getTickCount() + LANDING_GRACE_MS
     end
     if not quiet then
@@ -141,8 +160,9 @@ local function setFlying(on, quiet)
     end
 end
 
-addEventHandler("devFlyStateChanged", root, function(enabled)
-    setFlying(enabled == true)
+-- land: the server ended the flight (off duty), put the ped on the floor below
+addEventHandler("devFlyStateChanged", root, function(enabled, land)
+    setFlying(enabled == true, false, land == true)
 end)
 
 addEventHandler("onClientPreRender", root, function(slice)

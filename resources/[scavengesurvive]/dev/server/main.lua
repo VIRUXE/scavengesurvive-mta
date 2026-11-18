@@ -481,6 +481,15 @@ addEventHandler("onPlayerQuit", root, function()
     useFly[source] = nil
 end)
 
+-- Going off duty ends the flight and puts the staff member on the floor below them (the client finds it).
+addEventHandler("onElementDataChange", root, function(key, _, new)
+    if key ~= "staff.duty" or new == true or getElementType(source) ~= "player" or not useFly[source] then
+        return
+    end
+    useFly[source] = nil
+    triggerClientEvent(source, "devFlyStateChanged", source, false, true)
+end)
+
 addEventHandler("devFlyActiveChanged", root, function(isFlying)
     if not isElement(client) or client ~= source then
         return
