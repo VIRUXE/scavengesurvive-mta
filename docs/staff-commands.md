@@ -57,6 +57,8 @@ Double-clicking a command (or **Open in panel**) opens the staff panel on that c
   lift them.
 - `/duty` swaps to the upstream duty skin (217 male / 211 female), turns name tags on and sets element data
   `staff.duty`; `weapons` ignores player hits on a victim with that flag.
+- Level 4 and above, on duty or not, get a chat line when any player leaves (`Name has left (Quit)`, or the kick/ban
+  reason): the port's counterpart of the join line everyone sees.
 - `/spec` parks the watcher frozen, invisible and without collisions where they stood, follows the target's
   dimension and interior, and the arrow keys cycle through players; `/free` or `/spec off` returns them.
 - `/field add <name> <x1 y1 x2 y2 x3 y3 x4 y4 minZ maxZ>` draws a detection field (upstream `detfield*.pwn`): the

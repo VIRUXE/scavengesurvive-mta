@@ -444,8 +444,18 @@ local function forget(p)
     modules.duty.forget(p)
 end
 
-addEventHandler("onPlayerQuit", root, function(quitType)
+-- the quit type, with the reason a kick or ban carried (colour codes stripped)
+local function partReason(quitType, reason)
+    local text = tostring(quitType or "Quit")
+    if type(reason) == "string" and reason ~= "" then
+        text = text .. ": " .. reason:gsub("#%x%x%x%x%x%x", "")
+    end
+    return text
+end
+
+addEventHandler("onPlayerQuit", root, function(quitType, reason)
     modules.ghosts.record(source, quitType)
+    ctx.msgStaff(4, " >  #B8B8B8%s#FFFFFF has left (%s)", getPlayerName(source), partReason(quitType, reason))
     forget(source)
 end)
 
