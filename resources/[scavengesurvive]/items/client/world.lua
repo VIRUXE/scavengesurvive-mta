@@ -25,6 +25,8 @@ return function(ctx)
     local labelVisibility = {} -- id -> { visible, checkedAt }
     local reachCache = {} -- id -> { ok, at, tool }: no wall between the player and the item
     local itemElements = setmetatable({}, { __mode = "k" }) -- elements world items draw: never a wall
+    -- except these: a built defence (and a Large Frame's covering) is a wall, so a box behind one is out of reach
+    local defenceElements = setmetatable({}, { __mode = "k" })
     local paneOf = setmetatable({}, { __mode = "k" }) -- a snack machine's intact pane -> the machine's item id
     local shaders = {} -- tent material key -> shader, or false when its texture could not be read
     local typeCache = {} -- uname -> item type with its names in the local player's language (lang.itemType)
@@ -327,8 +329,10 @@ return function(ctx)
     local REACH_RAY_STEPS = 6 -- items and held objects a ray may pass through before it counts as blocked
     local F = false
 
-    -- a ray from the chest to a point; items and carried objects are passed through, anything else blocks it
+    -- a ray from the chest to a point; items and carried objects are passed through, anything else blocks it, and
+    -- so does a built defence other than the target's own model (ign): a motor that moved it aside moved it off the ray
     local function rayClear(sx, sy, sz, tx, ty, tz, ign)
+        local own = ign
         for _ = 1, REACH_RAY_STEPS do
             local left = getDistanceBetweenPoints3D(sx, sy, sz, tx, ty, tz)
             if left < 0.1 then
@@ -338,7 +342,9 @@ return function(ctx)
             if not hit then
                 return true
             end
-            if not (el and (itemElements[el] or getElementAttachedTo(el))) then
+            local passable = el
+                and (el == own or (not defenceElements[el] and (itemElements[el] or getElementAttachedTo(el))))
+            if not passable then
                 return false
             end
             local k = 0.05 / math.max(left, 0.05)
@@ -425,6 +431,12 @@ return function(ctx)
             if el then
                 itemElements[el] = true
             end
+        end
+        if e.obj then
+            defenceElements[e.obj] = e.defence or nil
+        end
+        if e.covering then
+            defenceElements[e.covering] = true
         end
         for _, obj in ipairs(e.snacks or {}) do
             itemElements[obj] = true
