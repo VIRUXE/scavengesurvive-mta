@@ -222,6 +222,106 @@ return function(ctx)
 
     local confirmBayMenu
 
+    -- The chooser's entries from items, loot and dumpsters carry `element`, the world object they act on. The entry
+    -- for the object the camera looks at opens selected (the crosshair ray, else the one nearest the view centre
+    -- within AIM_COS), and the selected entry's object is outlined in the world while the list is up.
+    local AIM_COS = 0.94 -- about 20 degrees off the view centre
+    local function aimedIndex(entries)
+        local cx, cy, cz, lx, ly, lz = getCameraMatrix()
+        local fx, fy, fz = lx - cx, ly - cy, lz - cz
+        local flen = math.sqrt(fx * fx + fy * fy + fz * fz)
+        if flen < 0.001 then
+            return nil
+        end
+        fx, fy, fz = fx / flen, fy / flen, fz / flen
+        local T, F = true, false
+        local hit, _, _, _, el = processLineOfSight(
+            cx,
+            cy,
+            cz,
+            cx + fx * 20,
+            cy + fy * 20,
+            cz + fz * 20,
+            T,
+            F,
+            F,
+            T,
+            F,
+            F,
+            F,
+            F,
+            localPlayer
+        )
+        local best, bestCos = nil, AIM_COS
+        for i, entry in ipairs(entries) do
+            local obj = entry.element
+            if isElement(obj) then
+                if hit and el == obj then
+                    return i
+                end
+                local x, y, z = getElementPosition(obj)
+                local vx, vy, vz = x - cx, y - cy, z - cz
+                local len = math.sqrt(vx * vx + vy * vy + vz * vz)
+                local cos = len > 0.001 and (vx * fx + vy * fy + vz * fz) / len or -1
+                if cos > bestCos then
+                    best, bestCos = i, cos
+                end
+            end
+        end
+        return best
+    end
+
+    -- the 12 edges of the object's bounding box, pulsing, a hair outside it so the model does not hide them
+    local function outlineElement(obj)
+        local x0, y0, z0, x1, y1, z1 = getElementBoundingBox(obj)
+        if not x0 then
+            x0, y0, z0, x1, y1, z1 = -0.25, -0.25, -0.25, 0.25, 0.25, 0.25
+        end
+        local pad = 0.03
+        x0, y0, z0, x1, y1, z1 = x0 - pad, y0 - pad, z0 - pad, x1 + pad, y1 + pad, z1 + pad
+        local m = getElementMatrix(obj)
+        if not m then
+            return
+        end
+        local function at(x, y, z)
+            return x * m[1][1] + y * m[2][1] + z * m[3][1] + m[4][1],
+                x * m[1][2] + y * m[2][2] + z * m[3][2] + m[4][2],
+                x * m[1][3] + y * m[2][3] + z * m[3][3] + m[4][3]
+        end
+        local c = {}
+        for i, p in ipairs({
+            { x0, y0, z0 },
+            { x1, y0, z0 },
+            { x1, y1, z0 },
+            { x0, y1, z0 },
+            { x0, y0, z1 },
+            { x1, y0, z1 },
+            { x1, y1, z1 },
+            { x0, y1, z1 },
+        }) do
+            c[i] = { at(p[1], p[2], p[3]) }
+        end
+        local alpha = 150 + 105 * math.abs(math.sin(getTickCount() / 300))
+        local colour = tocolor(232, 232, 144, alpha)
+        for _, e in ipairs({
+            { 1, 2 },
+            { 2, 3 },
+            { 3, 4 },
+            { 4, 1 },
+            { 5, 6 },
+            { 6, 7 },
+            { 7, 8 },
+            { 8, 5 },
+            { 1, 5 },
+            { 2, 6 },
+            { 3, 7 },
+            { 4, 8 },
+        }) do
+            local a, b = c[e[1]], c[e[2]]
+            dxDrawLine3D(a[1], a[2], a[3], b[1], b[2], b[3], colour, 2)
+        end
+    end
+
     -- The engine (bonnet, cowl, battery, starter motor, engine repair) has a key of its own, E: beside a helicopter
     -- the interact key boards it. Vehicles marks its engine entries of the interaction list with `engine`.
     local function pickActions(engine)
@@ -281,7 +381,7 @@ return function(ctx)
         local choices = pickActions(false)
         if #choices > 1 or (#choices == 1 and not choices[1].item) then
             blockEnterUntil = getTickCount() + TRUNK_ENTER_BLOCK_MS
-            bayMenu = { entries = choices, index = 1, generic = true }
+            bayMenu = { entries = choices, index = aimedIndex(choices) or 1, generic = true }
             if #choices == 1 then
                 confirmBayMenu()
             end
@@ -876,6 +976,10 @@ return function(ctx)
                 closeBayMenu()
                 return
             end
+        end
+        local current = menu.generic and menu.entries[menu.index]
+        if current and isElement(current.element) then
+            outlineElement(current.element)
         end
         local canvas, c = ctx.canvas, ctx.c
         local n = #menu.entries

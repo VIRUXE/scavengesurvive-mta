@@ -130,6 +130,7 @@ function interactionActions()
             label = interactionLang.text("Open dumpster"),
             event = "dumpsterOpenRequested",
             target = i,
+            element = state[i] and state[i].body or nil, -- hud outlines the selected entry's object in the world
         },
     }
 end

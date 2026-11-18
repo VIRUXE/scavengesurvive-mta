@@ -1056,6 +1056,7 @@ return function(ctx)
             then
                 local verb = lang.text("Pick up")
                 local event = "itemPickupRequested"
+                local obj = isElement(e.obj) and e.obj or nil
                 if def then
                     verb = defVerb
                 elseif t.category == "bag" or t.category == "safebox" then
@@ -1078,6 +1079,7 @@ return function(ctx)
                         label = lang.text("Take torch") .. " · " .. t.name,
                         event = "weldTorchGrabRequested",
                         target = id,
+                        element = obj,
                         item = true,
                     }
                 end
@@ -1086,6 +1088,7 @@ return function(ctx)
                     label = verb .. " · " .. t.name,
                     event = event,
                     target = id,
+                    element = obj, -- hud outlines the selected entry's object in the world
                     -- not an item to pick up: the HUD shows this label on F instead of "Pick up"
                     item = not def,
                 }
@@ -1098,6 +1101,7 @@ return function(ctx)
                         label = lang.text("Pick up") .. " · " .. t.name,
                         event = "itemLongPickupRequested",
                         target = id,
+                        element = obj,
                         item = true,
                     }
                 end

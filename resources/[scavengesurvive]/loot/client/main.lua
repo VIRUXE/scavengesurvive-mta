@@ -154,7 +154,7 @@ local function streamedCrates()
         local id = getElementData(o, "crate.id")
         if id then
             local x, y, z = getElementPosition(o)
-            out[#out + 1] = { id = id, kind = getElementData(o, "crate.kind"), x = x, y = y, z = z }
+            out[#out + 1] = { id = id, kind = getElementData(o, "crate.kind"), x = x, y = y, z = z, obj = o }
         end
     end
     return out
@@ -283,6 +283,7 @@ function interactionActions()
             label = interactionLang.text(c.kind == "cache" and "Open weapon cache" or "Open supply crate"),
             event = "supplyCrateOpenRequested",
             target = c.id,
+            element = c.obj, -- hud outlines the selected entry's object in the world
         },
     }
 end
