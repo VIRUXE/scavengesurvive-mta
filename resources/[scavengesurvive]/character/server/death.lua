@@ -89,9 +89,10 @@ return function(ctx)
             triggerEvent("tutorialCharacterDied", player, cause)
             return false
         end
+        local aliveAdd = state.aliveUnsaved(st)
         st.aliveFinal = state.aliveSeconds(st) -- the life's online time stops here (the ranking)
         st.dead, st.hp = true, 0
-        db.exec("UPDATE characters SET alive_s = GREATEST(alive_s, ?) WHERE id = ?", { st.aliveFinal, st.id })
+        db.exec("UPDATE characters SET alive_s = alive_s + ? WHERE id = ?", { aliveAdd, st.id })
         if state.clearStatuses then
             state.clearStatuses(player, not silent)
         end

@@ -159,7 +159,7 @@ return function(ctx)
         local _, _, rz = getElementRotation(player)
         local sql = "UPDATE characters SET hp = ?, food = ?, thirst = ?, bleed = ?, x = ?, y = ?, z = ?, rz = ?,"
             .. " interior = ?, dimension = ?, skills = ?, infection = ?, drugs = ?, wounds = ?,"
-            .. " alive_s = GREATEST(alive_s, ?) WHERE id = ? AND alive = 1"
+            .. " alive_s = alive_s + ? WHERE id = ? AND alive = 1"
         local inf, drugs = medical.encodeInfection(st.infection), medical.encodeDrugs(st.drugs)
         db.exec(sql, {
             st.hp,
@@ -176,7 +176,7 @@ return function(ctx)
             inf,
             drugs,
             survival.encodeWounds(st.wounds),
-            state.aliveSeconds(st),
+            state.aliveUnsaved(st),
             st.id,
         })
         st.dirty, st.skillsDirty = false, false
@@ -205,7 +205,7 @@ return function(ctx)
                 row.wounds = survival.encodeWounds(st.wounds)
                 row.interior, row.dimension = int, dim
                 row.path = takeTrail(player)
-                row.alive_s = state.aliveSeconds(st)
+                row.alive_add = state.aliveUnsaved(st)
                 rows[#rows + 1] = row
                 st.dirty, st.skillsDirty = false, false
             end

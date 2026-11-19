@@ -42,6 +42,15 @@ function state.aliveSeconds(st)
     return math.floor((st.aliveBase or 0) + running)
 end
 
+-- seconds counted since the last save, marked saved: the database adds them to alive_s rather than taking this
+-- server's total, so a correction made there (staff) holds while the character is loaded
+function state.aliveUnsaved(st)
+    local now = state.aliveSeconds(st)
+    local delta = math.max(0, now - (st.aliveSaved or now))
+    st.aliveSaved = now
+    return delta
+end
+
 -- pause (on duty) or resume the life clock
 function state.aliveClock(st, run)
     if st.aliveFinal or (st.aliveTick ~= nil) == run then
@@ -207,6 +216,7 @@ local function spawnFromRow(player, row, isNew)
         -- seconds this life spent online before this session (characters.alive_s) and the tick the session's count
         -- started at: the ranking counts a life only while its player is connected
         aliveBase = tonumber(row.alive_s) or 0,
+        aliveSaved = tonumber(row.alive_s) or 0, -- the count as of the last save (state.aliveUnsaved)
         aliveTick = getTickCount(), -- nil while paused (staff duty, set right after the spawn below)
         inventoryContainerId = row.inventory_container_id,
         lastSent = { hp = -1, food = -1, thirst = -1, bleed = -1, wounds = -1 },
