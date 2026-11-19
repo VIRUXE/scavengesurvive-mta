@@ -54,7 +54,9 @@ GLASS = 'house_window'
 FRAME_TEX = 'ws_doorframe'
 FRAME_UV = (0.4, 0.5)  # plain painted wood of ws_doorframe
 LIGHT_LIFT = 60 / 255  # a window lit exactly like a dim wall reads as a dark hole: up to 2x the wall, to this, never below the wall
-TWO_SIDED = ('ws_railing1',)  # see-through grilles drawn one way only: the balconies vanished from inside
+# see-through grilles and fences drawn one way only: the balconies vanished from inside, and lvhouse1's yard fence
+# (lshouse4's chain-link) from the yard, its collision still there
+TWO_SIDED = ('ws_railing1', 'ws_neatwoodfence', 'compfence1_lae')
 # flower and hedge cards are flat rectangles too: lvhouse2's front bed got frames, glass and blinds
 PLANT_TEX = ('flower', 'hedge', 'plant', 'bush', 'shrub', 'leaf', 'leaves', 'tree', 'ivy')
 # what hangs behind each house's glass, all vanilla textures in house_window.txd: a pair of gathered curtains, or a
