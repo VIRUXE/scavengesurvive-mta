@@ -817,13 +817,14 @@ return function(ctx)
 
     -- furnitureId (groundCraft): no recipe matching puts the tool on that furniture instead (#148); false when the
     -- crafting resource is not running
-    local function runCrafting(action, player, furnitureId)
+    -- targetId (deconstruct): the item the HUD outlined, sent with the press
+    local function runCrafting(action, player, furnitureId, targetId)
         local res = getResourceFromName and getResourceFromName("crafting")
         if not res or getResourceState(res) ~= "running" then
             return false
         end
         if action == "deconstruct" then
-            exports.crafting:deconstruct(player)
+            exports.crafting:deconstruct(player, targetId)
         elseif action == "groundCraft" then
             exports.crafting:groundCraft(player, furnitureId)
         elseif action == "workbenchCraft" then
@@ -923,7 +924,7 @@ return function(ctx)
                     return toast(c.player, "ITEM_WALL_BLOCKED")
                 end
                 if curUname == "Crowbar" then
-                    runCrafting("deconstruct", c.player)
+                    runCrafting("deconstruct", c.player, nil, c.targetId)
                 elseif curUname == "FireLighter" then
                     runCrafting("groundCraft", c.player)
                 elseif curHeld and furnitureSrv then -- none of the item's own targets near: a table may take it
@@ -967,7 +968,7 @@ return function(ctx)
             end
 
             if curUname == "Crowbar" then
-                return runCrafting("deconstruct", c.player)
+                return runCrafting("deconstruct", c.player, nil, c.targetId)
             end
 
             -- Locator on a phone, a Stun Gun on a Tool Battery, a Petrol Can on an empty Molotov (smallitems.lua)

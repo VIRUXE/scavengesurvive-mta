@@ -43,6 +43,8 @@ return {
     workbenchCraftRequested = true,
     craftHoldStarted = true,
     craftHoldStopped = true,
+    itemHoldTargetsShown = true,
+    itemHoldTargetsCleared = true,
     craftHoldCancelRequested = true,
     recipeCarriedRequested = true,
     recipeCarriedSent = true,

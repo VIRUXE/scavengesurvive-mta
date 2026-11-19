@@ -129,6 +129,7 @@ local function cancelHold(player)
             clearHoldAnim(player)
         end
         triggerClientEvent(player, "craftHoldStopped", player)
+        triggerClientEvent(player, "itemHoldTargetsCleared", player)
     end
 end
 
@@ -387,6 +388,12 @@ local function tryGroundCraft(player, _cid, held, px, py, pz, rz, int, dim, quie
         local ms = exports.character:skillTimeModifier(c.player, recipe.buildTime, recipe.result.uname)
         local label = lang.formatFor(c.player, "Constructing %s", lang.itemName(recipe.result.uname, c.player))
         triggerClientEvent(c.player, "craftHoldStarted", c.player, label, ms)
+        -- the parts stay outlined while the hold lasts (items itemHoldTargetsShown)
+        local partIds = {}
+        for i, it in ipairs(used) do
+            partIds[i] = tonumber(it.id)
+        end
+        triggerClientEvent(c.player, "itemHoldTargetsShown", c.player, partIds, ms)
         playHoldAnim(c.player)
         -- the parts that get used up, as the JSON array craft_ground takes
         local idsJson = "[" .. table.concat(consumedIds, ",") .. "]"
@@ -462,11 +469,16 @@ local function tryGroundCraft(player, _cid, held, px, py, pz, rz, int, dim, quie
     end, { player = player, toolUname = toolUname, quiet = quiet, furnitureId = furnitureId })
 end
 
--- 3. Deconstruction: Dismantle world item with Crowbar
+-- 3. Deconstruction: Dismantle world item with Crowbar. targetId: the item the player's HUD outlined (items
+-- nearbyCrowbarTarget); only that one is taken apart, still within reach. Without one the nearest is.
 local CROWBAR_TARGETS = "'" .. table.concat(craft.deconstructables("Crowbar"), "', '") .. "'"
 
-local function tryDeconstruct(player, _cid, held, px, py, _pz, _rz, int, dim)
+local function tryDeconstruct(player, _cid, held, px, py, _pz, _rz, int, dim, targetId)
     if not held or held.uname ~= "Crowbar" then
+        return
+    end
+    targetId = tonumber(targetId)
+    if targetId and (targetId <= 0 or targetId % 1 ~= 0 or targetId > 2147483647) then
         return
     end
     local query = "SELECT i.id, i.type_uname, i.x, i.y, i.z FROM world_items_pos p "
@@ -478,8 +490,15 @@ local function tryDeconstruct(player, _cid, held, px, py, _pz, _rz, int, dim)
         .. CROWBAR_TARGETS
         .. ") AND i.container_id IS NULL AND i.holder_char_id IS NULL "
         .. "AND IFNULL(i.interior, 0) = ? AND IFNULL(i.dimension, 0) = ? "
+        .. (targetId and "AND i.id = ? " or "")
         .. "ORDER BY ST_Distance(p.pos, POINT(?, ?)) ASC LIMIT 1"
-    db.one(query, { px, py, int or 0, dim or 0, px, py }, function(target, c)
+    local params = { px, py, int or 0, dim or 0 }
+    if targetId then
+        params[#params + 1] = targetId
+    end
+    params[#params + 1] = px
+    params[#params + 1] = py
+    db.one(query, params, function(target, c)
         if not isElement(c.player) or not target then
             return
         end
@@ -492,6 +511,7 @@ local function tryDeconstruct(player, _cid, held, px, py, _pz, _rz, int, dim)
         local ms = exports.character:skillTimeModifier(c.player, info.duration, target.type_uname)
         local label = lang.formatFor(c.player, "Deconstructing %s", lang.itemName(target.type_uname, c.player))
         triggerClientEvent(c.player, "craftHoldStarted", c.player, label, ms)
+        triggerClientEvent(c.player, "itemHoldTargetsShown", c.player, { tonumber(target.id) }, ms)
         playHoldAnim(c.player)
         local timer = setTimer(function(pl, tgt, dInfo, cint, cdim)
             activeHold[pl] = nil
@@ -748,7 +768,7 @@ function groundCraft(player, furnitureId)
     return true
 end
 
-function deconstruct(player)
+function deconstruct(player, targetId)
     local cid = charId(player)
     if not cid then
         return false
@@ -757,7 +777,7 @@ function deconstruct(player)
     local px, py, pz = getElementPosition(player)
     local _, _, rz = getElementRotation(player)
     local int, dim = getElementInterior(player), getElementDimension(player)
-    tryDeconstruct(player, cid, held, px, py, pz, rz, int, dim)
+    tryDeconstruct(player, cid, held, px, py, pz, rz, int, dim, targetId)
     return true
 end
 

@@ -102,7 +102,8 @@
     <export function="heldObjectOf" type="client"/>
     <export function="nearestItemDistance" type="client"/>
     <export function="blockedItemsNear" type="client"/>
-    <export function="nearbyCrowbarDefence" type="client"/>
+    <export function="nearbyCrowbarTarget" type="client"/>
+    <export function="itemObject" type="client"/>
     <export function="interactionActions" type="client"/>
     <export function="getProductionRecipes" type="client"/>
 </meta>

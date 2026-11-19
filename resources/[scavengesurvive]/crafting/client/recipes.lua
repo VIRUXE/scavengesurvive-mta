@@ -583,6 +583,11 @@ local function open()
 end
 
 -- what the character carries, for the green and red tiles
+-- export: the item types a tool takes apart (craft.lua removal recipes); items' Crowbar target picks among them
+function deconstructables(toolUname)
+    return craft.deconstructables(toolUname)
+end
+
 addEventHandler("recipeCarriedSent", localPlayer, function(counts)
     if not win then
         return

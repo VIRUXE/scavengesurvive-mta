@@ -1283,26 +1283,99 @@ return function(ctx)
         return best and math.sqrt(best) or false
     end
 
-    -- the nearest built defence a Crowbar in hand reaches (the server's pickup radius, flat, as its nearest-item query;
-    -- no wall between): its object and position, else false. The hud's F weighs it against a vehicle beside it.
-    function M.crowbarDefence(reach)
+    -- What a Crowbar's F works on: a built defence it reaches (flat, the server's 2 m pickup radius, no wall between)
+    -- or a constructed item it takes apart (crafting's removal recipes, its 2.5 m deconstruct radius) that the player
+    -- faces. The one the camera looks at wins, else the one nearest the view centre within CROWBAR_AIM_COS, else the
+    -- nearest. The hud outlines and names it and sends its id with the press, so the server works on that one.
+    -- Checked at most every CROWBAR_TARGET_MS: id, object, uname, or false.
+    local CROWBAR_AIM_COS = 0.94
+    local CROWBAR_TARGET_MS = 100
+    local deconstructSet = nil
+    local crowbarPick = { at = -math.huge }
+    local function deconstructable(uname)
+        if not deconstructSet then
+            local res = getResourceFromName("crafting")
+            local list = res and getResourceState(res) == "running" and exports.crafting:deconstructables("Crowbar")
+            if type(list) ~= "table" then
+                return false -- asked again next time: crafting may not have started yet
+            end
+            deconstructSet = {}
+            for _, u in ipairs(list) do
+                deconstructSet[u] = true
+            end
+        end
+        return deconstructSet[uname] == true
+    end
+    function M.crowbarTarget()
+        local now = getTickCount()
+        if now - crowbarPick.at < CROWBAR_TARGET_MS then
+            local e = crowbarPick.id and objects[crowbarPick.id]
+            if not e then
+                return false
+            end
+            return crowbarPick.id, isElement(e.obj) and e.obj or false, e.uname
+        end
+        crowbarPick = { at = now }
         local px, py, pz = getElementPosition(localPlayer)
         local dim, int = getElementDimension(localPlayer), getElementInterior(localPlayer)
-        local best, bestDist, bestId = nil, reach * reach, nil
+        local cands = {}
         for id, e in pairs(objects) do
             local r = e.row
-            if e.defence and builtDefence(r) and (r.dimension or 0) == dim and (r.interior or 0) == int then
+            if (r.dimension or 0) == dim and (r.interior or 0) == int and math.abs(e.z - pz) < 3 and not e.pitched then
                 local dx, dy = e.x - px, e.y - py
-                local dist = dx * dx + dy * dy
-                if dist <= bestDist and math.abs(e.z - pz) < 3 and reachable(id, e) then
-                    best, bestDist, bestId = e, dist, id
+                local flat = dx * dx + dy * dy
+                local built = e.defence and builtDefence(r)
+                if built and flat <= 4.0 and reachable(id, e) then
+                    cands[#cands + 1] = { id = id, e = e, dist = flat }
+                elseif not built and flat <= 6.0 and deconstructable(e.uname) and inReach(id, e) then
+                    cands[#cands + 1] = { id = id, e = e, dist = flat }
                 end
             end
         end
-        if not best then
+        if #cands == 0 then
             return false
         end
-        return bestId, best.obj, best.x, best.y, best.z
+        local pick = nil
+        if #cands > 1 then
+            local cx, cy, cz, lx, ly, lz = getCameraMatrix()
+            local fx, fy, fz = lx - cx, ly - cy, lz - cz
+            local flen = math.sqrt(fx * fx + fy * fy + fz * fz)
+            if flen > 0.001 then
+                fx, fy, fz = fx / flen, fy / flen, fz / flen
+                local yes, no = true, false
+                local ex, ey, ez = cx + fx * 20, cy + fy * 20, cz + fz * 20
+                local hit, _, _, _, el =
+                    processLineOfSight(cx, cy, cz, ex, ey, ez, yes, no, no, yes, no, no, no, no, localPlayer)
+                local bestCos = CROWBAR_AIM_COS
+                for _, c in ipairs(cands) do
+                    if hit and el and el == c.e.obj then
+                        pick = c
+                        break
+                    end
+                    local vx, vy, vz = c.e.x - cx, c.e.y - cy, c.e.z - cz
+                    local len = math.sqrt(vx * vx + vy * vy + vz * vz)
+                    local cos = len > 0.001 and (vx * fx + vy * fy + vz * fz) / len or -1
+                    if cos > bestCos then
+                        pick, bestCos = c, cos
+                    end
+                end
+            end
+        end
+        if not pick then
+            for _, c in ipairs(cands) do
+                if not pick or c.dist < pick.dist then
+                    pick = c
+                end
+            end
+        end
+        crowbarPick.id = pick.id
+        return pick.id, isElement(pick.e.obj) and pick.e.obj or false, pick.e.uname
+    end
+
+    -- the world object of a world item, or false (the hud and a hold outline it)
+    function M.objectOf(id)
+        local e = objects[tonumber(id)]
+        return e and isElement(e.obj) and e.obj or false
     end
 
     -- the ids of the world items within reach that a wall hides, or that empty hands would lift but that do not fit

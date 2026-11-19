@@ -70,6 +70,7 @@ local function cancelBreak(player)
         killTimer(activeBreaks[player])
         if isElement(player) then
             setPedAnimation(player)
+            triggerClientEvent(player, "itemHoldTargetsCleared", player)
         end
     end
     activeBreaks[player] = nil
@@ -160,6 +161,7 @@ end
 local function holdDefenceAction(player, row, tool, label, ms, finish)
     cancelBreak(player)
     triggerClientEvent(player, "vehicleHoldStarted", player, label, ms)
+    triggerClientEvent(player, "itemHoldTargetsShown", player, { row.id }, ms) -- the defence stays outlined
     setPedAnimation(player, "COP_AMBIENT", "COPBROWSE_LOOP", -1, true, false, false, false)
     activeBreaks[player] = setTimer(function(pl, itemId, x, y, z)
         activeBreaks[pl] = nil

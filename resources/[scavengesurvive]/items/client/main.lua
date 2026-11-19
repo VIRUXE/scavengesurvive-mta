@@ -21,6 +21,7 @@ local gardening = loadModule("shared/logic/gardening.lua")
 local machines = loadModule("shared/logic/machines.lua")
 -- the logic modules' label words in the local player's language (lib lang, auth's auth.lang)
 local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")()
+local outline = loadstring(exports.lib:getModule("outline"), "=lib/outline.lua")()
 for _, m in ipairs({ ammo, clothes, cooking, liquids, small, gardening, machines }) do
     m.tr = lang.text
 end
@@ -108,14 +109,18 @@ function nearbyMachine()
     return world.nearbyMachine(2.0) or false
 end
 
--- the nearest built defence a Crowbar reaches, as (id, object, x, y, z), else false: the hud's F picks it over a
--- vehicle beside it the Crowbar has nothing to do at, or that the player is not facing
-function nearbyCrowbarDefence()
-    local id, obj, x, y, z = world.crowbarDefence(2.0)
+-- what a Crowbar's F works on (world.crowbarTarget): id, object (or false), uname; else false
+function nearbyCrowbarTarget()
+    local id, obj, uname = world.crowbarTarget()
     if not id then
         return false
     end
-    return id, isElement(obj) and obj or false, x, y, z
+    return id, obj, uname
+end
+
+-- a world item's object, or false
+function itemObject(id)
+    return world.objectOf(id)
 end
 
 -- the ids of the world items within reach that a wall hides: the hud sends them with a pickup so the server skips them
@@ -379,3 +384,33 @@ function getProductionRecipes()
     end)
     return out
 end
+
+-- The world items a hold works on (building's build and removal, crafting's construction and deconstruction) stay
+-- outlined while it lasts: the server names them when the hold starts and clears them when it stops early; the
+-- outline also ends on its own once the hold's time is up.
+local holdTargets = nil -- { ids, untilTick }
+addEventHandler("itemHoldTargetsShown", localPlayer, function(ids, ms)
+    if type(ids) ~= "table" or #ids == 0 then
+        holdTargets = nil
+        return
+    end
+    holdTargets = { ids = ids, untilTick = getTickCount() + math.min(tonumber(ms) or 0, 120000) + 300 }
+end)
+addEventHandler("itemHoldTargetsCleared", localPlayer, function()
+    holdTargets = nil
+end)
+addEventHandler("onClientRender", root, function()
+    if not holdTargets then
+        return
+    end
+    if getTickCount() > holdTargets.untilTick then
+        holdTargets = nil
+        return
+    end
+    for _, id in ipairs(holdTargets.ids) do
+        local obj = world.objectOf(id)
+        if obj then
+            outline.draw(obj)
+        end
+    end
+end)

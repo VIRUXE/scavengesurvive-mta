@@ -9,6 +9,8 @@ addEvent("recipeCarriedRequested", true)
 -- server to client / client-local
 addEvent("craftHoldStarted", true)
 addEvent("craftHoldStopped", true)
+addEvent("itemHoldTargetsShown", true)
+addEvent("itemHoldTargetsCleared", true)
 addEvent("recipeCarriedSent", true)
 addEvent("toastShown", true)
 

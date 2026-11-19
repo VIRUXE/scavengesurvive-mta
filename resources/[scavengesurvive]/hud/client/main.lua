@@ -93,6 +93,7 @@ local SKILL_NOTICE_MS = 5000
 local GREEN = tocolor(0, 255, 0, 255) -- upstream skl_PlayerNotification colour 16711935 (0x00FF00FF)
 local typeCache, vehicleTypeCache = {}, {}
 local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")()
+local outline = loadstring(exports.lib:getModule("outline"), "=lib/outline.lua")()
 keyactions.tr = lang.text -- the key-action lines in the player's language
 
 local function itemType(uname)
@@ -681,6 +682,8 @@ local function vehicleHasFrontGlovebox()
 end
 
 local interactionActions = loadFile("client/interactions.lua", "=hud/interactions.lua")
+-- the table client/keys.lua gets; it puts crowbarFocus on it (what F with a Crowbar works on)
+local keysCtx = {}
 
 local function drawKeyActions(driver)
     local held = state.held
@@ -694,6 +697,15 @@ local function drawKeyActions(driver)
         local list = action.engine == true and engineChoices or choices
         list[#list + 1] = action
     end
+    -- a Crowbar's target is outlined and named on the F line (keys.lua crowbarFocus)
+    local crowbarName = false
+    if held and held.uname == "Crowbar" and keysCtx.crowbarFocus then
+        local id, obj, uname = keysCtx.crowbarFocus()
+        if id then
+            outline.draw(obj)
+            crowbarName = lang.itemName(uname)
+        end
+    end
     local lines = keyactions.lines({
         spawned = true,
         uiOpen = uiListIsOpen(),
@@ -702,6 +714,7 @@ local function drawKeyActions(driver)
         hitch = driver and state.hitch or false,
         glovebox = vehicleHasFrontGlovebox(),
         held = held and { uname = held.uname, category = held.category, isWeapon = isCalibreWep },
+        crowbarTarget = crowbarName,
         nearPlayer = held and hasPlayerNearby() or false,
         nearFeature = nearFeature(),
         nearCrate = exports.loot:nearbyCrate() or exports.dumpsters:nearbyDumpster() or nil,
@@ -907,13 +920,12 @@ addEventHandler("onClientResourceStart", resourceRoot, function()
     end, 100, 0)
 end)
 
-loadFile("client/keys.lua", "=hud/keys.lua")({
-    interactionActions = interactionActions,
-    getHeld = function()
-        return state.held
-    end,
-    hasPlayerNearby = hasPlayerNearby,
-    canvas = canvas,
-    c = c,
-    draw = draw,
-})
+keysCtx.interactionActions = interactionActions
+keysCtx.getHeld = function()
+    return state.held
+end
+keysCtx.hasPlayerNearby = hasPlayerNearby
+keysCtx.canvas = canvas
+keysCtx.c = c
+keysCtx.draw = draw
+loadFile("client/keys.lua", "=hud/keys.lua")(keysCtx)

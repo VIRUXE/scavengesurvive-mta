@@ -3,6 +3,7 @@
 -- N for 300 ms on a calibre weapon unloads it (tapping N drops the item).
 return function(ctx)
     local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")()
+    local outline = loadstring(exports.lib:getModule("outline"), "=lib/outline.lua")()
     local holdTimer = nil
     local interactHoldTimer = nil
     local bayMenu = nil -- { vehicle, entries = { { id, label } }, index }
@@ -172,17 +173,17 @@ return function(ctx)
         return nearest
     end
 
-    -- A Crowbar in hand with a built defence in its reach and a vehicle beside: true when the defence should take F.
-    -- An unlocked vehicle with no armour panel near has nothing for a Crowbar (no lock to force), so the defence wins;
-    -- when both have work, the one straight ahead of the player wins, else the one the player is turned more towards.
+    -- A Crowbar in hand with its target (items nearbyCrowbarTarget: a built defence or something it takes apart) in
+    -- reach and a vehicle beside: true when the target should take F. A vehicle the Crowbar has nothing to do at (no
+    -- lock to force, no armour panel near) gives way; when both have work, the one straight ahead of the player wins,
+    -- else the one the player is turned more towards.
     local CROWBAR_LOOK = 3.0
-    local function crowbarPrefersDefence(veh)
-        local defId, defObj, dx, dy = exports.items:nearbyCrowbarDefence()
-        if not defId then
-            return false
-        end
+    local function crowbarPrefersTarget(veh, obj)
         if exports.vehicles:crowbarWork(veh) ~= true then
             return true
+        end
+        if not isElement(obj) then
+            return false
         end
         local px, py, pz = getElementPosition(localPlayer)
         local _, _, rz = getElementRotation(localPlayer)
@@ -194,7 +195,7 @@ return function(ctx)
             local hit, _, _, _, el = processLineOfSight(px, py, sz, tx, ty, sz, T, T, F, T, F, F, F, F, localPlayer)
             if hit and el == veh then
                 return false
-            elseif hit and defObj and el == defObj then
+            elseif hit and el == obj then
                 return true
             end
         end
@@ -203,9 +204,33 @@ return function(ctx)
             local len = math.sqrt(vx * vx + vy * vy)
             return len > 0.001 and (vx * fx + vy * fy) / len or 1
         end
+        local dx, dy = getElementPosition(obj)
         local vx, vy = getElementPosition(veh)
         return facing(dx, dy) >= facing(vx, vy)
     end
+
+    -- What F with a Crowbar in hand works on: id, object, uname of the item, or false (nothing in reach, or a vehicle
+    -- beside takes the key). The HUD outlines and names it; the press sends its id so the server works on that one.
+    local function crowbarFocus()
+        local held = ctx.getHeld()
+        if not held or held.uname ~= "Crowbar" then
+            return false
+        end
+        local id, obj, uname = exports.items:nearbyCrowbarTarget()
+        if not id then
+            return false
+        end
+        local veh = exports.vehicles:nearbyTrailerDoor()
+        if not veh then
+            local nearVeh, nearDist = getNearbyVehicle()
+            veh = nearVeh and nearDist <= 5.5 and nearVeh or nil
+        end
+        if veh and not crowbarPrefersTarget(veh, obj) then
+            return false
+        end
+        return id, obj, uname
+    end
+    ctx.crowbarFocus = crowbarFocus
 
     -- From a front seat only the dedicated glovebox key (E) opens the glovebox in the dash.
     local function openGlovebox(seatedIn)
@@ -269,57 +294,6 @@ return function(ctx)
             end
         end
         return best
-    end
-
-    -- the 12 edges of the object's bounding box, pulsing, a hair outside it so the model does not hide them
-    local function outlineElement(obj)
-        local x0, y0, z0, x1, y1, z1 = getElementBoundingBox(obj)
-        if not x0 then
-            x0, y0, z0, x1, y1, z1 = -0.25, -0.25, -0.25, 0.25, 0.25, 0.25
-        end
-        local pad = 0.03
-        x0, y0, z0, x1, y1, z1 = x0 - pad, y0 - pad, z0 - pad, x1 + pad, y1 + pad, z1 + pad
-        local m = getElementMatrix(obj)
-        if not m then
-            return
-        end
-        local function at(x, y, z)
-            return x * m[1][1] + y * m[2][1] + z * m[3][1] + m[4][1],
-                x * m[1][2] + y * m[2][2] + z * m[3][2] + m[4][2],
-                x * m[1][3] + y * m[2][3] + z * m[3][3] + m[4][3]
-        end
-        local c = {}
-        for i, p in ipairs({
-            { x0, y0, z0 },
-            { x1, y0, z0 },
-            { x1, y1, z0 },
-            { x0, y1, z0 },
-            { x0, y0, z1 },
-            { x1, y0, z1 },
-            { x1, y1, z1 },
-            { x0, y1, z1 },
-        }) do
-            c[i] = { at(p[1], p[2], p[3]) }
-        end
-        local alpha = 150 + 105 * math.abs(math.sin(getTickCount() / 300))
-        local colour = tocolor(232, 232, 144, alpha)
-        for _, e in ipairs({
-            { 1, 2 },
-            { 2, 3 },
-            { 3, 4 },
-            { 4, 1 },
-            { 5, 6 },
-            { 6, 7 },
-            { 7, 8 },
-            { 8, 5 },
-            { 1, 5 },
-            { 2, 6 },
-            { 3, 7 },
-            { 4, 8 },
-        }) do
-            local a, b = c[e[1]], c[e[2]]
-            dxDrawLine3D(a[1], a[2], a[3], b[1], b[2], b[3], colour, 2)
-        end
     end
 
     -- The engine (bonnet, cowl, battery, starter motor, engine repair) has a key of its own, E: beside a helicopter
@@ -463,6 +437,19 @@ return function(ctx)
             end, 50, 0)
             return
         end
+        -- a Crowbar works on the item the HUD outlines (crowbarFocus), named by id so the server takes that one
+        if heldNow and heldNow.uname == "Crowbar" then
+            local targetId = crowbarFocus()
+            if targetId then
+                blockEnterUntil = getTickCount() + TRUNK_ENTER_BLOCK_MS
+                return triggerServerEvent(
+                    "itemPickupRequested",
+                    localPlayer,
+                    exports.items:blockedItemsNear(),
+                    targetId
+                )
+            end
+        end
         -- a ground bag opens on a tap and is picked up on a 500 ms hold; a sign or a body lying there (empty hands)
         -- edits or investigates on a tap and is picked up on the hold (upstream "Press F to edit / investigate,
         -- Hold F to pick up", #136, #139)
@@ -529,15 +516,6 @@ return function(ctx)
         local nearVeh, nearDist = getNearbyVehicle()
         local held = ctx.getHeld()
         local uname = held and held.uname
-        -- a Crowbar beside a built defence and a vehicle: the defence's pickup (building removeDefence) takes the key
-        -- unless the Crowbar has work at the vehicle and the player faces the vehicle rather than the defence
-        if uname == "Crowbar" then
-            local crowbarVeh = exports.vehicles:nearbyTrailerDoor() or (nearVeh and nearDist <= 5.5 and nearVeh)
-            if crowbarVeh and crowbarPrefersDefence(crowbarVeh) then
-                blockEnterUntil = getTickCount() + TRUNK_ENTER_BLOCK_MS
-                return triggerServerEvent("itemPickupRequested", localPlayer, exports.items:blockedItemsNear())
-            end
-        end
         -- a lock tool or key at a walk-in door (the towable Airstream's) is for that trailer, not a truck beside it
         if uname and LOCK_TOOLS[uname] then
             local doorVeh = exports.vehicles:nearbyTrailerDoor()
@@ -981,7 +959,7 @@ return function(ctx)
         end
         local current = menu.generic and menu.entries[menu.index]
         if current and isElement(current.element) then
-            outlineElement(current.element)
+            outline.draw(current.element)
         end
         local canvas, c = ctx.canvas, ctx.c
         local n = #menu.entries

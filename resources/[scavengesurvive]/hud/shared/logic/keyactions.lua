@@ -79,6 +79,8 @@ M.BUTTON_LABELS = {
 --   tow ("fit" / "hitch" / "front": vehicles' towHint, a Tow Bar or Rope in hand at a vehicle, M.TOW),
 --   atFuelCap (a Petrol Can in hand at a vehicle's fuel cap, facing it and looking at it),
 --   held = false | { uname, category, isWeapon },
+--   crowbarTarget,                        -- the name of what F with a Crowbar works on, in the reader's
+--                                         -- language (hud outlines it): "Deconstruct · <name>"
 --   nearCooker,                           -- uncooked food in hand next to a campfire or barbecue (#95): "Cook"
 --   nearMachine,                          -- a machine in reach (#145): "Access machine" / "(Hold) Machine menu"
 --   nearContainer,                        -- a bag or box lying in reach: "Open" / "(Hold) Pick up"; "fixed" (the
@@ -262,7 +264,9 @@ function M.lines(ctx, keys)
         end
         return out
     end
-    if M.SPECIAL[h.uname] and (not M.BODY_PARTS[h.uname] or ctx.installPart) then
+    if h.uname == "Crowbar" and ctx.crowbarTarget then
+        add("interact", tr(M.SPECIAL.Crowbar) .. " · " .. ctx.crowbarTarget, "special")
+    elseif M.SPECIAL[h.uname] and (not M.BODY_PARTS[h.uname] or ctx.installPart) then
         add("interact", tr(M.SPECIAL[h.uname]), "special")
     elseif h.category == "food" then
         add("interact", ctx.nearCooker and tr("Cook") or tr("Eat"), "eat")

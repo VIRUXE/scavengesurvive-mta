@@ -17,6 +17,7 @@
     <export function="deconstruct" type="server"/>
     <export function="workbenchCraft" type="server"/>
     <export function="isConstructionTool" type="server"/>
+    <export function="deconstructables" type="client"/>
     <!-- icons:begin (tools/recipe_icons.py) -->
     <file src="client/icons/11704_bdupsmask1.png"/>
     <file src="client/icons/11712_cross1.png"/>
