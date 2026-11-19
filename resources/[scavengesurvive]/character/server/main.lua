@@ -32,6 +32,28 @@ local state = {
     knockout = {}, -- player -> { untilTick, timer }
     cuffed = {}, -- player -> true
 }
+-- online seconds of a life: its stored count plus this session's, frozen once it died. The clock runs only while
+-- aliveTick is set: staff duty pauses it (st.aliveBase keeps what it had counted, fractions included).
+function state.aliveSeconds(st)
+    if st.aliveFinal then
+        return st.aliveFinal
+    end
+    local running = st.aliveTick and (getTickCount() - st.aliveTick) / 1000 or 0
+    return math.floor((st.aliveBase or 0) + running)
+end
+
+-- pause (on duty) or resume the life clock
+function state.aliveClock(st, run)
+    if st.aliveFinal or (st.aliveTick ~= nil) == run then
+        return
+    end
+    if run then
+        st.aliveTick = getTickCount()
+    else
+        st.aliveBase = (st.aliveBase or 0) + (getTickCount() - st.aliveTick) / 1000
+        st.aliveTick = nil
+    end
+end
 local CUFF_CONTROLS = {
     "fire",
     "aim_weapon",
@@ -182,10 +204,15 @@ local function spawnFromRow(player, row, isNew)
         drugs = loadDrugs(row.drugs),
         dirty = false,
         born = tonumber(row.born) or getRealTime().timestamp, -- unix time the character was created (death age)
+        -- seconds this life spent online before this session (characters.alive_s) and the tick the session's count
+        -- started at: the ranking counts a life only while its player is connected
+        aliveBase = tonumber(row.alive_s) or 0,
+        aliveTick = getTickCount(), -- nil while paused (staff duty, set right after the spawn below)
         inventoryContainerId = row.inventory_container_id,
         lastSent = { hp = -1, food = -1, thirst = -1, bleed = -1, wounds = -1 },
     }
     state.byPlayer[player], state.byId[row.id] = st, player
+    state.aliveClock(st, not onDuty(player))
     combatlog.reset(state.combat, player)
     sendCombatWindow(player, 0)
     clearStatuses(player, true)
@@ -275,7 +302,7 @@ local function loadOrCreate(player, accountId)
     db.one(
         "SELECT id, account_id, hp, food, thirst, bleed, wounds, skills, infection, drugs, x, y, z, rz, skin,"
             .. " interior, dimension,"
-            .. " inventory_container_id, UNIX_TIMESTAMP(spawned_at) AS born"
+            .. " inventory_container_id, alive_s, UNIX_TIMESTAMP(spawned_at) AS born"
             .. " FROM characters WHERE account_id = ? AND alive = 1",
         { accountId },
         function(row, ctx)
@@ -417,6 +444,28 @@ function getCharacterId(player)
     local st = state.byPlayer[player]
     return st and st.id or false
 end
+
+-- Seconds the player's character has been alive while online and off staff duty, this session included; false
+-- without one. Also returns whether it is dead (its count stopped at the death, st.aliveFinal) and whether its clock
+-- is paused (on duty).
+function getAliveSeconds(player)
+    local st = state.byPlayer[player]
+    if not st then
+        return false
+    end
+    return state.aliveSeconds(st), st.dead == true, st.aliveTick == nil
+end
+
+-- staff duty takes the character out of the game: its time alive stops counting until duty ends
+addEventHandler("onElementDataChange", root, function(key)
+    if key ~= "staff.duty" or getElementType(source) ~= "player" then
+        return
+    end
+    local st = state.byPlayer[source]
+    if st then
+        state.aliveClock(st, not onDuty(source))
+    end
+end)
 
 function getPlayerByCharacterId(id)
     return state.byId[id] or false

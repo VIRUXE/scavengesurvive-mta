@@ -36,6 +36,7 @@
     <export function="getCharacterId" type="server"/>
     <export function="restartCharacter" type="server"/>
     <export function="getPlayerByCharacterId" type="server"/>
+    <export function="getAliveSeconds" type="server"/>
     <export function="getInventoryContainerId" type="server"/>
     <export function="getStats" type="server"/>
     <export function="modifyStat" type="server"/>

@@ -131,12 +131,14 @@ CREATE TABLE IF NOT EXISTS `characters` (
   `inventory_container_id` int(11) DEFAULT NULL,
   `spawned_at` datetime NOT NULL DEFAULT current_timestamp(),
   `died_at` datetime DEFAULT NULL,
+  `alive_s` int(10) unsigned NOT NULL DEFAULT 0,
   `death_cause` varchar(32) DEFAULT NULL,
   `killer_char_id` int(11) DEFAULT NULL,
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_characters_alive_account` (`alive_account`),
   KEY `ix_characters_account` (`account_id`),
+  KEY `ix_characters_alive_s` (`alive_s`),
   CONSTRAINT `fk_characters_account` FOREIGN KEY (`account_id`) REFERENCES `accounts` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
@@ -450,9 +452,9 @@ CREATE TABLE IF NOT EXISTS `vehicles` (
   KEY `ix_vehicles_spawn` (`spawn_id`),
   KEY `fk_vehicles_trailer` (`trailer_id`),
   KEY `fk_vehicles_rope_tow` (`rope_tow_id`),
+  CONSTRAINT `fk_vehicles_rope_tow` FOREIGN KEY (`rope_tow_id`) REFERENCES `vehicles` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_vehicles_spawn` FOREIGN KEY (`spawn_id`) REFERENCES `vehicle_spawns` (`id`) ON DELETE SET NULL,
-  CONSTRAINT `fk_vehicles_trailer` FOREIGN KEY (`trailer_id`) REFERENCES `vehicles` (`id`) ON DELETE SET NULL,
-  CONSTRAINT `fk_vehicles_rope_tow` FOREIGN KEY (`rope_tow_id`) REFERENCES `vehicles` (`id`) ON DELETE SET NULL
+  CONSTRAINT `fk_vehicles_trailer` FOREIGN KEY (`trailer_id`) REFERENCES `vehicles` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
 CREATE TABLE IF NOT EXISTS `weapon_cache_points` (
@@ -858,11 +860,12 @@ BEGIN
       id INT PATH '$.id', hp FLOAT PATH '$.hp', food FLOAT PATH '$.food', thirst FLOAT PATH '$.thirst', bleed FLOAT PATH '$.bleed',
       x FLOAT PATH '$.x', y FLOAT PATH '$.y', z FLOAT PATH '$.z', rz FLOAT PATH '$.rz',
       interior INT PATH '$.interior', dimension INT PATH '$.dimension',
-      skills LONGTEXT PATH '$.skills', infection INT PATH '$.infection', drugs LONGTEXT PATH '$.drugs', wounds LONGTEXT PATH '$.wounds')) j ON j.id = c.id
+      skills LONGTEXT PATH '$.skills', infection INT PATH '$.infection', drugs LONGTEXT PATH '$.drugs', wounds LONGTEXT PATH '$.wounds', alive_s INT PATH '$.alive_s')) j ON j.id = c.id
     SET c.hp = j.hp, c.food = j.food, c.thirst = COALESCE(j.thirst, c.thirst), c.bleed = j.bleed, c.x = j.x, c.y = j.y, c.z = j.z, c.rz = j.rz,
       c.interior = COALESCE(j.interior, c.interior), c.dimension = COALESCE(j.dimension, c.dimension),
       c.skills = COALESCE(j.skills, c.skills), c.infection = COALESCE(j.infection, c.infection),
-      c.drugs = COALESCE(j.drugs, c.drugs), c.wounds = COALESCE(j.wounds, c.wounds)
+      c.drugs = COALESCE(j.drugs, c.drugs), c.wounds = COALESCE(j.wounds, c.wounds),
+      c.alive_s = GREATEST(c.alive_s, IFNULL(j.alive_s, 0))
     WHERE c.alive = 1;
   SET v_n = ROW_COUNT();
   -- trail points the server buffered since the last flush (staff dashboard); "ago" is milliseconds before now,
