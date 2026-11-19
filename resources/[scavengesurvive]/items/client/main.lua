@@ -70,11 +70,12 @@ function isHandWearable(uname)
 end
 
 function nearbyContainerItem()
-    local id, category = world.nearbyContainerItem(2.0)
-    return id or false, category or false
+    local id, category, stuck = world.nearbyContainerItem(2.0)
+    return id or false, category or false, stuck or false
 end
 
--- (nearbyContainerItem's category is "fixed" for a take-only container such as the snack machine: no hold pickup)
+-- (nearbyContainerItem's category is "fixed" for a take-only container such as the snack machine: no hold pickup;
+-- stuck is true when the container does not fit through the way to the player: it opens, the hold does not lift it)
 
 -- client export for the hud: a Sign or a body lying within reach (a tap of F edits or investigates it, a held F
 -- picks it up): its id and uname, else false

@@ -24,6 +24,7 @@ return function(ctx)
     local lockersOpen = {} -- locker item id -> true while someone has it open (lockerToggled, #143)
     local labelVisibility = {} -- id -> { visible, checkedAt }
     local reachCache = {} -- id -> { ok, at, tool }: no wall between the player and the item
+    local passCache = {} -- id -> { ok, at }: the item fits through the way to the player
     local itemElements = setmetatable({}, { __mode = "k" }) -- elements world items draw: never a wall
     -- except these: a built defence (and a Large Frame's covering) is a wall, so a box behind one is out of reach
     local defenceElements = setmetatable({}, { __mode = "k" })
@@ -323,6 +324,7 @@ return function(ctx)
         end
         labelVisibility[id] = nil
         reachCache[id] = nil
+        passCache[id] = nil
     end
 
     local REACH_CACHE_MS = 250
@@ -439,6 +441,73 @@ return function(ctx)
     -- an item F acts on: faced, and no wall in between
     local function inReach(id, e)
         return faced(e) and reachable(id, e)
+    end
+
+    -- true when the item can come to the player's hands: the way to it is open at knee height (the player walks up
+    -- to it), or its cross-section, carried along the line from where it lies to the hands, clears every wall. A
+    -- workbench seen through a window is opened there, never lifted out through it; a can on the sill still is.
+    local PASS_SHRINK = 0.8 -- the bounds are loose and a carried item may tilt a little
+    local function passes(id, e)
+        local now = getTickCount()
+        local cached = passCache[id]
+        if cached and now - cached.at < REACH_CACHE_MS then
+            return cached.ok
+        end
+        local own = isElement(e.obj) and e.obj or nil
+        local sx, sy, sz = getElementPosition(localPlayer)
+        local kz = sz - 0.5
+        local ok = not own or rayClear(sx, sy, kz, e.x, e.y, math.max(kz, e.z + 0.15), own)
+        if not ok then
+            ok = true
+            local ax, ay, az, bx, by, bz = getElementBoundingBox(own)
+            local m = getElementMatrix(own)
+            if ax and m then
+                local lx, ly, lz = (ax + bx) / 2, (ay + by) / 2, (az + bz) / 2
+                local cx = m[4][1] + lx * m[1][1] + ly * m[2][1] + lz * m[3][1]
+                local cy = m[4][2] + lx * m[1][2] + ly * m[2][2] + lz * m[3][2]
+                local cz = m[4][3] + lx * m[1][3] + ly * m[2][3] + lz * m[3][3]
+                local hz = sz + 0.3
+                local dx, dy, dz = sx - cx, sy - cy, hz - cz
+                local flat = math.sqrt(dx * dx + dy * dy)
+                local len = math.sqrt(dx * dx + dy * dy + dz * dz)
+                if flat > 0.05 then
+                    dx, dy, dz = dx / len, dy / len, dz / len
+                    -- u: across the way, level; v = d x u: up the way
+                    local ux, uy, uz = -dy * len / flat, dx * len / flat, 0
+                    local vx, vy, vz = dy * uz - dz * uy, dz * ux - dx * uz, dx * uy - dy * ux
+                    local half = { (bx - ax) / 2, (by - ay) / 2, (bz - az) / 2 }
+                    local wu, wv = 0, 0
+                    for i = 1, 3 do
+                        local a = m[i]
+                        wu = wu + math.abs(a[1] * ux + a[2] * uy + a[3] * uz) * half[i]
+                        wv = wv + math.abs(a[1] * vx + a[2] * vy + a[3] * vz) * half[i]
+                    end
+                    wu, wv = wu * PASS_SHRINK, wv * PASS_SHRINK
+                    for _, i in ipairs({ -1, 0, 1 }) do
+                        for _, j in ipairs({ -1, 0, 1 }) do
+                            local ox = i * wu * ux + j * wv * vx
+                            local oy = i * wu * uy + j * wv * vy
+                            local oz = i * wu * uz + j * wv * vz
+                            if ok and not rayClear(cx + ox, cy + oy, cz + oz, sx + ox, sy + oy, hz + oz, own) then
+                                ok = false
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        passCache[id] = { ok = ok, at = now }
+        return ok
+    end
+
+    -- an item in reach that empty hands would lift but that does not fit through the way (passes): the hold and the
+    -- chooser offer no pickup and the server leaves it out of one; containers and machines still open on a tap
+    local function stuck(id, e)
+        if e.defence or (ctx.heldUname and ctx.heldUname()) or machines.isMachine(e.uname) then
+            return false
+        end
+        local t = itemType(e.uname)
+        return not (t and t.category == "safebox") and not passes(id, e)
     end
 
     -- every element the item draws, so that a ray passes through it
@@ -1036,7 +1105,8 @@ return function(ctx)
         return nil
     end
 
-    -- the nearest bag or safebox lying within reach (upstream: a tap opens it, a hold picks it up): id, category
+    -- the nearest bag or safebox lying within reach (upstream: a tap opens it, a hold picks it up): id, category,
+    -- and true when it does not fit through the way to the player (opened there, never picked up)
     function M.nearbyContainerItem(reach)
         local px, py, pz = getElementPosition(localPlayer)
         local dim, int = getElementDimension(localPlayer), getElementInterior(localPlayer)
@@ -1055,7 +1125,7 @@ return function(ctx)
                 end
             end
         end
-        return nearest, nearestCategory
+        return nearest, nearestCategory, nearest and not passes(nearest, objects[nearest]) or false
     end
 
     -- Explicit targets for the shared interaction chooser; never substitute a nearer item on selection.
@@ -1107,18 +1177,23 @@ return function(ctx)
                         item = true,
                     }
                 end
-                actions[#actions + 1] = {
-                    id = "item:" .. id,
-                    label = verb .. " · " .. t.name,
-                    event = event,
-                    target = id,
-                    element = obj, -- hud outlines the selected entry's object in the world
-                    -- not an item to pick up: the HUD shows this label on F instead of "Pick up"
-                    item = not def,
-                }
+                -- a plain pickup of an item that does not fit through the way is not offered
+                local lifts = event == "itemPickupRequested" and verb == lang.text("Pick up")
+                if not (lifts and stuck(id, e)) then
+                    actions[#actions + 1] = {
+                        id = "item:" .. id,
+                        label = verb .. " · " .. t.name,
+                        event = event,
+                        target = id,
+                        element = obj, -- hud outlines the selected entry's object in the world
+                        -- not an item to pick up: the HUD shows this label on F instead of "Pick up"
+                        item = not def,
+                    }
+                end
                 if
                     (t.category == "bag" or t.category == "safebox")
                     and not (t.categoryData and t.categoryData.takeOnly)
+                    and passes(id, e)
                 then
                     actions[#actions + 1] = {
                         id = "carry:" .. id,
@@ -1181,7 +1256,8 @@ return function(ctx)
         return bestId, best.obj, best.x, best.y, best.z
     end
 
-    -- the ids of the world items within reach that a wall hides (at most 32): the server leaves them out of a pickup
+    -- the ids of the world items within reach that a wall hides, or that empty hands would lift but that do not fit
+    -- through the way (at most 32): the server leaves them out of a pickup
     function M.blockedNear(reach)
         local px, py, pz = getElementPosition(localPlayer)
         local dim, int = getElementDimension(localPlayer), getElementInterior(localPlayer)
@@ -1190,7 +1266,12 @@ return function(ctx)
             local r = e.row
             local dx, dy, dz = e.x - px, e.y - py, e.z - pz
             local same = (r.dimension or 0) == dim and (r.interior or 0) == int
-            if same and dx * dx + dy * dy <= reach * reach and math.abs(dz) < 3 and not inReach(id, e) then
+            if
+                same
+                and dx * dx + dy * dy <= reach * reach
+                and math.abs(dz) < 3
+                and (not inReach(id, e) or stuck(id, e))
+            then
                 blocked[#blocked + 1] = id
                 if #blocked >= 32 then
                     break

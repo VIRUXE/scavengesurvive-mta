@@ -468,7 +468,7 @@ return function(ctx)
         -- Hold F to pick up", #136, #139)
         -- a machine (#145, upstream "Press F to access machine / Hold F to open menu"): the tap opens its
         -- container, the hold its menu, or a refuel that lasts as long as the key stays down
-        local bagId, bagCategory = exports.items:nearbyContainerItem()
+        local bagId, bagCategory, bagStuck = exports.items:nearbyContainerItem()
         local inspectId, inspectUname = false, false
         if not bagId and not ctx.getHeld() then
             inspectId, inspectUname = exports.items:nearbyInspectable()
@@ -510,7 +510,9 @@ return function(ctx)
                     else
                         killTimer(interactHoldTimer)
                         interactHoldTimer = nil
-                        if bagId and bagCategory ~= "fixed" then -- a snack machine opens on a hold too
+                        if bagId and bagStuck then -- seen through a window or a gap it does not fit through
+                            triggerEvent("toastShown", localPlayer, "ITEM_WALL_BLOCKED")
+                        elseif bagId and bagCategory ~= "fixed" then -- a snack machine opens on a hold too
                             triggerServerEvent("itemLongPickupRequested", localPlayer, bagId)
                         else
                             triggerServerEvent("itemPickupRequested", localPlayer, exports.items:blockedItemsNear())
