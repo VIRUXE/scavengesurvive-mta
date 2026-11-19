@@ -18,7 +18,10 @@
     <script src="client/hunger.lua" type="client"/>
     <file src="client/hunger.fx"/>
     <file src="files/growl.ogg"/>
-    <file src="files/cough.ogg"/>
+    <file src="files/thirst_swallow1.wav"/>
+    <file src="files/thirst_swallow2.wav"/>
+    <file src="files/thirst_smack.wav"/>
+    <file src="files/thirst_throat.wav"/>
     <file src="shared/logic/survival.lua"/>
     <file src="shared/logic/spawnpoints.lua"/>
     <file src="shared/logic/combatlog.lua"/>

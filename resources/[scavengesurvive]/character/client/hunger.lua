@@ -13,7 +13,17 @@ end
 hunger.tr = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")().text
 
 local TICK_MS = 250
-local SOUNDS = { hunger = "files/growl.ogg", thirst = "files/cough.ogg" }
+-- each cue plays one of its kind's sounds at random, never the one it played last (tools/make_thirst_sound.py)
+local SOUNDS = {
+    hunger = { "files/growl.ogg" },
+    thirst = {
+        "files/thirst_swallow1.wav",
+        "files/thirst_swallow2.wav",
+        "files/thirst_smack.wav",
+        "files/thirst_throat.wav",
+    },
+}
+local lastSound = {} -- kind -> index played last
 
 local stats = { food = 100, thirst = 100, drugs = {} }
 local pose = false
@@ -142,7 +152,13 @@ local function cue(now)
     end
     lastCue = now
     exports.ui:actionTextShow(text, 4000)
-    local s = playSound(SOUNDS[kind])
+    local list = SOUNDS[kind]
+    local i = math.random(#list)
+    if #list > 1 and i == lastSound[kind] then
+        i = i % #list + 1
+    end
+    lastSound[kind] = i
+    local s = playSound(list[i])
     if s then
         setSoundVolume(s, 0.7)
     end
