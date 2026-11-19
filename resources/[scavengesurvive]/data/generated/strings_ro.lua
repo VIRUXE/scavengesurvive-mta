@@ -214,6 +214,7 @@ return {
     Close = "Închide",
     ["Close Bonnet"] = "Închide capota",
     ["Close Engine Cover"] = "Închide capacul motorului",
+    ["Close Trunk"] = "Închide portbagajul",
     ["Close door"] = "Închide ușa",
     Closed = "Închis",
     Clothes = "Haine",

@@ -214,6 +214,7 @@ return {
     Close = "Fermer",
     ["Close Bonnet"] = "Fermer le capot",
     ["Close Engine Cover"] = "Fermer le capot moteur",
+    ["Close Trunk"] = "Fermer le coffre",
     ["Close door"] = "Fermer la porte",
     Closed = "Fermé",
     Clothes = "Vêtements",

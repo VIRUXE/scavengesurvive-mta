@@ -1102,27 +1102,31 @@ return function(ctx)
     -- Where a dropped item comes to rest. In the main world the server's own world (lib geom.lua) gives the ground
     -- under the spot, and loot's rest data lays the item flush on it, tilted to the slope; when its footprint lands
     -- on items already lying there it lies on top of them or leans on them (exports.loot:restPose), whatever they
-    -- are. Built defences are walls, not a pile. Elsewhere, and for a type without rest data, it lies at feet height
-    -- as before. cb(z, nx, ny).
+    -- are. Built defences are walls, not a pile. The server's world has no built defences, so a ramp or floor built
+    -- of them is the surface the client saw under its drop spot (surface = { z, nx, ny }), taken only when it lies
+    -- above the server's ground and a built defence stands next to the spot. Elsewhere, and for a type without rest
+    -- data, it lies at feet height as before. cb(z, nx, ny).
     local geom = assert(loadstring(exports.lib:getModule("geom"), "=lib/geom.lua"))()
     local LYING_REACH = 4.5 -- metres: the furthest two lying items' footprints reach towards each other
-    local LYING_SQL = "SELECT i.type_uname, i.x, i.y, i.z, i.rz, i.ground_nx, i.ground_ny"
+    local SURFACE_REACH = 5.0 -- metres: how near a built defence's origin must be for the client's surface to count
+    local LYING_SQL = "SELECT i.type_uname, i.x, i.y, i.z, i.rz, i.ground_nx, i.ground_ny,"
+        .. " (i.data IS NOT NULL AND i.data LIKE '%\"defence\"%') AS is_defence"
         .. " FROM world_items_pos p JOIN items i ON i.id = p.item_id"
         .. " WHERE ST_Contains(ST_GeomFromText(?), p.pos) AND IFNULL(i.interior, 0) = 0"
-        .. " AND IFNULL(i.dimension, 0) = 0 AND (i.data IS NULL OR i.data NOT LIKE '%\"defence\"%')"
-    local function restOnGround(player, uname, x, y, z, rz, cb)
+        .. " AND IFNULL(i.dimension, 0) = 0"
+    local function restOnGround(player, uname, x, y, z, rz, cb, surface)
         local loot = getResourceFromName("loot")
         if
             getElementInterior(player) ~= 0
             or getElementDimension(player) ~= 0
-            or not geom.ready()
+            or not (geom.ready() or surface)
             or not loot
             or getResourceState(loot) ~= "running"
         then
             return cb(z)
         end
-        local gz, snx, sny = geom.below(x, y, z, 1.0, 2.5)
-        if not gz then
+        local gz, snx, sny = geom.below(x, y, z, 1.0, 2.5) -- nil while the server's world is not ready
+        if not gz and not surface then
             return cb(z)
         end
         local r = LYING_REACH
@@ -1140,7 +1144,24 @@ return function(ctx)
             y - r
         )
         db.query(LYING_SQL, { box }, function(rows)
-            local lz, nx, ny = exports.loot:restPose(uname, x, y, gz, snx, sny, rz, rows or {})
+            local lying, nearDefence = {}, false
+            for _, row in ipairs(rows or {}) do
+                if tonumber(row.is_defence) == 1 then
+                    local ox, oy = tonumber(row.x), tonumber(row.y)
+                    if ox and oy and (ox - x) ^ 2 + (oy - y) ^ 2 <= SURFACE_REACH ^ 2 then
+                        nearDefence = true
+                    end
+                else
+                    lying[#lying + 1] = row
+                end
+            end
+            if surface and nearDefence and (not gz or surface[1] > gz + 0.05) then
+                gz, snx, sny = surface[1], surface[2], surface[3]
+            end
+            if not gz then
+                return cb(z)
+            end
+            local lz, nx, ny = exports.loot:restPose(uname, x, y, gz, snx, sny, rz, lying)
             if not lz then
                 return cb(z)
             end
@@ -1241,7 +1262,7 @@ return function(ctx)
                     return
                 end
                 drop(lz, nx, ny)
-            end)
+            end, opts.spot and opts.spot.surface)
         end
         return true
     end
@@ -1481,7 +1502,12 @@ return function(ctx)
 
     net.handler("itemDropRequested", M.requestDrop, { rate = 5 })
 
-    net.handler("itemDropSpotChosen", function(player, x, y)
+    -- a finite number within [lo, hi]
+    local function within(v, lo, hi)
+        return type(v) == "number" and v == v and v >= lo and v <= hi
+    end
+
+    net.handler("itemDropSpotChosen", function(player, x, y, sz, snx, sny)
         local timer = dropSpotPending[player]
         if not timer then
             return
@@ -1489,12 +1515,18 @@ return function(ctx)
         killTimer(timer)
         dropSpotPending[player] = nil
         -- only one of the spots the client may pick (geometry.freeSpot), never one of its own choosing
-        local px, py = getElementPosition(player)
+        local px, py, pz = getElementPosition(player)
         local _, _, rz = getElementRotation(player)
         local spot
         if type(x) == "number" and type(y) == "number" and x == x and y == y then
             if geometry.isDropSpot(px, py, rz, 1.0, x, y, 0.35, 10) and reachable(player, x, y) then
                 spot = { x, y }
+                -- the built ramp or floor the client saw under it: from 2.5 m under the feet to a ramp's rise
+                -- over the metre ahead, never higher (restOnGround also wants a built defence next to it)
+                local feet = pz - 0.9
+                if within(sz, feet - 2.5, feet + 0.8) and within(snx, -1, 1) and within(sny, -1, 1) then
+                    spot.surface = { sz, snx, sny }
+                end
             end
         end
         dropAt(player, spot or serverSpot(player))

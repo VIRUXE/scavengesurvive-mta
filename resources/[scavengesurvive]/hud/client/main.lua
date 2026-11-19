@@ -56,6 +56,7 @@ local SUPPORTS = {
     engine = true, -- Y in the driver seat (engineToggleRequested)
     lights = true, -- N (lightsToggleRequested)
     doors = true, -- 2 (lockToggleRequested)
+    trunk = true, -- F at a vehicle's rear (nearTrunkHint)
 }
 
 local state = {
@@ -619,6 +620,49 @@ local function nearBonnetHint(held)
     return cowl and "cowl_open" or "open"
 end
 
+-- the trunk the interact key reaches (vehicles server Case 3: the nearest vehicle within 5.5 m, the player at its
+-- rear, 155 to 205 degrees as vehicle.lua isRear, facing it within 45 degrees and not standing on a vehicle; one with
+-- a trunk and no walk-in door): "open" or "shut", else false
+local function nearTrunkHint()
+    local contact = getPedContactElement(localPlayer)
+    if isElement(contact) and getElementType(contact) == "vehicle" then
+        return false
+    end
+    local px, py, pz = getElementPosition(localPlayer)
+    local nearest, nearestDist = nil, 5.5
+    for _, veh in ipairs(getElementsByType("vehicle", root, true)) do
+        local vx, vy, vz = getElementPosition(veh)
+        local dist = getDistanceBetweenPoints3D(px, py, pz, vx, vy, vz)
+        if dist <= nearestDist and getElementDimension(veh) == getElementDimension(localPlayer) then
+            nearest, nearestDist = veh, dist
+        end
+    end
+    if not nearest or not getElementData(nearest, "vehicles.containerId") then
+        return false
+    end
+    local vt = exports.data:vehicleType(getElementData(nearest, "vehicles.type"))
+    if vt and vt.door == true then
+        return false
+    end
+    local vx, vy = getElementPosition(nearest)
+    local _, _, vrz = getElementRotation(nearest)
+    local rad = math.rad(vrz or 0)
+    local dx, dy = px - vx, py - vy
+    local angle =
+        math.deg(math.atan2(dx * math.cos(rad) + dy * math.sin(rad), -dx * math.sin(rad) + dy * math.cos(rad)))
+    angle = angle % 360
+    if angle <= 155 or angle >= 205 then
+        return false
+    end
+    local _, _, prz = getElementRotation(localPlayer)
+    local h = math.rad(prz)
+    local dist = math.sqrt(dx * dx + dy * dy)
+    if dist < 0.001 or (math.sin(h) * dx - math.cos(h) * dy) / dist < math.cos(math.rad(45)) then
+        return false
+    end
+    return getVehicleDoorOpenRatio(nearest, 1) > 0.5 and "open" or "shut"
+end
+
 -- a bag or box in reach: true, or "fixed" for one that is never picked up (the snack machine), else false
 local function nearContainerHint()
     local id, category = exports.items:nearbyContainerItem()
@@ -668,6 +712,7 @@ local function drawKeyActions(driver)
         nearCooker = nearCooker(held),
         nearMachine = exports.items:nearbyMachine() ~= false,
         nearContainer = nearContainerHint(),
+        nearTrunk = not driver and nearTrunkHint() or false,
         carmour = carmourHint(held),
         bodyPart = bodyPartHint(held),
         bayMenu = bayMenuHint(held),

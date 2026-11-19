@@ -214,6 +214,7 @@ return {
     Close = "Aizvērt",
     ["Close Bonnet"] = "Aizvērt motora pārsegu",
     ["Close Engine Cover"] = "Aizvērt dzinēja pārsegu",
+    ["Close Trunk"] = "Aizvērt bagāžnieku",
     ["Close door"] = "Aizvērt durvis",
     Closed = "Aizvērts",
     Clothes = "Apģērbs",

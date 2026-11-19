@@ -61,7 +61,7 @@ M.BUTTON_LABELS = {
 -- lang:end
 
 -- ctx = {
---   spawned, uiOpen, knockedOut, hudOff, driver, hitch ("hitch" / "unhitch"), nearTrunk,
+--   spawned, uiOpen, knockedOut, hudOff, driver, hitch ("hitch" / "unhitch"), nearTrunk ("open" / "shut"),
 --   nearBonnet ("open" / "closed" / "cowl_open" / "cowl_closed" / "pickup_battery" / "pickup_starter": an engine
 --     bonnet or cowl in reach with empty hands, the last two when a loose part lies in the bay), nearPlayer,
 --   nearItem (a loose world item in pickup reach),
@@ -224,13 +224,19 @@ function M.lines(ctx, keys)
         add("interact", tr("Access machine"))
         add("interact", tr("(Hold) Machine menu"))
     end
-    -- a bag or box lying within reach (items): upstream's button "Hold F to pick up / Press F to open"
+    -- a bag or box lying within reach (items): upstream's button "Hold F to pick up / Press F to open"; with
+    -- something in hand only the tap opens it, the hold says the hands are full
     if ctx.nearContainer and not busyF and not (ctx.held and ctx.held.uname == "Crowbar") then
         add("interact", tr("Open"))
-        add("interact", tr("(Hold) Pick up"))
+        if not ctx.held then
+            add("interact", tr("(Hold) Pick up"))
+        end
     end
-    if ctx.nearTrunk then
-        add("interact", tr("Open Trunk"), "trunk")
+    -- the trunk at a vehicle's rear (hud nearTrunkHint, "open" / "shut"): empty hands shut an open one, anything
+    -- else opens it (vehicles server Case 3)
+    if ctx.nearTrunk and not busyF then
+        local close = ctx.nearTrunk == "open" and not ctx.held
+        add("interact", close and tr("Close Trunk") or tr("Open Trunk"), "trunk")
     end
     if ctx.nearBonnet and not busyF then
         local bonnetText = {

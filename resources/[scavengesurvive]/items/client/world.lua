@@ -356,8 +356,30 @@ return function(ctx)
         return false
     end
 
+    -- true when a built defence other than the item's own lies straight over it, below the reach test's higher point
+    -- (a floor, a ramp or a door laid flat on top of it): that point is then above the floor, not by the item
+    local function underDefence(e, own)
+        local ign = own
+        local sz, tz = e.z + 0.05, e.z + 0.6
+        for _ = 1, REACH_RAY_STEPS do
+            if sz >= tz then
+                return false
+            end
+            local hit, _, _, hz, el = processLineOfSight(e.x, e.y, sz, e.x, e.y, tz, true, F, F, true, F, F, F, F, ign)
+            if not hit then
+                return false
+            end
+            if el and el ~= own and defenceElements[el] then
+                return true
+            end
+            sz, ign = hz + 0.05, el
+        end
+        return false
+    end
+
     -- true when no wall or map object lies between the player and the world item (a carton in a pile, a table or a
-    -- low kerb does not count): the server picks by distance alone and cannot test this
+    -- low kerb does not count): the server picks by distance alone and cannot test this. An item under a built floor
+    -- is reached at its low point only, never over the floor.
     local function reachable(id, e)
         local now = getTickCount()
         local cached = reachCache[id]
@@ -368,7 +390,8 @@ return function(ctx)
         local sx, sy, sz = getElementPosition(localPlayer)
         sz = sz + 0.5
         local own = isElement(e.obj) and e.obj or nil
-        local ok = rayClear(sx, sy, sz, e.x, e.y, e.z + 0.15, own) or rayClear(sx, sy, sz, e.x, e.y, e.z + 0.6, own)
+        local ok = rayClear(sx, sy, sz, e.x, e.y, e.z + 0.15, own)
+            or (not underDefence(e, own) and rayClear(sx, sy, sz, e.x, e.y, e.z + 0.6, own))
         -- A mounted panel can be sunk slightly into masonry to cover an opening. Crowbar work reaches its
         -- surface, up to 20 cm before the stored target; loose-item pickup never gets this allowance.
         -- The server still checks the tool, inside face, distance and hold before removing a defence.
@@ -1006,6 +1029,32 @@ return function(ctx)
         local sx, sy, sz = getElementPosition(localPlayer)
         sz = sz + 0.5
         return rayClear(sx, sy, sz, x, y, z + 0.15) or rayClear(sx, sy, sz, x, y, z + 0.6)
+    end
+
+    -- The surface straight below a drop spot at ground height z (from 1 m over it to 2.5 m under it) when it is a
+    -- built defence (a ramp or floor): hz, nx, ny and its object, else nil. The server's world has no built
+    -- defences, so without this an item dropped on a ramp lands on the terrain under it. Loose items and carried
+    -- objects are passed through: the server lays the item on those itself.
+    function M.defenceSurfaceBelow(x, y, z)
+        local sz, ez = z + 1.0, z - 2.5
+        local ign
+        for _ = 1, REACH_RAY_STEPS do
+            if sz <= ez then
+                return nil
+            end
+            local hit, _, _, hz, el, nx, ny = processLineOfSight(x, y, sz, x, y, ez, true, F, F, true, F, F, F, F, ign)
+            if not hit then
+                return nil
+            end
+            if el and defenceElements[el] then
+                return hz, nx or 0, ny or 0, el
+            end
+            if not (el and (itemElements[el] or getElementAttachedTo(el))) then
+                return nil
+            end
+            sz, ign = hz - 0.05, el
+        end
+        return nil
     end
 
     -- the snack machines this client draws whose glass still holds: { { id, x, y, z, rz, int, dim } }

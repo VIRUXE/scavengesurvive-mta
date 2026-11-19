@@ -214,6 +214,7 @@ return {
     Close = "Sedd",
     ["Close Bonnet"] = "Sedd Capot",
     ["Close Engine Cover"] = "Sedd lghta dyal lmoteur",
+    ["Close Trunk"] = "Sedd lcoffre",
     ["Close door"] = "Sedd lbab",
     Closed = "Msdoud",
     Clothes = "Lbas",

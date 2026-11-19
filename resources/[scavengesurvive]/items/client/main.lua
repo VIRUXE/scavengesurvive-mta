@@ -208,22 +208,33 @@ addEventHandler("itemDropSpotRequested", localPlayer, function(removalId)
         end
     end
     local items = world.itemObjectsNear(x, y, dz, 5)
+    -- a spot over a built ramp or floor lies on it: that defence's box (a ramp's covers the whole wedge) does not
+    -- block it, and the spot is tested at the surface's height, which the server's world does not have
+    local surface
     local function blocked(cx, cy)
+        local sz, snx, sny, floor = world.defenceSurfaceBelow(cx, cy, dz)
+        local gz = sz or dz
         for _, veh in ipairs(vehicles) do
-            if insideElement(veh, cx, cy, dz, 0.3) then
+            if insideElement(veh, cx, cy, gz, 0.3) then
                 return true
             end
         end
         for _, obj in ipairs(items) do
-            if insideElement(obj, cx, cy, dz, 0.2) then
+            if obj ~= floor and insideElement(obj, cx, cy, gz, 0.2) then
                 return true
             end
         end
-        return not world.dropSpotReachable(cx, cy, dz)
+        if not world.dropSpotReachable(cx, cy, gz) then
+            return true
+        end
+        surface = sz and { sz, snx, sny } or nil
+        return false
     end
     local cx, cy = geometry.freeSpot(x, y, rz, 1.0, blocked)
     if removalId then
         triggerServerEvent("defenceRemovalSpotChosen", localPlayer, removalId, cx, cy)
+    elseif cx and surface then
+        triggerServerEvent("itemDropSpotChosen", localPlayer, cx, cy, surface[1], surface[2], surface[3])
     else
         triggerServerEvent("itemDropSpotChosen", localPlayer, cx, cy)
     end

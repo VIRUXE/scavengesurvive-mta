@@ -203,6 +203,7 @@ return {
     Close = "Zatvori",
     ["Close Bonnet"] = "Zatvori haubu",
     ["Close Engine Cover"] = "Zatvori poklopac motora",
+    ["Close Trunk"] = "Zatvori gepek",
     ["Close door"] = "Zatvori vrata",
     Closed = "Zatvoreno",
     Clothes = "Odjeća",

@@ -214,6 +214,7 @@ return {
     Close = "Zavřít",
     ["Close Bonnet"] = "Zavřít kapotu",
     ["Close Engine Cover"] = "Zavřít kryt motoru",
+    ["Close Trunk"] = "Zavřít kufr",
     ["Close door"] = "Zavřít dveře",
     Closed = "Zavřeno",
     Clothes = "Oblečení",

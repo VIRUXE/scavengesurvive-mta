@@ -214,6 +214,7 @@ return {
     Close = "Tutup",
     ["Close Bonnet"] = "Tutup kap mesin",
     ["Close Engine Cover"] = "Tutup penutup mesin",
+    ["Close Trunk"] = "Tutup bagasi",
     ["Close door"] = "Tutup pintu",
     Closed = "Ditutup",
     Clothes = "Pakaian",
