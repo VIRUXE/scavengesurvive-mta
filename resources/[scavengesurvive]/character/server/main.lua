@@ -118,6 +118,24 @@ tickCtx.bleeding = bleeding
 tickCtx.blood = loadFile("server/blood.lua")({ bleeding = bleeding, net = net })
 tickCtx.die = death.die
 local tick = loadFile("server/tick.lua")(tickCtx)
+
+-- Staff duty: full hp and no bleeding while it lasts (nothing harms an on-duty player, so it stays there). The
+-- character's own hp and bleed are kept in st.dutyKeep, are what every save writes meanwhile (a quit or crash on duty
+-- is no free heal) and come back when duty ends. Wounds stay as they were; the frozen tick leaves them alone.
+local function dutyStats(player, st, on)
+    if on and not st.dutyKeep then
+        st.dutyKeep = { hp = st.hp, bleed = st.bleed }
+        st.hp, st.bleed = 100, 0
+    elseif not on and st.dutyKeep then
+        st.hp, st.bleed = st.dutyKeep.hp, st.dutyKeep.bleed
+        st.dutyKeep = nil
+    else
+        return
+    end
+    st.dirty = true
+    setElementHealth(player, math.max(1, st.hp))
+    tick.sendStats(player, false)
+end
 local medicalCtx = { medical = medical, survival = survival, state = state, sendStats = tick.sendStats }
 medicalCtx.wake = function(p)
     return wakeUpPlayer(p)
@@ -232,6 +250,9 @@ local function spawnFromRow(player, row, isNew)
     end
     exports.staff:reapplyDutySkin(player)
     setElementHealth(player, math.max(1, st.hp))
+    if onDuty(player) then
+        dutyStats(player, st, true)
+    end
     setCameraTarget(player, player)
     fadeCamera(player, true)
     triggerEvent("characterSpawned", player, row.id, isNew)
@@ -472,8 +493,9 @@ addEventHandler("onElementDataChange", root, function(key)
         return
     end
     local st = state.byPlayer[source]
-    if st then
+    if st and not st.dead then
         state.aliveClock(st, not onDuty(source))
+        dutyStats(source, st, onDuty(source))
     end
 end)
 

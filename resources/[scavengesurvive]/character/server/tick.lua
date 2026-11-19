@@ -161,11 +161,12 @@ return function(ctx)
             .. " interior = ?, dimension = ?, skills = ?, infection = ?, drugs = ?, wounds = ?,"
             .. " alive_s = alive_s + ? WHERE id = ? AND alive = 1"
         local inf, drugs = medical.encodeInfection(st.infection), medical.encodeDrugs(st.drugs)
+        local own = st.dutyKeep or st -- on staff duty: the character's own hp and bleed, not the duty ones
         db.exec(sql, {
-            st.hp,
+            own.hp,
             st.food,
             st.thirst,
-            st.bleed,
+            own.bleed,
             x,
             y,
             z,
@@ -188,12 +189,13 @@ return function(ctx)
             if isElement(player) and (st.dirty or force) and st.hp > 0 and not st.dead then
                 local x, y, z, int, dim = placeOf(player)
                 local _, _, rz = getElementRotation(player)
+                local own = st.dutyKeep or st -- on staff duty: the character's own hp and bleed, not the duty ones
                 local row = {
                     id = st.id,
-                    hp = st.hp,
+                    hp = own.hp,
                     food = st.food,
                     thirst = st.thirst,
-                    bleed = st.bleed,
+                    bleed = own.bleed,
                     x = x,
                     y = y,
                     z = z,

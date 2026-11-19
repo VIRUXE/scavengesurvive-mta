@@ -586,6 +586,41 @@ return function(ctx)
         end,
     })
 
+    -- Not upstream: set the food (/hunger) or thirst bar to 0-100 on the caller or a named player. Lowering it on an
+    -- on-duty player is refused by character's modifyStat, the same as any harm while on duty.
+    for _, c in ipairs({ { name = "hunger", stat = "food" }, { name = "thirst", stat = "thirst" } }) do
+        ctx.command({
+            name = c.name,
+            level = 3,
+            usage = "/" .. c.name .. " <0-100> [player]",
+            help = "Set a player's " .. c.stat .. " (100 is full)",
+            needsDb = false,
+            fn = function(p, args)
+                local v = tonumber(args[1])
+                if not v or v < 0 or v > 100 then
+                    return ctx.say(p, " >  Usage: /%s <0-100> [player]", c.name)
+                end
+                local target = args[2] and ctx.target(p, args[2], true) or (not args[2] and p)
+                if not target or not isElement(target) then
+                    return
+                end
+                local st = exports.character:getStats(target)
+                if not st then
+                    return ctx.say(p, " >  %s has no living character.", getPlayerName(target))
+                end
+                local now = exports.character:modifyStat(target, c.stat, v - st[c.stat])
+                ctx.say(
+                    p,
+                    " >  %s: %s set to %d",
+                    getPlayerName(target),
+                    c.stat,
+                    math.floor((tonumber(now) or v) + 0.5)
+                )
+                ctx.log(p, c.name, getPlayerName(target), ctx.accountId(target), tostring(v))
+            end,
+        })
+    end
+
     -- Not upstream: deletes one world vehicle with its trunk, the only way a sunk one goes (vehicles/server/ground).
     -- The world is blacked out for everyone (world/client/blackout.lua); this lights the city for the caller only, to
     -- look at something, until they toggle it again or reconnect.

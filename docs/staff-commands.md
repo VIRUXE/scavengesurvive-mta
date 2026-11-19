@@ -9,7 +9,7 @@ details); bans and warnings write theirs inside the `staff_ban` / `staff_warn` p
 | --- | --- | --- |
 | 1 | Game Master | `/a`, `/mute`, `/unmute`, `/warn`, `/kick`, `/idlekick`, `/announce` (upstream `/msg`), `/tell <player> <message>` (port-only, partial names), `/clearchat`, `/aliases`, `/serial`, `/history`, `/reports`, `/acmds` |
 | 2 | Moderator | `/duty`, `/goto`, `/get`, `/gotopos`, `/takeback`, `/freeze`, `/unfreeze`, `/ban`, `/unban`, `/banlist`, `/banned`, `/spec`, `/free`, `/nametags`, `/profile`, `/setmotd`, `/deletereports`, `/field`, `/gender` |
-| 3 | Administrator | `/di <radius>` (port-only: delete loose world items around you), `/whitelist`, `/ip`, `/setactive`, `/resetpassword`, `/adminlist`, `/heal [player]` (port-only: full hp, bleeding stopped), `/delveh [vehicle id]` (alias `/dv`, port-only: delete a vehicle and its trunk by id, the one you sit in or the nearest within 10 m; the only way a sunk vehicle goes), `/veh <name|model>` (alias `/vehicle`: spawn a vehicle in front of you) and `/veh <get|goto|enter|owner|delete|respawn|reset|lock|unlock|removekey|destroy> [vehicle id]` (upstream `/vehicle`; the vehicle by id, the one you sit in or the nearest within 10 m; every action but `owner` needs duty below Lead (spawning does not); `owner` shows the vehicle's state, `reset` is `respawn`, and respawn refuses while an off-duty player stands by it) |
+| 3 | Administrator | `/di <radius>` (port-only: delete loose world items around you), `/whitelist`, `/ip`, `/setactive`, `/resetpassword`, `/adminlist`, `/heal [player]` (port-only: full hp, bleeding stopped), `/hunger <0-100> [player]` and `/thirst <0-100> [player]` (port-only: set the food or thirst bar, 100 is full; lowering it on an on-duty player is refused), `/delveh [vehicle id]` (alias `/dv`, port-only: delete a vehicle and its trunk by id, the one you sit in or the nearest within 10 m; the only way a sunk vehicle goes), `/veh <name|model>` (alias `/vehicle`: spawn a vehicle in front of you) and `/veh <get|goto|enter|owner|delete|respawn|reset|lock|unlock|removekey|destroy> [vehicle id]` (upstream `/vehicle`; the vehicle by id, the one you sit in or the nearest within 10 m; every action but `owner` needs duty below Lead (spawning does not); `owner` shows the vehicle's state, `reset` is `respawn`, and respawn refuses while an off-duty player stands by it) |
 | 4 | Lead | `/players`, `/setadmin`, `/restart`, `/sc [type]` (supply crate here), `/wc` (weapons cache here) |
 | 5 | Developer | everything above, `/setskill <skill> <0-1> [player]`, `/knockout <ms> [player]` (0 wakes up); the debug toggles live in the `dev` resource (`/sethp`, `/setfood`, `/setbleed`, `/weather` (a window: weather, who, for how long), `/additem`, `/spawnveh`, `/rr`, `/move`, `/fly`) |
 | 0 | Player | `/report [name|near|killer] [reason]`, `/bug [description]`, `/issues` (level 2 deletes from the open report) |
@@ -56,7 +56,9 @@ Double-clicking a command (or **Open in panel**) opens the staff panel on that c
 - Mutes cancel `onPlayerChat` and persist on the account (`accounts.muted`, `mute_until`), so a relog does not
   lift them.
 - `/duty` swaps to the upstream duty skin (217 male / 211 female), turns name tags on and sets element data
-  `staff.duty`; `weapons` ignores player hits on a victim with that flag.
+  `staff.duty`; `weapons` ignores player hits on a victim with that flag. `character` fills hp to 100 and stops the
+  bleeding for the whole duty, keeps the character's own hp and bleed (what every save writes meanwhile, so a quit on
+  duty heals nothing) and puts them back when duty ends.
 - Level 4 and above, on duty or not, get a chat line when any player leaves (`Name has left (Quit)`, or the kick/ban
   reason): the port's counterpart of the join line everyone sees.
 - `/spec` parks the watcher frozen, invisible and without collisions where they stood, follows the target's

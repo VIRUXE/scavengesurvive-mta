@@ -20,7 +20,11 @@ return function(ctx)
                 out[#out + 1] = {
                     p = p,
                     name = getPlayerName(p),
-                    x = x, y = y, z = z, int = int, dim = dim,
+                    x = x,
+                    y = y,
+                    z = z,
+                    int = int,
+                    dim = dim,
                     hp = math.floor(getElementHealth(p)),
                     armour = math.floor(getPedArmor(p)),
                     veh = veh and getVehicleName(veh) or nil,
