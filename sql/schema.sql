@@ -156,7 +156,7 @@ CREATE TABLE IF NOT EXISTS `connection_log` (
 
 CREATE TABLE IF NOT EXISTS `containers` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `kind` enum('inventory','bag','safebox','tent','vehicle','supply','glovebox') NOT NULL,
+  `kind` enum('inventory','bag','safebox','vehicle','supply','glovebox') NOT NULL,
   `size` tinyint(4) NOT NULL,
   `owner_char_id` int(11) DEFAULT NULL,
   `owner_item_id` int(11) DEFAULT NULL,
@@ -1224,7 +1224,7 @@ BEGIN
     OR v_owner_holder <=> p_char_id
     OR v_owner_vehicle IS NOT NULL
     OR v_kind = 'supply'
-    OR (v_kind IN ('safebox', 'tent', 'bag') AND v_owner_item IS NOT NULL AND v_owner_holder IS NULL AND v_owner_container IS NULL)
+    OR (v_kind IN ('safebox', 'bag') AND v_owner_item IS NOT NULL AND v_owner_holder IS NULL AND v_owner_container IS NULL)
   ) THEN
     ROLLBACK;
     SELECT 0 AS ok, 'NOT_OWNER' AS code, NULL AS payload;
@@ -2627,51 +2627,34 @@ END//
 
 CREATE OR REPLACE PROCEDURE `tent_pack`(IN p_item_id INT)
 BEGIN
-
-
-  DECLARE v_type VARCHAR(32) DEFAULT NULL;
-  DECLARE v_cont INT DEFAULT NULL;
-  DECLARE v_inside INT DEFAULT 0;
+  DECLARE v_rows INT DEFAULT 0;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
   SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
   START TRANSACTION;
-
-  SELECT type_uname INTO v_type FROM items WHERE id = p_item_id AND x IS NOT NULL FOR UPDATE;
-  SELECT id INTO v_cont FROM containers WHERE owner_item_id = p_item_id FOR UPDATE;
-  IF v_cont IS NOT NULL THEN
-    SELECT COUNT(*) INTO v_inside FROM items WHERE container_id = v_cont FOR UPDATE;
-  END IF;
-  IF NOT (v_type <=> 'TentPack') THEN
+  UPDATE items SET data = NULL WHERE id = p_item_id AND type_uname = 'TentPack' AND x IS NOT NULL;
+  SET v_rows = ROW_COUNT();
+  IF v_rows = 0 THEN
     ROLLBACK;
     SELECT 0 AS ok, 'NOT_IN_WORLD' AS code, NULL AS payload;
-  ELSEIF v_inside > 0 THEN
-    ROLLBACK;
-    SELECT 0 AS ok, 'TENT_NOT_EMPTY' AS code, NULL AS payload;
   ELSE
-    IF v_cont IS NOT NULL THEN
-      DELETE FROM containers WHERE id = v_cont;
-    END IF;
-    UPDATE items SET data = NULL WHERE id = p_item_id;
     COMMIT;
-    SELECT 1 AS ok, 'OK' AS code, JSON_OBJECT('container_id', CAST(v_cont AS SIGNED)) AS payload;
+    SELECT 1 AS ok, 'OK' AS code, NULL AS payload;
   END IF;
 END//
 
 CREATE OR REPLACE PROCEDURE `tent_pitch`(IN p_item_id INT)
 BEGIN
-
-  DECLARE v_type VARCHAR(32) DEFAULT NULL;
+  -- a pitched tent is no container: what is kept in it lies on the ground under it
+  DECLARE v_rows INT DEFAULT 0;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
   SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
   START TRANSACTION;
-  SELECT type_uname INTO v_type FROM items WHERE id = p_item_id AND x IS NOT NULL FOR UPDATE;
-  IF NOT (v_type <=> 'TentPack') THEN
+  UPDATE items SET data = '{"pitched":true}' WHERE id = p_item_id AND type_uname = 'TentPack' AND x IS NOT NULL;
+  SET v_rows = ROW_COUNT();
+  IF v_rows = 0 THEN
     ROLLBACK;
     SELECT 0 AS ok, 'NOT_IN_WORLD' AS code, NULL AS payload;
   ELSE
-    UPDATE items SET data = '{"pitched":true}' WHERE id = p_item_id;
-    INSERT INTO containers (kind, size, owner_item_id) VALUES ('tent', 16, p_item_id)
-      ON DUPLICATE KEY UPDATE size = 16;
     COMMIT;
     SELECT 1 AS ok, 'OK' AS code, NULL AS payload;
   END IF;

@@ -985,8 +985,6 @@ return {
     ["The starter motor is still in"] ="Стартер всё ещё на месте",
     ["The starter motor works, there is nothing to replace"] = "Стартер работает, менять нечего",
     ["The tank is empty. Fill it with the Petrol Can first."] = "Бак пуст. Сначала заправьте его из Канистры с бензином.",
-    ["The tent must be empty to pack it away"] = "Чтобы свернуть палатку, она должна быть пуста",
-    ["Someone is packing this tent"] = "Кто-то сворачивает эту палатку",
     ["The torch went back on the Welder"] = "Горелка вернулась на Сварочный аппарат",
     ["The wheel is off. Pick up a spare Wheel and put it down beside the hub with [N]. Then hold the %s and press [F]."] = "Колесо снято. Поднимите запасное колесо и положите его у ступицы клавишей [N]. Затем возьмите в руки предмет «%s» и нажмите [F].",
     ["Their hands are full"] = "У них заняты руки",

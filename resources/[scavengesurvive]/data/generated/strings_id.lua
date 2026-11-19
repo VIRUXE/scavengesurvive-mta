@@ -985,8 +985,6 @@ return {
     ["The starter motor is still in"] ="Motor starter masih terpasang",
     ["The starter motor works, there is nothing to replace"] = "Dinamo starter masih berfungsi, tidak ada yang perlu diganti",
     ["The tank is empty. Fill it with the Petrol Can first."] = "Tangki kosong. Isi dulu dengan jeriken bensin.",
-    ["The tent must be empty to pack it away"] = "Tenda harus kosong untuk dilipat",
-    ["Someone is packing this tent"] = "Seseorang sedang melipat tenda ini",
     ["The torch went back on the Welder"] = "Obor kembali ke Alat Las",
     ["The wheel is off. Pick up a spare Wheel and put it down beside the hub with [N]. Then hold the %s and press [F]."] = "Roda sudah terlepas. Ambil roda cadangan dan letakkan di samping hub roda dengan [N]. Lalu pegang ini dan tekan [F]: %s.",
     ["Their hands are full"] = "Tangan mereka penuh",

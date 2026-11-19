@@ -993,8 +993,6 @@ return {
     ["The starter motor is still in"] ="Demarreur mazal f blasto",
     ["The starter motor works, there is nothing to replace"] = "Demarreur khddam, ma kayn ma ytbeddel",
     ["The tank is empty. Fill it with the Petrol Can first."] = "Reservoir khawi. 3emmro b Bidon dyal Lisans lewwel.",
-    ["The tent must be empty to pack it away"] = "Lkhayma khassha tkoun khawya bach tjem3ha",
-    ["Someone is packing this tent"] = "Chi wa7ed kayjme3 had lkhayma",
     ["The torch went back on the Welder"] = "Chalumeau rje3 l Poste Soudure",
     ["The wheel is off. Pick up a spare Wheel and put it down beside the hub with [N]. Then hold the %s and press [F]."] = "Rrwida t7eydat. Hezz rwida dyal sekour w 7ettha 7da lmoyeu b [N]. Mn ba3d chedd %s w brek [F].",
     ["Their hands are full"] = "Yeddih 3amrin",

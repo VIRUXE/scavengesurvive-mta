@@ -8,7 +8,6 @@ Every item has a **size** between 1 and 20. The size is the number of slots the 
 |:--|--:|
 | Your inventory (pockets) | 6 slots |
 | A worn bag | 6 to 19 slots, see [Containers & Bags](Containers-and-Bags) |
-| A pitched [tent](Tent) | 16 slots |
 | A box, crate or locker in the world | 2 to 16 slots, see [Containers & Bags](Containers-and-Bags) |
 | A machine's container | 12 slots, see [Machines](Machines) |
 

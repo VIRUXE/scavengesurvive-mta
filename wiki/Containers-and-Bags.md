@@ -67,4 +67,4 @@ Storage comes in two kinds: **bags**, which you wear on your back, and **contain
 | Capsule | container placed in the world | 2 | 3 |
 <!-- /table:containers -->
 
-See also [Tent](Tent), which is a 16-slot container you pitch yourself, and [Machines](Machines).
+See also [Tent](Tent), a shelter you pitch yourself to hide what you leave on the ground under it, and [Machines](Machines).

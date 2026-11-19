@@ -912,7 +912,9 @@ return function(ctx)
         local r = tonumber(state.settings["items.pickup_radius"]) or 2.0
         local unames = held and targetsFor(held.uname)
         local int, dim = getElementInterior(player), getElementDimension(player)
-        local sql = world.findNearestSql(x, y, r, int, dim, unames, world.cleanIds(blocked), targetId)
+        -- a pitched tent is reached only to pack it (a Crowbar): otherwise the items lying in it come first
+        local skipPitched = not (held and held.uname == "Crowbar")
+        local sql = world.findNearestSql(x, y, r, int, dim, unames, world.cleanIds(blocked), targetId, skipPitched)
         db.one(sql, {}, function(row, c)
             if not isElement(c.player) then
                 return
@@ -949,11 +951,11 @@ return function(ctx)
             if row.uname == "TentPack" then
                 local isPitched = (rData and (rData.pitched == true or (rData[1] and rData[1].pitched == true)))
                 if isPitched then
+                    -- no container: what is kept in a tent lies on the ground under it
                     if curUname == "Crowbar" then
                         return containers and containers.dismantleTent(c.player, row.id)
-                    else
-                        return containers and containers.openWorldContainer(c.player, row)
                     end
+                    return
                 else
                     if curUname == "Hammer" then
                         return containers and containers.pitchTent(c.player, row.id)

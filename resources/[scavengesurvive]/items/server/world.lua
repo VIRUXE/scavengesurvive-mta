@@ -27,7 +27,7 @@ return function(ctx)
 
     -- unames: optional list of type unames (server constants) the nearest item must be one of; exclude: optional list
     -- of item ids to leave out (the client's walled-off items, already cleaned to integers by M.cleanIds)
-    function M.findNearestSql(x, y, r, interior, dimension, unames, exclude, targetId)
+    function M.findNearestSql(x, y, r, interior, dimension, unames, exclude, targetId, skipPitched)
         local point = string.format("POINT(%g, %g)", x, y)
         -- Match the same rounded centre/radius as the existing exact predicate.
         local qx, qy, qr =
@@ -49,6 +49,11 @@ return function(ctx)
         end
         if targetId then
             where = where .. string.format(" AND i.id = %d", targetId)
+        end
+        if skipPitched then
+            where = where
+                .. " AND NOT (i.type_uname = 'TentPack' AND IFNULL(COALESCE(JSON_VALUE(i.data, '$.pitched'),"
+                .. " JSON_VALUE(i.data, '$[0].pitched')) = 'true', 0))"
         end
         return "SELECT " .. COLS .. FROM .. where .. " ORDER BY ST_Distance(p.pos, " .. point .. ") ASC LIMIT 1"
     end

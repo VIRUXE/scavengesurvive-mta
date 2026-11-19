@@ -918,8 +918,6 @@ return {
     ["The starter motor is still in"] ="Anlaser je još unutra",
     ["The starter motor works, there is nothing to replace"] = "Anlaser radi, nema se šta mijenjati",
     ["The tank is empty. Fill it with the Petrol Can first."] = "Spremnik je prazan. Prvo ga napuni kanisterom benzina.",
-    ["The tent must be empty to pack it away"] = "Šator mora biti prazan da bi ga spakirao",
-    ["Someone is packing this tent"] = "Neko pakuje ovaj šator",
     ["The torch went back on the Welder"] = "Plamenik se vratio na aparat za varenje",
     ["The wheel is off. Pick up a spare Wheel and put it down beside the hub with [N]. Then hold the %s and press [F]."] = "Kotač je skinut. Podigni rezervni kotač i odloži ga kraj glavčine tipkom [N]. Zatim uzmi u ruku i pritisni [F]: %s.",
     ["Their hands are full"] = "Ruke su mu pune",

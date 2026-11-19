@@ -992,8 +992,6 @@ return {
     ["The starter motor is still in"] ="Startér je pořád uvnitř",
     ["The starter motor works, there is nothing to replace"] = "Startér funguje, není co měnit",
     ["The tank is empty. Fill it with the Petrol Can first."] = "Nádrž je prázdná. Nejdřív ji naplň kanystrem na benzín.",
-    ["The tent must be empty to pack it away"] = "Stan musí být prázdný, aby šel sbalit",
-    ["Someone is packing this tent"] = "Někdo tento stan právě balí",
     ["The torch went back on the Welder"] = "Hořák se vrátil na Svářečku",
     ["The wheel is off. Pick up a spare Wheel and put it down beside the hub with [N]. Then hold the %s and press [F]."] = "Kolo je sundané. Seber náhradní kolo a polož ho k náboji klávesou [N]. Pak vezmi do ruky a stiskni [F]: %s.",
     ["Their hands are full"] = "Má plné ruce",

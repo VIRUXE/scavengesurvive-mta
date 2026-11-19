@@ -985,8 +985,6 @@ return {
     ["The starter motor is still in"] ="Electromotorul este încă înăuntru",
     ["The starter motor works, there is nothing to replace"] = "Electromotorul funcționează, nu e nimic de înlocuit",
     ["The tank is empty. Fill it with the Petrol Can first."] = "Rezervorul e gol. Mai întâi umple-l cu canistra de benzină.",
-    ["The tent must be empty to pack it away"] = "Cortul trebuie să fie gol ca să-l poți strânge",
-    ["Someone is packing this tent"] = "Cineva strânge acest cort",
     ["The torch went back on the Welder"] = "Arzătorul a revenit pe aparatul de sudură",
     ["The wheel is off. Pick up a spare Wheel and put it down beside the hub with [N]. Then hold the %s and press [F]."] = "Roata a fost scoasă. Ridică o roată de rezervă și pune-o lângă butuc cu [N]. Apoi ține în mână și apasă [F]: %s.",
     ["Their hands are full"] = "Are mâinile ocupate",

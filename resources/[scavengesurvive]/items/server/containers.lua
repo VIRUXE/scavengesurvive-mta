@@ -753,9 +753,6 @@ return function(ctx)
             return
         end
         local uname = itemRow.uname
-        if uname == "TentPack" and M.isPacking(itemRow.id) then
-            return toast(player, "TENT_PACKING")
-        end
         if uname == LOCKER and itemRow.x then
             -- port deviation (#143): the door has to face the player; one already counted in keeps it open
             if lockerBy[player] ~= itemRow.id then
@@ -767,7 +764,6 @@ return function(ctx)
             end
             lockerEnter(player, itemRow.id)
         end
-        local isTent = (uname == "TentPack")
         local t = itemType(uname)
         local isBag = t and t.category == "bag"
         opts = opts or {}
@@ -776,17 +772,16 @@ return function(ctx)
         if t and t.categoryData and t.categoryData.takeOnly and not opts.takeOnly then
             return
         end
-        local csize = opts.size
-            or (isTent and 16 or (t and t.categoryData and (t.categoryData.bag_size or t.categoryData.size) or 8))
-        local ckind = opts.kind or (isTent and "tent" or (isBag and "bag" or "safebox"))
-        local title = opts.title or (isTent and lang.textFor(player, "Tent") or lang.itemName(uname, player))
+        local csize = opts.size or (t and t.categoryData and (t.categoryData.bag_size or t.categoryData.size) or 8)
+        local ckind = opts.kind or (isBag and "bag" or "safebox")
+        local title = opts.title or lang.itemName(uname, player)
         local pos = itemRow.x and itemRow.y and itemRow.z and { x = itemRow.x, y = itemRow.y, z = itemRow.z }
         -- a bag or box is picked up with a hold of the interact key, contents and all (upstream), not from its list
         local carryable = (isBag or (t and t.category == "safebox")) and not opts.machine and not opts.takeOnly or false
 
         db.one(
             "SELECT id, size, kind FROM containers WHERE owner_item_id = ? "
-                .. "AND kind IN ('bag', 'safebox', 'tent', 'supply') LIMIT 1",
+                .. "AND kind IN ('bag', 'safebox', 'supply') LIMIT 1",
             { itemRow.id },
             function(cRow, c)
                 if not isElement(c.player) then
@@ -965,7 +960,8 @@ return function(ctx)
 
     -- Pitching and packing a TentPack. Reached from hands.lua (interact on the world item while holding a
     -- Hammer or Crowbar) and from the remote events below; both paths re-check the held tool, the distance
-    -- and the row before the 3 s hold completes.
+    -- and the row before the 3 s hold completes. A pitched tent is no container: what is kept in it lies on the
+    -- ground under it, as any dropped item.
     local function pitchTent(player, itemId)
         local cid = charId(player)
         itemId = tonumber(itemId)
@@ -1004,8 +1000,7 @@ return function(ctx)
                     if getDistanceBetweenPoints3D(curPx, curPy, curPz, rx, ry, rz) > 3.5 then
                         return
                     end
-                    -- the pitched data and the tent's container in one transaction (tent_pitch), while it still lies
-                    -- in the world
+                    -- the pitched data, while it still lies in the world (tent_pitch)
                     db.call("tent_pitch", { itId }, function(res, c2)
                         if not res or not res.ok then
                             return isElement(c2.player) and toast(c2.player, res and res.code or "DB_ERROR")
@@ -1031,18 +1026,6 @@ return function(ctx)
         )
     end
 
-    -- tent item id -> the player packing it, from the start of the 3 s hold until it is packed or the pack fails:
-    -- nobody opens it meanwhile (an open would make a fresh container that the pack then hides inside the tent)
-    local packing = {}
-    M.isPacking = function(itemId)
-        local p = packing[itemId]
-        if p and not isElement(p) then
-            packing[itemId] = nil
-            return false
-        end
-        return p ~= nil
-    end
-
     local function dismantleTent(player, itemId)
         local cid = charId(player)
         itemId = tonumber(itemId)
@@ -1055,9 +1038,8 @@ return function(ctx)
         end
         local px, py, pz = getElementPosition(player)
         db.one(
-            "SELECT i.id, i.type_uname AS uname, i.data, i.x, i.y, i.z, c.id AS cont_id "
-                .. "FROM items i LEFT JOIN containers c ON c.owner_item_id = i.id "
-                .. "WHERE i.id = ? AND i.container_id IS NULL AND i.holder_char_id IS NULL",
+            "SELECT id, type_uname AS uname, x, y, z FROM items "
+                .. "WHERE id = ? AND container_id IS NULL AND holder_char_id IS NULL",
             { itemId },
             function(row, c)
                 if not isElement(c.player) or not row or row.uname ~= "TentPack" then
@@ -1067,79 +1049,40 @@ return function(ctx)
                 if d > 3.0 then
                     return
                 end
-                local function startDismantle()
-                    if M.isPacking(row.id) then
-                        return toast(c.player, "TENT_PACKING")
+                local label = lang.textFor(c.player, "Packing tent")
+                triggerClientEvent(c.player, "vehicleHoldStarted", c.player, label, 3000)
+                local packTimer = setTimer(function(pl, itId, rx, ry, rz)
+                    state.holdCancel[pl] = nil
+                    if not isElement(pl) then
+                        return
                     end
-                    packing[row.id] = c.player
-                    local label = lang.textFor(c.player, "Packing tent")
-                    triggerClientEvent(c.player, "vehicleHoldStarted", c.player, label, 3000)
-                    local packTimer = setTimer(function(pl, itId, cId, rx, ry, rz)
-                        state.holdCancel[pl] = nil
-                        local function abort()
-                            if packing[itId] == pl then
-                                packing[itId] = nil
-                            end
-                        end
-                        if not isElement(pl) then
-                            return abort()
-                        end
-                        local curHeld = state.held[pl]
-                        if not curHeld or curHeld.uname ~= "Crowbar" then
-                            return abort()
-                        end
-                        local curPx, curPy, curPz = getElementPosition(pl)
-                        if getDistanceBetweenPoints3D(curPx, curPy, curPz, rx, ry, rz) > 3.5 then
-                            return abort()
-                        end
-                        -- tent_pack: its container goes only while empty (someone may have put something in during
-                        -- the hold: the tent then stays up) and the tent reads as packed, in one transaction
-                        db.call("tent_pack", { itId }, function(res, c3)
-                            abort()
-                            if not res or not res.ok then
-                                return isElement(c3.player) and toast(c3.player, res and res.code or "DB_ERROR")
-                            end
-                            closeViewers(function(cont)
-                                return cont.worldItemId == itId or (cId and cont.containerId == cId)
-                            end)
-                            if world then
-                                world.resendEverywhere(itId)
-                            end
-                            if isElement(c3.player) then
-                                if refreshPlayer then
-                                    refreshPlayer(c3.player)
-                                end
-                                toast(c3.player, "TENT_PACKED")
-                            end
-                        end, { player = pl })
-                    end, 3000, 1, c.player, row.id, row.cont_id, row.x, row.y, row.z)
-                    local packingId = row.id
-                    state.holdCancel[c.player] = function()
-                        if isTimer(packTimer) then
-                            killTimer(packTimer)
-                        end
-                        if packing[packingId] then
-                            packing[packingId] = nil
-                        end
+                    local curHeld = state.held[pl]
+                    if not curHeld or curHeld.uname ~= "Crowbar" then
+                        return
                     end
-                end
-                if row.cont_id then
-                    db.one(
-                        "SELECT COUNT(*) AS cnt FROM items WHERE container_id = ?",
-                        { row.cont_id },
-                        function(cntRow, c2)
-                            if not isElement(c2.player) then
-                                return
+                    local curPx, curPy, curPz = getElementPosition(pl)
+                    if getDistanceBetweenPoints3D(curPx, curPy, curPz, rx, ry, rz) > 3.5 then
+                        return
+                    end
+                    db.call("tent_pack", { itId }, function(res, c3)
+                        if not res or not res.ok then
+                            return isElement(c3.player) and toast(c3.player, res and res.code or "DB_ERROR")
+                        end
+                        if world then
+                            world.resendEverywhere(itId)
+                        end
+                        if isElement(c3.player) then
+                            if refreshPlayer then
+                                refreshPlayer(c3.player)
                             end
-                            if cntRow and (cntRow.cnt or 0) > 0 then
-                                return toast(c2.player, "TENT_NOT_EMPTY")
-                            end
-                            startDismantle()
-                        end,
-                        { player = c.player }
-                    )
-                else
-                    startDismantle()
+                            toast(c3.player, "TENT_PACKED")
+                        end
+                    end, { player = pl })
+                end, 3000, 1, c.player, row.id, row.x, row.y, row.z)
+                state.holdCancel[c.player] = function()
+                    if isTimer(packTimer) then
+                        killTimer(packTimer)
+                    end
                 end
             end,
             { player = player }

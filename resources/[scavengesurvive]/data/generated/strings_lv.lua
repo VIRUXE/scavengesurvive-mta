@@ -992,8 +992,6 @@ return {
     ["The starter motor is still in"] ="Starteris joprojām ir iekšā",
     ["The starter motor works, there is nothing to replace"] = "Starteris darbojas, nav ko mainīt",
     ["The tank is empty. Fill it with the Petrol Can first."] = "Tvertne ir tukša. Vispirms piepildi to ar Benzīna kannu.",
-    ["The tent must be empty to pack it away"] = "Teltij jābūt tukšai, lai to varētu savākt",
-    ["Someone is packing this tent"] = "Kāds pašlaik savāc šo telti",
     ["The torch went back on the Welder"] = "Deglis nolikts atpakaļ uz Metināšanas aparāta",
     ["The wheel is off. Pick up a spare Wheel and put it down beside the hub with [N]. Then hold the %s and press [F]."] = "Ritenis ir noņemts. Pacel rezerves riteni un noliec to pie rumbas ar [N]. Tad nospied [F], turot rokā rīku: %s.",
     ["Their hands are full"] = "Viņam ir pilnas rokas",

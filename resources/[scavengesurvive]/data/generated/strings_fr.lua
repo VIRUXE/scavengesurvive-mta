@@ -985,8 +985,6 @@ return {
     ["The starter motor is still in"] ="Le démarreur est encore en place",
     ["The starter motor works, there is nothing to replace"] = "Le démarreur fonctionne, il n'y a rien à remplacer",
     ["The tank is empty. Fill it with the Petrol Can first."] = "Le réservoir est vide. Remplissez-le d'abord avec le Jerrican d'essence.",
-    ["The tent must be empty to pack it away"] = "La tente doit être vide pour être repliée",
-    ["Someone is packing this tent"] = "Quelqu'un est en train de replier cette tente",
     ["The torch went back on the Welder"] = "Le chalumeau est revenu sur le Poste à souder",
     ["The wheel is off. Pick up a spare Wheel and put it down beside the hub with [N]. Then hold the %s and press [F]."] = "La roue est démontée. Ramassez une Roue de rechange et posez-la près du moyeu avec [N]. Puis prenez ceci en main et appuyez sur [F] : %s.",
     ["Their hands are full"] = "Ses mains sont pleines",

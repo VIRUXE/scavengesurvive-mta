@@ -1046,8 +1046,10 @@ return function(ctx)
             local dx, dy, dz = e.x - px, e.y - py, e.z - pz
             local def = e.defence and builtDefence(r)
             local defVerb = def and defenceVerb(e.uname, def)
+            -- a pitched tent is no container and only a Crowbar packs it: the items lying in it are the targets
             if
                 t
+                and not e.pitched
                 and (not def or defVerb)
                 and (r.dimension or 0) == dim
                 and (r.interior or 0) == int
