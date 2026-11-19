@@ -35,6 +35,27 @@ bars.HUNGER = {
 -- At 1080p MTA's stock weapon icon sits at 1485..1637 x 25..194 px = 446.7..514.2 x 11.1..86.2 right-anchored units.
 bars.AMMO = { x = 480.4, y = 75.5 }
 
+-- A needs bar that wants attention: from LOW down (where the character starts to feel it, character's hunger.START)
+-- its colour breathes once every 1.2 s, from CRITICAL down (where HP drains) it turns red on and off twice a second.
+bars.LOW, bars.CRITICAL = 30, 20
+bars.ALERT = { r = 0xF0, g = 0x30, b = 0x30 }
+
+-- r, g, b, a of the bar `bar` at `value`, `nowMs` into the client's clock
+function bars.needColour(bar, value, nowMs)
+    value = tonumber(value) or bar.max
+    if value >= bars.LOW then
+        return bar.r, bar.g, bar.b, bar.a
+    end
+    if value < bars.CRITICAL then
+        if nowMs % 500 < 250 then
+            return bars.ALERT.r, bars.ALERT.g, bars.ALERT.b, bar.a
+        end
+        return bar.r, bar.g, bar.b, bar.a
+    end
+    local k = 0.55 + 0.45 * (0.5 + 0.5 * math.cos(nowMs / 1200 * 2 * math.pi)) -- 1 down to 0.55 and back
+    return math.floor(bar.r * k), math.floor(bar.g * k), math.floor(bar.b * k), bar.a
+end
+
 function bars.fill(value, max)
     if not max or max <= 0 then
         return 0

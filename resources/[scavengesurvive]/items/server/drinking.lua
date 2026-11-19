@@ -43,15 +43,17 @@ return function(ctx)
             return stop(player)
         end
         local t = itemType(held.uname)
-        local ok, nextData, food = liquids.sip(t, held.data)
+        local ok, nextData, food, thirst = liquids.sip(t, held.data)
         if not ok then
             stop(player)
             return toast(player, "LIQUID_EMPTY")
         end
         ctx.writeHeldData(player, held.id, nextData)
+        if thirst ~= 0 then
+            exports.character:modifyStat(player, "thirst", thirst)
+        end
         if food ~= 0 then
-            -- Positive drinks replenish hydration; harmful liquids keep their food penalty.
-            exports.character:modifyStat(player, food > 0 and "thirst" or "food", food)
+            exports.character:modifyStat(player, "food", food)
         end
         if isTimer(a.timer) then
             killTimer(a.timer)
@@ -61,6 +63,12 @@ return function(ctx)
             setPedAnimation(player)
             triggerClientEvent(player, "treatmentStopped", player)
             return toast(player, "LIQUID_EMPTY")
+        end
+        -- had enough: the hold ends without a line, the bar is full
+        local stats = exports.character:getStats(player)
+        if stats and not liquids.wanted(t, nextData, stats.food, stats.thirst) then
+            setPedAnimation(player)
+            return triggerClientEvent(player, "treatmentStopped", player)
         end
         begin(player, held, true)
     end
@@ -96,6 +104,10 @@ return function(ctx)
         local _, liquid = liquids.decode(t, held.data)
         if not liquid then
             return toast(player, "LIQUID_EMPTY")
+        end
+        local stats = exports.character:getStats(player)
+        if stats and not liquids.wanted(t, held.data, stats.food, stats.thirst) then
+            return toast(player, "NOT_THIRSTY")
         end
         begin(player, held, false)
     end

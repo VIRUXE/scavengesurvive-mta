@@ -27,7 +27,10 @@ local lastSound = {} -- kind -> index played last
 
 local stats = { food = 100, thirst = 100, drugs = {} }
 local pose = false
+-- fx is what the screen shows now (nil when clear), target what the needs ask for; draw() eases one to the other
 local screenSource, shader, fx = nil, nil, nil
+local target = { desat = 0, vignette = 0, blur = 0 }
+local lastDraw = 0
 local locked = {} -- control -> true: switched off here, so switched back on here
 local sprintMs, coolUntil = 0, 0
 local lastCue = 0
@@ -56,8 +59,17 @@ local function draw()
     if not fx then
         return
     end
+    local now = getTickCount()
+    fx = hunger.ease(fx, target, now - lastDraw)
+    lastDraw = now
+    if not hunger.active(fx) then
+        return freeScreen()
+    end
     local sw, sh = guiGetScreenSize()
     if shader then
+        dxSetShaderValue(shader, "Desat", fx.desat)
+        dxSetShaderValue(shader, "Vignette", fx.vignette)
+        dxSetShaderValue(shader, "Blur", fx.blur)
         dxUpdateScreenSource(screenSource)
         dxDrawImage(0, 0, sw, sh, shader)
     else
@@ -66,14 +78,16 @@ local function draw()
     end
 end
 
-local function setScreen(next)
-    if not hunger.active(next) then
+-- now = true: no fade (dead, on staff duty)
+local function setScreen(next, now)
+    target = next
+    if now and not hunger.active(next) then
         if fx then
             freeScreen()
         end
         return
     end
-    if not fx then
+    if not fx and hunger.active(next) then
         local sw, sh = guiGetScreenSize()
         screenSource = dxCreateScreenSource(sw, sh)
         shader = screenSource and dxCreateShader("client/hunger.fx") or nil
@@ -84,12 +98,7 @@ local function setScreen(next)
             destroyElement(screenSource)
             screenSource = nil
         end
-    end
-    fx = next
-    if shader then
-        dxSetShaderValue(shader, "Desat", fx.desat)
-        dxSetShaderValue(shader, "Vignette", fx.vignette)
-        dxSetShaderValue(shader, "Blur", fx.blur)
+        fx, lastDraw = { desat = 0, vignette = 0, blur = 0 }, getTickCount()
     end
 end
 
@@ -166,7 +175,7 @@ end
 
 local function update()
     if isPedDead(localPlayer) or getElementData(localPlayer, "staff.duty") == true then
-        setScreen({ desat = 0, vignette = 0, blur = 0 })
+        setScreen({ desat = 0, vignette = 0, blur = 0 }, true)
         releaseAll()
         return
     end

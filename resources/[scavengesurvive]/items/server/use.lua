@@ -10,25 +10,45 @@ return function(ctx)
     local itemType, charId, toast = ctx.type, ctx.charId, ctx.toast
 
     local COOKERS = { "Campfire", "Barbecue" }
+    local EAT_ANIM_MS = 2000
     local OWNED_SQL = ctx.ownedSql
 
-    local function eat(player, itemId, t, fromHand, data)
-        local food = t.categoryData or {}
-        local amount = (tonumber(food.biteValue) or 0) * (tonumber(food.maxBites) or 1)
-        -- item/food.pwn: uncooked food that can be cooked gives 70 %, and raw meat or fish infects (#94); a campfire
-        -- or barbecue cooks it (#95, server/cooking.lua)
-        local raw = ctx.cooking.isRaw(t, data)
-        if raw then
-            amount = amount * 0.7
+    -- a character with nothing to gain from it keeps the food (shared/logic/cooking.lua eatWanted)
+    local function notHungry(player, t, data)
+        local stats = exports.character:getStats(player)
+        if stats and not ctx.cooking.eatWanted(t, data, stats.food, stats.thirst) then
+            toast(player, "NOT_HUNGRY")
+            return true
         end
+        return false
+    end
+
+    local function eat(player, itemId, t, fromHand, data)
+        if notHungry(player, t, data) then
+            return
+        end
+        -- item/food.pwn: uncooked food that can be cooked gives 70 %, and raw meat or fish infects (#94); a campfire
+        -- or barbecue cooks it (#95, server/cooking.lua). Fruit also quenches, salty snacks dry the mouth.
+        local amount, thirst, raw = ctx.cooking.eatGain(t, data)
         -- destroy first: the stat only changes once the item is really gone
         ctx.destroy(itemId, player, function(ok, code)
             if not ok then
                 return toast(player, code)
             end
             exports.character:modifyStat(player, "food", amount)
-            if raw and food.canRawInfect then
+            if thirst ~= 0 then
+                exports.character:modifyStat(player, "thirst", thirst)
+            end
+            if raw and (t.categoryData or {}).canRawInfect then
                 exports.character:setInfection(player, "food", true)
+            end
+            -- a bite on foot with the hands free; in a vehicle, or carrying something else, it is just eaten
+            if
+                not getPedOccupiedVehicle(player)
+                and (fromHand or not state.held[player])
+                and not exports.character:isKnockedOut(player)
+            then
+                setPedAnimation(player, "FOOD", "EAT_Burger", EAT_ANIM_MS, false, false, true, false)
             end
             toast(player, "ATE")
             if not fromHand then
@@ -42,6 +62,9 @@ return function(ctx)
     -- container_move into the inventory), and the container's owner hears of the take (a machine empties its coil).
     -- Food the character already carries (inventory, worn bag) is eaten where it is.
     local function eatFromSide(player, itemId, t, data, openContainerId)
+        if notHungry(player, t, data) then
+            return
+        end
         local cid = charId(player)
         local side = ctx.openSide(player)
         local function eaten(res, c)

@@ -30,6 +30,8 @@ return function(ctx)
         GAVE_ITEM = "You handed it over",
         GOT_ITEM = "You were handed an item",
         ATE = "You ate it",
+        NOT_HUNGRY = "You are not hungry",
+        NOT_THIRSTY = "You are not thirsty",
         DB_ERROR = "Server error",
         NOT_OWNER = "Not yours",
         NOT_OWNED = "Not yours",
@@ -241,7 +243,7 @@ return function(ctx)
     -- lang:end
     local view = "inventory" -- which dialog is up: "inventory", "bag" or "trunk"
     local last = nil -- the last payload, re-rendered when the view switches
-    local charStats = { hp = 100, food = 100, bleed = 0, wounds = 0 }
+    local charStats = { hp = 100, food = 100, thirst = 100, bleed = 0, wounds = 0 }
 
     addEventHandler("characterStatsSynced", root, function(s)
         if s then
@@ -637,10 +639,10 @@ return function(ctx)
                 extra[#extra + 1] = { lang.text(name), tocolor(255, 255, 0, 255) }
             end
         end
-        -- seven body parts, bleed and hunger, the status rows and the footer: the panel grows past its usual
+        -- seven body parts, bleed, hunger and thirst, the status rows and the footer: the panel grows past its usual
         -- height when every row would not fit (a stack of drugs dropped the last ones)
         local lineH = 13 * s
-        ph = math.max(ph, 22 * s + (9 + #extra) * lineH + 4 * s + 22 * s)
+        ph = math.max(ph, 22 * s + (10 + #extra) * lineH + 4 * s + 22 * s)
         drawPanel(px, py, pw, ph)
         dxDrawRectangle(px, py, pw, 18 * s, tocolor(50, 50, 50, 255))
         dxDrawText(
@@ -658,7 +660,7 @@ return function(ctx)
 
         local wounds = charStats.wounds or 0
         local bleed = charStats.bleed or 0
-        local food = charStats.food or 100
+        local food, thirst = charStats.food or 100, charStats.thirst or 100
         -- the wounds the character carries on each body part (upstream GetPlayerWoundsPerBodypart): woundParts
         -- counts torso, groin, left arm, right arm, left leg, right leg, head
         local wp = type(charStats.woundParts) == "table" and charStats.woundParts or {}
@@ -698,22 +700,31 @@ return function(ctx)
         local bleeding = string.format("%.2f", bleed) ~= "0.00"
         local bleedCol = bleeding and tocolor(255, 60, 60, 255) or tocolor(50, 220, 50, 255)
         dxDrawText(bleedText, px + 8 * s, statusY, px + pw, statusY + lineH, bleedCol, 0.85 * s, "default-bold")
-        local foodCol = food < 20 and tocolor(255, 60, 60, 255)
-            or (food < 50 and tocolor(255, 200, 50, 255) or tocolor(50, 220, 50, 255))
-        dxDrawText(
+        local function needCol(v)
+            return v < 20 and tocolor(255, 60, 60, 255)
+                or (v < 50 and tocolor(255, 200, 50, 255) or tocolor(50, 220, 50, 255))
+        end
+        local needs = {
             lang.format("Hunger: %d%%", math.floor(food)),
-            px + 8 * s,
-            statusY + lineH,
-            px + pw,
-            statusY + lineH * 2,
-            foodCol,
-            0.85 * s,
-            "default-bold"
-        )
+            lang.format("Thirst: %d%%", math.floor(thirst)),
+        }
+        for i, text in ipairs(needs) do
+            local y = statusY + lineH * i
+            dxDrawText(
+                text,
+                px + 8 * s,
+                y,
+                px + pw,
+                y + lineH,
+                needCol(i == 1 and food or thirst),
+                0.85 * s,
+                "default-bold"
+            )
+        end
 
         local footerY = py + ph - 18 * s
         for i, row in ipairs(extra) do
-            local y = statusY + lineH * (i + 1)
+            local y = statusY + lineH * (i + 2)
             dxDrawText(row[1], px + 8 * s, y, px + pw, y + lineH, row[2], 0.85 * s, "default-bold")
         end
         dxDrawRectangle(px, footerY, pw, 18 * s, tocolor(50, 50, 50, 255))

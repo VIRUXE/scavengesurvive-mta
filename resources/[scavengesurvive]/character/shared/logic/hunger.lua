@@ -48,6 +48,20 @@ function M.active(fx)
     return fx.desat > 0 or fx.vignette > 0 or fx.blur > 0
 end
 
+-- The screen moves towards what the needs ask for instead of jumping there: a meal clears it over FADE_MS at most.
+M.FADE_MS = 2500
+
+-- fx stepped dtMs towards target; a new table
+function M.ease(fx, target, dtMs)
+    local step = math.max(0, dtMs) / M.FADE_MS
+    local out = {}
+    for _, k in ipairs({ "desat", "vignette", "blur" }) do
+        local d = target[k] - fx[k]
+        out[k] = fx[k] + clamp(d, -step, step)
+    end
+    return out
+end
+
 -- The camera drunk level (upstream units, the client divides by 200) thirst wants next, or nil to keep the current
 -- one: a sway every 40 s at START, every 10 s at 0, lasting 4..8 s. drunk is the current level.
 function M.thirstDrunk(thirst, drugs, drunk, sinceMs)

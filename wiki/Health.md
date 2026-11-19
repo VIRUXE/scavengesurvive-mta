@@ -1,14 +1,14 @@
 # Health
 
-Your character has two meters: health and hunger. Both are saved with the character and shown on the HUD and in the inventory's Health Status panel (open it with `H`).
+Your character has three meters: health, hunger and thirst. All are saved with the character and shown on the HUD and in the inventory's Health Status panel (open it with `H`).
 
-Health is 0 to 100. At 0 you die. A first-ever character starts with 90 health and 80 hunger; a character created after a death starts with 100 health and 40 hunger.
+Health is 0 to 100. At 0 you die. A first-ever character starts with 90 health and 80 hunger and thirst; a character created after a death starts with 100 health and 40 hunger and thirst.
 
 ## Regeneration
 
-Health regenerates once a second, but only while you are **not bleeding**. The amount depends on hunger:
+Health regenerates once a second, but only while you are **not bleeding**. The amount depends on the **lower** of hunger and thirst, so a full stomach does nothing for a parched character:
 
-| Hunger | Health per second (not bleeding) |
+| Lower of hunger and thirst | Health per second (not bleeding) |
 |--:|--:|
 | 100 | about 0.19 |
 | 50 | about 0.10 |
@@ -32,10 +32,16 @@ A [food infection](Infection) adds 0.004 per second on top. See [Food & Drink](F
 
 Below 20 hunger you start to starve and lose `(20 - hunger) / 30` health per second, up to about 0.67 per second at 0 hunger. Starving is a cause of death.
 
+## Thirst
+
+Thirst falls the same way, half again as fast: 0.006 per second standing still, 0.0072 walking, 0.0108 running, 0.0132 sprinting and 0.0012 in a vehicle. A full bar lasts about four and a half hours standing still and a little over two hours of sprinting.
+
+Below 20 thirst you lose `(20 - thirst) / 30` health per second, on top of what hunger takes. Dehydration is a cause of death. From 30 down both needs are felt before they hurt: the screen fades and blurs, sprints get shorter, and the bar on the HUD starts to pulse (it flashes red below 20).
+
 ## Ways to lose health
 
 - [Bleeding & Wounds](Bleeding-and-Wounds): every wound adds to your bleed rate, which drains health each second.
-- Starvation, as above.
+- Starvation and dehydration, as above.
 - The drug Air (from an empty injector) costs 1 health on half the seconds; see [Drugs](Drugs).
 - Low health darkens the screen. [Painkillers and Adrenaline](Drugs) hide the darkness.
 
@@ -57,7 +63,7 @@ Stop the bleed first, then heal. Bandages, Medkits and Doctor's Bags are covered
 - **Bandage** and **Antiseptic Bandage** reduce the bleed rate.
 - **Medkit** reduces the bleed rate and removes wounds.
 - **Doctor's Bag** stops the bleed, removes wounds and gives a drug.
-- Eating keeps hunger up, which keeps regeneration fast.
+- Eating and drinking keep hunger and thirst up, which keeps regeneration fast.
 
 ## Death
 

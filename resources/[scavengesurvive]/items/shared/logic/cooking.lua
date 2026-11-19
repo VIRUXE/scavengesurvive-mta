@@ -59,6 +59,42 @@ function M.isRaw(t, data)
     return M.canCook(t) and not M.isCooked(data)
 end
 
+-- Thirst a whole item gives or takes besides its food: fruit and ice cream are wet, salty snacks dry the mouth.
+M.FOOD_THIRST = {
+    Orange = 10,
+    Tomato = 8,
+    RedApple = 6,
+    GrnApple = 6,
+    Lemon = 5,
+    Banana = 3,
+    IceCream = 12,
+    IceCreamBars = 10,
+    PhatChips = -4,
+    CheesyPuffs = -4,
+    Pretzels = -5,
+    SaltedPeanuts = -5,
+    BeefJerky = -6,
+}
+M.RAW_SHARE = 0.7 -- item/food.pwn: uncooked food that can be cooked gives 70 %
+M.FULL = 99 -- from here up a need counts as met
+
+-- What eating the whole item gives: food, thirst, raw (uncooked food that can be cooked).
+function M.eatGain(t, data)
+    local food = t.categoryData or {}
+    local amount = (tonumber(food.biteValue) or 0) * (tonumber(food.maxBites) or 1)
+    local raw = M.isRaw(t, data)
+    if raw then
+        amount = amount * M.RAW_SHARE
+    end
+    return amount, M.FOOD_THIRST[t.uname] or 0, raw
+end
+
+-- Whether eating it would do a character at these needs any good: false when it only gives what is already full.
+function M.eatWanted(t, data, food, thirst)
+    local dFood, dThirst = M.eatGain(t, data)
+    return (dFood > 0 and (tonumber(food) or 0) < M.FULL) or (dThirst > 0 and (tonumber(thirst) or 0) < M.FULL)
+end
+
 -- OnItemNameRender: "Cooked" / "Uncooked" for food that can be cooked (the port eats a whole item, no bite %)
 function M.label(t, name, data)
     if not M.canCook(t) then

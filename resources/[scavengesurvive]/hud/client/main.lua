@@ -325,10 +325,13 @@ local function skillCornerTaken()
 end
 
 local function drawNeeds()
+    local now = getTickCount()
     local T = bars.THIRST
-    draw.progressBar(T.x, T.y, T.w, T.h, bars.fill(state.stats.thirst, T.max), T.r, T.g, T.b, T.a, "right")
+    local r, g, b, a = bars.needColour(T, state.stats.thirst, now)
+    draw.progressBar(T.x, T.y, T.w, T.h, bars.fill(state.stats.thirst, T.max), r, g, b, a, "right")
     local H = bars.HUNGER
-    draw.progressBar(H.x, H.y, H.w, H.h, bars.fill(state.stats.food, H.max), H.r, H.g, H.b, H.a, "right")
+    r, g, b, a = bars.needColour(H, state.stats.food, now)
+    draw.progressBar(H.x, H.y, H.w, H.h, bars.fill(state.stats.food, H.max), r, g, b, a, "right")
 end
 
 local function drawAmmo()

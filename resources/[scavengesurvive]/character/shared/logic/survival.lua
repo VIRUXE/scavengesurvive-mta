@@ -2,7 +2,7 @@ local survival = {}
 survival.NEW = { hp = 90, food = 80, thirst = 80, bleed = 0.0001 }
 survival.RESPAWN = { hp = 100, food = 40, thirst = 40, bleed = 0 }
 survival.IDLE_FOOD_RATE = 0.004
-survival.IDLE_THIRST_RATE = 0.004
+survival.IDLE_THIRST_RATE = 0.006 -- thirst runs out half again as fast as hunger
 survival.REGEN_PER_FOOD = 0.001925925
 survival.MAX_KNOCKOUT_MS = 120000
 survival.MIN_KNOCKOUT_MS = 1500
@@ -167,7 +167,8 @@ function survival.tick(state, movementMult, rng)
             s.bleed = 0
         end
     else
-        s.hp = s.hp + survival.REGEN_PER_FOOD * s.food * (infection.wound and 0.5 or 1.0)
+        -- the body heals on the lower of the two needs: a full stomach does nothing for a parched character
+        s.hp = s.hp + survival.REGEN_PER_FOOD * math.min(s.food, s.thirst) * (infection.wound and 0.5 or 1.0)
     end
     if drugs.Morphine and rng() < 0.8 then
         s.hp = s.hp + 0.5

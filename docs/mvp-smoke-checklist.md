@@ -113,7 +113,7 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
       - Equip `CowboyHat` / `ArmyHelmet` / `Mask` / `Bandana` / `Armour`: visible attached on head/face/spine bones with upstream offsets.
       - Body damage protection: Torso damage bleed reduced by 50% when wearing `Armour`; Head shot knockout chance reduced by 60% when wearing a helmet/hat.
     - **Body preview & Gear tiles**:
-      - Press **Tab** / open inventory: left Body Panel shows Health status, individual bodypart wound counts (Head, Torso, Arms, Groin, Legs) in red when injured, Bleeding status, Hunger %, and unconsciousness chance formula.
+      - Press **Tab** / open inventory: left Body Panel shows Health status, individual bodypart wound counts (Head, Torso, Arms, Groin, Legs) in red when injured, Bleeding status, Hunger % and Thirst %, and unconsciousness chance formula.
       - Right side displays 6 Gear Tiles (`HEAD`, `FACE`, `HAND`, `HOLSTER`, `TORSO`, `BACK`). Clicking an equipped tile takes off the item into hands/inventory; clicking an empty tile with matching held item wears it; clicking `BACK` navigates directly to worn bag. Wearable items in inventory also have a `Wear` option.
     - **Safeboxes & Tents as persistent containers**:
       - World safeboxes (`SmallBox`, `MediumBox`, `LargeBox`, `Locker`, `ToolBox`, `Capsule`, `Suitcase`, etc.): Press **F** near a world safebox to open its persistent container dialog; transfer items between hands and box. When empty, `[Pick up container]` option in dialog allows picking up the box into hands.
@@ -403,7 +403,7 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
       in the inventory, **F** says `It is empty`); a looted Bottle, Can Drink, Milk Carton or Apple Juice reads
       `(Water 0.4/0.50)`-style with a random level, and a looted Petrol Can `(Petrol 13.2/20.00)` rather than a
       fixed amount. Hold **F** with a filled Bottle: the drinking animation and a 1 s hold bar repeat, the label
-      drops 0.2 L per sip, the hunger bar rises per sip (Milk 2.1, Water 0.5), letting go stops it, and the last sip
+      drops 0.2 L per sip, the thirst bar rises per sip (Water 12, Milk 8 and 4 hunger), letting go stops it, and the last sip
       ends with `It is empty`. Drinking from a Petrol Can lowers food (-8 per sip, as upstream).
     - b. **Carry items and vehicles (#120).** Holding a `Wheel` or `SmallBox`, try to enter any vehicle: entry is
       refused with `Put that down before getting in`; drop it and enter normally.
