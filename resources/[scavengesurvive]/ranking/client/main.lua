@@ -41,53 +41,65 @@ local function text(str, x1, y1, x2, y2, colour, scale, font, align)
     dxDrawText(str, x1, y1, x2, y2, colour, scale * s, scale * s, font or FONT, align or "left", "center", true)
 end
 
--- one column: a header bar, the column titles, then rows { name, time, colour, me }
-local function column(x, y, w, title, rows, rowH, nRows)
+-- one table: a header bar, the column titles, then rows { name, me, cells = { { text, colour }, ... } }; the value
+-- columns (heads) sit at the right, CELL_W units each
+local CELL_W = 58
+local function table_(x, y, w, title, heads, rows, rowH, nRows)
     local pad = 4 * s
+    local cellW = CELL_W * s
     dxDrawRectangle(x, y, w, rowH, COL.head)
     text(title, x + pad, y, x + w - pad, y + rowH, COL.text, 0.55)
     y = y + rowH
     dxDrawRectangle(x, y, w, rowH * (nRows + 1), COL.list)
-    text(lang.text("Name"), x + pad + 14 * s, y, x + w, y + rowH, COL.dim, 0.5)
-    text(lang.text("Time alive"), x, y, x + w - pad, y + rowH, COL.dim, 0.5, nil, "right")
+    local nameRight = x + w - pad - cellW * #heads
+    text(lang.text("Name"), x + pad + 14 * s, y, nameRight, y + rowH, COL.dim, 0.5)
+    for k, head in ipairs(heads) do
+        local right = x + w - pad - cellW * (#heads - k)
+        text(head, right - cellW, y, right, y + rowH, COL.dim, 0.5, nil, "right")
+    end
     for i, r in ipairs(rows) do
         local ry = y + rowH * i
         if r.me then
             dxDrawRectangle(x, ry, w, rowH, COL.mine)
         end
         text(tostring(i) .. ".", x + pad, ry, x + pad + 12 * s, ry + rowH, COL.dim, 0.5, nil, "right")
-        text(r.name, x + pad + 14 * s, ry, x + w - 70 * s, ry + rowH, COL.text, 0.55)
-        text(r.time, x, ry, x + w - pad, ry + rowH, r.colour, 0.55, nil, "right")
+        text(r.name, x + pad + 14 * s, ry, nameRight, ry + rowH, COL.text, 0.55)
+        for k, cell in ipairs(r.cells) do
+            local right = x + w - pad - cellW * (#heads - k)
+            text(cell[1], right - cellW, ry, right, ry + rowH, cell[2], 0.55, nil, "right")
+        end
     end
 end
 
 local function onlineRows(elapsed)
     local out = {}
     for _, r in ipairs(data.online) do
-        local row = { name = r.name, me = r.me }
+        local cell
         if r.state == "alive" then
-            row.time = logic.duration(logic.secondsAt(r, elapsed))
-            row.colour = r.run and COL.running or COL.resting -- paused: staff on duty
+            -- paused (staff on duty): shown, not ticking
+            cell = { logic.duration(logic.secondsAt(r.s, r.run, elapsed)), r.run and COL.running or COL.resting }
         elseif r.state == "dead" then
-            row.time, row.colour = lang.text("Dead"), COL.dead
+            cell = { lang.text("Dead"), COL.dead }
         else
-            row.time, row.colour = "-", COL.dim
+            cell = { "-", COL.dim }
         end
-        out[#out + 1] = row
+        out[#out + 1] = { name = r.name, me = r.me, cells = { cell } }
     end
     return out
 end
 
+-- best life, then the current one: green while it counts, pale when its player is offline or on duty
 local function topRows(elapsed)
     local out = {}
     for _, r in ipairs(data.top) do
-        local colour = r.run and COL.running or (r.alive and COL.resting or COL.text)
-        out[#out + 1] = {
-            name = r.name,
-            me = r.me,
-            time = logic.duration(logic.secondsAt(r, elapsed)),
-            colour = colour,
-        }
+        local best = { logic.duration(logic.secondsAt(r.best, r.bestRun, elapsed)), COL.text }
+        local cur
+        if r.cur then
+            cur = { logic.duration(logic.secondsAt(r.cur, r.curRun, elapsed)), r.curRun and COL.running or COL.resting }
+        else
+            cur = { lang.text("Dead"), COL.dead }
+        end
+        out[#out + 1] = { name = r.name, me = r.me, cells = { best, cur } }
     end
     return out
 end
@@ -100,10 +112,10 @@ local function render()
     local online, top = onlineRows(elapsed), topRows(elapsed)
     local rowH = 11 * s
     local nRows = math.max(#online, logic.TOP)
-    local colW, gap, margin = 190 * s, 8 * s, 8 * s
-    local w = colW * 2 + gap + margin * 2
+    local leftW, rightW, gap, margin = 170 * s, 230 * s, 8 * s, 8 * s
+    local w = leftW + rightW + gap + margin * 2
     local titleH = 22 * s
-    local h = margin + titleH + rowH * (nRows + 2) + rowH * 1.5 + margin
+    local h = margin + titleH + rowH * (nRows + 2) + margin
     local x, y = (sw - w) / 2, math.max(4 * s, (sh - h) / 2)
     dxDrawRectangle(x, y, w, h, COL.box)
     text(
@@ -119,18 +131,9 @@ local function render()
     local count = string.format("%d/%d", data.players or #data.online, data.max or 0)
     text(count, x + margin, y + margin, x + w - margin, y + margin + titleH, COL.dim, 0.6, nil, "right")
     local cy = y + margin + titleH
-    column(x + margin, cy, colW, lang.text("Online now"), online, rowH, nRows)
-    column(x + margin + colW + gap, cy, colW, lang.text("Longest lives"), top, rowH, nRows)
-    local fy = cy + rowH * (nRows + 2) + rowH * 0.25
-    text(
-        lang.text("Time alive counts only while online. Green: still alive."),
-        x + margin,
-        fy,
-        x + w - margin,
-        fy + rowH,
-        COL.dim,
-        0.5
-    )
+    table_(x + margin, cy, leftW, lang.text("Online now"), { lang.text("Time alive") }, online, rowH, nRows)
+    local heads = { lang.text("Best"), lang.text("Current") }
+    table_(x + margin + leftW + gap, cy, rightW, lang.text("Top 10 personal bests"), heads, top, rowH, nRows)
 end
 
 local function show()

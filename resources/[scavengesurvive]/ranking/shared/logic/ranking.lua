@@ -44,31 +44,32 @@ function M.sortOnline(rows)
     return rows
 end
 
--- stored: each account's longest life from the database { account, name, s, alive }; live: the lives running now
--- { account, name, s, run } (online, alive; run = its clock is ticking, false on staff duty). The longer of the two
--- stands for the account and takes the live one's run. Best first, at most `limit`.
+-- The personal bests table. stored: per account from the database { account, name, best, cur } (cur = its living
+-- character's seconds, nil when it has none); live: the lives running now { account, name, s, run } (online, alive;
+-- run = the clock is ticking, false on staff duty). A live life is the account's current one, and its best too once
+-- it has reached it. Rows { name, best, bestRun, cur, curRun }, best first, at most `limit`.
 function M.merge(stored, live, limit)
     local byAccount, out = {}, {}
     for _, r in ipairs(stored) do
-        local e = { account = r.account, name = r.name, s = r.s, alive = r.alive, run = false }
+        local e = { account = r.account, name = r.name, best = r.best, cur = r.cur, bestRun = false, curRun = false }
         byAccount[r.account] = e
         out[#out + 1] = e
     end
     for _, r in ipairs(live) do
         local e = byAccount[r.account]
         if not e then
-            e = { account = r.account, name = r.name, s = 0, alive = true, run = false }
+            e = { account = r.account, name = r.name, best = 0, bestRun = false }
             byAccount[r.account] = e
             out[#out + 1] = e
         end
-        -- an account has one living character, so a stored best that is still alive is this running life
-        if r.s >= e.s or e.alive then
-            e.s, e.alive, e.run = math.max(e.s, r.s), true, r.run ~= false
+        e.cur, e.curRun = r.s, r.run ~= false
+        if r.s >= e.best then
+            e.best, e.bestRun = r.s, e.curRun
         end
     end
     table.sort(out, function(a, b)
-        if a.s ~= b.s then
-            return a.s > b.s
+        if a.best ~= b.best then
+            return a.best > b.best
         end
         return a.name < b.name
     end)
@@ -78,12 +79,12 @@ function M.merge(stored, live, limit)
     return out
 end
 
--- a row's seconds `elapsedMs` after the snapshot arrived: only a running clock moves
-function M.secondsAt(row, elapsedMs)
-    if row.run then
-        return row.s + math.floor(elapsedMs / 1000)
+-- seconds `elapsedMs` after the snapshot arrived: only a running clock moves
+function M.secondsAt(s, run, elapsedMs)
+    if run then
+        return s + math.floor(elapsedMs / 1000)
     end
-    return row.s
+    return s
 end
 
 return M

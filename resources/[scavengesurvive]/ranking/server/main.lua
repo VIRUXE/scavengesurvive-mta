@@ -1,4 +1,4 @@
--- Survival ranking: answers a client's Tab with every online player's current life and the longest lives ever, both
+-- Survival ranking: answers a client's Tab with every online player's current life and the top personal bests, all
 -- counted in seconds alive while online (characters.alive_s plus the running session, kept by character).
 local db = loadstring(exports.lib:getModule("db"), "=lib/db.lua")()
 local net = loadstring(exports.lib:getModule("net"), "=lib/net.lua")()
@@ -12,14 +12,14 @@ end
 local logic = loadFile("shared/logic/ranking.lua")
 
 local REFRESH_MS = 60000
--- each account's longest life: more rows than shown, since a live life may push stored ones down
-local TOP_SQL = "SELECT t.account_id, a.name, t.alive_s, t.alive FROM ("
-    .. " SELECT account_id, alive_s, alive,"
-    .. " ROW_NUMBER() OVER (PARTITION BY account_id ORDER BY alive_s DESC, alive DESC) AS rn"
-    .. " FROM characters WHERE alive_s > 0) t"
-    .. " JOIN accounts a ON a.id = t.account_id WHERE t.rn = 1 ORDER BY t.alive_s DESC LIMIT ?"
+-- each account's personal best and its living character's time: more rows than shown, since a live life may push
+-- stored ones down
+local TOP_SQL = "SELECT c.account_id, a.name, MAX(c.alive_s) AS best,"
+    .. " MAX(CASE WHEN c.alive = 1 THEN c.alive_s END) AS cur"
+    .. " FROM characters c JOIN accounts a ON a.id = c.account_id"
+    .. " GROUP BY c.account_id, a.name HAVING best > 0 ORDER BY best DESC LIMIT ?"
 
-local stored = {} -- { account, name, s, alive } from the last TOP_SQL
+local stored = {} -- { account, name, best, cur } from the last TOP_SQL
 local refreshTimer = nil
 
 local function refresh()
@@ -32,8 +32,8 @@ local function refresh()
             out[#out + 1] = {
                 account = r.account_id,
                 name = r.name,
-                s = tonumber(r.alive_s) or 0,
-                alive = tonumber(r.alive) == 1,
+                best = tonumber(r.best) or 0,
+                cur = tonumber(r.cur), -- NULL (no living character) arrives as false
             }
         end
         stored = out
