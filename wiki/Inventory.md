@@ -34,7 +34,7 @@ If the item fits in neither the inventory nor the bag you keep it in your hands 
 
 ## Big items
 
-Some items are carried in both hands, with a lifting animation and a carry pose: wheels, the boxes, crates, cartons and bin bags found around the map, metal panels and doors, the BBQ, the Welder, the Generator, the Gas Cylinder, the Plant Pot, the Dice, a Tent Pack, a Campfire, a body and a few others. They never go into your inventory or a bag (*Too big to put away, it goes in a vehicle or a box*), and you cannot get into a vehicle while holding one. Drop it, hand it over, or put it in a trunk or box with `Y` while that container's list is open.
+Some items are carried in both hands, with a lifting animation and a carry pose: wheels, the boxes, crates, cartons and bin bags found around the map, metal panels and doors, the BBQ, the Welder, the Generator, the Gas Cylinder, the Plant Pot, the Dice, a Campfire, a body and a few others. They never go into your inventory or a bag (*Too big to put away, it goes in a vehicle or a box*), and you cannot get into a vehicle while holding one. Drop it, hand it over, or put it in a trunk or box with `Y` while that container's list is open.
 
 ## Handing items over
 

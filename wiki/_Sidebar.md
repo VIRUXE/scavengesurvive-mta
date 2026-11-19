@@ -46,7 +46,6 @@
 - [Fireworks](Fireworks)
 - [Defences](Defences)
 - [Keypads](Keypads)
-- [Tent](Tent)
 - [Campfire & BBQ](Campfire-and-BBQ)
 - [Furniture](Furniture)
 - [Parachute](Parachute)

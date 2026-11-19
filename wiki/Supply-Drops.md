@@ -22,7 +22,7 @@ There are five types. A type only drops while enough players are online, and eac
 
 | Type | Players needed | Interval | Random extra | Contents |
 |:--|--:|--:|--:|:--|
-| Food and Medical | 3 | 15 min | up to 10 min | Tools (wrench, screwdriver, hammer, crowbar), petrol cans, lighters, wood, seeds, tents, plant pots, food and drink, bags and backpacks, medkits, antiseptic bandages, doctor's bags, pills |
+| Food and Medical | 3 | 15 min | up to 10 min | Tools (wrench, screwdriver, hammer, crowbar), petrol cans, lighters, wood, seeds, plant pots, food and drink, bags and backpacks, medkits, antiseptic bandages, doctor's bags, pills |
 | Low Grade Weapons | 4 | 40 min | up to 20 min | Knives, bats, pistols, shotguns, Mac 10, M77-RM rifle and their ammunition |
 | Military Weapons | 6 | 70 min | up to 30 min | Pistols, shotguns, MP5, M16, AK-47, rifles, sniper rifle, RPG, flamer, minigun and heavy ammunition |
 | Industrial Supplies | 5 | 33 min | up to 15 min | Chainsaws, boxes, electronics (car battery, fuse box, sensors, keypad, motor, receiver), metal panels, gates and doors, wood ramps, gas bottles, angle grinder, tool battery, grinding discs |

@@ -2625,41 +2625,6 @@ BEGIN
   END IF;
 END//
 
-CREATE OR REPLACE PROCEDURE `tent_pack`(IN p_item_id INT)
-BEGIN
-  DECLARE v_rows INT DEFAULT 0;
-  DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
-  SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
-  START TRANSACTION;
-  UPDATE items SET data = NULL WHERE id = p_item_id AND type_uname = 'TentPack' AND x IS NOT NULL;
-  SET v_rows = ROW_COUNT();
-  IF v_rows = 0 THEN
-    ROLLBACK;
-    SELECT 0 AS ok, 'NOT_IN_WORLD' AS code, NULL AS payload;
-  ELSE
-    COMMIT;
-    SELECT 1 AS ok, 'OK' AS code, NULL AS payload;
-  END IF;
-END//
-
-CREATE OR REPLACE PROCEDURE `tent_pitch`(IN p_item_id INT)
-BEGIN
-  -- a pitched tent is no container: what is kept in it lies on the ground under it
-  DECLARE v_rows INT DEFAULT 0;
-  DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
-  SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
-  START TRANSACTION;
-  UPDATE items SET data = '{"pitched":true}' WHERE id = p_item_id AND type_uname = 'TentPack' AND x IS NOT NULL;
-  SET v_rows = ROW_COUNT();
-  IF v_rows = 0 THEN
-    ROLLBACK;
-    SELECT 0 AS ok, 'NOT_IN_WORLD' AS code, NULL AS payload;
-  ELSE
-    COMMIT;
-    SELECT 1 AS ok, 'OK' AS code, NULL AS payload;
-  END IF;
-END//
-
 CREATE OR REPLACE PROCEDURE `tutorial_cleanup`(IN p_char_id INT, IN p_dimension INT)
 BEGIN
   DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;

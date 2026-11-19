@@ -22,7 +22,7 @@ Short answers to the questions new players ask, with the page that has the long 
 
 **Can I log out to escape a fight?** No. Quitting within 30 seconds of being hit by a player who is still online kills your character where it stood, exactly like a death. See [Combat Log](Combat-Log).
 
-**Do my items survive a server restart?** Yes. Everything in the world, in containers, in trunks, in tents and on your character is kept; the world comes back as it was. See [Loot & Respawn](Loot-and-Respawn).
+**Do my items survive a server restart?** Yes. Everything in the world, in containers, in trunks and on your character is kept; the world comes back as it was. See [Loot & Respawn](Loot-and-Respawn).
 
 **I spawned with nothing. Where is my bag?** New characters get no bag: your first character holds a Combat Knife, every one after a death an Antiseptic Bandage, and that is all. Bags are loot; hold one and press `Y` to wear it. See [Containers & Bags](Containers-and-Bags).
 

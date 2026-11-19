@@ -743,7 +743,6 @@ return function(ctx)
     end
 
     local BARBECUE = { "Barbecue" }
-    local TENT = { "TentPack" }
     -- the Petrol Can also fuels the three machines (server/machines.lua, #145)
     local TARGETS = {
         GasCan = { "Barbecue", "ScrapMachine", "RefineMachine", "WaterMachine", "Generator" },
@@ -785,24 +784,13 @@ return function(ctx)
         return list
     end
 
-    -- Crowbar reaches tents and defences; Motor, Keypad, AdvancedKeypad reach defences (building resource)
-    local crowbarTargets = nil
+    -- Crowbar, Motor, Keypad and AdvancedKeypad reach defences (building resource)
     local function targetsFor(uname)
         if ammo and ammo.isLiquidWeapon(itemType(uname)) then
             return { "GasCan" } -- F with a liquid weapon in hand reaches a Petrol Can lying near
         end
-        if uname == "Motor" or uname == "Keypad" or uname == "AdvancedKeypad" then
+        if uname == "Motor" or uname == "Keypad" or uname == "AdvancedKeypad" or uname == "Crowbar" then
             return getDefenceTargets()
-        end
-        if uname == "Crowbar" then
-            local defs = getDefenceTargets()
-            if not crowbarTargets or (#crowbarTargets <= #TENT and #defs > 0) then
-                crowbarTargets = { unpack(TENT) }
-                for _, u in ipairs(defs) do
-                    crowbarTargets[#crowbarTargets + 1] = u
-                end
-            end
-            return crowbarTargets
         end
         return withSmallTargets(uname, TARGETS[uname])
     end
@@ -912,9 +900,7 @@ return function(ctx)
         local r = tonumber(state.settings["items.pickup_radius"]) or 2.0
         local unames = held and targetsFor(held.uname)
         local int, dim = getElementInterior(player), getElementDimension(player)
-        -- a pitched tent is reached only to pack it (a Crowbar): otherwise the items lying in it come first
-        local skipPitched = not (held and held.uname == "Crowbar")
-        local sql = world.findNearestSql(x, y, r, int, dim, unames, world.cleanIds(blocked), targetId, skipPitched)
+        local sql = world.findNearestSql(x, y, r, int, dim, unames, world.cleanIds(blocked), targetId)
         db.one(sql, {}, function(row, c)
             if not isElement(c.player) then
                 return
@@ -947,21 +933,6 @@ return function(ctx)
             end
             local rData = decodeData(row.data)
 
-            -- TentPack interactions
-            if row.uname == "TentPack" then
-                local isPitched = (rData and (rData.pitched == true or (rData[1] and rData[1].pitched == true)))
-                if isPitched then
-                    -- no container: what is kept in a tent lies on the ground under it
-                    if curUname == "Crowbar" then
-                        return containers and containers.dismantleTent(c.player, row.id)
-                    end
-                    return
-                else
-                    if curUname == "Hammer" then
-                        return containers and containers.pitchTent(c.player, row.id)
-                    end
-                end
-            end
             -- Defences: a Hammer lays one down and a Screwdriver stands one up where it lies; once built it is never
             -- picked up again, a Crowbar takes it down from behind and anything else works its door or keypad
             local rowType = itemType(row.uname)

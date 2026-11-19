@@ -9,7 +9,7 @@ Where to read more:
 - Food and drinks: [Food & Drink](Food-and-Drink)
 - Bags and containers: [Containers & Bags](Containers-and-Bags)
 - Healing: [Medical](Medical) and [Drugs](Drugs)
-- Building: [Defences](Defences), [Keypads](Keypads), [Tent](Tent), [Constructing](Constructing), [Workbench](Workbench)
+- Building: [Defences](Defences), [Keypads](Keypads), [Constructing](Constructing), [Workbench](Workbench)
 - Cooking and fire: [Campfire & BBQ](Campfire-and-BBQ)
 - Clothing and headgear: [Clothes & Hats](Clothes-and-Hats)
 - Tools and parts: [Tools](Tools), [Scrap](Scrap), [Machines](Machines)

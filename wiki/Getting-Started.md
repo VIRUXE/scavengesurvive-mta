@@ -62,9 +62,9 @@ The map is split into seven zones. The three cities hold most of the loot points
 
 ## 11. A first camp
 
-A **Tent Pack** pitched with a Hammer (3 seconds) is a camouflaged shelter that hides what you leave on the ground under it and survives server restarts; a Crowbar packs it up again. Three Wood Logs lit with a Lighter make a **Campfire** that cooks one food in a minute and burns for 10 minutes; the logs come from felling a tree with a Chainsaw. A tent has no lock, so hide it. See [Tent](Tent), [Campfire & BBQ](Campfire-and-BBQ) and [Trees & Wood](Trees-and-Wood).
+Three Wood Logs lit with a Lighter make a **Campfire** that cooks one food in a minute and burns for 10 minutes; the logs come from felling a tree with a Chainsaw. See [Campfire & BBQ](Campfire-and-BBQ) and [Trees & Wood](Trees-and-Wood).
 
-![Tent Pack](images/items/1279_craigpackage.png) ![Campfire](images/items/19632_firewood1.png)
+![Campfire](images/items/19632_firewood1.png)
 
 ## 12. Locks, defences and keypads
 

@@ -76,7 +76,6 @@ This is a port of Southclaws' Scavenge & Survive for SA-MP, and the game is the 
 - [Fireworks](Fireworks)
 - [Defences](Defences)
 - [Keypads](Keypads)
-- [Tent](Tent)
 - [Campfire & BBQ](Campfire-and-BBQ)
 - [Furniture](Furniture)
 - [Parachute](Parachute)

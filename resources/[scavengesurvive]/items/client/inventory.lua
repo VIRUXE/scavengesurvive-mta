@@ -172,8 +172,6 @@ return function(ctx)
         TRAILER_DETACHED = "Trailer detached",
         VEH_FULL_REPAIR = "Vehicle is already fully repaired",
         CONTAINER_NOT_EMPTY = "Container is not empty",
-        TENT_PITCHED = "Pitched tent",
-        TENT_PACKED = "Packed tent",
         PICKED_UP = "Picked up",
         CRAFTED = "Crafted",
         DECONSTRUCTED = "Deconstructed",

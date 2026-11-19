@@ -37,8 +37,6 @@ return {
     itemUnwearRequested = true,
     containerPickupRequested = true,
     itemContainerMoveRequested = true,
-    tentPitchRequested = true,
-    tentDismantleRequested = true,
     combineRequested = true,
     groundCraftRequested = true,
     deconstructRequested = true,

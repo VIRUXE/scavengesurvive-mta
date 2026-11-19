@@ -2,7 +2,7 @@
 
 ![Shelter: a town house, the log cabins and a trailer, all enterable](images/scenes/shelter.png)
 
-Buildings you can walk into. They are scenery that the map places in the world: you can enter them, shelter in them and fight in them, but they cannot be built, packed up or moved. For a shelter of your own see [Tent](Tent); for protecting a door see [Defences](Defences), [Keypads](Keypads) and [Repairing & Locks](Repairing-and-Locks).
+Buildings you can walk into. They are scenery that the map places in the world: you can enter them, shelter in them and fight in them, but they cannot be built, packed up or moved. For protecting a door see [Defences](Defences), [Keypads](Keypads) and [Repairing & Locks](Repairing-and-Locks).
 
 ![A street of enterable town houses in East Beach](images/places/townhouse-street.png)
 

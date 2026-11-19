@@ -31,4 +31,4 @@ An unlit BBQ gives its food back to empty hands, and then the BBQ itself can be 
 
 A Campfire's and BBQ's contents survive server restarts.
 
-See also [Food & Drink](Food-and-Drink), [Trees & Wood](Trees-and-Wood), [Fuel](Fuel) and [Tent](Tent).
+See also [Food & Drink](Food-and-Drink), [Trees & Wood](Trees-and-Wood) and [Fuel](Fuel).
