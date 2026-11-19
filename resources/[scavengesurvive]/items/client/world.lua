@@ -419,6 +419,28 @@ return function(ctx)
         return ok
     end
 
+    -- true when the player is turned towards the world item: within FACING_COS of the ped's heading, or so close
+    -- (under FACING_FREE metres, flat) that it lies at the feet. Standing beside a box or with the back to it
+    -- offers nothing.
+    local FACING_COS = math.cos(math.rad(60))
+    local FACING_FREE = 0.6
+    local function faced(e)
+        local px, py = getElementPosition(localPlayer)
+        local dx, dy = e.x - px, e.y - py
+        local len = math.sqrt(dx * dx + dy * dy)
+        if len < FACING_FREE then
+            return true
+        end
+        local _, _, rz = getElementRotation(localPlayer)
+        local a = math.rad(rz)
+        return (-math.sin(a) * dx + math.cos(a) * dy) / len >= FACING_COS
+    end
+
+    -- an item F acts on: faced, and no wall in between
+    local function inReach(id, e)
+        return faced(e) and reachable(id, e)
+    end
+
     -- every element the item draws, so that a ray passes through it
     local function markItemElements(e)
         for _, el in ipairs({
@@ -978,7 +1000,7 @@ return function(ctx)
                 local r = e.row
                 local dx, dy, dz = e.x - px, e.y - py, e.z - pz
                 local same = (r.dimension or 0) == dim and (r.interior or 0) == int
-                if same and dx * dx + dy * dy <= reach * reach and math.abs(dz) < 3 and reachable(id, e) then
+                if same and dx * dx + dy * dy <= reach * reach and math.abs(dz) < 3 and inReach(id, e) then
                     return id, e.uname
                 end
             end
@@ -1006,7 +1028,7 @@ return function(ctx)
                 local r = e.row
                 local dx, dy, dz = e.x - px, e.y - py, e.z - pz
                 local same = (r.dimension or 0) == dim and (r.interior or 0) == int
-                if same and dx * dx + dy * dy <= reach * reach and math.abs(dz) < 3 and reachable(id, e) then
+                if same and dx * dx + dy * dy <= reach * reach and math.abs(dz) < 3 and inReach(id, e) then
                     return id
                 end
             end
@@ -1026,7 +1048,7 @@ return function(ctx)
                 local dx, dy, dz = e.x - px, e.y - py, e.z - pz
                 local dist = dx * dx + dy * dy + dz * dz
                 local same = (r.dimension or 0) == dim and (r.interior or 0) == int
-                if same and math.abs(dz) < 3 and dist < nearestDist and reachable(id, e) then
+                if same and math.abs(dz) < 3 and dist < nearestDist and inReach(id, e) then
                     -- a take-only one (the snack machine) stands where it is: "fixed", opened but never picked up
                     local fixed = t.categoryData and t.categoryData.takeOnly
                     nearest, nearestDist, nearestCategory = id, dist, fixed and "fixed" or t.category
@@ -1054,7 +1076,7 @@ return function(ctx)
                 and (r.dimension or 0) == dim
                 and (r.interior or 0) == int
                 and dx * dx + dy * dy + dz * dz <= 4
-                and reachable(id, e)
+                and inReach(id, e)
             then
                 local verb = lang.text("Pick up")
                 local event = "itemPickupRequested"
@@ -1129,7 +1151,7 @@ return function(ctx)
             if not inert and (r.dimension or 0) == dim and (r.interior or 0) == int then
                 local dx, dy, dz = e.x - px, e.y - py, e.z - pz
                 local dist = dx * dx + dy * dy + dz * dz
-                if (not best or dist < best) and (dist > 9 or reachable(id, e)) then
+                if (not best or dist < best) and (dist > 9 or inReach(id, e)) then
                     best = dist
                 end
             end
@@ -1168,7 +1190,7 @@ return function(ctx)
             local r = e.row
             local dx, dy, dz = e.x - px, e.y - py, e.z - pz
             local same = (r.dimension or 0) == dim and (r.interior or 0) == int
-            if same and dx * dx + dy * dy <= reach * reach and math.abs(dz) < 3 and not reachable(id, e) then
+            if same and dx * dx + dy * dy <= reach * reach and math.abs(dz) < 3 and not inReach(id, e) then
                 blocked[#blocked + 1] = id
                 if #blocked >= 32 then
                     break
