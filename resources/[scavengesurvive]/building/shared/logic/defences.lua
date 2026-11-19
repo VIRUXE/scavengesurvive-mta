@@ -52,11 +52,13 @@ function M.isInsidePlotPole(px, py, poleX, poleY, radius)
 end
 
 -- Building a defence (upstream StartBuildingDefence / ConvertItemToDefenceItem). The item type's `defence`
--- (DefineDefenceItem, generated into data) holds the rotation it stands at and lies at; a Screwdriver stands it up,
--- a Hammer lays it down, both after a 10 s hold shortened by the Construction skill.
+-- (DefineDefenceItem, generated into data) holds the rotation it stands at and lies at. Only a Hammer builds one
+-- (upstream: a Screwdriver stood it up, a Hammer laid it down); the player picks the pose in the interaction chooser.
+-- The build takes a 10 s hold shortened by the Construction skill.
 M.BUILD_MS = 10000
 M.REMOVE_MS = 10000
-M.TOOL_POSE = { Screwdriver = "vertical", Hammer = "horizontal" }
+M.BUILD_TOOL = "Hammer"
+M.POSES = { vertical = true, horizontal = true }
 
 -- the `defence` table a world item's data carries once built, or nil (data as fromJSON gives it: either the table
 -- or the table wrapped in a one-element array)

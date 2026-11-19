@@ -246,8 +246,9 @@ addEventHandler("itemDropSpotRequested", localPlayer, function(removalId)
 end)
 
 -- Actions exposed to the HUD interaction chooser.
-function interactionActions()
-    return world.interactionActions()
+-- uname: what the player holds (the hud passes it); a Hammer's entries build a defence lying unbuilt
+function interactionActions(uname)
+    return world.interactionActions(uname)
 end
 
 -- luacheck: globals getProductionRecipes

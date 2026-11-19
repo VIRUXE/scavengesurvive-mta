@@ -934,8 +934,9 @@ return function(ctx)
             end
             local rData = decodeData(row.data)
 
-            -- Defences: a Hammer lays one down and a Screwdriver stands one up where it lies; once built it is never
-            -- picked up again, a Crowbar takes it down from behind and anything else works its door or keypad
+            -- Defences: a Hammer builds one through the interaction chooser (building defenceBuildRequested), never
+            -- here; once built it is never picked up again, a Crowbar takes it down from behind and anything else
+            -- works its door or keypad
             local rowType = itemType(row.uname)
             if curUname == "MobilePhone" and rowType and rowType.explosive and rowType.explosive.trigger == "RADIO" then
                 local expRes = getResourceFromName("explosives")
@@ -953,9 +954,7 @@ return function(ctx)
             end
             if rowType and rowType.defence and buildingRunning() then
                 local built = builtDefence(rData)
-                if not built and (curUname == "Hammer" or curUname == "Screwdriver") then
-                    return exports.building:buildDefence(c.player, row.id)
-                elseif built and curUname == "Crowbar" then
+                if built and curUname == "Crowbar" then
                     return exports.building:removeDefence(c.player, row.id)
                 elseif built then
                     return exports.building:interactDefence(c.player, row)

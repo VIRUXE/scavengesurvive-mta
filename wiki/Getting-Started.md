@@ -68,7 +68,7 @@ Three Wood Logs lit with a Lighter make a **Campfire** that cooks one food in a 
 
 ## 12. Locks, defences and keypads
 
-Walls and doors are **defences**: drop the panel, hold a Screwdriver (upright) or Hammer (flat) and hold `F` for 10 seconds; a Crowbar from the inside takes it down again. A **Motor** turns a panel into a door, and a **Keypad** on top locks it behind a 4-digit code. Vehicles take a Locksmith Kit and a Key; the walk-in Airstream trailer takes a keypad on its door too. Most of these parts are made at a [Workbench](Workbench). See [Defences](Defences), [Keypads](Keypads), [Repairing & Locks](Repairing-and-Locks) and [Constructing](Constructing).
+Walls and doors are **defences**: drop the panel, hold a Hammer, press `F` and choose to build it standing up or lying flat (10 seconds); a Crowbar from the inside takes it down again. A **Motor** turns a panel into a door, and a **Keypad** on top locks it behind a 4-digit code. Vehicles take a Locksmith Kit and a Key; the walk-in Airstream trailer takes a keypad on its door too. Most of these parts are made at a [Workbench](Workbench). See [Defences](Defences), [Keypads](Keypads), [Repairing & Locks](Repairing-and-Locks) and [Constructing](Constructing).
 
 ![Keypad](images/items/19273_keypadnondynamic.png)
 

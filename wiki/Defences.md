@@ -27,10 +27,10 @@ Defences are the walls, doors and gates players build bases from. There are 11 k
 ## Building
 
 1. Drop the defence item where you want it.
-2. Stand within 3 m of it, hold a **Screwdriver** to stand it upright (a wall or door) or a **Hammer** to lay it flat (a floor or ramp), and hold `F` on it for about 10 seconds. The [Construction skill](Skills) shortens this. Walking off or swapping tools before the time is up cancels the build.
+2. Stand within 3 m of it facing it with a **Hammer** in hand and press `F`: choose **Build standing up** (a wall or door) or **Build lying flat** (a floor or ramp), then stay put for about 10 seconds. The [Construction skill](Skills) shortens this. Walking off or swapping tools before the time is up cancels the build.
 3. The defence is built (*Defence built*), and the nudge pad opens with a yellow arrow on the defence showing its **front**; see *Nudging into place* below.
 
-Hammer and Screwdriver lay the same item in different poses; once built, a defence stays in that pose until it is moved by a motor.
+Only the Hammer builds defences (upstream used a Screwdriver for walls and a Hammer for floors); once built, a defence stays in that pose until it is moved by a motor.
 
 ## Nudging into place
 

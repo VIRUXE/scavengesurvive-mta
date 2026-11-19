@@ -36,30 +36,41 @@ None: the converter replaced every `~x~`, `{C_*}`, `~k~` and `%P` token.
 
 Item type, ammo kind, calibre, liquid and seed kind names, and the item UI's labels, messages and format templates, are English in the data and the code; lib's `lang` module shows them in the player's language from the hand-edited `data/generated/strings_<code>.lua` tables. The English texts are collected from the item data and the code (`tr("…")`, `L("…")`, `lang.text/format("…")`, `lang.textFor/formatFor(player, "…")` and `-- lang:begin` … `-- lang:end` blocks). A text a language lacks shows in English; one whose placeholders differ from English is formatted in English. Texts kept identical to English are model names, brands, acronyms and the like.
 
-English has 1241 texts.
+English has 1250 texts.
 
 | Code | Language | Missing (shown in English) | Kept as in English | Placeholder mismatches | Not in English (stale) |
 | --- | --- | ---: | ---: | ---: | ---: |
-| `es` | Español | 0 | 39 | 0 | 7 |
-| `fr` | Français | 0 | 60 | 0 | 7 |
-| `pt` | Português | 0 | 35 | 0 | 7 |
-| `ptbr` | Português do Brasil | 0 | 39 | 0 | 7 |
-| `ru` | Russian | 0 | 16 | 0 | 7 |
-| `ro` | Romanian | 0 | 44 | 0 | 7 |
-| `id` | Indonesian | 0 | 38 | 0 | 7 |
-| `bhs` | Bosanski-Hrvatski-Srpski | 0 | 35 | 0 | 7 |
-| `cs` | Čeština | 0 | 37 | 0 | 7 |
-| `lv` | Latviešu | 0 | 32 | 0 | 7 |
-| `ary` | Darija | 0 | 67 | 0 | 7 |
+| `es` | Español | 10 | 39 | 0 | 8 |
+| `fr` | Français | 10 | 60 | 0 | 8 |
+| `pt` | Português | 10 | 35 | 0 | 8 |
+| `ptbr` | Português do Brasil | 10 | 39 | 0 | 8 |
+| `ru` | Russian | 10 | 16 | 0 | 8 |
+| `ro` | Romanian | 10 | 44 | 0 | 8 |
+| `id` | Indonesian | 10 | 38 | 0 | 8 |
+| `bhs` | Bosanski-Hrvatski-Srpski | 10 | 35 | 0 | 8 |
+| `cs` | Čeština | 10 | 37 | 0 | 8 |
+| `lv` | Latviešu | 10 | 32 | 0 | 8 |
+| `ary` | Darija | 10 | 67 | 0 | 8 |
 
-- `es` has texts no longer in English: `No skills yet`, `Recipe`, `Skills`, `Tool: %s`, `missing`, `used up`, `you have it`
-- `fr` has texts no longer in English: `No skills yet`, `Recipe`, `Skills`, `Tool: %s`, `missing`, `used up`, `you have it`
-- `pt` has texts no longer in English: `No skills yet`, `Recipe`, `Skills`, `Tool: %s`, `missing`, `used up`, `you have it`
-- `ptbr` has texts no longer in English: `No skills yet`, `Recipe`, `Skills`, `Tool: %s`, `missing`, `used up`, `you have it`
-- `ru` has texts no longer in English: `No skills yet`, `Recipe`, `Skills`, `Tool: %s`, `missing`, `used up`, `you have it`
-- `ro` has texts no longer in English: `No skills yet`, `Recipe`, `Skills`, `Tool: %s`, `missing`, `used up`, `you have it`
-- `id` has texts no longer in English: `No skills yet`, `Recipe`, `Skills`, `Tool: %s`, `missing`, `used up`, `you have it`
-- `bhs` has texts no longer in English: `No skills yet`, `Recipe`, `Skills`, `Tool: %s`, `missing`, `used up`, `you have it`
-- `cs` has texts no longer in English: `No skills yet`, `Recipe`, `Skills`, `Tool: %s`, `missing`, `used up`, `you have it`
-- `lv` has texts no longer in English: `No skills yet`, `Recipe`, `Skills`, `Tool: %s`, `missing`, `used up`, `you have it`
-- `ary` has texts no longer in English: `No skills yet`, `Recipe`, `Skills`, `Tool: %s`, `missing`, `used up`, `you have it`
+- `es` lacks: `Dead`, `Survival ranking`, `Online now`, `Time alive`, `Best`, `Current`, `Top 10 personal bests`, `%dd`, `%dh`, `%dm`
+- `es` has texts no longer in English: `No skills yet`, `Recipe`, `Skills`, `Tent`, `Tool: %s`, `missing`, `used up`, `you have it`
+- `fr` lacks: `Dead`, `Survival ranking`, `Online now`, `Time alive`, `Best`, `Current`, `Top 10 personal bests`, `%dd`, `%dh`, `%dm`
+- `fr` has texts no longer in English: `No skills yet`, `Recipe`, `Skills`, `Tent`, `Tool: %s`, `missing`, `used up`, `you have it`
+- `pt` lacks: `Dead`, `Survival ranking`, `Online now`, `Time alive`, `Best`, `Current`, `Top 10 personal bests`, `%dd`, `%dh`, `%dm`
+- `pt` has texts no longer in English: `No skills yet`, `Recipe`, `Skills`, `Tent`, `Tool: %s`, `missing`, `used up`, `you have it`
+- `ptbr` lacks: `Dead`, `Survival ranking`, `Online now`, `Time alive`, `Best`, `Current`, `Top 10 personal bests`, `%dd`, `%dh`, `%dm`
+- `ptbr` has texts no longer in English: `No skills yet`, `Recipe`, `Skills`, `Tent`, `Tool: %s`, `missing`, `used up`, `you have it`
+- `ru` lacks: `Dead`, `Survival ranking`, `Online now`, `Time alive`, `Best`, `Current`, `Top 10 personal bests`, `%dd`, `%dh`, `%dm`
+- `ru` has texts no longer in English: `No skills yet`, `Recipe`, `Skills`, `Tent`, `Tool: %s`, `missing`, `used up`, `you have it`
+- `ro` lacks: `Dead`, `Survival ranking`, `Online now`, `Time alive`, `Best`, `Current`, `Top 10 personal bests`, `%dd`, `%dh`, `%dm`
+- `ro` has texts no longer in English: `No skills yet`, `Recipe`, `Skills`, `Tent`, `Tool: %s`, `missing`, `used up`, `you have it`
+- `id` lacks: `Dead`, `Survival ranking`, `Online now`, `Time alive`, `Best`, `Current`, `Top 10 personal bests`, `%dd`, `%dh`, `%dm`
+- `id` has texts no longer in English: `No skills yet`, `Recipe`, `Skills`, `Tent`, `Tool: %s`, `missing`, `used up`, `you have it`
+- `bhs` lacks: `Dead`, `Survival ranking`, `Online now`, `Time alive`, `Best`, `Current`, `Top 10 personal bests`, `%dd`, `%dh`, `%dm`
+- `bhs` has texts no longer in English: `No skills yet`, `Recipe`, `Skills`, `Tent`, `Tool: %s`, `missing`, `used up`, `you have it`
+- `cs` lacks: `Dead`, `Survival ranking`, `Online now`, `Time alive`, `Best`, `Current`, `Top 10 personal bests`, `%dd`, `%dh`, `%dm`
+- `cs` has texts no longer in English: `No skills yet`, `Recipe`, `Skills`, `Tent`, `Tool: %s`, `missing`, `used up`, `you have it`
+- `lv` lacks: `Dead`, `Survival ranking`, `Online now`, `Time alive`, `Best`, `Current`, `Top 10 personal bests`, `%dd`, `%dh`, `%dm`
+- `lv` has texts no longer in English: `No skills yet`, `Recipe`, `Skills`, `Tent`, `Tool: %s`, `missing`, `used up`, `you have it`
+- `ary` lacks: `Dead`, `Survival ranking`, `Online now`, `Time alive`, `Best`, `Current`, `Top 10 personal bests`, `%dd`, `%dh`, `%dm`
+- `ary` has texts no longer in English: `No skills yet`, `Recipe`, `Skills`, `Tent`, `Tool: %s`, `missing`, `used up`, `you have it`

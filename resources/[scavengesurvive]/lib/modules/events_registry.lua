@@ -49,6 +49,7 @@ return {
     recipeCarriedRequested = true,
     recipeCarriedSent = true,
     buildingInteractRequested = true,
+    defenceBuildRequested = true,
     keypadSubmitted = true,
     keypadInstallRequested = true,
     lockBreakRequested = true,

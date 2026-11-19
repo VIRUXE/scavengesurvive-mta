@@ -1177,8 +1177,44 @@ return function(ctx)
         return nearest, nearestCategory, nearest and not passes(nearest, objects[nearest]) or false
     end
 
-    -- Explicit targets for the shared interaction chooser; never substitute a nearer item on selection.
-    function M.interactionActions()
+    -- With a Hammer in hand at a defence lying unbuilt that the player faces: the chooser's two ways of building it
+    -- (building defenceBuildRequested with the pose). Upstream built it standing with a Screwdriver and lying with a
+    -- Hammer; here the Hammer does both and the player picks.
+    local function buildActions(uname)
+        local id = uname == "Hammer" and M.buildableDefence(2.0)
+        local e = id and objects[id]
+        local t = e and itemType(e.uname)
+        if not t then
+            return {}
+        end
+        local obj = isElement(e.obj) and e.obj or nil
+        local name = t.name
+        return {
+            {
+                id = "build:" .. id .. ":1",
+                label = lang.text("Build standing up") .. " · " .. name,
+                event = "defenceBuildRequested",
+                target = id,
+                action = "vertical",
+                element = obj,
+            },
+            {
+                id = "build:" .. id .. ":2",
+                label = lang.text("Build lying flat") .. " · " .. name,
+                event = "defenceBuildRequested",
+                target = id,
+                action = "horizontal",
+                element = obj,
+            },
+        }
+    end
+
+    -- Explicit targets for the shared interaction chooser; never substitute a nearer item on selection. With
+    -- something in hand (uname) only the build entries of a Hammer.
+    function M.interactionActions(uname)
+        if uname then
+            return buildActions(uname)
+        end
         local actions = {}
         local px, py, pz = getElementPosition(localPlayer)
         local dim, int = getElementDimension(localPlayer), getElementInterior(localPlayer)
@@ -1376,6 +1412,25 @@ return function(ctx)
     function M.objectOf(id)
         local e = objects[tonumber(id)]
         return e and isElement(e.obj) and e.obj or false
+    end
+
+    -- the nearest defence item lying unbuilt that the player faces and reaches (the server's pickup radius, flat):
+    -- its id, else false. With a Hammer in hand the interaction chooser offers to build it (buildActions).
+    function M.buildableDefence(reach)
+        local px, py, pz = getElementPosition(localPlayer)
+        local dim, int = getElementDimension(localPlayer), getElementInterior(localPlayer)
+        local bestDist, bestId = reach * reach, nil
+        for id, e in pairs(objects) do
+            local r = e.row
+            if e.defence and not builtDefence(r) and (r.dimension or 0) == dim and (r.interior or 0) == int then
+                local dx, dy = e.x - px, e.y - py
+                local dist = dx * dx + dy * dy
+                if dist <= bestDist and math.abs(e.z - pz) < 3 and inReach(id, e) then
+                    bestDist, bestId = dist, id
+                end
+            end
+        end
+        return bestId or false
     end
 
     -- the ids of the world items within reach that a wall hides, or that empty hands would lift but that do not fit

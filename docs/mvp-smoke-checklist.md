@@ -417,9 +417,9 @@ MTA's launcher passes a second `mtasa://` to the already running client instead 
     - f. **Holster (#123).** Holding a holsterable weapon (`M9Pistol`, `DesertEagle`, `AK47Rifle`), press **Y** to
       holster it with its holster animation (300 ms for thigh pistols, 800 ms for back rifles); hands become empty.
       With empty hands and a holstered weapon, HUD displays `Y Draw weapon` and pressing **Y** equips it.
-36. **Tweaking a built item** (#133, upstream `item-tweak.pwn`). One client; `/additem CrateDoor`, `/additem Screwdriver`,
+36. **Tweaking a built item** (#133, upstream `item-tweak.pwn`). One client; `/additem CrateDoor`,
     `/additem Hammer`, two `/additem RefinedMetal`, four `/additem WoodLog`.
-    - a. Drop the Crate Door, hold the Screwdriver and press **F** on it: after the build hold, `Defence built` and a pad
+    - a. Drop the Crate Door, hold the Hammer, press **F** on it and pick `Build standing up`: after the build hold, `Defence built` and a pad
       of eight buttons appears at the right of the screen (`L`, `R`, `^`, `<`, `>`, `v`, `Edit: [LALT]`, `Done`), a
       yellow arrow lies on the door pointing at its front (the side a Crowbar cannot take it down from), and the help
       tip says to move away from the item and press LALT for the mouse (if `/tooltips` is on).

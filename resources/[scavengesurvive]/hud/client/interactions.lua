@@ -19,7 +19,8 @@ return function(held, force)
     end
     for _, provider in ipairs({ "items", "vehicles", "world", "loot", "dumpsters" }) do
         local resource = getResourceFromName(provider)
-        if resource and getResourceState(resource) == "running" and (provider ~= "items" or not held) then
+        -- with something in hand items gives only a Hammer's build entries (a defence lying unbuilt)
+        if resource and getResourceState(resource) == "running" then
             local entries = call(resource, "interactionActions", uname)
             for _, entry in ipairs(type(entries) == "table" and entries or {}) do
                 actions[#actions + 1] = entry

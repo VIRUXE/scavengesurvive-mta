@@ -1,5 +1,6 @@
 -- client to server (handlers registered with net.handler)
 addEvent("buildingInteractRequested", true)
+addEvent("defenceBuildRequested", true)
 addEvent("keypadSubmitted", true)
 addEvent("keypadInstallRequested", true)
 addEvent("holdActionCancelRequested", true)

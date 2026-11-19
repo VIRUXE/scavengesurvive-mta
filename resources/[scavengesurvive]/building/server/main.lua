@@ -396,13 +396,13 @@ local function activateDefence(row, t, pose, done, player)
 end
 
 -- Building and taking down defences (upstream StartBuildingDefence and the crowbar in _InteractDefenceWithItem).
--- Reached from items' interact key with a Hammer, Screwdriver or Crowbar in hand next to a defence item. Both re-check
--- the tool, the distance and the row when the hold ends, so walking off or swapping tools cancels.
-function buildDefence(player, itemId)
+-- A build comes from the interaction chooser's "Build standing up" / "Build lying flat" entries with a Hammer in hand
+-- (defenceBuildRequested), a takedown from items' interact key with a Crowbar. Both re-check the tool, the distance
+-- and the row when the hold ends, so walking off or swapping tools cancels.
+function buildDefence(player, itemId, pose)
     local tool = heldUname(player)
-    local pose = defences.TOOL_POSE[tool]
     itemId = tonumber(itemId)
-    if not charId(player) or not pose or not itemId then
+    if not charId(player) or tool ~= defences.BUILD_TOOL or not defences.POSES[pose] or not itemId then
         return
     end
     db.one(DEFENCE_ROW, { itemId }, function(row, c)
@@ -609,6 +609,12 @@ function removeDefence(player, itemId)
         end)
     end, { player = player })
 end
+
+-- the interaction chooser's build entries (items' interactionActions with a Hammer in hand): pose is "vertical"
+-- (standing up) or "horizontal" (lying flat)
+net.handler("defenceBuildRequested", function(player, itemId, pose)
+    buildDefence(player, itemId, pose)
+end, { rate = 3 })
 
 net.handler("buildingInteractRequested", function(player, itemId)
     local cid = charId(player)
