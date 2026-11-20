@@ -19,7 +19,7 @@ Only metal defences can be welded on. Body panels lie flat on the shell where yo
 | Crate Door | the door | 5 | 2.2 kg |
 | Ship Door | the door | 9 | 4.0 kg |
 
-A Wood Ramp, Insulated Panel, Insulated Doorway or Metal Door is refused (*Only metal defences can be welded on*). A panel brings the hitpoints it has left, so a damaged one protects less than a new one.
+A Wood Ramp, Insulated Panel, Insulated Doorway or Metal Door is refused (*Only metal defences can be welded on*), and so is Rusty Corrugated Metal, a 3.8 by 3 m sheet larger than any face of the trailer. A panel brings the hitpoints it has left, so a damaged one protects less than a new one.
 
 ## 1. Attach
 

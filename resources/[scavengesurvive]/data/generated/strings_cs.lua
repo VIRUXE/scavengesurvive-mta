@@ -837,6 +837,7 @@ return {
     Rules = "Pravidla",
     Running = "Běh",
     ["Russian Translation"] = "Ruský překlad",
+    ["Rusty Corrugated Metal"] = "Rezavý vlnitý plech",
     ["S.W.A.T."] = "S.W.A.T.",
     ["Saloon Wheel"] = "Kolo sedanu",
     ["Saloon Wheel (Flat)"] = "Kolo sedanu (píchlé)",

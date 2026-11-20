@@ -784,6 +784,7 @@ return {
     Rules = "Regras",
     Running = "A correr",
     ["Russian Translation"] = "Tradução para russo",
+    ["Rusty Corrugated Metal"] = "Chapa ondulada enferrujada",
     Sawnoff = "Caçadeira de canos serrados",
     ["Salted Peanuts"] = "Amendoins salgados",
     ["Scavenge and Survive by Southclaws, ported to MTA:SA by VIRUXE."] = "Scavenge and Survive de Southclaws, portado para MTA:SA por VIRUXE.",

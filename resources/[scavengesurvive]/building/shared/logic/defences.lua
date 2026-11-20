@@ -9,6 +9,7 @@ M.DEFENCES = {
     TallFrame = true,
     MetalFrame = true,
     CorPanel = true,
+    RustyMetal = true,
     CrateDoor = true,
 }
 

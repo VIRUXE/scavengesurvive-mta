@@ -376,6 +376,7 @@ Several different items can share a name (there are, for example, three kinds of
 |  | [Refined Metal](Refined-Metal) | 1 |
 |  | [Refining Machine](Refining-Machine) | 12 |
 |  | [Rope](Rope) | 3 |
+|  | [Rusty Corrugated Metal](Rusty-Corrugated-Metal) | 10 |
 |  | [Saloon Wheel](Saloon-Wheel) | 5 |
 |  | [Saloon Wheel (Flat)](Saloon-Wheel-Flat) | 5 |
 |  | [Scrap Machine](Scrap-Machine) | 12 |

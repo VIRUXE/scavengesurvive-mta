@@ -19,7 +19,7 @@
 | Vehicle trunks, industrial | The trunks of 14 vehicle types (Articulated, Baggage, Bobcat, Boxville, Coastguard and 9 more) | 5.1 % |
 | Vehicle trunks, civilian | The trunks of 31 vehicle types (BF Injection, Blista Compact, Bloodring Banger, Clover, Comet and 26 more) | 2.7 % |
 | Vehicle trunks, police | The trunks of 5 vehicle types (Enforcer, FBI Truck, HPV1000, Police Car, Ranger) | 2.2 % |
-| Supply drop "Industrial Supplies" | 36 drop points | 5.0 % |
+| Supply drop "Industrial Supplies" | 36 drop points | 4.7 % |
 
 ## Crafting
 

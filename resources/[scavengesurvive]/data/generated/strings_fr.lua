@@ -830,6 +830,7 @@ return {
     Rules = "Règles",
     Running = "Course",
     ["Russian Translation"] = "Traduction russe",
+    ["Rusty Corrugated Metal"] = "Tôle ondulée rouillée",
     ["S.W.A.T."] = "SWAT",
     ["Saloon Wheel"] = "Roue de berline",
     ["Saloon Wheel (Flat)"] = "Roue de berline (crevée)",

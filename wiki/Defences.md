@@ -17,6 +17,7 @@ Defences are the walls, doors and gates players build bases from. There are 11 k
 | Corrugated Metal | 6 | 10 | yes |
 | Crate Door | 5 | 9 | yes |
 | Metal Panel | 5 | 10 | yes |
+| Rusty Corrugated Metal | 5 | 10 | yes |
 | Small Metal Panel | 5 | 11 | yes |
 | Metal Gate | 4 | 10 | yes |
 | Metal Door | 2 | 9 | no |
@@ -51,7 +52,7 @@ Hold a **Crowbar** and hold `F` on the defence for 10 seconds. You must stand at
 
 Some defences can be fitted with a **Motor**. Standing at the back, hold the Motor and hold `F` for about 6 seconds: the Motor is used up and the defence now swings between its two poses (standing and lying) whenever someone presses `F` on it. It moves about 1.5 seconds later, and waits while anyone stands within 4 m. Without a Motor, pressing `F` on a built defence does nothing.
 
-Defences that take a Motor: Metal Gate, Metal Panel, Small Metal Panel, Crate Door, Corrugated Metal and Ship Door. The Metal Door, Insulated Doorway, Insulated Panel, Wood Ramp and Large Frame cannot.
+Defences that take a Motor: Metal Gate, Metal Panel, Small Metal Panel, Crate Door, Corrugated Metal, Rusty Corrugated Metal and Ship Door. The Metal Door, Insulated Doorway, Insulated Panel, Wood Ramp and Large Frame cannot.
 
 A Motor-fitted defence can then take a [Keypad](Keypads), which locks it behind a 4-digit code.
 

@@ -830,6 +830,7 @@ return {
     Rules = "Reguli",
     Running = "Alergare",
     ["Russian Translation"] = "Traducere în rusă",
+    ["Rusty Corrugated Metal"] = "Tablă ondulată ruginită",
     ["S.W.A.T."] = "S.W.A.T.",
     ["Saloon Wheel"] = "Roată de sedan",
     ["Saloon Wheel (Flat)"] = "Roată de sedan (dezumflată)",

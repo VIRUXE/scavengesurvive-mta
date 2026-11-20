@@ -782,6 +782,7 @@ return {
     Rules = "Pravila",
     Running = "Trčanje",
     ["Russian Translation"] = "Ruski prijevod",
+    ["Rusty Corrugated Metal"] = "Zahrđali valoviti lim",
     Sawnoff = "Skraćena sačmarica",
     ["Salted Peanuts"] = "Slani kikiriki",
     ["Scavenge and Survive by Southclaws, ported to MTA:SA by VIRUXE."] = "Scavenge and Survive: Southclaws, na MTA:SA prenio VIRUXE.",

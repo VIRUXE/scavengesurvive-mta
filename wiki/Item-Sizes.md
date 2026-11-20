@@ -37,7 +37,7 @@ Five items of each size; the [Item Catalogue](Item-Catalogue) lists every item w
 | 7 | 4 | [Flamer](Flamer), [Minigun](Minigun), [Sledgehammer](Sledgehammer), [Tool Box](Tool-Box) |
 | 8 | 5 | [Barstool](Barstool), [Generator](Generator), [Insulated Panel](Insulated-Panel), [Shield](Shield), [Small Amp](Small-Amp) |
 | 9 | 4 | [Crate Door](Crate-Door), [Fish](Fish), [Metal Door](Metal-Door), [Plank](Plank) |
-| 10 | 7 | [Corrugated Metal](Corrugated-Metal), [Insulated Doorway](Insulated-Doorway), [Metal Gate](Metal-Gate), [Metal Panel](Metal-Panel-MetPanel), [Ship Door](Ship-Door) |
+| 10 | 8 | [Corrugated Metal](Corrugated-Metal), [Insulated Doorway](Insulated-Doorway), [Metal Gate](Metal-Gate), [Metal Panel](Metal-Panel-MetPanel), [Rusty Corrugated Metal](Rusty-Corrugated-Metal) |
 | 11 | 2 | [Small Metal Panel](Small-Metal-Panel), [Wood Ramp](Wood-Ramp) |
 | 12 | 7 | [Cupboard](Cupboard), [Gun Case](Gun-Case), [Locker](Locker), [Refining Machine](Refining-Machine), [Scrap Machine](Scrap-Machine) |
 | 14 | 4 | [Desk](Desk), [Garage Door](Garage-Door), [Metal Frame](Metal-Frame), [Table](Table) |

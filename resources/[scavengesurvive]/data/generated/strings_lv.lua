@@ -837,6 +837,7 @@ return {
     Rules = "Noteikumi",
     Running = "Skriešana",
     ["Russian Translation"] = "Krievu tulkojums",
+    ["Rusty Corrugated Metal"] = "Sarūsējis gofrēts skārds",
     ["S.W.A.T."] = "S.W.A.T.",
     ["Saloon Wheel"] = "Sedana ritenis",
     ["Saloon Wheel (Flat)"] = "Sedana ritenis (pārdurts)",

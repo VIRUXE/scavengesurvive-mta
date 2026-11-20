@@ -280,6 +280,7 @@ return {
     Rope = "20267_rope_coil.png",
     RubbishBag = "20416_wbox_rubbishbag.png",
     Rucksack = "19559_hikerbackpack1.png",
+    RustyMetal = "16637_ghostgardoor.png",
     SaltedPeanuts = "20226_snack_saltedpeanuts.png",
     Satchel = "363_satchel.png",
     Sawnoff = "350_sawnoff.png",

@@ -845,6 +845,7 @@ return {
     Rules = "Lqawanin",
     Running = "Jri",
     ["Russian Translation"] = "Tarjama rousiya",
+    ["Rusty Corrugated Metal"] = "Tole Ondulee Mssadya",
     ["S.W.A.T."] = "S.W.A.T.",
     ["Saloon Wheel"] = "Rwida dyal Berline",
     ["Saloon Wheel (Flat)"] = "Rwida dyal Berline (Mcrevya)",

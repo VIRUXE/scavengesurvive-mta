@@ -23,6 +23,7 @@ The table lists the pieces of Scrap Metal each item yields. Many items are worth
 | [Locker](Locker) | 12 |
 | [Ship Door](Ship-Door) | 12 |
 | [Corrugated Metal](Corrugated-Metal) | 9 |
+| [Rusty Corrugated Metal](Rusty-Corrugated-Metal) | 9 |
 | [Metal Frame](Metal-Frame) | 8 |
 | [Oil Drum](Oil-Drum) | 8 |
 | [Tool Box](Tool-Box) | 8 |

@@ -830,6 +830,7 @@ return {
     Rules = "Aturan",
     Running = "Berlari",
     ["Russian Translation"] = "Terjemahan Rusia",
+    ["Rusty Corrugated Metal"] = "Seng Gelombang Berkarat",
     ["S.W.A.T."] = "S.W.A.T.",
     ["Saloon Wheel"] = "Roda Sedan",
     ["Saloon Wheel (Flat)"] = "Roda Sedan (Kempes)",

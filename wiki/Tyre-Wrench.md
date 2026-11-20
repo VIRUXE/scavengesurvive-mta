@@ -20,7 +20,7 @@
 | World loot, survivor | 825 spawn points: 227 in San Fierro, 225 in Los Santos, 113 in Las Venturas, 85 in Red County, 77 in Flint County, 66 in Bone County, 32 in Tierra Robada; also the trunks of 9 vehicle types (APC-30, Bandito, Doomride, Freeway, Roadpain and 4 more) | 0.6 % |
 | Vehicle trunks, military | The trunks of 4 vehicle types (Barracks, Launch, Patriot, Rhino) | 5.5 % |
 | Vehicle trunks, police | The trunks of 5 vehicle types (Enforcer, FBI Truck, HPV1000, Police Car, Ranger) | 3.6 % |
-| Vehicle trunks, industrial | The trunks of 14 vehicle types (Articulated, Baggage, Bobcat, Boxville, Coastguard and 9 more) | 3.0 % |
+| Vehicle trunks, industrial | The trunks of 14 vehicle types (Articulated, Baggage, Bobcat, Boxville, Coastguard and 9 more) | 2.9 % |
 | Vehicle trunks, civilian | The trunks of 31 vehicle types (BF Injection, Blista Compact, Bloodring Banger, Clover, Comet and 26 more) | 1.6 % |
 | Supply drop "Food and Medical" | 36 drop points | 2.5 % |
 

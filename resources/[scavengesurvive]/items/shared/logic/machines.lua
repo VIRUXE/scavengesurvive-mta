@@ -78,6 +78,7 @@ M.SCRAP = {
     MetalGate = 4,
     CrateDoor = 4,
     CorPanel = 9,
+    RustyMetal = 9,
     ShipDoor = 12,
     SmallPanel = 4,
     Keypad = 1,

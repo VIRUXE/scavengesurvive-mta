@@ -830,6 +830,7 @@ return {
     Rules = "Правила",
     Running = "Бег",
     ["Russian Translation"] = "Русский перевод",
+    ["Rusty Corrugated Metal"] = "Ржавый профнастил",
     ["S.W.A.T."] = "Спецназ",
     ["Saloon Wheel"] = "Колесо седана",
     ["Saloon Wheel (Flat)"] = "Колесо седана (пробитое)",

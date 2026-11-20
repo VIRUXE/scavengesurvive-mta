@@ -17,7 +17,7 @@
 |:--|:--|--:|
 | World loot, industrial | 2,431 spawn points: 791 in Los Santos, 406 in Las Venturas, 386 in San Fierro, 273 in Flint County, 270 in Red County, 233 in Bone County, 72 in Tierra Robada | 0.4 % |
 | Vehicle trunks, industrial | The trunks of 14 vehicle types (Articulated, Baggage, Bobcat, Boxville, Coastguard and 9 more) | 0.3 % |
-| Supply drop "Industrial Supplies" | 36 drop points | 6.2 % |
+| Supply drop "Industrial Supplies" | 36 drop points | 5.9 % |
 
 ## Crafting
 
