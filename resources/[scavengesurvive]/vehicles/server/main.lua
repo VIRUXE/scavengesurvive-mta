@@ -2601,7 +2601,8 @@ net.handler("vehiclePartRemoveRequested", function(player, vehicle)
     bodySrv.remove(player, vehicle)
 end, { rate = 3 })
 
--- Roadside interaction: repair, locksmith, lock-breaking, trunk container, refuelling, headlights, wheels
+-- Roadside interaction: repair, locksmith, lock-breaking, trunk container, refuelling, headlights, wheels.
+-- capX/capY/capZ are the fuel cap the client aimed at, or capX = "trunk_open" from the interaction list.
 net.handler("vehicleInteractRequested", function(player, vehicle, capX, capY, capZ)
     if not isElement(vehicle) or not info[vehicle] or isPedDead(player) then
         return
@@ -3126,7 +3127,9 @@ net.handler("vehicleInteractRequested", function(player, vehicle, capX, capY, ca
         if wheels.isWheel(uname) and not trunkOpen then
             return toast(player, "TRUNK_SHUT")
         end
-        if not held and trunkOpen then
+        -- the interaction list's "Open trunk" entry (capX == "trunk_open") only ever opens: on an open lid it brings
+        -- the window back instead of shutting it
+        if not held and trunkOpen and capX ~= "trunk_open" then
             if exports.items:trunkViewers(vehicle) == 0 then
                 setVehicleDoorOpenRatio(vehicle, 1, 0, 500)
                 markUsed(vehicle)

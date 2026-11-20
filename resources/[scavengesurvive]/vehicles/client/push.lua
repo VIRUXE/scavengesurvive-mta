@@ -313,6 +313,7 @@ function pushActions(heldUname)
                         label = lang.text("Open trunk") .. " · " .. name,
                         event = "vehicleInteractRequested",
                         target = v,
+                        action = "trunk_open",
                     }
                 end
             end

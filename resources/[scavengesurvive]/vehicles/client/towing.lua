@@ -341,7 +341,7 @@ function towingActions(heldUname)
                 add("untie_rope", lang.text("Untie rope"), "vehicleTowActionRequested", "untie_rope")
             end
             if added and rear and getElementData(vehicle, "vehicles.containerId") then
-                add("trunk", lang.text("Open trunk"), "vehicleInteractRequested")
+                add("trunk", lang.text("Open trunk"), "vehicleInteractRequested", "trunk_open")
             end
         end
     end
