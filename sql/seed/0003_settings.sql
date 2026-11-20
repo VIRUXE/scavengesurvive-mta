@@ -7,7 +7,7 @@ INSERT INTO settings (skey, svalue) VALUES
 ('loot.cache_interval_s','1500'),
 ('loot.cache_jitter_s','600'),
 ('loot.cache_min_players','4'),
-('loot.cap_multiplier','0.15'),
+('loot.cap_multiplier','0.25'),
 ('loot.cooldown_jitter','0.5'),
 ('loot.cooldown_minutes','360'),
 ('loot.despawn_minutes','120'),

@@ -15,9 +15,9 @@
 | Source | Where | Share of the table |
 |:--|:--|--:|
 | World loot, military | 106 spawn points: 56 in Bone County, 32 in San Fierro, 18 in Las Venturas | 4.4 % |
-| World loot, industrial | 2,431 spawn points: 791 in Los Santos, 406 in Las Venturas, 386 in San Fierro, 273 in Flint County, 270 in Red County, 233 in Bone County, 72 in Tierra Robada | 3.0 % |
-| World loot, civilian | 7,674 spawn points: 3,006 in Los Santos, 2,632 in San Fierro, 1,373 in Las Venturas, 285 in Red County, 164 in Bone County, 143 in Flint County, 71 in Tierra Robada (116 of them inside houses) | 1.4 % |
-| World loot, survivor | 825 spawn points: 227 in San Fierro, 225 in Los Santos, 113 in Las Venturas, 85 in Red County, 77 in Flint County, 66 in Bone County, 32 in Tierra Robada; also the trunks of 9 vehicle types (APC-30, Bandito, Doomride, Freeway, Roadpain and 4 more) | 1.1 % |
+| World loot, industrial | 2,431 spawn points: 791 in Los Santos, 406 in Las Venturas, 386 in San Fierro, 273 in Flint County, 270 in Red County, 233 in Bone County, 72 in Tierra Robada | 3.2 % |
+| World loot, civilian | 7,674 spawn points: 3,006 in Los Santos, 2,632 in San Fierro, 1,373 in Las Venturas, 285 in Red County, 164 in Bone County, 143 in Flint County, 71 in Tierra Robada (116 of them inside houses) | 1.7 % |
+| World loot, survivor | 825 spawn points: 227 in San Fierro, 225 in Los Santos, 113 in Las Venturas, 85 in Red County, 77 in Flint County, 66 in Bone County, 32 in Tierra Robada; also the trunks of 9 vehicle types (APC-30, Bandito, Doomride, Freeway, Roadpain and 4 more) | 1.2 % |
 | Vehicle trunks, military | The trunks of 4 vehicle types (Barracks, Launch, Patriot, Rhino) | 11.2 % |
 | Vehicle trunks, police | The trunks of 5 vehicle types (Enforcer, FBI Truck, HPV1000, Police Car, Ranger) | 8.2 % |
 | Vehicle trunks, industrial | The trunks of 14 vehicle types (Articulated, Baggage, Bobcat, Boxville, Coastguard and 9 more) | 4.9 % |

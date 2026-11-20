@@ -137,6 +137,32 @@ function roll.crossTable(name, rng, mult)
     return name
 end
 
+-- Where the refill goes: how many times likelier than a street or factory point a due point of these tables is to be
+-- drawn (ADR 0001, correction of 2026-11-20). The 250 or so medical, police and military points are where a player
+-- goes for that loot, so they roll soon after they fall due instead of waiting their turn among 11,000 others;
+-- survivor points (most of them on rooftops) are worth the climb twice as often.
+roll.DRAW_WEIGHTS = {
+    world_military = 20,
+    world_police = 20,
+    world_medical = 20,
+    world_survivor = 2,
+}
+
+-- SQL for a point's draw weight, given the expression of its table name (names sorted, so the text is stable).
+function roll.drawWeightSql(column)
+    local names = {}
+    for name in pairs(roll.DRAW_WEIGHTS) do
+        names[#names + 1] = name
+    end
+    table.sort(names)
+    local parts = { "CASE " .. column }
+    for _, name in ipairs(names) do
+        parts[#parts + 1] = string.format("WHEN '%s' THEN %d", name, roll.DRAW_WEIGHTS[name])
+    end
+    parts[#parts + 1] = "ELSE 1 END"
+    return table.concat(parts, " ")
+end
+
 -- `factor` (optional): uname -> weight for the pick among the entries that passed their roll (roll.repeatFactor).
 function roll.pick(tbl, size, spawnWeight, mult, rng, exclude, factor)
     if size == -1 then

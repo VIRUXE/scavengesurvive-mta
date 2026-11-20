@@ -618,12 +618,15 @@ function rollNear(x, y, radius, onDone)
     return true
 end
 
--- Due points of one zone in random order, from anywhere in the zone.
+-- Due points of one zone in random order, from anywhere in the zone, weighted by roll.DRAW_WEIGHTS: the smallest
+-- exponential key -LOG(1 - RAND()) / weight comes first, so a point of weight 20 is drawn 20 times as readily.
 local DUE_IN_ZONE = "SELECT s.id, s.x, s.y, s.z, s.zone, s.table_name, s.weight, s.size, s.rooftop, s.ground "
     .. "FROM loot_spawns s "
     .. "JOIN loot_spawn_state st ON st.spawn_id = s.id WHERE s.enabled = 1 AND s.zone = ? "
     .. "AND st.next_roll_at <= NOW() AND NOT EXISTS (SELECT 1 FROM items i WHERE i.loot_spawn_id = s.id) "
-    .. "ORDER BY RAND() LIMIT %d"
+    .. "ORDER BY -LOG(1 - RAND()) / "
+    .. roll.drawWeightSql("s.table_name")
+    .. " LIMIT %d"
 
 -- The refill's placement (ADR 0001 point 4, correction of 2026-11-12): every zone spends its allowance on due points
 -- drawn at random from the whole zone, never near a player, zone after zone. Most points roll fewer items than they
@@ -808,7 +811,7 @@ addEventHandler("onResourceStart", resourceRoot, function()
         settings = map
         drops.start()
         overlay.start()
-        local perPoint, mult = setting("loot.items_per_point", 2.0), setting("loot.cap_multiplier", 0.15)
+        local perPoint, mult = setting("loot.items_per_point", 2.0), setting("loot.cap_multiplier", 0.25)
         db.exec(UPSERT_BUDGETS, { perPoint, mult }, function()
             loadAllowances(function()
                 fillWorld()

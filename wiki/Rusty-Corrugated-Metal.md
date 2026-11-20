@@ -15,7 +15,7 @@
 
 | Source | Where | Share of the table |
 |:--|:--|--:|
-| World loot, industrial | 2,431 spawn points: 791 in Los Santos, 406 in Las Venturas, 386 in San Fierro, 273 in Flint County, 270 in Red County, 233 in Bone County, 72 in Tierra Robada | 0.7 % |
+| World loot, industrial | 2,431 spawn points: 791 in Los Santos, 406 in Las Venturas, 386 in San Fierro, 273 in Flint County, 270 in Red County, 233 in Bone County, 72 in Tierra Robada | 1.1 % |
 | Vehicle trunks, industrial | The trunks of 14 vehicle types (Articulated, Baggage, Bobcat, Boxville, Coastguard and 9 more) | 0.6 % |
 | Supply drop "Industrial Supplies" | 36 drop points | 4.9 % |
 
@@ -26,3 +26,7 @@ No recipe makes or uses it.
 ## Scrap
 
 Worth 9 [Scrap Metal](Scrap-Metal) in a Scrap Machine, see [Scrap](Scrap).
+
+## See also
+
+[Defences](Defences), [Vehicle Armour](Vehicle-Armour)

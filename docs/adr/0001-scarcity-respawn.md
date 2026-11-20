@@ -155,3 +155,23 @@ An item left untouched on the point that rolled it lies `loot.point_despawn_minu
 items are unchanged. Modelled at one player with today's stock: the points hold about 240 items after an hour,
 1,000 after 6 h and level off between 1,800 and 2,300 after a day; with the 2 h despawn the same fill would level
 off at about 400.
+
+## Correction (2026-11-20): rebalance from a week of pickups
+
+A week after the whole-zone fill the world sat at 82 % of its cap (3,199 of 3,883 items), 2,521 of them on 2,199 of
+the 11,674 points: one point in five held anything, nearly always a single item. About 2,200 items rolled a day and
+players (26 accounts in the week) took 1–5 % of them; the rest despawned after a day. Supply was never the limit,
+only how thinly the cap spread. The 252 medical, police and military points held 37 items between them, the same thin
+share as any street point.
+
+- **Quantity.** `loot.cap_multiplier` 0.15 → 0.25 (cap about 6,470 at one player): about one point in three holds
+  something. Refill rate, floor, cooldown and despawn are unchanged.
+- **Distribution.** The refill draws due points weighted by `roll.DRAW_WEIGHTS` instead of uniformly: medical, police
+  and military points 20, survivor points 2, the rest 1 (`ORDER BY -LOG(1 - RAND()) / weight`). A special point rolls
+  soon after it falls due, so with its own low spawn weight (8–10: about one roll in three leaves anything) it holds
+  loot about half the time instead of one time in ten; a looted one still waits out its 3–9 h cooldown.
+- **Mix** (`data/generated/loot_tables.lua`, the four `world_*` tables that feed points). Types nobody took in the
+  week are cut by a third to a half (plant pots, extinguishers, golf clubs, burger boxes, truck caps, notes, phones,
+  satchels and the like); building parts and containers, taken 10–47 % of the time they appeared (panels, gates,
+  crate doors, boxes, keypads, grinders, motors), are raised; firearms in `world_civilian` drop by about 40 %, so guns
+  come from the police and military points the draw now favours.
