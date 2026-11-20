@@ -19,8 +19,8 @@
 | Source | Where | Share of the table |
 |:--|:--|--:|
 | World loot, military | 106 spawn points: 56 in Bone County, 32 in San Fierro, 18 in Las Venturas | 1.5 % |
-| Vehicle trunks, military | The trunks of 4 vehicle types (Barracks, Launch, Patriot, Rhino) | 1.5 % |
-| Vehicle trunks, police | The trunks of 5 vehicle types (Enforcer, FBI Truck, HPV1000, Police Car, Ranger) | 1.3 % |
+| Vehicle trunks, military | The trunks of 4 vehicle types (Barracks, Launch, Patriot, Rhino) | 1.7 % |
+| Vehicle trunks, police | The trunks of 5 vehicle types (Enforcer, FBI Truck, HPV1000, Police Car, Ranger) | 1.5 % |
 | Supply drop "Military Weapons" | 36 drop points; also the weapon caches (186 in San Fierro) | 3.2 % |
 
 ## Crafting

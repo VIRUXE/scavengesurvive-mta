@@ -115,7 +115,7 @@ Fuel tank is in litres, trunk in slots, spawn chance in percent.
 |  | APC-30 | truck | Unique | 60 L | 0 | 0.1 |
 |  | Airstream | truck | Civilian | 0 L | 0 | 3 |
 |  | Ambulance | truck | Medical | 80 L | 70 | 30 |
-|  | Articulated | truck | Industrial | 0 L | 100 | 1 |
+|  | Articulated | truck | Industrial | 0 L | 100 | 18 |
 |  | BF Injection | truck | Civilian | 40 L | 24 | 15 |
 |  | Bandito | truck | Unique | 48 L | 15 | 0.1 |
 |  | Barracks | truck | Military | 200 L | 100 | 3 |
@@ -129,7 +129,7 @@ Fuel tank is in litres, trunk in slots, spawn chance in percent.
 |  | Flatbed | truck | Industrial | 70 L | 100 | 15 |
 |  | Huntley | truck | Civilian | 70 L | 50 | 57 |
 |  | Journey | truck | Civilian | 60 L | 76 | 10 |
-|  | Linerunner | truck | Industrial | 120 L | 12 | 5 |
+|  | Linerunner | truck | Industrial | 120 L | 12 | 15 |
 |  | Mesa | truck | Civilian | 77 L | 48 | 70 |
 |  | Patriot | truck | Military | 94 L | 50 | 22 |
 |  | Rancher | truck | Civilian | 110 L | 52 | 44 |

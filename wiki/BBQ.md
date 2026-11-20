@@ -14,8 +14,8 @@
 
 | Source | Where | Share of the table |
 |:--|:--|--:|
-| World loot, civilian | 7,674 spawn points: 3,006 in Los Santos, 2,632 in San Fierro, 1,373 in Las Venturas, 285 in Red County, 164 in Bone County, 143 in Flint County, 71 in Tierra Robada (116 of them inside houses) | 0.5 % |
-| Vehicle trunks, civilian | The trunks of 31 vehicle types (BF Injection, Blista Compact, Bloodring Banger, Clover, Comet and 26 more) | 0.5 % |
+| World loot, civilian | 7,674 spawn points: 3,006 in Los Santos, 2,632 in San Fierro, 1,373 in Las Venturas, 285 in Red County, 164 in Bone County, 143 in Flint County, 71 in Tierra Robada (116 of them inside houses) | 0.7 % |
+| Vehicle trunks, civilian | The trunks of 31 vehicle types (BF Injection, Blista Compact, Bloodring Banger, Clover, Comet and 26 more) | 0.6 % |
 
 - Already built in the world: 1 (1 in San Fierro).
 
@@ -29,4 +29,4 @@ Worth 6 [Scrap Metal](Scrap-Metal) in a Scrap Machine, see [Scrap](Scrap).
 
 ## See also
 
-[Campfire & BBQ](Campfire-and-BBQ), [Changes from the Original](Changes-from-the-Original), [Constructing](Constructing), [Death](Death), [Fireworks](Fireworks), [Fishing](Fishing), [Food & Drink](Food-and-Drink), [Fuel](Fuel), [Getting Started](Getting-Started), [Scavenge & Survive Reborn](Home), [Infection](Infection), [Inventory](Inventory), [Tent](Tent), [Tools](Tools), [Trees & Wood](Trees-and-Wood), [World & Zones](World-and-Zones)
+[Campfire & BBQ](Campfire-and-BBQ), [Changes from the Original](Changes-from-the-Original), [Constructing](Constructing), [Death](Death), [Fireworks](Fireworks), [Fishing](Fishing), [Food & Drink](Food-and-Drink), [Fuel](Fuel), [Getting Started](Getting-Started), [Scavenge & Survive Reborn](Home), [Infection](Infection), [Inventory](Inventory), [Tools](Tools), [Trees & Wood](Trees-and-Wood), [World & Zones](World-and-Zones)

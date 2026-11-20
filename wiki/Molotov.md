@@ -12,7 +12,9 @@
 
 ## Where to find it
 
-Not found as loot.
+| Source | Where | Share of the table |
+|:--|:--|--:|
+| World loot, survivor | 825 spawn points: 227 in San Fierro, 225 in Los Santos, 113 in Las Venturas, 85 in Red County, 77 in Flint County, 66 in Bone County, 32 in Tierra Robada; also the trunks of 9 vehicle types (APC-30, Bandito, Doomride, Freeway, Roadpain and 4 more) | 0.6 % |
 
 ## Crafting
 

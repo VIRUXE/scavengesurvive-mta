@@ -14,7 +14,7 @@
 
 | Source | Where | Share of the table |
 |:--|:--|--:|
-| World loot, survivor | 825 spawn points: 227 in San Fierro, 225 in Los Santos, 113 in Las Venturas, 85 in Red County, 77 in Flint County, 66 in Bone County, 32 in Tierra Robada; also the trunks of 9 vehicle types (APC-30, Bandito, Doomride, Freeway, Roadpain and 4 more) | 5.6 % |
+| World loot, survivor | 825 spawn points: 227 in San Fierro, 225 in Los Santos, 113 in Las Venturas, 85 in Red County, 77 in Flint County, 66 in Bone County, 32 in Tierra Robada; also the trunks of 9 vehicle types (APC-30, Bandito, Doomride, Freeway, Roadpain and 4 more) | 6.3 % |
 
 - Crafted, see below.
 
@@ -30,4 +30,4 @@ Cannot be scrapped: a Scrap Machine destroys it, see [Scrap](Scrap).
 
 ## See also
 
-[Campfire & BBQ](Campfire-and-BBQ), [Changes from the Original](Changes-from-the-Original), [Combining](Combining), [Constructing](Constructing), [Death](Death), [Defences](Defences), [Fireworks](Fireworks), [Fishing](Fishing), [Food & Drink](Food-and-Drink), [Fuel](Fuel), [Getting Started](Getting-Started), [Scavenge & Survive Reborn](Home), [Infection](Infection), [Inventory](Inventory), [Tent](Tent), [Tools](Tools), [Trees & Wood](Trees-and-Wood), [World & Zones](World-and-Zones)
+[Campfire & BBQ](Campfire-and-BBQ), [Changes from the Original](Changes-from-the-Original), [Combining](Combining), [Constructing](Constructing), [Death](Death), [Defences](Defences), [Fireworks](Fireworks), [Fishing](Fishing), [Food & Drink](Food-and-Drink), [Fuel](Fuel), [Getting Started](Getting-Started), [Scavenge & Survive Reborn](Home), [Infection](Infection), [Inventory](Inventory), [Tools](Tools), [Trees & Wood](Trees-and-Wood), [World & Zones](World-and-Zones)

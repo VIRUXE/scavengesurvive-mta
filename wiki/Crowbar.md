@@ -15,14 +15,14 @@
 | Source | Where | Share of the table |
 |:--|:--|--:|
 | World loot, military | 106 spawn points: 56 in Bone County, 32 in San Fierro, 18 in Las Venturas | 4.6 % |
-| World loot, industrial | 2,431 spawn points: 791 in Los Santos, 406 in Las Venturas, 386 in San Fierro, 273 in Flint County, 270 in Red County, 233 in Bone County, 72 in Tierra Robada | 4.0 % |
-| World loot, civilian | 7,674 spawn points: 3,006 in Los Santos, 2,632 in San Fierro, 1,373 in Las Venturas, 285 in Red County, 164 in Bone County, 143 in Flint County, 71 in Tierra Robada (116 of them inside houses) | 2.2 % |
-| World loot, survivor | 825 spawn points: 227 in San Fierro, 225 in Los Santos, 113 in Las Venturas, 85 in Red County, 77 in Flint County, 66 in Bone County, 32 in Tierra Robada; also the trunks of 9 vehicle types (APC-30, Bandito, Doomride, Freeway, Roadpain and 4 more) | 2.0 % |
-| Vehicle trunks, military | The trunks of 4 vehicle types (Barracks, Launch, Patriot, Rhino) | 9.6 % |
-| Vehicle trunks, police | The trunks of 5 vehicle types (Enforcer, FBI Truck, HPV1000, Police Car, Ranger) | 7.1 % |
-| Vehicle trunks, industrial | The trunks of 14 vehicle types (Articulated, Baggage, Bobcat, Boxville, Coastguard and 9 more) | 2.4 % |
-| Vehicle trunks, civilian | The trunks of 31 vehicle types (BF Injection, Blista Compact, Bloodring Banger, Clover, Comet and 26 more) | 2.1 % |
-| Supply drop "Food and Medical" | 36 drop points | 3.1 % |
+| World loot, industrial | 2,431 spawn points: 791 in Los Santos, 406 in Las Venturas, 386 in San Fierro, 273 in Flint County, 270 in Red County, 233 in Bone County, 72 in Tierra Robada | 3.1 % |
+| World loot, survivor | 825 spawn points: 227 in San Fierro, 225 in Los Santos, 113 in Las Venturas, 85 in Red County, 77 in Flint County, 66 in Bone County, 32 in Tierra Robada; also the trunks of 9 vehicle types (APC-30, Bandito, Doomride, Freeway, Roadpain and 4 more) | 1.6 % |
+| World loot, civilian | 7,674 spawn points: 3,006 in Los Santos, 2,632 in San Fierro, 1,373 in Las Venturas, 285 in Red County, 164 in Bone County, 143 in Flint County, 71 in Tierra Robada (116 of them inside houses) | 1.6 % |
+| Vehicle trunks, military | The trunks of 4 vehicle types (Barracks, Launch, Patriot, Rhino) | 11.2 % |
+| Vehicle trunks, police | The trunks of 5 vehicle types (Enforcer, FBI Truck, HPV1000, Police Car, Ranger) | 8.0 % |
+| Vehicle trunks, industrial | The trunks of 14 vehicle types (Articulated, Baggage, Bobcat, Boxville, Coastguard and 9 more) | 2.6 % |
+| Vehicle trunks, civilian | The trunks of 31 vehicle types (BF Injection, Blista Compact, Bloodring Banger, Clover, Comet and 26 more) | 2.3 % |
+| Supply drop "Food and Medical" | 36 drop points | 3.5 % |
 
 ## Crafting
 
@@ -36,4 +36,4 @@ Worth 1 [Scrap Metal](Scrap-Metal) in a Scrap Machine, see [Scrap](Scrap).
 
 ## See also
 
-[Constructing](Constructing), [Defences](Defences), [Furniture](Furniture), [Getting Started](Getting-Started), [HUD](HUD), [Keypads](Keypads), [Machines](Machines), [Melee Weapons](Melee-Weapons), [Repairing & Locks](Repairing-and-Locks), [Skills](Skills), [Tent](Tent), [Tools](Tools), [Trailers & Towing](Trailers-and-Towing), [Vehicle Armour](Vehicle-Armour), [Workbench](Workbench)
+[Constructing](Constructing), [Defences](Defences), [Furniture](Furniture), [Getting Started](Getting-Started), [HUD](HUD), [Keypads](Keypads), [Machines](Machines), [Melee Weapons](Melee-Weapons), [Repairing & Locks](Repairing-and-Locks), [Skills](Skills), [Tools](Tools), [Trailers & Towing](Trailers-and-Towing), [Vehicle Armour](Vehicle-Armour), [Workbench](Workbench)

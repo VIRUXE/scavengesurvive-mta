@@ -13,8 +13,8 @@
 
 | Source | Where | Share of the table |
 |:--|:--|--:|
-| World loot, medical | 94 spawn points: 36 in San Fierro, 21 in Bone County, 16 in Las Venturas, 8 in Los Santos, 7 in Red County, 5 in Tierra Robada, 1 in Flint County; also the trunk of the Ambulance | 3.5 % |
-| Supply drop "Food and Medical" | 36 drop points | 3.0 % |
+| World loot, medical | 94 spawn points: 36 in San Fierro, 21 in Bone County, 16 in Las Venturas, 8 in Los Santos, 7 in Red County, 5 in Tierra Robada, 1 in Flint County; also the trunk of the Ambulance | 3.0 % |
+| Supply drop "Food and Medical" | 36 drop points | 3.4 % |
 
 ## Crafting
 

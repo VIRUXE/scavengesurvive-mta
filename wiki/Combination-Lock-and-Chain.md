@@ -24,3 +24,7 @@ Not found as loot.
 ## Scrap
 
 Worth 1 [Scrap Metal](Scrap-Metal) in a Scrap Machine, see [Scrap](Scrap).
+
+## See also
+
+[Combining](Combining), [Repairing & Locks](Repairing-and-Locks)

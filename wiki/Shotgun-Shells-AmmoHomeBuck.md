@@ -22,7 +22,7 @@ Other items called Shotgun Shells: [Shotgun Shells (`AmmoBuck`)](Shotgun-Shells-
 
 | Source | Where | Share of the table |
 |:--|:--|--:|
-| World loot, civilian | 7,674 spawn points: 3,006 in Los Santos, 2,632 in San Fierro, 1,373 in Las Venturas, 285 in Red County, 164 in Bone County, 143 in Flint County, 71 in Tierra Robada (116 of them inside houses) | 1.3 % |
+| World loot, civilian | 7,674 spawn points: 3,006 in Los Santos, 2,632 in San Fierro, 1,373 in Las Venturas, 285 in Red County, 164 in Bone County, 143 in Flint County, 71 in Tierra Robada (116 of them inside houses) | 1.7 % |
 | Supply drop "Low Grade Weapons" | 36 drop points | 9.3 % |
 
 ## Crafting

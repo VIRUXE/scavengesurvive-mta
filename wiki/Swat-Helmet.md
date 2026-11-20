@@ -12,7 +12,10 @@
 
 ## Where to find it
 
-Not found as loot.
+| Source | Where | Share of the table |
+|:--|:--|--:|
+| World loot, military | 106 spawn points: 56 in Bone County, 32 in San Fierro, 18 in Las Venturas | 1.3 % |
+| World loot, police | 52 spawn points: 15 in San Fierro, 11 in Las Venturas, 9 in Los Santos, 9 in Red County, 4 in Bone County, 3 in Flint County, 1 in Tierra Robada | 0.9 % |
 
 ## Crafting
 

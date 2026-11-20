@@ -12,7 +12,9 @@
 
 ## Where to find it
 
-Not found as loot.
+| Source | Where | Share of the table |
+|:--|:--|--:|
+| World loot, military | 106 spawn points: 56 in Bone County, 32 in San Fierro, 18 in Las Venturas | 0.4 % |
 
 ## Crafting
 

@@ -24,4 +24,4 @@ Cannot be scrapped: a Scrap Machine destroys it, see [Scrap](Scrap).
 
 ## See also
 
-[Getting Started](Getting-Started), [Inventory](Inventory), [Tent](Tent)
+[Tent](Tent)

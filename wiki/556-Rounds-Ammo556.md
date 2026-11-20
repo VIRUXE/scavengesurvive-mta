@@ -23,7 +23,7 @@ Other items called 5.56 Rounds: [5.56 Rounds (`Ammo556HP`)](556-Rounds-Ammo556HP
 | Source | Where | Share of the table |
 |:--|:--|--:|
 | World loot, military | 106 spawn points: 56 in Bone County, 32 in San Fierro, 18 in Las Venturas | 2.2 % |
-| Vehicle trunks, military | The trunks of 4 vehicle types (Barracks, Launch, Patriot, Rhino) | 2.1 % |
+| Vehicle trunks, military | The trunks of 4 vehicle types (Barracks, Launch, Patriot, Rhino) | 2.5 % |
 | Supply drop "Military Weapons" | 36 drop points; also the weapon caches (186 in San Fierro) | 7.6 % |
 
 ## Crafting

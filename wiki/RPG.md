@@ -18,7 +18,7 @@
 
 | Source | Where | Share of the table |
 |:--|:--|--:|
-| World loot, military | 106 spawn points: 56 in Bone County, 32 in San Fierro, 18 in Las Venturas | 0.6 % |
+| World loot, military | 106 spawn points: 56 in Bone County, 32 in San Fierro, 18 in Las Venturas | 0.5 % |
 | Supply drop "Military Weapons" | 36 drop points; also the weapon caches (186 in San Fierro) | 3.2 % |
 
 ## Crafting
