@@ -151,11 +151,10 @@ local function dropPersonal(p, why)
 end
 
 -- MTA keeps every client's weather and clock in sync on its own (setWeather/setTime are global and sent to
--- joiners), so unlike upstream there is no per-player loop; the clock is re-synced to the host each minute
--- because setMinuteDuration only approximates real time.
+-- joiners), so unlike upstream there is no per-player loop; the clock runs at GTA's speed from the host's hour at
+-- start, and the server's own time is re-broadcast each minute to pull drifted clients back.
 local function syncClock()
-    local hour, minute = weather.clock(getRealTime())
-    setTime(hour, minute)
+    setTime(getTime())
 end
 
 addEventHandler("onResourceStart", resourceRoot, function()
@@ -167,7 +166,7 @@ addEventHandler("onResourceStart", resourceRoot, function()
         vendingSrv.start()
     end)
     setMinuteDuration(weather.MINUTE_MS)
-    syncClock()
+    setTime(weather.clock(getRealTime()))
     apply(weather.initial(math.random), "at start")
     setTimer(syncClock, weather.CLOCK_SYNC_MS, 0)
     setTimer(function()

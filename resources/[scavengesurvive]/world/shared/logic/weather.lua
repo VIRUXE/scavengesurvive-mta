@@ -1,11 +1,12 @@
 -- Weather and clock (upstream core/server/weather.pwn + player.pwn): one global weather drawn from a weighted
--- list, re-rolled with a 10 % chance every 10 minutes; the in-game clock follows the host's real time.
+-- list, re-rolled with a 10 % chance every 10 minutes; the in-game clock runs at GTA's speed (a 24-minute day),
+-- seeded from the host's hour.
 -- Pure logic: rng() returns a float in [0,1); the caller supplies the tick and the real-time table.
 local weather = {}
 weather.CHECK_MS = 600000 -- upstream cooldown: at least 10 minutes between weather changes
 weather.CHECK_INTERVAL_MS = 60000 -- evaluate change chance every minute once cooldown expires
 weather.CHANGE_CHANCE = 10 -- percent chance per minute once CHECK_MS has passed
-weather.MINUTE_MS = 60000 -- one game minute per real minute: the clock is the host's clock
+weather.MINUTE_MS = 1000 -- GTA's default: one game minute per real second, so the clock is not the host's clock
 weather.CLOCK_SYNC_MS = 60000
 
 -- GTA weather ids (SA-MP and MTA share them) with upstream's selection chance
