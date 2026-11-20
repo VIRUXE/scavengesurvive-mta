@@ -23,6 +23,7 @@
     <file src="data/COLFIX.lua"/>
     <file src="data/FC.lua"/>
     <file src="data/GEN.lua"/>
+    <file src="data/KAIJA.lua"/>
     <file src="data/LS.lua"/>
     <file src="data/LV.lua"/>
     <file src="data/OCEAN.lua"/>
