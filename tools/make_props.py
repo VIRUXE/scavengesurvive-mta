@@ -78,7 +78,12 @@ then runs itself in Blender (DragonFF) for each prop's dff and col.
     can capacitors in a tray), hack_device (rugged netbook with clip leads), advanced_keypad (access-control keypad, face
     +Y), lockpick (electric pick gun, origin at the grip's foot), clothes (three folded garments), pills (pharmacy vial).
 
-Origin (except welder_torch, grinder, ratchet and tow_bar): the centre of the base (x, y) with z = 0 at the lowest point; the front faces +Y.
+    shell_skirt 20501  two strips of street and backyard (concretenewb256 pavement in front, a concrete path and
+                     desgreengrass lawn behind) that close the ground round SA-MP's sfhouse3 where upstream stands it on
+                     box_hse_08's plots, whose ground is cut 0.46 m wider each side (SKIRT_* below). Its origin is the
+                     shell's: maps/data rows copy the shell row's position and heading.
+
+Origin (except welder_torch, grinder, ratchet, tow_bar and shell_skirt): the centre of the base (x, y) with z = 0 at the lowest point; the front faces +Y.
 """
 from __future__ import annotations
 
@@ -91,6 +96,50 @@ ROOT = Path(__file__).resolve().parents[1]
 PROP_MODELS = ROOT / "resources" / "[scavengesurvive]" / "prop_models"
 FILES = PROP_MODELS / "files"
 PROPS = PROP_MODELS / "props.lua"
+
+# shell_skirt: the strips of ground SA-MP's sfhouse3 leaves open where upstream stands it on box_hse_08's plots. The
+# ground meshes are cut to hse_08's footprint (x -5.163 to 6.217 in the house's frame, 0.4 m lower inside), sfhouse3 is
+# box_hse_01 (walls at x -4.69 and 5.76), so 0.46 m of the sunken floor shows in front of it and behind it. The prop
+# shares the shell's origin (a map row copies the shell row's position and heading); its top lies 3 mm under the
+# street's (4.6954 m under the origin) and runs 4 cm under the street's edge, so the two never fight.
+SKIRT_TOP, SKIRT_THICK, SKIRT_HALF_Y = -4.6984, 0.03, 4.29
+SKIRT_FRONT, SKIRT_BACK = (-5.203, -4.55), (5.70, 6.257)  # x ranges: under the front wall to the sidewalk, and behind
+SKIRT_PATH_Y = -2.03  # the back path's concrete runs from the back door's side (-y) to here, then lawn
+# day/night prelight sampled off the ground beside the strips (oc_flats_gnd*_sfs), most plots alike
+SKIRT_PAVE = ((0.08, 0.08, 0.08, 1.0), (0.09, 0.08, 0.04, 1.0))
+SKIRT_PATH = ((0.25, 0.26, 0.27, 1.0), (0.0, 0.0, 0.0, 1.0))
+SKIRT_LAWN = ((0.45, 0.47, 0.49, 1.0), (0.0, 0.0, 0.0, 1.0))
+SKIRT_SCALE = (0.28, 0.12)  # texture repeats per metre: concretenewb256 (the pavement's), desgreengrass (the lawn's)
+
+
+def build_shell_skirt(ctx):
+    bm, paint = ctx["bm"], ctx["paint"]
+    boxes = []
+
+    def slab(x0, x1, y0, y1, material, colours):
+        scale = SKIRT_SCALE[material]
+        z1, z0 = SKIRT_TOP, SKIRT_TOP - SKIRT_THICK
+        v = {(x, y, z): bm.verts.new((x, y, z)) for x in (x0, x1) for y in (y0, y1) for z in (z0, z1)}
+        sides = [
+            ((x0, y0, z1), (x1, y0, z1), (x1, y1, z1), (x0, y1, z1)),  # top
+            ((x0, y1, z0), (x1, y1, z0), (x1, y0, z0), (x0, y0, z0)),  # bottom
+            ((x0, y0, z0), (x1, y0, z0), (x1, y0, z1), (x0, y0, z1)),
+            ((x1, y1, z0), (x0, y1, z0), (x0, y1, z1), (x1, y1, z1)),
+            ((x0, y1, z0), (x0, y0, z0), (x0, y0, z1), (x0, y1, z1)),
+            ((x1, y0, z0), (x1, y1, z0), (x1, y1, z1), (x1, y0, z1)),
+        ]
+        for corners in sides:
+            face = bm.faces.new([v[c] for c in corners])
+            # planar mapping off the house's frame, so neighbouring strips and plots tile alike
+            uvs = [(c[1] * scale, (c[0] + c[2]) * scale) for c in corners]
+            paint(face, uvs, colours[0], colours[1], material)
+        boxes.append((((x0 + x1) / 2, (y0 + y1) / 2, SKIRT_TOP - SKIRT_THICK / 2), ((x1 - x0) / 2, (y1 - y0) / 2, SKIRT_THICK / 2)))
+
+    slab(*SKIRT_FRONT, -SKIRT_HALF_Y, SKIRT_HALF_Y, 0, SKIRT_PAVE)
+    slab(*SKIRT_BACK, -SKIRT_HALF_Y, SKIRT_PATH_Y, 0, SKIRT_PATH)
+    slab(*SKIRT_BACK, SKIRT_PATH_Y, SKIRT_HALF_Y, 1, SKIRT_LAWN)
+    return boxes
+
 
 SIZE, THICK, RIM = 1.0, 0.04, 0.04  # ls_hatch, metres; RIM: the share of the texture the edges show
 DAY, NIGHT = (0.38, 0.38, 0.38, 1.0), (0.12, 0.12, 0.13, 1.0)
@@ -2125,6 +2174,8 @@ PROPS_TABLE = [
     {"name": "doctor_bag", "id": 20297, "dist": 50, "sources": DOCBAG_TEXTURES, "build": build_doctor_bag},
     {"name": "bandage", "id": 20298, "dist": 30, "sources": BANDAGE_TEXTURES[:1], "build": build_bandage},
     {"name": "dirty_bandage", "id": 20299, "dist": 30, "sources": BANDAGE_TEXTURES, "build": build_dirty_bandage},
+    # 20201-20299 is full; props go on at 20501 (lib/modules/models.lua)
+    {"name": "shell_skirt", "id": 20501, "dist": 200, "source": "oc_flats_gnd_sfs.txd", "textures": ["concretenewb256", "desgreengrass"], "build": build_shell_skirt},
     # the explosives' trigger variants (items <Base><TRIGGERS[kind]>, e.g. TntTimebomb)
     {"name": "tnt_timer", "id": 20284, "dist": 50, "sources": with_triggers(TNT_TEXTURES), "build": lambda ctx, k="timer", s=with_triggers(TNT_TEXTURES): build_tnt(ctx, k, s)},
     {"name": "tnt_trip", "id": 20285, "dist": 50, "sources": with_triggers(TNT_TEXTURES), "build": lambda ctx, k="trip", s=with_triggers(TNT_TEXTURES): build_tnt(ctx, k, s)},

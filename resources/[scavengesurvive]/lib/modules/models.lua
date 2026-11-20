@@ -15,6 +15,8 @@ local function resourceForId(id)
         return "prop_models"
     elseif id >= 20401 and id <= 20499 then
         return "box_models"
+    elseif id >= 20501 and id <= 20599 then
+        return "prop_models" -- its second block, 20201-20299 being full
     elseif (id >= 11682 and id <= 11753) or (id >= 18631 and id <= 19999) then
         return "samp_models"
     end

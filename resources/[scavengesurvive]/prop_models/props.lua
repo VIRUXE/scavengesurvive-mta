@@ -42,6 +42,7 @@ return {
     [20297] = { dff = "doctor_bag", txd = "doctor_bag", dist = 50 },
     [20298] = { dff = "bandage", txd = "bandage", dist = 30 },
     [20299] = { dff = "dirty_bandage", txd = "dirty_bandage", dist = 30 },
+    [20501] = { dff = "shell_skirt", txd = "shell_skirt", dist = 200 },
     [20284] = { dff = "tnt_timer", txd = "tnt_timer", dist = 50 },
     [20285] = { dff = "tnt_trip", txd = "tnt_trip", dist = 50 },
     [20286] = { dff = "tnt_prox", txd = "tnt_prox", dist = 50 },

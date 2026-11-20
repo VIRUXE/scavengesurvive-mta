@@ -1064,6 +1064,9 @@ id = 20298
 path = "../../prop_models/files/dirty_bandage.col"
 id = 20299
 [[col]]
+path = "../../prop_models/files/shell_skirt.col"
+id = 20501
+[[col]]
 path = "../../box_models/files/wbox_carton.col"
 id = 20401
 [[col]]
