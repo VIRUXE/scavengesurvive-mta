@@ -8,8 +8,12 @@ local PROPERTIES = {
 }
 -- brightest a building's baked night colour may be once night has fully fallen (client/blackout.fx)
 local NIGHT_CAP = 0.12
--- hud.txd, fonts.txd and fronten*.txd textures (wildcards as engineRemoveShaderFromWorldTexture takes them)
-local HUD_TEXTURES = {
+-- textures the shader stays off (wildcards as engineRemoveShaderFromWorldTexture takes them): the hud.txd,
+-- fonts.txd and fronten*.txd ones, and the procedural weeds (txgrass*), which get their shade and distance fade
+-- from the fixed-function texture stages a pixel shader skips (they came out bright and hard-edged) and carry no
+-- baked window light to cap anyway
+local UNSHADED_TEXTURES = {
+    "txgrass*",
     "font1",
     "font2",
     "fist",
@@ -69,7 +73,7 @@ addEventHandler("onClientResourceStart", resourceRoot, function()
         engineApplyShaderToWorldTexture(shader, "*")
         -- GTA's own 2D drawing (HUD weapon icons, radar, zone and area names, the pause menu) counts as world
         -- textures too; left in, every one of them went dark at night
-        for _, name in ipairs(HUD_TEXTURES) do
+        for _, name in ipairs(UNSHADED_TEXTURES) do
             engineRemoveShaderFromWorldTexture(shader, name)
         end
         setTimer(updateCap, 1000, 0)
