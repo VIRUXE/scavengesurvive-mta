@@ -254,7 +254,7 @@ local function towerOf(vehicle)
     end
 end
 
--- The HUD's F line with a Tow Bar or Rope in hand (hud keyactions M.TOW), the same checks the server makes on F:
+-- The HUD's F line with a Tow Bar or Rope in hand (hud actionlines M.TOW), the same checks the server makes on F:
 -- "fit" at the rear of a car without a bar that takes one, "hitch" at a free hitch (a stock one or a bar), "front" at
 -- another vehicle's front once the rope is tied to a hitch; false anywhere else.
 function towHint(heldUname)

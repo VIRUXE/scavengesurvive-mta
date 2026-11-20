@@ -9,7 +9,7 @@ local function loadFile(path, chunkName)
     return assert(loadstring(src, chunkName))()
 end
 local canvas = loadFile(":ui/shared/logic/canvas.lua", "=ui/canvas.lua")
-local keyactions = loadFile("shared/logic/keyactions.lua", "=hud/keyactions.lua")
+local keyactions = loadFile("shared/logic/actionlines.lua", "=hud/actionlines.lua")
 local watch = loadFile("shared/logic/watch.lua", "=hud/watch.lua")
 local vehiclepanel = loadFile("shared/logic/vehiclepanel.lua", "=hud/vehiclepanel.lua")
 local bars = loadFile("shared/logic/bars.lua", "=hud/bars.lua")

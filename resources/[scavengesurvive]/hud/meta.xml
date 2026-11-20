@@ -25,7 +25,7 @@
     <file src="client/dashboards/helicopter.lua"/>
     <file src="client/dashboards/plane.lua"/>
     <file src="shared/logic/bars.lua"/>
-    <file src="shared/logic/keyactions.lua"/>
+    <file src="shared/logic/actionlines.lua"/>
     <file src="shared/logic/watch.lua"/>
     <file src="shared/logic/vehiclepanel.lua"/>
     <file src="shared/logic/voice.lua"/>
