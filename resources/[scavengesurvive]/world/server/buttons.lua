@@ -229,6 +229,9 @@ return function(ctx)
             if puzzles.enterCode(state, code, entered) then
                 keypadAt[player] = nil
                 triggerClientEvent(player, "keypadClosed", player)
+                -- nothing moves at the door: say where the way in is
+                triggerClientEvent(player, "toastShown", player, "LOCKUP_OPEN")
+                log.event("world.lockupUnlocked", logAt({ player = player }, player))
                 broadcast()
             else
                 triggerClientEvent(player, "toastShown", player, "WRONG_PASSCODE")
@@ -265,6 +268,13 @@ return function(ctx)
             end
             util.log("world", "info", "code hunt: lockup code set, %d parts placed", #parts)
         end)
+        -- a new code, a new haul in the lockup's stash (loot's shared/logic/lockup.lua)
+        local lootRes = getResourceFromName("loot")
+        if lootRes and getResourceState(lootRes) == "running" then
+            exports.loot:stockLockup()
+        else
+            util.log("world", "warn", "code hunt: loot is not running, the lockup stash keeps its last haul")
+        end
     end
 
     function M.start()

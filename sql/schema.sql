@@ -487,7 +487,7 @@ CREATE TABLE IF NOT EXISTS `world_budget` (
 
 CREATE TABLE IF NOT EXISTS `world_crates` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `kind` enum('supply','cache') NOT NULL,
+  `kind` enum('supply','cache','lockup') NOT NULL,
   `container_id` int(11) NOT NULL,
   `x` float NOT NULL,
   `y` float NOT NULL,

@@ -12,6 +12,7 @@ end
 local roll = loadFile("shared/logic/roll.lua")
 local itemRest = loadFile("shared/item_rest.lua")
 local dropsLogic = loadFile("shared/logic/drops.lua")
+local lockupLogic = loadFile("shared/logic/lockup.lua")
 local settings = {}
 local tableCache = {}
 local busy = {}
@@ -223,6 +224,7 @@ local drops = loadFile("server/drops.lua")({
     util = util,
     roll = roll,
     drops = dropsLogic,
+    lockup = lockupLogic,
     lootTable = lootTable,
     log = log,
     settings = function()
@@ -848,4 +850,9 @@ end
 
 function dropStatus()
     return drops.status()
+end
+
+-- world's code hunt, on every new code: a new haul in the SF lockup's stash
+function stockLockup()
+    return drops.stockLockup()
 end

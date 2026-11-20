@@ -34,11 +34,11 @@ drops.CACHE_OBJECT = 964
 drops.CACHE_Z_OFFSET = -0.044
 drops.OPEN_RADIUS = 3.0 -- the button's range in the SIF button library
 -- lang:begin
-drops.TITLES = { supply = "Supply Crate", cache = "Weapon Cache" }
+drops.TITLES = { supply = "Supply Crate", cache = "Weapon Cache", lockup = "Lockup Stash" }
 drops.UNKNOWN_TYPE = "Unknown"
 drops.UNKNOWN_LOCATION = "an unknown location"
 drops.SIGNAL_TEXT = "[EBS]: WEAPONS CACHE SIGNAL: BEARING: %.1fDEG DISTANCE: %.1fM"
-drops.SUPPLY_TEXT = "[EBS]: SUPPLY DROP: #33CCFF\"%s\"#FFFF00 INCOMING AT: #FFAA00\"%s\""
+drops.SUPPLY_TEXT = '[EBS]: SUPPLY DROP: #33CCFF"%s"#FFFF00 INCOMING AT: #FFAA00"%s"'
 -- lang:end
 drops.CACHE_TABLE = "airdrop_military_weapons"
 drops.CACHE_SIGNALS = 3
@@ -110,8 +110,14 @@ end
 
 -- The objects that stand for a crate of `kind` ("supply" / "cache") landed at (x, y, z), in creation order; the
 -- first one carries the crate's element data.
+-- the slots of a crate of `kind`: the SF lockup's stash (logic/lockup.lua) holds a bigger haul
+drops.LOCKUP_CRATE_SIZE = 80
+function drops.crateSize(kind)
+    return kind == "lockup" and drops.LOCKUP_CRATE_SIZE or drops.CRATE_SIZE
+end
+
 function drops.crateObjects(kind, x, y, z)
-    if kind == "cache" then
+    if kind == "cache" or kind == "lockup" then
         return { { model = drops.CACHE_OBJECT, x = x, y = y, z = z + drops.CACHE_Z_OFFSET, rx = 0, ry = 0, rz = 0 } }
     end
     return {

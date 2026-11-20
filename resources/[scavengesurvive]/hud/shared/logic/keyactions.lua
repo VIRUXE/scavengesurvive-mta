@@ -40,7 +40,12 @@ end
 
 -- The interact verb next to a landed crate, by the loot resource's crate kind.
 -- lang:begin
-M.CRATES = { supply = "Open supply crate", cache = "Open weapon cache", dumpster = "Open dumpster" }
+M.CRATES = {
+    supply = "Open supply crate",
+    cache = "Open weapon cache",
+    lockup = "Open the stash",
+    dumpster = "Open dumpster",
+}
 -- The interact verb with a Tow Bar or a Rope in hand at a vehicle, by vehicles' towHint.
 M.TOW = { fit = "(Hold) Fit tow bar", hitch = "Tie rope to tow bar", front = "Tie rope here", untie = "Untie rope" }
 -- the world resource's button labels (puzzles.lua, area69.lua, doors.lua), listed so tools/lang_qa collects them
@@ -68,7 +73,7 @@ M.BUTTON_LABELS = {
 --   nearInspectable (the uname of a nearby sign, plant pot or body),
 --   cuffedNearby, hasBag,
 --   glovebox (seated in a front seat of a vehicle with a glovebox: "Open glovebox"),
---   nearFeature ("ladder" / "zipline" / "ladder_on" / "zipline_on" / "button:<label>"), nearCrate ("supply" / "cache" / "dumpster"),
+--   nearFeature ("ladder" / "zipline" / "ladder_on" / "zipline_on" / "button:<label>"), nearCrate ("supply" / "cache" / "lockup" / "dumpster"),
 --   nearDoor ("open" / "closed" / "locked": a walk-in vehicle door in reach, the towable Airstream's),
 --   bodyPart ("(Hold) Remove Left Door" / "(Hold) Tighten Left Door", already in the reader's language: a Ratchet in
 --     hand at a vehicle body part that is still on),

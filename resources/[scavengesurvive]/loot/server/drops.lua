@@ -103,17 +103,12 @@ return function(ctx)
         db.exec("DELETE FROM containers WHERE id = ?", { c.containerId })
     end
 
-    -- Fills a crate container like upstream FillContainerWithLoot: every rolled item that fits goes in, one that
-    -- does not (container slots count item size units) is skipped, nothing is created outside the crate.
-    local function fillContainer(crate, tableName, count, label)
+    -- Fills a crate container like upstream FillContainerWithLoot: every item that fits goes in, one that does not
+    -- (container slots count item size units) is skipped, nothing is created outside the crate. `entries` is
+    -- { { uname, data } }; an entry without data gets the loot defaults of `tableName` (initialData).
+    local LOG_KINDS = { supply = "loot.supplyDropped", cache = "loot.cacheSpawned", lockup = "loot.lockupStocked" }
+    local function fillContainer(crate, entries, tableName, label)
         local containerId = crate.containerId
-        local tbl = ctx.lootTable(tableName)
-        if not tbl then
-            return util.log("loot", "warn", "drop: unknown loot table %s", tableName)
-        end
-        local unames = roll.fill(tbl, count, function()
-            return rng()
-        end)
         local placed = 0
         local function finish()
             local line = {
@@ -121,29 +116,29 @@ return function(ctx)
                 container_id = containerId,
                 msg = label,
                 items = placed,
-                rolled = #unames,
+                rolled = #entries,
                 x = crate.x,
                 y = crate.y,
                 z = crate.z,
                 zone = zoneAt(crate.x, crate.y),
             }
-            log.event(crate.kind == "supply" and "loot.supplyDropped" or "loot.cacheSpawned", line)
+            log.event(LOG_KINDS[crate.kind] or "loot.cacheSpawned", line)
         end
         local function place(i)
-            local uname = unames[i]
-            if not uname then
+            local e = entries[i]
+            if not e then
                 return finish()
             end
-            db.call("item_create_in_container", { uname, containerId }, function(res)
+            db.call("item_create_in_container", { e.uname, containerId }, function(res)
                 if res and res.ok then
                     placed = placed + 1
-                    local data = initialData(uname, tableName)
+                    local data = e.data or initialData(e.uname, tableName)
                     if data and res.payload and res.payload.item_id then
                         db.exec("UPDATE items SET data = ? WHERE id = ?", { data, res.payload.item_id })
                     end
                 elseif not res or res.code ~= "CONTAINER_FULL" then
                     local why = res and res.code or "db"
-                    util.log("loot", "warn", "drop: item_create_in_container %s failed: %s", uname, why)
+                    util.log("loot", "warn", "drop: item_create_in_container %s failed: %s", e.uname, why)
                 end
                 place(i + 1)
             end)
@@ -151,13 +146,32 @@ return function(ctx)
         place(1)
     end
 
+    -- `count` items rolled from loot table `tableName`, as fillContainer's entries
+    local function rolledEntries(tableName, count)
+        local tbl = ctx.lootTable(tableName)
+        if not tbl then
+            util.log("loot", "warn", "drop: unknown loot table %s", tableName)
+            return {}
+        end
+        local out = {}
+        for i, uname in
+            ipairs(roll.fill(tbl, count, function()
+                return rng()
+            end))
+        do
+            out[i] = { uname = uname }
+        end
+        return out
+    end
+
     -- Replaces the crate of `kind` with a new one at (x, y, z); `objects` reuses the landed drop objects.
-    local function createCrate(kind, x, y, z, objects, tableName, count, label)
+    -- `entries()` gives the contents once the crate exists (fillContainer's entries, rolled from `tableName`).
+    local function createCrate(kind, x, y, z, objects, tableName, entries, label)
         removeCrate(kind)
         local where = string.format("%.1f, %.1f, %.1f", x, y, z)
         -- db.exec callbacks get (ok, ctx, affectedRows, insertId)
         local insertContainer = "INSERT INTO containers (kind, size) VALUES ('supply', ?)"
-        db.exec(insertContainer, { drops.CRATE_SIZE }, function(ok, _, _, cid)
+        db.exec(insertContainer, { drops.crateSize(kind) }, function(ok, _, _, cid)
             local containerId = ok and tonumber(cid)
             if not containerId then
                 destroyObjects(objects)
@@ -176,7 +190,7 @@ return function(ctx)
                 end
                 crates[kind] = c
                 tagObjects(c)
-                fillContainer(c, tableName, count, label)
+                fillContainer(c, entries(), tableName, label)
             end)
         end)
     end
@@ -195,6 +209,10 @@ return function(ctx)
             if rows and #rows > 0 then
                 util.log("loot", "info", "%d crate(s) rebuilt from world_crates", #rows)
             end
+            -- the lockup always has its stash: world restocks it with every new code, this covers a first start
+            if not crates[ctx.lockup.KIND] then
+                M.stockLockup()
+            end
         end)
     end
 
@@ -210,7 +228,7 @@ return function(ctx)
                 if getDistanceBetweenPoints3D(px, py, pz, c.x, c.y, c.z) > drops.OPEN_RADIUS + 1.0 then
                     return
                 end
-                local title, size = lang.textFor(p, drops.TITLES[kind]), drops.CRATE_SIZE
+                local title, size = lang.textFor(p, drops.TITLES[kind]), drops.crateSize(kind)
                 local line = { player = p, crate_id = c.id, container_id = c.containerId, kind = kind }
                 line.x, line.y, line.z, line.zone = c.x, c.y, c.z, zoneAt(c.x, c.y)
                 log.event("world.crateOpened", line)
@@ -245,7 +263,10 @@ return function(ctx)
         end
         local t = drops.TYPES[d.typeIdx]
         local count = drops.supplyCount(rand)
-        createCrate("supply", d.x, d.y, d.z, d.objects, t.table, count, "supply crate (" .. t.name .. ")")
+        local function entries()
+            return rolledEntries(t.table, count)
+        end
+        createCrate("supply", d.x, d.y, d.z, d.objects, t.table, entries, "supply crate (" .. t.name .. ")")
         triggerClientEvent(root, "supplyCrateLanded", resourceRoot, d.x, d.y, d.z)
         triggerEvent("supplyCrateLanded", resourceRoot, d.typeIdx, d.x, d.y, d.z)
         lastSupplyDrop = getTickCount()
@@ -346,7 +367,11 @@ return function(ctx)
             return false, "ACTIVE"
         end
         activeCache = { x = x, y = y, z = z }
-        createCrate("cache", x, y, z, nil, drops.CACHE_TABLE, drops.cacheCount(rand), "weapons cache")
+        local count = drops.cacheCount(rand)
+        local function entries()
+            return rolledEntries(drops.CACHE_TABLE, count)
+        end
+        createCrate("cache", x, y, z, nil, drops.CACHE_TABLE, entries, "weapons cache")
         triggerEvent("weaponCacheDropped", resourceRoot, x, y, z)
         signal(x, y, z, 1)
         return true
@@ -386,6 +411,21 @@ return function(ctx)
             end
             scheduleCache()
         end, math.floor(ms), 1)
+    end
+
+    -- The SF lockup's stash (shared/logic/lockup.lua): a new haul replaces the last one, leftovers included, each time
+    -- the code hunt draws a new code (world's start)
+    function M.stockLockup()
+        local p = ctx.lockup.POS
+        local function entries()
+            return ctx.lockup.haul(function(uname)
+                return exports.data:itemType(uname)
+            end, function(cal)
+                return exports.data:ammoTypesForCalibre(cal)
+            end, rng)
+        end
+        createCrate(ctx.lockup.KIND, p[1], p[2], p[3], nil, nil, entries, "lockup stash")
+        return true
     end
 
     function M.types()

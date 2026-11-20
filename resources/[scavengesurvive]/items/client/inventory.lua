@@ -184,6 +184,7 @@ return function(ctx)
         KEYPAD_INSTALLED = "Keypad installed",
         ACCESS_GRANTED = "Access granted",
         WRONG_PASSCODE = "Incorrect passcode",
+        LOCKUP_OPEN = "Unlocked: the lockup's door lets you in now",
         DOOR_OPENED = "Opened",
         DOOR_CLOSED = "Closed",
         DEFENCE_BUILT = "Defence built",

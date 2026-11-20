@@ -165,7 +165,7 @@ local function crateNear()
     return drops.crateAt(streamedCrates(), px, py, pz)
 end
 
--- hud shows "Open supply crate" / "Open weapon cache" next to F: "supply" / "cache", or false
+-- hud shows "Open supply crate" / "Open weapon cache" / "Open the stash" next to F: the crate's kind, or false
 function nearbyCrate()
     local c = crateNear()
     return c and c.kind or false
@@ -257,8 +257,15 @@ addEventHandler("onClientRender", root, function()
             if d2 < 40 * 40 then
                 local sx, sy = getScreenFromWorldPosition(s.x, s.y, s.z + 1.7, 0.06)
                 if sx then
-                    local head = string.format("#%d  %s  %d%%  x%s  zone %s (%d left)", s.id, s.tbl, s.chance,
-                        s.size, s.zone, s.left)
+                    local head = string.format(
+                        "#%d  %s  %d%%  x%s  zone %s (%d left)",
+                        s.id,
+                        s.tbl,
+                        s.chance,
+                        s.size,
+                        s.zone,
+                        s.left
+                    )
                     outlined(head, sx, sy, { 255, 255, 255 }, 0.9)
                     outlined(spotText(s), sx, sy + 14, c, 0.9)
                 end
@@ -272,6 +279,9 @@ addEventHandler("onClientResourceStop", resourceRoot, function()
 end)
 
 local interactionLang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")()
+-- lang:begin
+local CRATE_ACTIONS = { supply = "Open supply crate", cache = "Open weapon cache", lockup = "Open the stash" }
+-- lang:end
 function interactionActions()
     local c = crateNear()
     if not c then
@@ -280,7 +290,7 @@ function interactionActions()
     return {
         {
             id = "crate:" .. c.id,
-            label = interactionLang.text(c.kind == "cache" and "Open weapon cache" or "Open supply crate"),
+            label = interactionLang.text(CRATE_ACTIONS[c.kind] or CRATE_ACTIONS.supply),
             event = "supplyCrateOpenRequested",
             target = c.id,
             element = c.obj, -- hud outlines the selected entry's object in the world
