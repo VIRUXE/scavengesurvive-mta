@@ -6,6 +6,8 @@ addEvent("keypadSubmitted", true)
 -- trees (server/trees.lua): the cutting hold is items' treatment hold, so its key release is items' event
 addEvent("treesStateRequested", true)
 addEvent("treatmentCancelRequested", true)
+-- ladders (client/features.lua): the metres climbed, handled by character's travel stats (Strength)
+addEvent("playerClimbed", true)
 
 -- server to client
 addEvent("buttonsStateChanged", true)

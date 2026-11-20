@@ -14,8 +14,28 @@ M.MAX_STEP_FOOT, M.MAX_STEP_VEHICLE = 25, 75 -- further than this in one second 
 -- metres per second on foot: GTA walks at about 1.5, runs at about 4.5 and sprints at about 6.5
 M.WALK_SPEED, M.RUN_SPEED, M.SPRINT_SPEED = 0.5, 2.5, 5.5
 
+-- Climbing trains Strength: every 5th wall climbed (GTA's own climb over a fence or wall) or every 15 m climbed up
+-- ladders, never twice within 10 s. The client reports each climb, the server clamps it.
+M.CLIMB_SKILL = "Strength"
+M.CLIMBS_PER_XP = 5
+M.LADDER_M_PER_XP = 15
+M.MAX_WALL_RISE, M.MAX_LADDER_RISE = 3.5, 60 -- metres one report may count
+M.MIN_WALL_RISE, M.MIN_LADDER_RISE = 0.8, 2
+M.CLIMB_COOLDOWN_MS = 10000
+
 function M.new()
-    return { dist = {}, time = {}, jumps = 0, knockedOutMs = 0, lastXp = nil, nextXpAt = {} }
+    return {
+        dist = {},
+        time = {},
+        jumps = 0,
+        knockedOutMs = 0,
+        lastXp = nil,
+        nextXpAt = {},
+        climbs = 0,
+        ladderM = 0,
+        nextLadderXpAt = M.LADDER_M_PER_XP,
+        lastClimbXp = nil,
+    }
 end
 
 -- The kind of movement a second was, or nil for standing still.
@@ -83,6 +103,43 @@ function M.jump(t)
     return t.jumps % M.JUMPS_PER_XP == 0
 end
 
+-- One climb report: kind "wall" (metres = the rise) or "ladder" (metres climbed). Returns true when Strength gains.
+function M.climb(t, kind, metres, now)
+    metres = tonumber(metres)
+    if not metres or metres ~= metres or metres <= 0 then
+        return false
+    end
+    local due
+    if kind == "wall" then
+        if metres < M.MIN_WALL_RISE then
+            return false
+        end
+        t.climbs = t.climbs + 1
+        due = t.climbs % M.CLIMBS_PER_XP == 0
+    elseif kind == "ladder" then
+        if metres < M.MIN_LADDER_RISE then
+            return false
+        end
+        t.ladderM = t.ladderM + math.min(metres, M.MAX_LADDER_RISE)
+        due = false
+        while t.ladderM >= t.nextLadderXpAt do
+            t.nextLadderXpAt = t.nextLadderXpAt + M.LADDER_M_PER_XP
+            due = true
+        end
+    else
+        return false
+    end
+    if not due then
+        return false
+    end
+    -- a crossing during the cooldown is lost, like Endurance's
+    if t.lastClimbXp and now - t.lastClimbXp < M.CLIMB_COOLDOWN_MS then
+        return false
+    end
+    t.lastClimbXp = now
+    return true
+end
+
 -- The velocity multiplier of a running jump for an Endurance value in [0, 1].
 function M.boost(endurance)
     local e = math.max(0, math.min(1, tonumber(endurance) or 0))
@@ -133,6 +190,8 @@ function M.window(t, tr)
         rows[#rows + 1] = { tr(M.LABELS[kind]), M.distance(t.dist[kind]), M.duration(t.time[kind]) }
     end
     rows[#rows + 1] = { tr("Jumps"), tostring(t.jumps or 0), "", colour = "#33CCFF" }
+    rows[#rows + 1] = { tr("Climbs"), tostring(t.climbs or 0), "", colour = "#33CCFF" }
+    rows[#rows + 1] = { tr("Ladders"), M.distance(t.ladderM), "", colour = "#33CCFF" }
     rows[#rows + 1] = { tr("Knocked out"), "", M.duration(t.knockedOutMs), colour = "#33CCFF" }
     local header = "#FFFFFF" .. tr("Movement this session (resets when you log in)")
     local columns = { tr("Activity"), tr("Distance"), tr("Time") }

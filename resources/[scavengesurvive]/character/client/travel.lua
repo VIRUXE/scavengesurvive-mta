@@ -51,10 +51,40 @@ local function onJump()
     end, 50, 1)
 end
 
+-- GTA's own climb over a wall or fence is a ped task; its rise is reported when it ends and trains Strength
+-- (the server counts the climbs, see shared/logic/travel.lua climb).
+local climbStartZ = nil
+local function watchClimb()
+    if isPedDead(localPlayer) or getPedOccupiedVehicle(localPlayer) then
+        climbStartZ = nil
+        return
+    end
+    local climbing = getPedSimplestTask(localPlayer) == "TASK_SIMPLE_CLIMB"
+    local _, _, z = getElementPosition(localPlayer)
+    if climbing then
+        climbStartZ = climbStartZ or z
+        return
+    end
+    local startZ = climbStartZ
+    climbStartZ = nil
+    if not startZ or z - startZ < travel.MIN_WALL_RISE then
+        return
+    end
+    if getElementData(localPlayer, "character.knockedOut") or getElementData(localPlayer, "character.cuffed") then
+        return
+    end
+    triggerServerEvent("playerClimbed", localPlayer, "wall", math.min(z - startZ, travel.MAX_WALL_RISE))
+end
+
+local climbTimer
 addEventHandler("onClientResourceStart", resourceRoot, function()
     bindKey("jump", "down", onJump)
+    climbTimer = setTimer(watchClimb, 100, 0)
 end)
 
 addEventHandler("onClientResourceStop", resourceRoot, function()
     unbindKey("jump", "down", onJump)
+    if isTimer(climbTimer) then
+        killTimer(climbTimer)
+    end
 end)

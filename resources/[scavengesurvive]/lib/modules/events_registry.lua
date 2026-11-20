@@ -141,6 +141,7 @@ return {
     comboPadlockOpened = true,
     comboPadlockChanged = true,
     playerJumped = true,
+    playerClimbed = true,
     sitRequested = true,
     standRequested = true,
     handsUpRequested = true,

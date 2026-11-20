@@ -14,6 +14,7 @@ addEvent("respawnRequested", true)
 addEvent("characterSkillsRequested", true) -- the client's skill rows, sent again (client/skills.lua)
 addEvent("groundSurfaceReported", true)
 addEvent("playerJumped", true)
+addEvent("playerClimbed", true) -- a wall or ladder climbed, from character's client and world's ladders
 addEvent("sitRequested", true)
 addEvent("standRequested", true)
 addEvent("handsUpRequested", true)

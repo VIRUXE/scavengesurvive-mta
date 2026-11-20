@@ -55,11 +55,19 @@ local function climbAnim(hang)
     end
 end
 
+-- the metres climbed up this ladder go to the server (character's travel stats train Strength with them)
+local function reportClimb(ladder)
+    if ladder.climbed >= 2 then
+        triggerServerEvent("playerClimbed", localPlayer, "ladder", ladder.climbed)
+    end
+end
+
 local function exitLadder()
     if not onLadder then
         return
     end
     local l = ladders[onLadder.idx]
+    reportClimb(onLadder)
     onLadder = nil
     setPedAnimation(localPlayer)
     setClimbControls(true)
@@ -77,13 +85,17 @@ local function enterLadder(idx)
     setElementRotation(localPlayer, 0, 0, l[5])
     setElementPosition(localPlayer, l[1], l[2], F.ladderEnterZ(l, z))
     setClimbControls(false)
-    onLadder = { idx = idx, since = getTickCount(), animUp = false }
+    onLadder = { idx = idx, since = getTickCount(), animUp = false, climbed = 0, lastZ = F.ladderEnterZ(l, z) }
     climbAnim(false)
 end
 
 local function ladderFrame()
     local l = ladders[onLadder.idx]
     local _, _, z = getElementPosition(localPlayer)
+    if z > onLadder.lastZ then
+        onLadder.climbed = onLadder.climbed + (z - onLadder.lastZ)
+    end
+    onLadder.lastZ = z
     if F.ladderShouldExit(l, z, getTickCount() - onLadder.since) then
         return exitLadder()
     end
@@ -227,6 +239,7 @@ end)
 
 addEventHandler("onClientPlayerWasted", localPlayer, function()
     if onLadder then
+        reportClimb(onLadder)
         onLadder = nil
         setClimbControls(true)
     end

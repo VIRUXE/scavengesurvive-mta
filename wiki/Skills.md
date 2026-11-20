@@ -42,7 +42,7 @@ Times are the base time and what it becomes at skill 1.0.
 | Fishing | a bite that lands on your line | the wait for a bite (30 to 120 s) is cut by up to half, and the chance a bite lands a fish rises from 30 % to 65 % |
 | Forestry | felling a tree with a Chainsaw | cutting speed: at 1.0 a tree takes half the time |
 | Endurance | covering distance on foot, see below | a running or sprinting jump goes further: its speed is multiplied by `1 + 1.3 x skill`, up to 2.3 times |
-| Strength | [pushing a vehicle](Vehicles#pushing) at least 3 m (a full gain from 15 m) | the push's speed: 0.8 m/s untrained, up to 1.8 m/s at 1.0, before health and the vehicle's weight |
+| Strength | [pushing a vehicle](Vehicles#pushing) at least 3 m (a full gain from 15 m); climbing: every 5th wall or fence climbed over, or every 15 m climbed up ladders (at most one climbing gain per 10 s) | the push's speed: 0.8 m/s untrained, up to 1.8 m/s at 1.0, before health and the vehicle's weight |
 | An item's name | [crafting](Constructing) that item, on the ground or at a [workbench](Workbench) | the same recipe next time: the build hold on the ground, or the workbench's 3.6 s per ingredient; the Crowbar takedown of that item is also shortened, without training |
 
 ### Endurance

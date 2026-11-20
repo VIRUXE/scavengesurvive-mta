@@ -86,6 +86,20 @@ return function(ctx)
         end
     end, { rate = 3 })
 
+    -- a wall climbed or a ladder climbed up, reported by the client that did it (movement is client-owned)
+    net.handler("playerClimbed", function(player, kind, metres)
+        local st = state.byPlayer[player]
+        if not st or st.dead or getPedOccupiedVehicle(player) or ctx.isKnockedOut(player) then
+            return
+        end
+        if type(kind) ~= "string" or type(metres) ~= "number" then
+            return
+        end
+        if travel.climb(of(player), kind, metres, getTickCount()) then
+            ctx.gainSkill(player, travel.CLIMB_SKILL)
+        end
+    end, { rate = 2 })
+
     addCommandHandler("mstats", function(player)
         if not state.byPlayer[player] then
             return
