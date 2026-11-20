@@ -1745,6 +1745,10 @@ return {
         { 11015, -2028.1328, -111.2734, 36.1328, 0.25 },
         { 11014, -2076.4375, -107.9297, 36.9688, 0.25 },
         { 1532, -2025.8281, -102.4688, 34.2734, 0.25 },
+        -- the crack factory: GTA places the burnt shell (CF_ext_dem_SFS) and its LOD on the intact factory and the
+        -- story script swaps them; MTA draws both, which z-fought and cut dark slabs through the hall
+        { 11088, -2166.875, -236.5156, 40.8594, 0.25 },
+        { 11282, -2166.875, -236.5156, 40.8594, 0.25 },
         { 9510, -2719.02, 861.211, 72.1562, 250.0 },
         { 9671, -2719.02, 861.211, 72.1562, 250.0 },
         { 715, -2693.24, 852.6, 71.74, 8.0 },
