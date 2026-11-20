@@ -309,6 +309,12 @@ function placement.isBreakable(model)
     return placement.BREAKABLE[model] == true
 end
 
+-- Vanilla models that render wrong as a building and are placed as frozen objects instead:
+-- apgate1_VegS01 (the SF driving school's north gates) drew its mesh fencing as solid black panels.
+placement.OBJECT_ONLY = {
+    [8167] = true,
+}
+
 -- SA-MP virtual world / interior (-1 = any) -> MTA dimension / interior
 function placement.where(world, interior)
     local dim = (world and world > 0) and world or 0
@@ -338,6 +344,7 @@ function placement.kind(o, sampId)
         or placement.isSwingDoor(model)
         or placement.isBreakable(model)
         or placement.isMovable(model)
+        or placement.OBJECT_ONLY[model]
     then
         return "object"
     end
