@@ -6,6 +6,7 @@ houses.SHELLS = {
     [19489] = "sfhouse1",
     [19491] = "sfhouse2",
     [19493] = "sfhouse3",
+    [20304] = "sfhouse3w", -- sfhouse3 stretched to box_hse_08's plots (tools/stretch_house_shells.py)
     [19495] = "sfhouse4",
     [19497] = "lvhouse1",
     [19499] = "lvhouse2",

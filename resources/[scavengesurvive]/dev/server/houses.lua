@@ -28,7 +28,13 @@ return function(ctx)
             zones[zone] = readLua(":maps/data/" .. zone .. ".lua") or {}
         end
         list = houses.collect(zones)
-        doors = readLua(":maps/shared/shell_doors.lua") or {}
+        -- a stretched shell hangs its base shell's doors, moved with the walls (maps placement.stretchShells)
+        local placement = readLua(":maps/shared/logic/placement.lua")
+        doors = placement.stretchShells(
+            readLua(":maps/shared/shell_doors.lua") or {},
+            readLua(":maps/shared/stretched_shells.lua") or {},
+            6
+        )
     end
 
     local function go(p, i, nth)

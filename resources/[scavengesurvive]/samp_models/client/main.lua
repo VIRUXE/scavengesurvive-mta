@@ -9,7 +9,7 @@ local ids = {} -- SA-MP model -> allocated MTA model
 -- The house shells (lshouse1 ... sfhouse4) have translucent glass panes in their window openings, textured
 -- house_window (tools/make_house_window.py). house_window.txd adds it to their vanilla dictionaries, once per
 -- shared dictionary.
-local HOUSE_SHELL = "^%a%ahouse%d$"
+local HOUSE_SHELL = "^%a%ahouse%dw?$" -- w: stretched to a deeper plot (stretched.lua, tools/stretch_house_shells.py)
 local windowTextureAdded = {} -- vanilla TXD id -> true
 local shells = {} -- allocated model id -> true, for the house shell exteriors
 
@@ -34,8 +34,9 @@ local ldr = loader.new({
 addEventHandler("onClientResourceStart", resourceRoot, function()
     local count, failed = 0, {}
     -- The hinged defence doors moved onto the middle of their footprint (defences.lua, tools/repivot_defences.py)
-    -- are SA-MP models re-pivoted by the port, loaded like the manifest's.
-    for _, name in ipairs({ "manifest", "defences" }) do
+    -- and the house shells stretched to deeper plots (stretched.lua, tools/stretch_house_shells.py) are SA-MP models
+    -- reworked by the port, loaded like the manifest's.
+    for _, name in ipairs({ "manifest", "defences", "stretched" }) do
         local manifest = loader.loadLuaFile(name .. ".lua", "=samp_models/" .. name .. ".lua")
         for sampModel, e in pairs(manifest) do
             local id, err = ldr.loadModel(e)

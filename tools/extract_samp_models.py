@@ -244,17 +244,25 @@ def files_needed(entries) -> list[str]:
     return sorted(names)
 
 
-def defence_files(out_dir: Path) -> list[str]:
-    """DFF and COL files of the re-pivoted defence copies listed in <out_dir>/defences.lua
-    (tools/repivot_defences.py)."""
-    manifest = out_dir / "defences.lua"
+# The port's own copies of SA-MP models, each list beside manifest.lua with its files: the re-pivoted defence doors
+# (tools/repivot_defences.py) and the stretched house shells (tools/stretch_house_shells.py).
+DERIVED = ("defences", "stretched")
+
+
+def defence_files(out_dir: Path, name: str = "defences") -> list[str]:
+    """DFF and COL files of the copies listed in <out_dir>/<name>.lua."""
+    manifest = out_dir / f"{name}.lua"
     if not manifest.is_file():
         return []
-    dffs = sorted(f"{name}.dff" for name in re.findall(r'dff = "([^"]+)"', manifest.read_text(encoding="ascii")))
-    return sorted(dffs + [name[:-4] + ".col" for name in dffs])
+    dffs = sorted(f"{dff}.dff" for dff in re.findall(r'dff = "([^"]+)"', manifest.read_text(encoding="ascii")))
+    return sorted(dffs + [dff[:-4] + ".col" for dff in dffs])
 
 
-def render_meta(entries, defences=()) -> str:
+def derived_files(out_dir: Path) -> dict[str, list[str]]:
+    return {name: files for name in DERIVED if (files := defence_files(out_dir, name))}
+
+
+def render_meta(entries, derived=None) -> str:
     lines = [
         "<meta>",
         '    <info author="scavengesurvive-mta" type="script" name="samp_models" '
@@ -266,16 +274,16 @@ def render_meta(entries, defences=()) -> str:
         '    <file src="manifest.lua"/>',
     ]
     lines += [f'    <file src="files/{name}"/>' for name in files_needed(entries)]
-    if defences:
-        lines.append('    <file src="defences.lua"/>')
-        lines += [f'    <file src="files/{name}"/>' for name in defences]
+    for name, files in (derived or {}).items():
+        lines.append(f'    <file src="{name}.lua"/>')
+        lines += [f'    <file src="files/{f}"/>' for f in files]
     lines += ['    <export function="resolve" type="client"/>']
     lines.append("</meta>")
     return "\n".join(lines) + "\n"
 
 
 def write_meta(out_dir: Path) -> None:
-    """Regenerates meta.xml for samp_models from manifest.lua and defences.lua on disk."""
+    """Regenerates meta.xml for samp_models from manifest.lua and the DERIVED lists on disk."""
     entries = {}
     manifest = out_dir / "manifest.lua"
     if manifest.is_file():
@@ -288,7 +296,7 @@ def write_meta(out_dir: Path) -> None:
             if txd_model:
                 e["txdModel"] = int(txd_model)
             entries[dff] = e
-    (out_dir / "meta.xml").write_text(render_meta(entries, defence_files(out_dir)), encoding="ascii", newline="\n")
+    (out_dir / "meta.xml").write_text(render_meta(entries, derived_files(out_dir)), encoding="ascii", newline="\n")
 
 
 def detect_gta() -> Path | None:
@@ -390,7 +398,7 @@ def main(argv=None) -> int:
                 path, index = archives[archive]
                 target.write_bytes(read_img_entry(path, index[name]))
     (args.out / "manifest.lua").write_text(render_manifest(entries), encoding="ascii", newline="\n")
-    (args.out / "meta.xml").write_text(render_meta(entries, defence_files(args.out)), encoding="ascii", newline="\n")
+    (args.out / "meta.xml").write_text(render_meta(entries, derived_files(args.out)), encoding="ascii", newline="\n")
     return 1 if problems else 0
 
 

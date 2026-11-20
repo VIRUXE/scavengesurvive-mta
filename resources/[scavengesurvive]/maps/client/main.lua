@@ -150,12 +150,16 @@ addEventHandler("onClientResourceStart", resourceRoot, function()
         end
     end
     -- the house shells glaze their own windows: upstream's panes in those openings would double the glass
+    -- (a shell stretched to a deeper plot takes its base shell's openings and doors, the doors moved with the walls)
+    local stretched = readLua("shared/stretched_shells.lua") or {}
     local dropped
-    queue, dropped = placement.dropGlazedPanes(queue, readLua("shared/glazed_windows.lua") or {})
+    local glazed = placement.stretchShells(readLua("shared/glazed_windows.lua") or {}, stretched)
+    queue, dropped = placement.dropGlazedPanes(queue, glazed)
     state.stats.glazed = dropped
     -- and hang doors cut to their entrances, in place of upstream's oversized ones and where it left none
     local swapped, added
-    queue, swapped, added = placement.fitShellDoors(queue, readLua("shared/shell_doors.lua") or {})
+    local doors = placement.stretchShells(readLua("shared/shell_doors.lua") or {}, stretched, 6)
+    queue, swapped, added = placement.fitShellDoors(queue, doors)
     state.stats.doors = swapped + added
     if #state.removed > 0 then
         setOcclusionsEnabled(false) -- removed world models leave their occluders behind otherwise

@@ -188,6 +188,28 @@ function placement.fitShellDoors(rows, doors)
     return out, swapped, added
 end
 
+-- data (shell_doors.lua or glazed_windows.lua, by shell model) with an entry for every stretched shell
+-- (stretched_shells.lua) copied from its base shell's. Upstream's doors and panes stand where they stood around the
+-- base shell, so what matches them stays put; field xField of each row (a fitted door's hinge x), when given, moves
+-- with its wall: by front in front of cut, by back behind it.
+function placement.stretchShells(data, stretched, xField)
+    for id, s in pairs(stretched) do
+        local rows = data[s.base]
+        if rows and not data[id] then
+            local out = {}
+            for i, r in ipairs(rows) do
+                local c = { unpack(r) }
+                if xField then
+                    c[xField] = c[xField] + (c[xField] < s.cut and s.front or s.back)
+                end
+                out[i] = c
+            end
+            data[id] = out
+        end
+    end
+    return data
+end
+
 function placement.isSampModel(model)
     return model >= 18631 or (model >= 11682 and model <= 11753)
 end

@@ -653,6 +653,12 @@ id = 19941
 path = "../../samp_models/files/cutscenelighterfl.col"
 id = 19998
 [[col]]
+path = "../../samp_models/files/sfhouse3w.col"
+id = 20304
+[[col]]
+path = "../../samp_models/files/sfhouse3wint.col"
+id = 20305
+[[col]]
 path = "../../hat_models/files/beanie1.col"
 id = 20001
 [[col]]
@@ -1063,9 +1069,6 @@ id = 20298
 [[col]]
 path = "../../prop_models/files/dirty_bandage.col"
 id = 20299
-[[col]]
-path = "../../prop_models/files/shell_skirt.col"
-id = 20501
 [[col]]
 path = "../../box_models/files/wbox_carton.col"
 id = 20401

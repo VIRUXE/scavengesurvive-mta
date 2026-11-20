@@ -523,5 +523,10 @@
     <file src="files/freight_sfw_door_def.dff"/>
     <file src="files/imcmptrkdrl_las_def.col"/>
     <file src="files/imcmptrkdrl_las_def.dff"/>
+    <file src="stretched.lua"/>
+    <file src="files/sfhouse3w.col"/>
+    <file src="files/sfhouse3w.dff"/>
+    <file src="files/sfhouse3wint.col"/>
+    <file src="files/sfhouse3wint.dff"/>
     <export function="resolve" type="client"/>
 </meta>

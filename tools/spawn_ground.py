@@ -57,7 +57,7 @@ LOOT_SEED = ROOT / "sql" / "seed" / "0009_loot_spawn_ground.sql"
 POSE_SEED = ROOT / "sql" / "seed" / "0010_vehicle_spawn_poses.sql"
 
 # the model resources lib/modules/models.lua resolves item models through, with their manifests
-MODEL_PACKS = [("samp_models", "manifest.lua"), ("hat_models", "hats.lua"), ("door_models", "doors.lua"), ("prop_models", "props.lua"), ("box_models", "boxes.lua")]
+MODEL_PACKS = [("samp_models", "manifest.lua"), ("samp_models", "stretched.lua"), ("hat_models", "hats.lua"), ("door_models", "doors.lua"), ("prop_models", "props.lua"), ("box_models", "boxes.lua")]
 SCATTER = 0.6  # loot/server/main.lua rollSpawn
 MAX_PER_SPAWN = 6  # loot/shared/logic/roll.lua roll.MAX_PER_SPAWN
 # item size classes for the slot clearance check: box (length, width, height) an item of the class fits in, lying
