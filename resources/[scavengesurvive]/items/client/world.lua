@@ -1421,8 +1421,9 @@ return function(ctx)
         local dim, int = getElementDimension(localPlayer), getElementInterior(localPlayer)
         local bestDist, bestId = reach * reach, nil
         for id, e in pairs(objects) do
-            local r = e.row
-            if e.defence and not builtDefence(r) and (r.dimension or 0) == dim and (r.interior or 0) == int then
+            local r, t = e.row, itemType(e.uname)
+            -- e.defence marks a built one only: an unbuilt defence is told by its type
+            if t and t.defence and not builtDefence(r) and (r.dimension or 0) == dim and (r.interior or 0) == int then
                 local dx, dy = e.x - px, e.y - py
                 local dist = dx * dx + dy * dy
                 if dist <= bestDist and math.abs(e.z - pz) < 3 and inReach(id, e) then
