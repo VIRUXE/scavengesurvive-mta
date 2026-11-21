@@ -7,6 +7,23 @@ return function(ctx)
     local medical, bleeding = ctx.medical, ctx.bleeding
     local FLUSH_MS = 10000
     local M = {}
+    -- leg wounds limp (shared/logic/wounds.lua): a GTA move style every client sees; checked every tick, so a spawn
+    -- or a skin change that put the style back is undone on the next one
+    local LIMP_STYLE = 120 -- MOVE_OLDMAN
+    local wounds
+    do
+        local f = fileOpen("shared/logic/wounds.lua", true)
+        local src = fileRead(f, fileGetSize(f))
+        fileClose(f)
+        wounds = assert(loadstring(src, "=character/wounds.lua"))()
+    end
+
+    local function walk(player, limp)
+        local style = limp and LIMP_STYLE or 0
+        if getPedWalkingStyle(player) ~= style then
+            setPedWalkingStyle(player, style)
+        end
+    end
 
     function M.sendStats(player, force)
         local st = state.byPlayer[player]
@@ -44,6 +61,7 @@ return function(ctx)
                     st.bleedShown = false
                     setElementData(player, "character.bleeding", false, "broadcast", "deny")
                 end
+                walk(player, false)
                 setElementHealth(player, math.max(1, st.hp))
             elseif
                 isElement(player)
@@ -69,6 +87,7 @@ return function(ctx)
                     ctx.blood.drop(player)
                 end
                 ctx.treatment.tick(player, st, 1000)
+                walk(player, wounds.limps(survival.woundsPerPart(st.wounds), st.drugs))
                 if ctx.travel then
                     ctx.travel.tick(player, 1000) -- travel stats and Endurance (#138)
                 end

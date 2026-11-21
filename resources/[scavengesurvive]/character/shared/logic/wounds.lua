@@ -1,8 +1,8 @@
 -- What wounds do to the body (2026-11-21): counted per part (survival.woundsPerPart order: torso, groin, left arm,
--- right arm, left leg, right leg, head), worse the more a part carries. Legs cap and then take the sprint, and lose
--- the jump from the third wound; torso and groin cap the sprint harder with each wound and take it at the third;
--- arms sway the aim. Adrenaline lifts all of it, as it does hunger's (shared/logic/hunger.lua). client/hunger.lua
--- merges the legs with hunger's, client/medical.lua the aim.
+-- right arm, left leg, right leg, head), worse the more a part carries. Legs cap and then take the sprint, limp from
+-- the second wound and lose the jump from the third; torso and groin cap the sprint harder with each wound and take
+-- it at the third; arms sway the aim. Adrenaline lifts all of it, as it does hunger's (shared/logic/hunger.lua).
+-- client/hunger.lua merges the legs with hunger's, client/medical.lua the aim, server/tick.lua sets the limp.
 
 local function count(parts, a, b)
     parts = type(parts) == "table" and parts or {}
@@ -48,6 +48,10 @@ local function worstLegs(a, b)
     }
 end
 
+local function limps(parts, drugs)
+    return not lifted(drugs) and count(parts, 5, 6) >= 2
+end
+
 -- the drunk level (upstream units, the client divides by 200) the camera keeps at least while aiming
 local function aimDrunk(parts, drugs)
     if lifted(drugs) then
@@ -56,4 +60,4 @@ local function aimDrunk(parts, drugs)
     return math.min(6000, count(parts, 3, 4) * 1500)
 end
 
-return { legs = legs, worstLegs = worstLegs, aimDrunk = aimDrunk }
+return { legs = legs, worstLegs = worstLegs, limps = limps, aimDrunk = aimDrunk }
