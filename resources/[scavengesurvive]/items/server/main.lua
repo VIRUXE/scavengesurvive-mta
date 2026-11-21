@@ -162,12 +162,17 @@ end
 
 -- upstream player/disallow-actions.pwn IsBadInteract: cuffed, on staff duty, knocked out or hands up; such a player
 -- picks nothing up, opens no inventory or container, takes nothing out of one and uses nothing
-local function isBadInteract(player)
+local function isStaffOnDuty(player)
+    local staffRes = getResourceFromName("staff")
+    return staffRes ~= false and getResourceState(staffRes) == "running" and exports.staff:isOnDuty(player) == true
+end
+
+-- ignoreDuty: only what keeps anyone's hands off the world (knocked out, hands up), not staff duty
+local function isBadInteract(player, ignoreDuty)
     if isIncapacitated(player) or exports.character:isHandsUp(player) then
         return true
     end
-    local staffRes = getResourceFromName("staff")
-    return staffRes ~= false and getResourceState(staffRes) == "running" and exports.staff:isOnDuty(player) == true
+    return not ignoreDuty and isStaffOnDuty(player)
 end
 
 hands = loadFile("server/hands.lua")({
@@ -187,6 +192,7 @@ hands = loadFile("server/hands.lua")({
     destroy = destroy,
     isIncapacitated = isIncapacitated,
     isBadInteract = isBadInteract,
+    isStaffOnDuty = isStaffOnDuty,
     isKnockedOut = isKnockedOut,
     isPlayerCuffed = isPlayerCuffed,
     setPlayerCuffed = setPlayerCuffed,

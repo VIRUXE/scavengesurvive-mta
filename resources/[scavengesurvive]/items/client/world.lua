@@ -690,6 +690,37 @@ return function(ctx)
         tiltToGround(obj, r)
     end
 
+    -- A defence a Motor (or a keypad) moves swings into its new pose over SWING_MS instead of jumping there: one turn
+    -- about the line that stays put (geometry.motion), eased in and out. obj -> { mo, start }; the object's collision
+    -- goes with it, and it ends exactly on the pose orient() gave it.
+    local SWING_MS = 1500
+    local swings = {}
+    local function startSwing(obj, from)
+        local mo = geometry.motion(from, getElementMatrix(obj))
+        if mo.angle == 0 and math.abs(mo.slide[1]) + math.abs(mo.slide[2]) + math.abs(mo.slide[3]) < 0.01 then
+            return
+        end
+        setElementMatrix(obj, from)
+        swings[obj] = { mo = mo, start = getTickCount() }
+    end
+    addEventHandler("onClientPreRender", root, function()
+        if next(swings) == nil then
+            return
+        end
+        local now = getTickCount()
+        for obj, sw in pairs(swings) do
+            if not isElement(obj) then
+                swings[obj] = nil
+            else
+                local s = math.min(1, (now - sw.start) / SWING_MS)
+                setElementMatrix(obj, geometry.motionAt(sw.mo, s * s * (3 - 2 * s)))
+                if s >= 1 then
+                    swings[obj] = nil
+                end
+            end
+        end
+    end)
+
     -- the fire a row shows: a campfire always, a barbecue while its cook runs (data.doneAt)
     local function updateFires(e, r)
         for _, fx in ipairs(e.fires or {}) do
@@ -919,7 +950,13 @@ return function(ctx)
                 e.defence = builtDefence(r) ~= nil
                 e.x, e.y, e.z = r.x or e.x, r.y or e.y, r.z or e.z -- a built defence stands higher than it lay
                 if isElement(e.obj) then -- the row came again because it moved or turned (a door swung)
+                    -- a built defence that changed pose swings there from wherever it is drawn now
+                    local was, now = builtDefence(e.row), builtDefence(r)
+                    local from = was and now and was.pose ~= now.pose and getElementMatrix(e.obj)
                     orient(e.obj, r, t)
+                    if from then
+                        startSwing(e.obj, from)
+                    end
                 end
                 e.row = r
                 updateFires(e, r)

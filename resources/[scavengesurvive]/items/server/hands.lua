@@ -12,6 +12,9 @@ return function(ctx)
     local isBadInteract = ctx.isBadInteract or function()
         return false
     end
+    local isStaffOnDuty = ctx.isStaffOnDuty or function()
+        return false
+    end
     local isKnockedOut = ctx.isKnockedOut
     local log = loadstring(exports.lib:getModule("log"), "=lib/log.lua")()
     local VANILLA_MELEE_MAX = 15
@@ -878,8 +881,16 @@ return function(ctx)
 
     net.handler("itemPickupRequested", function(player, blocked, targetId)
         local cid = charId(player)
-        if not cid or isBadInteract(player) then
+        if not cid then
             return
+        end
+        -- staff on duty touch nothing in the world but a built defence's door or keypad (building interactDefence)
+        local dutyOnly = false
+        if isBadInteract(player) then
+            if not isStaffOnDuty(player) or isBadInteract(player, true) then
+                return
+            end
+            dutyOnly = true
         end
         if state.lastHolster and state.lastHolster[player] and (getTickCount() - state.lastHolster[player] < 1000) then
             return
@@ -891,7 +902,7 @@ return function(ctx)
                 return
             end
         end
-        if not targetId and tryPlayerInteraction(player, cid, held) then
+        if not targetId and not dutyOnly and tryPlayerInteraction(player, cid, held) then
             return
         end
         local x, y = getElementPosition(player)
@@ -906,13 +917,20 @@ return function(ctx)
             if row and c.targetId then
                 local px, py, pz = getElementPosition(c.player)
                 if
-                    isBadInteract(c.player)
+                    isBadInteract(c.player, c.dutyOnly)
                     or getElementInterior(c.player) ~= (row.interior or 0)
                     or getElementDimension(c.player) ~= (row.dimension or 0)
                     or getDistanceBetweenPoints3D(px, py, pz, row.x, row.y, row.z) > c.radius
                 then
                     return
                 end
+            end
+            if c.dutyOnly then
+                local t = row and itemType(row.uname)
+                if t and t.defence and buildingRunning() and builtDefence(decodeData(row.data)) then
+                    return exports.building:interactDefence(c.player, row)
+                end
+                return
             end
             local curHeld = state.held[c.player]
             local curUname = curHeld and curHeld.uname
@@ -1036,6 +1054,7 @@ return function(ctx)
             radius = r,
             targetId = targetId,
             blocked = world.cleanIds(blocked),
+            dutyOnly = dutyOnly,
         })
     end, { rate = 5 })
 
