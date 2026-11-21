@@ -544,6 +544,11 @@ function medicalLootData(uname)
     return medical.lootData(uname, math.random) or false
 end
 
+-- The drugs, pills and injections a medical item can hold ({ drugs, pills, injections }), for dev's item picker.
+function medicalChoices()
+    return { drugs = medical.BAG_DRUGS, pills = medical.PILLS, injections = medical.INJECTIONS }
+end
+
 function setInfection(player, kind, on)
     local st = state.byPlayer[player]
     if on == true and onDuty(player) then

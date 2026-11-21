@@ -296,12 +296,9 @@ local function rollSpawn(s, placed)
     for i, uname in ipairs(unames) do
         local def = exports.data:itemType(uname)
         if def then
-            local cal = def.categoryData and def.categoryData.calibre
-            local ammoTypes = cal and exports.data:ammoTypesForCalibre(cal) or nil
-            local medical = roll.MEDICAL_DATA[uname] and exports.character:medicalLootData(uname)
             local item = {
                 u = uname,
-                data = medical or roll.initialItemData(def, tableName, ammoTypes, math.random), -- JSON text or nil
+                data = initialData(def, tableName), -- JSON text or nil
                 rz = math.random(0, 359),
             }
             local rest = itemRest[uname]
@@ -379,10 +376,20 @@ function pickItem(tableName)
     if not def then
         return nil, nil
     end
+    return def.uname, initialData(def, tostring(tableName))
+end
+
+-- The starting data (JSON text or nil) loot gives an item of this type: medical rolls, a random liquid fill, a
+-- partial magazine. `unameOrDef` is a type name or its definition; dev's /additem picker asks for it by name.
+function initialData(unameOrDef, tableName)
+    local def = type(unameOrDef) == "table" and unameOrDef or exports.data:itemType(unameOrDef)
+    if not def then
+        return nil
+    end
     local cal = def.categoryData and def.categoryData.calibre
     local ammoTypes = cal and exports.data:ammoTypesForCalibre(cal) or nil
     local medical = roll.MEDICAL_DATA[def.uname] and exports.character:medicalLootData(def.uname)
-    return def.uname, medical or roll.initialItemData(def, tostring(tableName), ammoTypes, math.random)
+    return medical or roll.initialItemData(def, tableName, ammoTypes, math.random)
 end
 
 -- Stocks a vehicle's trunk or glovebox container with up to `count` items rolled from tableName (the glovebox's

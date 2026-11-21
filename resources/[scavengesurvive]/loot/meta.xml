@@ -16,6 +16,7 @@
     <file src="server/overlay.lua"/>
     <export function="rollNear" type="server"/>
     <export function="pickItem" type="server"/>
+    <export function="initialData" type="server"/>
     <export function="dropSupply" type="server"/>
     <export function="dropWeaponCache" type="server"/>
     <export function="supplyDropTypes" type="server"/>

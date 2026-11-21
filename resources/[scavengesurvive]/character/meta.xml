@@ -55,6 +55,7 @@
     <export function="hasDrug" type="server"/>
     <export function="treatmentHold" type="server"/>
     <export function="medicalLootData" type="server"/>
+    <export function="medicalChoices" type="server"/>
     <export function="medicalLabel" type="client"/>
     <export function="applyWound" type="server"/>
     <export function="knockOutPlayer" type="server"/>

@@ -10,6 +10,7 @@ local function loadFile(path, chunkName)
     return assert(loadstring(src, chunkName))()
 end
 local itemSpawnLogic = loadFile("shared/logic/item_spawn.lua", "=dev/item_spawn_logic.lua")
+local contents = loadFile("shared/logic/item_contents.lua", "=dev/item_contents_logic.lua")
 
 -- Chat lines as each client saw them (client/main.lua forwards onClientChatMessage), oldest first, 100 kept.
 local CHAT_KEEP = 100
@@ -231,10 +232,24 @@ local function spawnItem(p, uname, pData)
     end, { player = p, uname = uname, x = sx, y = sy, z = sz })
 end
 
+-- The drugs, pills and injections of the medical items (the picker's choices), {} while character is down.
+local function medicalChoices()
+    local ok, medical = pcall(function()
+        return exports.character:medicalChoices()
+    end)
+    return ok and medical or {}
+end
+
+-- What item_contents needs to know about a type: the ammo its calibre takes and the medical choices.
+local function contentsCtx(def)
+    local cal = def.categoryData and def.categoryData.calibre
+    return { ammoTypes = cal and exports.data:ammoTypesForCalibre(cal) or {}, medical = medicalChoices() }
+end
+
 local function handleAddItem(p, ...)
     local args = { ... }
     if #args == 0 or not args[1] or args[1] == "" then
-        return triggerClientEvent(p, "devItemPickerOpened", p)
+        return triggerClientEvent(p, "devItemPickerOpened", p, "", medicalChoices())
     end
     if not ready then
         return say(p, "db not connected")
@@ -263,17 +278,26 @@ local function handleAddItem(p, ...)
             return say(p, "%s", dataErr)
         end
         pData = itemSpawnLogic.encodeJsonArray(dataArr)
+    else
+        -- an item with contents is chosen in the picker (liquid, amount, rounds, ...), not spawned with whatever
+        -- default the type has
+        local def = exports.data:itemType(uname)
+        if def and #contents.fields(def, contentsCtx(def)) > 0 then
+            return triggerClientEvent(p, "devItemPickerOpened", p, uname, medicalChoices())
+        end
     end
 
     spawnItem(p, uname, pData)
 end
 
--- The picker window (client/item_picker.lua) names the exact type it chose, so no substring resolving here.
-net.handler("devItemSpawnRequested", function(player, uname, spec, values)
+-- The picker window (client/item_picker.lua) names the exact type it chose, so no substring resolving here. `mode` is
+-- "values" (the panel's fields, checked by item_contents) or "random" (the data a loot spawn would give).
+net.handler("devItemSpawnRequested", function(player, uname, mode, values)
     local function refuse(text)
         triggerClientEvent(player, "devItemSpawnAnswered", player, false, text)
     end
-    local pickerArgs = tostring(uname) .. (type(spec) == "string" and spec ~= "" and (" " .. spec) or "")
+    mode = mode == "random" and "random" or "values"
+    local pickerArgs = tostring(uname) .. " " .. mode
     if not isItemSpawnAllowed(player) then
         logCommand(player, "additem", pickerArgs, true, "picker")
         return refuse("not allowed")
@@ -283,16 +307,18 @@ net.handler("devItemSpawnRequested", function(player, uname, spec, values)
         return refuse("db not connected")
     end
     local order = exports.data:itemTypes()
-    if type(uname) ~= "string" or uname == order[1] or not exports.data:itemType(uname) then
+    local def = type(uname) == "string" and uname ~= order[1] and exports.data:itemType(uname)
+    if not def then
         return refuse("unknown item type")
     end
-    local pData = nil
-    if type(spec) == "string" and spec:match("%S") then
-        local dataArr, dataErr = itemSpawnLogic.parseExtraData(spec, tostring(values))
-        if not dataArr then
+    local pData, dataErr
+    if mode == "random" then
+        pData = exports.loot:initialData(uname, "dev")
+    else
+        pData, dataErr = contents.encode(def, values, contentsCtx(def))
+        if dataErr then
             return refuse(dataErr)
         end
-        pData = itemSpawnLogic.encodeJsonArray(dataArr)
     end
     spawnItem(player, uname, pData)
 end, { rate = 5 })
