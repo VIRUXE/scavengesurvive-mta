@@ -449,14 +449,37 @@ return function(ctx)
         return ok
     end
 
+    -- the point of a large item's footprint (its bounds, flat) nearest to (px, py): a table's edge is what a player
+    -- standing against it faces, its centre may lie off to the side. Small items: their position.
+    local function nearestFootprintPoint(e, px, py)
+        local t = itemType(e.uname)
+        local obj = isElement(e.obj) and e.obj or nil
+        if not obj or e.defence or not t or (t.size or 0) < 9 then
+            return e.x, e.y
+        end
+        local ax, ay, _, bx, by = getElementBoundingBox(obj)
+        local m = getElementMatrix(obj)
+        if not ax or not m then
+            return e.x, e.y
+        end
+        -- the player in the object's frame (the rotation part is orthonormal: its transpose inverts it)
+        local rx, ry, rz = px - m[4][1], py - m[4][2], 0
+        local lx = rx * m[1][1] + ry * m[1][2] + rz * m[1][3]
+        local ly = rx * m[2][1] + ry * m[2][2] + rz * m[2][3]
+        lx = math.max(ax, math.min(bx, lx))
+        ly = math.max(ay, math.min(by, ly))
+        return m[4][1] + lx * m[1][1] + ly * m[2][1], m[4][2] + lx * m[1][2] + ly * m[2][2]
+    end
+
     -- true when the player is turned towards the world item: within FACING_COS of the ped's heading, or so close
     -- (under FACING_FREE metres, flat) that it lies at the feet. Standing beside a box or with the back to it
-    -- offers nothing.
+    -- offers nothing. A large item is faced through the nearest point of its footprint.
     local FACING_COS = math.cos(math.rad(60))
     local FACING_FREE = 0.6
     local function faced(e)
         local px, py = getElementPosition(localPlayer)
-        local dx, dy = e.x - px, e.y - py
+        local tx, ty = nearestFootprintPoint(e, px, py)
+        local dx, dy = tx - px, ty - py
         local len = math.sqrt(dx * dx + dy * dy)
         if len < FACING_FREE then
             return true
