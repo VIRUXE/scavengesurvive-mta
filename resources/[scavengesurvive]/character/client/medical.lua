@@ -10,10 +10,11 @@ end
 local medical = loadModule("shared/logic/medical.lua")
 medical.tr = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")().text -- labels in the player's language
 local hunger = loadModule("shared/logic/hunger.lua") -- the thirst sway shares the drunk level (client/hunger.lua)
+local wounds = loadModule("shared/logic/wounds.lua") -- arm wounds sway the aim
 
-local stats = { hp = 100, food = 100, thirst = 100, infection = {}, drugs = {} }
+local stats = { hp = 100, food = 100, thirst = 100, infection = {}, drugs = {}, woundParts = {} }
 local drunk, lastShake = 0, 0
-local aimFloor = 0 -- hunger and thirst sway the aim: the level the camera keeps at least while aiming
+local aimFloor = 0 -- hunger, thirst and arm wounds sway the aim: the level the camera keeps at least while aiming
 
 local function applyCamera()
     setCameraDrunkLevel(math.min(255, math.floor(math.max(drunk, aimFloor) / 200)))
@@ -30,6 +31,7 @@ addEventHandler("characterStatsSynced", localPlayer, function(s)
     stats.thirst = tonumber(s.thirst) or stats.thirst
     stats.infection = type(s.infection) == "table" and s.infection or {}
     stats.drugs = type(s.drugs) == "table" and s.drugs or {}
+    stats.woundParts = type(s.woundParts) == "table" and s.woundParts or stats.woundParts
 end)
 
 addEventHandler("characterNoticeShown", localPlayer, function(text, ms)
@@ -51,7 +53,12 @@ local function update()
     end
     local held = medical.drugDrunk(stats.drugs)
     local aiming = not held and not getPedOccupiedVehicle(localPlayer) and getPedControlState(localPlayer, "aim_weapon")
-    local nextAim = aiming and hunger.aimDrunk(stats.food, stats.thirst, stats.drugs) or 0
+    local nextAim = aiming
+            and math.max(
+                hunger.aimDrunk(stats.food, stats.thirst, stats.drugs),
+                wounds.aimDrunk(stats.woundParts, stats.drugs)
+            )
+        or 0
     if nextAim ~= aimFloor then
         aimFloor = nextAim
         applyCamera()
