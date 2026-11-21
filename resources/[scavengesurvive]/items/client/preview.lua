@@ -36,7 +36,7 @@ return function(ctx)
             return nil
         end
         setElementRotation(obj, rx, ry, rz)
-        local minX, minY, minZ, maxX, maxY, maxZ = getElementBoundingBox(obj)
+        local minX, minY, minZ, maxX, maxY, maxZ = models.bounds(obj)
         local m = getElementMatrix(obj)
         destroyElement(obj)
         if not minX or not m then

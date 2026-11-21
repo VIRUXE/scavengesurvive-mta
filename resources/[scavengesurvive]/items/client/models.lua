@@ -1,7 +1,7 @@
 -- Which MTA model an item type's object uses on this client: the SA-MP model loaded by the `samp_models` resource
 -- while it is running, otherwise the vanilla stand-in chosen by data/model_map.lua (type.mtaModel). Also owns the
 -- per-colour tint shaders for item types whose DefineItemType colour is not -1 (#96).
--- Returns { FALLBACK, forType, forSamp, colourRgba, hasTint, applyTint, onChanged }.
+-- Returns { FALLBACK, forType, forSamp, colourRgba, hasTint, applyTint, bounds, onChanged }.
 return function()
     local models = loadstring(exports.lib:getModule("models"), "=lib/models.lua")()
     local M = { FALLBACK = 1271 }
@@ -76,6 +76,9 @@ return function()
         end
         return M.forSamp(t.model) or t.mtaModel or M.FALLBACK
     end
+
+    -- an object's model-space box, corrected for MTA's shifted getElementBoundingBox (lib/models.lua)
+    M.bounds = models.bounds
 
     function M.onChanged(refresh)
         refreshers[#refreshers + 1] = refresh

@@ -194,7 +194,8 @@ end)
 -- box and no other world item's box (each plus a margin) holds and no wall hides, and drops there
 -- (server/hands.lua, itemDropSpotChosen)
 local function insideElement(el, px, py, pz, margin)
-    local minX, minY, minZ, maxX, maxY, maxZ = getElementBoundingBox(el)
+    local box = getElementType(el) == "object" and models.bounds or getElementBoundingBox
+    local minX, minY, minZ, maxX, maxY, maxZ = box(el)
     if not minX then
         return false
     end

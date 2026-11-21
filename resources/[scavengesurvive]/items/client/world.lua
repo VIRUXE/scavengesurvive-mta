@@ -431,7 +431,7 @@ return function(ctx)
         -- Sample inside their transformed bounds; every sample still needs an unobstructed ray.
         local t = itemType(e.uname)
         if not ok and not e.defence and own and t and (t.size or 0) >= 9 then
-            local ax, ay, az, bx, by, bz = getElementBoundingBox(own)
+            local ax, ay, az, bx, by, bz = models.bounds(own)
             local m = getElementMatrix(own)
             if ax and m then
                 local samples = {
@@ -471,7 +471,7 @@ return function(ctx)
         if not obj or e.defence or not t or (t.size or 0) < 9 then
             return e.x, e.y
         end
-        local ax, ay, _, bx, by = getElementBoundingBox(obj)
+        local ax, ay, _, bx, by = models.bounds(obj)
         local m = getElementMatrix(obj)
         if not ax or not m then
             return e.x, e.y
@@ -524,7 +524,7 @@ return function(ctx)
         local ok = not own or rayClear(sx, sy, kz, e.x, e.y, math.max(kz, e.z + 0.15), own)
         if not ok then
             ok = true
-            local ax, ay, az, bx, by, bz = getElementBoundingBox(own)
+            local ax, ay, az, bx, by, bz = models.bounds(own)
             local m = getElementMatrix(own)
             if ax and m then
                 local lx, ly, lz = (ax + bx) / 2, (ay + by) / 2, (az + bz) / 2

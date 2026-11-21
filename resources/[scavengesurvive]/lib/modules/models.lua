@@ -56,6 +56,19 @@ function models.resolve(id)
     return false
 end
 
+-- An object's model-space box (getElementBoundingBox's six numbers), client-side. MTA reports a model's collision
+-- box moved by its bounding sphere's centre, so any model whose box is not centred on its origin comes out shifted
+-- (the Locker 1.03 m up, a door a hinge's width aside). The centre is the box's own middle in every model we load,
+-- so the reported middle is twice the true one: half of it comes back off each corner.
+function models.bounds(el)
+    local x0, y0, z0, x1, y1, z1 = getElementBoundingBox(el)
+    if not x0 then
+        return false
+    end
+    local cx, cy, cz = (x0 + x1) / 4, (y0 + y1) / 4, (z0 + z1) / 4
+    return x0 - cx, y0 - cy, z0 - cz, x1 - cx, y1 - cy, z1 - cz
+end
+
 function models.hatlessSkin(skin)
     local res = getResourceFromName("skin_models")
     if not res or getResourceState(res) ~= "running" then

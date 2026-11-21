@@ -2,6 +2,7 @@
 -- chooser's selected entry, the item a Crowbar's F reaches, the item a build or deconstruct hold works on.
 -- Client-side, called from onClientRender. local outline = loadstring(exports.lib:getModule("outline"), ...)()
 local outline = {}
+local models = loadstring(exports.lib:getModule("models"), "=lib/models.lua")()
 
 local EDGES = {
     { 1, 2 },
@@ -23,7 +24,7 @@ function outline.draw(obj)
     if not isElement(obj) then
         return
     end
-    local x0, y0, z0, x1, y1, z1 = getElementBoundingBox(obj)
+    local x0, y0, z0, x1, y1, z1 = models.bounds(obj)
     if not x0 then
         x0, y0, z0, x1, y1, z1 = -0.25, -0.25, -0.25, 0.25, 0.25, 0.25
     end

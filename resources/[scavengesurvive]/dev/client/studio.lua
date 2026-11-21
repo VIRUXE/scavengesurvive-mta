@@ -63,7 +63,7 @@ local function layoutProps()
     local bounds = {}
     local late = getTickCount() - propsSince > PROP_WAIT
     for i, p in ipairs(props) do
-        local x1, y1, z1, x2, y2, z2 = getElementBoundingBox(p.object)
+        local x1, y1, z1, x2, y2, z2 = modelsLib.bounds(p.object) -- loaded by resolveModel when the props were made
         if not x1 then
             if not late then
                 return
