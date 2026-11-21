@@ -244,7 +244,12 @@ local function spawnFromRow(player, row, isNew)
     combatlog.reset(state.combat, player)
     sendCombatWindow(player, 0)
     clearStatuses(player, true)
-    spawnPlayer(player, row.x, row.y, row.z, row.rz, row.skin, row.interior or 0, row.dimension or 0)
+    -- A restart of this resource reloads everyone still playing. One already sitting in a vehicle (vehicles' own
+    -- restart handoff may have seated them first) keeps the seat: spawnPlayer would pull them out onto the road.
+    -- One not seated yet spawns as usual and the handoff seats them after.
+    if isNew or isPedDead(player) or not getPedOccupiedVehicle(player) then
+        spawnPlayer(player, row.x, row.y, row.z, row.rz, row.skin, row.interior or 0, row.dimension or 0)
+    end
     if getElementData(player, "auth.reauthProtection") then
         setElementFrozen(player, true)
     end
