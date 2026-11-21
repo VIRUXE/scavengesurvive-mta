@@ -42,7 +42,7 @@ files["resources/**/loot/client/**"] = { std = "lua51+mta_shared+mta_client", gl
 -- isPedDucked and getVehicleController postdate the generated .luacheck/mta_server.lua list
 files["resources/**/weapons/server/**"] = { std = "lua51+mta_shared+mta_server", read_globals = { "isPedDucked", "getVehicleController" } }
 files["resources/**/world/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "getWeather", "setGlobalWeather" }, read_globals = { "getTime" } }
-files["resources/**/world/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "interactionActions", "chooseInteraction", "buttonInteractionActions", "tryInteract", "nearbyFeature", "buttonInteract", "buttonNear" }, read_globals = { "dxDrawLine3D", "getBoundKeys", "moveObject", "stopObject", "dxCreateShader", "dxSetShaderValue", "engineApplyShaderToWorldTexture", "restoreWorldModel" } }
+files["resources/**/world/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "interactionActions", "chooseInteraction", "buttonInteractionActions", "tryInteract", "nearbyFeature", "buttonInteract", "buttonNear" }, read_globals = { "dxDrawLine3D", "getBoundKeys", "moveObject", "stopObject", "dxCreateShader", "dxSetShaderValue", "engineApplyShaderToWorldTexture", "restoreWorldModel", "setAmbientSoundEnabled" } }
 files["resources/**/world/data/**"] = { std = "lua51", max_line_length = false }
 files["resources/**/vehicles/shared/data/**"] = { std = "lua51", max_line_length = false }
 -- removePedFromVehicle, dxDrawPrimitive3D and the clock/weather getters and setters postdate the generated lists
