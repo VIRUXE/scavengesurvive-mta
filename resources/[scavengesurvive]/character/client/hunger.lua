@@ -1,6 +1,7 @@
 -- luacheck: read globals dxCreateScreenSource dxCreateShader dxSetShaderValue dxUpdateScreenSource
 -- Hunger and thirst effects on the local player (shared/logic/hunger.lua): the screen shader (client/hunger.fx),
--- the sprint cap and the sprint/jump lock, and the cues. The thirst sway and the aim sway go through the camera drunk
+-- the sprint cap and the sprint/jump lock (wounds cap them too, the stricter wins: shared/logic/wounds.lua), and the
+-- cues. The thirst sway and the aim sway go through the camera drunk
 -- level, which client/medical.lua owns. Nothing applies on staff duty or once dead.
 -- read and closed again: a handle left open locks the client's cached copy, so a changed file fails to download
 local hunger
@@ -11,6 +12,13 @@ do
     hunger = assert(loadstring(src, "=character/hunger.lua"))()
 end
 hunger.tr = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")().text
+local wounds
+do
+    local f = fileOpen("shared/logic/wounds.lua", true)
+    local src = fileRead(f, fileGetSize(f))
+    fileClose(f)
+    wounds = assert(loadstring(src, "=character/wounds.lua"))()
+end
 
 local TICK_MS = 250
 -- each cue plays one of its kind's sounds at random, never the one it played last (tools/make_thirst_sound.py)
@@ -25,7 +33,7 @@ local SOUNDS = {
 }
 local lastSound = {} -- kind -> index played last
 
-local stats = { food = 100, thirst = 100, drugs = {} }
+local stats = { food = 100, thirst = 100, drugs = {}, woundParts = {} }
 local pose = false
 -- fx is what the screen shows now (nil when clear), target what the needs ask for; draw() eases one to the other
 local screenSource, shader, fx = nil, nil, nil
@@ -39,6 +47,7 @@ addEventHandler("characterStatsSynced", localPlayer, function(s)
     stats.food = tonumber(s.food) or stats.food
     stats.thirst = tonumber(s.thirst) or stats.thirst
     stats.drugs = type(s.drugs) == "table" and s.drugs or {}
+    stats.woundParts = type(s.woundParts) == "table" and s.woundParts or stats.woundParts
 end)
 
 addEventHandler("poseChanged", localPlayer, function(p)
@@ -136,7 +145,8 @@ local function legs(now)
     if heldElsewhere() then
         return
     end
-    local l = hunger.legs(stats.food, stats.thirst, stats.drugs)
+    local l =
+        wounds.worstLegs(hunger.legs(stats.food, stats.thirst, stats.drugs), wounds.legs(stats.woundParts, stats.drugs))
     local sprintOff = not l.sprint or now < coolUntil
     if l.sprint and l.maxMs and not sprintOff then
         if getPedControlState(localPlayer, "sprint") and getPedMoveState(localPlayer) == "sprint" then
