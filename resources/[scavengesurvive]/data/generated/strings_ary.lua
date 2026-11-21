@@ -18,6 +18,7 @@ return {
     ["(Hold) Open radio"] = "(Chedd) 7el radio",
     ["(Hold) Pick up"] = "(Chedd) Hezz",
     ["(Hold) Pick up welder"] = "(Chedd) Hezz Poste Soudure",
+    ["(Hold) Pull chain"] = "(Chedd) Jbed sensla",
     ["(Hold) Refuel"] = "(Chedd) 3ammer lisans",
     ["(Hold) Remove %s"] = "(Chedd) 7iyed %s",
     ["(Hold) Tighten %s"] = "(Chedd) Ziyyer %s",

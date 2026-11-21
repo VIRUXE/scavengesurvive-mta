@@ -246,6 +246,155 @@ return function(ctx)
         keypadAt[source], lastCode[source] = nil, nil
     end)
 
+    -- Doors hauled on a chain (doors.lua M.HAULED): the door moves while its hauler holds the key, stays where it is
+    -- when they let go, and falls shut when they walk off, die or leave mid-haul. Every client follows
+    -- doorHaulMoved (door id, t from, t to, ms, kind "haul" / "stop" / "fall").
+    local hauled = {} -- door id -> { d = def, t = at rest, dir = last haul's direction, move = the motion under way }
+    local haulerOf = {} -- player -> the door id they are hauling
+    for _, d in ipairs(doors.HAULED) do
+        hauled[d.id] = { d = d, t = 0, dir = -1 }
+    end
+
+    local function tNow(h)
+        local m = h.move
+        if not m then
+            return h.t
+        end
+        local f = m.ms > 0 and math.min(1, (getTickCount() - m.start) / m.ms) or 1
+        return m.t0 + (m.t1 - m.t0) * f
+    end
+
+    local function sendHaul(h, target)
+        local m = h.move
+        if m then
+            local left = math.max(0, m.ms - (getTickCount() - m.start))
+            triggerClientEvent(target or root, "doorHaulMoved", resourceRoot, h.d.id, tNow(h), m.t1, left, m.kind)
+        else
+            triggerClientEvent(target or root, "doorHaulMoved", resourceRoot, h.d.id, h.t, h.t, 0, "stop")
+        end
+    end
+
+    local function endMove(h)
+        local m = h.move
+        if not m then
+            return
+        end
+        h.t, h.move = tNow(h), nil
+        for _, tm in ipairs({ m.timer, m.watch }) do
+            if isTimer(tm) then
+                killTimer(tm)
+            end
+        end
+        if m.player then
+            haulerOf[m.player] = nil
+            if isElement(m.player) then
+                setPedAnimation(m.player, nil)
+            end
+        end
+    end
+
+    local function startMove(h, t1, ms, kind, player)
+        local t0 = tNow(h)
+        endMove(h)
+        local m = { t0 = t0, t1 = t1, ms = ms, start = getTickCount(), kind = kind, player = player }
+        h.move = m
+        m.timer = setTimer(function()
+            if h.move == m then
+                endMove(h)
+                h.t = t1
+                sendHaul(h)
+            end
+        end, math.max(50, ms), 1)
+        sendHaul(h)
+        return m
+    end
+
+    -- the door drops from wherever it is (fallMs from fully open, less from lower)
+    local function fall(h, why, player)
+        local t = tNow(h)
+        endMove(h)
+        log.event("world.doorDropped", logAt({ player = player, door_id = h.d.id, t = t, why = why }, player))
+        if t > 0.001 then
+            startMove(h, 0, math.floor(h.d.fallMs * t + 0.5), "fall")
+        else
+            h.t = 0
+            sendHaul(h)
+        end
+    end
+
+    local function reachOf(player, d, slack)
+        if not isElement(player) or getElementDimension(player) ~= d.world or isPedDead(player) then
+            return false
+        end
+        local x, y, z = getElementPosition(player)
+        local r = d.reach
+        return getDistanceBetweenPoints3D(x, y, z, r[1], r[2], r[3]) <= doors.HAUL_REACH + slack
+    end
+
+    net.handler("doorHaulStarted", function(player, id)
+        local h = hauled[tostring(id)]
+        if
+            not h
+            or haulerOf[player]
+            or not exports.character:getCharacterId(player)
+            or not reachOf(player, h.d, 0.5)
+        then
+            return
+        end
+        if h.move then -- someone else hauls it, or it is falling
+            return
+        end
+        local t = h.t
+        local dir = t <= 0.001 and 1 or t >= 0.999 and -1 or -h.dir
+        h.dir = dir
+        local target = dir > 0 and 1 or 0
+        local ms = math.floor(math.abs(target - t) * (dir > 0 and h.d.upMs or h.d.downMs) + 0.5)
+        haulerOf[player] = h.d.id
+        local c = h.d.chain
+        local x, y = getElementPosition(player)
+        setElementRotation(player, 0, 0, (360 - math.deg(math.atan2(c[1] - x, c[2] - y))) % 360, "default", true)
+        setPedAnimation(player, "CASINO", "slot_plyr", -1, true, false, false, false)
+        local m = startMove(h, target, ms, "haul", player)
+        m.from = t
+        -- walking off with the chain in hand lets the door go
+        m.watch = setTimer(function()
+            if h.move == m and not reachOf(player, h.d, 1.0) then
+                fall(h, "left", player)
+            end
+        end, 250, 0)
+    end, { rate = 4 })
+
+    net.handler("doorHaulStopped", function(player)
+        local h = hauled[haulerOf[player] or ""]
+        if not h or not h.move or h.move.player ~= player then
+            return
+        end
+        local from = h.move.from
+        endMove(h)
+        sendHaul(h)
+        log.event("world.doorHauled", logAt({ player = player, door_id = h.d.id, from = from, to = h.t }, player))
+    end, { rate = 8 })
+
+    net.handler("doorHaulStateRequested", function(player)
+        for _, h in pairs(hauled) do
+            sendHaul(h, player)
+        end
+    end, { rate = 2 })
+
+    local function letGo(player, why)
+        local h = hauled[haulerOf[player] or ""]
+        if h and h.move and h.move.player == player then
+            fall(h, why, player)
+        end
+        haulerOf[player] = nil
+    end
+    addEventHandler("onPlayerQuit", root, function()
+        letGo(source, "quit")
+    end)
+    addEventHandler("onPlayerWasted", root, function()
+        letGo(source, "died")
+    end)
+
     -- codehunt.pwn: a new code and its four parts on every start; the parts of the last one still lying in the world
     -- go first (one carried off keeps its old digit, as upstream's saved inventories did)
     local function placeCodeParts()

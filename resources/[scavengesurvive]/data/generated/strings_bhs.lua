@@ -18,6 +18,7 @@ return {
     ["(Hold) Open radio"] = "(Drži) Otvori radio",
     ["(Hold) Pick up"] = "(Drži) Podigni",
     ["(Hold) Pick up welder"] = "(Drži) Uzmi aparat za varenje",
+    ["(Hold) Pull chain"] = "(Drži) Povuci lanac",
     ["(Hold) Refuel"] = "(Drži) Natoči gorivo",
     ["(Hold) Remove %s"] = "(Drži) Skini %s",
     ["(Hold) Tighten %s"] = "(Drži) Zategni %s",

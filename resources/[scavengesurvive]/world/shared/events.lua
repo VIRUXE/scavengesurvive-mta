@@ -3,6 +3,10 @@
 addEvent("buttonPressed", true)
 addEvent("buttonsStateRequested", true)
 addEvent("keypadSubmitted", true)
+-- doors hauled on a chain (doors.lua M.HAULED): the hold of the engine-bay key starts and ends a haul
+addEvent("doorHaulStarted", true)
+addEvent("doorHaulStopped", true)
+addEvent("doorHaulStateRequested", true)
 -- trees (server/trees.lua): the cutting hold is items' treatment hold, so its key release is items' event
 addEvent("treesStateRequested", true)
 addEvent("treatmentCancelRequested", true)
@@ -11,6 +15,7 @@ addEvent("playerClimbed", true)
 
 -- server to client
 addEvent("buttonsStateChanged", true)
+addEvent("doorHaulMoved", true)
 addEvent("buttonMessageShown", true)
 addEvent("buttonViewToggled", true)
 addEvent("puzzleKeypadSparked", true)

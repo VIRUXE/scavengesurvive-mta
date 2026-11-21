@@ -18,6 +18,7 @@ return {
     ["(Hold) Open radio"] = "(Tahan) Buka radio",
     ["(Hold) Pick up"] = "(Tahan) Ambil",
     ["(Hold) Pick up welder"] = "(Tahan) Ambil alat las",
+    ["(Hold) Pull chain"] = "(Tahan) Tarik rantai",
     ["(Hold) Refuel"] = "(Tahan) Isi bensin",
     ["(Hold) Remove %s"] = "(Tahan) Lepas %s",
     ["(Hold) Tighten %s"] = "(Tahan) Kencangkan %s",

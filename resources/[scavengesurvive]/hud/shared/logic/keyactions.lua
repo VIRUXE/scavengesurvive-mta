@@ -73,7 +73,8 @@ M.BUTTON_LABELS = {
 --   nearInspectable (the uname of a nearby sign, plant pot or body),
 --   cuffedNearby, hasBag,
 --   glovebox (seated in a front seat of a vehicle with a glovebox: "Open glovebox"),
---   nearFeature ("ladder" / "zipline" / "ladder_on" / "zipline_on" / "button:<label>"), nearCrate ("supply" / "cache" / "lockup" / "dumpster"),
+--   nearFeature ("ladder" / "zipline" / "ladder_on" / "zipline_on" / "button:<label>" / "hold:<label>",
+--   the last on the engine-bay key), nearCrate ("supply" / "cache" / "lockup" / "dumpster"),
 --   nearDoor ("open" / "closed" / "locked": a walk-in vehicle door in reach, the towable Airstream's),
 --   bodyPart ("(Hold) Remove Left Door" / "(Hold) Tighten Left Door", already in the reader's language: a Ratchet in
 --     hand at a vehicle body part that is still on),
@@ -177,6 +178,9 @@ function M.lines(ctx, keys)
     elseif type(feature) == "string" and feature:sub(1, 7) == "button:" then
         -- a button (world: a gate, a door, a puzzle): upstream's "Press F to <label>"
         add("interact", tr(feature:sub(8)))
+    elseif type(feature) == "string" and feature:sub(1, 5) == "hold:" then
+        -- a door hauled on a chain (world): held on the engine-bay key, E
+        add("bay", tr(feature:sub(6)))
     end
     -- a landed supply crate or weapons cache (loot resource): upstream's button label next to the crate
     if M.CRATES[ctx.nearCrate] then

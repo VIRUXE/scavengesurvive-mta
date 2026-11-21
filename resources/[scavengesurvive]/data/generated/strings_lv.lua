@@ -18,6 +18,7 @@ return {
     ["(Hold) Open radio"] = "(Turi) Atvērt radio",
     ["(Hold) Pick up"] = "(Turi) Pacelt",
     ["(Hold) Pick up welder"] = "(Turi) Pacelt metināšanas aparātu",
+    ["(Hold) Pull chain"] = "(Turi) Vilkt ķēdi",
     ["(Hold) Refuel"] = "(Turi) Uzpildīt degvielu",
     ["(Hold) Remove %s"] = "(Turi) Noņemt: %s",
     ["(Hold) Tighten %s"] = "(Turi) Pievilkt: %s",

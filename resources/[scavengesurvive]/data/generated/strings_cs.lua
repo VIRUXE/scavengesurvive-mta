@@ -18,6 +18,7 @@ return {
     ["(Hold) Open radio"] = "(Podržet) Otevřít rádio",
     ["(Hold) Pick up"] = "(Podržet) Zvednout",
     ["(Hold) Pick up welder"] = "(Podržet) Zvednout svářečku",
+    ["(Hold) Pull chain"] = "(Podržet) Tahat za řetěz",
     ["(Hold) Refuel"] = "(Podržet) Natankovat",
     ["(Hold) Remove %s"] = "(Podržet) Sundat %s",
     ["(Hold) Tighten %s"] = "(Podržet) Utáhnout %s",

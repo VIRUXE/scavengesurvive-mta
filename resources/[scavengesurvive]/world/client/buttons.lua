@@ -201,10 +201,125 @@ function buttonInteract()
     return true
 end
 
+-- Doors hauled on a chain (doors.lua M.HAULED): holding the engine-bay key (E) at one asks the server to haul it,
+-- letting go stops it; the server moves every client's copy (doorHaulMoved). Sounds out of GTA's collision sounds
+-- (genrl bank 32, its GENRL_COLLISIONS): the chain rattling at each pull (the wire-fence rattles), the door scraping
+-- on its runners while it moves (the metal scrape loop) and a solid metal clunk as it comes to rest at either end.
+local COLLISIONS, SCRAPE, CLUNK = 32, 2, 65
+local RATTLES = { 69, 70, 71 }
+local HAUL_MS = 560 -- one pull of the hand chain (CASINO slot_plyr's stroke)
+local hauledById, hauledObjects, hauledSounds = {}, {}, {}
+local haulingId = nil -- the door this client holds the chain of
+for _, d in ipairs(doors.HAULED) do
+    hauledById[d.id] = d
+end
+
+local function sfx(sound, x, y, z, volume, speed, looped)
+    local s = playSFX3D("genrl", COLLISIONS, sound, x, y, z, looped or false)
+    if s then
+        setSoundMaxDistance(s, 50)
+        setSoundVolume(s, volume)
+        setSoundSpeed(s, speed)
+    end
+    return s
+end
+
+local function stopHauledSound(id)
+    local playing = hauledSounds[id]
+    hauledSounds[id] = nil
+    if playing then
+        if isElement(playing.scrape) then
+            stopSound(playing.scrape)
+        end
+        if isTimer(playing.rattle) then
+            killTimer(playing.rattle)
+        end
+    end
+end
+
+local function hauledSound(id, kind)
+    local d, obj = hauledById[id], hauledObjects[id]
+    stopHauledSound(id)
+    local x, y, z = getElementPosition(obj)
+    local fast = kind == "fall"
+    local scrape = sfx(SCRAPE, x, y, z, fast and 0.16 or 0.1, fast and 1.1 or 0.6, true)
+    if scrape then
+        attachElements(scrape, obj)
+    end
+    local rattle
+    if not fast then
+        local c = d.chain
+        local function pull()
+            sfx(RATTLES[math.random(#RATTLES)], c[1], c[2], c[3], 0.2, 0.9 + math.random() * 0.2)
+        end
+        pull()
+        rattle = setTimer(pull, HAUL_MS, 0)
+    end
+    hauledSounds[id] = { scrape = scrape, rattle = rattle }
+end
+
+addEventHandler("doorHaulMoved", resourceRoot, function(id, t0, t1, ms, kind)
+    local d, obj = hauledById[id], hauledObjects[id]
+    if not d or not isElement(obj) then
+        return
+    end
+    local wasMoving = hauledSounds[id] ~= nil
+    stopHauledSound(id)
+    local from, to = doors.hauledPose(d, t0), doors.hauledPose(d, t1)
+    drawPose(obj, from)
+    if ms > 0 and t0 ~= t1 then
+        moveObject(obj, ms, to[1], to[2], to[3], to[4] - from[4], to[5] - from[5], to[6] - from[6])
+        hauledSound(id, kind)
+    elseif wasMoving and (t1 <= 0.001 or t1 >= 0.999) then
+        local x, y, z = getElementPosition(obj)
+        sfx(CLUNK, x, y, z, t1 <= 0.001 and 0.35 or 0.28, 0.85)
+    end
+end)
+
+-- the hauled door whose chain is in reach, or nil
+local function hauledNear()
+    if isPedDead(localPlayer) or getPedOccupiedVehicle(localPlayer) or getElementDimension(localPlayer) ~= 0 then
+        return nil
+    end
+    local x, y, z = getElementPosition(localPlayer)
+    for _, d in ipairs(doors.HAULED) do
+        local r = d.reach
+        if getDistanceBetweenPoints3D(x, y, z, r[1], r[2], r[3]) <= doors.HAUL_REACH then
+            return d
+        end
+    end
+    return nil
+end
+
+local function haulKey(key)
+    local bound = getKeyBoundToCommand("enginebay")
+    return key == string.lower(bound or "e")
+end
+
+addEventHandler("onClientKey", root, function(key, press)
+    if not haulKey(key) then
+        return
+    end
+    if press then
+        local d = not haulingId and not isCursorShowing() and not isMTAWindowActive() and hauledNear()
+        if d then
+            haulingId = d.id
+            triggerServerEvent("doorHaulStarted", localPlayer, d.id)
+        end
+    elseif haulingId then
+        haulingId = nil
+        triggerServerEvent("doorHaulStopped", localPlayer)
+    end
+end)
+
 -- features.lua nearbyFeature(): "button:<label>" for hud's F line
 function buttonNear()
     local b = near()
-    return b and ("button:" .. b[5]) or nil
+    if b then
+        return "button:" .. b[5]
+    end
+    local d = hauledNear()
+    return d and ("hold:" .. d.label) or nil
 end
 
 addEventHandler("onClientResourceStart", resourceRoot, function()
@@ -216,16 +331,29 @@ addEventHandler("onClientResourceStart", resourceRoot, function()
             place(p[1], { p[2], p[3], p[4], p[5], p[6], p[7] }, p[8])
         end
     end
+    for _, r in ipairs(doors.REMOVALS) do
+        removeWorldModel(r[1], r[2], r[3], r[4], r[5])
+    end
     for _, id in ipairs(reg.doorIds) do
         local d = reg.doors[id]
         doorObjects[id] = place(d.model, d.closed, d.world)
     end
+    for _, d in ipairs(doors.HAULED) do
+        hauledObjects[d.id] = place(d.model, d.closed, d.world)
+    end
+    triggerServerEvent("doorHaulStateRequested", localPlayer)
     keypad = place(puzzles.KEYPAD.model, puzzles.KEYPAD.pos, 0)
     screen = place(puzzles.SCREEN.model, puzzles.SCREEN.pos, 0)
     triggerServerEvent("buttonsStateRequested", localPlayer)
 end)
 
 addEventHandler("onClientResourceStop", resourceRoot, function()
+    for id in pairs(hauledById) do
+        stopHauledSound(id)
+    end
+    for _, r in ipairs(doors.REMOVALS) do
+        restoreWorldModel(r[1], r[2], r[3], r[4], r[5])
+    end
     if viewing then
         setCameraTarget(localPlayer)
         toggleAllControls(true, true, false)

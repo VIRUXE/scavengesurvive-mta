@@ -3,9 +3,16 @@
 -- upstream and are not ported. register(reg) adds them to a buttons.lua registry.
 local M = {}
 
--- objects that go with them and stand nowhere else: the keypad by the KACC gates (lv.pwn CreateObject)
+-- objects that go with them and stand nowhere else: the keypad by the KACC gates (lv.pwn CreateObject); the hand chain
+-- of Harry Plums' loading door, inside by its south jamb (prop_models shutter_chain)
 M.PROPS = {
     { 19273, 2503.98120, 2780.09302, 11.36690, 0, 0, 90.0, 0 },
+    { 20306, -2103.128, -19.509, 35.227, 0, 0, 90.0, 0 },
+}
+
+-- vanilla objects a door here (or a hauled one) takes the place of: { model, radius, x, y, z } (removeWorldModel)
+M.REMOVALS = {
+    { 11102, 3.0, -2102.9297, -16.0547, 36.4844 }, -- burgalrydoor_SFS, Harry Plums' loading door
 }
 
 local BUTTONS = {
@@ -64,6 +71,42 @@ local DOORS = {
         buttons = { "lvKacc" },
     },
 }
+
+-- Doors worked by hand on a chain, not by a button: hold the engine-bay key (E) at `reach` and the door moves while
+-- the key is down, stops where it is when it comes up, and falls shut if the hauler walks off, dies or leaves while
+-- hauling. A hold from shut raises it, from fully open lowers it, from part way reverses the last haul. `t` runs from
+-- 0 (closed) to 1 (open); a full haul takes upMs or downMs, a fall from fully open fallMs.
+-- lang:begin
+local PULL_CHAIN = "(Hold) Pull chain"
+-- lang:end
+M.HAULED = {
+    {
+        -- Harry Plums' warehouse, Doherty (house_shell burgalrystore_sfs): the vanilla roller door, up and over, it
+        -- tips back to lie under the roof inside; its hand chain inside by the south jamb (M.PROPS), reached from
+        -- 1.2 m in so the wall keeps it from the street
+        id = "hpLoading",
+        model = 11102,
+        world = 0,
+        closed = { -2102.9297, -16.0547, 36.4844, 0, 0, 180.0 },
+        open = { -2105.31, -16.0547, 39.31, 0, 90.0, 180.0 },
+        reach = { -2104.3, -19.51, 35.32 },
+        chain = { -2103.128, -19.509, 36.6 },
+        label = PULL_CHAIN,
+        upMs = 7000,
+        downMs = 5500,
+        fallMs = 1400,
+    },
+}
+M.HAUL_REACH = 1.5 -- the hold starts within this of `reach`; walking past HAUL_REACH + 1.0 drops the door
+
+-- the pose of a hauled door at t (0 closed .. 1 open), each value straight between its poses as moveObject runs them
+function M.hauledPose(d, t)
+    local out = {}
+    for i = 1, 6 do
+        out[i] = d.closed[i] + (d.open[i] - d.closed[i]) * t
+    end
+    return out
+end
 
 function M.register(reg, buttons)
     for _, b in ipairs(BUTTONS) do

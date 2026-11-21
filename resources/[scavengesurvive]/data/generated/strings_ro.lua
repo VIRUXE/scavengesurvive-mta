@@ -18,6 +18,7 @@ return {
     ["(Hold) Open radio"] = "(Ține apăsat) Deschide radioul",
     ["(Hold) Pick up"] = "(Ține apăsat) Ridică",
     ["(Hold) Pick up welder"] = "(Ține apăsat) Ridică aparatul de sudură",
+    ["(Hold) Pull chain"] = "(Ține apăsat) Trage de lanț",
     ["(Hold) Refuel"] = "(Ține apăsat) Alimentează",
     ["(Hold) Remove %s"] = "(Ține apăsat) Scoate %s",
     ["(Hold) Tighten %s"] = "(Ține apăsat) Strânge %s",

@@ -18,6 +18,7 @@ return {
     ["(Hold) Open radio"] = "(Manter) Abrir rádio",
     ["(Hold) Pick up"] = "(Manter) Apanhar",
     ["(Hold) Pick up welder"] = "(Manter) Apanhar máquina de soldar",
+    ["(Hold) Pull chain"] = "(Manter) Puxar a corrente",
     ["(Hold) Refuel"] = "(Manter) Abastecer",
     ["(Hold) Remove %s"] = "(Manter) Retirar %s",
     ["(Hold) Tighten %s"] = "(Manter) Apertar %s",
