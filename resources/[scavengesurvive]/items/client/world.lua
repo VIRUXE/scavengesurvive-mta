@@ -27,12 +27,6 @@ return function(ctx)
     local reachCache = {} -- id -> { ok, at, tool }: no wall between the player and the item
     local passCache = {} -- id -> { ok, at }: the item fits through the way to the player
     local itemElements = setmetatable({}, { __mode = "k" }) -- elements world items draw: never a wall
-
-    -- a Desk, Table, Barstool or Small Table: furniture that is never picked up and shows nothing (a Gun Case or
-    -- Cupboard hands its shown item back on F, so it stays an item in reach)
-    local function isTopFurniture(uname)
-        return furniture.is(uname) and not furniture.isDisplay(uname)
-    end
     -- except these: a built defence (and a Large Frame's covering) is a wall, so a box behind one is out of reach
     local defenceElements = setmetatable({}, { __mode = "k" })
     local paneOf = setmetatable({}, { __mode = "k" }) -- a snack machine's intact pane -> the machine's item id
@@ -1256,12 +1250,10 @@ return function(ctx)
             local dx, dy, dz = e.x - px, e.y - py, e.z - pz
             local def = e.defence and builtDefence(r)
             local defVerb = def and defenceVerb(e.uname, def)
-            -- a pitched tent is no container and only a Crowbar packs it: the items lying in it are the targets;
-            -- likewise a desk or table, never picked up, offers only the items lying on top
+            -- a pitched tent is no container and only a Crowbar packs it: the items lying in it are the targets
             if
                 t
                 and not e.pitched
-                and not isTopFurniture(e.uname)
                 and (not def or defVerb)
                 and (r.dimension or 0) == dim
                 and (r.interior or 0) == int
@@ -1346,9 +1338,8 @@ return function(ctx)
         for id, e in pairs(objects) do
             local r = e.row
             local def = e.defence and builtDefence(r)
-            -- a built defence F does nothing to is no item in reach, nor a desk or table (never picked up: a
-            -- Crowbar takes it apart, and F only takes what lies on top, itself an item in reach)
-            local inert = def and not defenceVerb(e.uname, def) or isTopFurniture(e.uname)
+            -- a built defence F does nothing to is no item in reach
+            local inert = def and not defenceVerb(e.uname, def)
             if not inert and (r.dimension or 0) == dim and (r.interior or 0) == int then
                 local dx, dy, dz = e.x - px, e.y - py, e.z - pz
                 local dist = dx * dx + dy * dy + dz * dz

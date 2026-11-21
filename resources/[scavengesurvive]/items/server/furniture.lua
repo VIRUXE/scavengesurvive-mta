@@ -2,7 +2,8 @@ local spatial = loadstring(exports.lib:getModule("spatial"), "=lib/spatial.lua")
 -- Server side of the furniture (#148, shared/logic/furniture.lua has the offsets): the interact key with an item in
 -- hand puts it on a Desk, Table, Barstool or Small Table, or into an empty Gun Case or Cupboard, which then shows it
 -- (furniture_display_put); with empty hands it takes the shown item back (furniture_display_take) or whatever lies
--- on top. Furniture itself is never picked up (hands.pickup asks blocksPickup).
+-- on top; with nothing shown or on top, the furniture itself goes to the hands (port deviation: upstream's
+-- OnPlayerPickUpItem breaks for furniture, which only a Crowbar took down).
 -- ctx = { db, state, type, toast, world, hands, furniture, decodeData, charId } built by server/main.lua.
 return function(ctx)
     local db, state, world, hands, furniture = ctx.db, ctx.state, ctx.world, ctx.hands, ctx.furniture
@@ -19,7 +20,7 @@ return function(ctx)
         log.event(kind, fields)
     end
 
-    function M.blocksPickup(uname)
+    function M.is(uname)
         return furniture.is(uname)
     end
 
@@ -68,6 +69,9 @@ return function(ctx)
                 via = "display",
                 character_id = cid,
             })
+            if res and res.code == "EMPTY" and isElement(c.player) and not state.held[c.player] then
+                return hands.pickup(c.player, cid, c.row) -- nothing shown: the case itself
+            end
             if not res or not res.ok then
                 return
             end
@@ -84,11 +88,11 @@ return function(ctx)
                 triggerEvent("itemMoved", c.player, item.id, "container", "held")
                 world.syncPlayer(c.player)
             end)
-        end, { player = player, caseId = row.id, caseUname = row.uname })
+        end, { player = player, caseId = row.id, caseUname = row.uname, row = row })
     end
 
     -- empty hands at a desk or table: the highest item lying on it (same x/y as the furniture, so the nearest item
-    -- is a tie the furniture can win)
+    -- is a tie the furniture can win), else the furniture itself
     local function takeFromTop(player, cid, row)
         local f = string.format
         local sql = "SELECT i.id, i.type_uname AS uname, i.hitpoints AS hp, i.data FROM world_items_pos p "
@@ -105,8 +109,8 @@ return function(ctx)
             .. table.concat(furniture.unames(), "', '")
             .. "') ORDER BY i.z DESC LIMIT 1"
         db.one(sql, {}, function(top)
-            if top and isElement(player) and not state.held[player] then
-                hands.pickup(player, cid, top)
+            if isElement(player) and not state.held[player] then
+                hands.pickup(player, cid, top or row)
             end
         end)
     end

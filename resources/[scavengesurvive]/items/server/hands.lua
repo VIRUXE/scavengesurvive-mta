@@ -851,9 +851,6 @@ return function(ctx)
         if pickupVetoed(player, row.id) then
             return
         end
-        if furnitureSrv and furnitureSrv.blocksPickup(row.uname) then
-            return -- upstream OnPlayerPickUpItem breaks for furniture; a Crowbar takes it down
-        end
         if vendingSrv and vendingSrv.is(row.uname) then
             return -- a snack machine stays where it stands
         end
@@ -977,7 +974,7 @@ return function(ctx)
 
             -- desks, tables and the gun case (server/furniture.lua); a construction tool builds from the parts around
             -- first and goes on the furniture only when nothing can be built
-            local onFurniture = furnitureSrv and furnitureSrv.blocksPickup(row.uname)
+            local onFurniture = furnitureSrv and furnitureSrv.is(row.uname)
             if onFurniture and curHeld and isConstructionTool(curUname) then
                 if runCrafting("groundCraft", c.player, row.id) then
                     return

@@ -2,7 +2,7 @@
 
 ![Desk](images/items/2180_med_office5_desk_3.png) ![Table](images/items/2115_low_dinning_1.png) ![Barstool](images/items/1805_cj_barstool.png) ![Small Table](images/items/2346_cj_hifi_table.png) ![Gun Case](images/items/2046_cj_guncupboard.png) ![Cupboard](images/items/19932_mkwallovencabinet1.png)
 
-Six items are **furniture**: the Desk, Table, Barstool and Small Table hold items on top, and the Gun Case and Cupboard display one item inside. Furniture is solid, you walk around it rather than through it, and it is **never picked up**: `F` with empty hands at a piece takes what lies on it, not the piece itself. A Crowbar takes it down; see [Constructing](Constructing).
+Six items are **furniture**: the Desk, Table, Barstool and Small Table hold items on top, and the Gun Case and Cupboard display one item inside. Furniture is solid, you walk around it rather than through it. `F` with empty hands at a piece takes what lies on it or is shown in it first; once it is bare, `F` picks the piece itself up to carry it elsewhere. A Crowbar takes it apart for its materials; see [Constructing](Constructing).
 
 | Furniture | Item size | Holds | How |
 |:--|--:|:--|:--|
