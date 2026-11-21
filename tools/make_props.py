@@ -78,6 +78,10 @@ then runs itself in Blender (DragonFF) for each prop's dff and col.
     can capacitors in a tray), hack_device (rugged netbook with clip leads), advanced_keypad (access-control keypad, face
     +Y), lockpick (electric pick gun, origin at the grip's foot), clothes (three folded garments), pills (pharmacy vial).
 
+    shutter_chain 20306  the hand chain of a manual roller door: an endless loop of steel chain, 3.4 m deep, over a pocket
+                     wheel on a wall bracket; origin under the wheel at the loop's lowest point, the wall at -y (HOIST_*).
+                     Harry Plums' warehouse door in Doherty (world/shared/logic/doors.lua).
+
     flood_light 20300  a halogen site work light on a tripod, 1.57 m tall: black legs and lower mast, a chrome upper mast,
                      a yellow lamp head on a black yoke, its face (the SF light tower's ws_floodlight reflector) toward +Y
                      and FLOOD_TILT degrees down; the light comes from FLOOD_LAMP along FLOOD_AIM. The Flood Light item.
@@ -632,10 +636,11 @@ def _sweep(ctx, path, radius, sides, material, col, closed=False, frames=None):
             paint(face, [(0.5 + 0.5 * math.cos(2 * math.pi * k / sides), 0.5 + 0.5 * math.sin(2 * math.pi * k / sides)) for k in range(sides)], c, night, material)
 
 
-def _link(ctx, centre, along, normal, material=0, col=None):
-    """One oval chain link round `centre`: its long axis `along`, its plane's normal `normal` (unit Vectors)."""
-    r = CHAIN_WIRE
-    length, width = CHAIN_LINK[0] - 2 * r, CHAIN_LINK[1] - 2 * r  # the wire's centre line
+def _link(ctx, centre, along, normal, material=0, col=None, size=None):
+    """One oval chain link round `centre`: its long axis `along`, its plane's normal `normal` (unit Vectors); `size`
+    (wire radius, outside length, outside width, sides round the wire) for another chain than the Chain item's."""
+    r, link_l, link_w, sides = size or (CHAIN_WIRE, CHAIN_LINK[0], CHAIN_LINK[1], 6)
+    length, width = link_l - 2 * r, link_w - 2 * r  # the wire's centre line
     a, straight = width / 2, length - width
     side = normal.cross(along).normalized()
     pts, frames = [], []
@@ -654,7 +659,7 @@ def _link(ctx, centre, along, normal, material=0, col=None):
     for i in range(n):
         t = (path[(i + 1) % n] - path[i - 1]).normalized()
         frames.append((t.cross(normal).normalized(), normal))
-    _sweep(ctx, path, r, 6, material, col, closed=True, frames=frames)
+    _sweep(ctx, path, r, sides, material, col, closed=True, frames=frames)
 
 
 def _chain(ctx, centres, first_flat=True, ends=None):
@@ -819,6 +824,54 @@ def _lock_chain(ctx, padlock, depth):
 def build_lock_chain(ctx):
     """The chain closed into a loop by the keyed padlock."""
     return _lock_chain(ctx, lambda c, xf: (_padlock(c, xf), PAD_SHACKLE[0]), PAD_D)
+
+
+HOIST_LINK = (0.01, 0.085, 0.052, 6)  # shutter_chain: the hand chain's wire radius, link length and width, sides round the wire
+HOIST_WHEEL = 0.12  # the pocket wheel's radius to the chain's centre line; the two falls hang this far either side
+HOIST_DROP = 3.4  # from the bottom of the loop up to the wheel's axle
+HOIST_STANDOFF = 0.14  # from the chain's plane back to the wall the bracket is fixed to (-y)
+HOIST_TEXTURES = LOCK_TEXTURES[:2]  # chrome chain, galvanised wheel and bracket
+
+
+def build_shutter_chain(ctx):
+    """The hand chain of a manual roller door: an endless loop of steel chain over a pocket wheel on a wall bracket,
+    hanging HOIST_DROP to the bottom of its loop. Origin under the wheel at the loop's lowest point; the falls are
+    either side of x = 0 in the x-z plane, the bracket goes back to a wall plate at y = -HOIST_STANDOFF."""
+    from mathutils import Vector
+
+    tube, box = ctx["tube"], ctx["box"]
+    wire, link_l = HOIST_LINK[0], HOIST_LINK[1]
+    pitch = link_l - 4 * wire
+    r, top = HOIST_WHEEL, HOIST_DROP
+    bottom = r + wire  # the centre of the loop's lower turn
+    # the loop's centre line: down the -x fall, round the bottom, up the +x fall, over the wheel
+    path = [Vector((-r, 0.0, top))]
+    path += [Vector((-r, 0.0, bottom))]
+    path += [Vector((-r * math.cos(math.pi * k / 12), 0.0, bottom - r * math.sin(math.pi * k / 12))) for k in range(1, 12)]
+    path += [Vector((r, 0.0, bottom)), Vector((r, 0.0, top))]
+    path += [Vector((r * math.cos(math.pi * k / 16), 0.0, top + r * math.sin(math.pi * k / 16))) for k in range(1, 17)]
+    total = sum((path[i + 1] - path[i]).length for i in range(len(path) - 1))
+    count = int(total / pitch) // 2 * 2  # even, so the loop closes flat to upright
+    centres = _spaced(path, 0, count + 1)[:count]
+    ahead = Vector((0.0, 1.0, 0.0))
+    for i, c in enumerate(centres):
+        along = (centres[(i + 1) % count] - centres[i - 1]).normalized()
+        normal = ahead if i % 2 == 0 else along.cross(ahead).normalized()
+        _link(ctx, c, along, normal, 0, (1.0, 1.0, 1.0, 1.0) if i % 2 else (0.92, 0.92, 0.94, 1.0), HOIST_LINK)
+    grey, dark = (0.95, 0.95, 0.97, 1.0), (0.7, 0.7, 0.72, 1.0)
+    # the pocket wheel: a rim either side of the chain, a hub, the axle back into the bracket
+    for y in (-0.032, 0.032):
+        tube((0.0, y - 0.006, top), (0.0, y + 0.006, top), r + 0.03, 20, 1, grey, False)
+    tube((0.0, -0.016, top), (0.0, 0.016, top), r - 0.02, 16, 1, dark, False)
+    tube((0.0, -HOIST_STANDOFF + 0.01, top), (0.0, 0.03, top), 0.022, 10, 1, dark)
+    # the bracket: an arm from the axle down and back to a plate on the wall
+    box((0.0, -HOIST_STANDOFF / 2 - 0.02, top - 0.03), (0.05, HOIST_STANDOFF - 0.03, 0.1), 1, grey)
+    box((0.0, -HOIST_STANDOFF + 0.006, top - 0.02), (0.22, 0.012, 0.3), 1, grey)
+    for x in (-0.08, 0.08):  # the plate's bolts
+        for z in (-0.13, 0.09):
+            tube((x, -HOIST_STANDOFF + 0.012, top + z), (x, -HOIST_STANDOFF + 0.022, top + z), 0.012, 6, 0, dark, False)
+    # collision only round the wheel and bracket, so the hanging chain never stops a player
+    return [((0.0, -HOIST_STANDOFF / 2 + 0.02, top), (r + 0.03, HOIST_STANDOFF / 2 + 0.02, r + 0.03))]
 
 
 COMBO_W, COMBO_D, COMBO_H = 0.046, 0.024, 0.05  # combo_padlock: the die-cast body (x, y, z)
@@ -2188,6 +2241,7 @@ PROPS_TABLE = [
     {"name": "bandage", "id": 20298, "dist": 30, "sources": BANDAGE_TEXTURES[:1], "build": build_bandage},
     {"name": "dirty_bandage", "id": 20299, "dist": 30, "sources": BANDAGE_TEXTURES, "build": build_dirty_bandage},
     {"name": "flood_light", "id": 20300, "dist": 120, "sources": FLOOD_TEXTURES, "build": build_flood_light},
+    {"name": "shutter_chain", "id": 20306, "dist": 80, "sources": HOIST_TEXTURES, "build": build_shutter_chain},
     # the explosives' trigger variants (items <Base><TRIGGERS[kind]>, e.g. TntTimebomb)
     {"name": "tnt_timer", "id": 20284, "dist": 50, "sources": with_triggers(TNT_TEXTURES), "build": lambda ctx, k="timer", s=with_triggers(TNT_TEXTURES): build_tnt(ctx, k, s)},
     {"name": "tnt_trip", "id": 20285, "dist": 50, "sources": with_triggers(TNT_TEXTURES), "build": lambda ctx, k="trip", s=with_triggers(TNT_TEXTURES): build_tnt(ctx, k, s)},
