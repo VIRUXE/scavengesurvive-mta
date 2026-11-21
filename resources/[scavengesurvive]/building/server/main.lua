@@ -28,6 +28,33 @@ local keypadTries = {} -- player -> { defence id, wrong codes since the last rig
 local DEFENCE_ROW = "SELECT id, type_uname, data, x, y, z, rz, interior, dimension FROM items "
     .. "WHERE id = ? AND container_id IS NULL AND holder_char_id IS NULL"
 
+local geom = assert(loadstring(exports.lib:getModule("geom"), "=lib/geom.lua"))()
+
+-- A defence lying flat (built so, or opened by a Motor) lies on the slope under it, as a dropped item does: the
+-- ground's normal goes into the built state as gnx / gny, which the items client tilts it by. The row's own
+-- ground_nx / ground_ny cannot carry it: the items_ground_reset trigger clears them whenever the row's z moves, which
+-- standing a defence up and every Motor toggle do. Main world only (the server's own world, lib geom.lua), only when
+-- that ground is within reach of where the panel lies (not a built floor under it) and never past 45 degrees; a
+-- standing defence keeps none.
+local TILT_MAX = math.sin(math.rad(45))
+local function setGroundTilt(st, x, y, z, int, dim)
+    st.gnx, st.gny = nil, nil
+    if st.pose ~= "horizontal" or (int or 0) ~= 0 or (dim or 0) ~= 0 then
+        return st
+    end
+    local gz, nx, ny = geom.below(x, y, z, 1.0, 2.5)
+    if not gz or math.abs(gz - z) > 0.6 or nx * nx + ny * ny < 0.0025 then
+        return st
+    end
+    local s = math.sqrt(nx * nx + ny * ny)
+    if s > TILT_MAX then
+        nx, ny = nx * TILT_MAX / s, ny * TILT_MAX / s
+    end
+    st.gnx = math.floor(nx * 10000 + 0.5) / 10000
+    st.gny = math.floor(ny * 10000 + 0.5) / 10000
+    return st
+end
+
 local function charId(player)
     return exports.character:getCharacterId(player)
 end
@@ -220,7 +247,7 @@ local function moveDefence(itemId, player)
 
             -- otherwise toggle pose vertical<->horizontal
             local newX, newY, newZ, newRz, newSt = defences.toggle(t.defence, st, row.x, row.y, row.z, row.rz)
-            d.defence = newSt
+            d.defence = setGroundTilt(newSt, newX, newY, newZ, itemInt, itemDim)
             db.exec(
                 "UPDATE items SET x = ?, y = ?, z = ?, rz = ?, data = ? WHERE id = ? AND x IS NOT NULL",
                 { newX, newY, newZ, newRz, encodeData(d), row.id },
@@ -383,7 +410,7 @@ local function activateDefence(row, t, pose, done, player)
     local d = decodeData(row.data)
     -- the builder's character: only they work a Large Frame's covering (defences.coveringAccess)
     st.owner = player and isElement(player) and charId(player) or nil
-    d.defence = st
+    d.defence = setGroundTilt(st, x, y, z, row.interior, row.dimension)
     local sql = "UPDATE items SET x = ?, y = ?, z = ?, rz = ?, data = ?, despawn_at = NULL, loot_spawn_id = NULL "
         .. "WHERE id = ? AND x IS NOT NULL"
     db.exec(sql, { x, y, z, rz, encodeData(d), row.id }, function()
@@ -470,7 +497,6 @@ end
 -- A completed crowbar action asks the existing client drop search for a clear spot; in the main world the server
 -- also checks it against walls in its own world (lib geom.lua). Never fall back to the old wall position if the
 -- search fails or the client disappears.
-local geom = assert(loadstring(exports.lib:getModule("geom"), "=lib/geom.lua"))()
 local removalSpots = {}
 local function clearRemovalSpot(player)
     local pending = removalSpots[player]
