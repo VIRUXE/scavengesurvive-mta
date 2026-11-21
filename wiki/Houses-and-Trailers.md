@@ -14,6 +14,7 @@ Buildings you can walk into. They are scenery that the map places in the world: 
 | Old west house | 1 | 2 | on two farms; open doorway, no door |
 | Farmhouse | 1 | 1 | the farm east of Fort Carson, by the water tower; front and back doors |
 | Desert concrete house | 1 | 16 | the grey rendered house with a porch on posts, in Bone County, Red County and the Los Santos hills; porch door |
+| Motel | 1 | 1 | the two-storey motel east of Fort Carson's main street; 24 rooms and the office, a door each |
 | Log cabins | 1 row of 6 | 1 | six one-room cabins side by side, Flint County |
 
 **Town houses.** Each has a modelled exterior and a hollow interior behind the entrance, so you can walk straight in from the street.
@@ -30,6 +31,8 @@ Buildings you can walk into. They are scenery that the map places in the world: 
 **Farmhouse.** The board house with the porch on the farm east of Fort Carson. Four rooms joined by open doorways: a living room behind the front door on the porch, a kitchen behind it, a bedroom that takes in the little front annex, and a back room behind the north door. Both doors swing, the windows are glazed and curtained.
 
 **Desert concrete house.** The grey rendered single-storey house with a roofed porch along its front, found 16 times across Bone County, Red County and the hills above Los Santos. Three rooms in a row joined by open doorways: a bedroom at one end, a living room behind the porch door in the middle and a kitchen at the other end. The door swings, the windows are glazed and curtained, and loot can lie in every room.
+
+**Motel.** The two-storey motel with the outside galleries and stairs, east of Fort Carson's main street. Every door painted on its two blocks opens on a room of its own: twelve on the ground floor, twelve along the galleries, and the little office by the sign makes 25. The doors swing, the front windows are glazed and curtained, the small back windows glazed, and loot can lie in every room.
 
 **Log cabins.** Six one-room cabins in a row beside the Flint County road. Each has its own swinging door and glazed windows.
 

@@ -1,6 +1,6 @@
 """Loot points inside the enterable trailers (house_shell models 3167-3175), the log cabin row (17067) and the houses
-(house_shell/houses.lua: des_bighus01-03, 3305-3303, the farmhouse des_farmhouse1, 16280, and the desert
-concrete house conhoos2, 3241).
+(house_shell/houses.lua: des_bighus01-03, 3305-3303, the farmhouse des_farmhouse1, 16280, the desert
+concrete house conhoos2, 3241, and the Fort Carson motel des_nmot_02, 16673).
 
 Rooms come from tools/shell_rooms.json (written by Shell.export(): [x0, x1, y0, y1, floor z, ceiling z] per room, in
 the model's frame). A point is (x, y, room index); its z is the room's floor + FLOOR_LIFT, so it follows the model.
@@ -69,6 +69,15 @@ HOUSES = {
     3241: ("conhoos2", [(-1.4, -4.6, 0), (1.4, -3.3, 0), (1.4, -0.5, 1), (-0.8, 0.3, 1), (-1.3, 2.3, 2), (1.4, 3.4, 2), (-1.2, 4.8, 2)]),
     # living room, kitchen, bedroom (with the annex), back room
     16280: ("des_farmhouse1", [(-4.3, -4.5, 0), (-7.3, -1.8, 0), (-4.3, 2.0, 1), (-6.8, 0.0, 1), (-10.6, -7.0, 2), (-10.7, -2.2, 2), (-10.7, 0.0, 3)]),
+    # the motel: one point at the back of each room (west block ground and upper, north block ground and upper), the office
+    16673: (
+        "des_nmot_02",
+        [(-16.6, 1.82, 0), (-16.6, 5.77, 1), (-16.6, 9.77, 2), (-16.6, 13.77, 3), (-16.6, 17.77, 4), (-16.6, 21.72, 5),
+         (-16.6, 1.82, 6), (-16.6, 5.77, 7), (-16.6, 9.77, 8), (-16.6, 13.77, 9), (-16.6, 17.77, 10), (-16.6, 21.72, 11),
+         (-0.51, 25.0, 12), (3.44, 25.0, 13), (7.44, 25.0, 14), (11.44, 25.0, 15), (15.44, 25.0, 16), (19.39, 25.0, 17),
+         (-0.51, 25.0, 18), (3.44, 25.0, 19), (7.44, 25.0, 20), (11.44, 25.0, 21), (15.44, 25.0, 22), (19.39, 25.0, 23),
+         (-5.2, -0.6, 24)],
+    ),
 }
 
 

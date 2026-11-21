@@ -10,7 +10,7 @@ Scavenge & Survive Reborn is a port of Southclaws' Scavenge & Survive for SA-MP 
 - The bonnet must be open to repair, a Wrench is needed for wheels, and a car with no wheels left freezes after 2 seconds ([Repairing & Locks](Repairing-and-Locks)).
 - **Bobcat salvage parts**: hood, tailgate, doors and bumpers come off, go on and shake off when loose ([Bobcat Salvage Parts](Bobcat-Salvage-Parts)).
 - A **towable Airstream** with a door, a lock and cargo that rides along, the one vehicle that takes **welded armour** ([Trailers & Towing](Trailers-and-Towing), [Vehicle Armour](Vehicle-Armour)).
-- **Enterable buildings**: a farmhouse, a desert concrete house, nine trailer models (143 placements) and log cabins with interiors, glazed windows, swinging doors and loot; the original's hollow houses got 75 glazed windows and fitted entrance doors ([Houses & Trailers](Houses-and-Trailers)).
+- **Enterable buildings**: a farmhouse, a desert concrete house, the Fort Carson motel (24 rooms and its office), nine trailer models (143 placements) and log cabins with interiors, glazed windows, swinging doors and loot; the original's hollow houses got 75 glazed windows and fitted entrance doors ([Houses & Trailers](Houses-and-Trailers)).
 - A **camper stove** model (it does not cook yet), **Fort Defiance**'s rooftop walkways rebuilt as proper models (the rest of the fort is unchanged) and breakable roadblock **wire fences**.
 - **Nine hats cut from GTA's own characters** that any skin can wear, and 22 skins with a bare head under a hat ([Clothes & Hats](Clothes-and-Hats)).
 - **GTA's own boxes and crates** are containers, and any number of players can look into one at once ([Containers & Bags](Containers-and-Bags)).

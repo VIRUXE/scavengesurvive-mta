@@ -22,7 +22,7 @@ from tools.trailer_shells.doors import OUT as TRAILERS_OUT
 from tools.trailer_shells.doors import UPRIGHT, removals, removed
 from tools.trailer_shells.prep import BUILD
 
-HOUSES = {3241: "conhoos2", 3303: "des_bighus03", 3304: "des_bighus02", 3305: "des_bighus01", 16280: "des_farmhouse1", 16326: "des_byoffice", 18259: "logcabinn01", 18267: "logcabinn"}  # vanilla model -> shell
+HOUSES = {3241: "conhoos2", 3303: "des_bighus03", 3304: "des_bighus02", 3305: "des_bighus01", 16280: "des_farmhouse1", 16326: "des_byoffice", 16673: "des_nmot_02", 18259: "logcabinn01", 18267: "logcabinn"}  # vanilla model -> shell
 TXD = {"logcabinn": "logcabinn01"}  # a shell wearing another one's dictionary (files/<txd>.txd)
 MAPS = {"logcabinn"}  # shells upstream's maps place copies of: the client hangs their doors once the maps are built
 OUT = TRAILERS_OUT.with_name("houses.lua")
