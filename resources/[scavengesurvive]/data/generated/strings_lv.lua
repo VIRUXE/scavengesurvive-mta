@@ -199,6 +199,7 @@ return {
     Charged = "Uzlādēts",
     Chat = "Čats",
     ["Chat and help"] = "Čats un palīdzība",
+    ["Check fuel"] = "Pārbaudīt degvielu",
     Checklist = "Uzdevumi",
     ["Cheesy Puffs"] = "Siera bumbiņas",
     ["Chocolate Chip Cookies"] = "Šokolādes cepumi",

@@ -199,6 +199,7 @@ return {
     Charged = "Terisi",
     Chat = "Obrolan",
     ["Chat and help"] = "Obrolan dan bantuan",
+    ["Check fuel"] = "Cek bahan bakar",
     Checklist = "Daftar tugas",
     ["Cheesy Puffs"] = "Camilan keju",
     ["Chocolate Chip Cookies"] = "Kue kering cokelat",

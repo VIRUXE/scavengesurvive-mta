@@ -199,6 +199,7 @@ return {
     Charged = "Chargé",
     Chat = "Chat",
     ["Chat and help"] = "Chat et aide",
+    ["Check fuel"] = "Vérifier le carburant",
     Checklist = "À faire",
     ["Cheesy Puffs"] = "Soufflés au fromage",
     ["Chocolate Chip Cookies"] = "Cookies aux pépites de chocolat",

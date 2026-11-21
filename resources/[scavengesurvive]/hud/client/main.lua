@@ -726,7 +726,7 @@ local function drawKeyActions(driver)
         nearItem = nearItem,
         nearInspectable = not held and inspectUname or false,
         nearCooker = nearCooker(held),
-        nearMachine = exports.items:nearbyMachine() ~= false,
+        nearMachine = select(2, exports.items:nearbyMachine()),
         nearContainer = nearContainerHint(),
         nearTrunk = not driver and nearTrunkHint() or false,
         carmour = carmourHint(held),

@@ -1082,7 +1082,8 @@ return function(ctx)
                 return
             end
             local t = itemType(row.uname)
-            if not t or (t.category ~= "bag" and t.category ~= "safebox") then
+            -- bags, boxes and the Generator (a tap on it tells its fuel, server/machines.lua)
+            if not t or (t.category ~= "bag" and t.category ~= "safebox" and row.uname ~= "Generator") then
                 return
             end
             local sameInt = (row.interior or 0) == getElementInterior(c.player)

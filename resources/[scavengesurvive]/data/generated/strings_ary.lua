@@ -199,6 +199,7 @@ return {
     Charged = "Mcharji",
     Chat = "Chat",
     ["Chat and help"] = "Chat w mosa3ada",
+    ["Check fuel"] = "Chouf lmazot",
     Checklist = "Liste",
     ["Cheesy Puffs"] = "Chips b Fromage",
     ["Chocolate Chip Cookies"] = "Biscuit b Chocolat",

@@ -1242,7 +1242,8 @@ return function(ctx)
         return out
     end
 
-    -- the machine within reach (hud: a tap opens it, a hold its menu), or nil
+    -- the machine within reach (hud: a tap opens it, a hold its menu; the Generator's tap tells its fuel, the hold
+    -- lifts it): id and type, or nil
     function M.nearbyMachine(reach)
         local px, py, pz = getElementPosition(localPlayer)
         local dim, int = getElementDimension(localPlayer), getElementInterior(localPlayer)
@@ -1252,7 +1253,7 @@ return function(ctx)
                 local dx, dy, dz = e.x - px, e.y - py, e.z - pz
                 local same = (r.dimension or 0) == dim and (r.interior or 0) == int
                 if same and dx * dx + dy * dy <= reach * reach and math.abs(dz) < 3 and inReach(id, e) then
-                    return id
+                    return id, e.uname
                 end
             end
         end
@@ -1354,6 +1355,8 @@ return function(ctx)
                     verb, event = lang.text("Inspect plant pot"), "potInspectRequested"
                 elseif e.uname == "Torso" then
                     verb, event = lang.text("Investigate"), "bodyInspectRequested"
+                elseif e.uname == machines.GENERATOR_UNAME then
+                    verb = lang.text("Check fuel") -- the lift is the carry entry below
                 elseif machines.isMachine(e.uname) then
                     verb = lang.text("Access machine")
                 end
@@ -1385,11 +1388,12 @@ return function(ctx)
                         item = not def,
                     }
                 end
-                if
-                    (t.category == "bag" or t.category == "safebox")
-                    and not (t.categoryData and t.categoryData.takeOnly)
-                    and passes(id, e)
-                then
+                local carried = e.uname == machines.GENERATOR_UNAME
+                    or (
+                        (t.category == "bag" or t.category == "safebox")
+                        and not (t.categoryData and t.categoryData.takeOnly)
+                    )
+                if carried and passes(id, e) then
                     actions[#actions + 1] = {
                         id = "carry:" .. id,
                         label = lang.text("Pick up") .. " · " .. t.name,

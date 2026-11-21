@@ -374,6 +374,7 @@ local machinesSrv = loadFile("server/machines.lua")({
     liquids = liquids,
     decodeData = hands.decodeData,
     charId = charId,
+    isBadInteract = isBadInteract,
 })
 hands.setMachines(machinesSrv)
 containers.setMachines(machines, liquids)

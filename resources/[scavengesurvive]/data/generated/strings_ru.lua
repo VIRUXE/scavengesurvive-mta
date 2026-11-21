@@ -199,6 +199,7 @@ return {
     Charged = "Заряжен",
     Chat = "Чат",
     ["Chat and help"] = "Чат и помощь",
+    ["Check fuel"] = "Проверить топливо",
     Checklist = "Задания",
     ["Cheesy Puffs"] = "Сырные палочки",
     ["Chocolate Chip Cookies"] = "Печенье с шоколадной крошкой",

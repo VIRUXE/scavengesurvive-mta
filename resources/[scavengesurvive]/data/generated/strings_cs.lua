@@ -199,6 +199,7 @@ return {
     Charged = "nabitý",
     Chat = "Chat",
     ["Chat and help"] = "Chat a pomoc",
+    ["Check fuel"] = "Zkontrolovat palivo",
     Checklist = "Úkoly",
     ["Cheesy Puffs"] = "Sýrové křupky",
     ["Chocolate Chip Cookies"] = "Sušenky s čokoládou",

@@ -191,6 +191,7 @@ return {
     ["Changing clothes"] = "A mudar de roupa",
     Charged = "Carregada",
     ["Chat and help"] = "Chat e ajuda",
+    ["Check fuel"] = "Ver combustível",
     Checklist = "Lista de tarefas",
     ["Cheesy Puffs"] = "Aperitivos de queijo",
     ["Chocolate Chip Cookies"] = "Bolachas com pepitas de chocolate",

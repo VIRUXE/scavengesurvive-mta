@@ -109,8 +109,10 @@ function heldObjectOf(player)
     return obj, uname
 end
 
+-- the machine within reach: its id and type, or false
 function nearbyMachine()
-    return world.nearbyMachine(2.0) or false
+    local id, uname = world.nearbyMachine(2.0)
+    return id or false, uname or false
 end
 
 -- what a Crowbar's F works on (world.crowbarTarget): id, object (or false), uname; else false

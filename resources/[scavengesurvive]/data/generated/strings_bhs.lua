@@ -191,6 +191,7 @@ return {
     Charged = "Napunjen",
     Chat = "Čet",
     ["Chat and help"] = "Čet i pomoć",
+    ["Check fuel"] = "Provjeri gorivo",
     Checklist = "Popis zadataka",
     ["Cheesy Puffs"] = "Smoki od sira",
     ["Chocolate Chip Cookies"] = "Keksi s komadićima čokolade",

@@ -87,7 +87,8 @@ M.BUTTON_LABELS = {
 --   crowbarTarget,                        -- the name of what F with a Crowbar works on, in the reader's
 --                                         -- language (hud outlines it): "Deconstruct · <name>"
 --   nearCooker,                           -- uncooked food in hand next to a campfire or barbecue (#95): "Cook"
---   nearMachine,                          -- a machine in reach (#145): "Access machine" / "(Hold) Machine menu"
+--   nearMachine,                          -- the type of a machine in reach (#145): "Access machine" / "(Hold)
+--                                         -- Machine menu"; the Generator: "Check fuel" / "(Hold) Pick up"
 --   nearContainer,                        -- a bag or box lying in reach: "Open" / "(Hold) Pick up"; "fixed" (the
 --                                         -- snack machine): "Open" only
 --   carmour,                              -- vehicles carmour: "attach" (placing a defence), "weld" (the Welder's
@@ -151,6 +152,9 @@ function M.lines(ctx, keys)
         elseif ctx.nearInspectable then
             local inspectText = { Sign = tr("Edit sign"), PlantPot = tr("Inspect plant pot") }
             add("interact", inspectText[ctx.nearInspectable] or tr("Investigate"))
+            add("interact", tr("(Hold) Pick up"))
+        elseif ctx.nearMachine == "Generator" then
+            add("interact", tr("Check fuel"))
             add("interact", tr("(Hold) Pick up"))
         elseif ctx.nearMachine then
             add("interact", tr("Access machine"))
@@ -227,7 +231,15 @@ function M.lines(ctx, keys)
     end
     -- a machine (items, #145): upstream's button "Press F to access machine / Hold F to open menu"; a Crowbar in
     -- hand takes it down instead (Deconstruct, a port deviation: upstream left it a TODO)
-    if ctx.nearMachine and not busyF and not (ctx.held and ctx.held.uname == "Crowbar") then
+    -- the Generator: the tap tells its fuel, the hold lifts it or, with a Petrol Can in hand, refuels it
+    if ctx.nearMachine == "Generator" and not busyF and not (ctx.held and ctx.held.uname == "Crowbar") then
+        add("interact", tr("Check fuel"))
+        if not ctx.held then
+            add("interact", tr("(Hold) Pick up"))
+        elseif ctx.held.uname == "GasCan" then
+            add("interact", tr("(Hold) Refuel"))
+        end
+    elseif ctx.nearMachine and not busyF and not (ctx.held and ctx.held.uname == "Crowbar") then
         add("interact", tr("Access machine"))
         add("interact", tr("(Hold) Machine menu"))
     end

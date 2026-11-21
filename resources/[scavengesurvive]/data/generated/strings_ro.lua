@@ -199,6 +199,7 @@ return {
     Charged = "Încărcat",
     Chat = "Chat",
     ["Chat and help"] = "Chat și ajutor",
+    ["Check fuel"] = "Verifică combustibilul",
     Checklist = "Listă de sarcini",
     ["Cheesy Puffs"] = "Pufuleți cu brânză",
     ["Chocolate Chip Cookies"] = "Biscuiți cu bucăți de ciocolată",

@@ -1,8 +1,10 @@
 -- Server side of the machines (shared/logic/machines.lua; upstream itemtype/machine.pwn): a tap of F on one opens
 -- its 12-slot container (or says how long the cook has left), a hold opens the Start dialog, or refuels it while a
--- Petrol Can is in hand; a cook is a timer resumed from the item data on a restart and finished by the
--- machine_finish procedure, which swaps the container's contents in one call.
--- ctx = { db, net, state, type, toast, world, hands, containers, machines, liquids, decodeData, charId }
+-- Petrol Can is in hand (the Generator: the tap tells its fuel, an empty-handed hold lifts it); a cook is a timer
+-- resumed from the item data on a restart and finished by the machine_finish procedure, which swaps the container's
+-- contents in one call.
+-- ctx = { db, net, state, type, toast, world, hands, containers, machines, liquids, decodeData, charId,
+-- isBadInteract }
 -- built by server/main.lua.
 return function(ctx)
     local db, net, state, world, hands = ctx.db, ctx.net, ctx.state, ctx.world, ctx.hands
@@ -10,6 +12,7 @@ return function(ctx)
     local log = loadstring(exports.lib:getModule("log"), "=lib/log.lua")()
     local machines, liquids, itemType, toast, decodeData =
         ctx.machines, ctx.liquids, ctx.type, ctx.toast, ctx.decodeData
+    local isBadInteract = ctx.isBadInteract
     local M = {}
     local cookTimers = {} -- item id -> timer
     local refuels = {} -- player -> { row, held, fuel, amount, timer }
@@ -171,12 +174,16 @@ return function(ctx)
     -- The interact key -----------------------------------------------------------------------------------------
 
     -- hands.lua itemPickupRequested: a tap on a machine. true when the row is a machine. A Generator is no container:
-    -- an empty-handed tap lifts it like any item.
+    -- the tap tells its fuel and the hold lifts it (machineMenuRequested).
     function M.interact(player, _, _, row)
-        if not machines.isMachine(row.uname) or machines.kind(row.uname) == "generator" then
+        if not machines.isMachine(row.uname) then
             return false
         end
         local st = machines.state(decodeData(row.data))
+        if machines.kind(row.uname) == "generator" then
+            text(player, "GENFUEL", st.fuel, machines.MAX_FUEL)
+            return true
+        end
         if st.cooking then
             text(player, "MACHPROCESS", machines.timeText(machines.remainingMs(st, now()), trFor(player)))
             return true
@@ -265,7 +272,13 @@ return function(ctx)
                 return startRefuel(p, row, st, held, amount)
             end
             if machines.kind(row.uname) == "generator" then
-                return text(p, "GENFUEL", st.fuel, machines.MAX_FUEL)
+                if held then
+                    return text(p, "GENFUEL", st.fuel, machines.MAX_FUEL)
+                end
+                if isBadInteract(p) then
+                    return
+                end
+                return hands.pickup(p, ctx.charId(p), row)
             end
             triggerClientEvent(p, "machineMenuShown", p, row.id, machines.kind(row.uname), st.fuel)
         end)
