@@ -24,6 +24,9 @@
 --   deck and ramp, the west stoop, the north lean-to; its log walls 18230 removed), wearing the Shady Cabin's
 --   dictionary; the two copies upstream's maps place (Flint County, the island off the south coast) get their
 --   doors once the maps have built them.
+-- * Harry Plums' warehouse burgalrystore_SFS (11092, tools/house_shells/harry_plums.py): its vanilla skin with a hollow
+--   COL (the lower sashes of its windows open to climb through, the roof and its lantern solid) and its window glass
+--   redrawn smashed. Its loading door is world's (world/shared/logic/doors.lua), worked by a hand chain.
 local function readLua(path)
     local f = fileOpen(path, true)
     local src = fileRead(f, fileGetSize(f))
@@ -203,6 +206,17 @@ addEventHandler("onClientResourceStart", resourceRoot, function()
     local westrn = engineLoadTXD("files/des_westrn9.txd", true)
     if westrn and replaceModel(3250, "des_westrn9", westrn, "des_westrn9") then
         outputDebugString("house_shell: open des_westrn9_ model 3250 loaded", 3)
+    end
+    local plumsTxd, plumsCol =
+        engineLoadTXD("files/burgalrystore_sfs.txd", true), engineLoadCOL("files/burgalrystore_sfs.col")
+    if plumsTxd and plumsCol and engineReplaceCOL(plumsCol, 11092) then
+        replaced[11092] = true
+        keep[#keep + 1], keep[#keep + 2] = plumsTxd, plumsCol
+        if not engineImportTXD(plumsTxd, 11092) then
+            outputDebugString("house_shell: failed to import burgalrystore_sfs.txd", 1)
+        end
+    else
+        outputDebugString("house_shell: failed to load burgalrystore_sfs", 1)
     end
     local txd = engineLoadTXD("files/trailers.txd", true)
     if not txd then
