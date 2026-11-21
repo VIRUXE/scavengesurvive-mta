@@ -13,5 +13,6 @@ return { read_globals = {
     "takePlayerScreenShot", "fileCreate", "fileWrite",
     -- ml_sageom (x64/modules), loaded in mtaserver.conf
     "sageomIsReady", "sageomGround", "sageomGroundMany", "sageomRaycast", "sageomPlace", "sageomPlaceModel",
-    "sageomGetModelBounds", "sageomWaterLevel", "sageomAddOverlay", "getResourceOrganizationalPath",
+    "sageomGetModelBounds", "sageomWaterLevel", "sageomAddOverlay", "sageomReload", "sageomReloadStatus",
+    "getResourceOrganizationalPath",
 } }

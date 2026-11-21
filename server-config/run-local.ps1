@@ -61,6 +61,10 @@ $text = Set-ConfValue $text "scriptdebugloglevel" "3"
 $text = Set-ConfValue $text "voice" "1" # built-in voice chat; stock voice_samplerate=1 (16 kHz) and voice_quality=4 kept
 $text = Set-ConfValue $text "servername" "Scavenge and Survive (dev)"
 $text = Set-ConfValue $text "ase" "0" # dev server with open dev commands: never advertise it on the master list
+# server-side collision (docs/runbooks/server-collision.md), when a 32-bit build of sa-geom's ml_sageom.dll is in place
+if (Test-Path -LiteralPath (Join-Path $Dm "modules\ml_sageom.dll")) {
+    $text = [regex]::Replace($text, '(?m)^</config>', { param($m) '    <module src="ml_sageom.dll"/>' + "`r`n" + $m.Value })
+}
 [IO.File]::WriteAllText($conf, $text, $Utf8)
 
 # (e) junction the resource group into the server

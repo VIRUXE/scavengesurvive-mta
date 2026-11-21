@@ -8,14 +8,22 @@ the `world` resource adds the port's own map on top of it.
 |---|---|---|
 | `ml_sageom.so` | `$MTA/x64/modules/`, `<module src="ml_sageom.so"/>` in `mtaserver.conf` | built from `/gta/sa/sa-geom` (`crates/sa-geom-mta`); loads only at server start |
 | Overlay | `world/geom/overlay.toml` + `port.map` | written by `python -m tools.geom_overlay`, committed |
-| Loader | `world/server/geom.lua` | applies the overlay once per server process; logs `geom.overlayApplied` |
+| Loader | `world/server/geom.lua` | applies the overlay at server start (`geom.overlayApplied`); on a restart with changed files the module rebuilds its world with the new overlay (`geom.overlayReloaded`) |
 | Queries | `lib` module `geom` (server) | answers `nil` when the module or the overlay is missing, so callers keep a fallback |
 
 ## After changing maps, puzzles or a model pack
 
 1. `python -m tools.geom_overlay` and commit `world/geom/`.
-2. Restart the **server**. An overlay cannot be taken out of a running module, so a `world` restart with changed
-   files only logs `geom.overlayStale` and keeps answering from the overlay already loaded.
+2. Restart `world` (`rr world`). An overlay cannot be taken out of a running world, so the module builds a fresh one
+   with the new overlay on a background thread (`sageomReload`, about 3–4 s) and swaps it in. Meanwhile root data
+   `geom.stale` is true and `lib` geom answers `nil` (callers fall back: drops lie at feet height); the swap logs
+   `geom.overlayReloaded`, a failure `geom.overlayFailed` and leaves it stale. Check with
+   `rcon.ps1 -Prod lua "return getElementData(root, 'geom.stale')"` (false once it is in).
+   A module older than `sageomReload` (sa-geom before 2026-11-21) only logs `geom.overlayStale` and keeps the old
+   overlay until the **server** restarts.
+
+Locally the server is 32-bit: `cargo build --release -p sa-geom-mta --target i686-pc-windows-msvc` in sa-geom and copy
+`ml_sageom.dll` into the server's `mods/deathmatch/modules/`; `run-local.ps1` loads it whenever it is there.
 
 ## Upgrading the module
 
