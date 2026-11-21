@@ -290,6 +290,11 @@ local function toggleCovering(itemId, player, cid)
     end, { player = player, cid = cid })
 end
 
+local function staffOnDuty(player)
+    local res = getResourceFromName("staff")
+    return res and getResourceState(res) == "running" and exports.staff:isOnDuty(player) == true
+end
+
 local function handleDefenceInteract(player, row)
     local cid = charId(player)
     if not cid then
@@ -386,7 +391,21 @@ local function handleDefenceInteract(player, row)
         return
     end
 
-    if st.keypad then
+    if st.keypad and staffOnDuty(player) then
+        -- staff on duty open a keypad's defence without its code (and never set one on a keypad that has none);
+        -- every such opening is a staff_actions row
+        log.event("building.keypadBypassed", defenceLine(row, { player = player }))
+        pcall(function()
+            exports.staff:logAction(
+                getPlayerName(player),
+                "defence_open",
+                tostring(row.type_uname or row.uname),
+                string.format("id=%s pos=%.1f,%.1f,%.1f", tostring(row.id), row.x or 0, row.y or 0, row.z or 0)
+            )
+        end)
+        toast(player, "DEFMOVINGIT")
+        moveDefence(row.id, player)
+    elseif st.keypad then
         if isPasscodeUnset(st.passcode) then
             -- keypad installed and no passcode set (nil, "", "0000", or 0) -> setup UI
             pendingSetup[player] = row.id

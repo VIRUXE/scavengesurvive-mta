@@ -90,10 +90,24 @@ return function(ctx)
     end
 
     local function formatName(t, r)
-        -- upstream labels a built defence with its hitpoints (defences.pwn SetItemLabel "%d/%d")
-        if t and builtDefence(r) then
+        -- upstream labels a built defence with its hitpoints (defences.pwn SetItemLabel "%d/%d"); a third line names
+        -- what is fitted to it: its Motor, and the keypad on it (a keypad needs the motor)
+        local def = t and builtDefence(r)
+        if def then
             local hp = math.floor(tonumber(r.hp) or 0)
-            return string.format("%s\n%d/%d", t.name, hp, t.maxHitpoints or 0)
+            local label = string.format("%s\n%d/%d", t.name, hp, t.maxHitpoints or 0)
+            local fitted = {}
+            if def.motor then
+                fitted[#fitted + 1] = lang.itemName("Motor")
+            end
+            local keypad = tonumber(def.keypad)
+            if keypad then
+                fitted[#fitted + 1] = lang.itemName(keypad == 2 and "AdvancedKeypad" or "Keypad")
+            end
+            if #fitted > 0 then
+                label = label .. "\n" .. table.concat(fitted, " + ")
+            end
+            return label
         end
         if isPitchedTent(r) then
             return lang.text("Pitched Tent")
