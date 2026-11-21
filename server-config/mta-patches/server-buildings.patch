@@ -1,0 +1,97 @@
+diff --git a/Server/mods/deathmatch/logic/CMapManager.cpp b/Server/mods/deathmatch/logic/CMapManager.cpp
+index da77e95..d0db70e 100644
+--- a/Server/mods/deathmatch/logic/CMapManager.cpp
++++ b/Server/mods/deathmatch/logic/CMapManager.cpp
+@@ -15,6 +15,7 @@
+ #include "CWaterManager.h"
+ #include "CPlayerManager.h"
+ #include "CMarkerManager.h"
++#include "CBuildingManager.h"
+ #include "CWater.h"
+ #include "CMarker.h"
+ #include "CBlip.h"
+@@ -280,6 +281,17 @@ void CMapManager::SendMapInformation(CPlayer& Player)
+ 
+     marker.Set("Water");
+ 
++    // Add the buildings to the packet
++    CBuildingManager*                     pBuildingManager = g_pGame->GetBuildingManager();
++    CFastList<CBuilding*>::const_iterator iterBuilding = pBuildingManager->IterBegin();
++    for (; iterBuilding != pBuildingManager->IterEnd(); iterBuilding++)
++    {
++        CBuilding* pBuilding = *iterBuilding;
++        EntityPacket.Add(pBuilding);
++    }
++
++    marker.Set("Building");
++
+     // Send it
+     Player.Send(EntityPacket);
+ 
+diff --git a/Server/mods/deathmatch/logic/CStaticFunctionDefinitions.cpp b/Server/mods/deathmatch/logic/CStaticFunctionDefinitions.cpp
+index bf38684..aac9af5 100644
+--- a/Server/mods/deathmatch/logic/CStaticFunctionDefinitions.cpp
++++ b/Server/mods/deathmatch/logic/CStaticFunctionDefinitions.cpp
+@@ -705,6 +705,12 @@ bool CStaticFunctionDefinitions::GetElementModel(CElement* pElement, unsigned sh
+             usModel = pObject->GetModel();
+             break;
+         }
++        case CElement::BUILDING:
++        {
++            CBuilding* pBuilding = static_cast<CBuilding*>(pElement);
++            usModel = pBuilding->GetModel();
++            break;
++        }
+         case CElement::PICKUP:
+         {
+             CPickup* pPickup = static_cast<CPickup*>(pElement);
+@@ -1214,6 +1220,18 @@ bool CStaticFunctionDefinitions::GetElementRotation(CElement* pElement, CVector&
+ 
+             break;
+         }
++        case CElement::BUILDING:
++        {
++            CBuilding* pBuilding = static_cast<CBuilding*>(pElement);
++            pBuilding->GetRotation(vecRotation);
++            ConvertRadiansToDegrees(vecRotation);
++            if (desiredRotOrder != EULER_DEFAULT && desiredRotOrder != EULER_ZXY)
++            {
++                vecRotation = ConvertEulerRotationOrder(vecRotation, EULER_ZXY, desiredRotOrder);
++            }
++
++            break;
++        }
+         default:
+             return false;
+     }
+diff --git a/Server/mods/deathmatch/logic/luadefs/CLuaBuildingDefs.cpp b/Server/mods/deathmatch/logic/luadefs/CLuaBuildingDefs.cpp
+index acd1f1e..b521780 100644
+--- a/Server/mods/deathmatch/logic/luadefs/CLuaBuildingDefs.cpp
++++ b/Server/mods/deathmatch/logic/luadefs/CLuaBuildingDefs.cpp
+@@ -66,6 +66,12 @@ CBuilding* CLuaBuildingDefs::CreateBuilding(lua_State* const luaVM, std::uint16_
+     if (!pBuilding)
+         return nullptr;
+ 
++    CElementGroup* pGroup = pResource->GetElementGroup();
++    if (pGroup)
++    {
++        pGroup->Add(pBuilding);
++    }
++
+     pBuilding->SetPosition(pos);
+     pBuilding->SetRotation(rot.value());
+     pBuilding->SetModel(modelId);
+diff --git a/Server/mods/deathmatch/logic/packets/CEntityAddPacket.cpp b/Server/mods/deathmatch/logic/packets/CEntityAddPacket.cpp
+index a86ec36..edf2046 100644
+--- a/Server/mods/deathmatch/logic/packets/CEntityAddPacket.cpp
++++ b/Server/mods/deathmatch/logic/packets/CEntityAddPacket.cpp
+@@ -1177,9 +1177,6 @@ bool CEntityAddPacket::Write(NetBitStreamInterface& BitStream) const
+                     // Model id
+                     BitStream.WriteCompressed(pBuilding->GetModel());
+ 
+-                    // Interior
+-                    BitStream.WriteCompressed(pBuilding->GetInterior());
+-
+                     CBuilding* pLowLodBuilding = pBuilding->GetLowLodElement();
+                     ElementID  lowLodBuildingID = pLowLodBuilding ? pLowLodBuilding->GetID() : INVALID_ELEMENT_ID;
+                     BitStream.Write(lowLodBuildingID);

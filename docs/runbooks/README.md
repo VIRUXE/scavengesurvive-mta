@@ -14,6 +14,7 @@ cut after the local checks (`docs/runbooks/release.md`).
 | [incident-db-down.md](incident-db-down.md) | MariaDB is unreachable while the server runs |
 | [upgrade-mariadb.md](upgrade-mariadb.md) | moving MariaDB to a version its package source lacks (tarball on Linux, source build on Windows) |
 | [logging-loki.md](logging-loki.md) | setting up the log push to Loki, a Grafana panel is empty, or `[logs] push … failed` on the console |
+| [patched-mta-server.md](patched-mta-server.md) | installing or updating the MTA server: `maps` needs the patched `deathmatch` module (server-side buildings) |
 | [release.md](release.md) | tagging a version from `main` |
 | [discord-bridge.md](discord-bridge.md) | the Discord chat relay or Rich Presence stops working, or moving it to another host |
 | [repivot-defences.md](repivot-defences.md) | the hinged defence doors' re-pivoted copies: rebuilding them, deploying, the one-off fix of built rows |

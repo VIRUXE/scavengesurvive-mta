@@ -72,6 +72,9 @@ production and the dev box run 13.2.0 outside packages (`docs/runbooks/upgrade-m
 - Client never calls `setElementData`. Server-set element data uses `"deny"`. `elementdata_whitelisted=1`.
 - Pure logic lives in `shared/logic/*.lua` and never calls MTA functions at file scope.
 - No global tables used as static classes or singletons for a resource's state (`Maps = { stats = {}, … }`, `Character.byPlayer`): new code keeps state in file-local tables or closures, returns a module table, and passes state as arguments. The older `Character`/`Items`/`UI` globals are converted when their resource is reworked, not in passing.
+- The server runs a patched `deathmatch` module (server-side buildings: join send, resource ownership, getters), built
+  per server build number from `server-config/mta-patches/` (`docs/runbooks/patched-mta-server.md`); an MTA server update
+  needs a rebuild first.
 - Never call `engineSetPoolCapacity("building", …)`: MTA grows the building pool on demand, and re-applying a capacity on a resource restart shrank a pool in use and crashed the client (2026-10-22).
 - Style: `stylua` and `luacheck` clean before every commit. Conventional commits (`feat(items): …`).
 - Git: commit straight to `main`; never create a branch unless asked. On prod the resources are a symlink into this
