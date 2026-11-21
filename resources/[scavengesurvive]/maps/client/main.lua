@@ -28,6 +28,12 @@ local state = {
     skippedRows = {}, -- SA-MP rows placed nowhere yet; re-queued when the pack loads
     removed = {}, -- removeWorldModel rows applied, restored on stop
 }
+-- Vanilla buildings whose IDE draw distance (100) is shorter than they are wide: GTA swapped them for their blurry
+-- LOD while you stood beside them. Raised on every client, reset on stop.
+local DRAW_DISTANCES = {
+    [13060] = 300, -- CE_factcomp1, the Blueberry factory complex (360, -97)
+    [13077] = 300, -- CE_townware, the Blueberry town warehouse (273, -239)
+}
 local queue, queueIndex, started = {}, 1, 0
 local building = false
 local step
@@ -134,6 +140,9 @@ local function removeWorld(rows)
 end
 
 addEventHandler("onClientResourceStart", resourceRoot, function()
+    for model, dist in pairs(DRAW_DISTANCES) do
+        engineSetModelLODDistance(model, dist)
+    end
     local index = readLua("data/index.lua") or {}
     local zones = {}
     for zone in pairs(index) do
@@ -190,6 +199,9 @@ end)
 addEventHandler("onClientResourceStop", resourceRoot, function()
     if building then
         removeEventHandler("onClientPreRender", root, step)
+    end
+    for model in pairs(DRAW_DISTANCES) do
+        engineResetModelLODDistance(model)
     end
     for _, r in ipairs(state.removed) do
         restoreWorldModel(r[1], r[5], r[2], r[3], r[4])

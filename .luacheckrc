@@ -34,7 +34,7 @@ files["resources/**/prop_models/client/**"] = { std = "lua51+mta_shared+mta_clie
 files["resources/**/box_models/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "resolve" } }
 -- restoreWorldModel postdates the generated .luacheck/mta_client.lua list
 files["resources/**/maps/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "getZoneAt", "getPlayerZone" } }
-files["resources/**/maps/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "getMapStats" }, read_globals = { "restoreWorldModel" } }
+files["resources/**/maps/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "getMapStats" }, read_globals = { "restoreWorldModel", "engineSetModelLODDistance", "engineResetModelLODDistance" } }
 files["resources/**/maps/data/**"] = { std = "lua51", max_line_length = false }
 -- moveObject, createBlipAttachedTo, removeElementData (server) and createEffect, moveObject (client) postdate the generated lists
 files["resources/**/loot/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "rollNear", "pickItem", "dropSupply", "dropWeaponCache", "supplyDropTypes", "dropStatus", "lootAllowances", "refillNow", "rollWorldNow", "stockContainer", "stockVehicleContainer", "restPose" }, read_globals = { "moveObject", "createBlipAttachedTo", "removeElementData" } }
