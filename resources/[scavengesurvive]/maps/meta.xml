@@ -1,5 +1,7 @@
 <meta>
     <info author="scavengesurvive-mta" type="script" name="maps" description="Upstream static maps built on the server (createBuilding, stand-ins for client-only models) and server zone colshapes" version="0.1.0"/>
+    <!-- the server also needs the patched deathmatch module (same version string, so not expressible here):
+         docs/runbooks/patched-mta-server.md -->
     <min_mta_version server="1.6.0-9.21765" client="1.6.0-9.22824"/>
     <download_priority_group>85</download_priority_group>
     <include resource="lib"/>
