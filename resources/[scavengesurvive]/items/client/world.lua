@@ -614,6 +614,14 @@ return function(ctx)
 
     -- The type's rest rotation added to the row's heading (upstream CreateItemInWorld with applyrotoffsets), then
     -- turned onto the slope it lies on (ground_nx / ground_ny, set by the death drop and /dropall; false when flat).
+    -- A defence built lying flat keeps the slope it lay on (its row keeps the normal); a standing one stays upright,
+    -- and so does a Large Frame, whose covering is drawn level over it.
+    local function tiltToGround(obj, r)
+        local nx, ny = tonumber(r.ground_nx) or 0, tonumber(r.ground_ny) or 0
+        if nx ~= 0 or ny ~= 0 then
+            setElementMatrix(obj, geometry.tilt(getElementMatrix(obj), nx, ny))
+        end
+    end
     local function orient(obj, r, t)
         -- loose items are walked through; a built defence is a wall (upstream's defence objects collide), and so are a
         -- Locker, which stands as tall as a player, the furniture (#148) and any type marked `collides`
@@ -630,6 +638,9 @@ return function(ctx)
             -- its row already holds the raised z and full heading, data the pose
             setElementPosition(obj, r.x, r.y, r.z)
             setElementRotation(obj, def.rx or 0, def.ry or 0, r.rz or 0)
+            if def.pose == "horizontal" and r.uname ~= "LargeFrame" then
+                tiltToGround(obj, r)
+            end
             return
         end
         setElementPosition(obj, r.x, r.y, r.z + (t and t.modelz or 0))
@@ -641,10 +652,7 @@ return function(ctx)
         elseif r.uname == "Shield" and small.isPlaced(r.data) then -- a planted shield stands facing its owner
             setElementRotation(obj, small.SHIELD_RX, 0, r.rz or 0)
         end
-        local nx, ny = tonumber(r.ground_nx) or 0, tonumber(r.ground_ny) or 0
-        if nx ~= 0 or ny ~= 0 then
-            setElementMatrix(obj, geometry.tilt(getElementMatrix(obj), nx, ny))
-        end
+        tiltToGround(obj, r)
     end
 
     -- the fire a row shows: a campfire always, a barbecue while its cook runs (data.doneAt)
