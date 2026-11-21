@@ -1070,6 +1070,12 @@ id = 20298
 path = "../../prop_models/files/dirty_bandage.col"
 id = 20299
 [[col]]
+path = "../../prop_models/files/flood_light.col"
+id = 20300
+[[col]]
+path = "../../prop_models/files/shutter_chain.col"
+id = 20306
+[[col]]
 path = "../../box_models/files/wbox_carton.col"
 id = 20401
 [[col]]
@@ -1138,3 +1144,66 @@ id = 20486
 [[col]]
 path = "../../box_models/files/wbox_dyn_crate_3_rest.col"
 id = 20487
+[[col]]
+path = "../../house_shell/files/des_westrn9.col"
+id = 3250
+[[col]]
+path = "../../house_shell/files/burgalrystore_sfs.col"
+id = 11092
+[[col]]
+path = "../../house_shell/files/trailer_large1_01.col"
+id = 3167
+[[col]]
+path = "../../house_shell/files/trailer2_01.col"
+id = 3168
+[[col]]
+path = "../../house_shell/files/trailer_large2_01.col"
+id = 3169
+[[col]]
+path = "../../house_shell/files/trailer_large3_01.col"
+id = 3170
+[[col]]
+path = "../../house_shell/files/trailer5_01.col"
+id = 3171
+[[col]]
+path = "../../house_shell/files/trailer6_01.col"
+id = 3172
+[[col]]
+path = "../../house_shell/files/trailer_large4_01.col"
+id = 3173
+[[col]]
+path = "../../house_shell/files/sm_airstrm_sml_.col"
+id = 3174
+[[col]]
+path = "../../house_shell/files/sm_airstrm_med_.col"
+id = 3175
+[[col]]
+path = "../../house_shell/files/cw2_logcabins.col"
+id = 17067
+[[col]]
+path = "../../house_shell/files/conhoos2.col"
+id = 3241
+[[col]]
+path = "../../house_shell/files/des_bighus03.col"
+id = 3303
+[[col]]
+path = "../../house_shell/files/des_bighus02.col"
+id = 3304
+[[col]]
+path = "../../house_shell/files/des_bighus01.col"
+id = 3305
+[[col]]
+path = "../../house_shell/files/des_farmhouse1.col"
+id = 16280
+[[col]]
+path = "../../house_shell/files/des_byoffice.col"
+id = 16326
+[[col]]
+path = "../../house_shell/files/des_nmot_02.col"
+id = 16673
+[[col]]
+path = "../../house_shell/files/logcabinn01.col"
+id = 18259
+[[col]]
+path = "../../house_shell/files/logcabinn.col"
+id = 18267
