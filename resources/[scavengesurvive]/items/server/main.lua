@@ -293,6 +293,23 @@ local garden = loadFile("server/gardening.lua")({
         return updateHeldData(player, data)
     end,
 })
+-- the Flood Light: a Tool Battery in it or a Generator near lights the room it stands in
+local floodLight = loadFile("server/floodlight.lua")({
+    db = db,
+    net = net,
+    state = state,
+    toast = toast,
+    world = world,
+    hands = hands,
+    destroy = destroy,
+    charId = charId,
+    decodeData = hands.decodeData,
+    updateHeldData = function(player, data)
+        return updateHeldData(player, data)
+    end,
+    flood = loadFile("shared/logic/floodlight.lua"),
+    machines = machines,
+})
 -- notes, signs, dice, the locator, the stun gun and the molotov (#136)
 local smallItems = loadFile("server/smallitems.lua")({
     db = db,
@@ -319,6 +336,7 @@ local smallItems = loadFile("server/smallitems.lua")({
         return hands.dropHeld(player, opts)
     end,
     garden = garden,
+    floodlight = floodLight,
 })
 hands.setSmall(smallItems)
 -- the Parachute: worn, it is GTA's parachute weapon
@@ -408,6 +426,7 @@ addEventHandler("onResourceStart", resourceRoot, function()
     fixed.start()
     machinesSrv.start()
     vendingSrv.start()
+    floodLight.start()
     -- restart: every spawned character gets its held item and worn bag back and a fresh world projection
     for _, p in ipairs(getElementsByType("player")) do
         if charId(p) then

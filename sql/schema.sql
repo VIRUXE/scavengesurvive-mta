@@ -1660,6 +1660,36 @@ BEGIN
   ) AS payload;
 END//
 
+CREATE OR REPLACE PROCEDURE `floodlight_drain`(
+  IN p_lights LONGTEXT, IN p_gens LONGTEXT)
+BEGIN
+  
+  
+  
+  DECLARE v_lights INT DEFAULT 0;
+  DECLARE v_gens INT DEFAULT 0;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
+  SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+  START TRANSACTION;
+  UPDATE items i
+    JOIN JSON_TABLE(p_lights, '$[*]' COLUMNS (
+      l INT PATH '$.l', o LONGTEXT PATH '$.o', d LONGTEXT PATH '$.d')) j ON j.l = i.id
+    SET i.data = j.d
+    WHERE i.type_uname = 'FloodLight' AND i.x IS NOT NULL AND IFNULL(i.data, '') = j.o;
+  SET v_lights = ROW_COUNT();
+  UPDATE items i
+    JOIN JSON_TABLE(p_gens, '$[*]' COLUMNS (g INT PATH '$.g', f DECIMAL(10, 4) PATH '$.f')) j ON j.g = i.id
+    SET i.data = JSON_SET(i.data,
+      IF(JSON_VALUE(i.data, '$.machine.fuel') IS NULL, '$[0].machine.fuel', '$.machine.fuel'),
+      GREATEST(0, CAST(JSON_VALUE(i.data,
+        IF(JSON_VALUE(i.data, '$.machine.fuel') IS NULL, '$[0].machine.fuel', '$.machine.fuel')) AS DECIMAL(10, 2)) - j.f))
+    WHERE i.type_uname = 'Generator' AND i.x IS NOT NULL;
+  SET v_gens = ROW_COUNT();
+  COMMIT;
+  SELECT 1 AS ok, 'OK' AS code,
+    JSON_OBJECT('lights', CAST(v_lights AS SIGNED), 'generators', CAST(v_gens AS SIGNED)) AS payload;
+END//
+
 CREATE OR REPLACE PROCEDURE `furniture_display_put`(IN p_char_id INT, IN p_item_id INT, IN p_case_id INT, IN p_size INT)
 BEGIN
   DECLARE v_case_uname VARCHAR(32) DEFAULT NULL;

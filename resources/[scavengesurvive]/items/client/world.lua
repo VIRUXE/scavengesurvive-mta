@@ -15,6 +15,7 @@ return function(ctx)
     local machines = ctx.machines
     local furniture = ctx.furniture
     local vending = ctx.vending
+    local floodlight = ctx.floodlight
     local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")()
     local surface = loadstring(exports.lib:getModule("surface"), "=lib/surface.lua")()
     local SIGN_RANGE = 25 -- metres a sign's text can be read from
@@ -133,6 +134,9 @@ return function(ctx)
         end
         if r.uname == "ComboPadlock" then
             return small.comboLabel(t and t.name or r.uname, r.data)
+        end
+        if r.uname == "FloodLight" then
+            return floodlight.label(t and t.name or r.uname, r.data)
         end
         if r.uname == gardening.BAG then
             return gardening.seedLabel(t and t.name or r.uname, gardening.seedsFor(r.id, r.data))
@@ -320,6 +324,7 @@ return function(ctx)
             if isElement(e.smoke) then
                 destroyElement(e.smoke)
             end
+            floodlight.clear(id, e)
             if isElement(e.shown) then
                 destroyElement(e.shown)
             end
@@ -835,6 +840,18 @@ return function(ctx)
         end
     end, 1000, 0)
 
+    -- the world resource (re)started with no lights of its own: every lit Flood Light registers with it again
+    addEventHandler("onClientResourceStart", root, function(res)
+        if getResourceName(res) ~= "world" then
+            return
+        end
+        for id, e in pairs(objects) do
+            if e.uname == "FloodLight" then
+                floodlight.update(id, e, e.row)
+            end
+        end
+    end)
+
     addEventHandler("inventorySynced", resourceRoot, function(delta)
         for _, id in ipairs(delta.remove or {}) do
             toMeasure[id] = nil
@@ -865,6 +882,7 @@ return function(ctx)
                 updateFires(e, r)
                 updatePlant(e, r)
                 updateSmoke(e, r)
+                floodlight.update(r.id, e, r)
                 updateShown(e, r)
                 updateCovering(e, r)
                 updateVending(e, r)
@@ -889,6 +907,7 @@ return function(ctx)
                 updateFires(e, r)
                 updatePlant(e, r)
                 updateSmoke(e, r)
+                floodlight.update(r.id, e, r)
                 updateShown(e, r)
                 updateCovering(e, r)
                 updateVending(e, r)
@@ -1259,6 +1278,11 @@ return function(ctx)
                     verb, event = lang.text("Investigate"), "bodyInspectRequested"
                 elseif machines.isMachine(e.uname) then
                     verb = lang.text("Access machine")
+                end
+                if e.uname == "FloodLight" then
+                    for _, a in ipairs(floodlight.actions(id, e, t.name, obj)) do
+                        actions[#actions + 1] = a
+                    end
                 end
                 if e.uname == "Welder" then
                     actions[#actions + 1] = {

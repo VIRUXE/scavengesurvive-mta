@@ -131,6 +131,7 @@ M.SCRAP = {
     OilDrum = 8,
     Canister = 3,
     Generator = 6,
+    FloodLight = 3,
     GasBottle = 2,
     Welder = 3,
     Locator = 1,

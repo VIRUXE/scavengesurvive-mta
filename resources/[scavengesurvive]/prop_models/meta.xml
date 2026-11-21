@@ -84,6 +84,9 @@
     <file src="files/fireworks.col"/>
     <file src="files/fireworks.dff"/>
     <file src="files/fireworks.txd"/>
+    <file src="files/flood_light.col"/>
+    <file src="files/flood_light.dff"/>
+    <file src="files/flood_light.txd"/>
     <file src="files/fluctuator.col"/>
     <file src="files/fluctuator.dff"/>
     <file src="files/fluctuator.txd"/>

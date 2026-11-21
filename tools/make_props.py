@@ -78,6 +78,10 @@ then runs itself in Blender (DragonFF) for each prop's dff and col.
     can capacitors in a tray), hack_device (rugged netbook with clip leads), advanced_keypad (access-control keypad, face
     +Y), lockpick (electric pick gun, origin at the grip's foot), clothes (three folded garments), pills (pharmacy vial).
 
+    flood_light 20300  a halogen site work light on a tripod, 1.57 m tall: black legs and lower mast, a chrome upper mast,
+                     a yellow lamp head on a black yoke, its face (the SF light tower's ws_floodlight reflector) toward +Y
+                     and FLOOD_TILT degrees down; the light comes from FLOOD_LAMP along FLOOD_AIM. The Flood Light item.
+
 Origin (except welder_torch, grinder, ratchet and tow_bar): the centre of the base (x, y) with z = 0 at the lowest point; the front faces +Y.
 """
 from __future__ import annotations
@@ -2082,6 +2086,64 @@ def build_dirty_bandage(ctx):
     return [((-0.02, 0.0, 0.01), (0.13, 0.13, 0.01))]
 
 
+FLOOD_HEAD = (0.0, 0.0, 1.45)  # flood_light.dff: the lamp head's centre (on its pivot), the head tilted FLOOD_TILT down
+FLOOD_TILT = 15  # degrees the head's face is turned down from +Y
+FLOOD_LAMP = (0.0, 0.058, 1.4345)  # flood_light.dff: the centre of the lamp face, where the light comes from
+FLOOD_AIM = (0.0, 0.966, -0.259)  # flood_light.dff: the beam's direction, the face's normal
+# (source TXD, texture) per flood light material, all vanilla and found with gta-scout: yellow painted housing, black
+# plastic (yoke, legs, handle), chrome pipe (the telescoping mast), the SF light tower's own lamp (ws_floodlight: the
+# halogen reflector on its left half, the cooling fins on its right), rubber feet
+FLOOD_TEXTURES = [("helixbarrier.txd", "yellow"), ("ballys01.txd", "CJ_blackplastic"), ("industrialext.txd", "cj_chromepipe"), ("sfse_hubstuff.txd", "ws_floodlight"), ("cj_airprt.txd", "CJ_RUBBER")]
+FLOOD_REFLECTOR = (0.03, 0.05, 0.47, 0.96)  # ws_floodlight: the lamp's face
+FLOOD_FINS = (0.55, 0.12, 0.92, 0.88)  # ws_floodlight: the fins
+
+
+def build_flood_light(ctx):
+    """A halogen site work light on a tripod, 1.57 m to the top of its handle: three black legs splayed 0.42 m from a collar
+    0.55 m up, a black lower mast and a chrome upper one with a clamp knob between, a black yoke holding a yellow lamp
+    head (0.28 x 0.11 x 0.22 m) on side pivots, its face (+Y) turned FLOOD_TILT degrees down, fins on its back and a
+    carry handle on top. Origin at the ground under the mast."""
+    from mathutils import Vector
+    box, tube = ctx["box"], _tube(ctx)
+    yellow, black, chrome, lamp, rubber = 0, 1, 2, 3, 4
+    white = (0.95, 0.95, 0.95, 1.0)
+    collar = 0.55
+    tube((0.0, 0.0, collar - 0.05), (0.0, 0.0, collar + 0.05), 0.03, 12, black, None, False)
+    for k in range(3):  # the legs, a brace from each to the mast, a rubber foot
+        a = math.radians(90 + 120 * k)
+        out = Vector((math.cos(a), math.sin(a), 0.0))
+        top, foot = out * 0.03 + Vector((0.0, 0.0, collar)), out * 0.42 + Vector((0.0, 0.0, 0.02))
+        tube(tuple(top), tuple(foot), 0.012, 8, black, None)
+        mid = top.lerp(foot, 0.55)
+        tube((0.0, 0.0, 0.27), tuple(mid), 0.007, 6, black, None)
+        tube(tuple(foot - Vector((0.0, 0.0, 0.02))), tuple(foot + Vector((0.0, 0.0, 0.01))), 0.02, 8, rubber, None, False)
+    tube((0.0, 0.0, 0.25), (0.0, 0.0, 0.95), 0.018, 10, black, None, False)  # the lower mast
+    tube((0.0, 0.0, 0.9), (0.0, 0.0, 1.31), 0.013, 10, chrome, white, False)  # the upper mast
+    tube((0.0, 0.0, 0.93), (0.0, 0.0, 0.97), 0.024, 10, black, None, False)  # the clamp, its knob out of +X
+    tube((0.024, 0.0, 0.95), (0.06, 0.0, 0.95), 0.006, 6, black, None, False)
+    tube((0.06, 0.0, 0.95), (0.068, 0.0, 0.95), 0.014, 8, black, None, False)
+    hz = FLOOD_HEAD[2]
+    box((0.0, 0.0, 1.31), (0.36, 0.03, 0.02), black, None)  # the yoke: a bar across the mast's top, an arm up each side
+    for x in (-0.17, 0.17):
+        box((x, 0.0, (1.31 + hz) / 2), (0.02, 0.03, hz - 1.31 + 0.02), black, None)
+        tube((x, 0.0, hz), (x + math.copysign(0.03, x), 0.0, hz), 0.022, 10, black, None, False)  # the pivot knob
+    t = math.radians(FLOOD_TILT)
+    ax, ay, az = Vector((1.0, 0.0, 0.0)), Vector((0.0, math.cos(t), -math.sin(t))), Vector((0.0, math.sin(t), math.cos(t)))
+    head = Vector(FLOOD_HEAD)
+    _obox(ctx, head, (ax, ay, az), (0.28, 0.11, 0.22), yellow, None)
+    _obox(ctx, head + ay * 0.0565, (ax, ay, az), (0.24, 0.004, 0.18), lamp, white, FLOOD_REFLECTOR)  # the reflector
+    for sx in (-1, 1):  # the bezel round the face, black
+        _obox(ctx, head + ay * 0.058 + ax * (sx * 0.13), (ax, ay, az), (0.02, 0.006, 0.22), black, None)
+    for sz in (-1, 1):
+        _obox(ctx, head + ay * 0.058 + az * (sz * 0.1), (ax, ay, az), (0.28, 0.006, 0.02), black, None)
+    _obox(ctx, head - ay * 0.0565, (ax, ay, az), (0.24, 0.004, 0.18), lamp, white, FLOOD_FINS)  # the fins on the back
+    top = head + az * 0.11
+    for sx in (-0.09, 0.09):  # the carry handle
+        tube(tuple(top + ax * sx), tuple(top + ax * sx + az * 0.06), 0.01, 8, black, None, False)
+    tube(tuple(top + ax * -0.1 + az * 0.06), tuple(top + ax * 0.1 + az * 0.06), 0.014, 10, black, None)
+    return [((0.0, 0.0, 0.67), (0.05, 0.05, 0.67)), ((0.0, 0.0, hz), (0.2, 0.09, 0.15))]
+
+
 PROPS_TABLE = [
     {"name": "ls_hatch", "id": 20201, "dist": 150, "source": "zombtest1.txd", "textures": ["pave_manhole1"], "build": build_ls_hatch},
     {"name": "welder", "id": 20202, "dist": 100, "source": "dynbarrels.txd", "textures": ["redmetal", "yellowmetal", "alumplat64"], "build": build_welder},
@@ -2125,6 +2187,7 @@ PROPS_TABLE = [
     {"name": "doctor_bag", "id": 20297, "dist": 50, "sources": DOCBAG_TEXTURES, "build": build_doctor_bag},
     {"name": "bandage", "id": 20298, "dist": 30, "sources": BANDAGE_TEXTURES[:1], "build": build_bandage},
     {"name": "dirty_bandage", "id": 20299, "dist": 30, "sources": BANDAGE_TEXTURES, "build": build_dirty_bandage},
+    {"name": "flood_light", "id": 20300, "dist": 120, "sources": FLOOD_TEXTURES, "build": build_flood_light},
     # the explosives' trigger variants (items <Base><TRIGGERS[kind]>, e.g. TntTimebomb)
     {"name": "tnt_timer", "id": 20284, "dist": 50, "sources": with_triggers(TNT_TEXTURES), "build": lambda ctx, k="timer", s=with_triggers(TNT_TEXTURES): build_tnt(ctx, k, s)},
     {"name": "tnt_trip", "id": 20285, "dist": 50, "sources": with_triggers(TNT_TEXTURES), "build": lambda ctx, k="trip", s=with_triggers(TNT_TEXTURES): build_tnt(ctx, k, s)},

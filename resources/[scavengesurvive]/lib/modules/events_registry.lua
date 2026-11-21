@@ -160,6 +160,7 @@ return {
     fishingStarted = true,
     fishingStopped = true,
     potInspectRequested = true,
+    floodLightActionRequested = true,
     potInspected = true,
     lockerToggled = true,
     supplyDropStarted = true,

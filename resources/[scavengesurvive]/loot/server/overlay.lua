@@ -36,10 +36,19 @@ return function(ctx)
                 state = "nobudget"
             end
             out[#out + 1] = {
-                id = r.id, x = r.x, y = r.y, z = r.z, tbl = r.table_name, zone = r.zone,
+                id = r.id,
+                x = r.x,
+                y = r.y,
+                z = r.z,
+                tbl = r.table_name,
+                zone = r.zone,
                 chance = math.min(100, math.floor((tonumber(r.weight) or 0) * mult + 0.5)),
-                size = sizeText(r.size), state = state, dueIn = dueIn, outTotal = outTotal,
-                lying = r.lying, left = left,
+                size = sizeText(r.size),
+                state = state,
+                dueIn = dueIn,
+                outTotal = outTotal,
+                lying = r.lying,
+                left = left,
             }
         end
         return out
@@ -52,8 +61,16 @@ return function(ctx)
         last[p] = s
         local box = string.format(
             "POLYGON((%g %g,%g %g,%g %g,%g %g,%g %g))",
-            x - RADIUS, y - RADIUS, x + RADIUS, y - RADIUS, x + RADIUS, y + RADIUS, x - RADIUS, y + RADIUS,
-            x - RADIUS, y - RADIUS
+            x - RADIUS,
+            y - RADIUS,
+            x + RADIUS,
+            y - RADIUS,
+            x + RADIUS,
+            y + RADIUS,
+            x - RADIUS,
+            y + RADIUS,
+            x - RADIUS,
+            y - RADIUS
         )
         local sql = "SELECT s.id, s.x, s.y, s.z, s.table_name, s.weight, s.size, s.zone, s.enabled, "
             .. "TIMESTAMPDIFF(SECOND, NOW(), st.next_roll_at) AS due_in, "

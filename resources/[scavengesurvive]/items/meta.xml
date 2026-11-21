@@ -36,6 +36,8 @@
     <file src="server/parachute.lua"/>
     <file src="client/parachute.lua"/>
     <file src="shared/logic/machines.lua"/>
+    <file src="shared/logic/floodlight.lua"/>
+    <file src="client/floodlight.lua"/>
     <file src="server/machines.lua"/>
     <file src="shared/logic/furniture.lua"/>
     <file src="shared/logic/firework.lua"/>

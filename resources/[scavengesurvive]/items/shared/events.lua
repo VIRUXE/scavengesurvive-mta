@@ -43,6 +43,7 @@ addEvent("potInspectRequested", true)
 addEvent("machineMenuRequested", true)
 addEvent("machineHoldReleased", true)
 addEvent("machineStartRequested", true)
+addEvent("floodLightActionRequested", true) -- the interaction chooser at a Flood Light: "toggle" or "battery"
 addEvent("parachuteSpent", true)
 addEvent("vendingGlassHit", true)
 addEvent("itemGroundMeasured", true)

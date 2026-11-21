@@ -387,5 +387,6 @@ INSERT INTO item_types (uname,name,model,size,max_hitpoints,category,category_da
 ('WheelLighttruckFlat','Light Truck Wheel (Flat)',20253,5,5,'generic',NULL),
 ('WheelClassicFlat','Classic Wheel (Flat)',20254,5,5,'generic',NULL),
 ('WheelSaloonFlat','Saloon Wheel (Flat)',20255,5,5,'generic',NULL),
-('WheelSportFlat','Sport Wheel (Flat)',20256,5,5,'generic',NULL)
+('WheelSportFlat','Sport Wheel (Flat)',20256,5,5,'generic',NULL),
+('FloodLight','Flood Light',20300,8,3,'generic',NULL)
 ON DUPLICATE KEY UPDATE name=VALUES(name), model=VALUES(model), size=VALUES(size), max_hitpoints=VALUES(max_hitpoints), category=VALUES(category), category_data=VALUES(category_data);
