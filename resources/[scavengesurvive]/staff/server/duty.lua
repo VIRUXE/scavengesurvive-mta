@@ -39,15 +39,25 @@ return function(ctx)
         end
     end)
 
-    local function dutyOn(p)
+    -- the server side of going on duty; what the client shows for it is sent by sendDutyView
+    local function dutyState(p)
         local skin = getElementModel(p)
         state.duty[p] = { skin = skin }
         setElementData(p, "staff.duty", true, "broadcast", "deny")
-        setDutyWeather(p, true)
         setElementModel(p, logic.dutySkin(exports.items:isFemaleSkin(skin)))
+        state.nametags[p] = true
+    end
+
+    local function sendDutyView(p)
+        setDutyWeather(p, true)
         setNametags(p, true)
         ctx.ghosts.sendTo(p)
         ctx.esp.sendTo(p)
+    end
+
+    local function dutyOn(p)
+        dutyState(p)
+        sendDutyView(p)
         ctx.say(p, " >  You are now on duty: full health, immune to all damage, survival stats frozen, name tags on.")
         ctx.msgStaff(1, " >  %s went on duty", getPlayerName(p))
         log.event("staff.dutyChanged", { player = p, on = true })
@@ -316,23 +326,34 @@ return function(ctx)
         end,
     })
 
-    -- Spectate: camera on the target, the staff member parked frozen and invisible where they stood.
-    local function spectate(p, target)
+    -- the staff member parked frozen and invisible where they stood, in the target's world, camera on the target
+    local function park(p, target)
+        setElementFrozen(p, true)
+        setElementAlpha(p, 0)
+        setElementCollisionsEnabled(p, false)
+        setElementDimension(p, getElementDimension(target))
+        setElementInterior(p, getElementInterior(target))
+        setCameraTarget(p, target)
+    end
+
+    -- Spectate: camera on the target, the staff member parked frozen and invisible where they stood. `quiet` leaves
+    -- out the client's banner (a restart handoff: the client asks for it once its staff script runs).
+    local function spectate(p, target, quiet)
         local s = state.spectating[p]
         if not s then
             local x, y, z = getElementPosition(p)
             s = { x = x, y = y, z = z, interior = getElementInterior(p), dimension = getElementDimension(p) }
             state.spectating[p] = s
-            setElementFrozen(p, true)
-            setElementAlpha(p, 0)
-            setElementCollisionsEnabled(p, false)
-            setNametags(p, true)
+            state.nametags[p] = true
+            if not quiet then
+                setNametags(p, true)
+            end
         end
         s.target = target
-        setElementDimension(p, getElementDimension(target))
-        setElementInterior(p, getElementInterior(target))
-        setCameraTarget(p, target)
-        triggerClientEvent(p, "spectateChanged", p, target)
+        park(p, target)
+        if not quiet then
+            triggerClientEvent(p, "spectateChanged", p, target)
+        end
         ctx.util.log("staff", "info", "%s watches %s", getPlayerName(p), getPlayerName(target))
     end
 
@@ -444,6 +465,58 @@ return function(ctx)
             end
         end
     end)
+
+    -- A character restart respawns everyone (spawnPlayer, camera back on the player): a watcher is parked again.
+    addEventHandler("characterSpawned", root, function()
+        local s = state.spectating[source]
+        if s and isElement(s.target) then
+            park(source, s.target)
+        end
+    end)
+
+    -- Restart handoff (this resource restarts with character, which every gameplay resource includes): the stop
+    -- still takes everyone off duty and back from spectating, so a staff resource stopped for good leaves nobody
+    -- immune or parked invisible, but first leaves both in the player's own element data, which outlives the
+    -- resource; the start puts them back without a word and the client asks for its side (staffStateRequested).
+    local HANDOFF_KEY, HANDOFF_TTL_S = "staff.handoff", 120
+
+    function M.saveHandoff(p)
+        local s = state.spectating[p]
+        if state.duty[p] or s then
+            local h = { at = getRealTime().timestamp, duty = state.duty[p] ~= nil, target = s and s.target or false }
+            setElementData(p, HANDOFF_KEY, h, false)
+        end
+    end
+
+    function M.takeHandoff(p)
+        local h = getElementData(p, HANDOFF_KEY)
+        if not h then
+            return
+        end
+        removeElementData(p, HANDOFF_KEY)
+        if type(h) ~= "table" or getRealTime().timestamp - (tonumber(h.at) or 0) > HANDOFF_TTL_S then
+            return
+        end
+        if h.duty and not state.duty[p] then
+            dutyState(p)
+            log.event("staff.dutyChanged", { player = p, on = true, restored = true })
+        end
+        if isElement(h.target) and h.target ~= p then
+            spectate(p, h.target, true)
+        end
+    end
+
+    ctx.net.handler("staffStateRequested", function(player)
+        if state.duty[player] then
+            sendDutyView(player)
+        elseif state.nametags[player] then
+            setNametags(player, true)
+        end
+        local s = state.spectating[player]
+        if s and isElement(s.target) then
+            triggerClientEvent(player, "spectateChanged", player, s.target)
+        end
+    end, { rate = 1 })
 
     ctx.command({
         name = "nametags",

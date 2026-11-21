@@ -471,12 +471,14 @@ addEventHandler("onResourceStart", resourceRoot, function()
         if ctx.accountId(p) then
             state.authed[p] = true
             loadMute(p) -- mutes survive a staff restart; never re-raise playerAuthenticated (character would respawn)
+            modules.duty.takeHandoff(p) -- and so do duty and spectating
         end
     end
 end)
 
 addEventHandler("onResourceStop", resourceRoot, function()
     for _, p in ipairs(getElementsByType("player")) do
+        modules.duty.saveHandoff(p)
         modules.bans.release(p)
         modules.moderation.forget(p)
         modules.duty.forget(p)

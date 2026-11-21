@@ -2,6 +2,7 @@
 addEvent("playerAuthenticated", false)
 addEvent("playerLoggedOut", false)
 addEvent("characterDied", false)
+addEvent("characterSpawned", false)
 
 -- client to server (handlers registered with net.handler)
 addEvent("staffListActionSelected", true)
@@ -10,6 +11,7 @@ addEvent("staffDialogResponded", true)
 addEvent("spectateRequested", true)
 addEvent("staffCommandIssued", true)
 addEvent("staffPanelRequested", true)
+addEvent("staffStateRequested", true)
 
 -- server to client / client-local
 addEvent("playerBlackoutChanged", true) -- /lights; handled by world/client/blackout.lua

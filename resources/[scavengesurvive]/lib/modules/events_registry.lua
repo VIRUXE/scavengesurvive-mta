@@ -85,6 +85,7 @@ return {
     staffListActionSelected = true,
     staffListClosed = true,
     spectateRequested = true,
+    staffStateRequested = true,
     staffListOpened = true,
     staffListDismissed = true,
     staffDialogOpened = true,

@@ -79,6 +79,11 @@ addEventHandler("spectateChanged", root, function(target)
     end
 end)
 
+-- after a restart the server holds this player's duty and spectate state; ask for what the client shows of it
+addEventHandler("onClientResourceStart", resourceRoot, function()
+    triggerServerEvent("staffStateRequested", localPlayer)
+end)
+
 addEventHandler("nametagsChanged", root, function(flag)
     nametags = flag == true
 end)
