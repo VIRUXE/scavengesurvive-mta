@@ -191,8 +191,11 @@ local SELECT_BUDGET = "SELECT cap, remainder, "
 local UPSERT_BUDGET = "INSERT INTO world_budget (category, zone, cap, remainder, allowance) "
     .. "VALUES ('vehicles', 'all', ?, 0, 0) ON DUPLICATE KEY UPDATE cap = VALUES(cap), remainder = 0"
 
--- retires every abandoned vehicle in one statement; RETURNING hands back the ids whose elements go too
+-- retires every abandoned vehicle in one statement; RETURNING hands back the ids whose elements go too. A vehicle with
+-- a lock fitted (a cut key or a lock and chain: key_code; a combination chain or a walk-in door keypad: keypad_code)
+-- is someone's and never retired.
 local DELETE_ABANDONED = "DELETE FROM vehicles WHERE left_spawn = 1 AND sunk = 0 "
+    .. "AND COALESCE(key_code, 0) = 0 AND keypad_code IS NULL "
     .. "AND COALESCE(last_used_at, updated_at) < DATE_SUB(NOW(), INTERVAL ? DAY) RETURNING id"
 
 local settings = {}
