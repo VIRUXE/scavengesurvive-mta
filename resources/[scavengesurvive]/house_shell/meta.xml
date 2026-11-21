@@ -2,7 +2,9 @@
     <info author="scavengesurvive-mta" type="script" name="house_shell" description="Enterable replacements for vanilla buildings: des_westrn9_ (3250), the trailers (3167-3175), the log cabins (17067) and the Fort Carson houses des_bighus01-03 (3303-3305), the Bone County farmhouse des_farmhouse1_ (16280), the desert concrete house conhoos2 (3241), the Verdant Meadows airstrip office des_byoffice (16326), the Fort Carson motel des_nmot_02 (16673) and the Shady Cabin logcabinn01 (18259) and the Chiliad log cabin logcabinn (18267), rebuilt whole" version="0.4.0"/>
     <min_mta_version client="1.6.0-9.21695"/>
     <download_priority_group>90</download_priority_group>
+    <include resource="lib"/>
     <script src="shared/events.lua" type="client"/>
+    <script src="server/main.lua" type="server"/>
     <script src="client/main.lua" type="client"/>
     <file src="trailers.lua"/>
     <file src="files/des_westrn9.col"/>

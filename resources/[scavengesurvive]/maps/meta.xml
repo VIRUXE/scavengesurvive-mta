@@ -1,6 +1,6 @@
 <meta>
-    <info author="scavengesurvive-mta" type="script" name="maps" description="Upstream static maps built client-side (createBuilding) and server zone colshapes" version="0.1.0"/>
-    <min_mta_version server="1.6.0" client="1.6.0-9.22410"/>
+    <info author="scavengesurvive-mta" type="script" name="maps" description="Upstream static maps built on the server (createBuilding, stand-ins for client-only models) and server zone colshapes" version="0.1.0"/>
+    <min_mta_version server="1.6.0-9.21765" client="1.6.0-9.22824"/>
     <download_priority_group>85</download_priority_group>
     <include resource="lib"/>
     <include resource="samp_models"/>
@@ -9,28 +9,30 @@
     <include resource="box_models"/>
     <script src="shared/events.lua" type="shared"/>
     <script src="server/main.lua" type="server"/>
+    <script src="server/build.lua" type="server"/>
     <script src="client/main.lua" type="client"/>
     <file src="shared/logic/placement.lua"/>
-    <file src="shared/logic/zones.lua"/>
-    <file src="shared/glazed_windows.lua"/>
-    <file src="shared/shell_doors.lua"/>
-    <file src="shared/stretched_shells.lua"/>
-    <file src="data/zones.lua"/>
-    <file src="data/index.lua"/>
-    <file src="data/BC.lua"/>
-    <file src="data/BOXES.lua"/>
-    <file src="data/VENDING.lua"/>
-    <file src="data/COLFIX.lua"/>
-    <file src="data/FC.lua"/>
-    <file src="data/GEN.lua"/>
-    <file src="data/KAIJA.lua"/>
-    <file src="data/LS.lua"/>
-    <file src="data/LV.lua"/>
-    <file src="data/OCEAN.lua"/>
-    <file src="data/RC.lua"/>
-    <file src="data/SF.lua"/>
-    <file src="data/TR.lua"/>
+    <file src="shared/logic/zones.lua" download="false"/>
+    <file src="shared/glazed_windows.lua" download="false"/>
+    <file src="shared/shell_doors.lua" download="false"/>
+    <file src="shared/stretched_shells.lua" download="false"/>
+    <file src="data/zones.lua" download="false"/>
+    <file src="data/index.lua" download="false"/>
+    <file src="data/BC.lua" download="false"/>
+    <file src="data/BOXES.lua" download="false"/>
+    <file src="data/VENDING.lua" download="false"/>
+    <file src="data/COLFIX.lua" download="false"/>
+    <file src="data/FC.lua" download="false"/>
+    <file src="data/GEN.lua" download="false"/>
+    <file src="data/KAIJA.lua" download="false"/>
+    <file src="data/LS.lua" download="false"/>
+    <file src="data/LV.lua" download="false"/>
+    <file src="data/OCEAN.lua" download="false"/>
+    <file src="data/RC.lua" download="false"/>
+    <file src="data/SF.lua" download="false"/>
+    <file src="data/TR.lua" download="false"/>
     <export function="getZoneAt" type="server"/>
     <export function="getPlayerZone" type="server"/>
+    <export function="getMapStats" type="server"/>
     <export function="getMapStats" type="client"/>
 </meta>

@@ -12,8 +12,8 @@ local buttons = loadFile("shared/logic/buttons.lua", "=world/buttons.lua")
 local doors = loadFile("shared/logic/doors.lua", "=world/doors.lua")
 local puzzles = loadFile("shared/logic/puzzles.lua", "=world/puzzles.lua")
 local area69 = loadFile("shared/logic/area69.lua", "=world/area69.lua")
-local data = loadFile("data/puzzles.lua", "=world/puzzles_data.lua")
 local models = loadstring(exports.lib:getModule("models"), "=lib/models.lua")()
+local standins = loadstring(exports.lib:getModule("standins"), "=lib/standins.lua")()
 local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")()
 
 local reg = buttons.new()
@@ -323,9 +323,8 @@ function buttonNear()
 end
 
 addEventHandler("onClientResourceStart", resourceRoot, function()
-    for _, o in ipairs(data.objects) do
-        place(o[1], { o[2], o[3], o[4], o[5], o[6], o[7] }, o[8])
-    end
+    -- the puzzles' static objects are the server's (server/main.lua): swap in this client's SA-MP models
+    standins.track(resourceRoot)
     for _, list in ipairs({ doors.PROPS, puzzles.PROPS }) do
         for _, p in ipairs(list) do
             place(p[1], { p[2], p[3], p[4], p[5], p[6], p[7] }, p[8])

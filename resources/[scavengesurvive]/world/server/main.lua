@@ -83,6 +83,28 @@ loadFile("server/trees.lua", "=world/server/trees.lua")({
 -- the port's map objects in the server's collision (ml_sageom), for the lib module geom
 loadFile("server/geom.lua", "=world/server/geom.lua")({ log = log })
 
+-- the puzzles' static objects (data/puzzles.lua: the ranch's quarry, the caves, the metro), built here for every player
+-- so the server's collision companion (lib sageom.lua) has them too; a SA-MP model is a stand-in that each client swaps
+-- for its own (client/buttons.lua)
+local standins = loadstring(exports.lib:getModule("standins"), "=lib/standins.lua")()
+local function placePuzzleObjects()
+    local count = 0
+    for _, o in ipairs(loadFile("data/puzzles.lua", "=world/puzzles_data.lua").objects) do
+        local obj
+        if standins.isCustom(o[1]) then
+            obj = standins.create(o[1], o[2], o[3], o[4], o[5], o[6], o[7])
+        else
+            obj = createObject(o[1], o[2], o[3], o[4], o[5], o[6], o[7])
+        end
+        if obj then
+            setElementDimension(obj, o[8] > 0 and o[8] or 0)
+            setElementFrozen(obj, true)
+            count = count + 1
+        end
+    end
+    util.log("world", "info", "puzzles: %d objects placed", count)
+end
+
 -- upstream creates the zone files' fixed items and the puzzle items on every start; here the ones gone from the
 -- world are made again, with no despawn time, a puzzle item carrying its tag (shared/logic/fixtures.lua)
 local function placeFixtures()
@@ -158,6 +180,7 @@ local function syncClock()
 end
 
 addEventHandler("onResourceStart", resourceRoot, function()
+    placePuzzleObjects()
     placeFixtures()
     buttonsSrv.start()
     db.settings(function(map)

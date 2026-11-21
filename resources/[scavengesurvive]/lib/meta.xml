@@ -16,6 +16,8 @@
     <file src="modules/geom.lua" download="false"/>
     <file src="modules/model_loader.lua"/>
     <file src="modules/models.lua"/>
+    <file src="modules/standins.lua"/>
+    <file src="modules/sageom.lua" download="false"/>
     <file src="modules/lang.lua"/>
     <file src="modules/outline.lua"/>
     <export function="getModule" type="server"/>

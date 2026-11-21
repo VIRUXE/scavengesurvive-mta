@@ -33,7 +33,8 @@ files["resources/**/door_models/client/**"] = { std = "lua51+mta_shared+mta_clie
 files["resources/**/prop_models/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "resolve" }, read_globals = { "engineSetModelFlags" } }
 files["resources/**/box_models/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "resolve" } }
 -- restoreWorldModel postdates the generated .luacheck/mta_client.lua list
-files["resources/**/maps/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "getZoneAt", "getPlayerZone" } }
+-- createBuilding, setObjectBreakable, removeWorldModel and restoreWorldModel (server) postdate the generated list
+files["resources/**/maps/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "getZoneAt", "getPlayerZone", "getMapStats" }, read_globals = { "createBuilding", "setObjectBreakable", "removeWorldModel", "restoreWorldModel" } }
 files["resources/**/maps/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "getMapStats" }, read_globals = { "restoreWorldModel", "engineSetModelLODDistance", "engineResetModelLODDistance" } }
 files["resources/**/maps/data/**"] = { std = "lua51", max_line_length = false }
 -- moveObject, createBlipAttachedTo, removeElementData (server) and createEffect, moveObject (client) postdate the generated lists
@@ -75,6 +76,7 @@ files["resources/**/chat/client/**"] = { std = "lua51+mta_shared+mta_client", gl
 files["resources/**/presence/server/**"] = { std = "lua51+mta_shared+mta_server", read_globals = { "getMaxPlayers", "getServerName" } }
 files["resources/**/ranking/server/**"] = { std = "lua51+mta_shared+mta_server", read_globals = { "getMaxPlayers" } }
 files["resources/**/presence/client/**"] = { std = "lua51+mta_shared+mta_client", read_globals = { "isDiscordRichPresenceConnected", "resetDiscordRichPresenceData", "setDiscordApplicationID", "setDiscordRichPresenceButton", "setDiscordRichPresenceDetails", "setDiscordRichPresencePartySize", "setDiscordRichPresenceStartTime", "setDiscordRichPresenceState" } }
+files["resources/**/house_shell/server/**"] = { std = "lua51+mta_shared+mta_server", read_globals = { "removeWorldModel", "restoreWorldModel" } }
 files["resources/**/house_shell/client/**"] = { std = "lua51+mta_shared+mta_client", read_globals = { "engineRestoreCOL", "engineRestreamWorld", "engineRestoreModel", "engineSetModelFlag", "engineFreeModel", "engineRequestModel", "engineSetModelPhysicalPropertiesGroup", "engineGetModelPhysicalPropertiesGroup", "engineSetModelLODDistance", "restoreWorldModel" } }
 files["resources/**/dev/client/item_picker.lua"] = { std = "lua51+mta_shared+mta_client", read_globals = { "guiCreateGridList", "guiGridListAddColumn", "guiGridListAddRow", "guiGridListClear", "guiGridListGetSelectedItem", "guiGridListSetSelectedItem", "guiGridListSetItemText", "guiLabelSetColor", "guiEditSetCaretIndex", "guiCreateComboBox", "guiComboBoxAddItem", "guiComboBoxGetSelected", "guiComboBoxSetSelected", "guiComboBoxGetItemText" } }
 -- fetchRemote postdates the generated .luacheck/mta_server.lua list; write is the export the lib log module calls

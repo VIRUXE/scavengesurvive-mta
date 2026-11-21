@@ -45,8 +45,6 @@ local doorModels = {} -- vanilla trailer model -> requested model id of its door
 local mapHouses = {} -- vanilla model of a house the maps place copies of -> { id = its leaf's model, house = its row }
 local requested = {} -- requested ids, freed on stop
 local doors = {} -- door objects created
-local props = {} -- furniture objects created
-local removed = {} -- { model, radius, x, y, z } of vanilla objects removed, restored on stop
 local hung = {} -- building or placement key -> true, so a trailer gets one door
 local keep = {} -- loaded COL/TXD/DFF elements
 
@@ -108,33 +106,19 @@ local function hangCabinDoors(id, x, y, z, rz)
     end
 end
 
--- A house's doors: one leaf model, hung at each of its hinges (x, y, z, rz in the model's frame); then the vanilla
--- objects it removes and the stock props it is furnished with, if any (also in the model's frame).
+-- A house's doors: one leaf model, hung at each of its hinges (x, y, z, rz in the model's frame). The vanilla objects
+-- it removes and the stock props it is furnished with are the server's (server/main.lua).
 local function hangHouseDoors(id, house, x, y, z, rz)
     local a = math.rad(rz)
     local c, s = math.cos(a), math.sin(a)
     local function at(p)
         return x + p[1] * c - p[2] * s, y + p[1] * s + p[2] * c, z + p[3]
     end
-    for _, r in ipairs(house.remove or {}) do
-        local wx, wy, wz = at({ r[2], r[3], r[4] })
-        if removeWorldModel(r[1], r[5], wx, wy, wz) then
-            removed[#removed + 1] = { r[1], r[5], wx, wy, wz }
-        end
-    end
     for _, h in ipairs(house.hinges) do
         local hx, hy, hz = at(h)
         local obj = createObject(id, hx, hy, hz, 0, 0, rz + h[4])
         if obj then
             doors[#doors + 1] = obj
-        end
-    end
-    for _, p in ipairs(house.props or {}) do
-        local px, py, pz = at({ p[2], p[3], p[4] })
-        local obj = createObject(p[1], px, py, pz, 0, 0, rz + p[5])
-        if obj then
-            setElementFrozen(obj, true) -- client-side furniture: kept where it stands, the same for every player
-            props[#props + 1] = obj
         end
     end
 end
@@ -289,15 +273,10 @@ addEventHandler("mapsBuilt", root, function()
 end)
 
 addEventHandler("onClientResourceStop", resourceRoot, function()
-    for _, list in ipairs({ doors, props }) do
-        for _, obj in ipairs(list) do
-            if isElement(obj) then
-                destroyElement(obj)
-            end
+    for _, obj in ipairs(doors) do
+        if isElement(obj) then
+            destroyElement(obj)
         end
-    end
-    for _, r in ipairs(removed) do
-        restoreWorldModel(r[1], r[2], r[3], r[4], r[5])
     end
     for model in pairs(replaced) do
         engineRestoreModel(model)

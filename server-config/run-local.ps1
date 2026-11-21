@@ -133,6 +133,17 @@ $la = New-AclElement "acl" ([ordered]@{ name = "ScavengeSurviveLogs" })
 [void]$la.AppendChild((New-AclElement "right" ([ordered]@{ name = "function.fetchRemote"; access = "true" })))
 [void]$root.InsertBefore($lg, $default)
 [void]$root.InsertBefore($la, $default)
+# (f4) sageom (sa-geom's companion resource, when installed): it hooks every resource's object calls to mirror them into
+# the server's collision module, and reads the .col files the model resources hand it (replaceCOL)
+foreach ($node in @($root.SelectNodes('group[@name="SaGeom"] | acl[@name="SaGeom"]'))) { [void]$root.RemoveChild($node) }
+$gg = New-AclElement "group" ([ordered]@{ name = "SaGeom" })
+[void]$gg.AppendChild((New-AclElement "acl" ([ordered]@{ name = "SaGeom" })))
+[void]$gg.AppendChild((New-AclElement "object" ([ordered]@{ name = "resource.sageom" })))
+$ga = New-AclElement "acl" ([ordered]@{ name = "SaGeom" })
+[void]$ga.AppendChild((New-AclElement "right" ([ordered]@{ name = "function.addDebugHook"; access = "true" })))
+[void]$ga.AppendChild((New-AclElement "right" ([ordered]@{ name = "general.ModifyOtherObjects"; access = "true" })))
+[void]$root.InsertBefore($gg, $default)
+[void]$root.InsertBefore($ga, $default)
 $admin = $root.SelectSingleNode('group[@name="Admin"]')
 if (-not $admin) { throw "acl.xml has no Admin group" }
 if (-not $admin.SelectSingleNode('object[@name="resource.dev"]')) {
