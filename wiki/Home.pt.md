@@ -93,7 +93,7 @@ Isto é uma adaptação do Scavenge & Survive do Southclaws para SA-MP, e o jogo
 - [Blindagem de veículos](Vehicle-Armour)
 - [Painel do condutor](Drivers-Dashboard)
 - [Baterias e motores de arranque](Car-Batteries-and-Starters)
-- [Peças do Bobcat](Bobcat-Salvage-Parts)
+- [Peças de veículos](Vehicle-Salvage-Parts)
 - [Reboques e rebocar](Trailers-and-Towing)
 
 ### Mundo {#world}

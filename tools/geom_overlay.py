@@ -8,7 +8,7 @@ queries (lib geom.lua) match what players stand on. Two files in resources/[scav
 - port.map: the maps resource's objects and removals and the puzzles' objects, main world only (dimension and interior
   -1 or 0), as MTA <object>/<removeWorldObject> rows: the same selection as tools/spawn_ground.py's overlay().
 - overlay.toml: that map plus a [[col]] entry per model of every model pack (samp_models, hat_models, door_models,
-  prop_models, box_models) with its id, from the pack's own files/ (no game files needed), and one per vanilla model
+  prop_models, box_models, car_part_models) with its id, from the pack's own files/ (no game files needed), and one per vanilla model
   house_shell rebuilds (the houses, trailers, log cabins and des_westrn9_), with the vanilla id, so the server stands
   on the shell's floor as players do. Paths are relative to the manifest, so the module finds them under the server's
   resources folder.

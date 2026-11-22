@@ -33,7 +33,7 @@ Five items of each size; the [Item Catalogue](Item-Catalogue) lists every item w
 | 3 | 36 | [5.56 Rounds](556-Rounds-Ammo556), [7.62 Rounds](762-Rounds), [Angle Grinder](Angle-Grinder), [Baseball Bat](Baseball-Bat), [Big Ass Sword](Big-Ass-Sword) |
 | 4 | 25 | [Armour](Armour), [Backpack](Backpack), [Broom](Broom), [Cardboard Box](Cardboard-Box), [Carton](Carton) |
 | 5 | 41 | [AK-47](AK47), [Alloy Wheel](Alloy-Wheel), [Alloy Wheel (Flat)](Alloy-Wheel-Flat), [Campfire](Campfire), [Chainsaw](Chainsaw) |
-| 6 | 28 | [BBQ](BBQ), [Big Crate](Big-Crate), [Bobcat Front Bumper (Bad)](Bobcat-Front-Bumper-Bad), [Bobcat Front Bumper (Good)](Bobcat-Front-Bumper-Good), [Bobcat Hood (Bad)](Bobcat-Hood-Bad) |
+| 6 | 442 | [BBQ](BBQ), [Big Crate](Big-Crate), [Fishing Rod](Fishing-Rod), [Heatseeker](Heatseeker), [Large Box](Large-Box) |
 | 7 | 4 | [Flamer](Flamer), [Minigun](Minigun), [Sledgehammer](Sledgehammer), [Tool Box](Tool-Box) |
 | 8 | 6 | [Barstool](Barstool), [Flood Light](Flood-Light), [Generator](Generator), [Insulated Panel](Insulated-Panel), [Shield](Shield) |
 | 9 | 4 | [Crate Door](Crate-Door), [Fish](Fish), [Metal Door](Metal-Door), [Plank](Plank) |

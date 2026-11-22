@@ -26,17 +26,9 @@ M.SPECIAL = {
     Locator = "Locate phone",
     FishRod = "Cast line", -- #141
 }
-M.BODY_PART_VERB = "Install Bobcat body part"
+M.BODY_PART_VERB = "Install body part"
 M.GLOVEBOX_VERB = "Open glovebox" -- listed so tools/lang_qa collects it
 -- lang:end
-
-M.BODY_PARTS = {}
-for _, part in ipairs({ "Tailgate", "LeftDoor", "RightDoor", "Hood", "FrontBumper", "RearBumper" }) do
-    M.SPECIAL["Bobcat" .. part .. "Good"] = M.BODY_PART_VERB
-    M.SPECIAL["Bobcat" .. part .. "Bad"] = M.BODY_PART_VERB
-    M.BODY_PARTS["Bobcat" .. part .. "Good"] = true
-    M.BODY_PARTS["Bobcat" .. part .. "Bad"] = true
-end
 
 -- The interact verb next to a landed crate, by the loot resource's crate kind.
 -- lang:begin
@@ -288,7 +280,9 @@ function M.lines(ctx, keys)
     end
     if h.uname == "Crowbar" and ctx.crowbarTarget then
         add("interact", tr(M.SPECIAL.Crowbar) .. " · " .. ctx.crowbarTarget, "special")
-    elseif M.SPECIAL[h.uname] and (not M.BODY_PARTS[h.uname] or ctx.installPart) then
+    elseif ctx.installPart then -- a vehicle body part held at the empty slot it fits (hud installPartHint)
+        add("interact", tr(M.BODY_PART_VERB), "special")
+    elseif M.SPECIAL[h.uname] then
         add("interact", tr(M.SPECIAL[h.uname]), "special")
     elseif h.category == "food" then
         add("interact", ctx.nearCooker and tr("Cook") or tr("Eat"), "eat")

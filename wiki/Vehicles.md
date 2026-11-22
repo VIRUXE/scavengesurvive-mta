@@ -12,7 +12,7 @@ Cars, trucks, bikes, boats and a few aircraft are scattered around the map. They
 
 The engine will not start with an empty tank, with a flat or missing battery (below), or when the vehicle is badly broken (health under 300). Below 450 health the engine can cut out while you drive faster than 30 km/h, more often the worse the damage. With the engine running the tank slowly drains, quicker at speed and at each type's own consumption; an empty tank stops the engine. When you get in as the driver a tip tells you how broken the vehicle is and which tool repairs it.
 
-Four pages go deeper: [Driver's Dashboard](Drivers-Dashboard) for the warning lamps, rev counter and voltmeter the driver sees, [Car Batteries & Starters](Car-Batteries-and-Starters) for what keeps the engine turning over, [Bobcat Salvage Parts](Bobcat-Salvage-Parts) for the doors, hood, tailgate and bumpers that come off a Bobcat and go back on, and [Trailers & Towing](Trailers-and-Towing) for the hitch and the Airstream.
+Four pages go deeper: [Driver's Dashboard](Drivers-Dashboard) for the warning lamps, rev counter and voltmeter the driver sees, [Car Batteries & Starters](Car-Batteries-and-Starters) for what keeps the engine turning over, [Vehicle Salvage Parts](Vehicle-Salvage-Parts) for the doors, hood, trunk and bumpers that come off every car and go back on, and [Trailers & Towing](Trailers-and-Towing) for the hitch and the Airstream.
 
 ## Battery
 

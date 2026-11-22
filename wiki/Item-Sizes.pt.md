@@ -30,7 +30,7 @@ Cinco itens de cada tamanho; o [Catálogo de itens](Item-Catalogue) lista todos 
 | 3 | 36 | [Balas 5.56](556-Rounds-Ammo556), [Balas 7.62](762-Rounds), [Bandeira](Flag), [Bengala](Cane-Cane), [Bomba de gasolina](Petrol-Bomb) |
 | 4 | 25 | [Barra de reboque](Tow-Bar), [Caixa de cartão](Cardboard-Box), [Caixa de cartão aberta](Open-Cardboard-Box), [Caixa de embalagem](Packing-Box), [Caixa de envio](Shipping-Box) |
 | 5 | 41 | [AK-47](AK47), [Abóbora](Pumpkin), [Bidão de óleo](Oil-Drum), [Botija de gás](Gas-Bottle), [Caixa de velocidades](Gear-Box) |
-| 6 | 28 | [Ancinho](Rake), [Caixa de papelão grande](Large-Carton), [Caixa grande](Large-Box), [Caixote de armas](Weapon-Crate), [Caixote de madeira](Wooden-Crate) |
+| 6 | 442 | [Ancinho](Rake), [Caixa de papelão grande](Large-Carton), [Caixa grande](Large-Box), [Caixote de armas](Weapon-Crate), [Caixote de madeira](Wooden-Crate) |
 | 7 | 4 | [Caixa de ferramentas](Tool-Box), [Lança-chamas](Flamer), [Marreta](Sledgehammer), [Metralhadora rotativa](Minigun) |
 | 8 | 6 | [Amplificador pequeno](Small-Amp), [Banco de bar](Barstool), [Escudo](Shield), [Gerador](Generator), [Painel isolado](Insulated-Panel) |
 | 9 | 4 | [Peixe](Fish), [Porta de caixote](Crate-Door), [Porta metálica](Metal-Door), [Tábua](Plank) |

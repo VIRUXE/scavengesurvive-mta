@@ -14,7 +14,7 @@ return function(ctx)
     local THROW_MAX = 12
 
     function M.isPart(uname)
-        return bp.partOf(uname) ~= nil
+        return bp.isPart(uname)
     end
 
     function M.busy(vehicle)
@@ -199,9 +199,8 @@ return function(ctx)
     -- the held part belongs on this vehicle, its slot is empty and the player stands at it: the tap fits it
     -- (anything else at the rear is a part for the trunk)
     function M.fits(player, vehicle, held)
-        local modelId, slot = bp.partOf(held.uname)
-        return modelId ~= nil
-            and getElementModel(vehicle) == modelId
+        local slot = bp.slotFor(held.uname, getElementModel(vehicle))
+        return slot ~= nil
             and workable(player, vehicle)
             and atSlot(player, vehicle, slot)
             and bp.condition(slot, state(vehicle, slot)) == "missing"
@@ -209,15 +208,12 @@ return function(ctx)
 
     -- A held part goes into the empty slot it belongs to, loose: a Ratchet has to secure it.
     function M.install(player, vehicle, held)
-        local modelId, slot, good = bp.partOf(held.uname)
-        if not modelId or ctx.activeActions[player] or M.busy(vehicle) then
+        if not bp.isPart(held.uname) or ctx.activeActions[player] or M.busy(vehicle) then
             return
         end
-        if
-            not workable(player, vehicle)
-            or getElementModel(vehicle) ~= modelId
-            or not atSlot(player, vehicle, slot)
-        then
+        local modelId = getElementModel(vehicle)
+        local slot, good = bp.slotFor(held.uname, modelId)
+        if not slot or not workable(player, vehicle) or not atSlot(player, vehicle, slot) then
             return ctx.toast(player, "PART_NOT_HERE")
         end
         if bp.condition(slot, state(vehicle, slot)) ~= "missing" then

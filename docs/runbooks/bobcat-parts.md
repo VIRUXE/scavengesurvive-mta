@@ -1,5 +1,8 @@
 # Bobcat salvage parts
 
+Superseded in part by `car-parts.md`: every car and truck now has its own set; the tool is a **Ratchet** (the remove
+procedure checked a Wrench until 2026-11-22), and the loot weights follow `tools/car_parts.py print loot`.
+
 Twelve standalone items, model ids 20210–20221: tailgate, left and right doors, hood, front and rear bumpers, each Good/Bad. Geometry is the original Bobcat ok/dam component, including broken glass on damaged doors. UVs and dimensions are preserved. Paint uses the stock Bobcat pairing 96/25 (grey and charcoal), with vehicle paint markers converted to fixed material colours. Original texture names, texture alpha and material alpha are retained; vehicle-only reflection/specular plugins are removed for standalone objects. Preview shaders multiply texture colours by material tints and preserve glass/decal alpha; origins are centred at ground level. Each has a box collision, combined Bobcat/vehicle TXD and a two-handed carry configuration. All twelve variants spawn at industrial world loot points (`world_industrial`), with weight 0.6 for good parts and 1.2 for bad parts. They do not spawn inside vehicle containers.
 
 ## Mechanics

@@ -1,0 +1,9883 @@
+{
+ "models": {
+  "403": {
+   "frames": [
+    "bonnet_dam",
+    "bonnet_dummy",
+    "bonnet_ok",
+    "bump_front_dam",
+    "bump_front_dummy",
+    "bump_front_ok",
+    "chassis",
+    "chassis_dummy",
+    "chassis_vlo",
+    "door_lf_dam",
+    "door_lf_dummy",
+    "door_lf_ok",
+    "door_rf_dam",
+    "door_rf_dummy",
+    "door_rf_ok",
+    "engine",
+    "exhaust",
+    "headlights",
+    "headlights2",
+    "linerun",
+    "linerun.dff.linerun_col.colmesh",
+    "linerun.dff.linerun_col.colsphere",
+    "linerun.dff.linerun_col.shadowmesh",
+    "misc_a",
+    "ped_arm",
+    "ped_frontseat",
+    "petrolcap",
+    "taillights",
+    "wheel",
+    "wheel_lb_dummy",
+    "wheel_lf_dummy",
+    "wheel_lm_dummy",
+    "wheel_rb_dummy",
+    "wheel_rf_dummy",
+    "wheel_rm_dummy",
+    "windscreen_dam",
+    "windscreen_dummy",
+    "windscreen_ok"
+   ],
+   "groundDrop": 1.5,
+   "name": "linerun",
+   "parts": {
+    "bonnet": {
+     "dam": {
+      "centre": [
+       0.0,
+       3.362,
+       0.79
+      ],
+      "samemesh": false,
+      "size": [
+       1.799,
+       1.646,
+       0.459
+      ],
+      "verts": 18
+     },
+     "ok": {
+      "centre": [
+       0.0,
+       3.362,
+       0.625
+      ],
+      "samemesh": false,
+      "size": [
+       1.799,
+       1.646,
+       0.129
+      ],
+      "verts": 14
+     }
+    },
+    "bump_front": {
+     "dam": {
+      "centre": [
+       -0.009,
+       4.308,
+       -0.96
+      ],
+      "samemesh": false,
+      "size": [
+       2.817,
+       0.389,
+       0.607
+      ],
+      "verts": 70
+     },
+     "ok": {
+      "centre": [
+       -0.0,
+       4.341,
+       -0.925
+      ],
+      "samemesh": false,
+      "size": [
+       2.8,
+       0.324,
+       0.539
+      ],
+      "verts": 74
+     }
+    },
+    "door_lf": {
+     "dam": {
+      "centre": [
+       -1.024,
+       1.727,
+       0.498
+      ],
+      "samemesh": false,
+      "size": [
+       0.326,
+       0.94,
+       1.666
+      ],
+      "verts": 36
+     },
+     "ok": {
+      "centre": [
+       -0.911,
+       1.727,
+       0.498
+      ],
+      "samemesh": false,
+      "size": [
+       0.099,
+       0.94,
+       1.666
+      ],
+      "verts": 26
+     }
+    },
+    "door_rf": {
+     "dam": {
+      "centre": [
+       0.982,
+       1.727,
+       0.498
+      ],
+      "samemesh": false,
+      "size": [
+       0.271,
+       0.94,
+       1.666
+      ],
+      "verts": 36
+     },
+     "ok": {
+      "centre": [
+       0.911,
+       1.727,
+       0.498
+      ],
+      "samemesh": false,
+      "size": [
+       0.099,
+       0.94,
+       1.666
+      ],
+      "verts": 26
+     }
+    }
+   },
+   "slots": {
+    "bonnet": [
+     0.0,
+     3.362
+    ],
+    "bump_front": [
+     0.0,
+     4.503
+    ],
+    "door_lf": [
+     -1.06,
+     1.727
+    ],
+    "door_rf": [
+     1.06,
+     1.727
+    ]
+   }
+  },
+  "405": {
+   "frames": [
+    "bonnet_dam",
+    "bonnet_dummy",
+    "bonnet_ok",
+    "boot_dam",
+    "boot_dummy",
+    "boot_ok",
+    "bump_front_dam",
+    "bump_front_dummy",
+    "bump_front_ok",
+    "bump_rear_dam",
+    "bump_rear_dummy",
+    "bump_rear_ok",
+    "chassis",
+    "chassis_dummy",
+    "chassis_vlo",
+    "door_lf_dam",
+    "door_lf_dummy",
+    "door_lf_ok",
+    "door_lr_dam",
+    "door_lr_dummy",
+    "door_lr_ok",
+    "door_rf_dam",
+    "door_rf_dummy",
+    "door_rf_ok",
+    "door_rr_dam",
+    "door_rr_dummy",
+    "door_rr_ok",
+    "engine",
+    "exhaust",
+    "exhaust_ok",
+    "headlights",
+    "headlights2",
+    "ped_arm",
+    "ped_backseat",
+    "ped_frontseat",
+    "petrolcap",
+    "sentinel",
+    "sentinel.dff.sentinel_col.colmesh",
+    "sentinel.dff.sentinel_col.colsphere",
+    "sentinel.dff.sentinel_col.shadowmesh",
+    "taillights",
+    "taillights2",
+    "ug_nitro",
+    "ug_spoiler",
+    "ug_spoiler_dam",
+    "wheel",
+    "wheel_lb_dummy",
+    "wheel_lf_dummy",
+    "wheel_rb_dummy",
+    "wheel_rf_dummy",
+    "windscreen_dam",
+    "windscreen_dummy",
+    "windscreen_ok"
+   ],
+   "groundDrop": 0.8,
+   "name": "sentinel",
+   "parts": {
+    "bonnet": {
+     "dam": {
+      "centre": [
+       0.0,
+       1.69,
+       0.254
+      ],
+      "samemesh": false,
+      "size": [
+       1.673,
+       1.575,
+       0.391
+      ],
+      "verts": 41
+     },
+     "ok": {
+      "centre": [
+       0.0,
+       1.705,
+       0.144
+      ],
+      "samemesh": false,
+      "size": [
+       1.673,
+       1.606,
+       0.203
+      ],
+      "verts": 41
+     }
+    },
+    "boot": {
+     "dam": {
+      "centre": [
+       0.0,
+       -2.323,
+       0.243
+      ],
+      "samemesh": false,
+      "size": [
+       1.657,
+       0.879,
+       0.352
+      ],
+      "verts": 26
+     },
+     "ok": {
+      "centre": [
+       0.0,
+       -2.304,
+       0.172
+      ],
+      "samemesh": false,
+      "size": [
+       1.657,
+       0.84,
+       0.241
+      ],
+      "verts": 27
+     }
+    },
+    "bump_front": {
+     "dam": {
+      "centre": [
+       -0.022,
+       2.516,
+       -0.298
+      ],
+      "samemesh": false,
+      "size": [
+       1.979,
+       0.266,
+       0.368
+      ],
+      "verts": 32
+     },
+     "ok": {
+      "centre": [
+       -0.0,
+       2.491,
+       -0.316
+      ],
+      "samemesh": false,
+      "size": [
+       1.935,
+       0.216,
+       0.231
+      ],
+      "verts": 40
+     }
+    },
+    "bump_rear": {
+     "dam": {
+      "centre": [
+       -0.004,
+       -2.87,
+       -0.375
+      ],
+      "samemesh": false,
+      "size": [
+       2.001,
+       0.348,
+       0.353
+      ],
+      "verts": 27
+     },
+     "ok": {
+      "centre": [
+       0.0,
+       -2.795,
+       -0.287
+      ],
+      "samemesh": false,
+      "size": [
+       1.97,
+       0.199,
+       0.171
+      ],
+      "verts": 32
+     }
+    },
+    "door_lf": {
+     "dam": {
+      "centre": [
+       -0.928,
+       0.225,
+       0.089
+      ],
+      "samemesh": false,
+      "size": [
+       0.286,
+       1.226,
+       1.157
+      ],
+      "verts": 64
+     },
+     "ok": {
+      "centre": [
+       -0.916,
+       0.225,
+       0.089
+      ],
+      "samemesh": false,
+      "size": [
+       0.507,
+       1.226,
+       1.157
+      ],
+      "verts": 70
+     }
+    },
+    "door_lr": {
+     "dam": {
+      "centre": [
+       -0.94,
+       -0.899,
+       0.089
+      ],
+      "samemesh": false,
+      "size": [
+       0.396,
+       1.128,
+       1.157
+      ],
+      "verts": 77
+     },
+     "ok": {
+      "centre": [
+       -0.842,
+       -0.899,
+       0.089
+      ],
+      "samemesh": false,
+      "size": [
+       0.348,
+       1.128,
+       1.157
+      ],
+      "verts": 67
+     }
+    },
+    "door_rf": {
+     "dam": {
+      "centre": [
+       0.908,
+       0.225,
+       0.089
+      ],
+      "samemesh": false,
+      "size": [
+       0.359,
+       1.226,
+       1.157
+      ],
+      "verts": 62
+     },
+     "ok": {
+      "centre": [
+       0.916,
+       0.225,
+       0.089
+      ],
+      "samemesh": false,
+      "size": [
+       0.507,
+       1.226,
+       1.157
+      ],
+      "verts": 70
+     }
+    },
+    "door_rr": {
+     "dam": {
+      "centre": [
+       0.899,
+       -0.899,
+       0.111
+      ],
+      "samemesh": false,
+      "size": [
+       0.377,
+       1.128,
+       1.202
+      ],
+      "verts": 72
+     },
+     "ok": {
+      "centre": [
+       0.842,
+       -0.899,
+       0.089
+      ],
+      "samemesh": false,
+      "size": [
+       0.348,
+       1.128,
+       1.157
+      ],
+      "verts": 67
+     }
+    }
+   },
+   "slots": {
+    "bonnet": [
+     0.0,
+     1.705
+    ],
+    "boot": [
+     0.0,
+     -2.724
+    ],
+    "bump_front": [
+     0.0,
+     2.599
+    ],
+    "bump_rear": [
+     0.0,
+     -2.895
+    ],
+    "door_lf": [
+     -1.269,
+     0.225
+    ],
+    "door_lr": [
+     -1.116,
+     -0.899
+    ],
+    "door_rf": [
+     1.269,
+     0.225
+    ],
+    "door_rr": [
+     1.116,
+     -0.899
+    ]
+   }
+  },
+  "407": {
+   "frames": [
+    "bump_front_dam",
+    "bump_front_dummy",
+    "bump_front_ok",
+    "chassis",
+    "chassis_dummy",
+    "chassis_vlo",
+    "door_lf_dam",
+    "door_lf_dummy",
+    "door_lf_ok",
+    "door_rf_dam",
+    "door_rf_dummy",
+    "door_rf_ok",
+    "engine",
+    "exhaust",
+    "extra1",
+    "extra2",
+    "extra3",
+    "firetruk",
+    "firetruk.dff.firetruk_col.colmesh",
+    "firetruk.dff.firetruk_col.colsphere",
+    "firetruk.dff.firetruk_col.shadowmesh",
+    "headlights",
+    "misc_a",
+    "ped_arm",
+    "ped_frontseat",
+    "petrolcap",
+    "taillights",
+    "wheel",
+    "wheel_lb_dummy",
+    "wheel_lf_dummy",
+    "wheel_rb_dummy",
+    "wheel_rf_dummy",
+    "windscreen_dam",
+    "windscreen_dummy",
+    "windscreen_ok"
+   ],
+   "groundDrop": 1.2,
+   "name": "firetruk",
+   "parts": {
+    "bump_front": {
+     "dam": {
+      "centre": [
+       -0.043,
+       4.055,
+       -0.695
+      ],
+      "samemesh": false,
+      "size": [
+       2.586,
+       0.827,
+       0.445
+      ],
+      "verts": 92
+     },
+     "ok": {
+      "centre": [
+       0.0,
+       4.076,
+       -0.652
+      ],
+      "samemesh": false,
+      "size": [
+       2.5,
+       0.869,
+       0.306
+      ],
+      "verts": 128
+     }
+    },
+    "door_lf": {
+     "dam": {
+      "centre": [
+       -1.368,
+       3.206,
+       0.334
+      ],
+      "samemesh": false,
+      "size": [
+       0.486,
+       0.86,
+       1.581
+      ],
+      "verts": 47
+     },
+     "ok": {
+      "centre": [
+       -1.302,
+       3.206,
+       0.348
+      ],
+      "samemesh": false,
+      "size": [
+       0.355,
+       0.86,
+       1.608
+      ],
+      "verts": 49
+     }
+    },
+    "door_rf": {
+     "dam": {
+      "centre": [
+       1.367,
+       3.206,
+       0.348
+      ],
+      "samemesh": false,
+      "size": [
+       0.5,
+       0.86,
+       1.608
+      ],
+      "verts": 46
+     },
+     "ok": {
+      "centre": [
+       1.302,
+       3.206,
+       0.348
+      ],
+      "samemesh": false,
+      "size": [
+       0.355,
+       0.86,
+       1.608
+      ],
+      "verts": 49
+     }
+    }
+   },
+   "slots": {
+    "bump_front": [
+     0.0,
+     4.51
+    ],
+    "door_lf": [
+     -1.58,
+     3.206
+    ],
+    "door_rf": [
+     1.58,
+     3.206
+    ]
+   }
+  },
+  "416": {
+   "frames": [
+    "ambulan",
+    "ambulan.dff.ambulan_col.colmesh",
+    "ambulan.dff.ambulan_col.colsphere",
+    "ambulan.dff.ambulan_col.shadowmesh",
+    "bonnet_dam",
+    "bonnet_dummy",
+    "bonnet_ok",
+    "bump_front_dam",
+    "bump_front_dummy",
+    "bump_front_ok",
+    "chassis",
+    "chassis_dummy",
+    "chassis_vlo",
+    "door_lf_dam",
+    "door_lf_dummy",
+    "door_lf_ok",
+    "door_lr_dam",
+    "door_lr_dummy",
+    "door_lr_ok",
+    "door_rf_dam",
+    "door_rf_dummy",
+    "door_rf_ok",
+    "door_rr_dam",
+    "door_rr_dummy",
+    "door_rr_ok",
+    "engine",
+    "exhaust",
+    "exhaust_ok",
+    "extra1",
+    "extra2",
+    "headlights",
+    "ped_arm",
+    "ped_backseat",
+    "ped_frontseat",
+    "petrolcap",
+    "taillights",
+    "wheel",
+    "wheel_lb_dummy",
+    "wheel_lf_dummy",
+    "wheel_rb_dummy",
+    "wheel_rf_dummy",
+    "windscreen_dam",
+    "windscreen_dummy",
+    "windscreen_ok"
+   ],
+   "groundDrop": 1.1,
+   "name": "ambulan",
+   "parts": {
+    "bonnet": {
+     "dam": {
+      "centre": [
+       -0.0,
+       2.455,
+       0.455
+      ],
+      "samemesh": false,
+      "size": [
+       1.859,
+       1.15,
+       0.385
+      ],
+      "verts": 44
+     },
+     "ok": {
+      "centre": [
+       0.0,
+       2.455,
+       0.342
+      ],
+      "samemesh": false,
+      "size": [
+       1.859,
+       1.15,
+       0.317
+      ],
+      "verts": 34
+     }
+    },
+    "bump_front": {
+     "dam": {
+      "centre": [
+       0.014,
+       2.903,
+       -0.477
+      ],
+      "samemesh": false,
+      "size": [
+       2.237,
+       0.64,
+       0.399
+      ],
+      "verts": 54
+     },
+     "ok": {
+      "centre": [
+       -0.0,
+       2.844,
+       -0.465
+      ],
+      "samemesh": false,
+      "size": [
+       2.265,
+       0.522,
+       0.37
+      ],
+      "verts": 60
+     }
+    },
+    "door_lf": {
+     "dam": {
+      "centre": [
+       -1.157,
+       1.147,
+       0.277
+      ],
+      "samemesh": false,
+      "size": [
+       0.575,
+       1.174,
+       1.526
+      ],
+      "verts": 85
+     },
+     "ok": {
+      "centre": [
+       -1.153,
+       1.106,
+       0.277
+      ],
+      "samemesh": false,
+      "size": [
+       0.722,
+       1.091,
+       1.526
+      ],
+      "verts": 81
+     }
+    },
+    "door_lr": {
+     "dam": {
+      "centre": [
+       -0.425,
+       -3.715,
+       0.541
+      ],
+      "samemesh": false,
+      "size": [
+       0.85,
+       0.236,
+       1.718
+      ],
+      "verts": 43
+     },
+     "ok": {
+      "centre": [
+       -0.425,
+       -3.636,
+       0.541
+      ],
+      "samemesh": false,
+      "size": [
+       0.85,
+       0.073,
+       1.718
+      ],
+      "verts": 39
+     }
+    },
+    "door_rf": {
+     "dam": {
+      "centre": [
+       1.19,
+       1.153,
+       0.277
+      ],
+      "samemesh": false,
+      "size": [
+       0.561,
+       1.046,
+       1.526
+      ],
+      "verts": 85
+     },
+     "ok": {
+      "centre": [
+       1.154,
+       1.106,
+       0.277
+      ],
+      "samemesh": false,
+      "size": [
+       0.722,
+       1.091,
+       1.526
+      ],
+      "verts": 81
+     }
+    },
+    "door_rr": {
+     "dam": {
+      "centre": [
+       0.425,
+       -3.658,
+       0.541
+      ],
+      "samemesh": false,
+      "size": [
+       0.85,
+       0.216,
+       1.718
+      ],
+      "verts": 41
+     },
+     "ok": {
+      "centre": [
+       0.425,
+       -3.636,
+       0.541
+      ],
+      "samemesh": false,
+      "size": [
+       0.85,
+       0.073,
+       1.718
+      ],
+      "verts": 39
+     }
+    }
+   },
+   "slots": {
+    "bonnet": [
+     0.0,
+     2.455
+    ],
+    "bump_front": [
+     0.0,
+     3.105
+    ],
+    "door_lf": [
+     -1.614,
+     1.106
+    ],
+    "door_lr": [
+     -0.95,
+     -3.636
+    ],
+    "door_rf": [
+     1.615,
+     1.106
+    ],
+    "door_rr": [
+     0.95,
+     -3.636
+    ]
+   }
+  },
+  "418": {
+   "frames": [
+    "bonnet_dam",
+    "bonnet_dummy",
+    "bonnet_ok",
+    "boot_dam",
+    "boot_dummy",
+    "boot_ok",
+    "bump_front_dam",
+    "bump_front_dummy",
+    "bump_front_ok",
+    "bump_rear_dam",
+    "bump_rear_dummy",
+    "bump_rear_ok",
+    "chassis",
+    "chassis_dummy",
+    "chassis_vlo",
+    "door_lf_dam",
+    "door_lf_dummy",
+    "door_lf_ok",
+    "door_lr_dam",
+    "door_lr_dummy",
+    "door_lr_ok",
+    "door_rf_dam",
+    "door_rf_dummy",
+    "door_rf_ok",
+    "door_rr_dam",
+    "door_rr_dummy",
+    "door_rr_ok",
+    "engine",
+    "exhaust",
+    "exhaust_ok",
+    "headlights",
+    "moonbeam",
+    "moonbeam.dff.moonbeam_col.colmesh",
+    "moonbeam.dff.moonbeam_col.colsphere",
+    "moonbeam.dff.moonbeam_col.shadowmesh",
+    "ped_arm",
+    "ped_backseat",
+    "ped_frontseat",
+    "petrolcap",
+    "plate_front_dam",
+    "plate_front_ok",
+    "plate_rear_dam",
+    "plate_rear_ok",
+    "taillights",
+    "ug_nitro",
+    "ug_roof",
+    "ug_spoiler",
+    "wheel",
+    "wheel_lb_dummy",
+    "wheel_lf_dummy",
+    "wheel_rb_dummy",
+    "wheel_rf_dummy",
+    "windscreen_dam",
+    "windscreen_dummy",
+    "windscreen_hi_ok",
+    "windscreen_ok"
+   ],
+   "groundDrop": 1.033,
+   "name": "moonbeam",
+   "parts": {
+    "bonnet": {
+     "dam": {
+      "centre": [
+       -0.0,
+       2.087,
+       0.097
+      ],
+      "samemesh": false,
+      "size": [
+       1.971,
+       0.736,
+       0.37
+      ],
+      "verts": 46
+     },
+     "ok": {
+      "centre": [
+       -0.0,
+       2.116,
+       0.096
+      ],
+      "samemesh": false,
+      "size": [
+       1.958,
+       0.776,
+       0.369
+      ],
+      "verts": 34
+     }
+    },
+    "boot": {
+     "dam": {
+      "centre": [
+       -0.0,
+       -2.415,
+       0.225
+      ],
+      "samemesh": false,
+      "size": [
+       1.819,
+       0.32,
+       1.411
+      ],
+      "verts": 72
+     },
+     "ok": {
+      "centre": [
+       0.004,
+       -2.416,
+       0.223
+      ],
+      "samemesh": false,
+      "size": [
+       1.812,
+       0.334,
+       1.407
+      ],
+      "verts": 70
+     }
+    },
+    "bump_front": {
+     "dam": {
+      "centre": [
+       -0.0,
+       2.47,
+       -0.693
+      ],
+      "samemesh": false,
+      "size": [
+       2.267,
+       0.56,
+       0.489
+      ],
+      "verts": 37
+     },
+     "ok": {
+      "centre": [
+       -0.0,
+       2.433,
+       -0.668
+      ],
+      "samemesh": false,
+      "size": [
+       2.268,
+       0.479,
+       0.427
+      ],
+      "verts": 37
+     }
+    },
+    "bump_rear": {
+     "dam": {
+      "centre": [
+       -0.005,
+       -2.508,
+       -0.646
+      ],
+      "samemesh": false,
+      "size": [
+       2.438,
+       0.85,
+       0.432
+      ],
+      "verts": 71
+     },
+     "ok": {
+      "centre": [
+       -0.0,
+       -2.382,
+       -0.646
+      ],
+      "samemesh": false,
+      "size": [
+       2.314,
+       0.598,
+       0.344
+      ],
+      "verts": 77
+     }
+    },
+    "door_lf": {
+     "dam": {
+      "centre": [
+       -1.099,
+       0.811,
+       0.043
+      ],
+      "samemesh": false,
+      "size": [
+       0.358,
+       1.494,
+       1.629
+      ],
+      "verts": 63
+     },
+     "ok": {
+      "centre": [
+       -1.074,
+       0.805,
+       0.066
+      ],
+      "samemesh": false,
+      "size": [
+       0.467,
+       1.503,
+       1.675
+      ],
+      "verts": 66
+     }
+    },
+    "door_lr": {
+     "dam": {
+      "centre": [
+       -1.086,
+       -0.536,
+       0.069
+      ],
+      "samemesh": false,
+      "size": [
+       0.309,
+       1.2,
+       1.681
+      ],
+      "verts": 46
+     },
+     "ok": {
+      "centre": [
+       -0.993,
+       -0.542,
+       0.066
+      ],
+      "samemesh": false,
+      "size": [
+       0.306,
+       1.205,
+       1.675
+      ],
+      "verts": 49
+     }
+    },
+    "door_rf": {
+     "dam": {
+      "centre": [
+       1.091,
+       0.825,
+       0.069
+      ],
+      "samemesh": false,
+      "size": [
+       0.352,
+       1.461,
+       1.681
+      ],
+      "verts": 57
+     },
+     "ok": {
+      "centre": [
+       1.074,
+       0.805,
+       0.066
+      ],
+      "samemesh": false,
+      "size": [
+       0.467,
+       1.501,
+       1.675
+      ],
+      "verts": 67
+     }
+    },
+    "door_rr": {
+     "dam": {
+      "centre": [
+       1.108,
+       -0.544,
+       0.069
+      ],
+      "samemesh": false,
+      "size": [
+       0.322,
+       1.21,
+       1.681
+      ],
+      "verts": 48
+     },
+     "ok": {
+      "centre": [
+       0.993,
+       -0.542,
+       0.066
+      ],
+      "samemesh": false,
+      "size": [
+       0.306,
+       1.2,
+       1.675
+      ],
+      "verts": 48
+     }
+    }
+   },
+   "slots": {
+    "bonnet": [
+     0.0,
+     2.116
+    ],
+    "boot": [
+     0.0,
+     -2.583
+    ],
+    "bump_front": [
+     0.0,
+     2.673
+    ],
+    "bump_rear": [
+     0.0,
+     -2.681
+    ],
+    "door_lf": [
+     -1.408,
+     0.805
+    ],
+    "door_lr": [
+     -1.246,
+     -0.542
+    ],
+    "door_rf": [
+     1.408,
+     0.805
+    ],
+    "door_rr": [
+     1.247,
+     -0.542
+    ]
+   }
+  },
+  "422": {
+   "frames": [
+    "bobcat",
+    "bobcat.dff.bobcat_col.colmesh",
+    "bobcat.dff.bobcat_col.colsphere",
+    "bobcat.dff.bobcat_col.shadowmesh",
+    "bonnet_dam",
+    "bonnet_dummy",
+    "bonnet_ok",
+    "boot_dam",
+    "boot_dummy",
+    "boot_ok",
+    "bump_front_dam",
+    "bump_front_dummy",
+    "bump_front_ok",
+    "bump_rear_dam",
+    "bump_rear_dummy",
+    "bump_rear_ok",
+    "chassis",
+    "chassis_dummy",
+    "chassis_vlo",
+    "door_lf_dam",
+    "door_lf_dummy",
+    "door_lf_ok",
+    "door_rf_dam",
+    "door_rf_dummy",
+    "door_rf_ok",
+    "engine",
+    "exhaust",
+    "exhaust_ok",
+    "extra1",
+    "extra2",
+    "headlights",
+    "ped_arm",
+    "ped_frontseat",
+    "petrolcap",
+    "taillights",
+    "ug_lights",
+    "ug_nitro",
+    "ug_wing_left",
+    "ug_wing_right",
+    "wheel",
+    "wheel_lb_dummy",
+    "wheel_lf_dummy",
+    "wheel_rb_dummy",
+    "wheel_rf_dummy",
+    "windscreen_dam",
+    "windscreen_dummy",
+    "windscreen_ok"
+   ],
+   "groundDrop": 0.9,
+   "name": "bobcat",
+   "parts": {
+    "bonnet": {
+     "dam": {
+      "centre": [
+       -0.0,
+       1.615,
+       0.248
+      ],
+      "samemesh": false,
+      "size": [
+       1.755,
+       1.217,
+       0.267
+      ],
+      "verts": 20
+     },
+     "ok": {
+      "centre": [
+       0.0,
+       1.628,
+       0.183
+      ],
+      "samemesh": false,
+      "size": [
+       1.756,
+       1.242,
+       0.139
+      ],
+      "verts": 20
+     }
+    },
+    "boot": {
+     "dam": {
+      "centre": [
+       -0.0,
+       -2.419,
+       -0.044
+      ],
+      "samemesh": false,
+      "size": [
+       1.68,
+       0.171,
+       0.527
+      ],
+      "verts": 35
+     },
+     "ok": {
+      "centre": [
+       0.0,
+       -2.435,
+       -0.049
+      ],
+      "samemesh": false,
+      "size": [
+       1.68,
+       0.083,
+       0.518
+      ],
+      "verts": 31
+     }
+    },
+    "bump_front": {
+     "dam": {
+      "centre": [
+       -0.024,
+       2.265,
+       -0.465
+      ],
+      "samemesh": false,
+      "size": [
+       2.161,
+       0.475,
+       0.333
+      ],
+      "verts": 71
+     },
+     "ok": {
+      "centre": [
+       -0.005,
+       2.216,
+       -0.457
+      ],
+      "samemesh": false,
+      "size": [
+       2.11,
+       0.377,
+       0.301
+      ],
+      "verts": 66
+     }
+    },
+    "bump_rear": {
+     "dam": {
+      "centre": [
+       0.014,
+       -2.469,
+       -0.588
+      ],
+      "samemesh": false,
+      "size": [
+       2.122,
+       0.375,
+       0.447
+      ],
+      "verts": 71
+     },
+     "ok": {
+      "centre": [
+       -0.0,
+       -2.441,
+       -0.507
+      ],
+      "samemesh": false,
+      "size": [
+       2.094,
+       0.315,
+       0.286
+      ],
+      "verts": 69
+     }
+    },
+    "door_lf": {
+     "dam": {
+      "centre": [
+       -0.97,
+       0.318,
+       0.071
+      ],
+      "samemesh": false,
+      "size": [
+       0.182,
+       1.189,
+       1.205
+      ],
+      "verts": 61
+     },
+     "ok": {
+      "centre": [
+       -0.997,
+       0.318,
+       0.071
+      ],
+      "samemesh": false,
+      "size": [
+       0.34,
+       1.189,
+       1.205
+      ],
+      "verts": 71
+     }
+    },
+    "door_rf": {
+     "dam": {
+      "centre": [
+       0.976,
+       0.318,
+       0.071
+      ],
+      "samemesh": false,
+      "size": [
+       0.171,
+       1.189,
+       1.205
+      ],
+      "verts": 63
+     },
+     "ok": {
+      "centre": [
+       0.997,
+       0.318,
+       0.071
+      ],
+      "samemesh": false,
+      "size": [
+       0.34,
+       1.189,
+       1.205
+      ],
+      "verts": 71
+     }
+    }
+   },
+   "slots": {
+    "bonnet": [
+     0.0,
+     1.628
+    ],
+    "boot": [
+     0.0,
+     -2.476
+    ],
+    "bump_front": [
+     0.0,
+     2.405
+    ],
+    "bump_rear": [
+     0.0,
+     -2.599
+    ],
+    "door_lf": [
+     -1.267,
+     0.318
+    ],
+    "door_rf": [
+     1.267,
+     0.318
+    ]
+   }
+  },
+  "424": {
+   "frames": [
+    "bfinject",
+    "bfinject.dff.bfinject_col.colmesh",
+    "bfinject.dff.bfinject_col.colsphere",
+    "bfinject.dff.bfinject_col.shadowmesh",
+    "bump_front_dam",
+    "bump_front_dummy",
+    "bump_front_ok",
+    "bump_rear_dam",
+    "bump_rear_dummy",
+    "bump_rear_ok",
+    "chassis",
+    "chassis_dummy",
+    "chassis_vlo",
+    "engine",
+    "exhaust",
+    "extra1",
+    "headlights",
+    "misc_a",
+    "misc_b",
+    "misc_c",
+    "misc_d",
+    "misc_e",
+    "ped_frontseat",
+    "petrolcap",
+    "plate_rear_ok",
+    "taillights",
+    "wheel",
+    "wheel_lb_dummy",
+    "wheel_lf_dummy",
+    "wheel_rb_dummy",
+    "wheel_rf_dummy"
+   ],
+   "groundDrop": 0.74,
+   "name": "bfinject",
+   "parts": {
+    "bump_front": {
+     "dam": {
+      "centre": [
+       -0.032,
+       1.416,
+       -0.309
+      ],
+      "samemesh": false,
+      "size": [
+       0.513,
+       1.017,
+       0.402
+      ],
+      "verts": 60
+     },
+     "ok": {
+      "centre": [
+       0.0,
+       1.374,
+       -0.193
+      ],
+      "samemesh": false,
+      "size": [
+       0.448,
+       0.933,
+       0.449
+      ],
+      "verts": 60
+     }
+    },
+    "bump_rear": {
+     "dam": {
+      "centre": [
+       0.062,
+       -1.495,
+       -0.22
+      ],
+      "samemesh": false,
+      "size": [
+       1.135,
+       1.12,
+       0.522
+      ],
+      "verts": 84
+     },
+     "ok": {
+      "centre": [
+       0.0,
+       -1.417,
+       -0.188
+      ],
+      "samemesh": false,
+      "size": [
+       1.042,
+       1.042,
+       0.459
+      ],
+      "verts": 84
+     }
+    }
+   },
+   "slots": {
+    "bump_front": [
+     0.0,
+     1.84
+    ],
+    "bump_rear": [
+     0.0,
+     -1.937
+    ]
+   }
+  },
+  "427": {
+   "frames": [
+    "bonnet_dam",
+    "bonnet_dummy",
+    "bonnet_ok",
+    "bump_front_dam",
+    "bump_front_dummy",
+    "bump_front_ok",
+    "chassis",
+    "chassis_dummy",
+    "chassis_vlo",
+    "door_lf_dam",
+    "door_lf_dummy",
+    "door_lf_ok",
+    "door_lr_dam",
+    "door_lr_dummy",
+    "door_lr_ok",
+    "door_rf_dam",
+    "door_rf_dummy",
+    "door_rf_ok",
+    "door_rr_dam",
+    "door_rr_dummy",
+    "door_rr_ok",
+    "enforcer",
+    "enforcer.dff.enforcer_col.colmesh",
+    "enforcer.dff.enforcer_col.colsphere",
+    "enforcer.dff.enforcer_col.shadowmesh",
+    "engine",
+    "exhaust",
+    "exhaust_ok",
+    "headlights",
+    "ped_arm",
+    "ped_backseat",
+    "ped_frontseat",
+    "petrolcap",
+    "taillights",
+    "wheel",
+    "wheel_lb_dummy",
+    "wheel_lf_dummy",
+    "wheel_rb_dummy",
+    "wheel_rf_dummy",
+    "windscreen_dam",
+    "windscreen_dummy",
+    "windscreen_ok"
+   ],
+   "groundDrop": 0.998,
+   "name": "enforcer",
+   "parts": {
+    "bonnet": {
+     "dam": {
+      "centre": [
+       0.0,
+       2.584,
+       0.605
+      ],
+      "samemesh": false,
+      "size": [
+       1.672,
+       1.28,
+       0.334
+      ],
+      "verts": 22
+     },
+     "ok": {
+      "centre": [
+       0.0,
+       2.601,
+       0.533
+      ],
+      "samemesh": false,
+      "size": [
+       1.672,
+       1.316,
+       0.191
+      ],
+      "verts": 18
+     }
+    },
+    "bump_front": {
+     "dam": {
+      "centre": [
+       0.022,
+       3.256,
+       -0.636
+      ],
+      "samemesh": false,
+      "size": [
+       2.372,
+       0.443,
+       0.542
+      ],
+      "verts": 50
+     },
+     "ok": {
+      "centre": [
+       -0.0,
+       3.285,
+       -0.577
+      ],
+      "samemesh": false,
+      "size": [
+       2.393,
+       0.332,
+       0.325
+      ],
+      "verts": 50
+     }
+    },
+    "door_lf": {
+     "dam": {
+      "centre": [
+       -1.143,
+       1.259,
+       0.537
+      ],
+      "samemesh": false,
+      "size": [
+       0.618,
+       1.01,
+       1.309
+      ],
+      "verts": 79
+     },
+     "ok": {
+      "centre": [
+       -1.087,
+       1.245,
+       0.537
+      ],
+      "samemesh": false,
+      "size": [
+       0.571,
+       1.037,
+       1.309
+      ],
+      "verts": 76
+     }
+    },
+    "door_lr": {
+     "dam": {
+      "centre": [
+       -0.362,
+       -3.646,
+       0.613
+      ],
+      "samemesh": false,
+      "size": [
+       0.772,
+       0.328,
+       1.626
+      ],
+      "verts": 49
+     },
+     "ok": {
+      "centre": [
+       -0.374,
+       -3.543,
+       0.613
+      ],
+      "samemesh": false,
+      "size": [
+       0.748,
+       0.122,
+       1.626
+      ],
+      "verts": 46
+     }
+    },
+    "door_rf": {
+     "dam": {
+      "centre": [
+       1.089,
+       1.245,
+       0.537
+      ],
+      "samemesh": false,
+      "size": [
+       0.51,
+       1.037,
+       1.309
+      ],
+      "verts": 79
+     },
+     "ok": {
+      "centre": [
+       1.087,
+       1.245,
+       0.537
+      ],
+      "samemesh": false,
+      "size": [
+       0.571,
+       1.037,
+       1.309
+      ],
+      "verts": 76
+     }
+    },
+    "door_rr": {
+     "dam": {
+      "centre": [
+       0.39,
+       -3.607,
+       0.613
+      ],
+      "samemesh": false,
+      "size": [
+       0.715,
+       0.249,
+       1.626
+      ],
+      "verts": 39
+     },
+     "ok": {
+      "centre": [
+       0.374,
+       -3.543,
+       0.613
+      ],
+      "samemesh": false,
+      "size": [
+       0.748,
+       0.122,
+       1.626
+      ],
+      "verts": 38
+     }
+    }
+   },
+   "slots": {
+    "bonnet": [
+     0.0,
+     2.601
+    ],
+    "bump_front": [
+     0.0,
+     3.451
+    ],
+    "door_lf": [
+     -1.472,
+     1.245
+    ],
+    "door_lr": [
+     -0.848,
+     -3.543
+    ],
+    "door_rf": [
+     1.472,
+     1.245
+    ],
+    "door_rr": [
+     0.848,
+     -3.543
+    ]
+   }
+  },
+  "433": {
+   "frames": [
+    "barracks",
+    "barracks.dff.barracks_col.colmesh",
+    "barracks.dff.barracks_col.colsphere",
+    "barracks.dff.barracks_col.shadowmesh",
+    "bonnet_dam",
+    "bonnet_dummy",
+    "bonnet_ok",
+    "bump_front_dam",
+    "bump_front_dummy",
+    "bump_front_ok",
+    "bump_rear_dam",
+    "bump_rear_dummy",
+    "bump_rear_ok",
+    "chassis",
+    "chassis_dummy",
+    "chassis_vlo",
+    "door_lf_dam",
+    "door_lf_dummy",
+    "door_lf_ok",
+    "door_rf_dam",
+    "door_rf_dummy",
+    "door_rf_ok",
+    "engine",
+    "exhaust",
+    "extra1",
+    "extra2",
+    "headlights",
+    "headlights2",
+    "ped_arm",
+    "ped_frontseat",
+    "petrolcap",
+    "taillights",
+    "wheel",
+    "wheel_lb_dummy",
+    "wheel_lf_dummy",
+    "wheel_lm_dummy",
+    "wheel_rb_dummy",
+    "wheel_rf_dummy",
+    "wheel_rm_dummy",
+    "windscreen_dam",
+    "windscreen_dummy",
+    "windscreen_ok"
+   ],
+   "groundDrop": 1.4,
+   "name": "barracks",
+   "parts": {
+    "bonnet": {
+     "dam": {
+      "centre": [
+       -0.002,
+       3.134,
+       0.891
+      ],
+      "samemesh": false,
+      "size": [
+       1.802,
+       1.975,
+       0.462
+      ],
+      "verts": 34
+     },
+     "ok": {
+      "centre": [
+       -0.001,
+       3.134,
+       0.768
+      ],
+      "samemesh": false,
+      "size": [
+       1.8,
+       1.975,
+       0.216
+      ],
+      "verts": 30
+     }
+    },
+    "bump_front": {
+     "dam": {
+      "centre": [
+       0.029,
+       3.996,
+       -0.595
+      ],
+      "samemesh": false,
+      "size": [
+       3.077,
+       0.527,
+       0.576
+      ],
+      "verts": 37
+     },
+     "ok": {
+      "centre": [
+       0.0,
+       3.997,
+       -0.564
+      ],
+      "samemesh": false,
+      "size": [
+       3.066,
+       0.394,
+       0.42
+      ],
+      "verts": 46
+     }
+    },
+    "bump_rear": {
+     "dam": {
+      "centre": [
+       -0.051,
+       -4.321,
+       -0.529
+      ],
+      "samemesh": false,
+      "size": [
+       3.072,
+       0.558,
+       0.968
+      ],
+      "verts": 57
+     },
+     "ok": {
+      "centre": [
+       -0.0,
+       -4.393,
+       -0.471
+      ],
+      "samemesh": false,
+      "size": [
+       3.066,
+       0.395,
+       0.842
+      ],
+      "verts": 68
+     }
+    },
+    "door_lf": {
+     "dam": {
+      "centre": [
+       -1.078,
+       1.391,
+       0.845
+      ],
+      "samemesh": false,
+      "size": [
+       0.417,
+       1.0,
+       1.388
+      ],
+      "verts": 40
+     },
+     "ok": {
+      "centre": [
+       -1.018,
+       1.391,
+       0.845
+      ],
+      "samemesh": false,
+      "size": [
+       0.226,
+       1.0,
+       1.388
+      ],
+      "verts": 34
+     }
+    },
+    "door_rf": {
+     "dam": {
+      "centre": [
+       1.114,
+       1.391,
+       0.883
+      ],
+      "samemesh": false,
+      "size": [
+       0.282,
+       1.0,
+       1.403
+      ],
+      "verts": 40
+     },
+     "ok": {
+      "centre": [
+       1.016,
+       1.391,
+       0.847
+      ],
+      "samemesh": false,
+      "size": [
+       0.226,
+       1.0,
+       1.393
+      ],
+      "verts": 34
+     }
+    }
+   },
+   "slots": {
+    "bonnet": [
+     0.0,
+     3.134
+    ],
+    "bump_front": [
+     0.0,
+     4.194
+    ],
+    "bump_rear": [
+     0.0,
+     -4.59
+    ],
+    "door_lf": [
+     -1.231,
+     1.391
+    ],
+    "door_rf": [
+     1.229,
+     1.391
+    ]
+   }
+  },
+  "440": {
+   "frames": [
+    "bonnet_dam",
+    "bonnet_dummy",
+    "bonnet_ok",
+    "bump_front_dam",
+    "bump_front_dummy",
+    "bump_front_ok",
+    "bump_rear_dam",
+    "bump_rear_dummy",
+    "bump_rear_ok",
+    "chassis",
+    "chassis_dummy",
+    "chassis_vlo",
+    "door_lf_dam",
+    "door_lf_dummy",
+    "door_lf_ok",
+    "door_lr_dam",
+    "door_lr_dummy",
+    "door_lr_ok",
+    "door_rf_dam",
+    "door_rf_dummy",
+    "door_rf_ok",
+    "door_rr_dam",
+    "door_rr_dummy",
+    "door_rr_ok",
+    "engine",
+    "exhaust",
+    "exhaust_ok",
+    "extra1",
+    "extra2",
+    "extra3",
+    "extra4",
+    "extra5",
+    "extra6",
+    "headlights",
+    "ped_backseat",
+    "ped_frontseat",
+    "petrolcap",
+    "plate_front_dam",
+    "plate_front_ok",
+    "plate_rear_dam",
+    "plate_rear_ok",
+    "rumpo",
+    "rumpo.dff.rumpo_col.colmesh",
+    "rumpo.dff.rumpo_col.colsphere",
+    "rumpo.dff.rumpo_col.shadowmesh",
+    "taillights",
+    "wheel",
+    "wheel_lb_dummy",
+    "wheel_lf_dummy",
+    "wheel_rb_dummy",
+    "wheel_rf_dummy",
+    "windscreen_dam",
+    "windscreen_dummy",
+    "windscreen_ok"
+   ],
+   "groundDrop": 1.103,
+   "name": "rumpo",
+   "parts": {
+    "bonnet": {
+     "dam": {
+      "centre": [
+       -0.0,
+       2.129,
+       0.149
+      ],
+      "samemesh": false,
+      "size": [
+       1.793,
+       0.722,
+       0.337
+      ],
+      "verts": 29
+     },
+     "ok": {
+      "centre": [
+       -0.0,
+       2.207,
+       0.082
+      ],
+      "samemesh": false,
+      "size": [
+       1.795,
+       0.88,
+       0.386
+      ],
+      "verts": 20
+     }
+    },
+    "bump_front": {
+     "dam": {
+      "centre": [
+       0.017,
+       2.669,
+       -0.627
+      ],
+      "samemesh": false,
+      "size": [
+       2.135,
+       0.376,
+       0.292
+      ],
+      "verts": 87
+     },
+     "ok": {
+      "centre": [
+       0.001,
+       2.618,
+       -0.59
+      ],
+      "samemesh": false,
+      "size": [
+       2.102,
+       0.262,
+       0.215
+      ],
+      "verts": 88
+     }
+    },
+    "bump_rear": {
+     "dam": {
+      "centre": [
+       -0.004,
+       -2.7,
+       -0.6
+      ],
+      "samemesh": false,
+      "size": [
+       2.122,
+       0.331,
+       0.268
+      ],
+      "verts": 74
+     },
+     "ok": {
+      "centre": [
+       0.001,
+       -2.638,
+       -0.59
+      ],
+      "samemesh": false,
+      "size": [
+       2.121,
+       0.197,
+       0.215
+      ],
+      "verts": 68
+     }
+    },
+    "door_lf": {
+     "dam": {
+      "centre": [
+       -1.092,
+       1.04,
+       -0.067
+      ],
+      "samemesh": false,
+      "size": [
+       0.354,
+       1.163,
+       1.483
+      ],
+      "verts": 58
+     },
+     "ok": {
+      "centre": [
+       -1.032,
+       1.04,
+       -0.019
+      ],
+      "samemesh": false,
+      "size": [
+       0.342,
+       1.163,
+       1.578
+      ],
+      "verts": 51
+     }
+    },
+    "door_lr": {
+     "dam": {
+      "centre": [
+       -0.387,
+       -2.547,
+       0.25
+      ],
+      "samemesh": false,
+      "size": [
+       0.795,
+       0.213,
+       1.408
+      ],
+      "verts": 42
+     },
+     "ok": {
+      "centre": [
+       -0.397,
+       -2.576,
+       0.277
+      ],
+      "samemesh": false,
+      "size": [
+       0.795,
+       0.226,
+       1.461
+      ],
+      "verts": 36
+     }
+    },
+    "door_rf": {
+     "dam": {
+      "centre": [
+       1.087,
+       1.04,
+       -0.019
+      ],
+      "samemesh": false,
+      "size": [
+       0.345,
+       1.163,
+       1.578
+      ],
+      "verts": 58
+     },
+     "ok": {
+      "centre": [
+       1.032,
+       1.04,
+       -0.019
+      ],
+      "samemesh": false,
+      "size": [
+       0.342,
+       1.163,
+       1.578
+      ],
+      "verts": 51
+     }
+    },
+    "door_rr": {
+     "dam": {
+      "centre": [
+       0.397,
+       -2.596,
+       0.277
+      ],
+      "samemesh": false,
+      "size": [
+       0.795,
+       0.266,
+       1.461
+      ],
+      "verts": 41
+     },
+     "ok": {
+      "centre": [
+       0.397,
+       -2.576,
+       0.277
+      ],
+      "samemesh": false,
+      "size": [
+       0.795,
+       0.226,
+       1.461
+      ],
+      "verts": 36
+     }
+    }
+   },
+   "slots": {
+    "bonnet": [
+     0.0,
+     2.207
+    ],
+    "bump_front": [
+     0.0,
+     2.749
+    ],
+    "bump_rear": [
+     0.0,
+     -2.736
+    ],
+    "door_lf": [
+     -1.303,
+     1.04
+    ],
+    "door_lr": [
+     -0.895,
+     -2.576
+    ],
+    "door_rf": [
+     1.303,
+     1.04
+    ],
+    "door_rr": [
+     0.895,
+     -2.576
+    ]
+   }
+  },
+  "455": {
+   "frames": [
+    "bonnet_dam",
+    "bonnet_dummy",
+    "bonnet_ok",
+    "bump_front_dam",
+    "bump_front_dummy",
+    "bump_front_ok",
+    "bump_rear_dam",
+    "bump_rear_dummy",
+    "bump_rear_ok",
+    "chassis",
+    "chassis_dummy",
+    "chassis_vlo",
+    "door_lf_dam",
+    "door_lf_dummy",
+    "door_lf_ok",
+    "door_rf_dam",
+    "door_rf_dummy",
+    "door_rf_ok",
+    "engine",
+    "exhaust",
+    "extra1",
+    "extra2",
+    "extra4",
+    "flatbed",
+    "flatbed.dff.flatbed_col.colmesh",
+    "flatbed.dff.flatbed_col.colsphere",
+    "flatbed.dff.flatbed_col.shadowmesh",
+    "headlights",
+    "headlights2",
+    "ped_arm",
+    "ped_frontseat",
+    "petrolcap",
+    "plate_front_dam",
+    "plate_front_ok",
+    "plate_rear_dam",
+    "plate_rear_ok",
+    "taillights",
+    "wheel",
+    "wheel_lb_dummy",
+    "wheel_lf_dummy",
+    "wheel_lm_dummy",
+    "wheel_rb_dummy",
+    "wheel_rf_dummy",
+    "wheel_rm_dummy",
+    "windscreen_dam",
+    "windscreen_dummy",
+    "windscreen_ok"
+   ],
+   "groundDrop": 1.4,
+   "name": "flatbed",
+   "parts": {
+    "bonnet": {
+     "dam": {
+      "centre": [
+       -0.001,
+       3.008,
+       0.839
+      ],
+      "samemesh": false,
+      "size": [
+       1.786,
+       1.722,
+       0.373
+      ],
+      "verts": 37
+     },
+     "ok": {
+      "centre": [
+       -0.001,
+       3.083,
+       0.768
+      ],
+      "samemesh": false,
+      "size": [
+       1.786,
+       1.872,
+       0.216
+      ],
+      "verts": 26
+     }
+    },
+    "bump_front": {
+     "dam": {
+      "centre": [
+       0.038,
+       4.118,
+       -0.619
+      ],
+      "samemesh": false,
+      "size": [
+       3.068,
+       0.637,
+       0.59
+      ],
+      "verts": 38
+     },
+     "ok": {
+      "centre": [
+       0.047,
+       3.991,
+       -0.564
+      ],
+      "samemesh": false,
+      "size": [
+       3.066,
+       0.383,
+       0.42
+      ],
+      "verts": 38
+     }
+    },
+    "bump_rear": {
+     "dam": {
+      "centre": [
+       0.007,
+       -4.35,
+       -0.503
+      ],
+      "samemesh": false,
+      "size": [
+       3.092,
+       0.638,
+       0.932
+      ],
+      "verts": 82
+     },
+     "ok": {
+      "centre": [
+       -0.0,
+       -4.387,
+       -0.471
+      ],
+      "samemesh": false,
+      "size": [
+       3.066,
+       0.383,
+       0.842
+      ],
+      "verts": 82
+     }
+    },
+    "door_lf": {
+     "dam": {
+      "centre": [
+       -1.062,
+       1.391,
+       0.845
+      ],
+      "samemesh": false,
+      "size": [
+       0.253,
+       1.0,
+       1.388
+      ],
+      "verts": 40
+     },
+     "ok": {
+      "centre": [
+       -1.018,
+       1.391,
+       0.845
+      ],
+      "samemesh": false,
+      "size": [
+       0.226,
+       1.0,
+       1.388
+      ],
+      "verts": 34
+     }
+    },
+    "door_rf": {
+     "dam": {
+      "centre": [
+       1.093,
+       1.391,
+       0.813
+      ],
+      "samemesh": false,
+      "size": [
+       0.381,
+       1.0,
+       1.326
+      ],
+      "verts": 40
+     },
+     "ok": {
+      "centre": [
+       1.016,
+       1.391,
+       0.847
+      ],
+      "samemesh": false,
+      "size": [
+       0.226,
+       1.0,
+       1.393
+      ],
+      "verts": 34
+     }
+    }
+   },
+   "slots": {
+    "bonnet": [
+     0.0,
+     3.083
+    ],
+    "bump_front": [
+     0.0,
+     4.183
+    ],
+    "bump_rear": [
+     0.0,
+     -4.578
+    ],
+    "door_lf": [
+     -1.231,
+     1.391
+    ],
+    "door_rf": [
+     1.229,
+     1.391
+    ]
+   }
+  },
+  "456": {
+   "frames": [
+    "bonnet_dam",
+    "bonnet_dummy",
+    "bonnet_ok",
+    "boot_dam",
+    "boot_dummy",
+    "boot_ok",
+    "bump_front_dam",
+    "bump_front_dummy",
+    "bump_front_ok",
+    "bump_rear_dam",
+    "bump_rear_dummy",
+    "bump_rear_ok",
+    "chassis",
+    "chassis_dummy",
+    "chassis_vlo",
+    "door_lf_dam",
+    "door_lf_dummy",
+    "door_lf_ok",
+    "door_rf_dam",
+    "door_rf_dummy",
+    "door_rf_ok",
+    "engine",
+    "exhaust",
+    "extra1",
+    "extra2",
+    "extra3",
+    "extra4",
+    "headlights",
+    "pad_arm",
+    "ped_frontseat",
+    "petrolcap",
+    "plate_front_dam",
+    "plate_front_ok",
+    "plate_rear_dam",
+    "plate_rear_ok",
+    "taillights",
+    "wheel",
+    "wheel_lb_dummy",
+    "wheel_lf_dummy",
+    "wheel_rb_dummy",
+    "wheel_rf_dummy",
+    "windscreen_dam",
+    "windscreen_dummy",
+    "windscreen_ok",
+    "wing_lf_dummy",
+    "wing_rf_dummy",
+    "yankee",
+    "yankee.dff.yankee_col.colmesh",
+    "yankee.dff.yankee_col.colsphere",
+    "yankee.dff.yankee_col.shadowmesh"
+   ],
+   "groundDrop": 1.0,
+   "name": "yankee",
+   "parts": {
+    "bonnet": {
+     "dam": {
+      "centre": [
+       -0.0,
+       2.795,
+       0.653
+      ],
+      "samemesh": false,
+      "size": [
+       1.593,
+       1.196,
+       0.254
+      ],
+      "verts": 37
+     },
+     "ok": {
+      "centre": [
+       -0.0,
+       2.847,
+       0.564
+      ],
+      "samemesh": false,
+      "size": [
+       1.593,
+       1.3,
+       0.143
+      ],
+      "verts": 28
+     }
+    },
+    "boot": {
+     "dam": {
+      "centre": [
+       -0.0,
+       -4.499,
+       1.119
+      ],
+      "samemesh": false,
+      "size": [
+       2.458,
+       0.312,
+       2.091
+      ],
+      "verts": 57
+     },
+     "ok": {
+      "centre": [
+       -0.0,
+       -4.585,
+       1.097
+      ],
+      "samemesh": false,
+      "size": [
+       2.458,
+       0.0,
+       2.134
+      ],
+      "verts": 30
+     }
+    },
+    "bump_front": {
+     "dam": {
+      "centre": [
+       0.039,
+       3.33,
+       -0.506
+      ],
+      "samemesh": false,
+      "size": [
+       2.461,
+       0.761,
+       0.545
+      ],
+      "verts": 30
+     },
+     "ok": {
+      "centre": [
+       -0.002,
+       3.284,
+       -0.443
+      ],
+      "samemesh": false,
+      "size": [
+       2.364,
+       0.668,
+       0.419
+      ],
+      "verts": 30
+     }
+    },
+    "bump_rear": {
+     "dam": {
+      "centre": [
+       0.016,
+       -4.487,
+       -0.613
+      ],
+      "samemesh": false,
+      "size": [
+       2.715,
+       0.278,
+       0.743
+      ],
+      "verts": 60
+     },
+     "ok": {
+      "centre": [
+       0.0,
+       -4.49,
+       -0.51
+      ],
+      "samemesh": false,
+      "size": [
+       2.715,
+       0.201,
+       0.42
+      ],
+      "verts": 56
+     }
+    },
+    "door_lf": {
+     "dam": {
+      "centre": [
+       -1.031,
+       1.556,
+       0.31
+      ],
+      "samemesh": false,
+      "size": [
+       0.463,
+       1.194,
+       1.658
+      ],
+      "verts": 60
+     },
+     "ok": {
+      "centre": [
+       -0.972,
+       1.556,
+       0.291
+      ],
+      "samemesh": false,
+      "size": [
+       0.482,
+       1.194,
+       1.636
+      ],
+      "verts": 54
+     }
+    },
+    "door_rf": {
+     "dam": {
+      "centre": [
+       0.972,
+       1.557,
+       0.283
+      ],
+      "samemesh": false,
+      "size": [
+       0.482,
+       1.196,
+       1.62
+      ],
+      "verts": 59
+     },
+     "ok": {
+      "centre": [
+       0.972,
+       1.557,
+       0.293
+      ],
+      "samemesh": false,
+      "size": [
+       0.482,
+       1.196,
+       1.639
+      ],
+      "verts": 53
+     }
+    }
+   },
+   "slots": {
+    "bonnet": [
+     0.0,
+     2.847
+    ],
+    "boot": [
+     0.0,
+     -4.585
+    ],
+    "bump_front": [
+     0.0,
+     3.618
+    ],
+    "bump_rear": [
+     0.0,
+     -4.59
+    ],
+    "door_lf": [
+     -1.313,
+     1.556
+    ],
+    "door_rf": [
+     1.313,
+     1.557
+    ]
+   }
+  },
+  "470": {
+   "frames": [
+    "bonnet_dam",
+    "bonnet_dummy",
+    "bonnet_ok",
+    "boot_dam",
+    "boot_dummy",
+    "boot_ok",
+    "bump_front_dam",
+    "bump_front_dummy",
+    "bump_front_ok",
+    "bump_rear_dam",
+    "bump_rear_dummy",
+    "bump_rear_ok",
+    "chassis",
+    "chassis_dummy",
+    "chassis_vlo",
+    "door_lf_dam",
+    "door_lf_dummy",
+    "door_lf_ok",
+    "door_lr_dam",
+    "door_lr_dummy",
+    "door_lr_ok",
+    "door_rf_dam",
+    "door_rf_dummy",
+    "door_rf_ok",
+    "door_rr_dam",
+    "door_rr_dummy",
+    "door_rr_ok",
+    "engine",
+    "exhaust",
+    "extra1",
+    "extra2",
+    "extra3",
+    "headlights",
+    "patriot",
+    "patriot.dff.patriot_col.colmesh",
+    "patriot.dff.patriot_col.colsphere",
+    "patriot.dff.patriot_col.shadowmesh",
+    "ped_arm",
+    "ped_backseat",
+    "ped_frontseat",
+    "petrolcap",
+    "taillights",
+    "wheel",
+    "wheel_lb_dummy",
+    "wheel_lf_dummy",
+    "wheel_rb_dummy",
+    "wheel_rf_dummy",
+    "windscreen_dam",
+    "windscreen_dummy",
+    "windscreen_ok"
+   ],
+   "groundDrop": 0.76,
+   "name": "patriot",
+   "parts": {
+    "bonnet": {
+     "dam": {
+      "centre": [
+       0.0,
+       1.418,
+       0.549
+      ],
+      "samemesh": false,
+      "size": [
+       1.316,
+       1.464,
+       0.362
+      ],
+      "verts": 32
+     },
+     "ok": {
+      "centre": [
+       0.0,
+       1.42,
+       0.424
+      ],
+      "samemesh": false,
+      "size": [
+       1.316,
+       1.469,
+       0.112
+      ],
+      "verts": 25
+     }
+    },
+    "boot": {
+     "dam": {
+      "centre": [
+       0.023,
+       -2.571,
+       0.23
+      ],
+      "samemesh": false,
+      "size": [
+       1.109,
+       0.216,
+       0.423
+      ],
+      "verts": 46
+     },
+     "ok": {
+      "centre": [
+       0.004,
+       -2.518,
+       0.196
+      ],
+      "samemesh": false,
+      "size": [
+       1.147,
+       0.11,
+       0.356
+      ],
+      "verts": 40
+     }
+    },
+    "bump_front": {
+     "dam": {
+      "centre": [
+       -0.015,
+       2.045,
+       0.031
+      ],
+      "samemesh": false,
+      "size": [
+       2.406,
+       0.768,
+       0.968
+      ],
+      "verts": 45
+     },
+     "ok": {
+      "centre": [
+       -0.001,
+       1.986,
+       0.06
+      ],
+      "samemesh": false,
+      "size": [
+       2.431,
+       0.649,
+       0.822
+      ],
+      "verts": 46
+     }
+    },
+    "bump_rear": {
+     "dam": {
+      "centre": [
+       0.015,
+       -2.669,
+       -0.058
+      ],
+      "samemesh": false,
+      "size": [
+       2.45,
+       0.372,
+       1.002
+      ],
+      "verts": 94
+     },
+     "ok": {
+      "centre": [
+       0.0,
+       -2.581,
+       0.02
+      ],
+      "samemesh": false,
+      "size": [
+       2.448,
+       0.162,
+       0.82
+      ],
+      "verts": 94
+     }
+    },
+    "door_lf": {
+     "dam": {
+      "centre": [
+       -1.286,
+       0.142,
+       0.329
+      ],
+      "samemesh": false,
+      "size": [
+       0.384,
+       1.012,
+       1.206
+      ],
+      "verts": 66
+     },
+     "ok": {
+      "centre": [
+       -1.202,
+       0.142,
+       0.329
+      ],
+      "samemesh": false,
+      "size": [
+       0.461,
+       1.006,
+       1.194
+      ],
+      "verts": 66
+     }
+    },
+    "door_lr": {
+     "dam": {
+      "centre": [
+       -1.155,
+       -0.886,
+       0.328
+      ],
+      "samemesh": false,
+      "size": [
+       0.285,
+       0.894,
+       1.206
+      ],
+      "verts": 47
+     },
+     "ok": {
+      "centre": [
+       -1.081,
+       -0.884,
+       0.329
+      ],
+      "samemesh": false,
+      "size": [
+       0.218,
+       0.888,
+       1.194
+      ],
+      "verts": 40
+     }
+    },
+    "door_rf": {
+     "dam": {
+      "centre": [
+       1.249,
+       0.142,
+       0.328
+      ],
+      "samemesh": false,
+      "size": [
+       0.309,
+       1.011,
+       1.206
+      ],
+      "verts": 68
+     },
+     "ok": {
+      "centre": [
+       1.202,
+       0.142,
+       0.329
+      ],
+      "samemesh": false,
+      "size": [
+       0.461,
+       1.006,
+       1.194
+      ],
+      "verts": 66
+     }
+    },
+    "door_rr": {
+     "dam": {
+      "centre": [
+       1.163,
+       -0.886,
+       0.328
+      ],
+      "samemesh": false,
+      "size": [
+       0.287,
+       0.894,
+       1.206
+      ],
+      "verts": 45
+     },
+     "ok": {
+      "centre": [
+       1.081,
+       -0.884,
+       0.329
+      ],
+      "samemesh": false,
+      "size": [
+       0.218,
+       0.888,
+       1.194
+      ],
+      "verts": 40
+     }
+    }
+   },
+   "slots": {
+    "bonnet": [
+     0.0,
+     1.42
+    ],
+    "boot": [
+     0.0,
+     -2.573
+    ],
+    "bump_front": [
+     0.0,
+     2.31
+    ],
+    "bump_rear": [
+     0.0,
+     -2.662
+    ],
+    "door_lf": [
+     -1.532,
+     0.142
+    ],
+    "door_lr": [
+     -1.29,
+     -0.884
+    ],
+    "door_rf": [
+     1.532,
+     0.142
+    ],
+    "door_rr": [
+     1.29,
+     -0.884
+    ]
+   }
+  },
+  "475": {
+   "frames": [
+    "bonnet_dam",
+    "bonnet_dummy",
+    "bonnet_ok",
+    "boot_dam",
+    "boot_dummy",
+    "boot_ok",
+    "bump_front_dam",
+    "bump_front_dummy",
+    "bump_front_ok",
+    "bump_rear_dam",
+    "bump_rear_dummy",
+    "bump_rear_ok",
+    "chassis",
+    "chassis_dummy",
+    "chassis_vlo",
+    "door_lf_dam",
+    "door_lf_dummy",
+    "door_lf_ok",
+    "door_rf_dam",
+    "door_rf_dummy",
+    "door_rf_ok",
+    "engine",
+    "exhaust",
+    "exhaust_ok",
+    "headlights",
+    "headlights2",
+    "ped_arm",
+    "ped_frontseat",
+    "petrolcap",
+    "sabre",
+    "sabre.dff.sabre_col.colmesh",
+    "sabre.dff.sabre_col.colsphere",
+    "sabre.dff.sabre_col.shadowmesh",
+    "taillights",
+    "ug_nitro",
+    "wheel",
+    "wheel_lb_dummy",
+    "wheel_lf_dummy",
+    "wheel_rb_dummy",
+    "wheel_rf_dummy",
+    "windscreen_dam",
+    "windscreen_dummy",
+    "windscreen_ok"
+   ],
+   "groundDrop": 0.7,
+   "name": "sabre",
+   "parts": {
+    "bonnet": {
+     "dam": {
+      "centre": [
+       0.001,
+       1.599,
+       0.294
+      ],
+      "samemesh": false,
+      "size": [
+       1.557,
+       1.684,
+       0.51
+      ],
+      "verts": 46
+     },
+     "ok": {
+      "centre": [
+       -0.0,
+       1.652,
+       0.154
+      ],
+      "samemesh": false,
+      "size": [
+       1.525,
+       1.79,
+       0.236
+      ],
+      "verts": 39
+     }
+    },
+    "boot": {
+     "dam": {
+      "centre": [
+       0.0,
+       -2.277,
+       0.204
+      ],
+      "samemesh": false,
+      "size": [
+       1.761,
+       0.906,
+       0.505
+      ],
+      "verts": 30
+     },
+     "ok": {
+      "centre": [
+       0.0,
+       -2.317,
+       0.119
+      ],
+      "samemesh": false,
+      "size": [
+       1.761,
+       0.985,
+       0.416
+      ],
+      "verts": 24
+     }
+    },
+    "bump_front": {
+     "dam": {
+      "centre": [
+       -0.002,
+       2.451,
+       -0.288
+      ],
+      "samemesh": false,
+      "size": [
+       2.117,
+       0.407,
+       0.467
+      ],
+      "verts": 116
+     },
+     "ok": {
+      "centre": [
+       0.0,
+       2.408,
+       -0.3
+      ],
+      "samemesh": false,
+      "size": [
+       2.114,
+       0.321,
+       0.313
+      ],
+      "verts": 108
+     }
+    },
+    "bump_rear": {
+     "dam": {
+      "centre": [
+       0.011,
+       -2.678,
+       -0.254
+      ],
+      "samemesh": false,
+      "size": [
+       2.074,
+       0.409,
+       0.453
+      ],
+      "verts": 135
+     },
+     "ok": {
+      "centre": [
+       0.0,
+       -2.704,
+       -0.245
+      ],
+      "samemesh": false,
+      "size": [
+       2.051,
+       0.312,
+       0.397
+      ],
+      "verts": 128
+     }
+    },
+    "door_lf": {
+     "dam": {
+      "centre": [
+       -1.052,
+       -0.013,
+       0.022
+      ],
+      "samemesh": false,
+      "size": [
+       0.422,
+       1.3,
+       1.19
+      ],
+      "verts": 54
+     },
+     "ok": {
+      "centre": [
+       -0.988,
+       -0.013,
+       0.016
+      ],
+      "samemesh": false,
+      "size": [
+       0.446,
+       1.3,
+       1.177
+      ],
+      "verts": 49
+     }
+    },
+    "door_rf": {
+     "dam": {
+      "centre": [
+       0.965,
+       0.009,
+       0.009
+      ],
+      "samemesh": false,
+      "size": [
+       0.524,
+       1.257,
+       1.184
+      ],
+      "verts": 54
+     },
+     "ok": {
+      "centre": [
+       0.988,
+       -0.013,
+       0.016
+      ],
+      "samemesh": false,
+      "size": [
+       0.446,
+       1.3,
+       1.177
+      ],
+      "verts": 49
+     }
+    }
+   },
+   "slots": {
+    "bonnet": [
+     0.0,
+     1.652
+    ],
+    "boot": [
+     0.0,
+     -2.809
+    ],
+    "bump_front": [
+     0.0,
+     2.568
+    ],
+    "bump_rear": [
+     0.0,
+     -2.86
+    ],
+    "door_lf": [
+     -1.311,
+     -0.013
+    ],
+    "door_rf": [
+     1.311,
+     -0.013
+    ]
+   }
+  },
+  "478": {
+   "frames": [
+    "bonnet_dam",
+    "bonnet_dummy",
+    "bonnet_ok",
+    "boot_dam",
+    "boot_dummy",
+    "boot_ok",
+    "bump_front_dam",
+    "bump_front_dummy",
+    "bump_front_ok",
+    "bump_rear_dam",
+    "bump_rear_dummy",
+    "bump_rear_ok",
+    "chassis",
+    "chassis_dummy",
+    "chassis_vlo",
+    "door_lf_dam",
+    "door_lf_dummy",
+    "door_lf_ok",
+    "door_rf_dam",
+    "door_rf_dummy",
+    "door_rf_ok",
+    "engine",
+    "exhaust",
+    "exhaust_ok",
+    "extra1",
+    "extra2",
+    "extra3",
+    "headlights",
+    "ped_arm",
+    "ped_frontseat",
+    "petrolcap",
+    "taillights",
+    "ug_bonnet",
+    "ug_bonnet_dam",
+    "ug_lights",
+    "ug_nitro",
+    "walton",
+    "walton.dff.walton_col.colmesh",
+    "walton.dff.walton_col.colsphere",
+    "walton.dff.walton_col.shadowmesh",
+    "wheel",
+    "wheel_lb_dummy",
+    "wheel_lf_dummy",
+    "wheel_rb_dummy",
+    "wheel_rf_dummy",
+    "windscreen_dam",
+    "windscreen_dummy",
+    "windscreen_ok"
+   ],
+   "groundDrop": 0.9,
+   "name": "walton",
+   "parts": {
+    "bonnet": {
+     "dam": {
+      "centre": [
+       0.0,
+       1.684,
+       0.336
+      ],
+      "samemesh": false,
+      "size": [
+       1.736,
+       1.182,
+       0.369
+      ],
+      "verts": 38
+     },
+     "ok": {
+      "centre": [
+       0.0,
+       1.682,
+       0.273
+      ],
+      "samemesh": false,
+      "size": [
+       1.736,
+       1.177,
+       0.279
+      ],
+      "verts": 35
+     }
+    },
+    "boot": {
+     "dam": {
+      "centre": [
+       -0.0,
+       -2.573,
+       0.234
+      ],
+      "samemesh": false,
+      "size": [
+       2.005,
+       0.081,
+       0.719
+      ],
+      "verts": 40
+     },
+     "ok": {
+      "centre": [
+       -0.0,
+       -2.573,
+       0.211
+      ],
+      "samemesh": false,
+      "size": [
+       2.001,
+       0.081,
+       0.666
+      ],
+      "verts": 48
+     }
+    },
+    "bump_front": {
+     "dam": {
+      "centre": [
+       0.0,
+       2.279,
+       -0.503
+      ],
+      "samemesh": false,
+      "size": [
+       2.022,
+       0.292,
+       0.303
+      ],
+      "verts": 57
+     },
+     "ok": {
+      "centre": [
+       0.0,
+       2.271,
+       -0.486
+      ],
+      "samemesh": false,
+      "size": [
+       2.023,
+       0.255,
+       0.215
+      ],
+      "verts": 50
+     }
+    },
+    "bump_rear": {
+     "dam": {
+      "centre": [
+       -0.006,
+       -2.576,
+       -0.423
+      ],
+      "samemesh": false,
+      "size": [
+       2.063,
+       0.15,
+       0.202
+      ],
+      "verts": 35
+     },
+     "ok": {
+      "centre": [
+       -0.0,
+       -2.587,
+       -0.436
+      ],
+      "samemesh": false,
+      "size": [
+       2.065,
+       0.132,
+       0.122
+      ],
+      "verts": 28
+     }
+    },
+    "door_lf": {
+     "dam": {
+      "centre": [
+       -1.015,
+       0.319,
+       0.091
+      ],
+      "samemesh": false,
+      "size": [
+       0.249,
+       1.192,
+       1.244
+      ],
+      "verts": 60
+     },
+     "ok": {
+      "centre": [
+       -0.98,
+       0.319,
+       0.091
+      ],
+      "samemesh": false,
+      "size": [
+       0.384,
+       1.192,
+       1.244
+      ],
+      "verts": 69
+     }
+    },
+    "door_rf": {
+     "dam": {
+      "centre": [
+       0.99,
+       0.326,
+       0.089
+      ],
+      "samemesh": false,
+      "size": [
+       0.298,
+       1.179,
+       1.24
+      ],
+      "verts": 60
+     },
+     "ok": {
+      "centre": [
+       0.98,
+       0.319,
+       0.091
+      ],
+      "samemesh": false,
+      "size": [
+       0.384,
+       1.192,
+       1.244
+      ],
+      "verts": 69
+     }
+    }
+   },
+   "slots": {
+    "bonnet": [
+     0.0,
+     1.682
+    ],
+    "boot": [
+     0.0,
+     -2.613
+    ],
+    "bump_front": [
+     0.0,
+     2.398
+    ],
+    "bump_rear": [
+     0.0,
+     -2.653
+    ],
+    "door_lf": [
+     -1.272,
+     0.319
+    ],
+    "door_rf": [
+     1.272,
+     0.319
+    ]
+   }
+  },
+  "479": {
+   "frames": [
+    "bonnet_dam",
+    "bonnet_dummy",
+    "bonnet_ok",
+    "boot_dam",
+    "boot_dummy",
+    "boot_ok",
+    "bump_front_dam",
+    "bump_front_dummy",
+    "bump_front_ok",
+    "bump_rear_dam",
+    "bump_rear_dummy",
+    "bump_rear_ok",
+    "chassis",
+    "chassis_dummy",
+    "chassis_vlo",
+    "door_lf_dam",
+    "door_lf_dummy",
+    "door_lf_ok",
+    "door_lr_dam",
+    "door_lr_dummy",
+    "door_lr_ok",
+    "door_rf_dam",
+    "door_rf_dummy",
+    "door_rf_ok",
+    "door_rr_dam",
+    "door_rr_dummy",
+    "door_rr_ok",
+    "engine",
+    "exhaust",
+    "exhaust_ok",
+    "headlights",
+    "ped_arm",
+    "ped_backseat",
+    "ped_frontseat",
+    "petrolcap",
+    "plate_front_dam",
+    "plate_front_ok",
+    "plate_rear_dam",
+    "plate_rear_ok",
+    "regina",
+    "regina.dff.regina_col.colmesh",
+    "regina.dff.regina_col.colsphere",
+    "regina.dff.regina_col.shadowmesh",
+    "taillights",
+    "ug_nitro",
+    "wheel",
+    "wheel_lb_dummy",
+    "wheel_lf_dummy",
+    "wheel_rb_dummy",
+    "wheel_rf_dummy",
+    "windscreen_dummy",
+    "windscreen_ok"
+   ],
+   "groundDrop": 0.735,
+   "name": "regina",
+   "parts": {
+    "bonnet": {
+     "dam": {
+      "centre": [
+       0.0,
+       1.751,
+       0.339
+      ],
+      "samemesh": false,
+      "size": [
+       1.795,
+       1.703,
+       0.3
+      ],
+      "verts": 44
+     },
+     "ok": {
+      "centre": [
+       0.0,
+       1.751,
+       0.289
+      ],
+      "samemesh": false,
+      "size": [
+       1.795,
+       1.703,
+       0.2
+      ],
+      "verts": 36
+     }
+    },
+    "boot": {
+     "dam": {
+      "centre": [
+       0.0,
+       -2.651,
+       0.359
+      ],
+      "samemesh": false,
+      "size": [
+       1.722,
+       0.353,
+       1.044
+      ],
+      "verts": 59
+     },
+     "ok": {
+      "centre": [
+       0.0,
+       -2.644,
+       0.359
+      ],
+      "samemesh": false,
+      "size": [
+       1.722,
+       0.34,
+       1.044
+      ],
+      "verts": 51
+     }
+    },
+    "bump_front": {
+     "dam": {
+      "centre": [
+       -0.003,
+       2.565,
+       -0.317
+      ],
+      "samemesh": false,
+      "size": [
+       2.287,
+       0.539,
+       0.388
+      ],
+      "verts": 112
+     },
+     "ok": {
+      "centre": [
+       0.002,
+       2.539,
+       -0.273
+      ],
+      "samemesh": false,
+      "size": [
+       2.292,
+       0.493,
+       0.295
+      ],
+      "verts": 139
+     }
+    },
+    "bump_rear": {
+     "dam": {
+      "centre": [
+       -0.011,
+       -2.798,
+       -0.33
+      ],
+      "samemesh": false,
+      "size": [
+       2.201,
+       0.456,
+       0.338
+      ],
+      "verts": 41
+     },
+     "ok": {
+      "centre": [
+       0.003,
+       -2.752,
+       -0.271
+      ],
+      "samemesh": false,
+      "size": [
+       2.185,
+       0.367,
+       0.219
+      ],
+      "verts": 59
+     }
+    },
+    "door_lf": {
+     "dam": {
+      "centre": [
+       -1.001,
+       0.237,
+       0.225
+      ],
+      "samemesh": false,
+      "size": [
+       0.352,
+       1.269,
+       1.206
+      ],
+      "verts": 37
+     },
+     "ok": {
+      "centre": [
+       -0.989,
+       0.237,
+       0.241
+      ],
+      "samemesh": false,
+      "size": [
+       0.474,
+       1.269,
+       1.236
+      ],
+      "verts": 59
+     }
+    },
+    "door_lr": {
+     "dam": {
+      "centre": [
+       -0.973,
+       -0.901,
+       0.221
+      ],
+      "samemesh": false,
+      "size": [
+       0.31,
+       0.983,
+       1.197
+      ],
+      "verts": 49
+     },
+     "ok": {
+      "centre": [
+       -0.902,
+       -0.901,
+       0.241
+      ],
+      "samemesh": false,
+      "size": [
+       0.3,
+       0.983,
+       1.236
+      ],
+      "verts": 64
+     }
+    },
+    "door_rf": {
+     "dam": {
+      "centre": [
+       1.001,
+       0.251,
+       0.224
+      ],
+      "samemesh": false,
+      "size": [
+       0.352,
+       1.242,
+       1.203
+      ],
+      "verts": 37
+     },
+     "ok": {
+      "centre": [
+       0.989,
+       0.237,
+       0.241
+      ],
+      "samemesh": false,
+      "size": [
+       0.474,
+       1.269,
+       1.236
+      ],
+      "verts": 59
+     }
+    },
+    "door_rr": {
+     "dam": {
+      "centre": [
+       0.973,
+       -0.901,
+       0.221
+      ],
+      "samemesh": false,
+      "size": [
+       0.31,
+       0.983,
+       1.197
+      ],
+      "verts": 49
+     },
+     "ok": {
+      "centre": [
+       0.902,
+       -0.901,
+       0.241
+      ],
+      "samemesh": false,
+      "size": [
+       0.3,
+       0.983,
+       1.236
+      ],
+      "verts": 64
+     }
+    }
+   },
+   "slots": {
+    "bonnet": [
+     0.0,
+     1.751
+    ],
+    "boot": [
+     0.0,
+     -2.814
+    ],
+    "bump_front": [
+     0.0,
+     2.785
+    ],
+    "bump_rear": [
+     0.0,
+     -2.936
+    ],
+    "door_lf": [
+     -1.326,
+     0.237
+    ],
+    "door_lr": [
+     -1.152,
+     -0.901
+    ],
+    "door_rf": [
+     1.326,
+     0.237
+    ],
+    "door_rr": [
+     1.152,
+     -0.901
+    ]
+   }
+  },
+  "480": {
+   "frames": [
+    "bonnet_dam",
+    "bonnet_dummy",
+    "bonnet_ok",
+    "boot_dam",
+    "boot_dummy",
+    "boot_ok",
+    "bump_front_dam",
+    "bump_front_dummy",
+    "bump_front_ok",
+    "bump_rear_dam",
+    "bump_rear_dummy",
+    "bump_rear_ok",
+    "chassis",
+    "chassis_dummy",
+    "chassis_vlo",
+    "comet",
+    "comet.dff.comet_col.colmesh",
+    "comet.dff.comet_col.colsphere",
+    "comet.dff.comet_col.shadowmesh",
+    "door_lf_dam",
+    "door_lf_dummy",
+    "door_lf_ok",
+    "door_rf_dam",
+    "door_rf_dummy",
+    "door_rf_ok",
+    "engine",
+    "exhaust",
+    "exhaust_ok",
+    "headlights",
+    "ped_arm",
+    "ped_frontseat",
+    "petrolcap",
+    "taillights",
+    "taillights2",
+    "ug_nitro",
+    "wheel",
+    "wheel_lb_dummy",
+    "wheel_lf_dummy",
+    "wheel_rb_dummy",
+    "wheel_rf_dummy",
+    "windscreen_dam",
+    "windscreen_dummy",
+    "windscreen_ok"
+   ],
+   "groundDrop": 0.7,
+   "name": "comet",
+   "parts": {
+    "bonnet": {
+     "dam": {
+      "centre": [
+       0.0,
+       1.447,
+       0.177
+      ],
+      "samemesh": false,
+      "size": [
+       1.308,
+       1.56,
+       0.531
+      ],
+      "verts": 40
+     },
+     "ok": {
+      "centre": [
+       0.0,
+       1.486,
+       0.048
+      ],
+      "samemesh": false,
+      "size": [
+       1.308,
+       1.638,
+       0.391
+      ],
+      "verts": 32
+     }
+    },
+    "boot": {
+     "dam": {
+      "centre": [
+       0.0,
+       -1.86,
+       0.22
+      ],
+      "samemesh": false,
+      "size": [
+       1.716,
+       1.026,
+       0.381
+      ],
+      "verts": 40
+     },
+     "ok": {
+      "centre": [
+       0.0,
+       -1.866,
+       0.128
+      ],
+      "samemesh": false,
+      "size": [
+       1.716,
+       1.037,
+       0.246
+      ],
+      "verts": 32
+     }
+    },
+    "bump_front": {
+     "dam": {
+      "centre": [
+       0.008,
+       2.164,
+       -0.345
+      ],
+      "samemesh": false,
+      "size": [
+       2.114,
+       0.803,
+       0.484
+      ],
+      "verts": 108
+     },
+     "ok": {
+      "centre": [
+       0.0,
+       2.123,
+       -0.301
+      ],
+      "samemesh": false,
+      "size": [
+       2.038,
+       0.745,
+       0.228
+      ],
+      "verts": 108
+     }
+    },
+    "bump_rear": {
+     "dam": {
+      "centre": [
+       -0.035,
+       -2.233,
+       -0.396
+      ],
+      "samemesh": false,
+      "size": [
+       2.066,
+       0.837,
+       0.502
+      ],
+      "verts": 108
+     },
+     "ok": {
+      "centre": [
+       0.0,
+       -2.201,
+       -0.334
+      ],
+      "samemesh": false,
+      "size": [
+       2.047,
+       0.816,
+       0.23
+      ],
+      "verts": 108
+     }
+    },
+    "door_lf": {
+     "dam": {
+      "centre": [
+       -1.001,
+       -0.048,
+       -0.037
+      ],
+      "samemesh": false,
+      "size": [
+       0.359,
+       1.329,
+       0.796
+      ],
+      "verts": 46
+     },
+     "ok": {
+      "centre": [
+       -0.997,
+       -0.048,
+       -0.032
+      ],
+      "samemesh": false,
+      "size": [
+       0.353,
+       1.329,
+       0.806
+      ],
+      "verts": 38
+     }
+    },
+    "door_rf": {
+     "dam": {
+      "centre": [
+       0.995,
+       -0.048,
+       -0.014
+      ],
+      "samemesh": false,
+      "size": [
+       0.348,
+       1.329,
+       0.842
+      ],
+      "verts": 48
+     },
+     "ok": {
+      "centre": [
+       0.997,
+       -0.048,
+       -0.032
+      ],
+      "samemesh": false,
+      "size": [
+       0.353,
+       1.329,
+       0.806
+      ],
+      "verts": 38
+     }
+    }
+   },
+   "slots": {
+    "bonnet": [
+     0.0,
+     1.486
+    ],
+    "boot": [
+     0.0,
+     -2.384
+    ],
+    "bump_front": [
+     0.0,
+     2.496
+    ],
+    "bump_rear": [
+     0.0,
+     -2.609
+    ],
+    "door_lf": [
+     -1.274,
+     -0.048
+    ],
+    "door_rf": [
+     1.274,
+     -0.048
+    ]
+   }
+  },
+  "489": {
+   "frames": [
+    "bonnet_dam",
+    "bonnet_dummy",
+    "bonnet_ok",
+    "boot_dam",
+    "boot_dummy",
+    "boot_ok",
+    "bump_front_dam",
+    "bump_front_dummy",
+    "bump_front_ok",
+    "bump_rear_dam",
+    "bump_rear_dummy",
+    "bump_rear_ok",
+    "chassis",
+    "chassis_dummy",
+    "chassis_vlo",
+    "door_lf_dam",
+    "door_lf_dummy",
+    "door_lf_ok",
+    "door_rf_dam",
+    "door_rf_dummy",
+    "door_rf_ok",
+    "engine",
+    "exhaust",
+    "exhaust_ok",
+    "headlights",
+    "ped_arm",
+    "ped_frontseat",
+    "petrolcap",
+    "plate_front_dam",
+    "plate_front_ok",
+    "plate_rear_dam",
+    "plate_rear_ok",
+    "rancher",
+    "rancher.dff.rancher_col.colmesh",
+    "rancher.dff.rancher_col.colsphere",
+    "rancher.dff.rancher_col.shadowmesh",
+    "taillights",
+    "ug_bonnet",
+    "ug_bonnet_dam",
+    "ug_lights",
+    "ug_lights_dam",
+    "ug_nitro",
+    "ug_roof",
+    "ug_spoiler",
+    "wheel",
+    "wheel_lb_dummy",
+    "wheel_lf_dummy",
+    "wheel_rb_dummy",
+    "wheel_rf_dummy",
+    "windscreen_dam",
+    "windscreen_dummy",
+    "windscreen_ok"
+   ],
+   "groundDrop": 1.114,
+   "name": "rancher",
+   "parts": {
+    "bonnet": {
+     "dam": {
+      "centre": [
+       -0.001,
+       1.647,
+       0.555
+      ],
+      "samemesh": false,
+      "size": [
+       1.988,
+       1.536,
+       0.336
+      ],
+      "verts": 83
+     },
+     "ok": {
+      "centre": [
+       0.0,
+       1.766,
+       0.381
+      ],
+      "samemesh": false,
+      "size": [
+       1.982,
+       1.773,
+       0.227
+      ],
+      "verts": 68
+     }
+    },
+    "boot": {
+     "dam": {
+      "centre": [
+       -0.011,
+       -2.559,
+       0.393
+      ],
+      "samemesh": false,
+      "size": [
+       2.049,
+       0.375,
+       1.141
+      ],
+      "verts": 80
+     },
+     "ok": {
+      "centre": [
+       -0.0,
+       -2.557,
+       0.389
+      ],
+      "samemesh": false,
+      "size": [
+       2.049,
+       0.378,
+       1.149
+      ],
+      "verts": 86
+     }
+    },
+    "bump_front": {
+     "dam": {
+      "centre": [
+       -0.004,
+       2.644,
+       -0.401
+      ],
+      "samemesh": false,
+      "size": [
+       2.391,
+       0.507,
+       0.433
+      ],
+      "verts": 57
+     },
+     "ok": {
+      "centre": [
+       0.0,
+       2.599,
+       -0.364
+      ],
+      "samemesh": false,
+      "size": [
+       2.396,
+       0.405,
+       0.346
+      ],
+      "verts": 72
+     }
+    },
+    "bump_rear": {
+     "dam": {
+      "centre": [
+       0.003,
+       -2.704,
+       -0.366
+      ],
+      "samemesh": false,
+      "size": [
+       2.51,
+       0.629,
+       0.421
+      ],
+      "verts": 48
+     },
+     "ok": {
+      "centre": [
+       0.0,
+       -2.628,
+       -0.37
+      ],
+      "samemesh": false,
+      "size": [
+       2.518,
+       0.467,
+       0.321
+      ],
+      "verts": 68
+     }
+    },
+    "door_lf": {
+     "dam": {
+      "centre": [
+       -1.244,
+       0.112,
+       0.111
+      ],
+      "samemesh": false,
+      "size": [
+       0.336,
+       1.441,
+       1.556
+      ],
+      "verts": 53
+     },
+     "ok": {
+      "centre": [
+       -1.171,
+       0.149,
+       0.202
+      ],
+      "samemesh": false,
+      "size": [
+       0.522,
+       1.372,
+       1.526
+      ],
+      "verts": 70
+     }
+    },
+    "door_rf": {
+     "dam": {
+      "centre": [
+       1.229,
+       0.178,
+       0.111
+      ],
+      "samemesh": false,
+      "size": [
+       0.365,
+       1.307,
+       1.556
+      ],
+      "verts": 53
+     },
+     "ok": {
+      "centre": [
+       1.171,
+       0.149,
+       0.202
+      ],
+      "samemesh": false,
+      "size": [
+       0.522,
+       1.372,
+       1.526
+      ],
+      "verts": 70
+     }
+    }
+   },
+   "slots": {
+    "bonnet": [
+     0.0,
+     1.766
+    ],
+    "boot": [
+     0.0,
+     -2.746
+    ],
+    "bump_front": [
+     0.0,
+     2.802
+    ],
+    "bump_rear": [
+     0.0,
+     -2.861
+    ],
+    "door_lf": [
+     -1.532,
+     0.149
+    ],
+    "door_rf": [
+     1.532,
+     0.149
+    ]
+   }
+  },
+  "495": {
+   "frames": [
+    "bonnet_dam",
+    "bonnet_dummy",
+    "bonnet_ok",
+    "boot_dam",
+    "boot_dummy",
+    "boot_ok",
+    "bump_front_dam",
+    "bump_front_dummy",
+    "bump_front_ok",
+    "bump_rear_dam",
+    "bump_rear_dummy",
+    "bump_rear_ok",
+    "chassis",
+    "chassis_dummy",
+    "chassis_vlo",
+    "door_lf_dam",
+    "door_lf_dummy",
+    "door_lf_ok",
+    "door_rf_dam",
+    "door_rf_dummy",
+    "door_rf_ok",
+    "engine",
+    "exhaust",
+    "exhaust_ok",
+    "headlights",
+    "misc_a",
+    "misc_b",
+    "ped_arm",
+    "ped_frontseat",
+    "petrolcap",
+    "plate_front_dam",
+    "plate_front_ok",
+    "plate_rear_dam",
+    "plate_rear_ok",
+    "sandking",
+    "sandking.dff.sandking_col.colmesh",
+    "sandking.dff.sandking_col.colsphere",
+    "sandking.dff.sandking_col.shadowmesh",
+    "taillights",
+    "ug_nitro",
+    "wheel",
+    "wheel_lb_dummy",
+    "wheel_lf_dummy",
+    "wheel_rb_dummy",
+    "wheel_rf_dummy",
+    "windscreen_dam",
+    "windscreen_dummy",
+    "windscreen_ok"
+   ],
+   "groundDrop": 1.25,
+   "name": "sandking",
+   "parts": {
+    "bonnet": {
+     "dam": {
+      "centre": [
+       -0.001,
+       1.677,
+       0.507
+      ],
+      "samemesh": false,
+      "size": [
+       2.073,
+       1.504,
+       0.43
+      ],
+      "verts": 79
+     },
+     "ok": {
+      "centre": [
+       -0.002,
+       1.71,
+       0.318
+      ],
+      "samemesh": false,
+      "size": [
+       2.077,
+       1.572,
+       0.292
+      ],
+      "verts": 54
+     }
+    },
+    "boot": {
+     "dam": {
+      "centre": [
+       -0.002,
+       -2.106,
+       0.331
+      ],
+      "samemesh": false,
+      "size": [
+       1.888,
+       0.296,
+       1.148
+      ],
+      "verts": 74
+     },
+     "ok": {
+      "centre": [
+       -0.002,
+       -2.103,
+       0.331
+      ],
+      "samemesh": false,
+      "size": [
+       1.888,
+       0.291,
+       1.148
+      ],
+      "verts": 56
+     }
+    },
+    "bump_front": {
+     "dam": {
+      "centre": [
+       -0.024,
+       2.531,
+       -0.449
+      ],
+      "samemesh": false,
+      "size": [
+       2.462,
+       0.611,
+       0.479
+      ],
+      "verts": 63
+     },
+     "ok": {
+      "centre": [
+       -0.0,
+       2.423,
+       -0.433
+      ],
+      "samemesh": false,
+      "size": [
+       2.425,
+       0.394,
+       0.431
+      ],
+      "verts": 70
+     }
+    },
+    "bump_rear": {
+     "dam": {
+      "centre": [
+       -0.043,
+       -2.217,
+       -0.519
+      ],
+      "samemesh": false,
+      "size": [
+       2.557,
+       0.546,
+       0.552
+      ],
+      "verts": 56
+     },
+     "ok": {
+      "centre": [
+       -0.0,
+       -2.139,
+       -0.457
+      ],
+      "samemesh": false,
+      "size": [
+       2.468,
+       0.39,
+       0.415
+      ],
+      "verts": 57
+     }
+    },
+    "door_lf": {
+     "dam": {
+      "centre": [
+       -1.214,
+       0.288,
+       0.099
+      ],
+      "samemesh": false,
+      "size": [
+       0.32,
+       1.281,
+       1.47
+      ],
+      "verts": 70
+     },
+     "ok": {
+      "centre": [
+       -1.209,
+       0.288,
+       0.13
+      ],
+      "samemesh": false,
+      "size": [
+       0.584,
+       1.279,
+       1.51
+      ],
+      "verts": 65
+     }
+    },
+    "door_rf": {
+     "dam": {
+      "centre": [
+       1.214,
+       0.288,
+       0.099
+      ],
+      "samemesh": false,
+      "size": [
+       0.32,
+       1.281,
+       1.47
+      ],
+      "verts": 70
+     },
+     "ok": {
+      "centre": [
+       1.207,
+       0.288,
+       0.13
+      ],
+      "samemesh": false,
+      "size": [
+       0.584,
+       1.279,
+       1.51
+      ],
+      "verts": 65
+     }
+    }
+   },
+   "slots": {
+    "bonnet": [
+     0.0,
+     1.71
+    ],
+    "boot": [
+     0.0,
+     -2.249
+    ],
+    "bump_front": [
+     0.0,
+     2.62
+    ],
+    "bump_rear": [
+     0.0,
+     -2.333
+    ],
+    "door_lf": [
+     -1.601,
+     0.288
+    ],
+    "door_rf": [
+     1.599,
+     0.288
+    ]
+   }
+  },
+  "496": {
+   "frames": [
+    "blistac",
+    "blistac.dff.blistac_col.colmesh",
+    "blistac.dff.blistac_col.colsphere",
+    "blistac.dff.blistac_col.shadowmesh",
+    "bonnet_dam",
+    "bonnet_dummy",
+    "bonnet_ok",
+    "boot_dummy",
+    "boot_ok",
+    "boot_ok_dam",
+    "bump_front_dam",
+    "bump_front_dummy",
+    "bump_front_ok",
+    "bump_rear_dam",
+    "bump_rear_dummy",
+    "bump_rear_ok",
+    "chassis",
+    "chassis_dummy",
+    "chassis_vlo",
+    "door_lf_dam",
+    "door_lf_dummy",
+    "door_lf_ok",
+    "door_rf_dam",
+    "door_rf_dummy",
+    "door_rf_ok",
+    "engine",
+    "exhaust",
+    "exhaust_ok",
+    "headlights",
+    "ped_arm",
+    "ped_frontseat",
+    "petrolcap",
+    "plate_front_dam",
+    "plate_front_ok",
+    "plate_rear_dam",
+    "plate_rear_ok",
+    "taillights",
+    "ug_bonnet",
+    "ug_bonnet_dam",
+    "ug_bonnet_left",
+    "ug_bonnet_left_dam",
+    "ug_bonnet_right",
+    "ug_bonnet_right_dam",
+    "ug_lights",
+    "ug_lights_dam",
+    "ug_nitro",
+    "ug_roof",
+    "ug_spoiler",
+    "ug_spoiler_dam",
+    "ug_wing_left",
+    "ug_wing_right",
+    "wheel",
+    "wheel_lb_dummy",
+    "wheel_lf_dummy",
+    "wheel_rb_dummy",
+    "wheel_rf_dummy",
+    "windscreen_dam",
+    "windscreen_dummy",
+    "windscreen_ok"
+   ],
+   "groundDrop": 0.668,
+   "name": "blistac",
+   "parts": {
+    "bonnet": {
+     "dam": {
+      "centre": [
+       -0.0,
+       1.41,
+       0.279
+      ],
+      "samemesh": false,
+      "size": [
+       1.87,
+       1.305,
+       0.187
+      ],
+      "verts": 67
+     },
+     "ok": {
+      "centre": [
+       -0.0,
+       1.496,
+       0.208
+      ],
+      "samemesh": false,
+      "size": [
+       1.87,
+       1.477,
+       0.176
+      ],
+      "verts": 40
+     }
+    },
+    "boot": {
+     "dam": {
+      "centre": [
+       -0.0,
+       -1.618,
+       0.472
+      ],
+      "samemesh": true,
+      "size": [
+       1.692,
+       1.084,
+       0.6
+      ],
+      "verts": 117
+     },
+     "ok": {
+      "centre": [
+       -0.0,
+       -1.618,
+       0.472
+      ],
+      "samemesh": false,
+      "size": [
+       1.692,
+       1.084,
+       0.6
+      ],
+      "verts": 117
+     }
+    },
+    "bump_front": {
+     "dam": {
+      "centre": [
+       0.029,
+       2.149,
+       -0.288
+      ],
+      "samemesh": false,
+      "size": [
+       2.151,
+       0.808,
+       0.609
+      ],
+      "verts": 86
+     },
+     "ok": {
+      "centre": [
+       -0.0,
+       2.063,
+       -0.29
+      ],
+      "samemesh": false,
+      "size": [
+       2.07,
+       0.637,
+       0.476
+      ],
+      "verts": 86
+     }
+    },
+    "bump_rear": {
+     "dam": {
+      "centre": [
+       -0.04,
+       -2.06,
+       -0.255
+      ],
+      "samemesh": false,
+      "size": [
+       2.218,
+       0.668,
+       0.397
+      ],
+      "verts": 41
+     },
+     "ok": {
+      "centre": [
+       0.001,
+       -1.968,
+       -0.237
+      ],
+      "samemesh": false,
+      "size": [
+       2.089,
+       0.483,
+       0.361
+      ],
+      "verts": 42
+     }
+    },
+    "door_lf": {
+     "dam": {
+      "centre": [
+       -0.971,
+       -0.005,
+       0.099
+      ],
+      "samemesh": false,
+      "size": [
+       0.296,
+       1.635,
+       1.108
+      ],
+      "verts": 52
+     },
+     "ok": {
+      "centre": [
+       -1.011,
+       0.003,
+       0.137
+      ],
+      "samemesh": false,
+      "size": [
+       0.472,
+       1.619,
+       1.082
+      ],
+      "verts": 57
+     }
+    },
+    "door_rf": {
+     "dam": {
+      "centre": [
+       0.979,
+       0.005,
+       0.137
+      ],
+      "samemesh": false,
+      "size": [
+       0.408,
+       1.615,
+       1.082
+      ],
+      "verts": 62
+     },
+     "ok": {
+      "centre": [
+       1.011,
+       0.003,
+       0.137
+      ],
+      "samemesh": false,
+      "size": [
+       0.472,
+       1.619,
+       1.082
+      ],
+      "verts": 57
+     }
+    }
+   },
+   "slots": {
+    "bonnet": [
+     0.0,
+     1.496
+    ],
+    "boot": [
+     0.0,
+     -2.16
+    ],
+    "bump_front": [
+     0.0,
+     2.382
+    ],
+    "bump_rear": [
+     0.0,
+     -2.21
+    ],
+    "door_lf": [
+     -1.347,
+     0.003
+    ],
+    "door_rf": [
+     1.347,
+     0.003
+    ]
+   }
+  },
+  "498": {
+   "frames": [
+    "bonnet_dam",
+    "bonnet_dummy",
+    "bonnet_ok",
+    "boxville",
+    "boxville.dff.boxville_col.colbox",
+    "boxville.dff.boxville_col.colmesh",
+    "boxville.dff.boxville_col.colsphere",
+    "boxville.dff.boxville_col.shadowmesh",
+    "bump_front_dam",
+    "bump_front_dummy",
+    "bump_front_ok",
+    "bump_rear_dam",
+    "bump_rear_dummy",
+    "bump_rear_ok",
+    "chassis",
+    "chassis_dummy",
+    "chassis_vlo",
+    "door_lf_dam",
+    "door_lf_dummy",
+    "door_lf_ok",
+    "door_lr_dam",
+    "door_lr_dummy",
+    "door_lr_ok",
+    "door_rf_dam",
+    "door_rf_dummy",
+    "door_rf_ok",
+    "door_rr_dam",
+    "door_rr_dummy",
+    "door_rr_ok",
+    "engine",
+    "exhaust",
+    "exhaust_ok",
+    "headlights",
+    "ped_backseat",
+    "ped_frontseat",
+    "petrolcap",
+    "plate_front_dam",
+    "plate_front_ok",
+    "plate_rear",
+    "taillights",
+    "wheel",
+    "wheel_lb_dummy",
+    "wheel_lf_dummy",
+    "wheel_rb_dummy",
+    "wheel_rf_dummy",
+    "windscreen_dam",
+    "windscreen_dummy",
+    "windscreen_ok"
+   ],
+   "groundDrop": 0.96,
+   "name": "boxville",
+   "parts": {
+    "bonnet": {
+     "dam": {
+      "centre": [
+       0.0,
+       2.822,
+       0.638
+      ],
+      "samemesh": false,
+      "size": [
+       2.264,
+       0.575,
+       0.28
+      ],
+      "verts": 30
+     },
+     "ok": {
+      "centre": [
+       0.0,
+       2.813,
+       0.556
+      ],
+      "samemesh": false,
+      "size": [
+       2.264,
+       0.557,
+       0.216
+      ],
+      "verts": 19
+     }
+    },
+    "bump_front": {
+     "dam": {
+      "centre": [
+       0.028,
+       3.137,
+       -0.527
+      ],
+      "samemesh": false,
+      "size": [
+       2.69,
+       0.283,
+       0.374
+      ],
+      "verts": 38
+     },
+     "ok": {
+      "centre": [
+       0.0,
+       3.097,
+       -0.467
+      ],
+      "samemesh": false,
+      "size": [
+       2.639,
+       0.204,
+       0.218
+      ],
+      "verts": 38
+     }
+    },
+    "bump_rear": {
+     "dam": {
+      "centre": [
+       -0.039,
+       -3.119,
+       -0.627
+      ],
+      "samemesh": false,
+      "size": [
+       2.704,
+       0.337,
+       0.354
+      ],
+      "verts": 38
+     },
+     "ok": {
+      "centre": [
+       0.0,
+       -3.052,
+       -0.557
+      ],
+      "samemesh": false,
+      "size": [
+       2.639,
+       0.204,
+       0.218
+      ],
+      "verts": 38
+     }
+    },
+    "door_lf": {
+     "dam": {
+      "centre": [
+       -1.355,
+       1.554,
+       0.382
+      ],
+      "samemesh": false,
+      "size": [
+       0.383,
+       1.134,
+       1.89
+      ],
+      "verts": 62
+     },
+     "ok": {
+      "centre": [
+       -1.341,
+       1.534,
+       0.353
+      ],
+      "samemesh": false,
+      "size": [
+       0.356,
+       1.094,
+       1.948
+      ],
+      "verts": 57
+     }
+    },
+    "door_lr": {
+     "dam": {
+      "centre": [
+       -0.36,
+       -2.972,
+       0.851
+      ],
+      "samemesh": false,
+      "size": [
+       0.72,
+       0.366,
+       2.339
+      ],
+      "verts": 51
+     },
+     "ok": {
+      "centre": [
+       -0.362,
+       -3.012,
+       0.851
+      ],
+      "samemesh": false,
+      "size": [
+       0.723,
+       0.153,
+       2.339
+      ],
+      "verts": 44
+     }
+    },
+    "door_rf": {
+     "dam": {
+      "centre": [
+       1.328,
+       1.552,
+       0.312
+      ],
+      "samemesh": false,
+      "size": [
+       0.33,
+       1.13,
+       1.868
+      ],
+      "verts": 57
+     },
+     "ok": {
+      "centre": [
+       1.341,
+       1.534,
+       0.353
+      ],
+      "samemesh": false,
+      "size": [
+       0.356,
+       1.094,
+       1.949
+      ],
+      "verts": 57
+     }
+    },
+    "door_rr": {
+     "dam": {
+      "centre": [
+       0.362,
+       -2.991,
+       0.851
+      ],
+      "samemesh": false,
+      "size": [
+       0.723,
+       0.324,
+       2.339
+      ],
+      "verts": 51
+     },
+     "ok": {
+      "centre": [
+       0.362,
+       -3.012,
+       0.851
+      ],
+      "samemesh": false,
+      "size": [
+       0.723,
+       0.153,
+       2.339
+      ],
+      "verts": 45
+     }
+    }
+   },
+   "slots": {
+    "bonnet": [
+     0.0,
+     2.813
+    ],
+    "bump_front": [
+     0.0,
+     3.199
+    ],
+    "bump_rear": [
+     0.0,
+     -3.154
+    ],
+    "door_lf": [
+     -1.619,
+     1.534
+    ],
+    "door_lr": [
+     -0.823,
+     -3.012
+    ],
+    "door_rf": [
+     1.619,
+     1.534
+    ],
+    "door_rr": [
+     0.823,
+     -3.012
+    ]
+   }
+  },
+  "500": {
+   "frames": [
+    "bonnet_dam",
+    "bonnet_dummy",
+    "bonnet_ok",
+    "boot_dam",
+    "boot_dummy",
+    "boot_ok",
+    "bump_front_dam",
+    "bump_front_dummy",
+    "bump_front_ok",
+    "bump_rear_dam",
+    "bump_rear_dummy",
+    "bump_rear_ok",
+    "chassis",
+    "chassis_dummy",
+    "chassis_vlo",
+    "door_lf_dam",
+    "door_lf_dummy",
+    "door_lf_ok",
+    "door_rf_dam",
+    "door_rf_dummy",
+    "door_rf_ok",
+    "engine",
+    "exhaust",
+    "exhaust_ok",
+    "extra1",
+    "extra2",
+    "headlights",
+    "mesa",
+    "mesa.dff.mesa_col.colmesh",
+    "mesa.dff.mesa_col.colsphere",
+    "mesa.dff.mesa_col.shadowmesh",
+    "ped_arm",
+    "ped_frontseat",
+    "petrolcap",
+    "taillights",
+    "ug_lights",
+    "ug_nitro",
+    "wheel",
+    "wheel_lb_dummy",
+    "wheel_lf_dummy",
+    "wheel_rb_dummy",
+    "wheel_rf_dummy",
+    "windscreen_dam",
+    "windscreen_dummy",
+    "windscreen_ok"
+   ],
+   "groundDrop": 1.02,
+   "name": "mesa",
+   "parts": {
+    "bonnet": {
+     "dam": {
+      "centre": [
+       0.0,
+       1.426,
+       0.21
+      ],
+      "samemesh": false,
+      "size": [
+       1.816,
+       1.184,
+       0.448
+      ],
+      "verts": 60
+     },
+     "ok": {
+      "centre": [
+       0.0,
+       1.435,
+       0.117
+      ],
+      "samemesh": false,
+      "size": [
+       1.816,
+       1.201,
+       0.261
+      ],
+      "verts": 52
+     }
+    },
+    "boot": {
+     "dam": {
+      "centre": [
+       0.007,
+       -2.064,
+       -0.007
+      ],
+      "samemesh": false,
+      "size": [
+       1.36,
+       0.515,
+       0.891
+      ],
+      "verts": 58
+     },
+     "ok": {
+      "centre": [
+       0.0,
+       -2.013,
+       -0.007
+      ],
+      "samemesh": false,
+      "size": [
+       1.347,
+       0.378,
+       0.891
+      ],
+      "verts": 50
+     }
+    },
+    "bump_front": {
+     "dam": {
+      "centre": [
+       -0.025,
+       2.248,
+       -0.42
+      ],
+      "samemesh": false,
+      "size": [
+       2.17,
+       0.457,
+       0.298
+      ],
+      "verts": 46
+     },
+     "ok": {
+      "centre": [
+       0.0,
+       2.193,
+       -0.458
+      ],
+      "samemesh": false,
+      "size": [
+       2.119,
+       0.324,
+       0.224
+      ],
+      "verts": 50
+     }
+    },
+    "bump_rear": {
+     "dam": {
+      "centre": [
+       0.009,
+       -1.992,
+       -0.538
+      ],
+      "samemesh": false,
+      "size": [
+       1.843,
+       0.221,
+       0.405
+      ],
+      "verts": 35
+     },
+     "ok": {
+      "centre": [
+       0.0,
+       -1.951,
+       -0.415
+      ],
+      "samemesh": false,
+      "size": [
+       1.816,
+       0.14,
+       0.159
+      ],
+      "verts": 34
+     }
+    },
+    "door_lf": {
+     "dam": {
+      "centre": [
+       -0.915,
+       0.008,
+       0.2
+      ],
+      "samemesh": false,
+      "size": [
+       0.256,
+       1.179,
+       1.28
+      ],
+      "verts": 76
+     },
+     "ok": {
+      "centre": [
+       -0.941,
+       0.008,
+       0.2
+      ],
+      "samemesh": false,
+      "size": [
+       0.409,
+       1.179,
+       1.28
+      ],
+      "verts": 80
+     }
+    },
+    "door_rf": {
+     "dam": {
+      "centre": [
+       0.96,
+       0.008,
+       0.19
+      ],
+      "samemesh": false,
+      "size": [
+       0.256,
+       1.179,
+       1.259
+      ],
+      "verts": 71
+     },
+     "ok": {
+      "centre": [
+       0.941,
+       0.008,
+       0.2
+      ],
+      "samemesh": false,
+      "size": [
+       0.409,
+       1.179,
+       1.28
+      ],
+      "verts": 80
+     }
+    }
+   },
+   "slots": {
+    "bonnet": [
+     0.0,
+     1.435
+    ],
+    "boot": [
+     0.0,
+     -2.203
+    ],
+    "bump_front": [
+     0.0,
+     2.355
+    ],
+    "bump_rear": [
+     0.0,
+     -2.021
+    ],
+    "door_lf": [
+     -1.246,
+     0.008
+    ],
+    "door_rf": [
+     1.246,
+     0.008
+    ]
+   }
+  },
+  "504": {
+   "frames": [
+    "bloodra",
+    "bloodra.dff.bloodra_col.colmesh",
+    "bloodra.dff.bloodra_col.colsphere",
+    "bloodra.dff.bloodra_col.shadowmesh",
+    "bonnet_dam",
+    "bonnet_dummy",
+    "bonnet_ok",
+    "boot_dam",
+    "boot_dummy",
+    "boot_ok",
+    "bump_front_dam",
+    "bump_front_dummy",
+    "bump_front_ok",
+    "bump_rear_dam",
+    "bump_rear_dummy",
+    "bump_rear_ok",
+    "chassis",
+    "chassis_dummy",
+    "chassis_vlo",
+    "door_lf_dummy",
+    "door_rf_dummy",
+    "engine",
+    "exhaust",
+    "exhaust_ok",
+    "extra1",
+    "extra2",
+    "extra3",
+    "extra4",
+    "extra5",
+    "extra6",
+    "headlights",
+    "ped_arm",
+    "ped_backseat",
+    "ped_frontseat",
+    "petrolcap",
+    "plate_rear",
+    "taillights",
+    "wheel",
+    "wheel_lb_dummy",
+    "wheel_lf_dummy",
+    "wheel_rb_dummy",
+    "wheel_rf_dummy",
+    "windscreen_dummy"
+   ],
+   "groundDrop": 0.7,
+   "name": "bloodra",
+   "parts": {
+    "bonnet": {
+     "dam": {
+      "centre": [
+       0.0,
+       1.869,
+       0.263
+      ],
+      "samemesh": false,
+      "size": [
+       1.49,
+       1.616,
+       0.508
+      ],
+      "verts": 36
+     },
+     "ok": {
+      "centre": [
+       0.0,
+       1.869,
+       0.162
+      ],
+      "samemesh": false,
+      "size": [
+       1.49,
+       1.616,
+       0.307
+      ],
+      "verts": 30
+     }
+    },
+    "boot": {
+     "dam": {
+      "centre": [
+       -0.0,
+       -2.314,
+       0.24
+      ],
+      "samemesh": false,
+      "size": [
+       1.679,
+       1.302,
+       0.425
+      ],
+      "verts": 36
+     },
+     "ok": {
+      "centre": [
+       0.0,
+       -2.328,
+       0.158
+      ],
+      "samemesh": false,
+      "size": [
+       1.679,
+       1.33,
+       0.273
+      ],
+      "verts": 31
+     }
+    },
+    "bump_front": {
+     "dam": {
+      "centre": [
+       -0.009,
+       2.53,
+       -0.361
+      ],
+      "samemesh": false,
+      "size": [
+       2.318,
+       0.523,
+       0.409
+      ],
+      "verts": 61
+     },
+     "ok": {
+      "centre": [
+       0.0,
+       2.52,
+       -0.294
+      ],
+      "samemesh": false,
+      "size": [
+       2.263,
+       0.504,
+       0.278
+      ],
+      "verts": 56
+     }
+    },
+    "bump_rear": {
+     "dam": {
+      "centre": [
+       0.003,
+       -2.908,
+       -0.363
+      ],
+      "samemesh": false,
+      "size": [
+       2.257,
+       0.459,
+       0.327
+      ],
+      "verts": 52
+     },
+     "ok": {
+      "centre": [
+       -0.0,
+       -2.86,
+       -0.314
+      ],
+      "samemesh": false,
+      "size": [
+       2.219,
+       0.381,
+       0.212
+      ],
+      "verts": 48
+     }
+    }
+   },
+   "slots": {
+    "bonnet": [
+     0.0,
+     1.869
+    ],
+    "boot": [
+     0.0,
+     -2.993
+    ],
+    "bump_front": [
+     0.0,
+     2.772
+    ],
+    "bump_rear": [
+     0.0,
+     -3.051
+    ]
+   }
+  },
+  "508": {
+   "frames": [
+    "bonnet_dam",
+    "bonnet_dummy",
+    "bonnet_ok",
+    "bump_front_dam",
+    "bump_front_dummy",
+    "bump_front_ok",
+    "bump_rear_dam",
+    "bump_rear_dummy",
+    "bump_rear_ok",
+    "chassis",
+    "chassis_dummy",
+    "chassis_vlo",
+    "door_lf_dam",
+    "door_lf_dummy",
+    "door_lf_ok",
+    "door_rf_dam",
+    "door_rf_dummy",
+    "door_rf_ok",
+    "door_rr_dam",
+    "door_rr_dummy",
+    "door_rr_ok",
+    "engine",
+    "exhaust",
+    "exhaust_ok",
+    "headlights",
+    "headlights2",
+    "journey",
+    "journey.dff.journey_col.colmesh",
+    "journey.dff.journey_col.colsphere",
+    "journey.dff.journey_col.shadowmesh",
+    "ped_arm",
+    "ped_frontseat",
+    "petrolcap",
+    "plate_rear",
+    "taillights",
+    "wheel",
+    "wheel_lb_dummy",
+    "wheel_lf_dummy",
+    "wheel_rb_dummy",
+    "wheel_rf_dummy",
+    "windscreen_dam",
+    "windscreen_dummy",
+    "windscreen_ok"
+   ],
+   "groundDrop": 1.3,
+   "name": "journey",
+   "parts": {
+    "bonnet": {
+     "dam": {
+      "centre": [
+       -0.0,
+       2.652,
+       0.137
+      ],
+      "samemesh": false,
+      "size": [
+       2.143,
+       0.759,
+       0.278
+      ],
+      "verts": 21
+     },
+     "ok": {
+      "centre": [
+       -0.0,
+       2.652,
+       0.058
+      ],
+      "samemesh": false,
+      "size": [
+       2.143,
+       0.759,
+       0.12
+      ],
+      "verts": 16
+     }
+    },
+    "bump_front": {
+     "dam": {
+      "centre": [
+       0.013,
+       3.015,
+       -0.903
+      ],
+      "samemesh": false,
+      "size": [
+       2.331,
+       0.368,
+       0.522
+      ],
+      "verts": 101
+     },
+     "ok": {
+      "centre": [
+       0.0,
+       2.949,
+       -0.88
+      ],
+      "samemesh": false,
+      "size": [
+       2.305,
+       0.236,
+       0.241
+      ],
+      "verts": 95
+     }
+    },
+    "bump_rear": {
+     "dam": {
+      "centre": [
+       0.009,
+       -3.95,
+       -0.877
+      ],
+      "samemesh": false,
+      "size": [
+       2.756,
+       0.398,
+       0.416
+      ],
+      "verts": 26
+     },
+     "ok": {
+      "centre": [
+       -0.0,
+       -3.901,
+       -0.87
+      ],
+      "samemesh": false,
+      "size": [
+       2.762,
+       0.14,
+       0.194
+      ],
+      "verts": 11
+     }
+    },
+    "door_lf": {
+     "dam": {
+      "centre": [
+       -1.295,
+       1.64,
+       -0.092
+      ],
+      "samemesh": false,
+      "size": [
+       0.651,
+       0.954,
+       1.608
+      ],
+      "verts": 76
+     },
+     "ok": {
+      "centre": [
+       -1.27,
+       1.633,
+       -0.071
+      ],
+      "samemesh": false,
+      "size": [
+       0.602,
+       0.969,
+       1.546
+      ],
+      "verts": 69
+     }
+    },
+    "door_rf": {
+     "dam": {
+      "centre": [
+       1.252,
+       1.633,
+       -0.071
+      ],
+      "samemesh": false,
+      "size": [
+       0.566,
+       0.969,
+       1.546
+      ],
+      "verts": 72
+     },
+     "ok": {
+      "centre": [
+       1.27,
+       1.633,
+       -0.071
+      ],
+      "samemesh": false,
+      "size": [
+       0.602,
+       0.969,
+       1.546
+      ],
+      "verts": 69
+     }
+    },
+    "door_rr": {
+     "dam": {
+      "centre": [
+       1.437,
+       0.214,
+       0.147
+      ],
+      "samemesh": false,
+      "size": [
+       0.454,
+       0.883,
+       2.015
+      ],
+      "verts": 60
+     },
+     "ok": {
+      "centre": [
+       1.36,
+       0.214,
+       0.148
+      ],
+      "samemesh": false,
+      "size": [
+       0.06,
+       0.883,
+       2.029
+      ],
+      "verts": 54
+     }
+    }
+   },
+   "slots": {
+    "bonnet": [
+     0.0,
+     2.652
+    ],
+    "bump_front": [
+     0.0,
+     3.067
+    ],
+    "bump_rear": [
+     0.0,
+     -3.971
+    ],
+    "door_lf": [
+     -1.671,
+     1.633
+    ],
+    "door_rf": [
+     1.671,
+     1.633
+    ],
+    "door_rr": [
+     1.49,
+     0.214
+    ]
+   }
+  },
+  "515": {
+   "frames": [
+    "bonnet_dam",
+    "bonnet_dummy",
+    "bonnet_ok",
+    "bump_front_dam",
+    "bump_front_dummy",
+    "bump_front_ok",
+    "chassis",
+    "chassis_dummy",
+    "chassis_vlo",
+    "door_lf_dam",
+    "door_lf_dummy",
+    "door_lf_ok",
+    "door_rf_dam",
+    "door_rf_dummy",
+    "door_rf_ok",
+    "engine",
+    "exhaust",
+    "headlights",
+    "headlights2",
+    "misc_a",
+    "ped_frontseat",
+    "petrolcap",
+    "plate_rear_ok",
+    "rdtrain",
+    "rdtrain.dff.rdtrain_col.colmesh",
+    "rdtrain.dff.rdtrain_col.colsphere",
+    "rdtrain.dff.rdtrain_col.shadowmesh",
+    "taillights",
+    "taillights2",
+    "wheel",
+    "wheel_lb_dummy",
+    "wheel_lf_dummy",
+    "wheel_lm_dummy",
+    "wheel_rb_dummy",
+    "wheel_rf_dummy",
+    "wheel_rm_dummy",
+    "windscreen_dam",
+    "windscreen_dummy",
+    "windscreen_ok"
+   ],
+   "groundDrop": 1.984,
+   "name": "rdtrain",
+   "parts": {
+    "bonnet": {
+     "dam": {
+      "centre": [
+       0.0,
+       3.254,
+       0.612
+      ],
+      "samemesh": false,
+      "size": [
+       2.457,
+       1.895,
+       0.45
+      ],
+      "verts": 26
+     },
+     "ok": {
+      "centre": [
+       0.0,
+       3.314,
+       0.4
+      ],
+      "samemesh": false,
+      "size": [
+       2.457,
+       2.0,
+       0.136
+      ],
+      "verts": 17
+     }
+    },
+    "bump_front": {
+     "dam": {
+      "centre": [
+       -0.028,
+       4.918,
+       -0.838
+      ],
+      "samemesh": false,
+      "size": [
+       3.585,
+       0.799,
+       2.354
+      ],
+      "verts": 105
+     },
+     "ok": {
+      "centre": [
+       -0.0,
+       4.741,
+       -0.741
+      ],
+      "samemesh": false,
+      "size": [
+       3.548,
+       0.437,
+       2.257
+      ],
+      "verts": 107
+     }
+    },
+    "door_lf": {
+     "dam": {
+      "centre": [
+       -1.359,
+       1.56,
+       0.214
+      ],
+      "samemesh": false,
+      "size": [
+       0.361,
+       0.872,
+       1.69
+      ],
+      "verts": 30
+     },
+     "ok": {
+      "centre": [
+       -1.219,
+       1.558,
+       0.213
+      ],
+      "samemesh": false,
+      "size": [
+       0.082,
+       0.858,
+       1.677
+      ],
+      "verts": 26
+     }
+    },
+    "door_rf": {
+     "dam": {
+      "centre": [
+       1.358,
+       1.595,
+       0.214
+      ],
+      "samemesh": false,
+      "size": [
+       0.362,
+       0.802,
+       1.69
+      ],
+      "verts": 30
+     },
+     "ok": {
+      "centre": [
+       1.218,
+       1.56,
+       0.213
+      ],
+      "samemesh": false,
+      "size": [
+       0.082,
+       0.859,
+       1.676
+      ],
+      "verts": 26
+     }
+    }
+   },
+   "slots": {
+    "bonnet": [
+     0.0,
+     3.314
+    ],
+    "bump_front": [
+     0.0,
+     4.959
+    ],
+    "door_lf": [
+     -1.36,
+     1.558
+    ],
+    "door_rf": [
+     1.36,
+     1.56
+    ]
+   }
+  },
+  "528": {
+   "frames": [
+    "bonnet_dam",
+    "bonnet_dummy",
+    "bonnet_ok",
+    "bump_front_dam",
+    "bump_front_dummy",
+    "bump_front_ok",
+    "bump_rear_dam",
+    "bump_rear_dummy",
+    "bump_rear_ok",
+    "chassis",
+    "chassis_dummy",
+    "chassis_vlo",
+    "door_lf_dam",
+    "door_lf_dummy",
+    "door_lf_ok",
+    "door_rf_dam",
+    "door_rf_dummy",
+    "door_rf_ok",
+    "engine",
+    "exhaust",
+    "fbitruck",
+    "fbitruck.dff.fbitruck_col.colmesh",
+    "fbitruck.dff.fbitruck_col.colsphere",
+    "fbitruck.dff.fbitruck_col.shadowmesh",
+    "headlights",
+    "ped_frontseat",
+    "petrolcap",
+    "taillights",
+    "wheel",
+    "wheel_lb_dummy",
+    "wheel_lf_dummy",
+    "wheel_rb_dummy",
+    "wheel_rf_dummy",
+    "windscreen_dam",
+    "windscreen_dummy",
+    "windscreen_ok"
+   ],
+   "groundDrop": 1.035,
+   "name": "fbitruck",
+   "parts": {
+    "bonnet": {
+     "dam": {
+      "centre": [
+       0.0,
+       1.693,
+       0.327
+      ],
+      "samemesh": false,
+      "size": [
+       2.221,
+       1.202,
+       0.436
+      ],
+      "verts": 49
+     },
+     "ok": {
+      "centre": [
+       -0.0,
+       1.693,
+       0.292
+      ],
+      "samemesh": false,
+      "size": [
+       2.222,
+       1.202,
+       0.368
+      ],
+      "verts": 44
+     }
+    },
+    "bump_front": {
+     "dam": {
+      "centre": [
+       -0.0,
+       2.612,
+       -0.565
+      ],
+      "samemesh": false,
+      "size": [
+       1.844,
+       0.385,
+       0.344
+      ],
+      "verts": 18
+     },
+     "ok": {
+      "centre": [
+       -0.0,
+       2.564,
+       -0.49
+      ],
+      "samemesh": false,
+      "size": [
+       1.844,
+       0.289,
+       0.193
+      ],
+      "verts": 14
+     }
+    },
+    "bump_rear": {
+     "dam": {
+      "centre": [
+       0.016,
+       -2.727,
+       -0.555
+      ],
+      "samemesh": false,
+      "size": [
+       2.312,
+       0.284,
+       0.323
+      ],
+      "verts": 39
+     },
+     "ok": {
+      "centre": [
+       -0.0,
+       -2.69,
+       -0.482
+      ],
+      "samemesh": false,
+      "size": [
+       2.279,
+       0.209,
+       0.177
+      ],
+      "verts": 42
+     }
+    },
+    "door_lf": {
+     "dam": {
+      "centre": [
+       -1.048,
+       0.108,
+       0.251
+      ],
+      "samemesh": false,
+      "size": [
+       0.45,
+       1.138,
+       1.197
+      ],
+      "verts": 76
+     },
+     "ok": {
+      "centre": [
+       -0.992,
+       0.107,
+       0.241
+      ],
+      "samemesh": false,
+      "size": [
+       0.337,
+       1.139,
+       1.175
+      ],
+      "verts": 72
+     }
+    },
+    "door_rf": {
+     "dam": {
+      "centre": [
+       1.088,
+       0.106,
+       0.234
+      ],
+      "samemesh": false,
+      "size": [
+       0.528,
+       1.141,
+       1.244
+      ],
+      "verts": 79
+     },
+     "ok": {
+      "centre": [
+       0.992,
+       0.107,
+       0.241
+      ],
+      "samemesh": false,
+      "size": [
+       0.337,
+       1.139,
+       1.175
+      ],
+      "verts": 72
+     }
+    }
+   },
+   "slots": {
+    "bonnet": [
+     0.0,
+     1.693
+    ],
+    "bump_front": [
+     0.0,
+     2.708
+    ],
+    "bump_rear": [
+     0.0,
+     -2.794
+    ],
+    "door_lf": [
+     -1.26,
+     0.107
+    ],
+    "door_rf": [
+     1.26,
+     0.107
+    ]
+   }
+  },
+  "542": {
+   "frames": [
+    "bonnet_dam",
+    "bonnet_dummy",
+    "bonnet_ok",
+    "boot_dam",
+    "boot_dummy",
+    "boot_ok",
+    "bump_front_dam",
+    "bump_front_dummy",
+    "bump_front_ok",
+    "bump_rear_dam",
+    "bump_rear_dummy",
+    "bump_rear_ok",
+    "chassis",
+    "chassis_dummy",
+    "chassis_vlo",
+    "clover",
+    "clover.dff.clover_col.colmesh",
+    "clover.dff.clover_col.colsphere",
+    "clover.dff.clover_col.shadowmesh",
+    "door_lf_dam",
+    "door_lf_dummy",
+    "door_lf_ok",
+    "door_rf_dam",
+    "door_rf_dummy",
+    "door_rf_ok",
+    "engine",
+    "exhaust",
+    "exhaust_ok",
+    "headlights",
+    "headlights2",
+    "ped_arm",
+    "ped_frontseat",
+    "petrolcap",
+    "plate_front_dam",
+    "plate_front_ok",
+    "plate_rear_dam",
+    "plate_rear_ok",
+    "taillights",
+    "taillights2",
+    "ug_bonnet_left",
+    "ug_bonnet_left_dam",
+    "ug_bonnet_right",
+    "ug_bonnet_right_dam",
+    "ug_nitro",
+    "ug_spoiler",
+    "ug_spoiler_dam",
+    "wheel",
+    "wheel_lb_dummy",
+    "wheel_lf_dummy",
+    "wheel_rb_dummy",
+    "wheel_rf_dummy",
+    "windscreen_dam",
+    "windscreen_dummy",
+    "windscreen_ok"
+   ],
+   "groundDrop": 0.743,
+   "name": "clover",
+   "parts": {
+    "bonnet": {
+     "dam": {
+      "centre": [
+       -0.0,
+       1.708,
+       0.241
+      ],
+      "samemesh": false,
+      "size": [
+       1.907,
+       1.916,
+       0.309
+      ],
+      "verts": 56
+     },
+     "ok": {
+      "centre": [
+       -0.0,
+       1.733,
+       0.21
+      ],
+      "samemesh": false,
+      "size": [
+       1.907,
+       1.964,
+       0.272
+      ],
+      "verts": 50
+     }
+    },
+    "boot": {
+     "dam": {
+      "centre": [
+       0.0,
+       -2.547,
+       0.264
+      ],
+      "samemesh": false,
+      "size": [
+       1.717,
+       0.799,
+       0.308
+      ],
+      "verts": 31
+     },
+     "ok": {
+      "centre": [
+       0.0,
+       -2.575,
+       0.24
+      ],
+      "samemesh": false,
+      "size": [
+       1.803,
+       0.855,
+       0.353
+      ],
+      "verts": 25
+     }
+    },
+    "bump_front": {
+     "dam": {
+      "centre": [
+       0.011,
+       2.667,
+       -0.343
+      ],
+      "samemesh": false,
+      "size": [
+       2.033,
+       0.351,
+       0.425
+      ],
+      "verts": 58
+     },
+     "ok": {
+      "centre": [
+       0.0,
+       2.641,
+       -0.251
+      ],
+      "samemesh": false,
+      "size": [
+       2.055,
+       0.3,
+       0.242
+      ],
+      "verts": 58
+     }
+    },
+    "bump_rear": {
+     "dam": {
+      "centre": [
+       0.006,
+       -2.946,
+       -0.173
+      ],
+      "samemesh": false,
+      "size": [
+       2.044,
+       0.31,
+       0.473
+      ],
+      "verts": 84
+     },
+     "ok": {
+      "centre": [
+       0.0,
+       -2.919,
+       -0.083
+      ],
+      "samemesh": false,
+      "size": [
+       2.031,
+       0.257,
+       0.295
+      ],
+      "verts": 84
+     }
+    },
+    "door_lf": {
+     "dam": {
+      "centre": [
+       -1.001,
+       0.02,
+       0.153
+      ],
+      "samemesh": false,
+      "size": [
+       0.287,
+       1.412,
+       1.11
+      ],
+      "verts": 53
+     },
+     "ok": {
+      "centre": [
+       -0.983,
+       0.02,
+       0.153
+      ],
+      "samemesh": false,
+      "size": [
+       0.474,
+       1.412,
+       1.11
+      ],
+      "verts": 85
+     }
+    },
+    "door_rf": {
+     "dam": {
+      "centre": [
+       1.001,
+       0.02,
+       0.141
+      ],
+      "samemesh": false,
+      "size": [
+       0.244,
+       1.412,
+       1.111
+      ],
+      "verts": 53
+     },
+     "ok": {
+      "centre": [
+       0.983,
+       0.02,
+       0.153
+      ],
+      "samemesh": false,
+      "size": [
+       0.474,
+       1.412,
+       1.11
+      ],
+      "verts": 85
+     }
+    }
+   },
+   "slots": {
+    "bonnet": [
+     0.0,
+     1.733
+    ],
+    "boot": [
+     0.0,
+     -3.002
+    ],
+    "bump_front": [
+     0.0,
+     2.791
+    ],
+    "bump_rear": [
+     0.0,
+     -3.048
+    ],
+    "door_lf": [
+     -1.32,
+     0.02
+    ],
+    "door_rf": [
+     1.32,
+     0.02
+    ]
+   }
+  },
+  "543": {
+   "frames": [
+    "bonnet_dam",
+    "bonnet_dummy",
+    "bonnet_ok",
+    "boot_dam",
+    "boot_dummy",
+    "boot_ok",
+    "bump_front_dam",
+    "bump_front_dummy",
+    "bump_front_ok",
+    "bump_rear_dam",
+    "bump_rear_dummy",
+    "bump_rear_ok",
+    "chassis",
+    "chassis_dummy",
+    "chassis_vlo",
+    "door_lf_dam",
+    "door_lf_dummy",
+    "door_lf_ok",
+    "door_rf_dam",
+    "door_rf_dummy",
+    "door_rf_ok",
+    "engine",
+    "exhaust",
+    "exhaust_ok",
+    "extra1",
+    "extra2",
+    "extra3",
+    "extra4",
+    "headlights",
+    "ped_arm",
+    "ped_frontseat",
+    "petrolcap",
+    "plate_front_dam",
+    "plate_front_ok",
+    "plate_rear_dam",
+    "plate_rear_ok",
+    "sadler",
+    "sadler.dff.sadler_col.colmesh",
+    "sadler.dff.sadler_col.colsphere",
+    "sadler.dff.sadler_col.shadowmesh",
+    "taillights",
+    "ug_bonnet_left",
+    "ug_nitro",
+    "ug_roof",
+    "ug_spoiler",
+    "ug_wing_left",
+    "ug_wing_right",
+    "wheel",
+    "wheel_lb_dummy",
+    "wheel_lf_dummy",
+    "wheel_rb_dummy",
+    "wheel_rf_dummy",
+    "windscreen_dam",
+    "windscreen_dummy",
+    "windscreen_ok"
+   ],
+   "groundDrop": 0.8,
+   "name": "sadler",
+   "parts": {
+    "bonnet": {
+     "dam": {
+      "centre": [
+       -0.0,
+       1.569,
+       0.442
+      ],
+      "samemesh": false,
+      "size": [
+       1.839,
+       1.306,
+       0.307
+      ],
+      "verts": 35
+     },
+     "ok": {
+      "centre": [
+       -0.0,
+       1.627,
+       0.299
+      ],
+      "samemesh": false,
+      "size": [
+       1.839,
+       1.421,
+       0.108
+      ],
+      "verts": 25
+     }
+    },
+    "boot": {
+     "dam": {
+      "centre": [
+       -0.001,
+       -2.585,
+       0.059
+      ],
+      "samemesh": false,
+      "size": [
+       1.799,
+       0.209,
+       0.549
+      ],
+      "verts": 44
+     },
+     "ok": {
+      "centre": [
+       -0.0,
+       -2.615,
+       0.059
+      ],
+      "samemesh": false,
+      "size": [
+       1.797,
+       0.125,
+       0.55
+      ],
+      "verts": 28
+     }
+    },
+    "bump_front": {
+     "dam": {
+      "centre": [
+       -0.013,
+       2.354,
+       -0.411
+      ],
+      "samemesh": false,
+      "size": [
+       1.96,
+       0.348,
+       0.223
+      ],
+      "verts": 16
+     },
+     "ok": {
+      "centre": [
+       -0.0,
+       2.26,
+       -0.391
+      ],
+      "samemesh": false,
+      "size": [
+       1.989,
+       0.16,
+       0.183
+      ],
+      "verts": 20
+     }
+    },
+    "bump_rear": {
+     "dam": {
+      "centre": [
+       -0.015,
+       -2.705,
+       -0.348
+      ],
+      "samemesh": false,
+      "size": [
+       2.072,
+       0.206,
+       0.201
+      ],
+      "verts": 16
+     },
+     "ok": {
+      "centre": [
+       -0.0,
+       -2.674,
+       -0.333
+      ],
+      "samemesh": false,
+      "size": [
+       2.042,
+       0.132,
+       0.192
+      ],
+      "verts": 20
+     }
+    },
+    "door_lf": {
+     "dam": {
+      "centre": [
+       -1.09,
+       0.281,
+       0.188
+      ],
+      "samemesh": false,
+      "size": [
+       0.436,
+       1.153,
+       1.089
+      ],
+      "verts": 82
+     },
+     "ok": {
+      "centre": [
+       -1.08,
+       0.279,
+       0.204
+      ],
+      "samemesh": false,
+      "size": [
+       0.459,
+       1.157,
+       1.121
+      ],
+      "verts": 92
+     }
+    },
+    "door_rf": {
+     "dam": {
+      "centre": [
+       1.082,
+       0.278,
+       0.19
+      ],
+      "samemesh": false,
+      "size": [
+       0.455,
+       1.154,
+       1.127
+      ],
+      "verts": 82
+     },
+     "ok": {
+      "centre": [
+       1.08,
+       0.279,
+       0.204
+      ],
+      "samemesh": false,
+      "size": [
+       0.459,
+       1.157,
+       1.121
+      ],
+      "verts": 92
+     }
+    }
+   },
+   "slots": {
+    "bonnet": [
+     0.0,
+     1.627
+    ],
+    "boot": [
+     0.0,
+     -2.678
+    ],
+    "bump_front": [
+     0.0,
+     2.34
+    ],
+    "bump_rear": [
+     0.0,
+     -2.739
+    ],
+    "door_lf": [
+     -1.409,
+     0.279
+    ],
+    "door_rf": [
+     1.409,
+     0.279
+    ]
+   }
+  },
+  "549": {
+   "frames": [
+    "bonnet_dam",
+    "bonnet_dummy",
+    "bonnet_ok",
+    "boot_dam",
+    "boot_dummy",
+    "boot_ok",
+    "bump_front_dam",
+    "bump_front_dummy",
+    "bump_front_ok",
+    "bump_rear_dam",
+    "bump_rear_dummy",
+    "bump_rear_ok",
+    "chassis",
+    "chassis_dummy",
+    "chassis_vlo",
+    "door_lf_dam",
+    "door_lf_dummy",
+    "door_lf_ok",
+    "door_rf_dam",
+    "door_rf_dummy",
+    "door_rf_ok",
+    "engine",
+    "exhaust",
+    "exhaust_ok",
+    "headlights",
+    "headlights2",
+    "ped_arm",
+    "ped_frontseat",
+    "petrolcap",
+    "plate_front",
+    "plate_rear",
+    "taillights",
+    "taillights2",
+    "tampa",
+    "tampa.dff.tampa_col.colmesh",
+    "tampa.dff.tampa_col.colsphere",
+    "tampa.dff.tampa_col.shadowmesh",
+    "ug_bonnet",
+    "ug_bonnet_dam",
+    "ug_bonnet_left",
+    "ug_bonnet_left_dam",
+    "ug_bonnet_right",
+    "ug_bonnet_right_dam",
+    "ug_lights",
+    "ug_nitro",
+    "ug_spoiler",
+    "ug_spoiler_dam",
+    "ug_wing_left",
+    "ug_wing_right",
+    "wheel",
+    "wheel_lb_dummy",
+    "wheel_lf_dummy",
+    "wheel_rb_dummy",
+    "wheel_rf_dummy",
+    "windscreen_dam",
+    "windscreen_dummy",
+    "windscreen_ok"
+   ],
+   "groundDrop": 0.701,
+   "name": "tampa",
+   "parts": {
+    "bonnet": {
+     "dam": {
+      "centre": [
+       0.0,
+       1.777,
+       0.35
+      ],
+      "samemesh": false,
+      "size": [
+       1.699,
+       1.169,
+       0.209
+      ],
+      "verts": 34
+     },
+     "ok": {
+      "centre": [
+       0.0,
+       1.891,
+       0.235
+      ],
+      "samemesh": false,
+      "size": [
+       1.699,
+       1.396,
+       0.187
+      ],
+      "verts": 42
+     }
+    },
+    "boot": {
+     "dam": {
+      "centre": [
+       0.0,
+       -2.054,
+       0.321
+      ],
+      "samemesh": false,
+      "size": [
+       1.647,
+       0.785,
+       0.243
+      ],
+      "verts": 28
+     },
+     "ok": {
+      "centre": [
+       0.0,
+       -2.121,
+       0.247
+      ],
+      "samemesh": false,
+      "size": [
+       1.647,
+       0.919,
+       0.12
+      ],
+      "verts": 34
+     }
+    },
+    "bump_front": {
+     "dam": {
+      "centre": [
+       0.056,
+       2.623,
+       -0.194
+      ],
+      "samemesh": false,
+      "size": [
+       2.112,
+       0.31,
+       0.184
+      ],
+      "verts": 36
+     },
+     "ok": {
+      "centre": [
+       -0.001,
+       2.532,
+       -0.174
+      ],
+      "samemesh": false,
+      "size": [
+       2.164,
+       0.266,
+       0.139
+      ],
+      "verts": 40
+     }
+    },
+    "bump_rear": {
+     "dam": {
+      "centre": [
+       -0.0,
+       -2.701,
+       -0.186
+      ],
+      "samemesh": false,
+      "size": [
+       2.316,
+       0.269,
+       0.211
+      ],
+      "verts": 52
+     },
+     "ok": {
+      "centre": [
+       0.002,
+       -2.561,
+       -0.128
+      ],
+      "samemesh": false,
+      "size": [
+       2.249,
+       0.202,
+       0.111
+      ],
+      "verts": 28
+     }
+    },
+    "door_lf": {
+     "dam": {
+      "centre": [
+       -1.041,
+       0.424,
+       0.1
+      ],
+      "samemesh": false,
+      "size": [
+       0.345,
+       1.302,
+       0.992
+      ],
+      "verts": 58
+     },
+     "ok": {
+      "centre": [
+       -0.955,
+       0.398,
+       0.128
+      ],
+      "samemesh": false,
+      "size": [
+       0.331,
+       1.355,
+       1.049
+      ],
+      "verts": 63
+     }
+    },
+    "door_rf": {
+     "dam": {
+      "centre": [
+       0.985,
+       0.416,
+       0.109
+      ],
+      "samemesh": false,
+      "size": [
+       0.388,
+       1.316,
+       1.018
+      ],
+      "verts": 52
+     },
+     "ok": {
+      "centre": [
+       0.955,
+       0.397,
+       0.126
+      ],
+      "samemesh": false,
+      "size": [
+       0.329,
+       1.353,
+       1.052
+      ],
+      "verts": 64
+     }
+    }
+   },
+   "slots": {
+    "bonnet": [
+     0.0,
+     1.891
+    ],
+    "boot": [
+     0.0,
+     -2.58
+    ],
+    "bump_front": [
+     0.0,
+     2.665
+    ],
+    "bump_rear": [
+     0.0,
+     -2.662
+    ],
+    "door_lf": [
+     -1.221,
+     0.398
+    ],
+    "door_rf": [
+     1.22,
+     0.397
+    ]
+   }
+  },
+  "554": {
+   "frames": [
+    "bonnet_dam",
+    "bonnet_dummy",
+    "bonnet_ok",
+    "boot_dam",
+    "boot_dummy",
+    "boot_ok",
+    "bump_front_dam",
+    "bump_front_dummy",
+    "bump_front_ok",
+    "bump_rear_dam",
+    "bump_rear_dummy",
+    "bump_rear_ok",
+    "chassis",
+    "chassis_dummy",
+    "chassis_vlo",
+    "door_lf_dam",
+    "door_lf_dummy",
+    "door_lf_ok",
+    "door_rf_dam",
+    "door_rf_dummy",
+    "door_rf_ok",
+    "engine",
+    "exhaust",
+    "exhaust_ok",
+    "headlights",
+    "headlights2",
+    "ped_arm",
+    "ped_frontseat",
+    "petrolcap",
+    "taillights",
+    "wheel",
+    "wheel01",
+    "wheel_lb_dummy",
+    "wheel_lf_dummy",
+    "wheel_rb_dummy",
+    "wheel_rf_dummy",
+    "windscreen_dam",
+    "windscreen_dummy",
+    "windscreen_ok",
+    "yosemite",
+    "yosemite.dff.yosemite_col.colmesh",
+    "yosemite.dff.yosemite_col.colsphere",
+    "yosemite.dff.yosemite_col.shadowmesh"
+   ],
+   "groundDrop": 0.995,
+   "name": "yosemite",
+   "parts": {
+    "bonnet": {
+     "dam": {
+      "centre": [
+       0.0,
+       1.762,
+       0.525
+      ],
+      "samemesh": false,
+      "size": [
+       2.208,
+       1.382,
+       0.349
+      ],
+      "verts": 29
+     },
+     "ok": {
+      "centre": [
+       0.0,
+       1.854,
+       0.359
+      ],
+      "samemesh": false,
+      "size": [
+       2.208,
+       1.564,
+       0.202
+      ],
+      "verts": 24
+     }
+    },
+    "boot": {
+     "dam": {
+      "centre": [
+       0.021,
+       -2.841,
+       0.076
+      ],
+      "samemesh": false,
+      "size": [
+       2.024,
+       0.331,
+       0.787
+      ],
+      "verts": 47
+     },
+     "ok": {
+      "centre": [
+       0.0,
+       -2.818,
+       0.096
+      ],
+      "samemesh": false,
+      "size": [
+       2.042,
+       0.158,
+       0.674
+      ],
+      "verts": 40
+     }
+    },
+    "bump_front": {
+     "dam": {
+      "centre": [
+       0.037,
+       2.442,
+       -0.468
+      ],
+      "samemesh": false,
+      "size": [
+       2.644,
+       0.574,
+       0.498
+      ],
+      "verts": 67
+     },
+     "ok": {
+      "centre": [
+       0.0,
+       2.43,
+       -0.341
+      ],
+      "samemesh": false,
+      "size": [
+       2.571,
+       0.55,
+       0.244
+      ],
+      "verts": 60
+     }
+    },
+    "bump_rear": {
+     "dam": {
+      "centre": [
+       -0.016,
+       -2.987,
+       -0.475
+      ],
+      "samemesh": false,
+      "size": [
+       2.406,
+       0.3,
+       0.47
+      ],
+      "verts": 81
+     },
+     "ok": {
+      "centre": [
+       0.0,
+       -2.942,
+       -0.361
+      ],
+      "samemesh": false,
+      "size": [
+       2.438,
+       0.209,
+       0.243
+      ],
+      "verts": 76
+     }
+    },
+    "door_lf": {
+     "dam": {
+      "centre": [
+       -1.149,
+       0.332,
+       0.288
+      ],
+      "samemesh": false,
+      "size": [
+       0.436,
+       1.416,
+       1.387
+      ],
+      "verts": 89
+     },
+     "ok": {
+      "centre": [
+       -1.116,
+       0.332,
+       0.279
+      ],
+      "samemesh": false,
+      "size": [
+       0.449,
+       1.416,
+       1.371
+      ],
+      "verts": 98
+     }
+    },
+    "door_rf": {
+     "dam": {
+      "centre": [
+       1.184,
+       0.336,
+       0.286
+      ],
+      "samemesh": false,
+      "size": [
+       0.36,
+       1.408,
+       1.384
+      ],
+      "verts": 103
+     },
+     "ok": {
+      "centre": [
+       1.116,
+       0.332,
+       0.279
+      ],
+      "samemesh": false,
+      "size": [
+       0.449,
+       1.416,
+       1.371
+      ],
+      "verts": 98
+     }
+    }
+   },
+   "slots": {
+    "bonnet": [
+     0.0,
+     1.854
+    ],
+    "boot": [
+     0.0,
+     -2.897
+    ],
+    "bump_front": [
+     0.0,
+     2.705
+    ],
+    "bump_rear": [
+     0.0,
+     -3.046
+    ],
+    "door_lf": [
+     -1.441,
+     0.332
+    ],
+    "door_rf": [
+     1.441,
+     0.332
+    ]
+   }
+  },
+  "560": {
+   "frames": [
+    "bonnet_dam",
+    "bonnet_dummy",
+    "bonnet_ok",
+    "boot_dam",
+    "boot_dummy",
+    "boot_ok",
+    "bump_front_dam",
+    "bump_front_dummy",
+    "bump_front_ok",
+    "bump_rear_dam",
+    "bump_rear_dummy",
+    "bump_rear_ok",
+    "chassis",
+    "chassis_dummy",
+    "chassis_vlo",
+    "door_lf_dam",
+    "door_lf_dummy",
+    "door_lf_ok",
+    "door_lr_dam",
+    "door_lr_dummy",
+    "door_lr_ok",
+    "door_rf_dam",
+    "door_rf_dummy",
+    "door_rf_ok",
+    "door_rr_dam",
+    "door_rr_dummy",
+    "door_rr_ok",
+    "engine",
+    "exhaust",
+    "exhaust_ok",
+    "headlights",
+    "ped_arm",
+    "ped_backseat",
+    "ped_frontseat",
+    "petrolcap",
+    "plate_rear_dam",
+    "plate_rear_ok",
+    "sultan",
+    "sultan.dff.sultan_col.colmesh",
+    "sultan.dff.sultan_col.colsphere",
+    "sultan.dff.sultan_col.shadowmesh",
+    "taillights",
+    "ug_nitro",
+    "ug_roof",
+    "ug_spoiler",
+    "ug_wing_left",
+    "ug_wing_right",
+    "wheel",
+    "wheel_lb_dummy",
+    "wheel_lf_dummy",
+    "wheel_rb_dummy",
+    "wheel_rf_dummy",
+    "windscreen_dam",
+    "windscreen_dummy",
+    "windscreen_ok"
+   ],
+   "groundDrop": 0.605,
+   "name": "sultan",
+   "parts": {
+    "bonnet": {
+     "dam": {
+      "centre": [
+       -0.0,
+       1.791,
+       0.333
+      ],
+      "samemesh": false,
+      "size": [
+       1.9,
+       1.421,
+       0.334
+      ],
+      "verts": 56
+     },
+     "ok": {
+      "centre": [
+       -0.0,
+       1.791,
+       0.261
+      ],
+      "samemesh": false,
+      "size": [
+       1.9,
+       1.421,
+       0.251
+      ],
+      "verts": 57
+     }
+    },
+    "boot": {
+     "dam": {
+      "centre": [
+       -0.0,
+       -1.985,
+       0.241
+      ],
+      "samemesh": false,
+      "size": [
+       1.715,
+       0.79,
+       0.411
+      ],
+      "verts": 32
+     },
+     "ok": {
+      "centre": [
+       -0.0,
+       -1.985,
+       0.213
+      ],
+      "samemesh": false,
+      "size": [
+       1.715,
+       0.79,
+       0.354
+      ],
+      "verts": 20
+     }
+    },
+    "bump_front": {
+     "dam": {
+      "centre": [
+       -0.1,
+       2.327,
+       -0.248
+      ],
+      "samemesh": false,
+      "size": [
+       2.383,
+       1.021,
+       0.538
+      ],
+      "verts": 92
+     },
+     "ok": {
+      "centre": [
+       -0.0,
+       2.259,
+       -0.208
+      ],
+      "samemesh": false,
+      "size": [
+       2.173,
+       0.886,
+       0.446
+      ],
+      "verts": 120
+     }
+    },
+    "bump_rear": {
+     "dam": {
+      "centre": [
+       0.131,
+       -2.236,
+       -0.176
+      ],
+      "samemesh": false,
+      "size": [
+       2.39,
+       1.091,
+       0.475
+      ],
+      "verts": 87
+     },
+     "ok": {
+      "centre": [
+       -0.0,
+       -2.088,
+       -0.198
+      ],
+      "samemesh": false,
+      "size": [
+       2.107,
+       0.794,
+       0.455
+      ],
+      "verts": 87
+     }
+    },
+    "door_lf": {
+     "dam": {
+      "centre": [
+       -0.985,
+       0.346,
+       0.164
+      ],
+      "samemesh": false,
+      "size": [
+       0.227,
+       1.216,
+       1.037
+      ],
+      "verts": 41
+     },
+     "ok": {
+      "centre": [
+       -1.0,
+       0.346,
+       0.192
+      ],
+      "samemesh": false,
+      "size": [
+       0.457,
+       1.216,
+       1.092
+      ],
+      "verts": 53
+     }
+    },
+    "door_lr": {
+     "dam": {
+      "centre": [
+       -0.993,
+       -0.738,
+       0.178
+      ],
+      "samemesh": false,
+      "size": [
+       0.255,
+       0.946,
+       1.066
+      ],
+      "verts": 42
+     },
+     "ok": {
+      "centre": [
+       -0.923,
+       -0.791,
+       0.182
+      ],
+      "samemesh": false,
+      "size": [
+       0.293,
+       1.051,
+       1.074
+      ],
+      "verts": 41
+     }
+    },
+    "door_rf": {
+     "dam": {
+      "centre": [
+       0.985,
+       0.346,
+       0.164
+      ],
+      "samemesh": false,
+      "size": [
+       0.227,
+       1.216,
+       1.037
+      ],
+      "verts": 41
+     },
+     "ok": {
+      "centre": [
+       1.0,
+       0.346,
+       0.192
+      ],
+      "samemesh": false,
+      "size": [
+       0.457,
+       1.216,
+       1.092
+      ],
+      "verts": 53
+     }
+    },
+    "door_rr": {
+     "dam": {
+      "centre": [
+       0.993,
+       -0.738,
+       0.178
+      ],
+      "samemesh": false,
+      "size": [
+       0.255,
+       0.946,
+       1.066
+      ],
+      "verts": 42
+     },
+     "ok": {
+      "centre": [
+       0.922,
+       -0.791,
+       0.182
+      ],
+      "samemesh": false,
+      "size": [
+       0.293,
+       1.051,
+       1.074
+      ],
+      "verts": 42
+     }
+    }
+   },
+   "slots": {
+    "bonnet": [
+     0.0,
+     1.791
+    ],
+    "boot": [
+     0.0,
+     -2.38
+    ],
+    "bump_front": [
+     0.0,
+     2.702
+    ],
+    "bump_rear": [
+     0.0,
+     -2.485
+    ],
+    "door_lf": [
+     -1.328,
+     0.346
+    ],
+    "door_lr": [
+     -1.169,
+     -0.791
+    ],
+    "door_rf": [
+     1.329,
+     0.346
+    ],
+    "door_rr": [
+     1.169,
+     -0.791
+    ]
+   }
+  },
+  "573": {
+   "frames": [
+    "bump_front_dam",
+    "bump_front_dummy",
+    "bump_front_ok",
+    "bump_rear_dam",
+    "bump_rear_dummy",
+    "bump_rear_ok",
+    "chassis",
+    "chassis_dummy",
+    "chassis_vlo",
+    "door_lf_dam",
+    "door_lf_dummy",
+    "door_lf_ok",
+    "door_rf_dam",
+    "door_rf_dummy",
+    "door_rf_ok",
+    "duneride",
+    "duneride.dff.duneride_col.colmesh",
+    "duneride.dff.duneride_col.colsphere",
+    "duneride.dff.duneride_col.shadowmesh",
+    "engine",
+    "exhaust",
+    "headlights",
+    "headlights2",
+    "ped_arm",
+    "ped_frontseat",
+    "petrolcap",
+    "taillights",
+    "taillights2",
+    "transmission_f",
+    "transmission_r",
+    "wheel",
+    "wheel_lb_dummy",
+    "wheel_lf_dummy",
+    "wheel_rb_dummy",
+    "wheel_rf_dummy",
+    "windscreen_dam",
+    "windscreen_dummy",
+    "windscreen_ok"
+   ],
+   "groundDrop": 1.5,
+   "name": "duneride",
+   "parts": {
+    "bump_front": {
+     "dam": {
+      "centre": [
+       -0.028,
+       3.149,
+       -0.801
+      ],
+      "samemesh": false,
+      "size": [
+       2.497,
+       0.364,
+       0.367
+      ],
+      "verts": 22
+     },
+     "ok": {
+      "centre": [
+       -0.0,
+       3.092,
+       -0.757
+      ],
+      "samemesh": false,
+      "size": [
+       2.537,
+       0.209,
+       0.254
+      ],
+      "verts": 22
+     }
+    },
+    "bump_rear": {
+     "dam": {
+      "centre": [
+       0.005,
+       -3.161,
+       -0.883
+      ],
+      "samemesh": false,
+      "size": [
+       2.541,
+       0.32,
+       0.356
+      ],
+      "verts": 22
+     },
+     "ok": {
+      "centre": [
+       -0.0,
+       -3.121,
+       -0.854
+      ],
+      "samemesh": false,
+      "size": [
+       2.537,
+       0.209,
+       0.254
+      ],
+      "verts": 22
+     }
+    },
+    "door_lf": {
+     "dam": {
+      "centre": [
+       -1.097,
+       2.129,
+       0.383
+      ],
+      "samemesh": false,
+      "size": [
+       0.211,
+       0.72,
+       1.853
+      ],
+      "verts": 47
+     },
+     "ok": {
+      "centre": [
+       -1.083,
+       2.129,
+       0.383
+      ],
+      "samemesh": false,
+      "size": [
+       0.066,
+       0.72,
+       1.853
+      ],
+      "verts": 45
+     }
+    },
+    "door_rf": {
+     "dam": {
+      "centre": [
+       1.178,
+       2.129,
+       0.36
+      ],
+      "samemesh": false,
+      "size": [
+       0.255,
+       0.72,
+       1.807
+      ],
+      "verts": 49
+     },
+     "ok": {
+      "centre": [
+       1.083,
+       2.129,
+       0.383
+      ],
+      "samemesh": false,
+      "size": [
+       0.066,
+       0.72,
+       1.853
+      ],
+      "verts": 45
+     }
+    }
+   },
+   "slots": {
+    "bump_front": [
+     0.0,
+     3.196
+    ],
+    "bump_rear": [
+     0.0,
+     -3.226
+    ],
+    "door_lf": [
+     -1.216,
+     2.129
+    ],
+    "door_rf": [
+     1.216,
+     2.129
+    ]
+   }
+  },
+  "578": {
+   "frames": [
+    "bump_front_dam",
+    "bump_front_dummy",
+    "bump_front_ok",
+    "chassis",
+    "chassis_dummy",
+    "chassis_vlo",
+    "dft30",
+    "dft30.dff.dft30_col.colmesh",
+    "dft30.dff.dft30_col.colsphere",
+    "dft30.dff.dft30_col.shadowmesh",
+    "door_lf_dam",
+    "door_lf_dummy",
+    "door_lf_ok",
+    "door_rf_dam",
+    "door_rf_dummy",
+    "door_rf_ok",
+    "engine",
+    "exhaust",
+    "headlights",
+    "headlights2",
+    "ped_arm",
+    "ped_frontseat",
+    "petrolcap",
+    "taillights",
+    "taillights2",
+    "wheel",
+    "wheel_lb_dummy",
+    "wheel_lf_dummy",
+    "wheel_lm",
+    "wheel_rb_dummy",
+    "wheel_rf_dummy",
+    "wheel_rm_dummy",
+    "windscreen_dam",
+    "windscreen_dummy",
+    "windscreen_ok"
+   ],
+   "groundDrop": 1.5,
+   "name": "dft30",
+   "parts": {
+    "bump_front": {
+     "dam": {
+      "centre": [
+       -0.009,
+       4.472,
+       -0.903
+      ],
+      "samemesh": false,
+      "size": [
+       2.524,
+       0.503,
+       0.597
+      ],
+      "verts": 184
+     },
+     "ok": {
+      "centre": [
+       -0.0,
+       4.371,
+       -0.862
+      ],
+      "samemesh": false,
+      "size": [
+       2.506,
+       0.297,
+       0.419
+      ],
+      "verts": 178
+     }
+    },
+    "door_lf": {
+     "dam": {
+      "centre": [
+       -1.486,
+       3.768,
+       0.328
+      ],
+      "samemesh": false,
+      "size": [
+       0.605,
+       1.053,
+       1.772
+      ],
+      "verts": 153
+     },
+     "ok": {
+      "centre": [
+       -1.446,
+       3.768,
+       0.329
+      ],
+      "samemesh": false,
+      "size": [
+       0.588,
+       1.053,
+       1.815
+      ],
+      "verts": 145
+     }
+    },
+    "door_rf": {
+     "dam": {
+      "centre": [
+       1.395,
+       3.766,
+       0.332
+      ],
+      "samemesh": false,
+      "size": [
+       0.557,
+       1.057,
+       1.82
+      ],
+      "verts": 148
+     },
+     "ok": {
+      "centre": [
+       1.446,
+       3.768,
+       0.329
+      ],
+      "samemesh": false,
+      "size": [
+       0.588,
+       1.053,
+       1.815
+      ],
+      "verts": 145
+     }
+    }
+   },
+   "slots": {
+    "bump_front": [
+     0.0,
+     4.519
+    ],
+    "door_lf": [
+     -1.84,
+     3.768
+    ],
+    "door_rf": [
+     1.84,
+     3.768
+    ]
+   }
+  },
+  "579": {
+   "frames": [
+    "bonnet_dam",
+    "bonnet_dummy",
+    "bonnet_ok",
+    "boot_dam",
+    "boot_dummy",
+    "boot_ok",
+    "bump_front_dam",
+    "bump_front_dummy",
+    "bump_front_ok",
+    "bump_rear_dam",
+    "bump_rear_dummy",
+    "bump_rear_ok",
+    "chassis",
+    "chassis_dummy",
+    "chassis_vlo",
+    "door_lf_dam",
+    "door_lf_dummy",
+    "door_lf_ok",
+    "door_lr_dam",
+    "door_lr_dummy",
+    "door_lr_ok",
+    "door_rf_dam",
+    "door_rf_dummy",
+    "door_rf_ok",
+    "door_rr_dam",
+    "door_rr_dummy",
+    "door_rr_ok",
+    "engine",
+    "exhaust",
+    "exhaust_ok",
+    "headlights",
+    "headlights2",
+    "huntley",
+    "huntley.dff.huntley_col.colmesh",
+    "huntley.dff.huntley_col.colsphere",
+    "huntley.dff.huntley_col.shadowmesh",
+    "ped_arm",
+    "ped_backseat",
+    "ped_frontseat",
+    "petrolcap",
+    "plate_front",
+    "plate_rear_dam",
+    "plate_rear_ok",
+    "taillights",
+    "taillights2",
+    "ug_nitro",
+    "ug_roof",
+    "ug_spoiler",
+    "ug_wing_left",
+    "ug_wing_right",
+    "wheel",
+    "wheel_lb_dummy",
+    "wheel_lf_dummy",
+    "wheel_rb_dummy",
+    "wheel_rf_dummy",
+    "windscreen_dam",
+    "windscreen_dummy",
+    "windscreen_ok"
+   ],
+   "groundDrop": 0.889,
+   "name": "huntley",
+   "parts": {
+    "bonnet": {
+     "dam": {
+      "centre": [
+       -0.0,
+       1.521,
+       0.51
+      ],
+      "samemesh": false,
+      "size": [
+       2.098,
+       1.459,
+       0.492
+      ],
+      "verts": 52
+     },
+     "ok": {
+      "centre": [
+       -0.0,
+       1.604,
+       0.404
+      ],
+      "samemesh": false,
+      "size": [
+       2.057,
+       1.625,
+       0.281
+      ],
+      "verts": 46
+     }
+    },
+    "boot": {
+     "dam": {
+      "centre": [
+       -0.003,
+       -2.671,
+       0.518
+      ],
+      "samemesh": false,
+      "size": [
+       1.905,
+       0.375,
+       1.179
+      ],
+      "verts": 72
+     },
+     "ok": {
+      "centre": [
+       -0.003,
+       -2.668,
+       0.518
+      ],
+      "samemesh": false,
+      "size": [
+       1.905,
+       0.37,
+       1.179
+      ],
+      "verts": 62
+     }
+    },
+    "bump_front": {
+     "dam": {
+      "centre": [
+       -0.014,
+       2.449,
+       -0.234
+      ],
+      "samemesh": false,
+      "size": [
+       2.324,
+       0.554,
+       0.263
+      ],
+      "verts": 48
+     },
+     "ok": {
+      "centre": [
+       0.001,
+       2.341,
+       -0.182
+      ],
+      "samemesh": false,
+      "size": [
+       2.293,
+       0.338,
+       0.148
+      ],
+      "verts": 48
+     }
+    },
+    "bump_rear": {
+     "dam": {
+      "centre": [
+       0.008,
+       -2.852,
+       -0.181
+      ],
+      "samemesh": false,
+      "size": [
+       2.397,
+       0.5,
+       0.269
+      ],
+      "verts": 48
+     },
+     "ok": {
+      "centre": [
+       -0.001,
+       -2.771,
+       -0.182
+      ],
+      "samemesh": false,
+      "size": [
+       2.378,
+       0.338,
+       0.148
+      ],
+      "verts": 48
+     }
+    },
+    "door_lf": {
+     "dam": {
+      "centre": [
+       -1.099,
+       0.103,
+       0.296
+      ],
+      "samemesh": false,
+      "size": [
+       0.318,
+       1.307,
+       1.566
+      ],
+      "verts": 48
+     },
+     "ok": {
+      "centre": [
+       -1.049,
+       0.12,
+       0.337
+      ],
+      "samemesh": false,
+      "size": [
+       0.388,
+       1.278,
+       1.549
+      ],
+      "verts": 57
+     }
+    },
+    "door_lr": {
+     "dam": {
+      "centre": [
+       -1.085,
+       -1.051,
+       0.335
+      ],
+      "samemesh": false,
+      "size": [
+       0.29,
+       1.044,
+       1.546
+      ],
+      "verts": 61
+     },
+     "ok": {
+      "centre": [
+       -0.991,
+       -1.051,
+       0.337
+      ],
+      "samemesh": false,
+      "size": [
+       0.269,
+       1.044,
+       1.549
+      ],
+      "verts": 51
+     }
+    },
+    "door_rf": {
+     "dam": {
+      "centre": [
+       1.096,
+       0.113,
+       0.337
+      ],
+      "samemesh": false,
+      "size": [
+       0.42,
+       1.287,
+       1.549
+      ],
+      "verts": 51
+     },
+     "ok": {
+      "centre": [
+       1.049,
+       0.12,
+       0.337
+      ],
+      "samemesh": false,
+      "size": [
+       0.388,
+       1.278,
+       1.549
+      ],
+      "verts": 56
+     }
+    },
+    "door_rr": {
+     "dam": {
+      "centre": [
+       1.089,
+       -1.052,
+       0.337
+      ],
+      "samemesh": false,
+      "size": [
+       0.262,
+       1.045,
+       1.549
+      ],
+      "verts": 61
+     },
+     "ok": {
+      "centre": [
+       0.991,
+       -1.051,
+       0.337
+      ],
+      "samemesh": false,
+      "size": [
+       0.269,
+       1.044,
+       1.549
+      ],
+      "verts": 51
+     }
+    }
+   },
+   "slots": {
+    "bonnet": [
+     0.0,
+     1.604
+    ],
+    "boot": [
+     0.0,
+     -2.853
+    ],
+    "bump_front": [
+     0.0,
+     2.51
+    ],
+    "bump_rear": [
+     0.0,
+     -2.94
+    ],
+    "door_lf": [
+     -1.344,
+     0.12
+    ],
+    "door_lr": [
+     -1.226,
+     -1.051
+    ],
+    "door_rf": [
+     1.343,
+     0.12
+    ],
+    "door_rr": [
+     1.225,
+     -1.051
+    ]
+   }
+  },
+  "596": {
+   "frames": [
+    "bonnet_dam",
+    "bonnet_dummy",
+    "bonnet_ok",
+    "boot_dam",
+    "boot_dummy",
+    "boot_ok",
+    "bump_front_dam",
+    "bump_front_dummy",
+    "bump_front_ok",
+    "bump_rear_dam",
+    "bump_rear_dummy",
+    "bump_rear_ok",
+    "chassis",
+    "chassis_dummy",
+    "chassis_vlo",
+    "copcarla",
+    "copcarla.dff.copcarla_col.colmesh",
+    "copcarla.dff.copcarla_col.colsphere",
+    "copcarla.dff.copcarla_col.shadowmesh",
+    "door_lf_dam",
+    "door_lf_dummy",
+    "door_lf_ok",
+    "door_lr_dam",
+    "door_lr_dummy",
+    "door_lr_ok",
+    "door_rf_dam",
+    "door_rf_dummy",
+    "door_rf_ok",
+    "door_rr_dam",
+    "door_rr_dummy",
+    "door_rr_ok",
+    "engine",
+    "exhaust",
+    "exhaust_ok",
+    "headlights",
+    "ped_arm",
+    "ped_backseat",
+    "ped_frontseat",
+    "ped_hoodseat",
+    "petrolcap",
+    "taillights",
+    "wheel",
+    "wheel_lb_dummy",
+    "wheel_lf_dummy",
+    "wheel_rb_dummy",
+    "wheel_rf_dummy",
+    "windscreen_dam",
+    "windscreen_dummy",
+    "windscreen_ok"
+   ],
+   "groundDrop": 0.7,
+   "name": "copcarla",
+   "parts": {
+    "bonnet": {
+     "dam": {
+      "centre": [
+       -0.001,
+       1.721,
+       0.272
+      ],
+      "samemesh": false,
+      "size": [
+       1.905,
+       1.393,
+       0.408
+      ],
+      "verts": 43
+     },
+     "ok": {
+      "centre": [
+       -0.0,
+       1.724,
+       0.18
+      ],
+      "samemesh": false,
+      "size": [
+       1.906,
+       1.4,
+       0.224
+      ],
+      "verts": 53
+     }
+    },
+    "boot": {
+     "dam": {
+      "centre": [
+       -0.0,
+       -2.4,
+       0.24
+      ],
+      "samemesh": false,
+      "size": [
+       1.913,
+       0.758,
+       0.426
+      ],
+      "verts": 31
+     },
+     "ok": {
+      "centre": [
+       0.002,
+       -2.399,
+       0.149
+      ],
+      "samemesh": false,
+      "size": [
+       1.917,
+       0.756,
+       0.294
+      ],
+      "verts": 40
+     }
+    },
+    "bump_front": {
+     "dam": {
+      "centre": [
+       0.001,
+       2.263,
+       -0.331
+      ],
+      "samemesh": false,
+      "size": [
+       2.231,
+       0.61,
+       0.497
+      ],
+      "verts": 77
+     },
+     "ok": {
+      "centre": [
+       0.0,
+       2.261,
+       -0.279
+      ],
+      "samemesh": false,
+      "size": [
+       2.228,
+       0.606,
+       0.386
+      ],
+      "verts": 98
+     }
+    },
+    "bump_rear": {
+     "dam": {
+      "centre": [
+       0.014,
+       -2.675,
+       -0.357
+      ],
+      "samemesh": false,
+      "size": [
+       2.243,
+       0.533,
+       0.353
+      ],
+      "verts": 70
+     },
+     "ok": {
+      "centre": [
+       0.0,
+       -2.676,
+       -0.326
+      ],
+      "samemesh": false,
+      "size": [
+       2.216,
+       0.523,
+       0.292
+      ],
+      "verts": 90
+     }
+    },
+    "door_lf": {
+     "dam": {
+      "centre": [
+       -0.986,
+       0.348,
+       0.155
+      ],
+      "samemesh": false,
+      "size": [
+       0.326,
+       1.367,
+       1.305
+      ],
+      "verts": 72
+     },
+     "ok": {
+      "centre": [
+       -1.035,
+       0.337,
+       0.142
+      ],
+      "samemesh": false,
+      "size": [
+       0.507,
+       1.389,
+       1.279
+      ],
+      "verts": 100
+     }
+    },
+    "door_lr": {
+     "dam": {
+      "centre": [
+       -1.021,
+       -0.761,
+       0.13
+      ],
+      "samemesh": false,
+      "size": [
+       0.4,
+       0.942,
+       1.255
+      ],
+      "verts": 51
+     },
+     "ok": {
+      "centre": [
+       -0.946,
+       -0.795,
+       0.142
+      ],
+      "samemesh": false,
+      "size": [
+       0.328,
+       1.01,
+       1.279
+      ],
+      "verts": 60
+     }
+    },
+    "door_rf": {
+     "dam": {
+      "centre": [
+       0.986,
+       0.348,
+       0.155
+      ],
+      "samemesh": false,
+      "size": [
+       0.326,
+       1.367,
+       1.305
+      ],
+      "verts": 72
+     },
+     "ok": {
+      "centre": [
+       1.035,
+       0.337,
+       0.142
+      ],
+      "samemesh": false,
+      "size": [
+       0.507,
+       1.389,
+       1.279
+      ],
+      "verts": 100
+     }
+    },
+    "door_rr": {
+     "dam": {
+      "centre": [
+       1.001,
+       -0.761,
+       0.13
+      ],
+      "samemesh": false,
+      "size": [
+       0.355,
+       0.942,
+       1.255
+      ],
+      "verts": 51
+     },
+     "ok": {
+      "centre": [
+       0.946,
+       -0.795,
+       0.142
+      ],
+      "samemesh": false,
+      "size": [
+       0.328,
+       1.01,
+       1.279
+      ],
+      "verts": 60
+     }
+    }
+   },
+   "slots": {
+    "bonnet": [
+     0.0,
+     1.724
+    ],
+    "boot": [
+     0.0,
+     -2.777
+    ],
+    "bump_front": [
+     0.0,
+     2.564
+    ],
+    "bump_rear": [
+     0.0,
+     -2.937
+    ],
+    "door_lf": [
+     -1.389,
+     0.337
+    ],
+    "door_lr": [
+     -1.21,
+     -0.795
+    ],
+    "door_rf": [
+     1.389,
+     0.337
+    ],
+    "door_rr": [
+     1.21,
+     -0.795
+    ]
+   }
+  },
+  "597": {
+   "frames": [
+    "bonnet_dam",
+    "bonnet_dummy",
+    "bonnet_ok",
+    "boot_dam",
+    "boot_dummy",
+    "boot_ok",
+    "bump_front_dam",
+    "bump_front_dummy",
+    "bump_front_ok",
+    "bump_rear_dam",
+    "bump_rear_dummy",
+    "bump_rear_ok",
+    "chassis",
+    "chassis_dummy",
+    "chassis_vlo",
+    "copcarsf",
+    "copcarsf.dff.copcarsf_col.colmesh",
+    "copcarsf.dff.copcarsf_col.colsphere",
+    "copcarsf.dff.copcarsf_col.shadowmesh",
+    "door_lf_dam",
+    "door_lf_dummy",
+    "door_lf_ok",
+    "door_lr_dam",
+    "door_lr_dummy",
+    "door_lr_ok",
+    "door_rf_dam",
+    "door_rf_dummy",
+    "door_rf_ok",
+    "door_rr_dam",
+    "door_rr_dummy",
+    "door_rr_ok",
+    "engine",
+    "exhaust",
+    "exhaust_ok",
+    "headlights",
+    "ped_arm",
+    "ped_backseat",
+    "ped_frontseat",
+    "petrolcap",
+    "taillights",
+    "wheel",
+    "wheel_lb_dummy",
+    "wheel_lf_dummy",
+    "wheel_rb_dummy",
+    "wheel_rf_dummy",
+    "windscreen_dam",
+    "windscreen_dummy",
+    "windscreen_ok"
+   ],
+   "groundDrop": 0.7,
+   "name": "copcarsf",
+   "parts": {
+    "bonnet": {
+     "dam": {
+      "centre": [
+       -0.001,
+       1.721,
+       0.272
+      ],
+      "samemesh": false,
+      "size": [
+       1.905,
+       1.393,
+       0.408
+      ],
+      "verts": 43
+     },
+     "ok": {
+      "centre": [
+       -0.0,
+       1.724,
+       0.18
+      ],
+      "samemesh": false,
+      "size": [
+       1.906,
+       1.4,
+       0.224
+      ],
+      "verts": 53
+     }
+    },
+    "boot": {
+     "dam": {
+      "centre": [
+       -0.0,
+       -2.4,
+       0.246
+      ],
+      "samemesh": false,
+      "size": [
+       1.913,
+       0.758,
+       0.439
+      ],
+      "verts": 31
+     },
+     "ok": {
+      "centre": [
+       0.002,
+       -2.399,
+       0.149
+      ],
+      "samemesh": false,
+      "size": [
+       1.917,
+       0.756,
+       0.294
+      ],
+      "verts": 40
+     }
+    },
+    "bump_front": {
+     "dam": {
+      "centre": [
+       0.001,
+       2.263,
+       -0.331
+      ],
+      "samemesh": false,
+      "size": [
+       2.231,
+       0.61,
+       0.497
+      ],
+      "verts": 77
+     },
+     "ok": {
+      "centre": [
+       0.0,
+       2.261,
+       -0.279
+      ],
+      "samemesh": false,
+      "size": [
+       2.228,
+       0.606,
+       0.386
+      ],
+      "verts": 98
+     }
+    },
+    "bump_rear": {
+     "dam": {
+      "centre": [
+       0.014,
+       -2.675,
+       -0.357
+      ],
+      "samemesh": false,
+      "size": [
+       2.243,
+       0.533,
+       0.353
+      ],
+      "verts": 70
+     },
+     "ok": {
+      "centre": [
+       0.0,
+       -2.676,
+       -0.326
+      ],
+      "samemesh": false,
+      "size": [
+       2.216,
+       0.523,
+       0.292
+      ],
+      "verts": 90
+     }
+    },
+    "door_lf": {
+     "dam": {
+      "centre": [
+       -0.986,
+       0.348,
+       0.155
+      ],
+      "samemesh": false,
+      "size": [
+       0.326,
+       1.367,
+       1.305
+      ],
+      "verts": 72
+     },
+     "ok": {
+      "centre": [
+       -1.035,
+       0.337,
+       0.142
+      ],
+      "samemesh": false,
+      "size": [
+       0.507,
+       1.389,
+       1.279
+      ],
+      "verts": 100
+     }
+    },
+    "door_lr": {
+     "dam": {
+      "centre": [
+       -1.021,
+       -0.761,
+       0.13
+      ],
+      "samemesh": false,
+      "size": [
+       0.4,
+       0.942,
+       1.255
+      ],
+      "verts": 51
+     },
+     "ok": {
+      "centre": [
+       -0.946,
+       -0.795,
+       0.142
+      ],
+      "samemesh": false,
+      "size": [
+       0.328,
+       1.01,
+       1.279
+      ],
+      "verts": 60
+     }
+    },
+    "door_rf": {
+     "dam": {
+      "centre": [
+       0.986,
+       0.348,
+       0.155
+      ],
+      "samemesh": false,
+      "size": [
+       0.326,
+       1.367,
+       1.305
+      ],
+      "verts": 72
+     },
+     "ok": {
+      "centre": [
+       1.035,
+       0.337,
+       0.142
+      ],
+      "samemesh": false,
+      "size": [
+       0.507,
+       1.389,
+       1.279
+      ],
+      "verts": 100
+     }
+    },
+    "door_rr": {
+     "dam": {
+      "centre": [
+       1.001,
+       -0.761,
+       0.13
+      ],
+      "samemesh": false,
+      "size": [
+       0.355,
+       0.942,
+       1.255
+      ],
+      "verts": 51
+     },
+     "ok": {
+      "centre": [
+       0.946,
+       -0.795,
+       0.142
+      ],
+      "samemesh": false,
+      "size": [
+       0.328,
+       1.01,
+       1.279
+      ],
+      "verts": 60
+     }
+    }
+   },
+   "slots": {
+    "bonnet": [
+     0.0,
+     1.724
+    ],
+    "boot": [
+     0.0,
+     -2.777
+    ],
+    "bump_front": [
+     0.0,
+     2.564
+    ],
+    "bump_rear": [
+     0.0,
+     -2.937
+    ],
+    "door_lf": [
+     -1.389,
+     0.337
+    ],
+    "door_lr": [
+     -1.21,
+     -0.795
+    ],
+    "door_rf": [
+     1.389,
+     0.337
+    ],
+    "door_rr": [
+     1.21,
+     -0.795
+    ]
+   }
+  },
+  "598": {
+   "frames": [
+    "bonnet_dam",
+    "bonnet_dummy",
+    "bonnet_ok",
+    "boot_dam",
+    "boot_dummy",
+    "boot_ok",
+    "bump_front_dam",
+    "bump_front_dummy",
+    "bump_front_ok",
+    "bump_rear_dam",
+    "bump_rear_dummy",
+    "bump_rear_ok",
+    "chassis",
+    "chassis_dummy",
+    "chassis_vlo",
+    "copcarvg",
+    "copcarvg.dff.copcarvg_col.colmesh",
+    "copcarvg.dff.copcarvg_col.colsphere",
+    "copcarvg.dff.copcarvg_col.shadowmesh",
+    "door_lf_dam",
+    "door_lf_dummy",
+    "door_lf_ok",
+    "door_lr_dam",
+    "door_lr_dummy",
+    "door_lr_ok",
+    "door_rf_dam",
+    "door_rf_dummy",
+    "door_rf_ok",
+    "door_rr_dam",
+    "door_rr_dummy",
+    "door_rr_ok",
+    "engine",
+    "exhaust",
+    "exhaust_ok",
+    "headlights",
+    "ped_arm",
+    "ped_backseat",
+    "ped_frontseat",
+    "petrolcap",
+    "taillights",
+    "taillights2",
+    "wheel",
+    "wheel_lb_dummy",
+    "wheel_lf_dummy",
+    "wheel_rb_dummy",
+    "wheel_rf_dummy",
+    "windscreen_dam",
+    "windscreen_dummy",
+    "windscreen_ok"
+   ],
+   "groundDrop": 0.7,
+   "name": "copcarvg",
+   "parts": {
+    "bonnet": {
+     "dam": {
+      "centre": [
+       0.0,
+       1.605,
+       0.401
+      ],
+      "samemesh": false,
+      "size": [
+       1.96,
+       1.357,
+       0.429
+      ],
+      "verts": 47
+     },
+     "ok": {
+      "centre": [
+       0.0,
+       1.707,
+       0.267
+      ],
+      "samemesh": false,
+      "size": [
+       1.96,
+       1.562,
+       0.19
+      ],
+      "verts": 40
+     }
+    },
+    "boot": {
+     "dam": {
+      "centre": [
+       0.0,
+       -2.238,
+       0.349
+      ],
+      "samemesh": false,
+      "size": [
+       1.92,
+       0.938,
+       0.352
+      ],
+      "verts": 28
+     },
+     "ok": {
+      "centre": [
+       0.0,
+       -2.251,
+       0.272
+      ],
+      "samemesh": false,
+      "size": [
+       1.924,
+       0.963,
+       0.197
+      ],
+      "verts": 24
+     }
+    },
+    "bump_front": {
+     "dam": {
+      "centre": [
+       0.009,
+       2.522,
+       -0.236
+      ],
+      "samemesh": false,
+      "size": [
+       2.237,
+       0.472,
+       0.449
+      ],
+      "verts": 136
+     },
+     "ok": {
+      "centre": [
+       0.0,
+       2.435,
+       -0.225
+      ],
+      "samemesh": false,
+      "size": [
+       2.186,
+       0.284,
+       0.291
+      ],
+      "verts": 130
+     }
+    },
+    "bump_rear": {
+     "dam": {
+      "centre": [
+       -0.006,
+       -2.822,
+       -0.12
+      ],
+      "samemesh": false,
+      "size": [
+       2.211,
+       0.363,
+       0.434
+      ],
+      "verts": 73
+     },
+     "ok": {
+      "centre": [
+       0.0,
+       -2.743,
+       -0.2
+      ],
+      "samemesh": false,
+      "size": [
+       2.199,
+       0.205,
+       0.267
+      ],
+      "verts": 68
+     }
+    },
+    "door_lf": {
+     "dam": {
+      "centre": [
+       -1.095,
+       0.283,
+       0.206
+      ],
+      "samemesh": false,
+      "size": [
+       0.436,
+       1.371,
+       1.161
+      ],
+      "verts": 77
+     },
+     "ok": {
+      "centre": [
+       -1.068,
+       0.286,
+       0.193
+      ],
+      "samemesh": false,
+      "size": [
+       0.485,
+       1.366,
+       1.133
+      ],
+      "verts": 72
+     }
+    },
+    "door_lr": {
+     "dam": {
+      "centre": [
+       -0.994,
+       -0.862,
+       0.201
+      ],
+      "samemesh": false,
+      "size": [
+       0.316,
+       0.984,
+       1.135
+      ],
+      "verts": 52
+     },
+     "ok": {
+      "centre": [
+       -0.963,
+       -0.896,
+       0.193
+      ],
+      "samemesh": false,
+      "size": [
+       0.273,
+       1.052,
+       1.133
+      ],
+      "verts": 42
+     }
+    },
+    "door_rf": {
+     "dam": {
+      "centre": [
+       1.01,
+       0.279,
+       0.2
+      ],
+      "samemesh": false,
+      "size": [
+       0.314,
+       1.38,
+       1.149
+      ],
+      "verts": 68
+     },
+     "ok": {
+      "centre": [
+       1.067,
+       0.286,
+       0.193
+      ],
+      "samemesh": false,
+      "size": [
+       0.485,
+       1.366,
+       1.133
+      ],
+      "verts": 72
+     }
+    },
+    "door_rr": {
+     "dam": {
+      "centre": [
+       1.032,
+       -0.896,
+       0.201
+      ],
+      "samemesh": false,
+      "size": [
+       0.395,
+       1.052,
+       1.118
+      ],
+      "verts": 50
+     },
+     "ok": {
+      "centre": [
+       0.963,
+       -0.896,
+       0.193
+      ],
+      "samemesh": false,
+      "size": [
+       0.273,
+       1.052,
+       1.133
+      ],
+      "verts": 42
+     }
+    }
+   },
+   "slots": {
+    "bonnet": [
+     0.0,
+     1.707
+    ],
+    "boot": [
+     0.0,
+     -2.732
+    ],
+    "bump_front": [
+     0.0,
+     2.577
+    ],
+    "bump_rear": [
+     0.0,
+     -2.846
+    ],
+    "door_lf": [
+     -1.41,
+     0.286
+    ],
+    "door_lr": [
+     -1.2,
+     -0.896
+    ],
+    "door_rf": [
+     1.41,
+     0.286
+    ],
+    "door_rr": [
+     1.199,
+     -0.896
+    ]
+   }
+  },
+  "599": {
+   "frames": [
+    "bonnet_dam",
+    "bonnet_dummy",
+    "bonnet_ok",
+    "boot_dam",
+    "boot_dummy",
+    "boot_ok",
+    "bump_front_dam",
+    "bump_front_dummy",
+    "bump_front_ok",
+    "bump_rear_dam",
+    "bump_rear_dummy",
+    "bump_rear_ok",
+    "chassis",
+    "chassis_dummy",
+    "chassis_vlo",
+    "copcarru",
+    "copcarru.dff.copcarru_col.colmesh",
+    "copcarru.dff.copcarru_col.colsphere",
+    "copcarru.dff.copcarru_col.shadowmesh",
+    "door_lf_dam",
+    "door_lf_dummy",
+    "door_lf_ok",
+    "door_rf_dam",
+    "door_rf_dummy",
+    "door_rf_ok",
+    "exhaust",
+    "exhaust_ok",
+    "headlights",
+    "ped_arm",
+    "ped_frontseat",
+    "ped_hoodseat",
+    "petrolcap",
+    "plate_front_dam",
+    "plate_front_ok",
+    "plate_rear_dam",
+    "plate_rear_ok",
+    "taillights",
+    "ug_bonnet",
+    "ug_bonnet_dam",
+    "ug_lights",
+    "ug_nitro",
+    "ug_roof",
+    "ug_spoiler",
+    "wheel",
+    "wheel_lb_dummy",
+    "wheel_lf_dummy",
+    "wheel_rb_dummy",
+    "wheel_rf_dummy",
+    "windscreen_dam",
+    "windscreen_dummy",
+    "windscreen_ok"
+   ],
+   "groundDrop": 1.139,
+   "name": "copcarru",
+   "parts": {
+    "bonnet": {
+     "dam": {
+      "centre": [
+       0.0,
+       1.691,
+       0.528
+      ],
+      "samemesh": false,
+      "size": [
+       1.982,
+       1.624,
+       0.33
+      ],
+      "verts": 73
+     },
+     "ok": {
+      "centre": [
+       0.0,
+       1.766,
+       0.381
+      ],
+      "samemesh": false,
+      "size": [
+       1.982,
+       1.773,
+       0.227
+      ],
+      "verts": 60
+     }
+    },
+    "boot": {
+     "dam": {
+      "centre": [
+       -0.008,
+       -2.559,
+       0.389
+      ],
+      "samemesh": false,
+      "size": [
+       2.034,
+       0.382,
+       1.149
+      ],
+      "verts": 79
+     },
+     "ok": {
+      "centre": [
+       -0.0,
+       -2.557,
+       0.389
+      ],
+      "samemesh": false,
+      "size": [
+       2.049,
+       0.378,
+       1.149
+      ],
+      "verts": 76
+     }
+    },
+    "bump_front": {
+     "dam": {
+      "centre": [
+       -0.017,
+       2.703,
+       -0.501
+      ],
+      "samemesh": false,
+      "size": [
+       2.398,
+       0.613,
+       0.632
+      ],
+      "verts": 49
+     },
+     "ok": {
+      "centre": [
+       0.0,
+       2.582,
+       -0.364
+      ],
+      "samemesh": false,
+      "size": [
+       2.358,
+       0.371,
+       0.346
+      ],
+      "verts": 58
+     }
+    },
+    "bump_rear": {
+     "dam": {
+      "centre": [
+       -0.01,
+       -2.72,
+       -0.412
+      ],
+      "samemesh": false,
+      "size": [
+       2.446,
+       0.651,
+       0.475
+      ],
+      "verts": 48
+     },
+     "ok": {
+      "centre": [
+       0.0,
+       -2.613,
+       -0.37
+      ],
+      "samemesh": false,
+      "size": [
+       2.463,
+       0.437,
+       0.321
+      ],
+      "verts": 48
+     }
+    },
+    "door_lf": {
+     "dam": {
+      "centre": [
+       -1.135,
+       0.148,
+       0.179
+      ],
+      "samemesh": false,
+      "size": [
+       0.396,
+       1.373,
+       1.481
+      ],
+      "verts": 60
+     },
+     "ok": {
+      "centre": [
+       -1.171,
+       0.149,
+       0.202
+      ],
+      "samemesh": false,
+      "size": [
+       0.522,
+       1.372,
+       1.526
+      ],
+      "verts": 74
+     }
+    },
+    "door_rf": {
+     "dam": {
+      "centre": [
+       1.135,
+       0.149,
+       0.179
+      ],
+      "samemesh": false,
+      "size": [
+       0.396,
+       1.37,
+       1.481
+      ],
+      "verts": 70
+     },
+     "ok": {
+      "centre": [
+       1.171,
+       0.149,
+       0.202
+      ],
+      "samemesh": false,
+      "size": [
+       0.522,
+       1.372,
+       1.526
+      ],
+      "verts": 74
+     }
+    }
+   },
+   "slots": {
+    "bonnet": [
+     0.0,
+     1.766
+    ],
+    "boot": [
+     0.0,
+     -2.746
+    ],
+    "bump_front": [
+     0.0,
+     2.768
+    ],
+    "bump_rear": [
+     0.0,
+     -2.832
+    ],
+    "door_lf": [
+     -1.532,
+     0.149
+    ],
+    "door_rf": [
+     1.532,
+     0.149
+    ]
+   }
+  }
+ },
+ "textures": {}
+}

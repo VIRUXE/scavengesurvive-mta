@@ -383,7 +383,7 @@ end
 
 -- export: the part item `uname` is a removable vehicle body part (fits a slot of some model)
 function isBodyPart(uname)
-    return bodyparts.partOf(uname) ~= nil
+    return bodyparts.isPart(uname)
 end
 
 -- A held part can be fitted only at its own empty slot, within the same reach as the server action.
@@ -391,8 +391,8 @@ function canInstallBodyPart(vehicle, uname)
     if not isElement(vehicle) then
         return false
     end
-    local model, slot = bodyparts.partOf(uname)
-    if model ~= getElementModel(vehicle) or not slot then
+    local slot = bodyparts.slotFor(uname, getElementModel(vehicle))
+    if not slot then
         return false
     end
     local px, py, pz = getElementPosition(localPlayer)

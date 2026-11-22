@@ -35,4 +35,4 @@ Worth 1 [Scrap Metal](Scrap-Metal) in a Scrap Machine, see [Scrap](Scrap).
 
 ## See also
 
-[Bobcat Salvage Parts](Bobcat-Salvage-Parts), [Car Batteries & Starters](Car-Batteries-and-Starters), [Controls](Controls), [Repairing & Locks](Repairing-and-Locks), [Tools](Tools), [Vehicles](Vehicles)
+[Car Batteries & Starters](Car-Batteries-and-Starters), [Controls](Controls), [Repairing & Locks](Repairing-and-Locks), [Tools](Tools), [Vehicle Salvage Parts](Vehicle-Salvage-Parts), [Vehicles](Vehicles)

@@ -35,4 +35,4 @@ Vale 1 [Sucata](Scrap-Metal) numa Máquina de sucata, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Peças do Bobcat](Bobcat-Salvage-Parts), [Baterias e motores de arranque](Car-Batteries-and-Starters), [Controlos](Controls), [Reparações e fechaduras](Repairing-and-Locks), [Ferramentas](Tools), [Veículos](Vehicles)
+[Baterias e motores de arranque](Car-Batteries-and-Starters), [Controlos](Controls), [Reparações e fechaduras](Repairing-and-Locks), [Ferramentas](Tools), [Peças de veículos](Vehicle-Salvage-Parts), [Veículos](Vehicles)

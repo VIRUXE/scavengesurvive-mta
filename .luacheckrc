@@ -33,6 +33,7 @@ files["resources/**/skin_models/client/**"] = { std = "lua51+mta_shared+mta_clie
 files["resources/**/door_models/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "resolve" } }
 files["resources/**/prop_models/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "resolve" }, read_globals = { "engineSetModelFlags" } }
 files["resources/**/box_models/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "resolve" } }
+files["resources/**/car_part_models/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "resolve" } }
 -- restoreWorldModel postdates the generated .luacheck/mta_client.lua list
 -- createBuilding, setObjectBreakable, removeWorldModel and restoreWorldModel (server) postdate the generated list
 files["resources/**/maps/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "getZoneAt", "getPlayerZone", "getMapStats" }, read_globals = { "createBuilding", "setObjectBreakable", "removeWorldModel", "restoreWorldModel" } }

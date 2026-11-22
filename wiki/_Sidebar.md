@@ -70,7 +70,7 @@
 - [Vehicle Armour](Vehicle-Armour)
 - [Driver's Dashboard](Drivers-Dashboard)
 - [Car Batteries & Starters](Car-Batteries-and-Starters)
-- [Bobcat Salvage Parts](Bobcat-Salvage-Parts)
+- [Vehicle Salvage Parts](Vehicle-Salvage-Parts)
 - [Trailers & Towing](Trailers-and-Towing)
 
 **World**

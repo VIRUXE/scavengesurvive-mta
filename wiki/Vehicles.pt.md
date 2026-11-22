@@ -11,7 +11,7 @@ Há carros, camiões, motas, barcos e alguns aviões espalhados pelo mapa. São 
 
 O motor não arranca com o depósito vazio, com a bateria descarregada ou em falta (mais abaixo), nem quando o veículo está muito avariado (vida abaixo de 300). Abaixo de 450 de vida o motor pode falhar enquanto conduzes a mais de 30 km/h, tanto mais vezes quanto pior o estado. Com o motor a trabalhar o depósito esvazia-se devagar, mais depressa em velocidade e conforme o consumo de cada tipo; com o depósito vazio o motor pára. Quando entras como condutor, uma dica diz-te quão avariado está o veículo e que ferramenta o repara.
 
-Quatro páginas aprofundam o assunto: [Painel do condutor](Drivers-Dashboard) para as luzes de aviso, o conta-rotações e o voltímetro que o condutor vê, [Baterias e motores de arranque](Car-Batteries-and-Starters) para o que mantém o motor a rodar, [Peças do Bobcat](Bobcat-Salvage-Parts) para as portas, o capot, o taipal e os para-choques que saem de um Bobcat e voltam a ser montados, e [Reboques e rebocar](Trailers-and-Towing) para o engate e o Airstream.
+Quatro páginas aprofundam o assunto: [Painel do condutor](Drivers-Dashboard) para as luzes de aviso, o conta-rotações e o voltímetro que o condutor vê, [Baterias e motores de arranque](Car-Batteries-and-Starters) para o que mantém o motor a rodar, [Peças de veículos](Vehicle-Salvage-Parts) para as portas, o capot, a mala e os para-choques que saem de todos os carros e voltam a ser montados, e [Reboques e rebocar](Trailers-and-Towing) para o engate e o Airstream.
 
 ## Bateria {#battery}
 ![Bateria de carro](images/items/20208_car_battery.png)

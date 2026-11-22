@@ -206,7 +206,8 @@ def english_names() -> list[str]:
     types = (GENERATED / "item_types.lua").read_text(encoding="utf-8")
     for line in types.splitlines():
         if line.startswith("M.byUname."):
-            m = re.search(r', name = "((?:[^"\\\\]|\\\\.)*)", price', line)
+            # a vehicle salvage part's name is its partName template with the vehicle's name put in (lib lang.lua)
+            m = re.search(r'partName = "([^"]*)"', line) or re.search(r', name = "((?:[^"\\\\]|\\\\.)*)", price', line)
             if m:
                 add(unescape(m.group(1)))
             m = re.search(r'categoryData = \{[^}]*\bname = "([^"]*)"', line)

@@ -93,7 +93,11 @@ function lang.itemType(uname, player)
             for k, v in pairs(def) do
                 t[k] = v
             end
-            t.name = translate(code, def.name)
+            if def.partName then -- a vehicle salvage part: "%s Hood (Good)" with the vehicle's name, which stays
+                t.name = format(code, def.partName, def.partVehicle)
+            else
+                t.name = translate(code, def.name)
+            end
             if type(def.categoryData) == "table" and def.categoryData.name then
                 local cd = {}
                 for k, v in pairs(def.categoryData) do

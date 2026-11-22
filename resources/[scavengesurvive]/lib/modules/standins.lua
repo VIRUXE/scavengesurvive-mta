@@ -1,8 +1,8 @@
 -- Server objects whose model exists only on clients: the SA-MP models (samp_models) and the port's own (hat_models,
--- door_models, prop_models, box_models), whose ids each client allocates for itself (lib models.lua). The server
--- creates them with a stand-in (CJ_CIGGY, invisible), marks each with the model it stands for (element data "samp"),
--- and tells the collision companion to collide it as that model (lib sageom.lua); each client swaps in its own
--- allocated model and shows it, and puts the stand-in back while the model is not loaded.
+-- door_models, prop_models, box_models, car_part_models), whose ids each client allocates for itself (lib
+-- models.lua). The server creates them with a stand-in (CJ_CIGGY, invisible), marks each with the model it stands for
+-- (element data "samp"), and tells the collision companion to collide it as that model (lib sageom.lua); each client
+-- swaps in its own allocated model and shows it, and puts the stand-in back while the model is not loaded.
 --   local standins = loadstring(exports.lib:getModule("standins"), "=lib/standins.lua")()
 --   server: standins.create(model, x, y, z, rx, ry, rz)   client: standins.track(resourceRoot, onSwap)
 local KEY = "samp"

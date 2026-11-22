@@ -148,6 +148,10 @@ end
 -- An item type's name in a language; the uname itself for an unknown type.
 function Data.itemName(lang, uname)
     local def = items.byUname[uname]
+    if def and def.partName then -- a vehicle salvage part: its template in the language, with the vehicle's name
+        local ok, name = pcall(string.format, Data.translate(lang, def.partName), def.partVehicle)
+        return ok and name or def.name
+    end
     return def and Data.translate(lang, def.name) or tostring(uname)
 end
 

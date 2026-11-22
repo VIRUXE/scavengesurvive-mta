@@ -489,9 +489,12 @@ end
 -- lang:begin
 local BODY_PART_NAMES = {
     Hood = "Hood",
+    Trunk = "Trunk",
     Tailgate = "Tailgate",
     LeftDoor = "Left Door",
     RightDoor = "Right Door",
+    RearLeftDoor = "Rear Left Door",
+    RearRightDoor = "Rear Right Door",
     FrontBumper = "Front Bumper",
     RearBumper = "Rear Bumper",
 }

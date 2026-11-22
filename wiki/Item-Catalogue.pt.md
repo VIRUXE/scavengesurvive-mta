@@ -254,8 +254,6 @@ Vários itens diferentes podem partilhar o mesmo nome (há, por exemplo, três t
 | ![](images/items/20005_bikera_hat.png) | [Capacete de mota](Motorcycle-Helmet) | 1 |
 | ![](images/items/19200_policehelmet1.png) | [Capacete de polícia](Police-Helmet) | 1 |
 | ![](images/items/19106_armyhelmet6.png) | [Capacete militar](Army-Helmet) | 2 |
-| ![](images/items/20217_bobcat_bonnet_dam.png) | [Capô Bobcat (danificado)](Bobcat-Hood-Bad) | 6 |
-| ![](images/items/20216_bobcat_bonnet_ok.png) | [Capô Bobcat (intacto)](Bobcat-Hood-Good) | 6 |
 | ![](images/items/19352_tophat01.png) | [Cartola](Top-Hat) | 2 |
 | ![](images/items/19792_sampkeycard1.png) | [Cartão de acesso](Keycard) | 1 |
 | ![](images/items/20236_ratchet.png) | [Catraca](Ratchet) | 1 |
@@ -352,10 +350,6 @@ Vários itens diferentes podem partilhar o mesmo nome (há, por exemplo, três t
 | ![](images/items/19843_metalpanel1.png) | [Painel metálico](Metal-Panel-MetalFrame) | 10 |
 | ![](images/items/19843_metalpanel1.png) | [Painel metálico pequeno](Small-Metal-Panel) | 11 |
 | ![](images/items/11713_fireextpanel1.png) | [Painel vermelho](Red-Panel) | 5 |
-| ![](images/items/20219_bobcat_bump_front_dam.png) | [Para-choques dianteiro Bobcat (danificado)](Bobcat-Front-Bumper-Bad) | 6 |
-| ![](images/items/20218_bobcat_bump_front_ok.png) | [Para-choques dianteiro Bobcat (intacto)](Bobcat-Front-Bumper-Good) | 6 |
-| ![](images/items/20221_bobcat_bump_rear_dam.png) | [Para-choques traseiro Bobcat (danificado)](Bobcat-Rear-Bumper-Bad) | 6 |
-| ![](images/items/20220_bobcat_bump_rear_ok.png) | [Para-choques traseiro Bobcat (intacto)](Bobcat-Rear-Bumper-Good) | 6 |
 | ![](images/items/371_gun_para.png) | [Paraquedas](Parachute) | 6 |
 | ![](images/items/2905_kmb_deadleg.png) | [Perna](Leg) | 4 |
 | ![](images/items/2034_cj_sawnoff.png) | [Pistola very-light](Flare-Gun) | 2 |
@@ -364,10 +358,6 @@ Vários itens diferentes podem partilhar o mesmo nome (há, por exemplo, três t
 | ![](images/items/18643_laserpointer1.png) | [Ponteiro laser](Laser-Pointer) | 1 |
 | ![](images/items/20302_container_door_def.png) | [Porta de caixote](Crate-Door) | 9 |
 | ![](images/items/20303_freight_sfw_door_def.png) | [Porta de navio](Ship-Door) | 10 |
-| ![](images/items/20215_bobcat_door_rf_dam.png) | [Porta direita Bobcat (danificada)](Bobcat-Right-Door-Bad) | 6 |
-| ![](images/items/20214_bobcat_door_rf_ok.png) | [Porta direita Bobcat (intacta)](Bobcat-Right-Door-Good) | 6 |
-| ![](images/items/20213_bobcat_door_lf_dam.png) | [Porta esquerda Bobcat (danificada)](Bobcat-Left-Door-Bad) | 6 |
-| ![](images/items/20212_bobcat_door_lf_ok.png) | [Porta esquerda Bobcat (intacta)](Bobcat-Left-Door-Good) | 6 |
 | ![](images/items/19398_wall046.png) | [Porta isolada](Insulated-Doorway) | 10 |
 | ![](images/items/18553_count_ammundoor.png) | [Porta metálica](Metal-Door) | 9 |
 | ![](images/items/19303_pd_jail_door02.png) | [Portão metálico](Metal-Gate) | 10 |
@@ -410,8 +400,6 @@ Vários itens diferentes podem partilhar o mesmo nome (há, por exemplo, três t
 | ![](images/items/20284_tnt_timer.png) | [TNT com temporizador](Timed-TNT) | 2 |
 | ![](images/items/20286_tnt_prox.png) | [TNT de proximidade](Proximity-TNT) | 2 |
 | ![](images/items/20287_tnt_phone.png) | [TNT remoto por telemóvel](Phone-Remote-TNT) | 2 |
-| ![](images/items/20211_bobcat_boot_dam.png) | [Taipal traseiro Bobcat (danificado)](Bobcat-Tailgate-Bad) | 6 |
-| ![](images/items/20210_bobcat_boot_ok.png) | [Taipal traseiro Bobcat (intacto)](Bobcat-Tailgate-Good) | 6 |
 | ![](images/items/11737_rockstarmat1.png) | [Tapete de entrada](Doormat) | 3 |
 | ![](images/items/19273_keypadnondynamic.png) | [Teclado numérico](Keypad) | 2 |
 | ![](images/items/20280_advanced_keypad.png) | [Teclado numérico avançado](Advanced-Keypad) | 2 |

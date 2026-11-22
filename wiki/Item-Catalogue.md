@@ -235,18 +235,6 @@ Several different items can share a name (there are, for example, three kinds of
 | ![](images/items/1805_cj_barstool.png) | [Barstool](Barstool) | 8 |
 | ![](images/items/19554_beanie1.png) | [Beanie](Beanie) | 1 |
 | ![](images/items/18946_hatboater3.png) | [Boater Hat](Boater-Hat) | 1 |
-| ![](images/items/20219_bobcat_bump_front_dam.png) | [Bobcat Front Bumper (Bad)](Bobcat-Front-Bumper-Bad) | 6 |
-| ![](images/items/20218_bobcat_bump_front_ok.png) | [Bobcat Front Bumper (Good)](Bobcat-Front-Bumper-Good) | 6 |
-| ![](images/items/20217_bobcat_bonnet_dam.png) | [Bobcat Hood (Bad)](Bobcat-Hood-Bad) | 6 |
-| ![](images/items/20216_bobcat_bonnet_ok.png) | [Bobcat Hood (Good)](Bobcat-Hood-Good) | 6 |
-| ![](images/items/20213_bobcat_door_lf_dam.png) | [Bobcat Left Door (Bad)](Bobcat-Left-Door-Bad) | 6 |
-| ![](images/items/20212_bobcat_door_lf_ok.png) | [Bobcat Left Door (Good)](Bobcat-Left-Door-Good) | 6 |
-| ![](images/items/20221_bobcat_bump_rear_dam.png) | [Bobcat Rear Bumper (Bad)](Bobcat-Rear-Bumper-Bad) | 6 |
-| ![](images/items/20220_bobcat_bump_rear_ok.png) | [Bobcat Rear Bumper (Good)](Bobcat-Rear-Bumper-Good) | 6 |
-| ![](images/items/20215_bobcat_door_rf_dam.png) | [Bobcat Right Door (Bad)](Bobcat-Right-Door-Bad) | 6 |
-| ![](images/items/20214_bobcat_door_rf_ok.png) | [Bobcat Right Door (Good)](Bobcat-Right-Door-Good) | 6 |
-| ![](images/items/20211_bobcat_boot_dam.png) | [Bobcat Tailgate (Bad)](Bobcat-Tailgate-Bad) | 6 |
-| ![](images/items/20210_bobcat_boot_ok.png) | [Bobcat Tailgate (Good)](Bobcat-Tailgate-Good) | 6 |
 | ![](images/items/11735_wboot1.png) | [Boot](Boot) | 2 |
 | ![](images/items/18947_hatbowler1.png) | [Bowler Hat](Bowler-Hat) | 1 |
 | ![](images/items/19556_boxingglover.png) | [Boxing Gloves](Boxing-Gloves) | 1 |
