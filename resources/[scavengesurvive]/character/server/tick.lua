@@ -25,6 +25,28 @@ return function(ctx)
         end
     end
 
+    -- Poison makes the character cough (survival.coughGap): the game's own choking, two seconds at a time, which
+    -- every client sees and hears. Not in a vehicle, where it would take the hands off the wheel.
+    local COUGH_MS = 2000
+    local function cough(player, st)
+        local gap = survival.coughGap(st.toxic, math.random)
+        if not gap then
+            st.coughIn = nil
+            return
+        end
+        st.coughIn = (st.coughIn or gap) - 1
+        if st.coughIn > 0 or getPedOccupiedVehicle(player) then
+            return
+        end
+        st.coughIn = gap
+        setPedChoking(player, true)
+        setTimer(function(p)
+            if isElement(p) then
+                setPedChoking(p, false)
+            end
+        end, COUGH_MS, 1, player)
+    end
+
     function M.sendStats(player, force)
         local st = state.byPlayer[player]
         if not st then
@@ -36,12 +58,13 @@ return function(ctx)
             or math.abs(st.thirst - st.lastSent.thirst) >= 0.5
             or math.abs(st.bleed - st.lastSent.bleed) >= 0.01
             or #st.wounds ~= st.lastSent.wounds
+            or math.abs(st.toxic - (st.lastSent.toxic or 0)) >= 0.5
         if not changed then
             return
         end
         local payload = { hp = st.hp, food = st.food, thirst = st.thirst, bleed = st.bleed, wounds = #st.wounds }
         payload.woundParts = survival.woundsPerPart(st.wounds)
-        payload.infection, payload.drugs = st.infection, st.drugs
+        payload.infection, payload.drugs, payload.toxic = st.infection, st.drugs, st.toxic
         st.lastSent = payload
         triggerClientEvent(player, "characterStatsSynced", player, payload)
         triggerEvent("characterStatsChanged", player, payload)
@@ -79,6 +102,8 @@ return function(ctx)
                 local bleedBefore = st.bleed
                 local s, events = survival.tick(st, mult, math.random)
                 st.hp, st.food, st.thirst, st.bleed, st.dirty = s.hp, s.food, s.thirst, s.bleed, true
+                st.toxic = s.toxic
+                cough(player, st)
                 -- the spray every client draws (client/blood.lua) and the pool trail (server/blood.lua)
                 local blocked = inVehicle
                 local shown = bleeding.visible(st.bleedShown, st.bleed, blocked, math.random)
@@ -98,7 +123,8 @@ return function(ctx)
                 M.sendStats(player, false)
                 for _, e in ipairs(events) do
                     if e == "died" then
-                        ctx.die(player, survival.deathCause(bleedBefore, st.food, st.thirst), false)
+                        local cause = survival.deathCause(bleedBefore, st.food, st.thirst, st.toxic)
+                        ctx.die(player, cause, false)
                     end
                 end
             end
@@ -180,7 +206,7 @@ return function(ctx)
         local x, y, z, int, dim = placeOf(player)
         local _, _, rz = getElementRotation(player)
         local sql = "UPDATE characters SET hp = ?, food = ?, thirst = ?, bleed = ?, x = ?, y = ?, z = ?, rz = ?,"
-            .. " interior = ?, dimension = ?, skills = ?, infection = ?, drugs = ?, wounds = ?,"
+            .. " interior = ?, dimension = ?, skills = ?, infection = ?, drugs = ?, wounds = ?, toxic = ?,"
             .. " alive_s = alive_s + ? WHERE id = ? AND alive = 1"
         local inf, drugs = medical.encodeInfection(st.infection), medical.encodeDrugs(st.drugs)
         local own = st.dutyKeep or st -- on staff duty: the character's own hp and bleed, not the duty ones
@@ -199,6 +225,7 @@ return function(ctx)
             inf,
             drugs,
             survival.encodeWounds(st.wounds),
+            st.toxic,
             state.aliveUnsaved(st),
             st.id,
         })
@@ -227,6 +254,7 @@ return function(ctx)
                 row.skills = st.skillsDirty and skills.encode(st.skills) or nil
                 row.infection, row.drugs = medical.encodeInfection(st.infection), medical.encodeDrugs(st.drugs)
                 row.wounds = survival.encodeWounds(st.wounds)
+                row.toxic = st.toxic
                 row.interior, row.dimension = int, dim
                 row.path = takeTrail(player)
                 row.alive_add = state.aliveUnsaved(st)

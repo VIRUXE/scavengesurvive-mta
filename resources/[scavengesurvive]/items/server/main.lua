@@ -14,6 +14,7 @@ local diff = loadFile("shared/logic/diff.lua")
 local ammo = loadFile("shared/logic/ammo.lua")
 local apparel = loadFile("shared/logic/apparel.lua")
 local armourLogic = loadFile("shared/logic/armour.lua")
+local masksLogic = loadFile("shared/logic/masks.lua")
 local skins = loadFile("shared/logic/skins.lua")
 apparel.skins = skins
 local clothes = loadFile("shared/logic/clothes.lua")
@@ -82,6 +83,7 @@ end
 
 local hands
 local armourDurability
+local maskWear
 
 -- every refusal a player sees goes through here; one that contradicts the hand in memory reloads it (hands.resyncIf)
 local function toast(player, code)
@@ -184,6 +186,7 @@ hands = loadFile("server/hands.lua")({
     liquids = liquids,
     apparel = apparel,
     armour = armourLogic,
+    masks = masksLogic,
     type = itemType,
     defaultAmmo = defaultAmmo,
     charId = charId,
@@ -222,6 +225,18 @@ armourCtx.sendInventory = function(player)
     return sendInventory(player)
 end
 armourDurability = loadFile("server/armour.lua")(armourCtx)
+maskWear = loadFile("server/masks.lua")({
+    state = state,
+    hands = hands,
+    destroy = destroy,
+    world = world,
+    masks = masksLogic,
+    toast = toast,
+    log = log,
+    sendInventory = function(player)
+        return containers.refreshInventory(player)
+    end,
+})
 local fixed = loadFile("server/fixed.lua")({ db = db, world = world, log = util.log })
 local cookingCtx = { db = db, state = state, type = itemType, toast = toast, world = world, hands = hands }
 cookingCtx.cooking = cooking
@@ -453,6 +468,8 @@ loadFile("server/use.lua")({
     apparel = apparel,
     wear = containers.wear,
     openSide = containers.openSide,
+    masks = masksLogic,
+    maskWear = maskWear,
 })
 
 addEventHandler("onResourceStart", resourceRoot, function()
@@ -872,6 +889,21 @@ function armourHit(player, bleed, penetration)
         return bleed
     end
     return armourDurability.hit(player, bleed, tonumber(penetration) or 0)
+end
+
+-- export (toxic): the player breathed gas of this strength (0..1) for dt seconds; the worn mask wears and the
+-- share of the gas it kept out is returned, 0..1 (0 without a mask)
+function maskBreathed(player, concentration, dt)
+    if not isElement(player) then
+        return 0
+    end
+    return maskWear.breathed(player, tonumber(concentration) or 0, tonumber(dt) or 0)
+end
+
+-- export: the item a player wears in a slot ("hat", "mask", "armour", "holster") as { id, uname, data }, or false
+function getGear(player, slot)
+    local item = isElement(player) and state[slot] and state[slot][player]
+    return item and { id = item.id, uname = item.uname, data = item.data } or false
 end
 
 -- weapons: a headshot knocks the hat and mask off (hands.popGear, #137)

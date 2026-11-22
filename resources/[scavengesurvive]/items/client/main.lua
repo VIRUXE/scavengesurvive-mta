@@ -16,6 +16,7 @@ local geometry = loadModule("shared/logic/geometry.lua")
 local cooking = loadModule("shared/logic/cooking.lua")
 local liquids = loadModule("shared/logic/liquids.lua")
 local gas = loadModule("shared/logic/gas.lua")
+local masks = loadModule("shared/logic/masks.lua")
 local small = loadModule("shared/logic/smallitems.lua")
 local gardening = loadModule("shared/logic/gardening.lua")
 local machines = loadModule("shared/logic/machines.lua")
@@ -52,6 +53,38 @@ local inventoryCtx = { ammo = ammo, apparel = apparel, clothes = clothes, models
 inventoryCtx.cooking = cooking
 inventoryCtx.liquids = liquids
 inventoryCtx.gas = gas
+inventoryCtx.masks = masks
+-- The local player's worn mask, from the element data every client gets: its type and the item data rebuilt from
+-- its state (masks.dataOf), or nil without one.
+local function wornMask(player)
+    local uname = getElementData(player or localPlayer, "items.mask")
+    if not uname or not masks.spec(uname) then
+        return nil
+    end
+    return uname, masks.dataOf(uname, getElementData(player or localPlayer, "items.maskState"))
+end
+
+loadModule("client/breath.lua")({ masks = masks, worn = wornMask })
+-- Exported (character): what the legs still do with the mask on, { sprint, jump, maxMs, cooldownMs }, or false.
+function maskLegs()
+    local uname, data = wornMask()
+    return uname and masks.legs(uname, data) or false
+end
+
+-- Exported (hud, toxic): the worn mask as { uname, protection, restriction, left (% or false), kind }, or false.
+function maskProtection()
+    local uname, data = wornMask()
+    if not uname then
+        return false
+    end
+    return {
+        uname = uname,
+        kind = masks.spec(uname).kind,
+        protection = masks.protection(uname, data),
+        restriction = masks.restriction(uname, data),
+        left = data.wear or data.filter or false,
+    }
+end
 inventoryCtx.small = small
 inventoryCtx.gardening = gardening
 loadModule("client/inventory.lua")(inventoryCtx)

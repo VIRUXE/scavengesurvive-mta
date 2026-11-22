@@ -23,3 +23,7 @@ Nenhuma receita o faz ou usa.
 ## Sucata
 
 Não dá sucata: uma Máquina de sucata destrói-o, ver [Sucata](Scrap).
+
+## Ver também
+
+[Explosivos](Explosives)

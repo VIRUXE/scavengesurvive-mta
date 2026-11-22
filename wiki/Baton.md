@@ -17,7 +17,7 @@
 
 | Source | Where | Share of the table |
 |:--|:--|--:|
-| World loot, police | 52 spawn points: 15 in San Fierro, 11 in Las Venturas, 9 in Los Santos, 9 in Red County, 4 in Bone County, 3 in Flint County, 1 in Tierra Robada | 4.3 % |
+| World loot, police | 52 spawn points: 15 in San Fierro, 11 in Las Venturas, 9 in Los Santos, 9 in Red County, 4 in Bone County, 3 in Flint County, 1 in Tierra Robada | 4.2 % |
 
 ## Crafting
 

@@ -2,11 +2,13 @@
 
 ![Gas Mask](images/items/19472_gasmask01.png) ![Hockey Mask](images/items/19036_hockeymask1.png) ![Zorro Mask](images/items/18974_maskzorro1.png) ![Pussy Mask](images/items/19557_sexymask1.png) ![Devil Mask](images/items/11704_bdupsmask1.png) ![Bandana](images/items/18917_mask7.png)
 
-Masks are worn on the face, in the `FACE` tile of the [inventory](Inventory). Nine items go there: five masks and the bandana in four patterns, all size 1.
+Masks are worn on the face, in the `FACE` tile of the [inventory](Inventory). Eleven items go there: five masks, the Dust Mask and the Half Respirator, and the bandana in four patterns, all size 1.
 
 | Item | |
 |:--|:--|
 | [Gas Mask](Gas-Mask) | ![](images/items/19472_gasmask01.png) |
+| [Half Respirator](Half-Respirator) | |
+| [Dust Mask](Dust-Mask) | |
 | [Hockey Mask](Hockey-Mask) | ![](images/items/19036_hockeymask1.png) |
 | [Zorro Mask](Zorro-Mask) | ![](images/items/18974_maskzorro1.png) |
 | [Pussy Mask](Pussy-Mask) | ![](images/items/19557_sexymask1.png) |
@@ -34,7 +36,18 @@ A mask sits on the face of every one of the 310 human skins in the game, men and
 
 ## What a mask does
 
-Nothing but change your look. A mask does not hide your name in chat, does not change the damage you take, and the Gas Mask does not filter tear gas. A hat is the one piece of headgear with an effect (it cuts the chance of a headshot knocking you out, see [Clothes & Hats](Clothes-and-Hats)); a mask has none.
+Some masks keep out the gas of the [Toxic Cloud](Toxic-Cloud):
+
+| Mask | Keeps out | Wears |
+|:--|:--|:--|
+| Bandana | 15 % | never |
+| [Dust Mask](Dust-Mask) | 50 % | Disposable: used up by about 5 minutes of thick gas. |
+| [Half Respirator](Half-Respirator) | 85 % | Takes a [Filter](Filter), good for about 15 minutes of thick gas. |
+| [Gas Mask](Gas-Mask) | 97 % | Takes a [Filter](Filter), good for about 20 minutes of thick gas. |
+
+The better a mask protects, the harder it is to breathe through: it shortens your sprints, and you hear yourself breathing. The filters, the wear and the breathing are explained under [Toxic Cloud](Toxic-Cloud).
+
+The Hockey, Zorro, Pussy and Devil masks only change your look. No mask hides your name in chat or changes the damage you take, and none filters tear gas.
 
 ## Knocked off
 

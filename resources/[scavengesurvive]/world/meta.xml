@@ -40,6 +40,7 @@
     <export function="clearPlayerWeather" type="server"/>
     <export function="getPlayerWeather" type="server"/>
     <export function="getWeatherState" type="server"/>
+    <export function="isSheltered" type="client"/>
     <export function="tryInteract" type="client"/>
     <export function="setLight" type="client"/>
     <export function="removeLight" type="client"/>

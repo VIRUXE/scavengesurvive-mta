@@ -28,7 +28,7 @@ Five items of each size; the [Item Catalogue](Item-Catalogue) lists every item w
 
 | Size | Items | Examples |
 |--:|--:|:--|
-| 1 | 140 | [.308 Rounds](308-Rounds), [Accelerometer](Accelerometer), [Apple Juice](Apple-Juice), [Banana](Banana), [Bandana](Bandana-BandanaBl) |
+| 1 | 143 | [.308 Rounds](308-Rounds), [Accelerometer](Accelerometer), [Apple Juice](Apple-Juice), [Banana](Banana), [Bandana](Bandana-BandanaBl) |
 | 2 | 73 | [.357 Rounds](357-Rounds-Ammo357), [.50 Rounds](50-Rounds-Ammo50), [9mm Rounds](9mm-Rounds-Ammo9mm), [Advanced Keypad](Advanced-Keypad), [Antiseptic Bandage](Antiseptic-Bandage) |
 | 3 | 36 | [5.56 Rounds](556-Rounds-Ammo556), [7.62 Rounds](762-Rounds), [Angle Grinder](Angle-Grinder), [Baseball Bat](Baseball-Bat), [Big Ass Sword](Big-Ass-Sword) |
 | 4 | 26 | [Armour](Armour), [Backpack](Backpack), [Broom](Broom), [Cardboard Box](Cardboard-Box), [Carton](Carton) |

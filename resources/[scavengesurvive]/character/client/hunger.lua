@@ -33,11 +33,11 @@ local SOUNDS = {
 }
 local lastSound = {} -- kind -> index played last
 
-local stats = { food = 100, thirst = 100, drugs = {}, woundParts = {} }
+local stats = { food = 100, thirst = 100, toxic = 0, drugs = {}, woundParts = {} }
 local pose = false
 -- fx is what the screen shows now (nil when clear), target what the needs ask for; draw() eases one to the other
 local screenSource, shader, fx = nil, nil, nil
-local target = { desat = 0, vignette = 0, blur = 0 }
+local target = { desat = 0, vignette = 0, blur = 0, tint = 0 }
 local lastDraw = 0
 local locked = {} -- control -> true: switched off here, so switched back on here
 local sprintMs, coolUntil = 0, 0
@@ -46,6 +46,7 @@ local lastCue = 0
 addEventHandler("characterStatsSynced", localPlayer, function(s)
     stats.food = tonumber(s.food) or stats.food
     stats.thirst = tonumber(s.thirst) or stats.thirst
+    stats.toxic = tonumber(s.toxic) or 0
     stats.drugs = type(s.drugs) == "table" and s.drugs or {}
     stats.woundParts = type(s.woundParts) == "table" and s.woundParts or stats.woundParts
 end)
@@ -79,11 +80,13 @@ local function draw()
         dxSetShaderValue(shader, "Desat", fx.desat)
         dxSetShaderValue(shader, "Vignette", fx.vignette)
         dxSetShaderValue(shader, "Blur", fx.blur)
+        dxSetShaderValue(shader, "Tint", fx.tint)
         dxUpdateScreenSource(screenSource)
         dxDrawImage(0, 0, sw, sh, shader)
     else
         -- no shader (old card or out of video memory): a plain darkening instead
         dxDrawRectangle(0, 0, sw, sh, tocolor(0, 0, 0, math.floor(fx.vignette * 90)))
+        dxDrawRectangle(0, 0, sw, sh, tocolor(120, 150, 30, math.floor(fx.tint * 60)))
     end
 end
 
@@ -107,7 +110,7 @@ local function setScreen(next, now)
             destroyElement(screenSource)
             screenSource = nil
         end
-        fx, lastDraw = { desat = 0, vignette = 0, blur = 0 }, getTickCount()
+        fx, lastDraw = { desat = 0, vignette = 0, blur = 0, tint = 0 }, getTickCount()
     end
 end
 
@@ -147,6 +150,12 @@ local function legs(now)
     end
     local l =
         wounds.worstLegs(hunger.legs(stats.food, stats.thirst, stats.drugs), wounds.legs(stats.woundParts, stats.drugs))
+    -- a mask is hard to breathe through, the better it protects the harder (items shared/logic/masks.lua)
+    local items = getResourceFromName("items")
+    local breath = items and getResourceState(items) == "running" and exports.items:maskLegs()
+    if type(breath) == "table" then
+        l = wounds.worstLegs(l, breath)
+    end
     local sprintOff = not l.sprint or now < coolUntil
     if l.sprint and l.maxMs and not sprintOff then
         if getPedControlState(localPlayer, "sprint") and getPedMoveState(localPlayer) == "sprint" then
@@ -185,12 +194,12 @@ end
 
 local function update()
     if isPedDead(localPlayer) or getElementData(localPlayer, "staff.duty") == true then
-        setScreen({ desat = 0, vignette = 0, blur = 0 }, true)
+        setScreen({ desat = 0, vignette = 0, blur = 0, tint = 0 }, true)
         releaseAll()
         return
     end
     local now = getTickCount()
-    setScreen(hunger.screen(stats.food, stats.thirst, stats.drugs))
+    setScreen(hunger.screen(stats.food, stats.thirst, stats.drugs, stats.toxic))
     if getPedOccupiedVehicle(localPlayer) then
         releaseAll()
     else

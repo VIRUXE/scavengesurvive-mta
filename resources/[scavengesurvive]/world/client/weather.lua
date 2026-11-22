@@ -91,6 +91,12 @@ setTimer(function()
     end
 end, SHELTER_CHECK_MS, 0)
 
+-- Exported: whether this client's camera is under a roof with walls around it right now (the toxic resource keeps
+-- its outdoor fog out of such places).
+function isSheltered()
+    return sheltered
+end
+
 addEventHandler("onClientResourceStop", resourceRoot, function()
     shelter(false)
 end)

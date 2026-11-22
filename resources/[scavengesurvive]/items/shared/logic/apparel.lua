@@ -37,6 +37,8 @@ local CUT_HATS = {
 
 local MASKS = {
     GasMask = true,
+    HalfRespirator = true,
+    DustMask = true,
     HockeyMask = true,
     ZorroMask = true,
     PussyMask = true,
@@ -212,6 +214,7 @@ local NUDGE = {
     BandanaGr = BANDANA_NUDGE,
     BandanaWh = BANDANA_NUDGE,
     BandanaPat = BANDANA_NUDGE,
+    DustMask = BANDANA_NUDGE, -- drawn with the white bandana until its own model exists
     ZorroMask = { [192] = { 0.04, 0, 0 } },
 }
 

@@ -15,10 +15,10 @@
 
 | Source | Where | Share of the table |
 |:--|:--|--:|
-| World loot, police | 52 spawn points: 15 in San Fierro, 11 in Las Venturas, 9 in Los Santos, 9 in Red County, 4 in Bone County, 3 in Flint County, 1 in Tierra Robada | 4.5 % |
-| World loot, industrial | 2,431 spawn points: 791 in Los Santos, 406 in Las Venturas, 386 in San Fierro, 273 in Flint County, 270 in Red County, 233 in Bone County, 72 in Tierra Robada | 3.2 % |
+| World loot, police | 52 spawn points: 15 in San Fierro, 11 in Las Venturas, 9 in Los Santos, 9 in Red County, 4 in Bone County, 3 in Flint County, 1 in Tierra Robada | 4.4 % |
+| World loot, industrial | 2,431 spawn points: 791 in Los Santos, 406 in Las Venturas, 386 in San Fierro, 273 in Flint County, 270 in Red County, 233 in Bone County, 72 in Tierra Robada | 3.0 % |
 | World loot, civilian | 7,674 spawn points: 3,006 in Los Santos, 2,632 in San Fierro, 1,373 in Las Venturas, 285 in Red County, 164 in Bone County, 143 in Flint County, 71 in Tierra Robada (116 of them inside houses) | 1.5 % |
-| Vehicle trunks, industrial | The trunks of 14 vehicle types (Articulated, Baggage, Bobcat, Boxville, Coastguard and 9 more) | 5.0 % |
+| Vehicle trunks, industrial | The trunks of 14 vehicle types (Articulated, Baggage, Bobcat, Boxville, Coastguard and 9 more) | 4.5 % |
 | Vehicle trunks, civilian | The trunks of 31 vehicle types (BF Injection, Blista Compact, Bloodring Banger, Clover, Comet and 26 more) | 2.7 % |
 | Vehicle trunks, police | The trunks of 5 vehicle types (Enforcer, FBI Truck, HPV1000, Police Car, Ranger) | 2.2 % |
 | Supply drop "Industrial Supplies" | 36 drop points | 4.7 % |

@@ -18,11 +18,11 @@
 
 | Origem | Onde | Parte da tabela |
 |:--|:--|--:|
-| Saque do mundo, sobrevivente | 825 pontos de aparecimento: 227 em San Fierro, 225 em Los Santos, 113 em Las Venturas, 85 em Red County, 77 em Flint County, 66 em Bone County, 32 em Tierra Robada; também as malas de 9 tipos de veículo (APC-30, Bandito, Doomride, Freeway, Roadpain e mais 4) | 2,7 % |
+| Saque do mundo, sobrevivente | 825 pontos de aparecimento: 227 em San Fierro, 225 em Los Santos, 113 em Las Venturas, 85 em Red County, 77 em Flint County, 66 em Bone County, 32 em Tierra Robada; também as malas de 9 tipos de veículo (APC-30, Bandito, Doomride, Freeway, Roadpain e mais 4) | 2,6 % |
 | Saque do mundo, civil | 7 674 pontos de aparecimento: 3 006 em Los Santos, 2 632 em San Fierro, 1 373 em Las Venturas, 285 em Red County, 164 em Bone County, 143 em Flint County, 71 em Tierra Robada (116 delas dentro de casas) | 2,0 % |
-| Saque do mundo, industrial | 2 431 pontos de aparecimento: 791 em Los Santos, 406 em Las Venturas, 386 em San Fierro, 273 em Flint County, 270 em Red County, 233 em Bone County, 72 em Tierra Robada | 1,0 % |
+| Saque do mundo, industrial | 2 431 pontos de aparecimento: 791 em Los Santos, 406 em Las Venturas, 386 em San Fierro, 273 em Flint County, 270 em Red County, 233 em Bone County, 72 em Tierra Robada | 0,9 % |
 | Malas de veículos, porta-luvas | Ainda em lado nenhum | 9,5 % |
-| Malas de veículos, industrial | As malas de 14 tipos de veículo (Articulated, Baggage, Bobcat, Boxville, Coastguard e mais 9) | 3,5 % |
+| Malas de veículos, industrial | As malas de 14 tipos de veículo (Articulated, Baggage, Bobcat, Boxville, Coastguard e mais 9) | 3,1 % |
 | Malas de veículos, civil | As malas de 31 tipos de veículo (BF Injection, Blista Compact, Bloodring Banger, Clover, Comet e mais 26) | 1,9 % |
 | Entrega de abastecimentos "Comida e medicamentos" | 36 pontos de entrega | 6,8 % |
 

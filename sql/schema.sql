@@ -120,6 +120,7 @@ CREATE TABLE IF NOT EXISTS `characters` (
   `skills` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '[]' CHECK (json_valid(`skills`)),
   `infection` tinyint(3) unsigned NOT NULL DEFAULT 0,
   `drugs` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '[]' CHECK (json_valid(`drugs`)),
+  `toxic` float NOT NULL DEFAULT 0,
   `x` float NOT NULL,
   `y` float NOT NULL,
   `z` float NOT NULL,
@@ -819,11 +820,11 @@ BEGIN
       id INT PATH '$.id', hp FLOAT PATH '$.hp', food FLOAT PATH '$.food', thirst FLOAT PATH '$.thirst', bleed FLOAT PATH '$.bleed',
       x FLOAT PATH '$.x', y FLOAT PATH '$.y', z FLOAT PATH '$.z', rz FLOAT PATH '$.rz',
       interior INT PATH '$.interior', dimension INT PATH '$.dimension',
-      skills LONGTEXT PATH '$.skills', infection INT PATH '$.infection', drugs LONGTEXT PATH '$.drugs', wounds LONGTEXT PATH '$.wounds', alive_add INT PATH '$.alive_add')) j ON j.id = c.id
+      skills LONGTEXT PATH '$.skills', infection INT PATH '$.infection', drugs LONGTEXT PATH '$.drugs', wounds LONGTEXT PATH '$.wounds', toxic FLOAT PATH '$.toxic', alive_add INT PATH '$.alive_add')) j ON j.id = c.id
     SET c.hp = j.hp, c.food = j.food, c.thirst = COALESCE(j.thirst, c.thirst), c.bleed = j.bleed, c.x = j.x, c.y = j.y, c.z = j.z, c.rz = j.rz,
       c.interior = COALESCE(j.interior, c.interior), c.dimension = COALESCE(j.dimension, c.dimension),
       c.skills = COALESCE(j.skills, c.skills), c.infection = COALESCE(j.infection, c.infection),
-      c.drugs = COALESCE(j.drugs, c.drugs), c.wounds = COALESCE(j.wounds, c.wounds),
+      c.drugs = COALESCE(j.drugs, c.drugs), c.wounds = COALESCE(j.wounds, c.wounds), c.toxic = COALESCE(j.toxic, c.toxic),
       c.alive_s = c.alive_s + IFNULL(j.alive_add, 0)
     WHERE c.alive = 1;
   SET v_n = ROW_COUNT();
@@ -2300,8 +2301,8 @@ BEGIN
           'slot', p_holder_kind
         ) AS payload;
     ELSE
-      -- the hand is taken: into the inventory, counted by size like container_put (the old fixed six slots let a
-      -- big item past a full inventory, or refused one with gaps in its slot numbers)
+      
+      
       SELECT inventory_container_id INTO v_inv FROM characters WHERE id = p_char_id;
       SELECT size INTO v_inv_size FROM containers WHERE id = v_inv FOR UPDATE;
       SELECT t.size INTO v_item_size FROM items i JOIN item_types t ON t.uname = i.type_uname WHERE i.id = v_item_id;
@@ -2368,7 +2369,7 @@ BEGIN
     END IF;
   END IF;
 
-  -- the item has to be on the character or in a container they reach: one lying in the world (or none) is refused
+  
   IF NOT (
     p_char_id IS NOT NULL AND (
       v_item_char <=> p_char_id
@@ -2380,14 +2381,14 @@ BEGIN
     ROLLBACK;
     SELECT 0 AS ok, 'NOT_OWNER' AS code, NULL AS payload;
   ELSEIF v_item_char <=> p_char_id AND v_item_kind = p_holder_kind THEN
-    -- already in that slot (a second click, a stale list): swapping it with itself would move it into the hand
+    
     ROLLBACK;
     SELECT 0 AS ok, 'ALREADY_WORN' AS code, NULL AS payload;
   ELSE
     SELECT id INTO v_old_id
       FROM items WHERE holder_char_id = p_char_id AND holder_kind = p_holder_kind FOR UPDATE;
-    -- the swapped-out item goes to the hand the new one leaves, else into the container slot it leaves, else into
-    -- the hand, which then has to be empty (uq_items_holder_kind would otherwise abort with 1062)
+    
+    
     SELECT COUNT(*) INTO v_held
       FROM items WHERE holder_char_id = p_char_id AND holder_kind = 'held' AND id <> p_item_id;
     IF v_old_id IS NOT NULL AND v_item_kind IS NOT NULL AND v_item_kind <> 'held' AND v_held > 0 THEN
@@ -2411,7 +2412,7 @@ BEGIN
             WHERE id = v_old_id;
         END IF;
       ELSEIF v_item_container IS NOT NULL THEN
-        -- nothing takes the slot it left: close the gap, as container_take does
+        
         UPDATE items SET slot = slot - 1 WHERE container_id = v_item_container AND slot > v_item_slot ORDER BY slot ASC;
       END IF;
 

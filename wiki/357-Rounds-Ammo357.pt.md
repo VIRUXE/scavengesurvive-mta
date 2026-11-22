@@ -24,7 +24,7 @@ Outros itens chamados Balas .357: [Balas .357 (`Ammo357Tracer`)](357-Rounds-Ammo
 
 | Origem | Onde | Parte da tabela |
 |:--|:--|--:|
-| Saque do mundo, sobrevivente | 825 pontos de aparecimento: 227 em San Fierro, 225 em Los Santos, 113 em Las Venturas, 85 em Red County, 77 em Flint County, 66 em Bone County, 32 em Tierra Robada; também as malas de 9 tipos de veículo (APC-30, Bandito, Doomride, Freeway, Roadpain e mais 4) | 1,4 % |
+| Saque do mundo, sobrevivente | 825 pontos de aparecimento: 227 em San Fierro, 225 em Los Santos, 113 em Las Venturas, 85 em Red County, 77 em Flint County, 66 em Bone County, 32 em Tierra Robada; também as malas de 9 tipos de veículo (APC-30, Bandito, Doomride, Freeway, Roadpain e mais 4) | 1,3 % |
 | Saque do mundo, militar | 106 pontos de aparecimento: 56 em Bone County, 32 em San Fierro, 18 em Las Venturas | 1,3 % |
 | Saque do mundo, civil | 7 674 pontos de aparecimento: 3 006 em Los Santos, 2 632 em San Fierro, 1 373 em Las Venturas, 285 em Red County, 164 em Bone County, 143 em Flint County, 71 em Tierra Robada (116 delas dentro de casas) | 0,4 % |
 | Malas de veículos, militar | As malas de 4 tipos de veículo (Barracks, Launch, Patriot, Rhino) | 1,5 % |

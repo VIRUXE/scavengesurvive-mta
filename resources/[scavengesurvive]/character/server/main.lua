@@ -231,6 +231,7 @@ local function spawnFromRow(player, row, isNew)
         skills = loadSkills(row.skills),
         infection = medical.decodeInfection(row.infection),
         drugs = loadDrugs(row.drugs),
+        toxic = tonumber(row.toxic) or 0, -- poison level 0..100 (shared/logic/survival.lua)
         dirty = false,
         born = tonumber(row.born) or getRealTime().timestamp, -- unix time the character was created (death age)
         -- seconds this life spent online before this session (characters.alive_s) and the tick the session's count
@@ -338,7 +339,8 @@ local function loadOrCreate(player, accountId)
         return
     end
     db.one(
-        "SELECT id, account_id, hp, food, thirst, bleed, wounds, skills, infection, drugs, x, y, z, rz, skin,"
+        "SELECT id, account_id, hp, food, thirst, bleed, wounds, skills, infection, drugs, toxic, x, y, z, rz,"
+            .. " skin,"
             .. " interior, dimension,"
             .. " inventory_container_id, alive_s, UNIX_TIMESTAMP(spawned_at) AS born"
             .. " FROM characters WHERE account_id = ? AND alive = 1",
@@ -641,6 +643,35 @@ function skillTimeModifier(player, ms, name)
     return st and skills.timeModifier(st.skills, ms, name) or ms
 end
 
+-- Breathed gas (the toxic resource, once a tick for a player in the cloud): amount is the dose after the mask and
+-- the shelter; the character's Poison Resistance takes its share off, and grows by a step for every
+-- TOXIC_SKILL_EVERY points taken. Returns the new poison level.
+local TOXIC_SKILL, TOXIC_SKILL_EVERY = "PoisonResistance", 10
+function addToxic(player, amount)
+    local st = state.byPlayer[player]
+    amount = tonumber(amount)
+    if not st or st.dead or not amount or amount <= 0 then
+        return st and st.toxic or 0
+    end
+    if onDuty(player) or getElementData(player, "auth.reauthProtection") then
+        return st.toxic
+    end
+    local taken
+    st.toxic, taken = survival.addToxic(st.toxic, amount, skills.value(st.skills, TOXIC_SKILL))
+    st.dirty = true
+    st.toxicLearnt = (st.toxicLearnt or 0) + taken
+    while st.toxicLearnt >= TOXIC_SKILL_EVERY do
+        st.toxicLearnt = st.toxicLearnt - TOXIC_SKILL_EVERY
+        gainSkill(player, TOXIC_SKILL, 1)
+    end
+    return st.toxic
+end
+
+function getToxic(player)
+    local st = state.byPlayer[player]
+    return st and st.toxic or 0
+end
+
 function killCharacter(player, cause, killer)
     return death.die(player, cause, killer)
 end
@@ -695,6 +726,7 @@ function healCharacter(player)
         st.dutyKeep.hp, st.dutyKeep.bleed = 100, 0
     end
     st.infection.wound = false
+    st.toxic = 0
     st.dirty = true
     setElementHealth(player, 100)
     tick.sendStats(player, true)

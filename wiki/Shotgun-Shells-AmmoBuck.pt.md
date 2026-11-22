@@ -24,10 +24,10 @@ Outros itens chamados Cartuchos de caçadeira: [Cartuchos de caçadeira (`AmmoFl
 
 | Origem | Onde | Parte da tabela |
 |:--|:--|--:|
-| Saque do mundo, polícia | 52 pontos de aparecimento: 15 em San Fierro, 11 em Las Venturas, 9 em Los Santos, 9 em Red County, 4 em Bone County, 3 em Flint County, 1 em Tierra Robada | 2,6 % |
+| Saque do mundo, polícia | 52 pontos de aparecimento: 15 em San Fierro, 11 em Las Venturas, 9 em Los Santos, 9 em Red County, 4 em Bone County, 3 em Flint County, 1 em Tierra Robada | 2,5 % |
 | Saque do mundo, civil | 7 674 pontos de aparecimento: 3 006 em Los Santos, 2 632 em San Fierro, 1 373 em Las Venturas, 285 em Red County, 164 em Bone County, 143 em Flint County, 71 em Tierra Robada (116 delas dentro de casas) | 0,7 % |
 | Malas de veículos, polícia | As malas de 5 tipos de veículo (Enforcer, FBI Truck, HPV1000, Police Car, Ranger) | 1,8 % |
-| Malas de veículos, industrial | As malas de 14 tipos de veículo (Articulated, Baggage, Bobcat, Boxville, Coastguard e mais 9) | 0,6 % |
+| Malas de veículos, industrial | As malas de 14 tipos de veículo (Articulated, Baggage, Bobcat, Boxville, Coastguard e mais 9) | 0,5 % |
 | Malas de veículos, civil | As malas de 31 tipos de veículo (BF Injection, Blista Compact, Bloodring Banger, Clover, Comet e mais 26) | 0,3 % |
 | Entrega de abastecimentos "Armas de baixa qualidade" | 36 pontos de entrega | 7,0 % |
 

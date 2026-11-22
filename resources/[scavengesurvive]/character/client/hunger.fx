@@ -1,9 +1,11 @@
 // Hunger and thirst on the screen (client/hunger.lua, shared/logic/hunger.lua): the screen source drained of colour
-// (Desat), darkened towards the edges (Vignette) and blurred towards the edges (Blur), each 0..1.
+// (Desat), darkened towards the edges (Vignette) and blurred towards the edges (Blur), each 0..1. Poison adds a
+// sickly green cast (Tint, 0..1), stronger towards the edges.
 texture ScreenTexture;
 float Desat = 0;
 float Vignette = 0;
 float Blur = 0;
+float Tint = 0;
 float2 Aspect = float2(1, 1);
 
 sampler ScreenSampler = sampler_state
@@ -28,6 +30,8 @@ float4 ps(float2 uv : TEXCOORD0) : COLOR0
     c += tex2D(ScreenSampler, uv - float2(0, spread)).rgb * 0.16;
     float grey = dot(c, float3(0.299, 0.587, 0.114));
     c = lerp(c, float3(grey, grey, grey), Desat);
+    float sick = dot(c, float3(0.3, 0.6, 0.1));
+    c = lerp(c, sick * float3(0.72, 1.0, 0.34), Tint * (0.35 + 0.4 * edge));
     c *= 1 - Vignette * saturate(r * r * 1.1);
     return float4(c, 1);
 }

@@ -15,7 +15,7 @@
 
 | Origem | Onde | Parte da tabela |
 |:--|:--|--:|
-| Saque do mundo, médico | 94 pontos de aparecimento: 36 em San Fierro, 21 em Bone County, 16 em Las Venturas, 8 em Los Santos, 7 em Red County, 5 em Tierra Robada, 1 em Flint County; também a mala do Ambulance | 4,5 % |
+| Saque do mundo, médico | 94 pontos de aparecimento: 36 em San Fierro, 21 em Bone County, 16 em Las Venturas, 8 em Los Santos, 7 em Red County, 5 em Tierra Robada, 1 em Flint County; também a mala do Ambulance | 4,3 % |
 | Entrega de abastecimentos "Comida e medicamentos" | 36 pontos de entrega | 3,4 % |
 
 ## Fabrico

@@ -562,6 +562,11 @@ return function(ctx)
     M.sendInventory = function(player)
         return sendInventory(player)
     end
+    -- the same, for a change the player did not make by hand (a worn mask wearing out): the client only updates an
+    -- inventory it is already showing, instead of opening one
+    M.refreshInventory = function(player)
+        return sendInventory(player, "viewer")
+    end
 
     -- every other player with containerId open is sent its contents again
     function M.refreshViewers(containerId, except)

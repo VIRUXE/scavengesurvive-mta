@@ -45,6 +45,8 @@
     <export function="getStats" type="server"/>
     <export function="modifyStat" type="server"/>
     <export function="killCharacter" type="server"/>
+    <export function="addToxic" type="server"/>
+    <export function="getToxic" type="server"/>
     <export function="gainSkill" type="server"/>
     <export function="setSkill" type="server"/>
     <export function="getSkill" type="server"/>

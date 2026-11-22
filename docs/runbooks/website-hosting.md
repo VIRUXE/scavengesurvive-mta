@@ -15,7 +15,7 @@ rotated, the Discord invite changes, or the site moves to another host.
 | Wiki deploy | `.github/workflows/pages.yml`, job `wiki-site` | `python -m tools.wiki_site --strict` builds `wiki/` (MkDocs Material, pictures from `docs/images`) and rsyncs `build/wiki-site/` as `deploy-ssr` with a second key (secret `JUNIPER_WIKI_DEPLOY_KEY`), limited to `restrict,command="/usr/bin/rrsync /var/www/scavengesurvive-reborn.com/wiki"`; the `wiki` job turns every GitHub wiki page into a stub linking its new address |
 | Old URL | GitHub Pages, job `pages` | `viruxe.github.io/scavengesurvive-mta/<path>` forwards to `scavengesurvive-reborn.com/<path>` (generated stub, `noindex`) |
 | Game server name | `CNAME sv` → `nasa.flaviopereira.dev`, **DNS only** | the only address players, the site, the wiki and Rich Presence use; no port needed since the server listens on MTA's default 22003. It follows nasa's own record, which nasa's cron `/root/ddns-update.sh` keeps on the WAN IP. Never proxy it: Cloudflare's proxy carries no UDP game traffic |
-| Downloads and renders | `CNAME dl` → `nasa.flaviopereira.dev`, **DNS only**; nginx on nasa (`/etc/nginx/sites-available/dl.scavengesurvive-reborn.com`, certbot webroot `/var/www/html`) | `/downloads/` is the MTA `httpdownloadurl` (`http://dl.scavengesurvive-reborn.com/downloads` in prod `mtaserver.conf`, plain HTTP, gzip, the server's `resource-cache/http-client-files`); `/images/items/` serves `docs/images/items/all/` for the Discord #spawns embeds (`discordchat` `spawnImageBase`). Replaces `ss.flaviopereira.dev` |
+| Downloads and renders | `CNAME dl` → `nasa.flaviopereira.dev`, **proxied** (since 2026-11-22); nginx on nasa (`/etc/nginx/sites-available/dl.scavengesurvive-reborn.com`, certbot webroot `/var/www/html`) | `/downloads/` is the MTA `httpdownloadurl` (`http://dl.scavengesurvive-reborn.com/downloads` in prod `mtaserver.conf`, plain HTTP, gzip, the server's `resource-cache/http-client-files`), cached at Cloudflare's edges (see [Downloads through Cloudflare](#downloads-through-cloudflare)); `/images/items/` serves `docs/images/items/all/` for the Discord #spawns embeds (`discordchat` `spawnImageBase`). Replaces `ss.flaviopereira.dev`, which still serves the same folder unproxied at `/reborn/downloads/` |
 | Discord invite | `discord.gg/CAs9Nsta8d` | never expires, made for this link in the Scavenge & Survive Reborn server (lands in `#general`) |
 
 ## Checks
@@ -45,6 +45,38 @@ To deploy the wiki by hand (the workflow failed, or a test build): `python -m to
 (old files stay until the next rsync `--delete`).
 
 If juniper's host key changes: `ssh-keyscan -t ed25519,rsa,ecdsa juniper.flaviopereira.dev | gh secret set JUNIPER_KNOWN_HOSTS`.
+
+## Downloads through Cloudflare
+
+MTA clients fetch every resource file from `http://dl.scavengesurvive-reborn.com/downloads/<resource>/<file>`; with the
+proxy on, a Cloudflare edge near the player answers instead of nasa (before/after:
+`docs/reviews/2026-11-22-download-cdn.md`). The pieces:
+
+- **Cache Rule** (zone `scavengesurvive-reborn.com`, phase `http_request_cache_settings`): host `dl…` and path starting
+  `/downloads/` → eligible for cache, edge and browser TTL from the origin.
+- **nginx on nasa** sends `Cache-Control: public, max-age=300` on `/downloads/`, so an edge keeps a file 5 minutes and
+  then revalidates it (a 304 when unchanged). The TTL lives in nginx because the Free plan has a minimum for rule overrides.
+- **Configuration Rule** (phase `http_config_settings`): host `dl…` → Browser Integrity Check off, Security Level
+  "essentially off". The MTA client (`User-Agent: MTA:SA Server <ip>:22003 - See http://mtasa.com/agent/`) cannot pass a
+  challenge; a challenge page would make it drop the external URL for the whole join.
+- **Real client IPs:** `snippets/cloudflare-realip.conf` (Cloudflare's ranges from `https://www.cloudflare.com/ips/`,
+  `real_ip_header CF-Connecting-IP`) is included in both `dl` server blocks. Refresh it if Cloudflare adds ranges.
+- **Access log:** `/var/log/nginx/mta-downloads.log` (both `dl` and `ss`), rotated with the other nginx logs. With the
+  proxy, only edge misses and revalidations reach it.
+
+**Stale files are safe.** After an `rr`, an edge can serve the old copy for up to 5 minutes. The client checksums every
+file against the server (`CResourceFileDownloadManager.cpp` in mtasa-blue): on a mismatch it fetches that one file again
+from the game server's own HTTP port (22005) and the server logs
+`DIAGNOSTIC: <player> #1011 External HTTP file mismatch (Retrying this file with internal HTTP) [<file>]` in
+`logs/server.log`. If the external URL fails outright (error or challenge) the client logs `#1012 … (Disabling External
+HTTP)` and takes the rest of that join from port 22005 over one connection: a run of `#1012` means Cloudflare is
+refusing the client. Check: `grep -c '#1011\|#1012' /gta/sa/mta/servers/scavengesurvive/mods/deathmatch/logs/server.log`.
+
+```
+curl -s -o /dev/null -D - http://dl.scavengesurvive-reborn.com/downloads/hat_models/hats.lua | grep -i 'cf-cache-status\|cache-control'
+```
+
+To take Cloudflare out: set `dl` back to DNS only (orange cloud off); nothing else needs to change.
 
 ## Change the Discord invite
 

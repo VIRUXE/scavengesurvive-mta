@@ -113,6 +113,9 @@ return function(ctx)
         if uname == "ComboPadlock" then
             return ctx.small.useComboPadlock(player, itemId, data, fromHand, openContainerId)
         end
+        if fromHand and uname == ctx.masks.FILTER_UNAME then
+            return ctx.maskWear.useFilter(player, itemId)
+        end
         local wearSlot = ctx.apparel.slotFor(uname)
         if fromHand and (wearSlot == "hat" or wearSlot == "mask" or wearSlot == "armour") then
             return ctx.wear(player, itemId)

@@ -13,8 +13,8 @@
 
 | Origem | Onde | Parte da tabela |
 |:--|:--|--:|
-| Saque do mundo, industrial | 2 431 pontos de aparecimento: 791 em Los Santos, 406 em Las Venturas, 386 em San Fierro, 273 em Flint County, 270 em Red County, 233 em Bone County, 72 em Tierra Robada | 0,5 % |
-| Malas de veículos, industrial | As malas de 14 tipos de veículo (Articulated, Baggage, Bobcat, Boxville, Coastguard e mais 9) | 0,7 % |
+| Saque do mundo, industrial | 2 431 pontos de aparecimento: 791 em Los Santos, 406 em Las Venturas, 386 em San Fierro, 273 em Flint County, 270 em Red County, 233 em Bone County, 72 em Tierra Robada | 0,4 % |
+| Malas de veículos, industrial | As malas de 14 tipos de veículo (Articulated, Baggage, Bobcat, Boxville, Coastguard e mais 9) | 0,6 % |
 
 ## Fabrico
 

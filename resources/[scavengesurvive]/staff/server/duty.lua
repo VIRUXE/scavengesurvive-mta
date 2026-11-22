@@ -797,6 +797,43 @@ return function(ctx)
         end,
     })
 
+    -- The toxic cloud on demand; the toxic resource owns the mechanics.
+    ctx.command({
+        name = "toxic",
+        level = 4,
+        usage = "/toxic [here|cross|stop]",
+        help = "The toxic cloud: where it is; form one over you, send one across the map, or end it",
+        needsDb = false,
+        fn = function(p, args)
+            local word = (args[1] or ""):lower()
+            if word == "here" or word == "cross" then
+                local x, y
+                if word == "here" then
+                    x, y = getElementPosition(p)
+                end
+                local done, why = exports.toxic:startCloud(x, y, "staff request")
+                ctx.say(p, done and " >  A toxic cloud is forming." or " >  Refused: %s", tostring(why))
+                if done then
+                    ctx.log(p, "toxiccloud", nil, nil, word)
+                end
+            elseif word == "stop" then
+                local done = exports.toxic:stopCloud("staff request")
+                ctx.say(p, done and " >  The toxic cloud is gone." or " >  No toxic cloud is in the air.")
+                if done then
+                    ctx.log(p, "toxiccloud", nil, nil, word)
+                end
+            else
+                local cloud, wait = exports.toxic:cloudStatus()
+                if cloud then
+                    local fmt = " >  Toxic cloud at %.0f, %.0f (radius %d m), %d s left. /toxic stop ends it."
+                    ctx.say(p, fmt, cloud.x, cloud.y, cloud.radius, cloud.left_s)
+                else
+                    ctx.say(p, " >  No toxic cloud; the next may form in %d min. /toxic here|cross", (wait or 0) / 60)
+                end
+            end
+        end,
+    })
+
     ctx.command({
         name = "restart",
         level = 4,

@@ -17,7 +17,7 @@
 | Origem | Onde | Parte da tabela |
 |:--|:--|--:|
 | Saque do mundo, militar | 106 pontos de aparecimento: 56 em Bone County, 32 em San Fierro, 18 em Las Venturas | 1,3 % |
-| Saque do mundo, polícia | 52 pontos de aparecimento: 15 em San Fierro, 11 em Las Venturas, 9 em Los Santos, 9 em Red County, 4 em Bone County, 3 em Flint County, 1 em Tierra Robada | 0,9 % |
+| Saque do mundo, polícia | 52 pontos de aparecimento: 15 em San Fierro, 11 em Las Venturas, 9 em Los Santos, 9 em Red County, 4 em Bone County, 3 em Flint County, 1 em Tierra Robada | 0,8 % |
 
 ## Fabrico
 

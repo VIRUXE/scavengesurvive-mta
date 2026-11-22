@@ -15,8 +15,8 @@
 
 | Origem | Onde | Parte da tabela |
 |:--|:--|--:|
-| Saque do mundo, médico | 94 pontos de aparecimento: 36 em San Fierro, 21 em Bone County, 16 em Las Venturas, 8 em Los Santos, 7 em Red County, 5 em Tierra Robada, 1 em Flint County; também a mala do Ambulance | 29,0 % |
-| Saque do mundo, sobrevivente | 825 pontos de aparecimento: 227 em San Fierro, 225 em Los Santos, 113 em Las Venturas, 85 em Red County, 77 em Flint County, 66 em Bone County, 32 em Tierra Robada; também as malas de 9 tipos de veículo (APC-30, Bandito, Doomride, Freeway, Roadpain e mais 4) | 5,8 % |
+| Saque do mundo, médico | 94 pontos de aparecimento: 36 em San Fierro, 21 em Bone County, 16 em Las Venturas, 8 em Los Santos, 7 em Red County, 5 em Tierra Robada, 1 em Flint County; também a mala do Ambulance | 27,7 % |
+| Saque do mundo, sobrevivente | 825 pontos de aparecimento: 227 em San Fierro, 225 em Los Santos, 113 em Las Venturas, 85 em Red County, 77 em Flint County, 66 em Bone County, 32 em Tierra Robada; também as malas de 9 tipos de veículo (APC-30, Bandito, Doomride, Freeway, Roadpain e mais 4) | 5,6 % |
 | Saque do mundo, civil | 7 674 pontos de aparecimento: 3 006 em Los Santos, 2 632 em San Fierro, 1 373 em Las Venturas, 285 em Red County, 164 em Bone County, 143 em Flint County, 71 em Tierra Robada (116 delas dentro de casas) | 1,6 % |
 | Malas de veículos, porta-luvas | Ainda em lado nenhum | 11,5 % |
 | Malas de veículos, civil | As malas de 31 tipos de veículo (BF Injection, Blista Compact, Bloodring Banger, Clover, Comet e mais 26) | 1,7 % |

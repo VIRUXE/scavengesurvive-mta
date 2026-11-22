@@ -39,6 +39,7 @@ Abaixo de 20 de sede perdes `(20 - sede) / 30` de saúde por segundo, além do q
 - [Hemorragias e feridas](Bleeding-and-Wounds): cada ferimento soma à tua taxa de hemorragia, que retira saúde a cada segundo.
 - Fome e desidratação, como acima.
 - A droga Ar (de uma seringa vazia) custa 1 de saúde em metade dos segundos; vê [Drogas](Drugs).
+- O veneno do gás da [Nuvem tóxica](Toxic-Cloud): a partir de 40 % de veneno tira saúde, depressa a partir de 80 %.
 - Pouca saúde escurece o ecrã. Os [Analgésicos e a Adrenalina](Drugs) escondem a escuridão.
 
 ## Inconsciência {#unconsciousness}

@@ -16,7 +16,7 @@
 
 | Origem | Onde | Parte da tabela |
 |:--|:--|--:|
-| Saque do mundo, militar | 106 pontos de aparecimento: 56 em Bone County, 32 em San Fierro, 18 em Las Venturas | 9,8 % |
+| Saque do mundo, militar | 106 pontos de aparecimento: 56 em Bone County, 32 em San Fierro, 18 em Las Venturas | 9,6 % |
 
 ## Fabrico
 

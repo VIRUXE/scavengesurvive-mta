@@ -31,4 +31,4 @@ Cannot be scrapped: a Scrap Machine destroys it, see [Scrap](Scrap).
 
 ## See also
 
-[Clothes & Hats](Clothes-and-Hats), [Masks](Masks)
+[Clothes & Hats](Clothes-and-Hats), [Masks](Masks), [Toxic Cloud](Toxic-Cloud)

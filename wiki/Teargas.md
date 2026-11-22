@@ -26,3 +26,7 @@ No recipe makes or uses it.
 ## Scrap
 
 Cannot be scrapped: a Scrap Machine destroys it, see [Scrap](Scrap).
+
+## See also
+
+[Explosives](Explosives)

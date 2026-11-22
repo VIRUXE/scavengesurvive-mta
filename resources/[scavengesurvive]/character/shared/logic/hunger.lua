@@ -4,6 +4,8 @@
 -- below SEVERE, no jump below WEAK), sway the aim and show a line and a sound now and then. Upstream food.pwn meant
 -- a drunk level below 30 but its Adrenaline test was inverted, so it never showed. Adrenaline lifts everything,
 -- Painkill hides the screen effects (as it does the low-HP darkness, medical.hidesDarkness).
+-- Poison (the toxic cloud, survival.TOXIC_*) shows on the same screen from TOXIC_START up: a sickly green cast
+-- (tint), blurred and darkened edges. No drug hides it.
 -- M.tr(text): a line in the reader's language; the client sets it to lib lang.text, identity elsewhere
 local M = {}
 M.tr = function(s)
@@ -13,6 +15,7 @@ end
 M.START = 30
 M.SEVERE = 20
 M.WEAK = 10
+M.TOXIC_START = 15 -- survival.TOXIC_COUGHS: where poison starts to show
 
 -- lang:begin
 M.CUES = {
@@ -30,22 +33,28 @@ function M.level(v)
     return clamp((M.START - (tonumber(v) or 100)) / M.START, 0, 1)
 end
 
--- { desat, vignette, blur }, each 0..1
-function M.screen(food, thirst, drugs)
+-- 0 at TOXIC_START or below, 1 at 100
+function M.toxicLevel(toxic)
+    return clamp(((tonumber(toxic) or 0) - M.TOXIC_START) / (100 - M.TOXIC_START), 0, 1)
+end
+
+-- { desat, vignette, blur, tint }, each 0..1
+function M.screen(food, thirst, drugs, toxic)
     drugs = drugs or {}
+    local h, t, p = M.level(food), M.level(thirst), M.toxicLevel(toxic)
     if drugs.Painkill or drugs.Adrenaline then
-        return { desat = 0, vignette = 0, blur = 0 }
+        h, t = 0, 0
     end
-    local h, t = M.level(food), M.level(thirst)
     return {
         desat = math.max(h * 0.85, t * 0.3),
-        vignette = math.max(h, t) * 0.8,
-        blur = t,
+        vignette = math.max(h * 0.8, t * 0.8, p * 0.6),
+        blur = math.max(t, p * 0.9),
+        tint = p,
     }
 end
 
 function M.active(fx)
-    return fx.desat > 0 or fx.vignette > 0 or fx.blur > 0
+    return fx.desat > 0 or fx.vignette > 0 or fx.blur > 0 or fx.tint > 0
 end
 
 -- The screen moves towards what the needs ask for instead of jumping there: a meal clears it over FADE_MS at most.
@@ -55,7 +64,7 @@ M.FADE_MS = 2500
 function M.ease(fx, target, dtMs)
     local step = math.max(0, dtMs) / M.FADE_MS
     local out = {}
-    for _, k in ipairs({ "desat", "vignette", "blur" }) do
+    for _, k in ipairs({ "desat", "vignette", "blur", "tint" }) do
         local d = target[k] - fx[k]
         out[k] = fx[k] + clamp(d, -step, step)
     end

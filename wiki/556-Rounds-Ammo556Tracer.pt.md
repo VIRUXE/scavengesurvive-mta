@@ -24,7 +24,7 @@ Outros itens chamados Balas 5.56: [Balas 5.56 (`Ammo556`)](556-Rounds-Ammo556), 
 
 | Origem | Onde | Parte da tabela |
 |:--|:--|--:|
-| Saque do mundo, militar | 106 pontos de aparecimento: 56 em Bone County, 32 em San Fierro, 18 em Las Venturas | 2,2 % |
+| Saque do mundo, militar | 106 pontos de aparecimento: 56 em Bone County, 32 em San Fierro, 18 em Las Venturas | 2,1 % |
 | Malas de veículos, militar | As malas de 4 tipos de veículo (Barracks, Launch, Patriot, Rhino) | 2,5 % |
 | Entrega de abastecimentos "Armas militares" | 36 pontos de entrega; também os esconderijos de armas (186 em San Fierro) | 3,2 % |
 

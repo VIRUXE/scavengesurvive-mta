@@ -5,6 +5,16 @@ survival.IDLE_FOOD_RATE = 0.004
 survival.IDLE_THIRST_RATE = 0.006 -- thirst runs out half again as fast as hunger
 survival.REGEN_PER_FOOD = 0.001925925
 survival.MAX_KNOCKOUT_MS = 120000
+-- Poison (the toxic cloud): a level 0..100 that breathed gas raises (server/main.lua addToxic) and clean air lowers.
+-- Under TOXIC_HURTS it only shows (coughing, a tinted and blurred view); from there it costs health, slowly at
+-- first and fast from TOXIC_SEVERE, so a lungful is survivable and standing in the gas is not.
+survival.TOXIC_DECAY = 0.1 -- a second: a full dose takes some 17 minutes of clean air to clear
+survival.TOXIC_COUGHS = 15
+survival.TOXIC_HURTS = 40
+survival.TOXIC_SEVERE = 80
+survival.TOXIC_HURT_RATE = 0.6 -- health a second at 100, growing from nothing at TOXIC_HURTS
+survival.TOXIC_SEVERE_RATE = 1.2 -- more health a second at 100, growing from nothing at TOXIC_SEVERE
+survival.TOXIC_RESIST = 0.25 -- of the intake a Master of Poison Resistance does not take
 survival.MIN_KNOCKOUT_MS = 1500
 
 local function clamp(v, lo, hi)
@@ -110,8 +120,9 @@ function survival.decodeWounds(decoded, bleed, isNew)
 end
 
 -- The cause of a death in the survival tick: a tick drains HP through bleeding (bleed > 0 at its start), hunger
--- (food < 20), dehydration (thirst < 20) or the Air drug. Bleeding wins when several applied.
-function survival.deathCause(bleedBefore, food, thirst)
+-- (food < 20), dehydration (thirst < 20), poison (toxic at TOXIC_HURTS or more) or the Air drug. Bleeding wins when
+-- several applied.
+function survival.deathCause(bleedBefore, food, thirst, toxic)
     if bleedBefore > 0 then
         return "bleeding"
     end
@@ -120,6 +131,9 @@ function survival.deathCause(bleedBefore, food, thirst)
     end
     if (thirst or 100) < 20 then
         return "dehydration"
+    end
+    if (toxic or 0) >= survival.TOXIC_HURTS then
+        return "toxic"
     end
     return "drugs"
 end
@@ -134,6 +148,7 @@ function survival.tick(state, movementMult, rng)
         thirst = state.thirst or 80,
         bleed = state.bleed,
         wounds = type(state.wounds) == "table" and #state.wounds or tonumber(state.wounds) or 0,
+        toxic = state.toxic or 0,
     }
     local events = {}
     local infection, drugs = state.infection or {}, state.drugs or {}
@@ -170,6 +185,15 @@ function survival.tick(state, movementMult, rng)
         -- the body heals on the lower of the two needs: a full stomach does nothing for a parched character
         s.hp = s.hp + survival.REGEN_PER_FOOD * math.min(s.food, s.thirst) * (infection.wound and 0.5 or 1.0)
     end
+    s.toxic = clamp(s.toxic - survival.TOXIC_DECAY, 0, 100)
+    if s.toxic > survival.TOXIC_HURTS then
+        local span = 100 - survival.TOXIC_HURTS
+        s.hp = s.hp - survival.TOXIC_HURT_RATE * (s.toxic - survival.TOXIC_HURTS) / span
+    end
+    if s.toxic > survival.TOXIC_SEVERE then
+        local span = 100 - survival.TOXIC_SEVERE
+        s.hp = s.hp - survival.TOXIC_SEVERE_RATE * (s.toxic - survival.TOXIC_SEVERE) / span
+    end
     if drugs.Morphine and rng() < 0.8 then
         s.hp = s.hp + 0.5
     end
@@ -185,6 +209,24 @@ function survival.tick(state, movementMult, rng)
         events[#events + 1] = "died"
     end
     return s, events
+end
+
+-- Breathed gas: amount is the dose before the character's own resistance (skill 0..1 of Poison Resistance).
+-- Returns the new level and the dose that was actually taken.
+function survival.addToxic(toxic, amount, skill)
+    local taken = math.max(0, amount) * (1 - survival.TOXIC_RESIST * clamp(skill or 0, 0, 1))
+    local level = clamp((toxic or 0) + taken, 0, 100)
+    return level, level - (toxic or 0)
+end
+
+-- Seconds until the next cough at this poison level: every 14 s or so when it starts, every 3 s near the end;
+-- nil below TOXIC_COUGHS.
+function survival.coughGap(toxic, rng)
+    if (toxic or 0) < survival.TOXIC_COUGHS then
+        return nil
+    end
+    local t = (toxic - survival.TOXIC_COUGHS) / (100 - survival.TOXIC_COUGHS)
+    return 14 - 11 * t + rng() * 3
 end
 
 function survival.knockoutAdd(remainingMs, addMs)

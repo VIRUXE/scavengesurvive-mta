@@ -133,6 +133,15 @@ return function(ctx)
     end
     M.publish = publish
 
+    -- the worn mask's condition, for the wearer's breathing and gauge and for what others hear (masks.worn)
+    function M.publishMask(player)
+        if isElement(player) then
+            local item = state.mask[player]
+            local worn = item and ctx.masks.worn(item.uname, item.data) or false
+            setElementData(player, "items.maskState", worn, "broadcast", "deny")
+        end
+    end
+
     -- the worn vest's points, for the wearer's HUD bar (false: no vest)
     function M.publishArmour(player)
         if isElement(player) then
@@ -173,9 +182,15 @@ return function(ctx)
             if slot == "armour" and item and ctx.armour.ensure(item, math.random) then
                 M.queueData(item)
             end
+            -- a mask found lying about gets its condition the first time it is put on
+            if slot == "mask" and item and ctx.masks.ensure(item, math.random) then
+                M.queueData(item)
+            end
             state[slot][player] = item
             publish(player, "items." .. slot, item)
-            if slot == "armour" then
+            if slot == "mask" then
+                M.publishMask(player)
+            elseif slot == "armour" then
                 M.publishArmour(player)
             end
         end
@@ -189,6 +204,7 @@ return function(ctx)
                 publish(player, "items." .. slot, nil)
             end
         end
+        M.publishMask(player)
         M.publishArmour(player)
         M.setGear(player, "parachute", nil)
     end

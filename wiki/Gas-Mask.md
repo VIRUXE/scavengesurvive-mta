@@ -17,10 +17,10 @@
 | Source | Where | Share of the table |
 |:--|:--|--:|
 | World loot, police | 52 spawn points: 15 in San Fierro, 11 in Las Venturas, 9 in Los Santos, 9 in Red County, 4 in Bone County, 3 in Flint County, 1 in Tierra Robada | 3.4 % |
-| World loot, medical | 94 spawn points: 36 in San Fierro, 21 in Bone County, 16 in Las Venturas, 8 in Los Santos, 7 in Red County, 5 in Tierra Robada, 1 in Flint County; also the trunk of the Ambulance | 3.2 % |
-| World loot, industrial | 2,431 spawn points: 791 in Los Santos, 406 in Las Venturas, 386 in San Fierro, 273 in Flint County, 270 in Red County, 233 in Bone County, 72 in Tierra Robada | 3.0 % |
+| World loot, medical | 94 spawn points: 36 in San Fierro, 21 in Bone County, 16 in Las Venturas, 8 in Los Santos, 7 in Red County, 5 in Tierra Robada, 1 in Flint County; also the trunk of the Ambulance | 3.1 % |
+| World loot, industrial | 2,431 spawn points: 791 in Los Santos, 406 in Las Venturas, 386 in San Fierro, 273 in Flint County, 270 in Red County, 233 in Bone County, 72 in Tierra Robada | 2.8 % |
 | World loot, survivor | 825 spawn points: 227 in San Fierro, 225 in Los Santos, 113 in Las Venturas, 85 in Red County, 77 in Flint County, 66 in Bone County, 32 in Tierra Robada; also the trunks of 9 vehicle types (APC-30, Bandito, Doomride, Freeway, Roadpain and 4 more) | 1.9 % |
-| Vehicle trunks, industrial | The trunks of 14 vehicle types (Articulated, Baggage, Bobcat, Boxville, Coastguard and 9 more) | 6.1 % |
+| Vehicle trunks, industrial | The trunks of 14 vehicle types (Articulated, Baggage, Bobcat, Boxville, Coastguard and 9 more) | 5.6 % |
 
 ## Crafting
 
@@ -32,4 +32,4 @@ Worth 1 [Scrap Metal](Scrap-Metal) in a Scrap Machine, see [Scrap](Scrap).
 
 ## See also
 
-[Clothes & Hats](Clothes-and-Hats), [Masks](Masks)
+[Clothes & Hats](Clothes-and-Hats), [Masks](Masks), [Toxic Cloud](Toxic-Cloud)

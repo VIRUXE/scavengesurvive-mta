@@ -1,0 +1,22 @@
+<meta>
+    <info author="scavengesurvive-mta" type="script" name="toxic" description="The toxic cloud: a gas front that drifts across the map" version="0.1.0"/>
+    <min_mta_version server="1.6.0" client="1.6.0"/>
+    <include resource="lib"/>
+    <include resource="world"/>
+    <include resource="character"/>
+    <include resource="items"/>
+    <script src="shared/events.lua" type="shared"/>
+    <script src="server/main.lua" type="server"/>
+    <script src="client/main.lua" type="client"/>
+    <file src="shared/logic/cloud.lua"/>
+    <file src="shared/logic/enclosure.lua"/>
+    <file src="server/exposure.lua"/>
+    <file src="files/puff.png"/>
+    <file src="client/cloud.fx"/>
+    <export function="startCloud" type="server"/>
+    <export function="stopCloud" type="server"/>
+    <export function="cloudStatus" type="server"/>
+    <export function="concentrationAt" type="server"/>
+    <export function="exposureOf" type="server"/>
+    <export function="protection" type="client"/>
+</meta>

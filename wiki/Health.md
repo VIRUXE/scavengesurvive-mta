@@ -43,6 +43,7 @@ Below 20 thirst you lose `(20 - thirst) / 30` health per second, on top of what 
 - [Bleeding & Wounds](Bleeding-and-Wounds): every wound adds to your bleed rate, which drains health each second.
 - Starvation and dehydration, as above.
 - The drug Air (from an empty injector) costs 1 health on half the seconds; see [Drugs](Drugs).
+- Poison from the gas of the [Toxic Cloud](Toxic-Cloud): from a poison level of 40 % it drains health, fast from 80 %.
 - Low health darkens the screen. [Painkillers and Adrenaline](Drugs) hide the darkness.
 
 ## Unconsciousness

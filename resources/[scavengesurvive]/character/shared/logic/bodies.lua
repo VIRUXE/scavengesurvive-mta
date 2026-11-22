@@ -22,6 +22,7 @@ M.REASONS = {
     fall = "Most bones are broken, looks like they fell from a great height.",
     bleeding = "They bled to death.",
     starvation = "They starved to death.", -- not upstream, which had no line for it
+    toxic = "The lips are blue and the lungs burnt: they breathed poison gas.", -- the port's toxic cloud
 }
 M.KILLED = "They bled to death." -- upstream's default for a death at another player's hands
 M.UNKNOWN = "They died for an unknown reason."

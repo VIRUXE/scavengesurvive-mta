@@ -2,7 +2,7 @@
 
 ![Máscara de gás](images/items/19472_gasmask01.png) ![Máscara de hóquei](images/items/19036_hockeymask1.png) ![Máscara do Zorro](images/items/18974_maskzorro1.png) ![Máscara de gatinha](images/items/19557_sexymask1.png) ![Máscara de diabo](images/items/11704_bdupsmask1.png) ![Lenço de cabeça](images/items/18917_mask7.png)
 
-As máscaras usam-se na cara, no mosaico `FACE` do [inventário](Inventory). Nove itens vão para lá: cinco máscaras e o lenço de cabeça em quatro padrões, todos de tamanho 1.
+As máscaras usam-se na cara, no mosaico `FACE` do [inventário](Inventory). Onze itens vão para lá: cinco máscaras, a máscara de pó e o respirador de meia face, e o lenço de cabeça em quatro padrões, todos de tamanho 1.
 
 | Item | |
 |:--|:--|
@@ -31,7 +31,19 @@ O mosaico mostra então um modelo 3D da máscara a rodar com o nome por baixo. C
 Uma máscara assenta na cara de cada uma das 310 skins humanas do jogo, homens e mulheres, grandes e pequenos, e o mesmo vale para um chapéu ou um colete. As skins que nunca foram ajustadas individualmente tomam emprestado o ajuste de uma constituição parecida, e alguns narizes que atravessavam um lenço de cabeça foram afastados. A skin da personagem nunca muda: a máscara é um modelo preso ao osso da cabeça que toda a gente à tua volta vê.
 
 ## O que faz uma máscara {#what-a-mask-does}
-Nada além de mudar o teu aspeto. Uma máscara não esconde o teu nome no chat, não altera o dano que levas, e a Máscara de gás não filtra gás lacrimogéneo. Um chapéu é a única peça para a cabeça com efeito (reduz a probabilidade de um tiro na cabeça te deixar inconsciente, ver [Roupa e chapéus](Clothes-and-Hats)); uma máscara não tem nenhum.
+
+Algumas máscaras deixam de fora o gás da [Nuvem tóxica](Toxic-Cloud):
+
+| Máscara | Deixa de fora | Desgaste |
+|:--|:--|:--|
+| Lenço de cabeça | 15 % | nunca |
+| [Máscara de pó](Dust-Mask) | 50 % | Descartável: gasta-se com cerca de 5 minutos de gás denso. |
+| [Respirador de meia face](Half-Respirator) | 85 % | Leva um [Filtro](Filter), que dá para cerca de 15 minutos de gás denso. |
+| [Máscara de gás](Gas-Mask) | 97 % | Leva um [Filtro](Filter), que dá para cerca de 20 minutos de gás denso. |
+
+Quanto melhor uma máscara protege, mais custa respirar através dela: encurta as tuas corridas, e ouves-te a respirar. Os filtros, o desgaste e a respiração estão explicados em [Nuvem tóxica](Toxic-Cloud).
+
+As máscaras de hóquei, do Zorro, de gatinha e de diabo só mudam o teu aspeto. Nenhuma máscara esconde o teu nome no chat nem altera o dano que sofres, e nenhuma filtra gás lacrimogéneo.
 
 ## Arrancada {#knocked-off}
 Um tiro na cabeça arranca-te a máscara, e o chapéu também se usares um. Ambos caem no chão aos teus pés e podem ser apanhados de novo, por ti ou por quem te acertou.

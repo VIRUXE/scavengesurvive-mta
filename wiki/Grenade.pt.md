@@ -16,7 +16,7 @@
 
 | Origem | Onde | Parte da tabela |
 |:--|:--|--:|
-| Saque do mundo, militar | 106 pontos de aparecimento: 56 em Bone County, 32 em San Fierro, 18 em Las Venturas | 2,2 % |
+| Saque do mundo, militar | 106 pontos de aparecimento: 56 em Bone County, 32 em San Fierro, 18 em Las Venturas | 2,1 % |
 | Malas de veículos, militar | As malas de 4 tipos de veículo (Barracks, Launch, Patriot, Rhino) | 2,5 % |
 
 ## Fabrico
@@ -26,3 +26,7 @@ Nenhuma receita o faz ou usa.
 ## Sucata
 
 Não dá sucata: uma Máquina de sucata destrói-o, ver [Sucata](Scrap).
+
+## Ver também
+
+[Explosivos](Explosives)

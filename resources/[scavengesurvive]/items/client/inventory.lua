@@ -11,6 +11,7 @@ return function(ctx)
     local gardening = ctx and ctx.gardening -- shared/logic/gardening.lua: what a bag of Seeds holds
     local liquids = ctx and ctx.liquids -- shared/logic/liquids.lua: "(Water 0.4/0.50)" on liquid containers
     local gas = ctx and ctx.gas -- shared/logic/gas.lua: "(6.3/11 kg)" on a Gas Bottle
+    local masks = ctx and ctx.masks -- shared/logic/masks.lua: "(filter 63%)" on a mask
     local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")() -- names in the player's language
     -- lang:begin
     local MESSAGES = {
@@ -206,6 +207,10 @@ return function(ctx)
         LOCATORDIS = "Unable to trace the mobile phone",
         LOCATORSYNC = "Locator synced, you can now locate the phone.",
         STUNGUNCHAR = "Stun Gun Charged",
+        MASK_SPENT = "Your mask is used up and falls apart",
+        FILTER_SPENT = "Your mask's filter is spent",
+        FILTER_FITTED = "Fresh filter fitted",
+        FILTER_NO_MASK = "Wear a respirator or a gas mask to fit a filter",
         STUNGUNOUTC = "Out of charge",
         MOLOPOURBOT = "Fuel poured in bottle",
         FUELNOTPETR = "Fuel can does not contain petrol",
@@ -337,6 +342,8 @@ return function(ctx)
             name = gardening.seedLabel(name, gardening.seedsFor(it.id, it.data))
         elseif gas and it.uname == gas.UNAME then
             name = gas.label(name, it.data)
+        elseif masks and masks.spec(it.uname) then
+            name = masks.label(name, it.uname, it.data, lang.text)
         elseif cooking and cooking.isFood(t) then
             name = cooking.label(t, name, it.data)
         elseif liquids and liquids.isContainer(t) then
@@ -619,6 +626,9 @@ return function(ctx)
         if sl.id == "armour" and type(sl.item.data) == "table" and sl.item.data.ap then
             name = string.format("%s (%d)", name, sl.item.data.ap)
         end
+        if sl.id == "mask" and masks then
+            name = masks.label(name, sl.item.uname, sl.item.data, lang.text)
+        end
         return string.upper(name)
     end
 
@@ -631,6 +641,12 @@ return function(ctx)
         end
         if infection.wound then
             extra[#extra + 1] = { lang.text("Wound Infect"), tocolor(255, 0, 0, 255) }
+        end
+        -- poison from the toxic cloud: its level, amber while it only shows and red once it costs health
+        local toxic = math.floor((tonumber(charStats.toxic) or 0) + 0.5)
+        if toxic >= 1 then
+            local colour = toxic >= 40 and tocolor(255, 0, 0, 255) or tocolor(200, 220, 60, 255)
+            extra[#extra + 1] = { lang.format("Poison: %d%%", toxic), colour }
         end
         local drugs = type(charStats.drugs) == "table" and charStats.drugs or {}
         -- lang:begin

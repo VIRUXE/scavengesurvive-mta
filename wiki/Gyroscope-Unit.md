@@ -15,7 +15,7 @@
 
 | Source | Where | Share of the table |
 |:--|:--|--:|
-| World loot, military | 106 spawn points: 56 in Bone County, 32 in San Fierro, 18 in Las Venturas | 0.7 % |
+| World loot, military | 106 spawn points: 56 in Bone County, 32 in San Fierro, 18 in Las Venturas | 0.6 % |
 | World loot, industrial | 2,431 spawn points: 791 in Los Santos, 406 in Las Venturas, 386 in San Fierro, 273 in Flint County, 270 in Red County, 233 in Bone County, 72 in Tierra Robada | 0.3 % |
 
 ## Crafting

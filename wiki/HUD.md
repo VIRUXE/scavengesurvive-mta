@@ -9,6 +9,7 @@ The screen shows only what your character would know: there is no map, no money,
 - **Health bar**: GTA's own red bar, filled to your [health](Health).
 - **Thirst and hunger bars**: a blue bar (thirst) above a green bar (hunger), both the width of the health bar, stacked above the health bar (above the armour bar too, while a vest is worn) (see [Food & Drink](Food-and-Drink)). From 30 down a bar pulses, and below 20, where it costs health, it flashes red.
 - **Weapon icon**: GTA's icon of what you hold. A loaded firearm shows `magazine/reserve` (for example `10/0`) underneath; see [Firearms](Firearms).
+- **Protection and poison bars**: a yellow bar and a purple bar on top of the stack, for the [Toxic Cloud](Toxic-Cloud): how protected you are (mask and shelter) while a mask is worn or a cloud is on the map, and your poison level while you have any.
 - **Armour bar**: a pale bar just above the health bar, shown while you wear a vest (hunger and thirst move up to make room). It follows the vest's points (full from 100 up) and drops with every chest hit; the exact number stays in the inventory's `TORSO` tile. See [Armour](Armour).
 - **Area name**: shown briefly when you enter a new district.
 - **Crosshair** while aiming.

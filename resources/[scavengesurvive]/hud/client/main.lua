@@ -71,7 +71,7 @@ local state = {
     chatMode = 0,
     keys = {},
     hidden = false, -- setHidden(true): the dev studio wants clean screenshots
-    skillNotice = false, -- { text, untilTick }: "+Repair" after a skill gain (skillGained from character)
+    skillNotice = false, -- { name, untilTick }: "+Repair" after a skill gain (skillGained from character)
     skills = {}, -- { { name, amount, level, colour }, ... } in learned order (characterSkillsSynced from character)
 }
 
@@ -190,8 +190,7 @@ end)
 
 -- upstream skills.pwn: "+<skill>" at 320,430 for five seconds; a skill named after an item type shows its name
 addEventHandler("skillGained", root, function(name)
-    local t = lang.itemType(name)
-    state.skillNotice = { text = "+" .. (t and t.name or tostring(name)), untilTick = getTickCount() + SKILL_NOTICE_MS }
+    state.skillNotice = { name = tostring(name), untilTick = getTickCount() + SKILL_NOTICE_MS }
 end)
 
 -- The skill bars, bottom right (they replace upstream's inventory "Skills" list): one thin white bar per skill,
@@ -211,6 +210,7 @@ local SKILL_NAMES = {
     Fishing = "Fishing",
     Forestry = "Forestry",
     Medical = "Medical",
+    PoisonResistance = "Poison Resistance",
     Repair = "Repair",
     Strength = "Strength",
 }
@@ -271,7 +271,7 @@ local function drawSkillNotice(y)
         return
     end
     draw.text({
-        text = n.text,
+        text = "+" .. skillName(n.name),
         x = 320,
         y = y or 430,
         font = 1,
@@ -326,7 +326,7 @@ end
 
 local function drawNeeds()
     local now = getTickCount()
-    -- a worn vest's bar takes the slot above health; thirst and hunger move up one slot
+    -- a worn vest's bar takes the slot above health; everything stacked above moves up one slot
     local points = getElementData(localPlayer, "items.armourPoints")
     local lift = points and bars.STEP or 0
     local T = bars.THIRST
@@ -338,6 +338,35 @@ local function drawNeeds()
     if points then
         local A = bars.ARMOUR
         draw.progressBar(A.x, A.y, A.w, A.h, bars.fill(points, A.max), A.r, A.g, A.b, A.a, "right")
+    end
+    return lift
+end
+
+-- The toxic cloud on the HUD, two more bars on top of thirst, hunger and health and drawn like them:
+--   protection (toxic's protection export), while a mask is worn or a cloud is in the air: as full as the player is
+--     protected (the worn mask and how airtight the place or the vehicle is, together), flashing red while gas is
+--     being breathed in;
+--   poison (the character's toxic level), above it, while there is any: it fills as the poison builds, flickers
+--     while more is being taken in and flashes red once it costs health.
+-- lift: how far the stack is moved up (drawNeeds, for the armour bar).
+local function drawToxic(lift)
+    lift = lift or 0
+    local now = getTickCount()
+    local p = running("toxic") and exports.toxic:protection()
+    local slot = 0
+    if type(p) == "table" then
+        local P = bars.PROTECTION
+        local r, g, b, a = bars.protectionColour(P, p.total, p.breathing, now)
+        draw.progressBar(P.x, P.y - lift, P.w, P.h, bars.fill(p.total, 1), r, g, b, a, "right")
+    else
+        slot = bars.STEP -- no protection bar: the poison bar takes its place
+    end
+    local toxic = tonumber(state.stats.toxic) or 0
+    if toxic >= bars.POISON_SHOWN then
+        local X = bars.POISON
+        local exposed = type(p) == "table" and bars.exposed(p.total, p.breathing)
+        local r, g, b, a = bars.poisonColour(X, toxic, exposed, now)
+        draw.progressBar(X.x, X.y - lift + slot, X.w, X.h, bars.fill(toxic, X.max), r, g, b, a, "right")
     end
 end
 
@@ -872,7 +901,7 @@ addEventHandler("onClientRender", root, function()
         dxDrawRectangle(0, 0, sw, sh, tocolor(0, 0, 0, state.brightness))
     end
     if not onDuty and not setting then
-        drawNeeds()
+        drawToxic(drawNeeds())
     end
     drawAmmo()
     drawKeyActions(driver)

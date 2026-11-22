@@ -19,6 +19,14 @@
     <file src="shared/logic/apparel.lua"/>
     <file src="shared/logic/armour.lua"/>
     <file src="server/armour.lua"/>
+    <file src="shared/logic/masks.lua"/>
+    <file src="client/breath.lua"/>
+    <file src="sounds/breath_cloth.wav"/>
+    <file src="sounds/breath_dust.wav"/>
+    <file src="sounds/breath_respirator.wav"/>
+    <file src="sounds/breath_gasmask.wav"/>
+    <file src="sounds/breath_wheeze.wav"/>
+    <file src="server/masks.lua"/>
     <file src="shared/logic/carry.lua"/>
     <file src="shared/logic/skins.lua"/>
     <file src="shared/logic/clothes.lua"/>
@@ -82,6 +90,8 @@
     <export function="meleeHit" type="server"/>
     <export function="popHeadgear" type="server"/>
     <export function="armourHit" type="server"/>
+    <export function="maskBreathed" type="server"/>
+    <export function="getGear" type="server"/>
     <export function="createStartingItems" type="server"/>
     <export function="refreshPlayer" type="server"/>
     <export function="resendWorldItem" type="server"/>
@@ -111,4 +121,6 @@
     <export function="itemObject" type="client"/>
     <export function="interactionActions" type="client"/>
     <export function="getProductionRecipes" type="client"/>
+    <export function="maskLegs" type="client"/>
+    <export function="maskProtection" type="client"/>
 </meta>

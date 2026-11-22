@@ -16,7 +16,7 @@
 
 | Source | Where | Share of the table |
 |:--|:--|--:|
-| World loot, military | 106 spawn points: 56 in Bone County, 32 in San Fierro, 18 in Las Venturas | 2.2 % |
+| World loot, military | 106 spawn points: 56 in Bone County, 32 in San Fierro, 18 in Las Venturas | 2.1 % |
 | Vehicle trunks, military | The trunks of 4 vehicle types (Barracks, Launch, Patriot, Rhino) | 2.5 % |
 
 ## Crafting
@@ -26,3 +26,7 @@ No recipe makes or uses it.
 ## Scrap
 
 Cannot be scrapped: a Scrap Machine destroys it, see [Scrap](Scrap).
+
+## See also
+
+[Explosives](Explosives)
