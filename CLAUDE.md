@@ -20,7 +20,7 @@ production and the dev box run 13.2.0 outside packages (`docs/runbooks/upgrade-m
   edited since, so running it reverts those edits (item names, settings, loot, translations). A change to an item type,
   loot row, map object or translation is a hand edit to the file in `data/generated/`, `sql/seed/` or `maps/`, never a
   change to the converter followed by a regen. `tools/convert/__main__.py` refuses to run.
-- `site/` is the public website (`https://scavengesurvive-reborn.com`, DNS at Cloudflare, nginx on juniper): plain HTML, CSS
+- `site/` is the public website (`https://www.scavengesurvive-reborn.com`, DNS at Cloudflare, nginx on juniper): plain HTML, CSS
   and JS, no build step, rsynced to juniper by `.github/workflows/pages.yml` on every push to `main` (the old GitHub Pages
   URL only redirects; `docs/runbooks/website-hosting.md`). `discord.scavengesurvive-reborn.com` redirects to the Discord invite. Images are WebP copies made by `python -m tools.site_assets`
   from `docs/images` (never link the site into `docs/` or the wiki). Texts are English in the HTML with `data-i18n` keys;

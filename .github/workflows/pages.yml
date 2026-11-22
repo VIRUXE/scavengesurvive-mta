@@ -1,4 +1,4 @@
-# Deploys site/ to https://scavengesurvive-reborn.com (juniper), turns GitHub Pages into a redirect there, and mirrors
+# Deploys site/ to https://www.scavengesurvive-reborn.com (juniper), turns GitHub Pages into a redirect there, and mirrors
 # wiki/ to the repository's wiki.
 #
 # The site job rsyncs site/ as deploy-ssr, whose key only reaches /var/www/scavengesurvive-reborn.com/public through
@@ -22,7 +22,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  SITE_URL: https://scavengesurvive-reborn.com
+  SITE_URL: https://www.scavengesurvive-reborn.com
 
 jobs:
   site:
@@ -32,7 +32,7 @@ jobs:
       contents: read
     environment:
       name: website
-      url: https://scavengesurvive-reborn.com
+      url: https://www.scavengesurvive-reborn.com
     steps:
       - uses: actions/checkout@v4
       - name: Install the deploy key

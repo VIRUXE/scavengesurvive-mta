@@ -8,8 +8,8 @@ rotated, the Discord invite changes, or the site moves to another host.
 | Piece | Where | Notes |
 | --- | --- | --- |
 | Domain | Namecheap (registrar), bought 2026-11-22 | nameservers set to Cloudflare's `arya` / `matias.ns.cloudflare.com` |
-| DNS | Cloudflare, zone `scavengesurvive-reborn.com` (Free) | `A @`, `A discord` → `78.47.205.20` (juniper), `CNAME www` → apex, all proxied; SSL/TLS **Full (strict)** |
-| Web server | juniper (`juniper.flaviopereira.dev`), nginx | `/etc/nginx/sites-available/scavengesurvive-reborn.com`: apex serves `/var/www/scavengesurvive-reborn.com/public`, `www` 301s to the apex, `discord` 302s to the invite; logs `/var/log/nginx/ssr_*.log` |
+| DNS | Cloudflare, zone `scavengesurvive-reborn.com` (Free) | `A @`, `A discord` → `78.47.205.20` (juniper), `CNAME www` → apex, all proxied; `www` is the canonical host; SSL/TLS **Full (strict)** |
+| Web server | juniper (`juniper.flaviopereira.dev`), nginx | `/etc/nginx/sites-available/scavengesurvive-reborn.com`: `www` serves `/var/www/scavengesurvive-reborn.com/public`, the apex and all `http://` 301 to `https://www`, `discord` 302s to the invite; logs `/var/log/nginx/ssr_*.log` |
 | Certificate | certbot, `--cert-name scavengesurvive-reborn.com` | webroot `/var/www/letsencrypt` (`snippets/acme.conf`), covers apex, `www` and `discord`; renewed by certbot's own timer (HTTP-01 works through the Cloudflare proxy) |
 | Deploy | `.github/workflows/pages.yml`, job `site` | rsyncs `site/` (minus `PLACEHOLDERS.md`) on every push to `main` that touches `site/`; user `deploy-ssr` (home `/var/www/scavengesurvive-reborn.com`), key in `~/.ssh/authorized_keys` limited to `restrict,command="/usr/bin/rrsync /var/www/scavengesurvive-reborn.com/public"` |
 | Old URL | GitHub Pages, job `pages` | `viruxe.github.io/scavengesurvive-mta/<path>` forwards to `scavengesurvive-reborn.com/<path>` (generated stub, `noindex`) |
@@ -20,8 +20,8 @@ rotated, the Discord invite changes, or the site moves to another host.
 ## Checks
 
 ```
-curl -sI https://scavengesurvive-reborn.com/ | head -1          # 200, server: cloudflare
-curl -sI https://www.scavengesurvive-reborn.com/x | grep -i location
+curl -sI https://www.scavengesurvive-reborn.com/ | head -1          # 200, server: cloudflare
+curl -sI http://scavengesurvive-reborn.com/x | grep -i location   # https://www.../x
 curl -sI https://discord.scavengesurvive-reborn.com/ | grep -i location
 ssh juniper.flaviopereira.dev 'nginx -t; certbot certificates --cert-name scavengesurvive-reborn.com'
 ```
