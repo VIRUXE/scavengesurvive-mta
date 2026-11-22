@@ -285,8 +285,7 @@ end
 roll.HEADINGS = 16
 roll.GAP = 0.03 -- metres kept between two items' footprints
 roll.LEVEL = 1.0 -- items further apart than this vertically are on different floors and never conflict
-roll.LEAN_MAX = 35 -- degrees: an item that would lean steeper than this lies flat on top of what it touches
-roll.TILT_MAX = math.sin(math.rad(45)) -- the lean and the ground's slope together tilt an item at most 45 degrees
+roll.LEAN_MAX = 35 -- degrees: an item that would rest steeper than this slides off and lies level on top instead
 local DEFAULT_REST = { 0, 0, 0, 0, 0, 0.4, 0.4, 0.3 }
 
 -- Headings (degrees) an item may take on a slot: the free ones of its class, each also turned around; nil when its
@@ -433,8 +432,8 @@ local function clipTo(poly, fp)
 end
 
 -- The plane h0 + gx * dx + gy * dy (dx, dy from the footprint's centre) that lies on or over every support point
--- { dx, dy, h } and is lowest at the centre: where a rigid flat item comes to rest on them, its centre of mass as low as
--- it can go. A small linear programme in (h0, gx, gy); its optimum stands on three of the points whose triangle holds
+-- { dx, dy, h } and is lowest at the centre: where a rigid flat item comes to rest on them, its centre of mass as low
+-- as it can go. A small linear programme in (h0, gx, gy); its optimum stands on three of the points whose triangle holds
 -- the centre (the weight between its supports), so every such triple is tried and the lowest one over all points kept.
 -- Returns h0, gx, gy, or nil when no triple holds it (never with the footprint's own corners among the points).
 local function restingPlane(pts)
@@ -451,8 +450,8 @@ local function restingPlane(pts)
                 local det = abx * acy - aby * acx
                 if math.abs(det) > 1e-6 then
                     -- the centre (0, 0) in barycentric terms: inside (or on) the triangle when all three are >= 0
-                    local u = ((-a[1]) * acy - (-a[2]) * acx) / det
-                    local v = (abx * (-a[2]) - aby * (-a[1])) / det
+                    local u = (-a[1] * acy - -a[2] * acx) / det
+                    local v = (abx * -a[2] - aby * -a[1]) / det
                     if u >= -EPS and v >= -EPS and u + v <= 1 + EPS then
                         local h0 = a[3] + u * (b[3] - a[3]) + v * (c[3] - a[3])
                         if not best or h0 < best[1] - EPS then
@@ -546,7 +545,7 @@ end
 -- Lay one item of a roll so it touches nothing in `placed` (footprints already on the ground: this roll, the batch,
 -- and items lying nearby). Its own slot first (slot i of the roll's ring), then the point's other slots nearest first;
 -- on each, its free headings in random order (eight random ones when its class is unchecked). When nothing is free it
--- leans on what it overlaps on its own slot (roll.leanOn): items may touch, they never vanish. Appends its footprint
+-- settles on what it overlaps on its own slot (roll.settle): items may touch, they never vanish. Appends its footprint
 -- to `placed` and returns x, y, z, rz, nx, ny, leaning (true when it had to lean).
 function roll.placeItem(px, py, ground, n, i, rest, modelz, rng, placed)
     rest = rest or DEFAULT_REST

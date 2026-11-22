@@ -468,7 +468,8 @@ local function lyingNear(rows, cb)
     if #polys == 0 then
         return cb({})
     end
-    local sql = "SELECT i.type_uname, i.x, i.y, i.z, i.rz FROM world_items_pos p JOIN items i ON i.id = p.item_id "
+    local sql = "SELECT i.type_uname, i.x, i.y, i.z, i.rz, i.ground_nx, i.ground_ny"
+        .. " FROM world_items_pos p JOIN items i ON i.id = p.item_id "
         .. "WHERE ST_Contains(ST_GeomFromText('MULTIPOLYGON("
         .. table.concat(polys, ",")
         .. ")'), p.pos) AND IFNULL(i.interior, 0) = 0 AND IFNULL(i.dimension, 0) = 0"
@@ -477,9 +478,17 @@ local function lyingNear(rows, cb)
         for _, r in ipairs(lying or {}) do
             local x, y, z = tonumber(r.x), tonumber(r.y), tonumber(r.z)
             if x and y and z then
-                -- its stored z is its origin: the ground under it is `base` (its rest data) lower
-                local rest = itemRest[r.type_uname]
-                placed[#placed + 1] = roll.footprint(x, y, z - (rest and rest[1] or 0.1), tonumber(r.rz) or 0, rest)
+                -- its stored z is its origin less its type's modelz; its top face lies as it lies
+                local def = exports.data:itemType(r.type_uname)
+                placed[#placed + 1] = roll.lyingFootprint(
+                    x,
+                    y,
+                    z + (def and def.modelz or 0),
+                    tonumber(r.rz) or 0,
+                    itemRest[r.type_uname],
+                    r.ground_nx,
+                    r.ground_ny
+                )
             end
         end
         cb(placed)
@@ -488,8 +497,8 @@ end
 
 -- Where an item dropped by hand comes to rest (items/server/hands.lua): on the ground at (x, y) (height gz, slope
 -- normal snx, sny, from the server's world) with heading rz, flush as loot lies, and when its footprint lands on items
--- already lying there (`lying`: rows of type_uname, x, y, z, rz, ground_nx, ground_ny) it lies on top of them or leans on them
--- (roll.leanOn). Things taller than a metre are stepped around, not climbed. Returns z, nx, ny (false when flat), or
+-- already lying there (`lying`: rows of type_uname, x, y, z, rz, ground_nx, ground_ny) it settles on their top faces as
+-- they lie, as a rigid flat body would (roll.settle). Things taller than a metre are stepped around, not climbed. Returns z, nx, ny (false when flat), or
 -- false for a type without rest data.
 local CLIMB_MAX = 1.0
 
@@ -510,20 +519,24 @@ function restPose(uname, x, y, gz, snx, sny, rz, lying)
         local other = itemRest[r.type_uname]
         local ox, oy, oz = tonumber(r.x), tonumber(r.y), tonumber(r.z)
         if other and ox and oy and oz and (other[8] or 0) <= CLIMB_MAX then
-            -- its stored z is its origin less its type's modelz: its lowest point is `base` under the origin
+            -- its stored z is its origin less its type's modelz; its top face lies as it lies (tilted by its normal)
             local odef = exports.data:itemType(r.type_uname)
-            local bottom = oz + (odef and odef.modelz or 0) - other[1]
-            -- tilted (to a slope, or leaning itself), its high end stands that much over its middle
-            local tnx, tny = tonumber(r.ground_nx) or 0, tonumber(r.ground_ny) or 0
-            local rise = math.sqrt(tnx * tnx + tny * tny) * math.max(other[6] or 0.4, other[7] or 0.4) / 2
-            local top = bottom + (other[8] or 0.3) + rise
-            if top - gz <= CLIMB_MAX then -- a pile grows no taller than that either
-                placed[#placed + 1] = roll.footprint(ox, oy, bottom, tonumber(r.rz) or 0, other, top)
+            local fp = roll.lyingFootprint(
+                ox,
+                oy,
+                oz + (odef and odef.modelz or 0),
+                tonumber(r.rz) or 0,
+                other,
+                r.ground_nx,
+                r.ground_ny
+            )
+            if fp.top - gz <= CLIMB_MAX then -- a pile grows no taller than that either
+                placed[#placed + 1] = fp
             end
         end
     end
     local slot = { 0, 0, gz, tonumber(snx) or 0, tonumber(sny) or 0 }
-    local _, _, z, _, nx, ny = roll.leanOn(x, y, slot, rest, def and def.modelz or 0, rz, false, placed)
+    local _, _, z, _, nx, ny = roll.settle(x, y, slot, rest, def and def.modelz or 0, rz, false, placed)
     return z, nx or false, ny or false
 end
 
