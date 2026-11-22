@@ -284,6 +284,7 @@ Several different items can share a name (there are, for example, three kinds of
 |  | [Easter Egg](Easter-Egg) | 3 |
 |  | [Electronic Lockpick](Electronic-Lockpick) | 2 |
 |  | [Empty Molotov](Empty-Molotov) | 1 |
+|  | [Extension Cord](Extension-Cord) | 3 |
 |  | [Fire Helmet](Fire-Helmet) | 1 |
 |  | [Fireworks](Fireworks) | 2 |
 |  | [Fishing Rod](Fishing-Rod) | 6 |
@@ -291,6 +292,7 @@ Several different items can share a name (there are, for example, three kinds of
 |  | [Flare](Flare) | 2 |
 |  | [Flare Gun](Flare-Gun) | 2 |
 |  | [Flashlight](Flashlight) | 2 |
+|  | [Flood Light](Flood-Light) | 8 |
 |  | [Fluctuator Unit](Fluctuator-Unit) | 1 |
 |  | [Flux Capacitor](Flux-Capacitor) | 1 |
 |  | [Fuse Box](Fuse-Box) | 2 |

@@ -36,6 +36,7 @@ The table lists the pieces of Scrap Metal each item yields. Many items are worth
 | [Metal Gate](Metal-Gate) | 4 |
 | [Small Metal Panel](Small-Metal-Panel) | 4 |
 | [Armour](Armour) | 3 |
+| [Flood Light](Flood-Light) | 3 |
 | [Gas Cylinder](Gas-Cylinder) | 3 |
 | [Metal Panel (`MetPanel`)](Metal-Panel-MetPanel) | 3 |
 | [Sword](Sword) | 3 |
