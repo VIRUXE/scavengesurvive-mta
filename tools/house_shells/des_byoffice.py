@@ -233,19 +233,49 @@ def wall_in_blank_doorway(bm, uv, cols):
     rows = [(l.vert.co.y, l.vert.co.z, 1.0) for l in ref.loops]
     inv = Matrix([[sum(r[i] * r[j] for r in rows) for j in range(3)] for i in range(3)]).inverted()
     coef = [inv @ Vector([sum(r[i] * l[uv].uv[k] for r, l in zip(rows, ref.loops)) for i in range(3)]) for k in range(2)]
-    colours = [tuple(ref.loops[0][c]) for c in cols]
     mat = ref.material_index
+    # the wall's prelight around the doorway: every corner of the wall faces in its plane, outside the doorway
+    lit = [
+        (l.vert.co.yz.copy(), [Vector(l[c]) for c in cols])
+        for f in bm.faces
+        if f not in dead and f.normal.x > 0.9 and abs(f.calc_center_median().x - x_wall) < 0.01
+        for l in f.loops
+    ]
     bmesh.ops.delete(bm, geom=dead, context="FACES")
-    # wound to face +x, into the kitchen (the game culls back faces: the other way the kitchen looked out under the stilts)
-    f = bm.faces.new([bm.verts.new(v) for v in ((x_wall, y0, z0), (x_wall, y1, z0), (x_wall, y1, z1), (x_wall, y0, z1))])
-    f.material_index = mat
-    f.normal_update()
-    for loop in f.loops:
-        co = loop.vert.co
-        loop[uv].uv = (coef[0][0] * co.y + coef[0][1] * co.z + coef[0][2], coef[1][0] * co.y + coef[1][1] * co.z + coef[1][2])
-        for c, value in zip(cols, colours):
-            loop[c] = value
-    print(f"blank doorway: {len(dead)} faces walled over")
+
+    def light(y, z):
+        """Prelight at (y, z) on the wall: the wall's own where a wall corner is, else blended from the corners
+        around (inverse square distance), so the patch takes the wall's shading instead of one flat colour (which
+        drew the outline of a door)."""
+        p = Vector((y, z))
+        weights = [(1.0 / max((q - p).length_squared, 1e-8), c) for q, c in lit]
+        total = sum(w for w, _ in weights)
+        return [tuple(sum((c[k] * w for w, c in weights), Vector((0, 0, 0, 0))) / total) for k in range(len(cols))]
+
+    # a grid through every wall corner on the doorway's edges, so the patch meets the wall vertex for vertex
+    def cuts(a, b, values):
+        """a, b and the values strictly between them, none closer than 2 cm to another (no sliver faces)."""
+        out = [a, b]
+        for v in sorted(values):
+            if a < v < b and all(abs(v - w) > 0.02 for w in out):
+                out.append(v)
+        return sorted(out)
+
+    ys = cuts(y0, y1, [q.x for q, _ in lit if abs(q.y - z0) < 0.01 or abs(q.y - z1) < 0.01])
+    zs = cuts(z0, z1, [q.y for q, _ in lit if abs(q.x - y0) < 0.01 or abs(q.x - y1) < 0.01])
+    for (ya, yb) in zip(ys, ys[1:]):
+        for (za, zb) in zip(zs, zs[1:]):
+            # wound to face +x, into the kitchen (the game culls back faces: the other way the kitchen looked out
+            # under the stilts)
+            f = bm.faces.new([bm.verts.new(v) for v in ((x_wall, ya, za), (x_wall, yb, za), (x_wall, yb, zb), (x_wall, ya, zb))])
+            f.material_index = mat
+            f.normal_update()
+            for loop in f.loops:
+                co = loop.vert.co
+                loop[uv].uv = (coef[0][0] * co.y + coef[0][1] * co.z + coef[0][2], coef[1][0] * co.y + coef[1][1] * co.z + coef[1][2])
+                for c, value in zip(cols, light(co.y, co.z)):
+                    loop[c] = value
+    print(f"blank doorway: {len(dead)} faces walled over, {len(ys) - 1} x {len(zs) - 1} patch")
 
 
 def refit(old, new, uvs, normal):
