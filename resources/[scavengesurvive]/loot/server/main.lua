@@ -11,6 +11,7 @@ local function loadFile(path)
 end
 local roll = loadFile("shared/logic/roll.lua")
 local itemRest = loadFile("shared/item_rest.lua")
+local settle = loadFile("shared/logic/settle.lua")
 local dropsLogic = loadFile("shared/logic/drops.lua")
 local lockupLogic = loadFile("shared/logic/lockup.lua")
 local settings = {}
@@ -257,6 +258,74 @@ local function countSpawn(uname)
     recentSpawns[uname] = { n = (r and roll.decay(r.n, r.t, now, halfLife) or 0) + 1, t = now }
 end
 
+-- An item lies as its shape comes to rest, not level on whatever sticks out of it (a door on its wing mirror): the
+-- first time a type is laid the server takes the mesh its clients draw from the model pack that holds it (the pack's
+-- modelDff export: a resource reads only its own files) and works out how it tips from its rest rotation
+-- (shared/logic/settle.lua). Types on the game's own models have no file here and lie as declared.
+local MODEL_PACKS = { "samp_models", "hat_models", "door_models", "prop_models", "box_models", "car_part_models" }
+local NO_SETTLE = { Dice = true } -- lies on the face it rolled (items/client/world.lua)
+local tipped = {} -- item type -> its tipped pose (settle.pose), false when it lies as declared
+
+local function modelDff(model)
+    for _, name in ipairs(MODEL_PACKS) do
+        local res = getResourceFromName(name)
+        if res and getResourceState(res) == "running" then
+            for _, fn in ipairs(getResourceExportedFunctions(res) or {}) do
+                if fn == "modelDff" then
+                    local ok, bytes = pcall(function()
+                        return exports[name]:modelDff(model)
+                    end)
+                    if ok and type(bytes) == "string" then
+                        return bytes
+                    end
+                end
+            end
+        end
+    end
+    return nil
+end
+
+local function tippedPose(uname, def)
+    if tipped[uname] == nil then
+        tipped[uname] = false
+        local bytes = def and not NO_SETTLE[uname] and modelDff(tonumber(def.model))
+        if bytes then
+            local ok, pose = pcall(function()
+                local mesh = settle.mesh(bytes)
+                return mesh and settle.pose(mesh, def.rotx, def.roty, def.rotz)
+            end)
+            if not ok then
+                util.log(
+                    "loot",
+                    "warn",
+                    "%s: mesh of model %s not read (%s)",
+                    uname,
+                    tostring(def.model),
+                    tostring(pose)
+                )
+            end
+            tipped[uname] = ok and pose or false
+        end
+    end
+    return tipped[uname]
+end
+
+-- An item laid flush at origin (x, y, z) with heading rz on a surface of normal (nx, ny; nil when level), as
+-- roll.layAt / roll.settle lay it, in the pose its shape tips into there: its origin moves along the normal by what
+-- its rest height changes, and its heading and normal become those of the tipped pose. Returns x, y, z, rz, nx, ny,
+-- unchanged for a type that lies well as declared.
+local function settleByShape(uname, def, rest, x, y, z, rz, nx, ny)
+    local pose = rest and tippedPose(uname, def)
+    if not pose then
+        return x, y, z, rz, nx, ny
+    end
+    local sx, sy = nx or 0, ny or 0
+    local sz = math.sqrt(math.max(0, 1 - sx * sx - sy * sy))
+    local rise = pose.base - (rest[1] or 0)
+    local lrz, lnx, lny = settle.lay(pose, rz, nx, ny)
+    return x + sx * rise, y + sy * rise, z + sz * rise, lrz, lnx, lny
+end
+
 -- One spawn's roll for loot_roll: { s = id, cd = cooldown seconds, items = { { u, data, x, y, z, rz, nx, ny } } },
 -- or nil for a spawn whose loot table is unknown (disabled instead). `placed` holds the footprints already on the
 -- ground around (the batch so far and items lying nearby): an item takes a free spot of the point when there is one,
@@ -307,6 +376,9 @@ local function rollSpawn(s, placed)
             if ground then
                 x, y, z, rz, nx, ny, lean =
                     roll.placeItem(s.x, s.y, ground, #unames, i, rest or UNSHAPED, modelz, math.random, placed)
+                if x then
+                    x, y, z, rz, nx, ny = settleByShape(uname, def, rest, x, y, z, rz, nx, ny)
+                end
             end
             if not x then -- no measured ground: as upstream, on a ring at the point's height
                 local ang = math.rad(i * (360 / #unames))
@@ -498,8 +570,9 @@ end
 -- Where an item dropped by hand comes to rest (items/server/hands.lua): on the ground at (x, y) (height gz, slope
 -- normal snx, sny, from the server's world) with heading rz, flush as loot lies, and when its footprint lands on items
 -- already lying there (`lying`: rows of type_uname, x, y, z, rz, ground_nx, ground_ny) it settles on their top faces as
--- they lie, as a rigid flat body would (roll.settle). Things taller than a metre are stepped around, not climbed. Returns z, nx, ny (false when flat), or
--- false for a type without rest data.
+-- they lie, as a rigid flat body would (roll.settle). Things taller than a metre are stepped around, not climbed.
+-- With `byShape` it then tips into the pose its shape rests in there (settleByShape), which can turn its heading.
+-- Returns z, nx, ny (false when flat) and the heading, or false for a type without rest data.
 local CLIMB_MAX = 1.0
 
 -- an item type's rest data (shared/item_rest.lua: { base, cx, cy, class, longX, sx, sy, sz }), false without any
@@ -507,7 +580,7 @@ function restData(uname)
     return itemRest[uname] or false
 end
 
-function restPose(uname, x, y, gz, snx, sny, rz, lying)
+function restPose(uname, x, y, gz, snx, sny, rz, lying, byShape)
     local rest = itemRest[uname]
     x, y, gz, rz = tonumber(x), tonumber(y), tonumber(gz), tonumber(rz)
     if not rest or not x or not y or not gz or not rz then
@@ -537,7 +610,10 @@ function restPose(uname, x, y, gz, snx, sny, rz, lying)
     end
     local slot = { 0, 0, gz, tonumber(snx) or 0, tonumber(sny) or 0 }
     local _, _, z, _, nx, ny = roll.settle(x, y, slot, rest, def and def.modelz or 0, rz, false, placed)
-    return z, nx or false, ny or false
+    if byShape then
+        _, _, z, rz, nx, ny = settleByShape(uname, def, rest, x, y, z, rz, nx, ny)
+    end
+    return z, nx or false, ny or false, rz
 end
 
 local function placeRollsAmong(rows, done, quiet, placed)

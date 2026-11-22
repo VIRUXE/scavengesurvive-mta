@@ -2,3 +2,14 @@
 -- and ray queries collide with the objects players see built from these models.
 local sageom = loadstring(exports.lib:getModule("sageom"), "=lib/sageom.lua")()
 sageom.registerPack({ "manifest.lua", "defences.lua", "stretched.lua" })
+
+-- The .dff of one of this pack's models (false for a model that is not its own): loot rests an item by the shape of
+-- its mesh (loot/shared/logic/settle.lua), and a resource reads only its own files.
+local readDff = loadstring(exports.lib:getModule("modelpack"), "=lib/modelpack.lua")().dffReader({
+    "manifest.lua",
+    "stretched.lua",
+    "defences.lua",
+})
+function modelDff(id)
+    return readDff(id)
+end

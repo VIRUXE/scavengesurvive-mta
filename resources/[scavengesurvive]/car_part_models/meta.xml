@@ -836,4 +836,5 @@
     <file src="files/yosemite_door_rf_ok.col"/>
     <file src="files/yosemite_door_rf_ok.dff"/>
     <export function="resolve" type="client"/>
+    <export function="modelDff" type="server"/>
 </meta>

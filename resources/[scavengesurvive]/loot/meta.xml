@@ -9,6 +9,7 @@
     <script src="server/main.lua" type="server"/>
     <script src="client/main.lua" type="client"/>
     <file src="shared/logic/roll.lua"/>
+    <file src="shared/logic/settle.lua"/>
     <file src="shared/logic/drops.lua"/>
     <file src="shared/logic/lockup.lua"/>
     <file src="shared/item_rest.lua"/>

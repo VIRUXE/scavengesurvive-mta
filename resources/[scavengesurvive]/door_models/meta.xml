@@ -65,4 +65,5 @@
     <file src="files/sfhouse4_door3.col"/>
     <file src="files/sfhouse4_door3.dff"/>
     <export function="resolve" type="client"/>
+    <export function="modelDff" type="server"/>
 </meta>

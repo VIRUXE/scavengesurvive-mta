@@ -1119,10 +1119,12 @@ return function(ctx)
     -- Where a dropped item comes to rest. In the main world the server's own world (lib geom.lua) gives the ground
     -- under the spot, and loot's rest data lays the item flush on it, tilted to the slope; when its footprint lands
     -- on items already lying there it lies on top of them or leans on them (exports.loot:restPose), whatever they
-    -- are. Built defences are walls, not a pile. The server's world has no built defences, so a ramp or floor built
-    -- of them is the surface the client saw under its drop spot (surface = { z, nx, ny }), taken only when it lies
-    -- above the server's ground and a built defence stands next to the spot. Elsewhere, and for a type without rest
-    -- data, it lies at feet height as before. cb(z, nx, ny).
+    -- are, and tips into the pose its own shape rests in (a door on its wing mirror and far edge, not level over the
+    -- mirror), which can turn its heading a little. Built defences are walls, not a pile. The server's world has no
+    -- built defences, so a ramp or floor built of them is the surface the client saw under its drop spot (surface =
+    -- { z, nx, ny }), taken only when it lies above the server's ground and a built defence stands next to the spot.
+    -- Elsewhere, and for a type without rest data, it lies at feet height as before. cb(z, nx, ny, rz): rz only
+    -- when loot laid it.
     local geom = assert(loadstring(exports.lib:getModule("geom"), "=lib/geom.lua"))()
     local LYING_REACH = 4.5 -- metres: the furthest two lying items' footprints reach towards each other
     local SURFACE_REACH = 5.0 -- metres: how near a built defence's origin must be for the client's surface to count
@@ -1178,11 +1180,11 @@ return function(ctx)
             if not gz then
                 return cb(z)
             end
-            local lz, nx, ny = exports.loot:restPose(uname, x, y, gz, snx, sny, rz, lying)
+            local lz, nx, ny, lrz = exports.loot:restPose(uname, x, y, gz, snx, sny, rz, lying, true)
             if not lz then
                 return cb(z)
             end
-            cb(lz, nx or nil, ny or nil)
+            cb(lz, nx or nil, ny or nil, tonumber(lrz))
         end)
     end
 
@@ -1226,7 +1228,8 @@ return function(ctx)
         end
         M.flushData(item.id)
         local int, dim = getElementInterior(player), getElementDimension(player)
-        local function drop(lz, nx, ny)
+        local function drop(lz, nx, ny, lrz)
+            drz = lrz or drz
             local params = { item.id, cid, dx, dy, lz, drz, int, dim, nx, ny, n = 10 }
             db.call("item_drop", params, function(res, c)
                 item.dropping = nil
@@ -1273,12 +1276,12 @@ return function(ctx)
             drop(dz)
         else
             item.dropping = true
-            restOnGround(player, item.uname, dx, dy, dz, drz, function(lz, nx, ny)
+            restOnGround(player, item.uname, dx, dy, dz, drz, function(lz, nx, ny, lrz)
                 if not isElement(player) or state.held[player] ~= item then
                     item.dropping = nil
                     return
                 end
-                drop(lz, nx, ny)
+                drop(lz, nx, ny, lrz)
             end, opts.spot and opts.spot.surface)
         end
         return true
