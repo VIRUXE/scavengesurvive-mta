@@ -14,7 +14,11 @@ Python 3 standard library plus `pymysql` (the Debian `python3-pymysql` package, 
    `CREATE USER 'ssmta_mailer'@'127.0.0.1' IDENTIFIED BY '…';`
    `GRANT SELECT, UPDATE ON scavengesurvive.email_outbox TO 'ssmta_mailer'@'127.0.0.1';`
 2. `/etc/scavengesurvive-mailer.env` from `example.env` (mode 0640, group mta): SMTP login (a Gmail app password),
-   `MAIL_FROM_NAME`, the database user above.
+   `MAIL_FROM` / `MAIL_FROM_NAME`, the database user above. Prod sends as `admin@scavengesurvive-reborn.com`
+   through Brevo (`smtp-relay.brevo.com:465`, the Brevo SMTP login and an SMTP key), which DKIM-signs for the
+   domain (`brevo1/brevo2._domainkey` CNAMEs in Cloudflare) so DMARC passes. Brevo's IP blocking for SMTP keys is
+   off, so the same key also serves Gmail "Send mail as". Gmail SMTP still works as a fallback (an app password,
+   with `MAIL_FROM` a "Send mail as" alias verified on that account), but its DKIM is gmail.com's and DMARC fails.
 3. Check it: `sudo -u mta bash -c 'set -a; . /etc/scavengesurvive-mailer.env; exec python3 mailer.py --dry-run'`
    prints what is queued without sending; `--once` sends one pass (quote values with spaces or `&` in the env file;
    systemd and the shell both read `KEY="value"`).
