@@ -85,7 +85,7 @@ return function()
     end
 
     -- a model resource (re)started or is stopping: every live object picks its model again
-    addEventHandler("sampModelsChanged", root, function()
+    addEventHandler("customModelsChanged", root, function()
         cache = {}
         for _, refresh in ipairs(refreshers) do
             refresh()

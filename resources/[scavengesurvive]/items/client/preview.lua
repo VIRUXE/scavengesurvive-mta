@@ -130,7 +130,7 @@ return function(ctx)
 
     -- the models resource (re)started or stopped: SA-MP model ids are reassigned, so measurements and references
     -- taken under the old ids are dropped (the inventory renderer resolves and hands over fresh ids each frame)
-    addEventHandler("sampModelsChanged", root, function()
+    addEventHandler("customModelsChanged", root, function()
         M.hide()
         frames = {}
     end)

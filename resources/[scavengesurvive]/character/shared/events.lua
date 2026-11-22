@@ -36,4 +36,4 @@ addEvent("bloodPoolDropped", true)
 addEvent("bloodPoolsSynced", true)
 addEvent("bloodPoolsCleared", true)
 addEvent("uiListActionSelected", false)
-addEvent("sampModelsChanged", false) -- fired by the models resource on every client
+addEvent("customModelsChanged", false) -- fired by the model resources on every client

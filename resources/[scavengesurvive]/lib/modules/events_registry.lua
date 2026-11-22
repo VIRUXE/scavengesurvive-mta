@@ -121,7 +121,7 @@ return {
     vehiclePartRemoveRequested = true,
     fuelPumpInteractRequested = true,
     trunkCloseRequested = true,
-    sampModelsChanged = false,
+    customModelsChanged = false,
     playerZoneEntered = false,
     playerZoneLeft = false,
     mapsBuilt = false,

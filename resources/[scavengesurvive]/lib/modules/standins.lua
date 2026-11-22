@@ -71,8 +71,8 @@ local function track(parent, onSwap)
         end
     end
     swapAll()
-    addEvent("sampModelsChanged", false)
-    addEventHandler("sampModelsChanged", root, swapAll)
+    addEvent("customModelsChanged", false)
+    addEventHandler("customModelsChanged", root, swapAll)
     local count = 0
     for _ in pairs(marked) do
         count = count + 1

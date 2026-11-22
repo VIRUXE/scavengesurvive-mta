@@ -230,7 +230,7 @@ addEventHandler("onClientElementDataChange", root, function(key)
         sync()
     end
 end)
-addEventHandler("sampModelsChanged", root, function()
+addEventHandler("customModelsChanged", root, function()
     for v in pairs(bars) do
         removeBar(v)
     end

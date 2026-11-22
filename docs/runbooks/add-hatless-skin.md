@@ -20,7 +20,7 @@ see the twin.
   with the twin; when it empties, with the real skin again. Client-side `setElementModel` is never synced.
   `swapped[player]` keeps the real skin, and every per-skin row (`skins.lua`) is looked up by it. A server-side
   skin change (duty, clothes) arrives through `onClientElementModelChange`, which drops the swap and re-applies
-  it for the new skin; the pack reloading or stopping re-applies through `sampModelsChanged`.
+  it for the new skin; the pack reloading or stopping re-applies through `customModelsChanged`.
 
 ## Adding a skin
 

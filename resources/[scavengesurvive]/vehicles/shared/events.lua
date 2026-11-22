@@ -52,7 +52,7 @@ addEvent("keypadClosed", true)
 addEvent("weldStarted", true)
 addEvent("grindStarted", true)
 addEvent("vehicleRopeTieStarted", true) -- a Rope is tied to this hitch, its other end not yet (false: given up)
-addEvent("sampModelsChanged", false) -- fired by the model resources on every client (the tow bar's model)
+addEvent("customModelsChanged", false) -- fired by the model resources on every client (the tow bar's model)
 addEvent("vehiclePushStarted", true) -- the push was allowed (source: the vehicle); args: top speed m/s, +1/-1
 addEvent("vehiclePushStopped", true) -- the push is over (source: the player)
 addEvent("vehicleSpotsChanged", true) -- vehicle spawn points around a dev-level staff member on duty (server/overlay.lua)

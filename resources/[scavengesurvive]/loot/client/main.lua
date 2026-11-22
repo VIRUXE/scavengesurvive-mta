@@ -132,7 +132,7 @@ addEventHandler("onClientResourceStart", resourceRoot, function()
 end)
 
 -- the SA-MP model pack (re)loaded or is stopping: its ids change
-addEventHandler("sampModelsChanged", root, function()
+addEventHandler("customModelsChanged", root, function()
     for crate, p in pairs(parachutes) do
         placeParachute(crate, p)
     end

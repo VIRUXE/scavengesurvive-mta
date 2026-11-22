@@ -2,7 +2,7 @@
 addEvent("lootSpawned", false)
 addEvent("weaponCacheDropped", false)
 addEvent("lootContainerStocked", false)
-addEvent("sampModelsChanged", false) -- fired on every client by the model resources
+addEvent("customModelsChanged", false) -- fired on every client by the model resources
 -- client to server (handler registered with net.handler)
 addEvent("supplyCrateOpenRequested", true)
 -- server to client (and server-local for other resources: supplyCrateLanded)

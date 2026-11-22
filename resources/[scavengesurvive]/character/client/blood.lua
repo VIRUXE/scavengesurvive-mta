@@ -116,7 +116,7 @@ addEventHandler("onClientPlayerQuit", root, function()
 end)
 
 -- the pack (re)loaded or is stopping: its model ids change, so every pool is made again from the trails
-addEventHandler("sampModelsChanged", root, function()
+addEventHandler("customModelsChanged", root, function()
     local model = poolModel()
     for id, trail in pairs(trails) do
         for slot, p in pairs(trail) do

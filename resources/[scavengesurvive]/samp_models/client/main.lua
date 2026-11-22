@@ -1,7 +1,7 @@
 -- Loads the SA-MP custom object models listed in manifest.lua (written by tools/extract_samp_models.py together
 -- with files/) into client-allocated model ids. Allocated ids differ per client, so nothing is
 -- shared through the server: other resources ask exports.samp_models:resolve(sampModel) or use the lib models helper
--- on their own client and listen for sampModelsChanged (fired after loading and again before unloading)
+-- on their own client and listen for customModelsChanged (fired after loading and again before unloading)
 -- to swap their objects' models.
 local loader = loadstring(exports.lib:getModule("model_loader"), "=lib/model_loader.lua")()
 
@@ -13,7 +13,7 @@ local HOUSE_SHELL = "^%a%ahouse%dw?$" -- w: stretched to a deeper plot (stretche
 local windowTextureAdded = {} -- vanilla TXD id -> true
 local shells = {} -- allocated model id -> true, for the house shell exteriors
 
-addEvent("sampModelsChanged", false)
+addEvent("customModelsChanged", false)
 
 local ldr = loader.new({
     onTxdModel = function(id, e, txdId, loadTxd)
@@ -51,7 +51,7 @@ addEventHandler("onClientResourceStart", resourceRoot, function()
     if #failed > 0 then
         outputDebugString(("samp_models: %d loaded, failed: %s"):format(count, table.concat(failed, ", ")), 2)
     end
-    triggerEvent("sampModelsChanged", root)
+    triggerEvent("customModelsChanged", root)
 end)
 
 -- GTA only keeps rain out of a place through map cull zones or interior ids, neither of which a custom object can
@@ -96,7 +96,7 @@ addEventHandler("onClientResourceStop", resourceRoot, function()
     end
     shells = {}
     ids = {}
-    triggerEvent("sampModelsChanged", root) -- users fall back to stand-ins before the ids go away
+    triggerEvent("customModelsChanged", root) -- users fall back to stand-ins before the ids go away
     ldr.freeAll()
 end)
 

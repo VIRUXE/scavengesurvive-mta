@@ -4,4 +4,4 @@ addEvent("playerZoneLeft", false)
 
 -- server to client / client-local
 addEvent("mapsBuilt", false)
-addEvent("sampModelsChanged", false)
+addEvent("customModelsChanged", false)

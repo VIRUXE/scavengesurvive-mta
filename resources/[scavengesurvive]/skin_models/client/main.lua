@@ -8,7 +8,7 @@ local hatless = {} -- base skin -> allocated ped model
 local bare = {} -- base skin -> its twin, when the twin's head was rebuilt bare (its own hair TXD, #89)
 local ldr = loader.new()
 
-addEvent("sampModelsChanged", false)
+addEvent("customModelsChanged", false)
 
 addEventHandler("onClientResourceStart", resourceRoot, function()
     local count, failed = 0, {}
@@ -26,12 +26,12 @@ addEventHandler("onClientResourceStart", resourceRoot, function()
     if #failed > 0 then
         outputDebugString(("skin_models: %d loaded, failed: %s"):format(count, table.concat(failed, ", ")), 2)
     end
-    triggerEvent("sampModelsChanged", root)
+    triggerEvent("customModelsChanged", root)
 end)
 
 addEventHandler("onClientResourceStop", resourceRoot, function()
     hatless, bare = {}, {}
-    triggerEvent("sampModelsChanged", root)
+    triggerEvent("customModelsChanged", root)
     ldr.freeAll()
 end)
 

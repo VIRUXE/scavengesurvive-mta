@@ -5,7 +5,7 @@ local loader = loadstring(exports.lib:getModule("model_loader"), "=lib/model_loa
 local ids = {} -- port model id -> allocated MTA model
 local ldr = loader.new()
 
-addEvent("sampModelsChanged", false)
+addEvent("customModelsChanged", false)
 
 addEventHandler("onClientResourceStart", resourceRoot, function()
     local count, failed = 0, {}
@@ -25,12 +25,12 @@ addEventHandler("onClientResourceStart", resourceRoot, function()
     if #failed > 0 then
         outputDebugString(("prop_models: %d loaded, failed: %s"):format(count, table.concat(failed, ", ")), 2)
     end
-    triggerEvent("sampModelsChanged", root)
+    triggerEvent("customModelsChanged", root)
 end)
 
 addEventHandler("onClientResourceStop", resourceRoot, function()
     ids = {}
-    triggerEvent("sampModelsChanged", root)
+    triggerEvent("customModelsChanged", root)
     ldr.freeAll()
 end)
 
