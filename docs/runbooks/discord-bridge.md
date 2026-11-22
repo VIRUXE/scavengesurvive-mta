@@ -14,7 +14,7 @@ Presence shows nothing, or the bridge has to be set up on another host.
 | Node relay | `$MTA/discord-relay`, systemd `mta-discord-relay.service` (user `mta`, `/usr/bin/node`) | `src/` of the same repo; deps via `pnpm install --prod`; `config.json` (mode 600) holds the bot token, guild id and passphrase |
 
 Discord side: application and bot **Scavenge & Survive** (id `1564023462010429470`) in the Developer Portal,
-Message Content intent on, invited with View Channels + Send Messages + Read Message History. It talks only in
+Message Content and Server Members intents on, invited with View Channels + Send Messages + Read Message History. It talks only in
 the guild set in `config.json` (it leaves any other) and only in the channel named there.
 
 Local changes to the vendored relay (reapply after an upstream update): the socket server listens on
@@ -22,7 +22,7 @@ Local changes to the vendored relay (reapply after an upstream update): the sock
 text never pings; `Bot.sendMessageTo` and `Bot.getChannel` resolve channels by ID or name; `PlayerEventHandler` routes
 join/quit/kick/ban/nickchange activity to `joinPartChannel` (`1564285345426833608`); `ChatMessageHandler` routes
 `staff.log` and messages with `channel` to `staffChannel` (`1563498523507425421`) or the specified channel;
-`Bot._channelCreate` no longer deletes every new channel (upstream compared discord.js 14's numeric channel types against `"text"`).
+`library/RoleGreeter.js` (started from `app.js` when `config.json` has `roleGreeting`) pings a member in `#br-huehuehue` the first time they get the `br` role, with a pt-BR welcome and how to connect (ids kept in `/var/lib/mta-discord-relay/role-greetings.json`; `Bot.js` adds the `GuildMembers` intent and the `GuildMember` partial); `Bot._channelCreate` no longer deletes every new channel (upstream compared discord.js 14's numeric channel types against `"text"`).
 
 ## Check
 
