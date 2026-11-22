@@ -17,7 +17,7 @@ Vê [Conta e início de sessão](Account-and-Login).
 | Comando | O que faz |
 |:--|:--|
 | `/craft` | Fabrica com o que seguras e com o que está por perto (bancada de trabalho ou chão), ou desmonta com um pé de cabra na mão. Vê [Bancada de trabalho](Workbench) e [Combinar](Combining). |
-| `/recipes` | Abre a lista de receitas de fabrico. |
+| `/recipes` | Abre a lista de receitas: combinação, construção, bancada de trabalho, máquinas, culinária e recolha. O `/recipe` do bot do Discord mostra as mesmas páginas ([Discord](Discord)). |
 | `/dropall` | Larga tudo o que levas, vestes e guardas em ti à volta dos teus pés, com as mãos no ar, como uma [morte](Death) sem morrer. |
 | `/aimshout [text]` | Define a frase que o teu [aimshout](Aimshout) grita; sem texto mostra como se usa. |
 | `/mstats` | Mostra as tuas estatísticas de viagem: distância e tempo por atividade, saltos e tempo inconsciente. Os contadores duram a sessão; vê [Competências](Skills). |

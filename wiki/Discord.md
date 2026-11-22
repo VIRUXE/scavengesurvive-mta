@@ -29,9 +29,12 @@ The bot answers a few slash commands in any channel of the Discord server:
 - `/wiki`: the player wiki.
 - `/site`: the website.
 - `/rules`: the rules ([Fair Play](Fair-Play)).
+- `/recipe <item>`: how to make an item, the same page as the in-game `/recipes` window.
 - `/help`: lists these commands.
 
 They answer in English, except in `#br-huehuehue`, where the answers (and the links, to the Portuguese wiki) are in Brazilian Portuguese.
+
+`/recipe` suggests recipes as you type: the ones making what you typed first, then the ones using it as an ingredient or a tool. The answer shows the item's picture, its method (combination, construction, workbench, machines, cooking or gathering), what it takes (marked kept, tool or place) and the numbered steps. A button under it opens the recipe of each ingredient that has one of its own: on your own answer it turns the page, on someone else's you get a copy only you see. The list is the one the game server is running, so it is always the same as in game.
 
 If the bridge is down for a while, the game carries on; lines sent in the meantime are simply not relayed.
 

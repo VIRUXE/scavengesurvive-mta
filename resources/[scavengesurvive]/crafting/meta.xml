@@ -8,6 +8,7 @@
     <include resource="character"/>
     <script src="shared/events.lua" type="shared"/>
     <script src="server/main.lua" type="server"/>
+    <script src="server/export.lua" type="server"/>
     <script src="client/main.lua" type="client"/>
     <script src="client/recipes.lua" type="client"/>
     <file src="shared/logic/craft.lua"/>

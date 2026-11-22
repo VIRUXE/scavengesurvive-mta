@@ -27,9 +27,12 @@ O bot responde a alguns comandos de barra em qualquer canal do servidor de Disco
 - `/wiki`: a wiki dos jogadores.
 - `/site`: o site.
 - `/rules`: as regras ([Jogo limpo](Fair-Play)).
+- `/recipe <item>`: como fazer um item, a mesma página da janela `/recipes` do jogo.
 - `/help`: lista estes comandos.
 
 Respondem em inglês, exceto em `#br-huehuehue`, onde as respostas (e as ligações, para a wiki em português) são em português do Brasil.
+
+O `/recipe` sugere receitas enquanto escreves: primeiro as que fazem o que escreveste, depois as que o usam como ingrediente ou ferramenta. A resposta mostra a imagem do item, o método (combinação, construção, bancada de trabalho, máquinas, culinária ou recolha), o que precisa (marcado como mantido, ferramenta ou local) e os passos numerados. Um botão por baixo abre a receita de cada ingrediente que tenha a sua: na tua própria resposta muda a página, na de outra pessoa recebes uma cópia que só tu vês. A lista é a que o servidor do jogo está a correr, por isso é sempre igual à do jogo.
 
 Se a ponte estiver em baixo durante algum tempo, o jogo continua; as linhas enviadas entretanto simplesmente não são retransmitidas.
 

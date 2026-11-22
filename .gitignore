@@ -22,3 +22,6 @@ resources/\[scavengesurvive\]/dashboard/live.json
 
 # the player wiki staged and built by tools/wiki_site.py
 /build/
+
+# the /recipes window as data for the Discord bot, written by the crafting resource
+resources/\[scavengesurvive\]/crafting/recipes.json

@@ -19,7 +19,7 @@ See [Account & Login](Account-and-Login).
 | Command | What it does |
 |:--|:--|
 | `/craft` | Crafts with what you hold and what is nearby (workbench or ground), or deconstructs with a crowbar in hand. See [Workbench](Workbench) and [Combining](Combining). |
-| `/recipes` | Opens the list of crafting recipes. |
+| `/recipes` | Opens the list of recipes: combining, constructing, the workbench, machines, cooking and gathering. The Discord bot's `/recipe` shows the same pages ([Discord](Discord)). |
 | `/dropall` | Drops everything you carry, wear and store on you around your feet, with your hands up, like a [death](Death) without dying. |
 | `/aimshout [text]` | Sets the line your [aimshout](Aimshout) shouts; without text it shows how to use it. |
 | `/mstats` | Shows your travel stats: distance and time per activity, jumps and time knocked out. The counters last for the session; see [Skills](Skills). |

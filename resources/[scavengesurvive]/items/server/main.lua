@@ -902,3 +902,21 @@ function burnHeldFuel(player, units)
     end
     return hands.burnFuel(player, units)
 end
+
+-- crafting/server/export.lua: the machines, cooking and gathering recipes of the /recipes window in a language
+-- (code, e.g. "pt"), from the same shared/logic/production.lua the client window reads
+local production = loadFile("shared/logic/production.lua")
+function getProductionRecipesIn(code)
+    return production.build({
+        tr = function(english)
+            return exports.data:translate(code, english)
+        end,
+        unames = exports.data:itemTypes(),
+        itemType = itemType,
+        machines = machines,
+        cooking = cooking,
+        gardening = gardening,
+        small = small,
+        fishing = fishing,
+    })
+end

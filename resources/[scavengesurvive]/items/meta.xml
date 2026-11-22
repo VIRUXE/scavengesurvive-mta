@@ -29,6 +29,7 @@
     <file src="shared/logic/gas.lua"/>
     <file src="shared/logic/smallitems.lua"/>
     <file src="shared/logic/fishing.lua"/>
+    <file src="shared/logic/production.lua"/>
     <file src="server/fishing.lua"/>
     <file src="shared/logic/gardening.lua"/>
     <file src="server/gardening.lua"/>
@@ -94,6 +95,7 @@
     <export function="dropHeld" type="server"/>
     <export function="isFemaleSkin" type="server"/>
     <export function="rollSpawnSkin" type="server"/>
+    <export function="getProductionRecipesIn" type="server"/>
     <export function="setAttachPreview" type="client"/>
     <export function="getAttachConfig" type="client"/>
     <export function="nearbyCooker" type="client"/>
