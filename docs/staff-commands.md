@@ -44,7 +44,7 @@ Double-clicking a command (or **Open in panel**) opens the staff panel on that c
   along, on the ground (or water) under you instead of dropping them from your height (port addition; main world only,
   needs the server's collision world).
 - `/goto`, `/get`, `/gotopos`, `/spec` need **duty** unless the actor is level 5. `/tp` is an alias of `/gotopos`
-  (a port addition).
+  and `/bring` of `/get` (port additions).
 - Bans record name, IP **and serial** (upstream had no serial field; ADR 0007). `auth` refuses a joining player whose
   name, IP or serial matches an active ban, prints the date / reason / unban lines and kicks after one second.
   Timed bans expire through the `ev_expire_bans` scheduler event and are also filtered by expiry in every query.

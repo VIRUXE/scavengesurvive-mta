@@ -248,9 +248,10 @@ return function(ctx)
 
     ctx.command({
         name = "get",
+        aliases = { "bring" },
         level = 2,
         playerOnly = true,
-        usage = "/get <player>",
+        usage = "/get (or /bring) <player>",
         help = "Teleport a player to you (on duty)",
         needsDb = false,
         fn = function(p, args, lvl)
