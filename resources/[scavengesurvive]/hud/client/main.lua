@@ -326,13 +326,15 @@ end
 
 local function drawNeeds()
     local now = getTickCount()
+    -- a worn vest's bar takes the slot above health; thirst and hunger move up one slot
+    local points = getElementData(localPlayer, "items.armourPoints")
+    local lift = points and bars.STEP or 0
     local T = bars.THIRST
     local r, g, b, a = bars.needColour(T, state.stats.thirst, now)
-    draw.progressBar(T.x, T.y, T.w, T.h, bars.fill(state.stats.thirst, T.max), r, g, b, a, "right")
+    draw.progressBar(T.x, T.y - lift, T.w, T.h, bars.fill(state.stats.thirst, T.max), r, g, b, a, "right")
     local H = bars.HUNGER
     r, g, b, a = bars.needColour(H, state.stats.food, now)
-    draw.progressBar(H.x, H.y, H.w, H.h, bars.fill(state.stats.food, H.max), r, g, b, a, "right")
-    local points = getElementData(localPlayer, "items.armourPoints")
+    draw.progressBar(H.x, H.y - lift, H.w, H.h, bars.fill(state.stats.food, H.max), r, g, b, a, "right")
     if points then
         local A = bars.ARMOUR
         draw.progressBar(A.x, A.y, A.w, A.h, bars.fill(points, A.max), A.r, A.g, A.b, A.a, "right")

@@ -18,7 +18,7 @@ Special Armour can turn up at military loot points and, more rarely, at police l
 
 ## Points
 
-Every piece of Armour has between **25 and 99 points**, rolled when it is made or found. A bar under the health bar on the [HUD](HUD) shows them (full from 100), and the exact number is in the `TORSO` tile's caption, for example `ARMOUR (73)`. It only ever goes down.
+Every piece of Armour has between **25 and 99 points**, rolled when it is made or found. A bar just above the health bar on the [HUD](HUD) shows them (full from 100), and the exact number is in the `TORSO` tile's caption, for example `ARMOUR (73)`. It only ever goes down.
 
 ## What it stops
 

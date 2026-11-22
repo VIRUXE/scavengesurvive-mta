@@ -31,11 +31,13 @@ bars.HUNGER = {
     a = 0xFF,
     max = 100,
 }
--- The worn vest's points (items.armourPoints), the same bar just under the health bar. A vest starts at 25..149
--- points; the bar is full from 100 up, the exact number stays in the inventory's TORSO caption.
+bars.STEP = STEP -- distance between two stacked bars
+-- The worn vest's points (items.armourPoints), the same bar just above the health bar; while it is shown, hunger
+-- and thirst move up one slot (bars.STEP). A vest starts at 25..149 points; the bar is full from 100 up, the
+-- exact number stays in the inventory's TORSO caption.
 bars.ARMOUR = {
     x = 517.8,
-    y = HEALTH_FRAME_TOP + STEP + BORDER,
+    y = HEALTH_FRAME_TOP - STEP + BORDER,
     w = 76.9,
     h = NEEDS_H,
     r = 0xC8,
