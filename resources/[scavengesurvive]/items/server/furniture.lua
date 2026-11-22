@@ -24,9 +24,49 @@ return function(ctx)
         return furniture.is(uname)
     end
 
+    -- the rest data of an item type (loot's item_rest.lua), nil without it or while loot is down
+    local function restData(uname)
+        local loot = getResourceFromName("loot")
+        if not loot or getResourceState(loot) ~= "running" then
+            return nil
+        end
+        return exports.loot:restData(uname) or nil
+    end
+
+    -- the item's footprint centred on the furniture's top and lying flush on it, or on what already lies there
+    -- (exports.loot:restPose stacks it like a drop); without rest data, upstream's offset
+    local ON_TOP_SQL = "SELECT i.type_uname, i.x, i.y, i.z, i.rz, i.ground_nx, i.ground_ny FROM world_items_pos p "
+        .. "JOIN items i ON i.id = p.item_id WHERE "
     local function putOnTop(player, row)
-        local x, y, z, rz = furniture.onTop(row)
-        hands.dropHeld(player, { at = { x = x, y = y, z = z, rz = rz } })
+        local held = state.held[player]
+        if not held then
+            return
+        end
+        local fRest, iRest = restData(row.uname), restData(held.uname)
+        local fDef, iDef = ctx.type(row.uname), ctx.type(held.uname)
+        local x, y, top, rz = furniture.onTop(row, fRest, fDef and fDef.modelz, iRest)
+        if not (fRest and iRest) then
+            return hands.dropHeld(player, { at = { x = x, y = y, z = top, rz = rz } })
+        end
+        local flush = top + iRest[1] - (iDef and iDef.modelz or 0)
+        local f = string.format
+        local sql = ON_TOP_SQL
+            .. spatial.bounds(tonumber(f("%f", x)), tonumber(f("%f", y)), tonumber(f("%f", furniture.ON_TOP_REACH)))
+            .. f(" AND i.z > %f AND IFNULL(i.interior, 0) = %d", (row.z or 0) + 0.1, row.interior or 0)
+            .. f(" AND IFNULL(i.dimension, 0) = %d AND i.id <> %d", row.dimension or 0, held.id)
+        db.query(sql, {}, function(rows)
+            if not isElement(player) or state.held[player] ~= held then
+                return
+            end
+            local lying = {}
+            for _, r in ipairs(rows or {}) do
+                if not furniture.is(r.type_uname) then
+                    lying[#lying + 1] = r
+                end
+            end
+            local z = exports.loot:restPose(held.uname, x, y, top, 0, 0, rz, lying) or flush
+            hands.dropHeld(player, { at = { x = x, y = y, z = z, rz = rz } })
+        end)
     end
 
     local function putInCase(player, cid, held, row)

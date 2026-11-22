@@ -492,6 +492,12 @@ end
 -- (roll.leanOn). Things taller than a metre are stepped around, not climbed. Returns z, nx, ny (false when flat), or
 -- false for a type without rest data.
 local CLIMB_MAX = 1.0
+
+-- an item type's rest data (shared/item_rest.lua: { base, cx, cy, class, longX, sx, sy, sz }), false without any
+function restData(uname)
+    return itemRest[uname] or false
+end
+
 function restPose(uname, x, y, gz, snx, sny, rz, lying)
     local rest = itemRest[uname]
     x, y, gz, rz = tonumber(x), tonumber(y), tonumber(gz), tonumber(rz)

@@ -39,11 +39,21 @@ function M.unames()
     return list
 end
 
--- where an item put on a furniture row lies: the furniture's position raised by its offset, its heading kept
--- (CreateItemInWorld(itemid, x + px, y + py, z + pz, rx, ry, rz); every upstream x/y offset is 0)
-function M.onTop(row)
+-- Where an item put on a furniture row lies: x, y of its origin, the height of the furniture's top, and the
+-- furniture's heading. Upstream put the item's origin on the furniture's origin raised by its offset
+-- (CreateItemInWorld(itemid, x + px, y + py, z + pz, ...), every x/y offset 0), but a Desk, Table or Small Table has
+-- its origin at one end, so a long item hung half off it (port deviation): with rest data (loot/shared/item_rest.lua,
+-- { base, cx, cy, ..., sz }) the item's footprint centre goes over the furniture's, and the top is its measured
+-- height above its lowest point. fRest / fModelz are the furniture type's, iRest the item type's (nil: none).
+function M.onTop(row, fRest, fModelz, iRest)
     local f = M.TYPES[row.uname]
-    return row.x, row.y, (row.z or 0) + (f and f.z or 0), row.rz or 0
+    local x, y, z, rz = row.x, row.y, row.z or 0, row.rz or 0
+    local dx = (fRest and fRest[2] or 0) - (iRest and iRest[2] or 0)
+    local dy = (fRest and fRest[3] or 0) - (iRest and iRest[3] or 0)
+    local r = math.rad(rz)
+    local c, s = math.cos(r), math.sin(r)
+    local top = fRest and z + (fModelz or 0) - fRest[1] + fRest[8] or z + (f and f.z or 0)
+    return x + dx * c - dy * s, y + dx * s + dy * c, top, rz
 end
 
 -- the shown item's type in a case's item data, either JSON shape; nil when the case is empty

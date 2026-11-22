@@ -28,6 +28,7 @@
     <export function="stockContainer" type="server"/>
     <export function="stockVehicleContainer" type="server"/>
     <export function="restPose" type="server"/>
+    <export function="restData" type="server"/>
     <export function="nearbyCrate" type="client"/>
     <export function="tryOpenCrate" type="client"/>
     <export function="interactionActions" type="client"/>

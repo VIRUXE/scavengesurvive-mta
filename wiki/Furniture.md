@@ -9,7 +9,7 @@ Six items are **furniture**: the Desk, Table, Barstool and Small Table hold item
 | Desk | 14 | any number of items | on top, 0.80 m up |
 | Table | 14 | any number of items | on top, 0.80 m up |
 | Barstool | 8 | any number of items | on top, 0.48 m up |
-| Small Table | 10 | any number of items | on top, 0.45 m up |
+| Small Table | 10 | any number of items | on top, 0.47 m up |
 | Gun Case | 12 | one item of size 5 or less | displayed lying inside |
 | Cupboard | 12 | one item of size 5 or less | displayed lying inside |
 
@@ -17,7 +17,7 @@ The Desk, Table, Barstool and Small Table are built on the ground with a Screwdr
 
 ## Desks, tables and stools
 
-- **Put something on it:** hold the item and press `F` at the furniture. It is set down on top, turned the way the furniture faces. It stays an ordinary world item: its label shows, anyone can take it, and it survives restarts.
+- **Put something on it:** hold the item and press `F` at the furniture. It is set down in the middle of the top, flat on it and turned the way the furniture faces; a second item lies on the first. It stays an ordinary world item: its label shows, anyone can take it, and it survives restarts.
 - **Take something off:** with empty hands press `F` at the furniture. The highest item lying on it comes into your hands. Repeat for the next one.
 - With an item in hand, `F` aimed at something already lying on the table still puts yours on the table. When your held item has a use of its own nearby (a Petrol Can at a barbecue, food at a campfire, Seeds at a plant pot), that use comes first.
 - A **construction tool** (Screwdriver, Hammer and the like) pressed at furniture builds first if there are parts lying around that make a recipe; only when there is nothing to build does the tool go on the furniture.
