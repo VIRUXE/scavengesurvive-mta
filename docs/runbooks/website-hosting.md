@@ -54,8 +54,11 @@ proxy on, a Cloudflare edge near the player answers instead of nasa (before/afte
 
 - **Cache Rule** (zone `scavengesurvive-reborn.com`, phase `http_request_cache_settings`): host `dl…` and path starting
   `/downloads/` → eligible for cache, edge and browser TTL from the origin.
-- **nginx on nasa** sends `Cache-Control: public, max-age=300` on `/downloads/`, so an edge keeps a file 5 minutes and
-  then revalidates it (a 304 when unchanged). The TTL lives in nginx because the Free plan has a minimum for rule overrides.
+- **nginx on nasa** sends `Cache-Control: public, max-age=86400` on `/downloads/`, so an edge keeps a file a day and
+  then revalidates it (a 304 when unchanged). The TTL lives in nginx because the Free plan has a minimum for rule
+  overrides. A 5-minute TTL was tried first: copies expired between joins and the revalidation made small files slower
+  than going direct (see the review).
+- **Smart Tiered Cache** is on for the zone: an edge that misses fills from a Cloudflare tier near nasa.
 - **Configuration Rule** (phase `http_config_settings`): host `dl…` → Browser Integrity Check off, Security Level
   "essentially off". The MTA client (`User-Agent: MTA:SA Server <ip>:22003 - See http://mtasa.com/agent/`) cannot pass a
   challenge; a challenge page would make it drop the external URL for the whole join.
@@ -64,7 +67,12 @@ proxy on, a Cloudflare edge near the player answers instead of nasa (before/afte
 - **Access log:** `/var/log/nginx/mta-downloads.log` (both `dl` and `ss`), rotated with the other nginx logs. With the
   proxy, only edge misses and revalidations reach it.
 
-**Stale files are safe.** After an `rr`, an edge can serve the old copy for up to 5 minutes. The client checksums every
+**After an `rr`, purge that resource:** Cloudflare dashboard → Caching → Configuration → Custom Purge → Prefix
+`dl.scavengesurvive-reborn.com/downloads/<resource>/` (or the API: `POST /zones/<zone>/purge_cache` with
+`{"prefixes": ["dl.scavengesurvive-reborn.com/downloads/<resource>/"]}`). Without it, edges keep the old copies of
+that resource's changed files for up to a day.
+
+**Stale files are safe.** An unpurged edge serves the old copy of a changed file. The client checksums every
 file against the server (`CResourceFileDownloadManager.cpp` in mtasa-blue): on a mismatch it fetches that one file again
 from the game server's own HTTP port (22005) and the server logs
 `DIAGNOSTIC: <player> #1011 External HTTP file mismatch (Retrying this file with internal HTTP) [<file>]` in

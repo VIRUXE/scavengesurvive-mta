@@ -17,7 +17,7 @@ Não precisas de uma conta MTA, de uma conta no fórum nem de uma conta Discord.
 ## Ligar {#connect}
 O endereço do servidor é `sv.scavengesurvive-reborn.com`.
 
-Abre o MTA, prime **F8** para abrir a consola e escreve `connect sv.scavengesurvive-reborn.com` (ou encontra o servidor na lista de servidores). A Ligação rápida não serve aqui: só volta a ligar ao último servidor em que estiveste. O MTA vai buscar os ficheiros do servidor, o que demora um pouco na primeira vez, e põe-te no jogo.
+Abre o MTA, prime **F8** para abrir a consola e escreve `connect sv.scavengesurvive-reborn.com` (ou encontra o servidor na lista de servidores). A Ligação rápida não serve aqui: só volta a ligar ao último servidor em que estiveste. O MTA vai buscar os ficheiros do servidor, o que demora um pouco na primeira vez, e põe-te no jogo. Os ficheiros vêm de um servidor perto de ti e ficam no teu PC, por isso as entradas seguintes só vão buscar o que uma atualização mudou. A barra **Map download progress** que vês em cada entrada não são ficheiros: é o próprio mundo (edifícios, itens, carros, cerca de 1,2 MB) que o servidor te envia de cada vez.
 
 Um amigo que já jogue também te pode puxar pelo Discord: com a Rich Presence ligada, o estado dele traz um botão **Join server** que abre o MTA e liga-o por ti. Vê [Discord](Discord).
 

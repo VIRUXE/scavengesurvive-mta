@@ -20,7 +20,7 @@ You do not need an MTA account, a forum account or a Discord account. Your in-ga
 
 The server's address is `sv.scavengesurvive-reborn.com`.
 
-Start MTA, press **F8** to open its console and type `connect sv.scavengesurvive-reborn.com` (or find the server in the server browser). Quick Connect is no use here: it only reconnects to the last server you were on. MTA fetches the server's files, which takes a moment the first time, and drops you into the game.
+Start MTA, press **F8** to open its console and type `connect sv.scavengesurvive-reborn.com` (or find the server in the server browser). Quick Connect is no use here: it only reconnects to the last server you were on. MTA fetches the server's files, which takes a moment the first time, and drops you into the game. The files come from a server near you and stay on your PC, so later joins only fetch what an update changed. The **Map download progress** bar you see on every join is not files: it is the world itself (buildings, items, cars, about 1.2 MB) that the server sends you each time.
 
 A friend who already plays can also pull you in through Discord: with Rich Presence on, their status carries a **Join server** button that starts MTA and connects it for you. See [Discord](Discord).
 
