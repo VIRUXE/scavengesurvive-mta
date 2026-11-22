@@ -16,7 +16,8 @@ silhouettes and paints the hair from it.
 for the head's idle pose; the studio grid against the reference below the brow, a scale and shift for the image
 model's re-framing; and the studio's lighting factor, studio pixel over atlas texel on the face. That goes to
 `tools/data/hatless_prep.json`. `build` runs the Blender script per skin and installs `<name>_nohat.dff` and its hair
-TXD; restart `skin_models` to see them.
+TXD; restart `skin_models` to see them. A twin with repainted textures in `tools/data/ped_hd` gets them
+swapped back in (tools/ped_hd.py).
 """
 import argparse
 import json
@@ -30,6 +31,7 @@ from pathlib import Path
 import numpy as np
 
 from tools import hatless_proj as hp
+from tools import ped_hd
 from tools.extract_ped_models import HEADGEAR, SKIN_MODELS, find_blender, read_peds, render_peds, write_meta_peds
 from tools.extract_samp_models import detect_gta, read_img_entry, read_img_index
 from tools.port_hats import HATS
@@ -349,6 +351,8 @@ def build(skins: list[int]) -> None:
             print(next(line for line in blender("build", str(work / "job.json")).splitlines() if line.startswith("REBUILT")))
             for ext in ("dff", "txd"):
                 shutil.copy(work / f"{name}_nohat.{ext}", files / f"{name}_nohat.{ext}")
+            if hd := ped_hd.apply(f"{name}_nohat"):
+                print(f"{skin}: HD {', '.join(hd)} from tools/data/ped_hd (painted on the old bake: check they still fit)")
     peds = read_peds(SKIN_MODELS / "peds.lua")
     txds = {d for d in peds.values() if (files / f"{d}.txd").is_file()}
     (SKIN_MODELS / "peds.lua").write_text(render_peds(peds, txds), encoding="ascii", newline="\n")
