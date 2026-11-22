@@ -1169,9 +1169,9 @@ def _tube(ctx):
     return tube
 
 
-def _torus(ctx, centre, big, small, segs, sides, material, col, axis="z"):
+def _torus(ctx, centre, big, small, segs, sides, material, col, axis="z", repeats=None):
     """A ring of tube `small` round a circle of radius `big` about `centre`, its plane normal to Z (or Y), the texture wrapped
-    once round the tube and `segs` times along the ring."""
+    once round the tube and `segs` times along the ring (or `repeats` if supplied)."""
     from mathutils import Vector
     bm, paint = ctx["bm"], ctx["paint"]
     c = col or (0.9, 0.9, 0.9, 1.0)
@@ -1186,7 +1186,8 @@ def _torus(ctx, centre, big, small, segs, sides, material, col, axis="z"):
     for i in range(segs):
         for k in range(sides):
             i2, k2 = (i + 1) % segs, (k + 1) % sides
-            paint(bm.faces.new((grid[i][k], grid[i2][k], grid[i2][k2], grid[i][k2])), [(0, k / sides), (1, k / sides), (1, (k + 1) / sides), (0, (k + 1) / sides)], c, night, material)
+            u0, u1 = (0, 1) if repeats is None else (i * repeats / segs, (i + 1) * repeats / segs)
+            paint(bm.faces.new((grid[i][k], grid[i2][k], grid[i2][k2], grid[i][k2])), [(u0, k / sides), (u1, k / sides), (u1, (k + 1) / sides), (u0, (k + 1) / sides)], c, night, material)
 
 
 def _obox(ctx, centre, axes, size, material, col, rect=None):
@@ -2209,10 +2210,37 @@ def build_flood_light(ctx):
 
 MAINS_LEVER_PIVOT = (-0.085, 0.209, -0.015)  # back-centred mains_box space, axis +Y
 MAINS_INLET = (0.11, 0.247, -0.14)  # centre of the blue inlet's mouth, facing +Y
-MAINS_TEXTURES = [("ship_brijsfw.txd", "fusebox2_128"), ("ballys01.txd", "CJ_blackplastic"), ("milbase.txd", "lightblue_64"), ("cj_airprt.txd", "CJ_red_COUNTER"), ("gazsfnlite.txd", "fusebox1_128"), ("industrialext.txd", "cj_chromepipe"), ("helixbarrier.txd", "yellow")]
+# GTA Scout comparison: plasticdrum1_128 has saturated blue moulded plastic, fine grain and broad highlights;
+# frate64_blue has container ribs, bluemetal02/05 have rust, and lightblue_64 has almost no surface detail.
+# Both CEE connectors use the drum's wall between its bands, with a quieter, darker patch on the inlet cover.
+POWER_PLASTIC = ("landjump.txd", "plasticdrum1_128")
+MAINS_TEXTURES = [("ship_brijsfw.txd", "fusebox2_128"), ("ballys01.txd", "CJ_blackplastic"), POWER_PLASTIC, ("cj_airprt.txd", "CJ_red_COUNTER"), ("gazsfnlite.txd", "fusebox1_128"), ("industrialext.txd", "cj_chromepipe"), ("helixbarrier.txd", "yellow")]
 LEVER_TEXTURES = [("ballys01.txd", "CJ_blackplastic"), ("cj_airprt.txd", "CJ_red_COUNTER"), ("industrialext.txd", "cj_chromepipe")]
-CORD_TEXTURES = [("helixbarrier.txd", "yellow"), ("ballys01.txd", "CJ_blackplastic"), ("industrialext.txd", "cj_chromepipe"), ("milbase.txd", "lightblue_64")]
-POWER_BLUE = (0.25, 0.42, 1.0, 1.0)  # blue prelight on the opaque vanilla lightblue_64
+CORD_TEXTURES = [("helixbarrier.txd", "yellow"), ("ballys01.txd", "CJ_blackplastic"), ("industrialext.txd", "cj_chromepipe"), POWER_PLASTIC]
+POWER_BLUE = (0.78, 0.78, 0.78, 1.0)  # neutral prelight: the texture supplies the blue; night stays at 30/32 percent
+POWER_COVER = (0.60, 0.60, 0.60, 1.0)
+
+
+def _power_plastic(ctx, centre, rect=(0.02, 0.22, 0.98, 0.78), ring_radius=0.0):
+    """CEE plastic only: crop out the drum bands and bake soft directional relief into both prelight sets.
+    Each primitive supplies its centre so outward normals are reliable before the final winding pass."""
+    from mathutils import Vector
+    origin, light = Vector(centre), Vector((-0.35, 0.45, 0.82)).normalized()
+    u0, v0, u1, v1 = rect
+
+    def paint(face, uvs, day, night, material):
+        face.normal_update()
+        normal = face.normal.copy()
+        outward = face.calc_center_median() - origin
+        if ring_radius:  # the Y-axis inlet lip shades about its tube, including the inside of the ring
+            outward -= Vector((outward.x, 0, outward.z)).normalized() * ring_radius
+        if normal.dot(outward) < 0:
+            normal.negate()
+        shade = 0.58 + 0.42 * max(0.0, normal.dot(light))
+        colours = [tuple(c * shade for c in col[:3]) + (col[3],) for col in (day, night)]
+        ctx["paint"](face, [(u0 + u * (u1 - u0), v0 + v * (v1 - v0)) for u, v in uvs], *colours, material)
+
+    return {**ctx, "paint": paint}
 
 
 def build_mains_box(ctx):
@@ -2221,7 +2249,6 @@ def build_mains_box(ctx):
     bm, box, paint = ctx["bm"], ctx["box"], ctx["paint"]
     steel, black, plastic, red, label, chrome, yellow = range(7)
     tube = _tube(ctx)
-    blue_tube = tube
     white, dim = (0.92, 0.92, 0.90, 1.0), (0.50, 0.50, 0.48, 1.0)
     # Folded steel housing with a narrow dark gasket behind the raised door; all back faces on/inside Y=0.
     box((0.0, 0.082, 0.0), (0.40, 0.164, 0.50), steel, white)
@@ -2248,15 +2275,18 @@ def build_mains_box(ctx):
     tube((x, 0.201, z), (x, y, z), 0.022, 12, chrome, dim, False)
     # CEE 16 A inlet: mounting flange, blue barrel, dark inset mouth and three metal pins.
     x, y, z = MAINS_INLET
-    box((x, 0.187, z), (0.092, 0.014, 0.106), plastic, POWER_BLUE)
-    blue_tube((x, 0.194, z), (x, y - 0.012, z), 0.037, 16, plastic, POWER_BLUE, False)
-    _torus(ctx, (x, y - 0.003, z), 0.0335, 0.004, 16, 6, plastic, POWER_BLUE, axis="y")
+    from mathutils import Vector
+    blue = _power_plastic(ctx, (x, 0.187, z), (0.72, 0.22, 0.98, 0.78))
+    axes = (Vector((1, 0, 0)), Vector((0, 1, 0)), Vector((0, 0, 1)))
+    _obox(blue, Vector((x, 0.187, z)), axes, (0.092, 0.014, 0.106), plastic, POWER_BLUE)
+    _tube(_power_plastic(ctx, (x, 0.2145, z)))((x, 0.194, z), (x, y - 0.012, z), 0.037, 16, plastic, POWER_BLUE, False)
+    _torus(_power_plastic(ctx, (x, y - 0.003, z), ring_radius=0.0335), (x, y - 0.003, z), 0.0335, 0.004, 16, 6, plastic, POWER_BLUE, axis="y", repeats=1)
     tube((x, y - 0.009, z), (x, y - 0.008, z), 0.029, 16, black, None, False)
     for dx, dz in ((-0.012, 0.009), (0.012, 0.009), (0.0, -0.013)):
         tube((x + dx, y - 0.008, z + dz), (x + dx, y - 0.002, z + dz), 0.003, 6, chrome, white, False)
     # Flip cover hinged above the mouth, visibly raised rather than obscuring the connection point.
-    blue_tube((x - 0.040, 0.215, z + 0.041), (x + 0.040, 0.215, z + 0.041), 0.006, 8, plastic, POWER_BLUE, False)
-    blue_tube((x, 0.212, z + 0.070), (x, 0.220, z + 0.070), 0.035, 16, plastic, POWER_BLUE, False)
+    _tube(_power_plastic(ctx, (x, 0.215, z + 0.041)))((x - 0.040, 0.215, z + 0.041), (x + 0.040, 0.215, z + 0.041), 0.006, 8, plastic, POWER_COVER, False)
+    _tube(_power_plastic(ctx, (x, 0.216, z + 0.070), (0.72, 0.22, 0.98, 0.78)))((x, 0.212, z + 0.070), (x, 0.220, z + 0.070), 0.035, 16, plastic, POWER_COVER, False)
     # Top cable gland and grey conduit, 0.25 m beyond the cabinet; open dark cut end.
     tube((0.075, 0.075, 0.245), (0.075, 0.075, 0.271), 0.024, 10, steel, dim, False)
     tube((0.075, 0.075, 0.265), (0.075, 0.075, 0.500), 0.016, 10, steel, white, False)
@@ -2320,8 +2350,8 @@ def build_cord_coil(ctx):
         return Vector(p) + Vector(direction) * t
     p, direction = path[0], (-0.94, -0.34, 0)
     tube(at(p, direction, -0.004), at(p, direction, 0.018), 0.010, 8, 1, None, False)
-    tube(at(p, direction, 0.016), at(p, direction, 0.060), 0.023, 12, 3, POWER_BLUE, False)
-    tube(at(p, direction, 0.055), at(p, direction, 0.071), 0.027, 12, 3, POWER_BLUE, False)
+    _tube(_power_plastic(ctx, at(p, direction, 0.038)))(at(p, direction, 0.016), at(p, direction, 0.060), 0.023, 12, 3, POWER_BLUE, False)
+    _tube(_power_plastic(ctx, at(p, direction, 0.063)))(at(p, direction, 0.055), at(p, direction, 0.071), 0.027, 12, 3, POWER_BLUE, False)
     tube(at(p, direction, 0.071), at(p, direction, 0.073), 0.021, 12, 1, None, False)
     side = Vector((0.34, -0.94, 0))
     for dx, dz in ((-0.009, 0.006), (0.009, 0.006), (0, -0.010)):
