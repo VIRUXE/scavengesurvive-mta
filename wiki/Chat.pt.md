@@ -10,7 +10,7 @@ Prime `T` (a tecla de chat do MTA) para escreveres. Cada linha que envias sai pe
 | Rádio | `/r` | todos sintonizados a menos de 0,05 MHz da tua frequência | laranja, `[98.12] Nome: texto` (a tua frequência) |
 | Admin | só staff | a staff | a cor do cargo do membro da staff, `[Admin] Nome: texto` |
 
-Escrever só o comando muda o teu modo (`You turn your radio on to the global frequency.`); escrevê-lo com texto envia essa linha nesse modo sem mudares. Os botões de ligar e `global`/`freq` do painel do rádio também mudam de modo: rádio desligado é chat local. Todos os logins começam em global; a tua frequência fica guardada com a tua personagem.
+Escrever só o comando muda o teu modo (`You turn your radio on to the global frequency.`); escrevê-lo com texto envia essa linha nesse modo sem mudares. Os botões de ligar e `global`/`freq` do painel do rádio também mudam de modo: rádio desligado é chat local. Todos os logins começam em global; a tua frequência fica guardada com a tua personagem. Quando entras no servidor vês as últimas 6 linhas globais enviadas antes de chegares (do jogo e do Discord) sob o cabeçalho *Chat global recente*; as linhas locais, de rádio, de admin e de `/me` nunca são repetidas.
 
 <!-- shot:shot-chat-radio -->
 

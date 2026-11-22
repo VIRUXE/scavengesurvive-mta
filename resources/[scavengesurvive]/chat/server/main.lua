@@ -22,6 +22,7 @@ do
 end
 
 local ready = false
+local history = {} -- the last global lines { text, rgb }, replayed to a player who joins
 local state = {} -- player -> { mode, oldMode, freq, quiet, streak, lastTick, charId, voiceWarned }
 
 local function get(p)
@@ -308,7 +309,11 @@ local function deliver(p, text, mode)
         end
     end
     local players = audience(p, mode)
-    send(logic.format(mode, name, text, st.freq, colourHex), players, rgb)
+    local line = logic.format(mode, name, text, st.freq, colourHex)
+    send(line, players, rgb)
+    if mode == MODE.GLOBAL then
+        logic.pushHistory(history, { text = line, rgb = rgb })
+    end
     if (mode == MODE.LOCAL or mode == "me") and #players <= 1 then
         -- the speaker is in the list too: no one else within range
         outputChatBox("#AAAAAA" .. lang.textFor(p, "No one nearby saw your message."), p, 255, 255, 255, true)
@@ -655,6 +660,12 @@ end)
 
 -- The "has joined" line for everyone, in each reader's language, with the joiner's language after it.
 addEventHandler("playerJoinAnnounced", root, function(code)
+    if #history > 0 then
+        outputChatBox(exports.data:translate(code, logic.HISTORY_HEADER), source, 255, 255, 255, true)
+        for _, entry in ipairs(history) do
+            send(entry.text, { source }, entry.rgb)
+        end
+    end
     local name = getPlayerName(source)
     local langName = exports.data:languageName(code)
     for _, recipient in ipairs(getElementsByType("player")) do
@@ -713,7 +724,9 @@ function sendGlobalExternal(tag, name, text)
         return string.format("#5865F2[%s] #FFFFFF%s#FFFFFF: %s", tostring(tag), tostring(name), t)
     end
     local players = audience(nil, MODE.GLOBAL)
-    send(format(tostring(text)), players, logic.COLOURS[MODE.GLOBAL])
+    local line = format(tostring(text))
+    send(line, players, logic.COLOURS[MODE.GLOBAL])
+    logic.pushHistory(history, { text = line, rgb = logic.COLOURS[MODE.GLOBAL] })
     translateFor(nil, "discord", format, tostring(text), players, logic.COLOURS[MODE.GLOBAL])
     outputServerLog(string.format("[CHAT] [%s] %s: %s", tostring(tag), tostring(name), tostring(text)))
     return true

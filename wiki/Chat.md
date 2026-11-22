@@ -11,7 +11,7 @@ Press `T` (MTA's chat key) to type. Every line you send goes out through your [r
 | Radio | `/r` | everyone tuned within 0.05 MHz of your frequency | orange, `[98.12] Name: text` (your frequency) |
 | Admin | staff only | the staff | the staff member's rank colour, `[Admin] Name: text` |
 
-Typing the command alone switches your mode (`You turn your radio on to the global frequency.`); typing it with text sends that one line in that mode without switching. The radio panel's power and `global`/`freq` buttons switch modes as well: power off is local chat. Every login starts in global; your frequency is saved with your character.
+Typing the command alone switches your mode (`You turn your radio on to the global frequency.`); typing it with text sends that one line in that mode without switching. The radio panel's power and `global`/`freq` buttons switch modes as well: power off is local chat. Every login starts in global; your frequency is saved with your character. When you join the server you are shown the last 6 global lines sent before you arrived (from the game and from Discord) under a *Recent global chat* header; local, radio, admin and `/me` lines are never replayed.
 
 <!-- shot:shot-chat-radio -->
 

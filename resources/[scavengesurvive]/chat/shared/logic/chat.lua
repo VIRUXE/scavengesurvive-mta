@@ -190,6 +190,20 @@ chat.COPYRIGHT = 'Scavenge and Survive #33CCFF(Copyright (C) 2016 Barnaby "South
 chat.JOINED = " >  #B8B8B8%s#FFFFFF has joined (%s)"
 -- lang:end
 
+-- The last HISTORY_SIZE global lines are replayed to a player who joins, under a header in their language.
+chat.HISTORY_SIZE = 6
+-- lang:begin
+chat.HISTORY_HEADER = " >  #AAAAAARecent global chat:"
+-- lang:end
+
+-- Appends a line to list and drops the oldest ones beyond HISTORY_SIZE.
+function chat.pushHistory(list, line)
+    list[#list + 1] = line
+    while #list > chat.HISTORY_SIZE do
+        table.remove(list, 1)
+    end
+end
+
 -- { text, r, g, b } in send order for the joiner; the MoTD line only when one is set.
 function chat.joinLines(_, motd)
     local lines = {
