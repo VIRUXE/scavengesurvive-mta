@@ -318,6 +318,20 @@ print(f"vestibule: {len(fake)} faces removed")
 for name, where in INTERIOR:
     add_interior(name, where)
 
+# the bug zapper on the wing's wall (kb_flykiller1) is switched off: the game bakes its tubes' glow into their prelight
+# (0.65, 1, 1 cyan), which lit it up day and night in a room otherwise dim; the glowing faces take the room's light
+ZAPPER_DAY, ZAPPER_NIGHT = (0.30, 0.28, 0.24, 1.0), (0.10, 0.09, 0.08, 1.0)
+zapper = s.mat("kb_flykiller1")
+dimmed = 0
+for f in s.bm.faces:
+    if f.material_index == zapper:
+        for loop in f.loops:
+            r, g, b = tuple(loop[s.day])[:3]
+            if b > 0.3 and b > r * 1.3:
+                loop[s.day], loop[s.night] = ZAPPER_DAY, ZAPPER_NIGHT
+                dimmed += 1
+print(f"bug zapper: {dimmed} glowing corners dimmed")
+
 # one pipe, inside and out: the house's own chimney (steel256128, on the roof 0.75 m from where the stove's flue
 # rises) moves over the flue's riser, its open foot lifted to CHIMNEY_FOOT, between the ceiling and the roof; the
 # riser stops at RISER_TOP, above the ceiling, inside the roof space (cut at FLUE_TOP it poked 0.12 m out of the
