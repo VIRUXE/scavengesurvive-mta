@@ -34,6 +34,11 @@ production and the dev box run 13.2.0 outside packages (`docs/runbooks/upgrade-m
 - **Every new feature, and every fix to behaviour inherited from upstream, updates the wiki and the website in the same
   change**, unasked: a `site/data/changes.json` entry (English and Portuguese), the hand-written wiki topic page it
   belongs to (e.g. `wiki/Explosives.md`), and `python -m tools.wiki_tables` for the generated tables and item pages.
+- **Every change to how items work keeps the in-game `/recipes` window (`crafting/client/recipes.lua`) true**: it lists
+  the recipes of `crafting/shared/logic/craft.lua` by itself, but anything made another way (machines, cooking,
+  gathering) is a hand-written entry behind `exports.items:getProductionRecipes()` (`items/client/main.lua`), its steps
+  and notes are texts to reword when the mechanic changes, and an item new to it needs its picture
+  (`python -m tools.recipe_icons`).
 - No tests: the project has none and none are ever to be created (user decision 2026-10-31).
 - `ops/` (dev Loki + Grafana compose, dashboards, alert rules), `docs/runbooks/` (operations), `docs/staff-commands.md` (staff parity table), `docs/reviews/<date>-*.md` (live checks).
 
