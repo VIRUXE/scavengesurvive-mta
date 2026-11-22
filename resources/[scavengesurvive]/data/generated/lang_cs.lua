@@ -122,7 +122,7 @@ return {
     CowboyHat_T = "Nasaď si to zmáčknutím [F]",
     CrateDoor_T = "Polož to na zem, pak u toho zmáčkni [F] s Kladivem a vyber, jestli to postavit nastojato (zeď) nebo naležato (podlaha)",
     Cross_T = "Zatím žádné využití",
-    Crowbar_T = "Slouží k odstranění zábran zezadu, sbalení prázdných stanů, rozebrání vyrobených staveb, rozbití běžných zámků vozidel a vypáčení nepřivařených panelů z přívěsu",
+    Crowbar_T = "Slouží k odstranění zábran zezadu, rozebrání vyrobených staveb, rozbití běžných zámků vozidel a vypáčení nepřivařených panelů z přívěsu",
     Cupboard_T = "Nábytek: zmáčkni [F] s předmětem v ruce pro vystavení uvnitř a s prázdnýma rukama pro vzetí zpět",
     DECONSTRUCT = "Rozebírám předmět...",
     DEFBUILDING = "Staví se %s...",

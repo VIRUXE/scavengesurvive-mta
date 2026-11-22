@@ -122,7 +122,7 @@ return {
     CowboyHat_T = "Kenakan ini dengan menekan [F]",
     CrateDoor_T = "Letakkan benda ini, lalu tekan [F] padanya dengan Palu dan pilih untuk membangunnya berdiri (dinding) atau mendatar (lantai)",
     Cross_T = "Benda ini belum ada kegunaannya",
-    Crowbar_T = "Gunakan ini untuk merobohkan pertahanan dari belakang, mengemas tenda kosong, membongkar bangunan hasil crafting, merusak kunci standar kendaraan, dan mencongkel panel yang tidak dilas dari trailer",
+    Crowbar_T = "Gunakan ini untuk merobohkan pertahanan dari belakang, membongkar bangunan hasil crafting, merusak kunci standar kendaraan, dan mencongkel panel yang tidak dilas dari trailer",
     Cupboard_T = "Furnitur: tekan [F] sambil memegang benda untuk memajangnya di dalam, dan dengan tangan kosong untuk mengambilnya kembali",
     DECONSTRUCT = "Membongkar benda...",
     DEFBUILDING = "Membangun %s...",

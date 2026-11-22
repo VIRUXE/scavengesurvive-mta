@@ -122,7 +122,7 @@ return {
     CowboyHat_T = "Nospied [F], lai uzliktu",
     CrateDoor_T = "Noliec to, tad nospied [F] pie tā ar Āmuru un izvēlies būvēt to stāvus (siena) vai guļus (grīda)",
     Cross_T = "Šim priekšmetam pagaidām nav pielietojuma",
-    Crowbar_T = "Ar to vari nojaukt aizsargbarjeras no aizmugures, savākt tukšas teltis, izjaukt izgatavotas konstrukcijas, uzlauzt parastās transportlīdzekļu slēdzenes un atplēst nesametinātus paneļus no piekabes",
+    Crowbar_T = "Ar to vari nojaukt aizsargbarjeras no aizmugures, izjaukt izgatavotas konstrukcijas, uzlauzt parastās transportlīdzekļu slēdzenes un atplēst nesametinātus paneļus no piekabes",
     Cupboard_T = "Mēbele: nospied [F] ar priekšmetu rokā, lai to ieliktu iekšā, un ar tukšām rokām, lai to paņemtu atpakaļ",
     DECONSTRUCT = "Izjauc priekšmetu...",
     DEFBUILDING = "Būvē %s...",

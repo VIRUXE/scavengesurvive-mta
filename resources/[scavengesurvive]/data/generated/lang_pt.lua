@@ -122,7 +122,7 @@ return {
     CowboyHat_T = "Veste-o premindo [F]",
     CrateDoor_T = "Pousa isto e depois prime [F] nele com um Martelo e escolhe construí-lo de pé (uma parede) ou deitado (um chão)",
     Cross_T = "Este item ainda não tem utilidade",
-    Crowbar_T = "Usa isto para deitar abaixo defesas pela traseira, desmontar tendas vazias, desmantelar construções fabricadas, arrombar fechaduras normais de veículos e arrancar painéis não soldados de um reboque",
+    Crowbar_T = "Usa isto para deitar abaixo defesas pela traseira, desmantelar construções fabricadas, arrombar fechaduras normais de veículos e arrancar painéis não soldados de um reboque",
     Cupboard_T = "Mobília: prime [F] com um item na mão para o expores lá dentro e de mãos vazias para o voltar a pegar",
     DECONSTRUCT = "A desmontar item...",
     DEFBUILDING = "A construir %s...",

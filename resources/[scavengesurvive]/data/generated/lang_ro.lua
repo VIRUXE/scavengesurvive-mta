@@ -122,7 +122,7 @@ return {
     CowboyHat_T = "Poartă-l apăsând [F]",
     CrateDoor_T = "Pune-l jos, apoi apasă [F] la el cu un ciocan și alege să-l construiești în picioare (un perete) sau culcat (o podea)",
     Cross_T = "Acest obiect nu are încă nicio utilizare",
-    Crowbar_T = "Folosește-o ca să dai jos apărări din spate, să strângi corturi goale, să demontezi construcții create prin crafting, să spargi încuietorile standard ale vehiculelor și să desprinzi panourile nesudate de pe o remorcă",
+    Crowbar_T = "Folosește-o ca să dai jos apărări din spate, să demontezi construcții create prin crafting, să spargi încuietorile standard ale vehiculelor și să desprinzi panourile nesudate de pe o remorcă",
     Cupboard_T = "Mobilier: apasă [F] cu un obiect în mână ca să-l expui înăuntru și cu mâinile goale ca să-l iei înapoi",
     DECONSTRUCT = "Se demontează obiectul...",
     DEFBUILDING = "Se construiește %s...",

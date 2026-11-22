@@ -122,7 +122,7 @@ return {
     CowboyHat_T = "Lbes hadi b [F]",
     CrateDoor_T = "7ettha f l2rd, w brek [F] 3liha b Mterqa w khtar wach tbniha waqfa (7it) wla mbsouta (ard)",
     Cross_T = "Had l7aja mazal ma fiha 7ta fayda",
-    Crowbar_T = "Sta3mel hadi bach t7iyed difa3at mn lor, tjme3 lkhyam lkhawyin, tfekk l7wayej li tsne3o, tkesser l9fal 3adiyin dyal tomobilat w t9le3 panneaux ma msoudyinch mn remorque",
+    Crowbar_T = "Sta3mel hadi bach t7iyed difa3at mn lor, tfekk l7wayej li tsne3o, tkesser l9fal 3adiyin dyal tomobilat w t9le3 panneaux ma msoudyinch mn remorque",
     Cupboard_T = "Atat: brek [F] w chi 7aja f yeddik bach t3red-ha ldakhel, w b yeddik khawyin bach terja3ha",
     DECONSTRUCT = "Kanfekkou l7aja...",
     DEFBUILDING = "Kanbniw %s...",

@@ -122,7 +122,7 @@ return {
     CowboyHat_T = "Wear this by pressing [F]",
     CrateDoor_T = "Lay this down, then press [F] at it with a Hammer and choose to build it standing up (a wall) or lying flat (a floor)",
     Cross_T = "This item has no use yet",
-    Crowbar_T = "Use this to take down defences from the back, pack up empty tents, dismantle crafted constructions, break standard vehicle locks and pry unwelded panels off a trailer",
+    Crowbar_T = "Use this to take down defences from the back, dismantle crafted constructions, break standard vehicle locks and pry unwelded panels off a trailer",
     Cupboard_T = "Furniture: press [F] with an item in hand to display it inside, and with empty hands to take it back",
     DECONSTRUCT = "Deconstructing item...",
     DEFBUILDING = "Building %s...",

@@ -122,7 +122,7 @@ return {
     CowboyHat_T = "Póntelo pulsando [F]",
     CrateDoor_T = "Déjalo en el suelo y luego pulsa [F] sobre él con un Martillo y elige construirlo de pie (una pared) o tumbado (un suelo)",
     Cross_T = "Este objeto aún no tiene uso",
-    Crowbar_T = "Úsala para derribar defensas desde la parte trasera, recoger tiendas vacías, desmontar construcciones fabricadas, romper cerraduras normales de vehículos y arrancar paneles no soldados de un remolque",
+    Crowbar_T = "Úsala para derribar defensas desde la parte trasera, desmontar construcciones fabricadas, romper cerraduras normales de vehículos y arrancar paneles no soldados de un remolque",
     Cupboard_T = "Mueble: pulsa [F] con un objeto en la mano para exponerlo dentro, y con las manos vacías para recogerlo",
     DECONSTRUCT = "Desmontando objeto...",
     DEFBUILDING = "Construyendo %s...",

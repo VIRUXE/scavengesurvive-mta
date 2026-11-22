@@ -122,7 +122,7 @@ return {
     CowboyHat_T = "Stisni [F] da nosiš ovo",
     CrateDoor_T = "Spusti ovo na tlo, pa pritisni [F] kod njega s čekićem i odaberi hoćeš li ga izgraditi uspravno (zid) ili položeno (pod)",
     Cross_T = "Ovaj predmet još nema upotrebu",
-    Crowbar_T = "Koristi ovo da skineš obrane sa stražnje strane, spakuješ prazne šatore, rastaviš izrađene konstrukcije, razbiješ obične brave na vozilima i odvojiš nezavarene ploče s prikolice",
+    Crowbar_T = "Koristi ovo da skineš obrane sa stražnje strane, rastaviš izrađene konstrukcije, razbiješ obične brave na vozilima i odvojiš nezavarene ploče s prikolice",
     Cupboard_T = "Namještaj: stisni [F] s predmetom u ruci da ga izložiš unutra, a s praznim rukama da ga uzmeš nazad",
     DECONSTRUCT = "Rastavljanje predmeta...",
     DEFBUILDING = "Izgradnja traje %s...",

@@ -122,7 +122,7 @@ return {
     CowboyHat_T = "Use o chapéu de cowboy pressionando [F]",
     CrateDoor_T = "Coloque isto no chão e depois pressione [F] nele com um Martelo e escolha construí-lo em pé (uma parede) ou deitado (um piso)",
     Cross_T = "Este item ainda não tem utilidade",
-    Crowbar_T = "Use isto para derrubar defesas pela parte de trás, desmontar barracas vazias, desmanchar construções criadas, quebrar as fechaduras comuns de veículos e arrancar painéis não soldados de um trailer",
+    Crowbar_T = "Use isto para derrubar defesas pela parte de trás, desmanchar construções criadas, quebrar as fechaduras comuns de veículos e arrancar painéis não soldados de um trailer",
     Cupboard_T = "Móvel: pressione [F] com um item na mão para exibi-lo dentro e com as mãos vazias para pegá-lo de volta",
     DECONSTRUCT = "Desmontando item...",
     DEFBUILDING = "Construindo %s...",

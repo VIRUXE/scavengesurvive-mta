@@ -122,7 +122,7 @@ return {
     CowboyHat_T = "Portez-le en appuyant sur [F]",
     CrateDoor_T = "Posez-le au sol, puis appuyez sur [F] dessus avec un Marteau et choisissez de le construire debout (un mur) ou à plat (un sol)",
     Cross_T = "Cet objet n'a pas encore d'utilité",
-    Crowbar_T = "Servez-vous-en pour démonter les défenses par l'arrière, replier les tentes vides, démanteler les constructions fabriquées, forcer les serrures de véhicule standard et arracher les panneaux non soudés d'une remorque",
+    Crowbar_T = "Servez-vous-en pour démonter les défenses par l'arrière, démanteler les constructions fabriquées, forcer les serrures de véhicule standard et arracher les panneaux non soudés d'une remorque",
     Cupboard_T = "Meuble : appuyez sur [F] avec un objet en main pour l'exposer dedans, et les mains vides pour le reprendre",
     DECONSTRUCT = "Démontage de l'objet...",
     DEFBUILDING = "Construction de %s...",
