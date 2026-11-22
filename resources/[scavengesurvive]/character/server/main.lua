@@ -118,6 +118,7 @@ tickCtx.bleeding = bleeding
 tickCtx.blood = loadFile("server/blood.lua")({ bleeding = bleeding, net = net })
 tickCtx.die = death.die
 local tick = loadFile("server/tick.lua")(tickCtx)
+loadFile("server/ground.lua")({ log = log, state = state, onDuty = onDuty }) -- under-map rescue on foot
 
 -- Staff duty: full hp and no bleeding while it lasts (nothing harms an on-duty player, so it stays there). The
 -- character's own hp and bleed are kept in st.dutyKeep, are what every save writes meanwhile (a quit or crash on duty
