@@ -8,7 +8,7 @@ O ecrã mostra apenas o que a tua personagem saberia: não há mapa, nem dinheir
 - **Barra de vida**: a barra vermelha do próprio GTA, preenchida até à tua [vida](Health).
 - **Barras de sede e fome**: uma barra azul (sede) por cima de uma verde (fome), ambas com a largura da barra de vida, empilhadas entre as barras de armadura e de vida (vê [Comida e bebida](Food-and-Drink)). A partir de 30 para baixo a barra pulsa, e abaixo de 20, onde custa vida, pisca a vermelho.
 - **Ícone da arma**: o ícone do GTA do que seguras. Uma arma de fogo carregada mostra `carregador/reserva` (por exemplo `10/0`) por baixo; vê [Armas de fogo](Firearms).
-- **Sem barra de armadura**: os pontos de um colete vestido só aparecem no mosaico `TORSO` do inventário; vê [Colete](Armour).
+- **Barra de armadura**: uma barra clara mesmo por baixo da barra de vida, visível enquanto vestes um colete. Segue os pontos do colete (cheia a partir de 100) e desce a cada tiro no peito; o número exacto continua no mosaico `TORSO` do inventário. Vê [Colete](Armour).
 - **Nome da área**: mostrado brevemente quando entras num novo bairro.
 - **Mira** enquanto apontas.
 

@@ -332,6 +332,11 @@ local function drawNeeds()
     local H = bars.HUNGER
     r, g, b, a = bars.needColour(H, state.stats.food, now)
     draw.progressBar(H.x, H.y, H.w, H.h, bars.fill(state.stats.food, H.max), r, g, b, a, "right")
+    local points = getElementData(localPlayer, "items.armourPoints")
+    if points then
+        local A = bars.ARMOUR
+        draw.progressBar(A.x, A.y, A.w, A.h, bars.fill(points, A.max), A.r, A.g, A.b, A.a, "right")
+    end
 end
 
 local function drawAmmo()

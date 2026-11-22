@@ -23,6 +23,7 @@ return function(ctx)
         if left > 0 then
             item.data.ap = left
             hands.queueData(item)
+            hands.publishArmour(player)
             sendInventory(player)
             return through
         end

@@ -17,7 +17,7 @@ Segura o Colete e prime `F`, escolhe `Vestir` nele no [inventário](Inventory), 
 Podes encontrar o Colete especial em pontos de saque militares e, mais raramente, em pontos de saque policiais. O esconderijo de San Fierro que se abre com o código também contém um Colete especial, de tecido azul-ardósia, com **100 a 149** pontos iniciais. Usa a mesma ranhura de tronco e segue as mesmas regras de dano.
 
 ## Pontos {#points}
-Cada peça de Colete tem entre **25 e 99 pontos**, sorteados quando é feita ou encontrada. O número aparece na legenda do quadrado `TORSO`, por exemplo `COLETE (73)`. Só desce.
+Cada peça de Colete tem entre **25 e 99 pontos**, sorteados quando é feita ou encontrada. Uma barra por baixo da barra de vida no [HUD](HUD) mostra-os (cheia a partir de 100), e o número exacto aparece na legenda do quadrado `TORSO`, por exemplo `COLETE (73)`. Só desce.
 
 ## O que trava {#what-it-stops}
 O Colete funciona contra **tiros no peito** de uma arma de fogo carregada com munição. Nada mais lhe toca, e não protege mais nada: um tiro na cabeça, num braço, na virilha ou numa perna, um soco, uma arma corpo a corpo, uma queda, um fogo ou uma explosão magoam-te como se não tivesses colete.

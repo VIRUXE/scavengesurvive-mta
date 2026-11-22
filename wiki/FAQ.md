@@ -28,7 +28,7 @@ Short answers to the questions new players ask, with the page that has the long 
 
 **I caught a fish and cannot put it away.** A Fish is size 9 and never fits the 6-slot inventory. Carry it in your hands, or put it in a bag of nine slots or more (Backpack, Medium Bag, Large Backpack, Parachute Bag, Travel Rucksack), a trunk or a box. See [Fishing](Fishing) and [Item Sizes](Item-Sizes).
 
-**Where is my armour bar?** There is none on the HUD. A worn vest shows its points only in the inventory's `TORSO` tile, `ARMOUR (73)`. See [Armour](Armour).
+**Where is my armour bar?** It sits just under the health bar while you wear a vest; the exact points are in the inventory's `TORSO` tile, `ARMOUR (73)`. See [Armour](Armour).
 
 **The key list does not mention the trunk, repairs, the engine or the lights.** It never does: `F` at the rear of a vehicle opens the trunk and `F` with a tool at the bonnet repairs all the same, and `Y` and `N` work the engine and lights from the driver's seat. See [Controls](Controls) and [HUD](HUD).
 

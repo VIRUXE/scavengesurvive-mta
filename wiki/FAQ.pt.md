@@ -26,7 +26,7 @@ Respostas curtas às perguntas que os jogadores novos fazem, com a página que t
 
 **Apanhei um peixe e não o consigo guardar.** Um Peixe tem tamanho 9 e nunca cabe no inventário de 6 ranhuras. Leva-o nas mãos, ou mete-o num saco de nove ranhuras ou mais (Mochila, Saco médio, Mochila grande, Mochila de paraquedas, Mochila de viagem), numa mala de veículo ou numa caixa. Vê [Pesca](Fishing) e [Tamanhos dos itens](Item-Sizes).
 
-**Onde está a minha barra de armadura?** Não há nenhuma no HUD. Um colete vestido mostra os seus pontos apenas no mosaico `TORSO` do inventário, `ARMOUR (73)`. Vê [Colete](Armour).
+**Onde está a minha barra de armadura?** Fica mesmo por baixo da barra de vida enquanto vestes um colete; os pontos exactos estão no mosaico `TORSO` do inventário, `ARMOUR (73)`. Vê [Colete](Armour).
 
 **A lista de teclas não menciona a mala, as reparações, o motor nem as luzes.** Nunca menciona: `F` à retaguarda de um veículo abre a mala e `F` com uma ferramenta no capot repara na mesma, e `Y` e `N` ligam o motor e as luzes a partir do lugar do condutor. Vê [Controlos](Controls) e [HUD](HUD).
 

@@ -31,6 +31,19 @@ bars.HUNGER = {
     a = 0xFF,
     max = 100,
 }
+-- The worn vest's points (items.armourPoints), the same bar just under the health bar. A vest starts at 25..149
+-- points; the bar is full from 100 up, the exact number stays in the inventory's TORSO caption.
+bars.ARMOUR = {
+    x = 517.8,
+    y = HEALTH_FRAME_TOP + STEP + BORDER,
+    w = 76.9,
+    h = NEEDS_H,
+    r = 0xC8,
+    g = 0xC8,
+    b = 0xD0,
+    a = 0xFF,
+    max = 100,
+}
 -- Upstream weapon.pwn:77 draws "%d/%d" at (520.41, 62.65) inside the bottom of SA-MP's weapon icon frame.
 -- At 1080p MTA's stock weapon icon sits at 1485..1637 x 25..194 px = 446.7..514.2 x 11.1..86.2 right-anchored units.
 bars.AMMO = { x = 480.4, y = 75.5 }

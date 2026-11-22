@@ -133,6 +133,15 @@ return function(ctx)
     end
     M.publish = publish
 
+    -- the worn vest's points, for the wearer's HUD bar (false: no vest)
+    function M.publishArmour(player)
+        if isElement(player) then
+            local item = state.armour[player]
+            local ap = item and type(item.data) == "table" and tonumber(item.data.ap) or false
+            setElementData(player, "items.armourPoints", ap and math.max(0, ap) or false, "broadcast", "deny")
+        end
+    end
+
     local function publishAmmo(player, item)
         if isElement(player) then
             local loaded = item and item.data and item.data.ammoItem or false
@@ -166,6 +175,9 @@ return function(ctx)
             end
             state[slot][player] = item
             publish(player, "items." .. slot, item)
+            if slot == "armour" then
+                M.publishArmour(player)
+            end
         end
     end
 
@@ -177,6 +189,7 @@ return function(ctx)
                 publish(player, "items." .. slot, nil)
             end
         end
+        M.publishArmour(player)
         M.setGear(player, "parachute", nil)
     end
 
