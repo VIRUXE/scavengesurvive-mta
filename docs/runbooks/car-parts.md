@@ -7,7 +7,7 @@ model listed in `vehicles/shared/logic/bodyparts.lua` `MODELS`.
 
 ## How a set is made
 
-`tools/car_parts.py` is the manifest and the driver; `tools/blender/car_parts.py` is the Blender side (DragonFF).
+`tools/car_parts.py` is the manifest and the driver; `tools/car_parts_blender.py` is the Blender side (DragonFF).
 
 ```
 python -m tools.car_parts survey      # per model: its ok/dam frames, slot points, groundDrop -> tools/data/car_parts_survey.json

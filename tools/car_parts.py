@@ -26,7 +26,7 @@ RES = ROOT / "resources" / "[scavengesurvive]"
 OUT = RES / "car_part_models"
 DATA = ROOT / "tools" / "data" / "car_parts.json"
 SURVEY = ROOT / "tools" / "data" / "car_parts_survey.json"
-BLENDER_SCRIPT = ROOT / "tools" / "blender" / "car_parts.py"
+BLENDER_SCRIPT = ROOT / "tools" / "car_parts_blender.py"
 FIRST_ID = 21001
 LAST_ID = 21999
 
