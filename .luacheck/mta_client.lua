@@ -1,5 +1,5 @@
 return { read_globals = {
-    "localPlayer", "setRainLevel", "resetRainLevel", "triggerServerEvent", "triggerLatentServerEvent", "bindKey", "unbindKey", "getKeyState", "getBoundKeys", "isPedOnGround",
+    "localPlayer", "getProjectileType", "getProjectileCreator", "setRainLevel", "resetRainLevel", "triggerServerEvent", "triggerLatentServerEvent", "bindKey", "unbindKey", "getKeyState", "getBoundKeys", "isPedOnGround",
     "isCursorShowing", "showCursor", "getCursorPosition", "guiGetScreenSize", "dxDrawText", "dxDrawRectangle",
     "dxDrawImage", "dxDrawImageSection", "dxDrawLine", "dxDrawLine3D", "dxDrawCircle", "dxGetTextWidth",
     "dxGetFontHeight", "dxGetTextSize", "dxCreateFont", "dxCreateRenderTarget", "dxSetRenderTarget",

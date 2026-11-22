@@ -48,6 +48,7 @@ addEvent("floodLightActionRequested", true) -- the interaction chooser at a Floo
 addEvent("cordPlugRequested", true) -- an Extension Cord in hand at a mains inlet (power): the site id
 addEvent("cordUnplugRequested", true) -- the chooser at a plugged cord's box or Generator: the cord's item id
 addEvent("parachuteSpent", true)
+addEvent("heldItemThrown", true) -- a Grenade, Tear Gas, Molotov or Remote Bomb in hand thrown: the GTA weapon id
 addEvent("vendingGlassHit", true)
 addEvent("itemGroundMeasured", true)
 

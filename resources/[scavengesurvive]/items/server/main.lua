@@ -358,6 +358,22 @@ local parachute = loadFile("server/parachute.lua")({
 })
 hands.setParachute(parachute)
 containers.setParachute(parachute)
+
+-- A Grenade, Tear Gas, Molotov or Remote Bomb leaves the hand as GTA's projectile, which the server never sees
+-- (onPlayerWeaponFire is only for shots): the thrower's client reports it (client/main.lua) and the item thrown is
+-- destroyed, so it no longer sits in the hand to be dropped or thrown again. One item is one throw: the weapon is given
+-- one round. A thrown Remote Bomb leaves GTA's own detonator (weapon 40) with the client, which sets it off.
+local THROWN_WEAPONS = { [16] = true, [17] = true, [18] = true, [39] = true }
+net.handler("heldItemThrown", function(player, weapon)
+    local held = state.held[player]
+    local t = held and itemType(held.uname)
+    local w = t and t.category == "weapon" and t.categoryData and t.categoryData.baseWeapon
+    if not held or held.thrown or not THROWN_WEAPONS[w] or w ~= weapon or isPedDead(player) then
+        return
+    end
+    held.thrown = true -- the destroy is under way: a second report for the same throw is ignored
+    destroy(held.id, player, nil, "thrown")
+end, { rate = 5 })
 -- the Fishing Rod (#141)
 loadFile("server/fishing.lua")({ db = db, net = net, state = state, toast = toast, world = world, fishing = fishing })
 -- the Generator's engine, its fuel burn and the Extension Cords from it into a building's mains (power)

@@ -51,6 +51,8 @@ As receitas de TNT e IED juntam o material da carga (TNT, ou um IED feito na Ban
 ## Molotov {#molotov}
 Uma bomba incendiária de arremesso. Combina uma Garrafa com uma Ligadura suja para fazer um Molotov vazio. Larga-o, depois segura num Jerricã de gasolina com gasolina e prime `F` junto à garrafa: despejam-se 0,5 litros e passa a ser um Molotov. Apanha-o e arremessa-o. O fogo custa vida mas não abre feridas com hemorragia. Vê [Combustível](Fuel) para encher um Jerricã de gasolina.
 
+Um Molotov, tal como uma [Granada](Grenade), o [Gás lacrimogéneo](Teargas) ou a [Bomba remota](Remote-Bomb), arremessa-se uma vez: o arremesso gasta o item e deixa-te as mãos vazias.
+
 ## Bomba de gasolina {#petrol-bomb}
 Uma carga incendiária de tamanho 3 que arma como uma carga temporizada: rebenta numa explosão de fogo ao fim de 5 segundos. Não causa dano a itens e não tem receita de fabrico.
 

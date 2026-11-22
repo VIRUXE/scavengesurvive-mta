@@ -54,6 +54,8 @@ TNT and IED recipes pair the charge material (TNT, or an IED made at the Workben
 
 A throwable fire bomb. Combine a Bottle with a Dirty Bandage to make an Empty Molotov. Drop it, then hold a Petrol Can with petrol in it and press `F` at the bottle: 0.5 litres are poured in and it becomes a Molotov. Pick it up and throw it. Fire costs health but does not open bleeding wounds. See [Fuel](Fuel) for filling a Petrol Can.
 
+A Molotov, like a [Grenade](Grenade), [Teargas](Teargas) or [Remote Bomb](Remote-Bomb), is thrown once: the throw uses the item up and leaves your hands empty.
+
 ## Petrol Bomb
 
 A size 3 incendiary charge that arms like a timed charge: it flares up with a fire explosion after 5 seconds. It does no damage to items and has no crafting recipe.

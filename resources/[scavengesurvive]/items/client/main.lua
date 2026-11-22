@@ -60,6 +60,16 @@ loadModule("client/combo.lua")({ models = models, lang = lang })
 loadModule("client/firework.lua")(loadModule("shared/logic/firework.lua"))
 loadModule("client/parachute.lua")(small)
 
+-- a Grenade, Tear Gas, Molotov or Remote Bomb thrown: only this client sees the projectile, so it tells the server,
+-- which destroys the item in hand (server/main.lua heldItemThrown)
+local THROWN_WEAPONS = { [16] = true, [17] = true, [18] = true, [39] = true }
+addEventHandler("onClientProjectileCreation", root, function(creator)
+    local kind = getProjectileType(source)
+    if creator == localPlayer and THROWN_WEAPONS[kind] then
+        triggerServerEvent("heldItemThrown", localPlayer, kind)
+    end
+end)
+
 -- client exports for the attachedit resource: preview offsets on the local player's own attachments
 function setAttachPreview(slot, offsets, scale)
     return attach.setPreview(slot, offsets, scale)
