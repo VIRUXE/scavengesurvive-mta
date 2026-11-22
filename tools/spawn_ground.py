@@ -22,10 +22,12 @@ Nothing here runs in the server: the results are data the server reads.
   fits one way always faces that way; one that fits neither way goes in vehicle_spawn_removed and that point never
   rolls it. A point with no ground at all (it stands on something the world lacks) spawns as before.
 
-The world is the vanilla map plus the port's own map objects and removals (maps/data/*.lua, world/data/puzzles.lua)
-and the SA-MP client's SAMP.ide/SAMP.img/SAMPCOL.img. Points are read from the live DB through the lib credentials in
-mods/deathmatch/settings.xml. Without --apply it only writes the report and the files (item_rest.lua, the seeds);
---apply also loads the results into the live DB.
+The world is the one the server stands on (tools/geom_overlay.py: the port's map objects and removals, house_shell's
+rebuilt collisions, removals and props, the model packs' collisions) plus the SA-MP client's
+SAMP.ide/SAMP.img/SAMPCOL.img. Points are read from the live DB through the lib credentials in
+mods/deathmatch/settings.xml (--settings for another file, e.g. server-config/local.settings.xml against a local DB
+holding the same points; then load the written seeds into the live DB yourself). Without --apply it only writes the
+report and the files (item_rest.lua, the seeds); --apply also loads the results into the live DB.
 
 Rerun it after loot points, vehicle points or item models change.
 """
@@ -34,6 +36,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import os
 import re
 import subprocess
 import sys
@@ -43,8 +46,6 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-
-from tools.render_places import MAPS, PUZZLES, REMOVAL, ROW  # noqa: E402
 
 RES = ROOT / "resources" / "[scavengesurvive]"
 GTA = Path("/gta/sa/gamefiles/GTA San Andreas")
@@ -87,7 +88,9 @@ def db(sql: str) -> list[list[str]]:
     user = re.search(r'lib\.db_user" value="([^"]*)"', text).group(1)
     pw = re.search(r'lib\.db_pass" value="([^"]*)"', text).group(1)
     # the SQL goes on stdin: the seeds are megabytes, far over the kernel's limit for one argument
-    res = subprocess.run(["mariadb", "-h127.0.0.1", f"-u{user}", f"-p{pw}", "scavengesurvive", "-N", "-B"], input=sql, capture_output=True, text=True)
+    # the password through the environment: off the command line, and an empty one never stops at a prompt
+    env = {**os.environ, "MYSQL_PWD": pw}
+    res = subprocess.run(["mariadb", "-h127.0.0.1", f"-u{user}", "scavengesurvive", "-N", "-B"], input=sql, capture_output=True, text=True, env=env)
     if res.returncode != 0:  # never echo the command line: it holds the password
         sys.exit(f"mariadb: {res.stderr.strip()[:2000]}")
     return [line.split("\t") for line in res.stdout.splitlines()]
@@ -123,29 +126,33 @@ def vehicle_types() -> list[dict]:
 
 
 def overlay(work: Path, gta: Path) -> Path:
-    """The port's world on top of vanilla: its map objects and removals, the SA-MP models, and mesh shapes for the
-    SA-MP and prop models items use."""
-    rows = ["<map>"]
-    for path in sorted(MAPS.glob("*.lua")) + [PUZZLES]:
-        text = path.read_text(encoding="utf8")
-        for m, x, y, z, rx, ry, rz, world, interior in ROW.findall(text):
-            if int(world) in (-1, 0) and int(interior) in (-1, 0):
-                rows.append(f'<object model="{m}" posX="{x}" posY="{y}" posZ="{z}" rotX="{rx}" rotY="{ry}" rotZ="{rz}" interior="0"/>')
-        if "removals = {" in text:
-            for m, x, y, z, r in REMOVAL.findall(text[text.index("removals = {") :]):
-                rows.append(f'<removeWorldObject model="{m}" radius="{r}" posX="{x}" posY="{y}" posZ="{z}" interior="0"/>')
-    rows.append("</map>")
-    (work / "port.map").write_text("\n".join(rows), encoding="utf8")
+    """The world the server stands on (tools/geom_overlay.py: the port's map objects and removals, what house_shell
+    removes and furnishes, the model packs' collisions and the shells' rebuilt ones) plus the SA-MP models and the
+    mesh shapes of the pack models items use. Without the shells' COLs a point inside a rebuilt house measured the
+    ground under the building and its items lay under the floor."""
+    from tools.geom_overlay import MANIFEST_COL, SHELL, port_map, shell_cols
+
+    (work / "port.map").write_text(port_map()[0], encoding="utf8", newline="\n")
     samp = gta / "SAMP"
-    toml = [f'ide = [{{ path = "{samp / "SAMP.ide"}" }}]', f'img = [{{ path = "{samp / "SAMPCOL.img"}" }}, {{ path = "{samp / "SAMP.img"}" }}]', 'map = [{ path = "port.map" }]']
+    toml = [
+        f'ide = [{{ path = "{(samp / "SAMP.ide").as_posix()}" }}]',
+        f'img = [{{ path = "{(samp / "SAMPCOL.img").as_posix()}" }}, {{ path = "{(samp / "SAMP.img").as_posix()}" }}]',
+        'map = [{ path = "port.map" }]',
+    ]
     for res, manifest in MODEL_PACKS:
         files = RES / res / "files"
+        cols = {int(i): c for i, c in MANIFEST_COL.findall((RES / res / manifest).read_text(encoding="utf8"))}
         for mid, name in sorted(lua_models(RES / res / manifest).items()):
+            col = files / f"{cols.get(mid, name)}.col"
+            if col.exists():
+                toml.append(f'[[col]]\npath = "{col.as_posix()}"\nid = {mid}')
             f = files / f"{name}.dff"
             if f.exists():
-                toml.append(f'[[dff]]\npath = "{f}"\nid = {mid}')
+                toml.append(f'[[dff]]\npath = "{f.as_posix()}"\nid = {mid}')
+    for mid, name in shell_cols():
+        toml.append(f'[[col]]\npath = "{(SHELL / "files" / f"{name}.col").as_posix()}"\nid = {mid}')
     p = work / "overlay.toml"
-    p.write_text("\n".join(toml) + "\n", encoding="utf8")
+    p.write_text("\n".join(toml) + "\n", encoding="utf8", newline="\n")
     return p
 
 
@@ -420,7 +427,7 @@ def write_rest(rest: dict[str, float]) -> None:
 
     lines += [f"    {u} = {lua(v)}," if re.fullmatch(r"[A-Za-z_]\w*", u) else f'    ["{u}"] = {lua(v)},' for u, v in sorted(rest.items())]
     lines.append("}")
-    REST_OUT.write_text("\n".join(lines) + "\n", encoding="utf8")
+    REST_OUT.write_text("\n".join(lines) + "\n", encoding="utf8", newline="\n")
 
 
 def chunks(seq, n):
@@ -454,8 +461,8 @@ def write_seeds(ground: dict[int, dict | None], poses: list[tuple], removed: lis
             "INSERT INTO vehicle_spawn_removed (spawn_id, model, type_uname, reason, detail, ground_z, box_x0, box_x1, box_y0, box_y1, "
             f"box_h, box_base, block_x, block_y, block_z) VALUES\n{rows};\n"
         )
-    LOOT_SEED.write_text("".join(loot), encoding="utf8")
-    POSE_SEED.write_text("".join(pose), encoding="utf8")
+    LOOT_SEED.write_text("".join(loot), encoding="utf8", newline="\n")
+    POSE_SEED.write_text("".join(pose), encoding="utf8", newline="\n")
     return "".join(loot), "".join(pose)
 
 
@@ -466,7 +473,11 @@ def main(argv=None) -> int:
     ap.add_argument("--apply", action="store_true", help="load the results into the live DB")
     ap.add_argument("--report", type=Path, help="TSV of the points that need a look")
     ap.add_argument("--removed", type=Path, help="TSV of every (vehicle point, model) that fits neither way")
+    ap.add_argument("--settings", type=Path, help="settings.xml with the lib.db_* credentials (default: the server's)")
     a = ap.parse_args(argv)
+    if a.settings:
+        global SETTINGS
+        SETTINGS = a.settings
     report: list[str] = []
     with tempfile.TemporaryDirectory() as tmp:
         ov = overlay(Path(tmp), a.gta)
@@ -481,7 +492,7 @@ def main(argv=None) -> int:
             for sid, m, u, reason, detail, x, y, z, _ in removed:
                 f.write(f"{sid}\t{x:.3f}\t{y:.3f}\t{z:.3f}\t{m}\t{u}\t{reason}\t{detail}\n")
     if a.report:
-        a.report.write_text("kind\tid\tx\ty\tz\tflag\tnote\n" + "\n".join(report) + "\n", encoding="utf8")
+        a.report.write_text("kind\tid\tx\ty\tz\tflag\tnote\n" + "\n".join(report) + "\n", encoding="utf8", newline="\n")
     print(f"{len(report)} report lines", file=sys.stderr)
     if a.apply:
         for sql in (loot_sql, pose_sql):
