@@ -5,7 +5,9 @@ item types or the converted maps (`maps/data/*.lua`) use, this copies the .dff (
 own) out of SAMP.img and splits the matching single-model .col out of SAMPCOL.img's `allsampcols.col` into
 `samp_models/files/`, then writes `samp_models/manifest.lua` + `samp_models/meta.xml`. All of it is
 committed; rerun this only when item types or maps start using SA-MP models that are not in the pack yet (see
-`--check`). Models whose
+`--check`). Existing files are kept, including bucket01.dff's added interior faces
+(tools/repair_samp_bucket.py); after building an empty pack, run that repair on the original SAMP.img.
+Models whose
 texture dictionary is a vanilla one that some vanilla model already owns are bound to that model's TXD at runtime
 (no file copied); the few vanilla TXDs no model owns (cutscene props, special peds) are copied from the game's own
 archives. Provenance: THIRD_PARTY_NOTICES.md.
