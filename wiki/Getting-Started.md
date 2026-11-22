@@ -6,15 +6,15 @@ Your first hour on Scavenge & Survive, step by step. You have one character, eve
 
 Connect with the nickname you want to keep: your account *is* your nickname (1 to 22 characters). A window first asks for your **language**; pick one of the ten and press **Continue**. Then *Register For A New Account* asks for a password of 4 to 32 characters. **Accept** creates the account, logs you in and shows the welcome text, whose button counts down from 10 before you can close it. Next time the same name asks for the password: five wrong tries disconnect you for 10 minutes. See [Account & Login](Account-and-Login).
 
-![Register dialog](images/screens/auth-dialog-register.jpg)
+![Register dialog](images/auth-dialog-register.jpg)
 
 ## 2. You wake up on a beach
 
 Your character spawns at one of 14 spots at the water's edge, in random clothes. Your very first character has 90 health, 80 hunger and a **Combat Knife** in its hands; every character you make after a death starts with 100 health, 40 hunger and an **Antiseptic Bandage** instead. There is no bag, no map and nothing else: all you have is what you find. See [Death](Death).
 
-![Combat Knife](images/items/335_knifecur.png) ![Antiseptic Bandage](images/items/11748_bandagepack1.png)
+![Combat Knife](images/items/335_knifecur.png) ![Antiseptic Bandage](images/items/20298_bandage.png)
 
-<a href="https://raw.githubusercontent.com/wiki/VIRUXE/scavengesurvive-mta/images/map/spawns.png" target="_blank" rel="noopener noreferrer" title="View full-size map; Ctrl/Cmd-click or middle-click to open in a new tab"><img src="https://raw.githubusercontent.com/wiki/VIRUXE/scavengesurvive-mta/images/map/spawns.png" alt="The beaches a new character can wake up on"></a>
+<a href="images/map/spawns.png" target="_blank" rel="noopener noreferrer" title="View full-size map; Ctrl/Cmd-click or middle-click to open in a new tab"><img src="images/map/spawns.png" alt="The beaches a new character can wake up on"></a>
 
 ## 3. The screen
 
@@ -24,7 +24,7 @@ Top right: the red health bar and the green hunger bar above it, the icon of wha
 
 Walk towards the coast road, into the first houses and yards. Items lie on the ground with a yellow label within 4 m. Tap `F` to take the nearest one into your hands, `Y` to put it away, `N` to drop it (or hand it to a player standing next to you). Bags, boxes and crates open on a tap and are picked up on a hold of `F`; the boxes lying around warehouses and yards are often already full. See [Inventory](Inventory) and [Containers & Bags](Containers-and-Bags).
 
-![A Hotdog on the ground with its label](images/screens/world-item-hotdog.jpg)
+![A Hotdog on the ground with its label](images/world-item-hotdog.jpg)
 
 ## 5. The inventory on `H`
 
@@ -58,7 +58,7 @@ Nearly every vehicle you find is damaged, almost out of fuel, and half the time 
 
 The map is split into seven zones. The three cities hold most of the loot points (Los Santos about 4,000, San Fierro 3,200, Las Venturas 2,000), the countryside far fewer. Civilian points give tools, food, bags and pistols; industrial yards give tools, panels and petrol; medical, police and military points hold the good things and the crowds. New loot lands at random points across each zone, never within 150 m of a player, and a point that rolled waits 3 to 9 hours before it rolls again, so a busy street stays bare for a while. Supply drops are announced in chat and draw everyone. See [World & Zones](World-and-Zones), [Loot & Respawn](Loot-and-Respawn) and [Supply Drops](Supply-Drops).
 
-<a href="https://raw.githubusercontent.com/wiki/VIRUXE/scavengesurvive-mta/images/map/loot.png" target="_blank" rel="noopener noreferrer" title="View full-size map; Ctrl/Cmd-click or middle-click to open in a new tab"><img src="https://raw.githubusercontent.com/wiki/VIRUXE/scavengesurvive-mta/images/map/loot.png" alt="Where the loot points are: the denser, the more spawn points nearby"></a>
+<a href="images/map/loot.png" target="_blank" rel="noopener noreferrer" title="View full-size map; Ctrl/Cmd-click or middle-click to open in a new tab"><img src="images/map/loot.png" alt="Where the loot points are: the denser, the more spawn points nearby"></a>
 
 ## 11. A first camp
 

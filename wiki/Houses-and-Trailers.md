@@ -85,4 +85,4 @@ A separate Airstream is a vehicle: a caravan that can be hitched, driven away an
 
 Every enterable house, cabin and trailer.
 
-<a href="https://raw.githubusercontent.com/wiki/VIRUXE/scavengesurvive-mta/images/map/shelters.png" target="_blank" rel="noopener noreferrer" title="View full-size map; Ctrl/Cmd-click or middle-click to open in a new tab"><img src="https://raw.githubusercontent.com/wiki/VIRUXE/scavengesurvive-mta/images/map/shelters.png" alt="Map"></a>
+<a href="images/map/shelters.png" target="_blank" rel="noopener noreferrer" title="View full-size map; Ctrl/Cmd-click or middle-click to open in a new tab"><img src="images/map/shelters.png" alt="Map"></a>

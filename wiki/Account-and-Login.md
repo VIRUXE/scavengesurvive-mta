@@ -10,17 +10,17 @@ Your account is your MTA nickname: the name you connect with is the name you reg
 4. **Welcome.** New accounts read the welcome text. Its only button counts down from 10 before it reads **Accept**; closing it earlier just brings it back. `/welcome` shows it again any time.
 5. Your first character spawns; see [Death](Death) for what a new character starts with.
 
-![Register dialog](images/screens/auth-dialog-register.jpg)
+![Register dialog](images/auth-dialog-register.jpg)
 
 ## Logging in
 
 Every later join shows *Login To Your Account*. Type the password and press **Accept** (or `Enter`); **Leave** (or `Escape`) disconnects you.
 
-![Login dialog](images/screens/auth-dialog-login.jpg)
+![Login dialog](images/auth-dialog-login.jpg)
 
 A wrong password, or one shorter than 4 characters, counts as a try: *Incorrect password! N out of 5 tries*. The fifth wrong try disconnects you, and the tries are counted per computer for 10 minutes, so reconnecting does not reset them.
 
-![Wrong password](images/screens/auth-dialog-wrong-password.jpg)
+![Wrong password](images/auth-dialog-wrong-password.jpg)
 
 Only one session per account: a second client connecting with your name is refused (*Account already online*). A deactivated account is refused with *Account inactive*; ask the staff.
 

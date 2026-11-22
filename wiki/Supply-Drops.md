@@ -66,4 +66,4 @@ A weapons cache is a crate of military gear that appears at once on the ground, 
 
 Supply drop landing points (stars) and weapon cache spots (dots).
 
-<a href="https://raw.githubusercontent.com/wiki/VIRUXE/scavengesurvive-mta/images/map/drops.png" target="_blank" rel="noopener noreferrer" title="View full-size map; Ctrl/Cmd-click or middle-click to open in a new tab"><img src="https://raw.githubusercontent.com/wiki/VIRUXE/scavengesurvive-mta/images/map/drops.png" alt="Map"></a>
+<a href="images/map/drops.png" target="_blank" rel="noopener noreferrer" title="View full-size map; Ctrl/Cmd-click or middle-click to open in a new tab"><img src="images/map/drops.png" alt="Map"></a>

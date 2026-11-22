@@ -91,6 +91,6 @@ These do not use the scarcity budget:
 
 Density of the loot points, and every vehicle spawn point by group.
 
-<a href="https://raw.githubusercontent.com/wiki/VIRUXE/scavengesurvive-mta/images/map/loot.png" target="_blank" rel="noopener noreferrer" title="View full-size map; Ctrl/Cmd-click or middle-click to open in a new tab"><img src="https://raw.githubusercontent.com/wiki/VIRUXE/scavengesurvive-mta/images/map/loot.png" alt="Maps"></a>
+<a href="images/map/loot.png" target="_blank" rel="noopener noreferrer" title="View full-size map; Ctrl/Cmd-click or middle-click to open in a new tab"><img src="images/map/loot.png" alt="Maps"></a>
 
-<a href="https://raw.githubusercontent.com/wiki/VIRUXE/scavengesurvive-mta/images/map/vehicles.png" target="_blank" rel="noopener noreferrer" title="View full-size map; Ctrl/Cmd-click or middle-click to open in a new tab"><img src="https://raw.githubusercontent.com/wiki/VIRUXE/scavengesurvive-mta/images/map/vehicles.png" alt="Maps"></a>
+<a href="images/map/vehicles.png" target="_blank" rel="noopener noreferrer" title="View full-size map; Ctrl/Cmd-click or middle-click to open in a new tab"><img src="images/map/vehicles.png" alt="Maps"></a>

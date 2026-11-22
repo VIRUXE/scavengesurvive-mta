@@ -4,7 +4,7 @@
 
 Medical items stop bleeding, close wounds, cure infections and apply [drugs](Drugs). Hold the item and hold `F`: a progress bar runs, and letting go cancels it. If another player stands within 1.5 m of you, you treat them; otherwise you treat yourself. Pills are always taken by yourself.
 
-![Dirty Bandage](images/items/11747_bandage1.png) ![Antiseptic Bandage](images/items/11748_bandagepack1.png) ![Medkit](images/items/11736_medicalsatchel1.png) ![Doctor's Bag](images/items/11738_mediccase1.png) ![Pills](images/items/2709_pain_killer.png) ![Injector](images/items/2711_tatoo_needle.png)
+![Dirty Bandage](images/items/20299_dirty_bandage.png) ![Antiseptic Bandage](images/items/20298_bandage.png) ![Medkit](images/items/20296_medkit.png) ![Doctor's Bag](images/items/20297_doctor_bag.png) ![Pills](images/items/20283_pills.png) ![Injector](images/items/2711_tatoo_needle.png)
 
 ## Treatment time
 

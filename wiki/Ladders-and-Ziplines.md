@@ -21,7 +21,7 @@ There are 14 ladders:
 
 The ladders and passages that belong to the puzzles (the ladder between the caves and Ganton, for example) are buttons instead, see [Code Hunt & Puzzles](Code-Hunt-and-Puzzles).
 
-<a href="https://raw.githubusercontent.com/wiki/VIRUXE/scavengesurvive-mta/images/map/features.png" target="_blank" rel="noopener noreferrer" title="View full-size map; Ctrl/Cmd-click or middle-click to open in a new tab"><img src="https://raw.githubusercontent.com/wiki/VIRUXE/scavengesurvive-mta/images/map/features.png" alt="Every ladder and zipline"></a>
+<a href="images/map/features.png" target="_blank" rel="noopener noreferrer" title="View full-size map; Ctrl/Cmd-click or middle-click to open in a new tab"><img src="images/map/features.png" alt="Every ladder and zipline"></a>
 
 ## Ziplines
 

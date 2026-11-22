@@ -26,7 +26,7 @@ While either infection is active your screen wobbles from time to time, more oft
 | Antiseptic Bandage | no | cured |
 | Doctor's Bag | no | cured |
 
-![Pills](images/items/2709_pain_killer.png) ![Antiseptic Bandage](images/items/11748_bandagepack1.png)
+![Pills](images/items/20283_pills.png) ![Antiseptic Bandage](images/items/20298_bandage.png)
 
 An Antiseptic Bandage is used up when it cures or stops a bleed, and it is the safe alternative to a Dirty Bandage. Pills only work on yourself; the type of pill is shown in the item name, for example `Pills (Antibiotics)`. See [Medical](Medical) for every treatment item.
 

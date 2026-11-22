@@ -2,7 +2,7 @@
 
 ![Explosives around a crate: the TNT, IED and EMP variants and a Molotov](images/scenes/explosives.png)
 
-![Timed TNT](images/items/1252_barrelexpos.png) ![Proximity TNT](images/items/1576_drug_orange.png) ![IED](images/items/2033_cj_sawnoff2.png) ![EMP](images/items/343_teargas.png) ![Molotov](images/items/344_molotov.png) ![Petrol Bomb](images/items/1650_petrolcanm.png)
+![Timed TNT](images/items/20284_tnt_timer.png) ![Proximity TNT](images/items/20286_tnt_prox.png) ![IED](images/items/20273_ied.png) ![EMP](images/items/343_teargas.png) ![Molotov](images/items/344_molotov.png) ![Petrol Bomb](images/items/1650_petrolcanm.png)
 
 There are 12 charges: three kinds of explosion (TNT, IED and EMP) times four triggers (timed, proximity, trip mine and phone remote). They are crafted at a [Workbench](Workbench) with a Screwdriver. A stick of [Dynamite](Dynamite) is a thirteenth, found ready-made as loot: a small charge on a timed fuse, and three sticks with a Screwdriver at a Workbench make a TNT.
 

@@ -2,7 +2,7 @@
 
 Drugs come from [Pills](Medical), [Injectors](Medical) and the Doctor's Bag. Each one lasts 5 minutes. Taking the same drug again adds another 5 minutes instead of resetting the timer, so doses stack. Active drugs are listed in yellow in the Health Status panel (open the inventory with `H`), they are saved when you log out and carry on counting down when you return, and you are told when one wears off. Dying clears them.
 
-![Pills](images/items/2709_pain_killer.png) ![Injector](images/items/2711_tatoo_needle.png) ![Doctor's Bag](images/items/11738_mediccase1.png)
+![Pills](images/items/20283_pills.png) ![Injector](images/items/2711_tatoo_needle.png) ![Doctor's Bag](images/items/20297_doctor_bag.png)
 
 ## Taking them
 

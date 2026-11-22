@@ -62,4 +62,4 @@ The quarry door leads into a cave world of its own. It holds no loot points, but
 
 The puzzle sites above ground.
 
-<a href="https://raw.githubusercontent.com/wiki/VIRUXE/scavengesurvive-mta/images/map/puzzles.png" target="_blank" rel="noopener noreferrer" title="View full-size map; Ctrl/Cmd-click or middle-click to open in a new tab"><img src="https://raw.githubusercontent.com/wiki/VIRUXE/scavengesurvive-mta/images/map/puzzles.png" alt="Map"></a>
+<a href="images/map/puzzles.png" target="_blank" rel="noopener noreferrer" title="View full-size map; Ctrl/Cmd-click or middle-click to open in a new tab"><img src="images/map/puzzles.png" alt="Map"></a>

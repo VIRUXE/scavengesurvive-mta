@@ -79,77 +79,77 @@ Fuel tank is in litres, trunk in slots, spawn chance in percent.
 <!-- table:vehicles -->
 |  | Vehicle | Type | Group | Fuel tank | Trunk slots | Spawn chance |
 |:--|:--|:--|:--|--:|--:|--:|
-|  | Coastguard | boat | Police | 120 L | 24 | 35 |
-|  | Dinghy | boat | Civilian | 81 L | 10 | 64 |
-|  | Launch | boat | Military | 213 L | 26 | 40 |
-|  | Marquis | boat | Civilian | 900 L | 100 | 50 |
-|  | Reefer | boat | Civilian | 245 L | 48 | 60 |
-|  | Squalo | boat | Civilian | 50 L | 28 | 20 |
-|  | Tropic | boat | Civilian | 260 L | 44 | 55 |
-|  | Vortex | boat | Unique | 45 L | 4 | 0.1 |
-|  | Baggage | car | Industrial | 14.5 L | 8 | 35.5 |
-|  | Blista Compact | car | Civilian | 40 L | 38 | 68 |
-|  | Bloodring Banger | car | Unique | 65 L | 32 | 0.5 |
-|  | Clover | car | Civilian | 62 L | 34 | 75 |
-|  | Comet | car | Civilian | 50 L | 20 | 10 |
-|  | Doomride | car | Unique | 180 L | 80 | 0.5 |
-|  | Moonbeam | car | Civilian | 60 L | 65 | 30 |
-|  | Police Car | car | Police | 78 L | 42 | 80 |
-|  | Police Car | car | Police | 70 L | 42 | 80 |
-|  | Police Car | car | Police | 75 L | 42 | 80 |
-|  | Regina | car | Civilian | 74 L | 48 | 75 |
-|  | Sabre | car | Civilian | 60 L | 24 | 17 |
-|  | Scimitar | car | Unique | 56 L | 24 | 3.3 |
-|  | Sentinel | car | Civilian | 58.8 L | 42 | 78 |
-|  | Sultan | car | Civilian | 65 L | 40 | 15 |
-|  | Tampa | car | Civilian | 58 L | 38 | 64 |
-|  | Maverick | helicopter | Civilian | 240 L | 32 | 1 |
-|  | Seasparrow | helicopter | Civilian | 96 L | 10 | 0.31 |
-|  | Faggio | motorbike | Civilian | 8 L | 10 | 45 |
-|  | Freeway | motorbike | Civilian | 19 L | 15 | 8 |
-|  | HPV1000 | motorbike | Police | 60 L | 15 | 45 |
-|  | Sanchez | motorbike | Civilian | 10 L | 8 | 15 |
-|  | Wayfarer | motorbike | Civilian | 47 L | 15 | 10 |
-|  | Rustler | plane | Civilian | 88 L | 15 | 0.8 |
-|  | Mountain Bike | pushbike | Civilian | 0 L | 2 | 8 |
-|  | APC-30 | truck | Unique | 60 L | 0 | 0.1 |
+| ![](images/vehicles/472_coastg.png) | Coastguard | boat | Police | 120 L | 24 | 35 |
+| ![](images/vehicles/473_dinghy.png) | Dinghy | boat | Civilian | 81 L | 10 | 64 |
+| ![](images/vehicles/595_launch.png) | Launch | boat | Military | 213 L | 26 | 40 |
+| ![](images/vehicles/484_marquis.png) | Marquis | boat | Civilian | 900 L | 100 | 50 |
+| ![](images/vehicles/453_reefer.png) | Reefer | boat | Civilian | 245 L | 48 | 60 |
+| ![](images/vehicles/446_squalo.png) | Squalo | boat | Civilian | 50 L | 28 | 20 |
+| ![](images/vehicles/454_tropic.png) | Tropic | boat | Civilian | 260 L | 44 | 55 |
+| ![](images/vehicles/539_vortex.png) | Vortex | boat | Unique | 45 L | 4 | 0.1 |
+| ![](images/vehicles/485_baggage.png) | Baggage | car | Industrial | 14.5 L | 8 | 35.5 |
+| ![](images/vehicles/496_blistac.png) | Blista Compact | car | Civilian | 40 L | 38 | 68 |
+| ![](images/vehicles/504_bloodra.png) | Bloodring Banger | car | Unique | 65 L | 32 | 0.5 |
+| ![](images/vehicles/542_clover.png) | Clover | car | Civilian | 62 L | 34 | 75 |
+| ![](images/vehicles/480_comet.png) | Comet | car | Civilian | 50 L | 20 | 10 |
+| ![](images/vehicles/573_duneride.png) | Doomride | car | Unique | 180 L | 80 | 0.5 |
+| ![](images/vehicles/418_moonbeam.png) | Moonbeam | car | Civilian | 60 L | 65 | 30 |
+| ![](images/vehicles/596_copcarla.png) | Police Car | car | Police | 78 L | 42 | 80 |
+| ![](images/vehicles/597_copcarsf.png) | Police Car | car | Police | 70 L | 42 | 80 |
+| ![](images/vehicles/598_copcarvg.png) | Police Car | car | Police | 75 L | 42 | 80 |
+| ![](images/vehicles/479_regina.png) | Regina | car | Civilian | 74 L | 48 | 75 |
+| ![](images/vehicles/475_sabre.png) | Sabre | car | Civilian | 60 L | 24 | 17 |
+| ![](images/vehicles/475_sabre.png) | Scimitar | car | Unique | 56 L | 24 | 3.3 |
+| ![](images/vehicles/405_sentinel.png) | Sentinel | car | Civilian | 58.8 L | 42 | 78 |
+| ![](images/vehicles/560_sultan.png) | Sultan | car | Civilian | 65 L | 40 | 15 |
+| ![](images/vehicles/549_tampa.png) | Tampa | car | Civilian | 58 L | 38 | 64 |
+| ![](images/vehicles/487_maverick.png) | Maverick | helicopter | Civilian | 240 L | 32 | 1 |
+| ![](images/vehicles/447_seaspar.png) | Seasparrow | helicopter | Civilian | 96 L | 10 | 0.31 |
+| ![](images/vehicles/462_faggio.png) | Faggio | motorbike | Civilian | 8 L | 10 | 45 |
+| ![](images/vehicles/463_freeway.png) | Freeway | motorbike | Civilian | 19 L | 15 | 8 |
+| ![](images/vehicles/523_copbike.png) | HPV1000 | motorbike | Police | 60 L | 15 | 45 |
+| ![](images/vehicles/468_sanchez.png) | Sanchez | motorbike | Civilian | 10 L | 8 | 15 |
+| ![](images/vehicles/586_wayfarer.png) | Wayfarer | motorbike | Civilian | 47 L | 15 | 10 |
+| ![](images/vehicles/476_rustler.png) | Rustler | plane | Civilian | 88 L | 15 | 0.8 |
+| ![](images/vehicles/510_mtbike.png) | Mountain Bike | pushbike | Civilian | 0 L | 2 | 8 |
+| ![](images/vehicles/578_dft30.png) | APC-30 | truck | Unique | 60 L | 0 | 0.1 |
 |  | Airstream | truck | Civilian | 0 L | 0 | 3 |
-|  | Ambulance | truck | Medical | 80 L | 70 | 30 |
-|  | Articulated | truck | Industrial | 0 L | 100 | 18 |
-|  | BF Injection | truck | Civilian | 40 L | 24 | 15 |
-|  | Bandito | truck | Unique | 48 L | 15 | 0.1 |
-|  | Barracks | truck | Military | 200 L | 100 | 3 |
-|  | Bobcat | truck | Civilian | 60 L | 40 | 76 |
-|  | Boxville | truck | Industrial | 75 L | 70 | 55 |
-|  | DFT-30 | truck | Industrial | 60 L | 0 | 35 |
-|  | Duneride | truck | Civilian | 180 L | 85 | 10 |
-|  | Enforcer | truck | Police | 90 L | 64 | 10 |
-|  | FBI Truck | truck | Police | 80 L | 45 | 3 |
-|  | Firetruck | truck | Medical | 115 L | 65 | 0.5 |
-|  | Flatbed | truck | Industrial | 70 L | 100 | 15 |
-|  | Huntley | truck | Civilian | 70 L | 50 | 57 |
-|  | Journey | truck | Civilian | 60 L | 76 | 10 |
-|  | Linerunner | truck | Industrial | 120 L | 12 | 15 |
-|  | Mesa | truck | Civilian | 77 L | 48 | 70 |
-|  | Patriot | truck | Military | 94 L | 50 | 22 |
-|  | Rancher | truck | Civilian | 110 L | 52 | 44 |
-|  | Ranger | truck | Police | 110 L | 48 | 30 |
-|  | Rhino | truck | Military | 1900 L | 12 | 0.01 |
-|  | Roadpain | truck | Unique | 210 L | 0 | 1.4 |
-|  | Rumpo | truck | Industrial | 55 L | 80 | 45 |
-|  | Sadler | truck | Civilian | 60 L | 40 | 34 |
-|  | Sandking | truck | Unique | 120 L | 46 | 3.5 |
-|  | Steamroller | truck | Unique | 60 L | 0 | 0.1 |
-|  | Trailer | truck | Industrial | 0 L | 50 | 20 |
-|  | Truckfort | truck | Unique | 265 L | 76 | 1.1 |
-|  | Tug | truck | Industrial | 10 L | 8 | 10 |
-|  | Walton | truck | Civilian | 60 L | 46 | 40 |
-|  | Yankee | truck | Industrial | 60 L | 80 | 40 |
-|  | Yosemite | truck | Civilian | 60 L | 44 | 70 |
+| ![](images/vehicles/416_ambulan.png) | Ambulance | truck | Medical | 80 L | 70 | 30 |
+| ![](images/vehicles/591_artict3.png) | Articulated | truck | Industrial | 0 L | 100 | 18 |
+| ![](images/vehicles/424_bfinject.png) | BF Injection | truck | Civilian | 40 L | 24 | 15 |
+| ![](images/vehicles/568_bandito.png) | Bandito | truck | Unique | 48 L | 15 | 0.1 |
+| ![](images/vehicles/433_barracks.png) | Barracks | truck | Military | 200 L | 100 | 3 |
+| ![](images/vehicles/422_bobcat.png) | Bobcat | truck | Civilian | 60 L | 40 | 76 |
+| ![](images/vehicles/498_boxville.png) | Boxville | truck | Industrial | 75 L | 70 | 55 |
+| ![](images/vehicles/578_dft30.png) | DFT-30 | truck | Industrial | 60 L | 0 | 35 |
+| ![](images/vehicles/573_duneride.png) | Duneride | truck | Civilian | 180 L | 85 | 10 |
+| ![](images/vehicles/427_enforcer.png) | Enforcer | truck | Police | 90 L | 64 | 10 |
+| ![](images/vehicles/528_fbitruck.png) | FBI Truck | truck | Police | 80 L | 45 | 3 |
+| ![](images/vehicles/407_firetruk.png) | Firetruck | truck | Medical | 115 L | 65 | 0.5 |
+| ![](images/vehicles/455_flatbed.png) | Flatbed | truck | Industrial | 70 L | 100 | 15 |
+| ![](images/vehicles/579_huntley.png) | Huntley | truck | Civilian | 70 L | 50 | 57 |
+| ![](images/vehicles/508_journey.png) | Journey | truck | Civilian | 60 L | 76 | 10 |
+| ![](images/vehicles/403_linerun.png) | Linerunner | truck | Industrial | 120 L | 12 | 15 |
+| ![](images/vehicles/500_mesa.png) | Mesa | truck | Civilian | 77 L | 48 | 70 |
+| ![](images/vehicles/470_patriot.png) | Patriot | truck | Military | 94 L | 50 | 22 |
+| ![](images/vehicles/489_rancher.png) | Rancher | truck | Civilian | 110 L | 52 | 44 |
+| ![](images/vehicles/599_copcarru.png) | Ranger | truck | Police | 110 L | 48 | 30 |
+| ![](images/vehicles/432_rhino.png) | Rhino | truck | Military | 1900 L | 12 | 0.01 |
+| ![](images/vehicles/515_rdtrain.png) | Roadpain | truck | Unique | 210 L | 0 | 1.4 |
+| ![](images/vehicles/440_rumpo.png) | Rumpo | truck | Industrial | 55 L | 80 | 45 |
+| ![](images/vehicles/543_sadler.png) | Sadler | truck | Civilian | 60 L | 40 | 34 |
+| ![](images/vehicles/495_sandking.png) | Sandking | truck | Unique | 120 L | 46 | 3.5 |
+| ![](images/vehicles/578_dft30.png) | Steamroller | truck | Unique | 60 L | 0 | 0.1 |
+| ![](images/vehicles/611_utiltr1.png) | Trailer | truck | Industrial | 0 L | 50 | 20 |
+| ![](images/vehicles/403_linerun.png) | Truckfort | truck | Unique | 265 L | 76 | 1.1 |
+| ![](images/vehicles/583_tug.png) | Tug | truck | Industrial | 10 L | 8 | 10 |
+| ![](images/vehicles/478_walton.png) | Walton | truck | Civilian | 60 L | 46 | 40 |
+| ![](images/vehicles/456_yankee.png) | Yankee | truck | Industrial | 60 L | 80 | 40 |
+| ![](images/vehicles/554_yosemite.png) | Yosemite | truck | Civilian | 60 L | 44 | 70 |
 <!-- /table:vehicles -->
 
 ## Map
 
 Every vehicle spawn point, coloured by group.
 
-<a href="https://raw.githubusercontent.com/wiki/VIRUXE/scavengesurvive-mta/images/map/vehicles.png" target="_blank" rel="noopener noreferrer" title="View full-size map; Ctrl/Cmd-click or middle-click to open in a new tab"><img src="https://raw.githubusercontent.com/wiki/VIRUXE/scavengesurvive-mta/images/map/vehicles.png" alt="Map"></a>
+<a href="images/map/vehicles.png" target="_blank" rel="noopener noreferrer" title="View full-size map; Ctrl/Cmd-click or middle-click to open in a new tab"><img src="images/map/vehicles.png" alt="Map"></a>

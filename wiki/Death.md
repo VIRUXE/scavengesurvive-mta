@@ -65,6 +65,6 @@ Nothing else carries over: no items, no skills. Your account, language and passw
 
 The beaches a new character can wake up on.
 
-<a href="https://raw.githubusercontent.com/wiki/VIRUXE/scavengesurvive-mta/images/map/spawns.png" target="_blank" rel="noopener noreferrer" title="View full-size map; Ctrl/Cmd-click or middle-click to open in a new tab"><img src="https://raw.githubusercontent.com/wiki/VIRUXE/scavengesurvive-mta/images/map/spawns.png" alt="Map"></a>
+<a href="images/map/spawns.png" target="_blank" rel="noopener noreferrer" title="View full-size map; Ctrl/Cmd-click or middle-click to open in a new tab"><img src="images/map/spawns.png" alt="Map"></a>
 
 See also [Health](Health), [Combat Log](Combat-Log) and [Getting Started](Getting-Started).

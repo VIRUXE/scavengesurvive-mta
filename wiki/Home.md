@@ -19,7 +19,7 @@ Scavenge & Survive is a PvP survival game on a decayed San Andreas, where suppli
 
 The whole of San Andreas is open, divided into seven zones that decide how much loot each region holds; there are no safe areas. See [World & Zones](World-and-Zones) for the zones, the loot and the weather, and [Loot & Respawn](Loot-and-Respawn) for how the world refills.
 
-<a href="https://raw.githubusercontent.com/wiki/VIRUXE/scavengesurvive-mta/images/map/overview.png" target="_blank" rel="noopener noreferrer" title="View full-size map; Ctrl/Cmd-click or middle-click to open in a new tab"><img src="https://raw.githubusercontent.com/wiki/VIRUXE/scavengesurvive-mta/images/map/overview.png" alt="Everything on one map"></a>
+<a href="World-and-Zones#the-map" title="Open the interactive map: every layer, drag and zoom"><img src="images/map/overview.png" alt="Everything on one map"></a>
 
 ## What changed from the original
 

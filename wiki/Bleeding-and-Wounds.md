@@ -52,7 +52,7 @@ Hold the interact key (`F`) with the item in your hands, on yourself or on a pla
 | Medkit | reduces the rate and removes wounds |
 | Doctor's Bag | stops the bleed completely and removes wounds |
 
-![Dirty Bandage](images/items/11747_bandage1.png) ![Antiseptic Bandage](images/items/11748_bandagepack1.png) ![Medkit](images/items/11736_medicalsatchel1.png) ![Doctor's Bag](images/items/11738_mediccase1.png)
+![Dirty Bandage](images/items/20299_dirty_bandage.png) ![Antiseptic Bandage](images/items/20298_bandage.png) ![Medkit](images/items/20296_medkit.png) ![Doctor's Bag](images/items/20297_doctor_bag.png)
 
 A bandage cuts a small bleed almost to nothing and a heavy one only a little, so a bad bleed needs several bandages or a Medkit. A rate under 0.005 counts as stopped. A bandage is used up when it works; if there is no bleed it is not spent.
 

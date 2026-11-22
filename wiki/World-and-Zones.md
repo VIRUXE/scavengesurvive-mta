@@ -4,7 +4,7 @@ The whole of San Andreas is open: three cities, the countryside between them and
 
 ![Storage tanks and towers at an industrial complex in Flint County](images/places/farm-silos.png)
 
-<a href="https://raw.githubusercontent.com/wiki/VIRUXE/scavengesurvive-mta/images/map/zones.png" target="_blank" rel="noopener noreferrer" title="View full-size map; Ctrl/Cmd-click or middle-click to open in a new tab"><img src="https://raw.githubusercontent.com/wiki/VIRUXE/scavengesurvive-mta/images/map/zones.png" alt="The seven zones"></a>
+<a href="images/map/zones.png" target="_blank" rel="noopener noreferrer" title="View full-size map; Ctrl/Cmd-click or middle-click to open in a new tab"><img src="images/map/zones.png" alt="The seven zones"></a>
 
 ## The seven zones
 
@@ -22,7 +22,7 @@ The whole of San Andreas is open: three cities, the countryside between them and
 
 Every zone has a fixed set of loot points and may hold 2 items per point, so the cities are far richer than the countryside: Los Santos has about 4,000 loot points, San Fierro 3,200, Las Venturas 2,000, Red County 650, Bone County 550, Flint County 500 and Tierra Robada 180. How and when they fill is on [Loot & Respawn](Loot-and-Respawn).
 
-<a href="https://raw.githubusercontent.com/wiki/VIRUXE/scavengesurvive-mta/images/map/loot.png" target="_blank" rel="noopener noreferrer" title="View full-size map; Ctrl/Cmd-click or middle-click to open in a new tab"><img src="https://raw.githubusercontent.com/wiki/VIRUXE/scavengesurvive-mta/images/map/loot.png" alt="Where the loot points are: the denser, the more spawn points nearby"></a>
+<a href="images/map/loot.png" target="_blank" rel="noopener noreferrer" title="View full-size map; Ctrl/Cmd-click or middle-click to open in a new tab"><img src="images/map/loot.png" alt="Where the loot points are: the denser, the more spawn points nearby"></a>
 
 Each point is of one kind, and the kind decides what it can hold:
 
@@ -35,7 +35,7 @@ Each point is of one kind, and the kind decides what it can hold:
 
 ## Weather
 
-![Sandstorm](images/screens/sandstorm.jpg)
+![Sandstorm](images/fort-defiance-sandstorm.jpg)
 
 The weather is the same for everyone and changes on its own. A change never comes sooner than 10 minutes after the last one; from then on there is a 10 % chance every minute of a new roll, so a spell of weather lasts about 20 minutes on average, sometimes much longer. Every weather of San Andreas can come up, but rain, the sandstorm and the dull countryside skies are drawn only a third to a half as often as the clear ones, and the server never starts up in a sandstorm.
 
@@ -67,7 +67,7 @@ A few items stand at fixed places. If one is taken down or carried off it is put
 | [Barbecue](Campfire-and-BBQ) | Paradiso, San Fierro |
 | Dildo | Come-A-Lot, Las Venturas |
 
-<a href="https://raw.githubusercontent.com/wiki/VIRUXE/scavengesurvive-mta/images/map/fixtures.png" target="_blank" rel="noopener noreferrer" title="View full-size map; Ctrl/Cmd-click or middle-click to open in a new tab"><img src="https://raw.githubusercontent.com/wiki/VIRUXE/scavengesurvive-mta/images/map/fixtures.png" alt="Workbenches, machines and fuel stations"></a>
+<a href="images/map/fixtures.png" target="_blank" rel="noopener noreferrer" title="View full-size map; Ctrl/Cmd-click or middle-click to open in a new tab"><img src="images/map/fixtures.png" alt="Workbenches, machines and fuel stations"></a>
 
 The parts of the puzzles (Fuse Box, Battery, Hard Drive, Key) and the lockup's Code items are put back the same way; see [Code Hunt & Puzzles](Code-Hunt-and-Puzzles).
 
@@ -80,8 +80,19 @@ The parts of the puzzles (Fuse Box, Battery, Hard Drive, Key) and the lockup's C
 - Crates from the sky at named spots: [Supply Drops](Supply-Drops).
 - Houses and trailers you can walk into: [Houses & Trailers](Houses-and-Trailers).
 
-## Everything on one map
+## The map
 
-The fixed points of interest together; loot and vehicle spawns have maps of their own above.
+Every kind of point on one map, layer by layer: drag to move, scroll or pinch to zoom, double-click to zoom in.
 
-<a href="https://raw.githubusercontent.com/wiki/VIRUXE/scavengesurvive-mta/images/map/overview.png" target="_blank" rel="noopener noreferrer" title="View full-size map; Ctrl/Cmd-click or middle-click to open in a new tab"><img src="https://raw.githubusercontent.com/wiki/VIRUXE/scavengesurvive-mta/images/map/overview.png" alt="Everything on one map"></a>
+<div class="wiki-map" aria-label="Map of San Andreas">
+<button data-layer="overview" data-src="images/map/overview.png" data-caption="Everything on one map: every kind of point, drawn on the radar tiles.">Overview</button>
+<button data-layer="zones" data-src="images/map/zones.png" data-caption="The seven zones. Each has its own loot budget and names the places in chat.">Zones</button>
+<button data-layer="loot" data-src="images/map/loot.png" data-caption="11,062 loot points. The denser the dots, the richer the streets: cities first, country last.">Loot</button>
+<button data-layer="vehicles" data-src="images/map/vehicles.png" data-caption="2,017 vehicle points for about 80 vehicles at a time, each smoking and nearly dry when it spawns.">Vehicles</button>
+<button data-layer="drops" data-src="images/map/drops.png" data-caption="36 supply drop points. A point rests 24 hours after a drop.">Supply drops</button>
+<button data-layer="spawns" data-src="images/map/spawns.png" data-caption="The 14 beaches a new character can wake up on, never the same one twice in a row.">Spawns</button>
+<button data-layer="shelters" data-src="images/map/shelters.png" data-caption="Town houses, trailers and log cabins you can walk into, with loot inside and rain outside.">Shelters</button>
+<button data-layer="puzzles" data-src="images/map/puzzles.png" data-caption="The code hunt, the Chiliad station and the gate of Area 69.">Puzzles</button>
+<button data-layer="fixtures" data-src="images/map/fixtures.png" data-caption="Workbenches, scrap and refining machines, barbecues and campfires that come back after a restart.">Fixtures</button>
+<button data-layer="features" data-src="images/map/features.png" data-caption="14 ladders, 13 ziplines and 78 fuel outlets.">Features</button>
+</div>

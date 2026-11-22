@@ -41,7 +41,7 @@ Stand at the driver's door (or the rear for the trunk) and press `F` with the to
 | Tool | Breaks |
 |:--|:--|
 | ![Crowbar](images/items/18634_gtasacrowbar1.png) Crowbar | A plain lock only. A custom lock *cannot be broken* with it |
-| ![Electronic Lockpick](images/items/1952_turn_arm_r.png) Electronic Lockpick | Any lock |
+| ![Electronic Lockpick](images/items/20281_lockpick.png) Electronic Lockpick | Any lock |
 
 The Electronic Lockpick is made at a [Workbench](Workbench).
 

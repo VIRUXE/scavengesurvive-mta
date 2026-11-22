@@ -57,7 +57,7 @@ Some names carry their state: food reads `(Cooked)` or `(Uncooked)`; a drink `Bo
 
 ## Items on the ground
 
-![A Hotdog on the ground with its label](images/screens/world-item-hotdog.jpg)
+![A Hotdog on the ground with its label](images/world-item-hotdog.jpg)
 
 Items lying in the world are shown within 150 m of you. Within 4 m each shows its name as a yellow label (bigger within 3 m), hidden while a wall stands between you and it; a built defence shows its hit points from 10 m, and a Sign's text can be read from 25 m. Picking an item up shows a tip about it for 20 seconds; `/tooltips` turns the tips off and on.
 

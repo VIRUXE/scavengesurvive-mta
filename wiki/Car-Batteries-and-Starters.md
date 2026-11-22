@@ -1,6 +1,6 @@
 # Car Batteries & Starters
 
-![Car Battery](images/items/20208_car_battery.png) ![Starter Motor](images/items/2006_cr_safe_dial.png)
+![Car Battery](images/items/20208_car_battery.png) ![Starter Motor](images/items/20269_starter_motor.png)
 
 Two parts under the bonnet decide whether an engine turns over: the **battery** and the **starter motor**. Every vehicle with an engine under a bonnet has both (cars, trucks, vans, helicopters and planes); motorbikes, bicycles, boats and the open vehicles without doors (BF Injection, Bandito, Baggage...) have neither and need neither. The items are [Car Battery](Car-Battery) and [Starter Motor](Starter-Motor); the lamps that show their state are on [Driver's Dashboard](Drivers-Dashboard).
 
