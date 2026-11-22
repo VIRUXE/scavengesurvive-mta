@@ -19,3 +19,6 @@ tools/marquis_cabin/build/
 
 # live snapshot written by the dashboard resource
 resources/\[scavengesurvive\]/dashboard/live.json
+
+# the player wiki staged and built by tools/wiki_site.py
+/build/

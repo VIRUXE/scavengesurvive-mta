@@ -1,0 +1,75 @@
+/* The wiki in the website's colours and fonts (site/assets/css/site.css): ember orange on near-black, Inter for
+   text, Bebas Neue for the site name, JetBrains Mono for code. The font files are copied from site/assets/fonts. */
+
+@font-face { font-family: "Inter"; font-weight: 400; font-display: swap; src: url("fonts/inter-400-latin.woff2") format("woff2"); }
+@font-face { font-family: "Inter"; font-weight: 500; font-display: swap; src: url("fonts/inter-500-latin.woff2") format("woff2"); }
+@font-face { font-family: "Inter"; font-weight: 600; font-display: swap; src: url("fonts/inter-600-latin.woff2") format("woff2"); }
+@font-face { font-family: "Inter"; font-weight: 700; font-display: swap; src: url("fonts/inter-700-latin.woff2") format("woff2"); }
+@font-face { font-family: "Bebas Neue"; font-weight: 400; font-display: swap; src: url("fonts/bebas-neue-latin.woff2") format("woff2"); }
+@font-face { font-family: "JetBrains Mono"; font-weight: 400; font-display: swap; src: url("fonts/jetbrains-mono-400-latin.woff2") format("woff2"); }
+
+:root {
+  --md-text-font: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --md-code-font: "JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+
+[data-md-color-primary="custom"] {
+  --md-primary-fg-color: #a63d00;
+  --md-primary-fg-color--light: #ff6a00;
+  --md-primary-fg-color--dark: #7a3b16;
+  --md-primary-bg-color: #fff;
+  --md-primary-bg-color--light: #ffffffb3;
+}
+[data-md-color-accent="custom"] {
+  --md-accent-fg-color: #ff6a00;
+  --md-accent-fg-color--transparent: #ff6a001a;
+  --md-accent-bg-color: #fff;
+}
+
+[data-md-color-scheme="slate"] {
+  --md-hue: 30;
+  --md-default-bg-color: #121212;
+  --md-default-fg-color: #d8d4cce6;
+  --md-default-fg-color--light: #9b968d;
+  --md-default-fg-color--lighter: #6b665f;
+  --md-default-fg-color--lightest: #6b665f40;
+  --md-typeset-a-color: #ffb347;
+  --md-code-bg-color: #1a1a1a;
+  --md-footer-bg-color: #0b0b0b;
+  --md-footer-bg-color--dark: #0b0b0b;
+}
+[data-md-color-scheme="slate"][data-md-color-primary="custom"] {
+  --md-primary-fg-color: #1a1a1a;
+  --md-primary-fg-color--dark: #0b0b0b;
+}
+[data-md-color-scheme="default"] {
+  --md-typeset-a-color: #a63d00;
+}
+
+.md-header__topic:first-child { font-family: "Bebas Neue", var(--md-text-font); font-size: 1.15rem; letter-spacing: 0.04em; }
+[data-md-color-scheme="slate"] .md-header { border-bottom: 2px solid #ff6a00; }
+[data-md-color-scheme="slate"] .md-tabs { background: #0b0b0b; }
+
+/* item renders are 512 px squares: a picture on a page, a thumbnail in the catalogue tables */
+.md-typeset img[src*="/images/items/"] { max-width: 224px; }
+.md-typeset table:not([class]) td img { max-height: 48px; width: auto; vertical-align: middle; }
+.md-typeset table:not([class]) { font-size: 0.72rem; }
+.md-typeset img { border-radius: 4px; }
+
+/* the map explorer of wiki.js (the website's .map, site/assets/css/site.css) */
+.wiki-map { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.8rem; margin: 1.5em 0; }
+.wiki-map__panel { order: -1; }
+.wiki-map:not(.is-ready) { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.wiki-map__stage { position: relative; aspect-ratio: 1; overflow: hidden; border-radius: 4px; background: #0d1b2a; cursor: grab; touch-action: none; user-select: none; border: 1px solid var(--md-default-fg-color--lightest); }
+.wiki-map__stage:active { cursor: grabbing; }
+.wiki-map__layers { position: absolute; inset: 0; transform-origin: 0 0; will-change: transform; }
+.md-typeset .wiki-map__layers img { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; border-radius: 0; opacity: 0; transition: opacity 0.4s; pointer-events: none; }
+.md-typeset .wiki-map__layers img.is-on { opacity: 1; }
+.wiki-map__hud { position: absolute; left: 0.6rem; bottom: 0.6rem; display: flex; gap: 0.3rem; z-index: 1; }
+.wiki-map__hud button { width: 1.8rem; height: 1.8rem; border-radius: 4px; border: 1px solid #ffffff33; background: #0a0a0acc; color: #fff; cursor: pointer; font: inherit; }
+.wiki-map__hud button:hover { border-color: #ff6a00; color: #ffb347; }
+.wiki-map__chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.wiki-map__chip, .wiki-map:not(.is-ready) button { padding: 0.25rem 0.7rem; border-radius: 999px; border: 1px solid var(--md-default-fg-color--lightest); background: transparent; color: var(--md-default-fg-color); font: inherit; font-size: 0.7rem; cursor: pointer; }
+.wiki-map__chip:hover { border-color: var(--md-accent-fg-color); }
+.wiki-map__chip[aria-pressed="true"] { background: var(--md-accent-fg-color); border-color: var(--md-accent-fg-color); color: #fff; }
+.md-typeset .wiki-map__caption { margin: 0.6rem 0 0; font-size: 0.7rem; color: var(--md-default-fg-color--light); min-height: 2.4em; }

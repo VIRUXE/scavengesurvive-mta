@@ -1,0 +1,95 @@
+# Shared MkDocs settings of the player wiki (wiki.scavengesurvive-reborn.com). Not built directly: `python -m
+# tools.wiki_site` stages each language and writes a config per language that INHERITs this one, adding docs_dir,
+# site_dir, site_url, the navigation (from wiki/_Sidebar.md), the theme language and the search plugin.
+site_name: Scavenge & Survive Wiki
+site_description: Player wiki of Scavenge & Survive Reborn, a PvP survival server for MTA:San Andreas.
+repo_url: https://github.com/VIRUXE/scavengesurvive-mta
+repo_name: scavengesurvive-mta
+edit_uri: ""
+copyright: >-
+  Built on the original Scavenge &amp; Survive wiki by Southclaws and its contributors; every page describes this server
+  as it runs today. Text CC BY-SA 4.0.
+
+theme:
+  name: material
+  font: false
+  logo: assets/logo-64.webp
+  favicon: assets/logo-64.webp
+  palette:
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-sunny
+        name: Light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-night
+        name: Dark mode
+  features:
+    - navigation.instant
+    - navigation.instant.progress
+    - navigation.tracking
+    - navigation.sections
+    - navigation.top
+    - navigation.footer
+    - search.suggest
+    - search.highlight
+    - search.share
+    - toc.follow
+    - content.tooltips
+
+extra_css:
+  - assets/wiki.css
+extra_javascript:
+  - assets/wiki.js
+
+extra:
+  homepage: https://www.scavengesurvive-reborn.com
+  generator: false
+  social:
+    - icon: fontawesome/solid/house
+      link: https://www.scavengesurvive-reborn.com
+      name: Website
+    - icon: fontawesome/brands/discord
+      link: https://discord.scavengesurvive-reborn.com
+      name: Discord
+    - icon: fontawesome/brands/github
+      link: https://github.com/VIRUXE/scavengesurvive-mta
+      name: Source
+  alternate:
+    - name: English
+      link: /
+      lang: en
+    - name: Português
+      link: /pt/
+      lang: pt
+
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.betterem
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tilde
+  - pymdownx.tasklist:
+      custom_checkbox: true
+
+validation:
+  nav:
+    omitted_files: ignore
+  links:
+    absolute_links: ignore
+    unrecognized_links: warn
+    anchors: warn

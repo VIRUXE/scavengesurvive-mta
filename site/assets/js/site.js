@@ -436,7 +436,7 @@
           '<div class="server"><div class="server__name"><span class="status"></span>' + s.name + "</div>" +
           '<div class="server__addr"><span>' + s.address + '</span><button data-copy="' + s.address + '">' + t("copy", "Copy") + "</button></div>" +
           '<dl><dt>' + t("servers.players", "Players") + '</dt><dd data-live-players>—</dd><dt>' + t("servers.lang", "Language") + "</dt><dd>" + pick(s.language) + "</dd><dt>" + t("servers.region", "Region") + "</dt><dd>" + pick(s.region) + "</dd>" + (s.discord ? "<dt>Discord</dt><dd><a href=\"" + s.discord + '" rel="noopener">' + s.discord.replace(/^https?:\/\//, "") + "</a></dd>" : "") + "</dl>" +
-          '<div class="row"><a class="btn btn--ember" href="mtasa://' + s.address + '">' + t("join", "Join now") + '</a><a class="btn btn--ghost" href="' + (s.rules || "https://github.com/VIRUXE/scavengesurvive-mta/wiki/Fair-Play") + '" rel="noopener">' + t("servers.rules", "Rules") + "</a></div></div>")).join("");
+          '<div class="row"><a class="btn btn--ember" href="mtasa://' + s.address + '">' + t("join", "Join now") + '</a><a class="btn btn--ghost" href="' + (s.rules || "https://wiki.scavengesurvive-reborn.com/Fair-Play/") + '" rel="noopener">' + t("servers.rules", "Rules") + "</a></div></div>")).join("");
         initLive();
       };
       render();

@@ -3,6 +3,7 @@ $ErrorActionPreference = "Stop"
 Set-Location (Split-Path $PSScriptRoot -Parent)
 python -m pip install --upgrade pip hererocks | Out-Null
 python -m pip install -e . | Out-Null
+python -m pip install -r wiki-site/requirements.txt | Out-Null
 # hererocks runs LuaRocks' install.bat from its temp dir; that fails when cwd is excluded from exe lookup.
 Remove-Item Env:NoDefaultCurrentDirectoryInExePath -ErrorAction SilentlyContinue
 if (-not (Test-Path ".lua/bin/lua.exe")) { python -m hererocks .lua -l 5.1.5 -r latest }

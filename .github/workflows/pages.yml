@@ -1,11 +1,13 @@
-# Deploys site/ to https://www.scavengesurvive-reborn.com (juniper), turns GitHub Pages into a redirect there, and mirrors
-# wiki/ to the repository's wiki.
+# Deploys site/ to https://www.scavengesurvive-reborn.com (juniper), turns GitHub Pages into a redirect there, builds
+# wiki/ into https://wiki.scavengesurvive-reborn.com (juniper, tools/wiki_site.py), and leaves a forwarding stub of every
+# page in the repository's GitHub wiki.
 #
 # The site job rsyncs site/ as deploy-ssr, whose key only reaches /var/www/scavengesurvive-reborn.com/public through
-# rrsync (docs/runbooks/website-hosting.md). Secrets: JUNIPER_DEPLOY_KEY (private key), JUNIPER_KNOWN_HOSTS
-# (ssh-keyscan of juniper.flaviopereira.dev). The pages job keeps viruxe.github.io/scavengesurvive-mta/ working for old
-# links: every path there forwards to the same path on the domain. The wiki job needs the wiki to exist (create any page
-# once in the UI); it pushes with the workflow's own token.
+# rrsync (docs/runbooks/website-hosting.md); the wiki-site job rsyncs the built wiki with a second key of the same user
+# that only reaches /var/www/scavengesurvive-reborn.com/wiki. Secrets: JUNIPER_DEPLOY_KEY and JUNIPER_WIKI_DEPLOY_KEY
+# (private keys), JUNIPER_KNOWN_HOSTS (ssh-keyscan of juniper.flaviopereira.dev). The pages job keeps viruxe.github.io/scavengesurvive-mta/ working for old
+# links: every path there forwards to the same path on the domain. The wiki job needs the GitHub wiki to exist; it
+# pushes with the workflow's own token and keeps the wiki's old images/ folder, which nothing builds from any more.
 name: pages
 
 on:
@@ -14,6 +16,9 @@ on:
     paths:
       - "site/**"
       - "wiki/**"
+      - "wiki-site/**"
+      - "tools/wiki_site.py"
+      - "docs/images/**"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 
@@ -84,8 +89,40 @@ jobs:
       - id: deploy
         uses: actions/deploy-pages@v4
 
+  wiki-site:
+    name: Build the wiki and deploy it to juniper
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    environment:
+      name: wiki
+      url: https://wiki.scavengesurvive-reborn.com
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: wiki-site/requirements.txt
+      - name: Install MkDocs
+        run: pip install -r wiki-site/requirements.txt
+      - name: Build
+        run: python -m tools.wiki_site --strict
+      - name: Install the deploy key
+        env:
+          KEY: ${{ secrets.JUNIPER_WIKI_DEPLOY_KEY }}
+          KNOWN_HOSTS: ${{ secrets.JUNIPER_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+      - name: Rsync the built wiki
+        run: |
+          rsync -rlz --delete --chmod=D755,F644 build/wiki-site/ deploy-ssr@juniper.flaviopereira.dev:/
+
   wiki:
-    name: Mirror wiki/ to the GitHub wiki
+    name: Point the GitHub wiki at the new wiki
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -95,13 +132,20 @@ jobs:
         env:
           TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: git clone "https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.wiki.git" /tmp/wiki
-      - name: Replace every page, keep images/
+      - name: Replace every page with a link to its new address, keep images/
         run: |
           cd /tmp/wiki
           find . -maxdepth 1 -name '*.md' -delete
-          cp "$GITHUB_WORKSPACE"/wiki/*.md .
+          for f in "$GITHUB_WORKSPACE"/wiki/*.md; do
+            name=$(basename "$f" .md)
+            case "$name" in _*|*.*) continue ;; esac
+            title=$(sed -n 's/^# //p;q' "$f")
+            if [ "$name" = Home ]; then url="https://wiki.scavengesurvive-reborn.com/"; else url="https://wiki.scavengesurvive-reborn.com/$name/"; fi
+            printf '# %s\n\nThe wiki moved to its own site, with search and a Portuguese version: **[%s](%s)**.\n' \
+              "${title:-$name}" "${url#https://}" "$url" > "$name.md"
+          done
           git add -A
           if git diff --cached --quiet; then echo "wiki unchanged"; exit 0; fi
           git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
-            commit -m "docs(wiki): mirror wiki/ from ${GITHUB_SHA::7}"
+            commit -m "docs(wiki): point every page at wiki.scavengesurvive-reborn.com (${GITHUB_SHA::7})"
           git push

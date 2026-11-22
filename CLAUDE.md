@@ -28,9 +28,14 @@ production and the dev box run 13.2.0 outside packages (`docs/runbooks/upgrade-m
   English). `site/data/changes.json` is the census of differences from upstream (every entry with its source), `placeholders.json`
   the screenshots, renders and films still to be made (`site/PLACEHOLDERS.md` has the briefs; set `file` to fill one),
   `servers.json` the server list.
-- `wiki/` is the source of the GitHub wiki (one `.md` per page, GitHub-wiki link syntax): the same workflow mirrors it to the wiki
-  repository on push and leaves the wiki's `images/` alone, so edit pages here, never in the wiki UI. `python -m tools.wiki_tables`
-  regenerates the data tables and item pages into it. `<!-- shot:<id> -->` markers are screenshot slots sharing ids with the site.
+- `wiki/` is the source of the player wiki at `https://wiki.scavengesurvive-reborn.com` (one `.md` per page, links by page
+  name `[Fuel](Fuel)`, pictures `images/<path>` = `docs/images/<path>` with `images/items/` = `docs/images/items/all/`,
+  navigation from `_Sidebar.md`): `python -m tools.wiki_site [--serve]` builds it with MkDocs Material (`wiki-site/`,
+  pinned in `wiki-site/requirements.txt`) and the same workflow deploys it to juniper. `<Page>.pt.md` is a page's
+  Portuguese, served under `/pt/` (an untranslated page shows the English). The GitHub wiki only holds stubs pointing
+  there. `python -m tools.wiki_tables` regenerates the data tables and item pages into it, in both languages (its own
+  texts translated by hand in `tools/wiki_lang.py`). A `<div class="wiki-map">` of `<button data-layer data-src
+  data-caption>` lines becomes the zoomable map explorer (`wiki-site/assets/wiki.js`, World & Zones). `<!-- shot:<id> -->` markers are screenshot slots sharing ids with the site.
 - **Every new feature, and every fix to behaviour inherited from upstream, updates the wiki and the website in the same
   change**, unasked: a `site/data/changes.json` entry (English and Portuguese), the hand-written wiki topic page it
   belongs to (e.g. `wiki/Explosives.md`), and `python -m tools.wiki_tables` for the generated tables and item pages.

@@ -101,7 +101,7 @@ end
 
 -- #spawns embeds -----------------------------------------------------------------------------------------------
 
-local WIKI = "https://github.com/VIRUXE/scavengesurvive-mta/wiki/"
+local WIKI = "https://wiki.scavengesurvive-reborn.com/"
 local FOOTER = "Scavenge & Survive"
 local CATEGORY = {
     weapon = { colour = 0xC0392B },

@@ -32,7 +32,7 @@ physical item on the ground, wounds bleed, and death drops it all.
 | M9 Live economy & release | 🔶 | Done: scarcity-driven respawn for loot and vehicles (ADR 0001, #67: carrying capacity per category and zone, deficit-proportional refill, jittered cooldowns, no respawn near players, carried loot counts). Open: the two-client live checks (combat log #26, smoke steps 12 and 22-28; #55 is answered by measurement), balancing on the playtest, `v1.0.0` |
 
 Website: <https://www.scavengesurvive-reborn.com> (source in `site/`, every difference from upstream on its
-[What changed](https://www.scavengesurvive-reborn.com/changes.html) page). Player wiki: the [GitHub wiki](https://github.com/VIRUXE/scavengesurvive-mta/wiki), written in `wiki/` and mirrored on push.
+[What changed](https://www.scavengesurvive-reborn.com/changes.html) page). Player wiki: <https://wiki.scavengesurvive-reborn.com> (English and Portuguese, searchable), written in `wiki/` and built on push.
 Community: the [Discord server](https://discord.scavengesurvive-reborn.com), where global chat is bridged to the game.
 
 Progress is tracked in the [issues](https://github.com/VIRUXE/scavengesurvive-mta/issues) and the

@@ -9,9 +9,10 @@ rotated, the Discord invite changes, or the site moves to another host.
 | --- | --- | --- |
 | Domain | Namecheap (registrar), bought 2026-11-22 | nameservers set to Cloudflare's `arya` / `matias.ns.cloudflare.com` |
 | DNS | Cloudflare, zone `scavengesurvive-reborn.com` (Free) | `A @`, `A discord`, `A wiki` → `78.47.205.20` (juniper), `CNAME www` → apex, all proxied; `www` is the canonical host; SSL/TLS **Full (strict)** |
-| Web server | juniper (`juniper.flaviopereira.dev`), nginx | `/etc/nginx/sites-available/scavengesurvive-reborn.com`: `www` serves `/var/www/scavengesurvive-reborn.com/public`, the apex and all `http://` 301 to `https://www`, `discord` 302s to the invite, `wiki` 302s `/<Page>` to the same page of the GitHub wiki; logs `/var/log/nginx/ssr_*.log` |
+| Web server | juniper (`juniper.flaviopereira.dev`), nginx | `/etc/nginx/sites-available/scavengesurvive-reborn.com`: `www` serves `/var/www/scavengesurvive-reborn.com/public`, the apex and all `http://` 301 to `https://www`, `discord` 302s to the invite, `wiki` serves `/var/www/scavengesurvive-reborn.com/wiki` (English at `/`, Portuguese under `/pt/`, `/Home` 301s to `/`); logs `/var/log/nginx/ssr_*.log` |
 | Certificate | certbot, `--cert-name scavengesurvive-reborn.com` | webroot `/var/www/letsencrypt` (`snippets/acme.conf`), covers apex, `www`, `discord` and `wiki`; renewed by certbot's own timer (HTTP-01 works through the Cloudflare proxy) |
 | Deploy | `.github/workflows/pages.yml`, job `site` | rsyncs `site/` (minus `PLACEHOLDERS.md`) on every push to `main` that touches `site/`; user `deploy-ssr` (home `/var/www/scavengesurvive-reborn.com`), key in `~/.ssh/authorized_keys` limited to `restrict,command="/usr/bin/rrsync /var/www/scavengesurvive-reborn.com/public"` |
+| Wiki deploy | `.github/workflows/pages.yml`, job `wiki-site` | `python -m tools.wiki_site --strict` builds `wiki/` (MkDocs Material, pictures from `docs/images`) and rsyncs `build/wiki-site/` as `deploy-ssr` with a second key (secret `JUNIPER_WIKI_DEPLOY_KEY`), limited to `restrict,command="/usr/bin/rrsync /var/www/scavengesurvive-reborn.com/wiki"`; the `wiki` job turns every GitHub wiki page into a stub linking its new address |
 | Old URL | GitHub Pages, job `pages` | `viruxe.github.io/scavengesurvive-mta/<path>` forwards to `scavengesurvive-reborn.com/<path>` (generated stub, `noindex`) |
 | Game server name | `CNAME sv` → `nasa.flaviopereira.dev`, **DNS only** | the only address players, the site, the wiki and Rich Presence use; no port needed since the server listens on MTA's default 22003. It follows nasa's own record, which nasa's cron `/root/ddns-update.sh` keeps on the WAN IP. Never proxy it: Cloudflare's proxy carries no UDP game traffic |
 | Downloads and renders | `CNAME dl` → `nasa.flaviopereira.dev`, **DNS only**; nginx on nasa (`/etc/nginx/sites-available/dl.scavengesurvive-reborn.com`, certbot webroot `/var/www/html`) | `/downloads/` is the MTA `httpdownloadurl` (`http://dl.scavengesurvive-reborn.com/downloads` in prod `mtaserver.conf`, plain HTTP, gzip, the server's `resource-cache/http-client-files`); `/images/items/` serves `docs/images/items/all/` for the Discord #spawns embeds (`discordchat` `spawnImageBase`). Replaces `ss.flaviopereira.dev` |
@@ -35,6 +36,13 @@ A failed deploy shows in the `site` job of the `pages` workflow (`gh run list --
 2. On juniper, replace the key in `/var/www/scavengesurvive-reborn.com/.ssh/authorized_keys`, keeping the
    `restrict,command="/usr/bin/rrsync /var/www/scavengesurvive-reborn.com/public"` prefix (owner `deploy-ssr`, mode 600).
 3. `gh secret set JUNIPER_DEPLOY_KEY < ssr_deploy`, delete the local private key, `gh workflow run pages.yml`.
+
+The wiki key is rotated the same way: `-C "github-actions deploy wiki.scavengesurvive-reborn.com"`, the
+`/var/www/scavengesurvive-reborn.com/wiki` rrsync root, and the `JUNIPER_WIKI_DEPLOY_KEY` secret.
+
+To deploy the wiki by hand (the workflow failed, or a test build): `python -m tools.wiki_site --strict`, then
+`tar czf - -C build/wiki-site . | ssh juniper.flaviopereira.dev 'tar xzf - -C /var/www/scavengesurvive-reborn.com/wiki --no-same-owner && chown -R deploy-ssr: /var/www/scavengesurvive-reborn.com/wiki'`
+(old files stay until the next rsync `--delete`).
 
 If juniper's host key changes: `ssh-keyscan -t ed25519,rsa,ecdsa juniper.flaviopereira.dev | gh secret set JUNIPER_KNOWN_HOSTS`.
 
