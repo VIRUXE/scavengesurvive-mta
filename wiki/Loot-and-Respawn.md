@@ -74,6 +74,7 @@ A spawn point cools down for 6 hours, give or take up to a third (about 4 to 8 h
 ### Abandoned vehicles and wrecks
 
 - A vehicle that has been driven away from its spawn point and then **not used for 3 days** is removed, with its trunk and everything inside. Using it means getting in, opening its trunk, hitching it as a trailer, or using or standing in the walk-in Airstream.
+- A vehicle with a **custom lock** (a Locksmith Kit, a Lock and Chain, a Combination Lock and Chain, or a keypad on a walk-in door; see [Repairing & Locks](Repairing-and-Locks)) is never removed by this rule, nor is a sunk one. Locking the doors with `/lock` does not count: a plainly locked vehicle is removed like any other. Breaking the custom lock makes it removable again.
 - A vehicle that never left its spawn point is not removed by this rule.
 - A wrecked (exploded) vehicle disappears 30 seconds later.
 - Parked vehicles count against the capacity while they exist, so keeping many cars slows new spawns for everyone.

@@ -41,7 +41,7 @@ While you drive, the vehicle's name sits in the bottom right corner. The doors, 
 
 - **Action text**: one white line at about three quarters of the way down, replaced by each new message and gone after 3 seconds: `Equipped`, `Trunk locked`, `Extra 2 slots required`, `Engine stalled`, `Wounded: head  -12 hp  (bleeding)`, `Healed 2 wounds`...
 - **Progress bar**: a small grey bar above the action text while a held action runs (repairing, refuelling, a treatment, welding, casting a line...). It is cancelled when you move or let go of the key. The same bar reads out a knockout while you are unconscious.
-- **Help tips**: green text to the left of the centre with a tip for what you are doing, sometimes with a blue line under it. The tip on getting into a damaged vehicle stays 20 seconds. `/tooltips` turns them off and on; the choice is saved on your account.
+- **Help tips**: green text to the left of the centre with a tip for what you are doing, sometimes with a blue line under it. The tip on getting into a damaged vehicle stays 20 seconds. `/tooltips` turns them off and on, together with the tips in chat ([Chat](Chat)); the choice is saved on your account.
 - **Skill notice**: `+Repair` and the like in green at the bottom for 5 seconds after an action trains a [skill](Skills); while you drive it sits just above the dashboard.
 - **Skill bars**: bottom right, one thin white bar per [skill](Skills) with its name to the left, filled to the skill's value; the ten highest show when you have more. They move up while you drive to clear the vehicle name.
 - **Heat bar**: a red bar with `Overheating!` while you drive an armed vehicle and fire its gun, see [Vehicles](Vehicles).

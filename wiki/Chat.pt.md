@@ -25,6 +25,7 @@ A voz com carregar-para-falar (a tecla de voz do MTA, definida nas definições 
 
 ## Linhas do servidor {#lines-from-the-server}
 - Quando entras, lês a linha laranja de direitos de autor e, se a staff definiu uma, `MoTD: ...` (`/motd` repete-a); todos leem `Name has joined`.
+- De 5 em 5 minutos uma dica ` >  ` a azul ensina uma coisa sobre o jogo, na tua língua e com as teclas que tens atribuídas; 32 dicas vão alternando. `/tooltips` desliga-as junto com as dicas de ajuda ([HUD](HUD)).
 - Linhas ` >  ...` a amarelo ou branco são o servidor a falar contigo: avisos, mensagens da staff, respostas a comandos.
 - As linhas `[Admin]` existem só para a staff; nunca as vês.
 

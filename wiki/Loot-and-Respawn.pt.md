@@ -62,6 +62,7 @@ Um ponto de aparecimento fica em espera durante 6 horas, com uma variação até
 
 ### Veículos abandonados e destroços {#abandoned-vehicles-and-wrecks}
 - Um veículo que foi levado do seu ponto de aparecimento e depois **não é usado durante 3 dias** é removido, com a mala e tudo o que está lá dentro. Usá-lo é entrar, abrir a mala, engatá-lo como reboque, ou usar ou estar dentro do Airstream onde se entra.
+- Um veículo com **fechadura personalizada** (um Kit de serralheiro, um Cadeado e corrente, um Cadeado de combinação e corrente, ou um teclado numa porta do Airstream; vê [Reparações e fechaduras](Repairing-and-Locks)) nunca é removido por esta regra, nem um afundado. Trancar as portas com `/lock` não conta: um veículo só trancado é removido como qualquer outro. Partir a fechadura personalizada torna-o removível outra vez.
 - Um veículo que nunca saiu do seu ponto de aparecimento não é removido por esta regra.
 - Um veículo destruído (explodido) desaparece 30 segundos depois.
 - Os veículos estacionados contam para a capacidade enquanto existirem, por isso ter muitos carros abranda os novos aparecimentos para toda a gente.

@@ -9,7 +9,7 @@ Vê [Conta e início de sessão](Account-and-Login).
 |:--|:--|
 | `/changepass <old> <new>` | Muda a palavra-passe da tua conta (4 a 32 caracteres). |
 | `/lang <code>` | Define o teu idioma: `en`, `es`, `fr`, `pt`, `ptbr`, `ru`, `ro`, `id`, `bhs` ou `cs`. Fica guardado na tua conta. |
-| `/tooltips` | Liga ou desliga as dicas de ajuda (vê [HUD](HUD)). Fica guardado na tua conta. |
+| `/tooltips` | Liga ou desliga as dicas de ajuda e as dicas no chat (vê [HUD](HUD), [Chat](Chat)). Fica guardado na tua conta. |
 | `/tutorial` | Sai do tutorial depois de o completares (reparar, reabastecer e conduzir o Bobcat). Uma conta nova começa no tutorial e não pode sair antes disso. |
 | `/welcome` | Mostra outra vez a janela de boas-vindas. |
 

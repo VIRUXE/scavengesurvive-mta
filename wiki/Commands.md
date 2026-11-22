@@ -10,7 +10,7 @@ See [Account & Login](Account-and-Login).
 |:--|:--|
 | `/changepass <old> <new>` | Changes your account password (4 to 32 characters). |
 | `/lang <code>` | Sets your language: `en`, `es`, `fr`, `pt`, `ptbr`, `ru`, `ro`, `id`, `bhs` or `cs`. Saved on your account. |
-| `/tooltips` | Turns the help tips on or off (see [HUD](HUD)). Saved on your account. |
+| `/tooltips` | Turns the help tips and the chat tips on or off (see [HUD](HUD), [Chat](Chat)). Saved on your account. |
 | `/tutorial` | Leaves the tutorial once you have completed it (repair, refuel and drive the Bobcat). A new account starts in the tutorial and cannot leave it before then. |
 | `/welcome` | Shows the welcome window again. |
 

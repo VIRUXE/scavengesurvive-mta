@@ -1,6 +1,7 @@
 -- Derived from Southclaws/ScavengeSurvive (MPL-2.0). See THIRD_PARTY_NOTICES.md
 -- Ported once from upstream by tools/convert, which is retired: edit this file by hand, never regenerate it.
 INSERT INTO settings (skey, svalue) VALUES
+('chat.tip_minutes','5'),
 ('items.empty_despawn_minutes','15'),
 ('items.pickup_radius','2.0'),
 ('items.sync_radius','150'),
@@ -27,7 +28,7 @@ INSERT INTO settings (skey, svalue) VALUES
 ('player.login_freeze_time','8'),
 ('player.max_tab_out_time','60'),
 ('player.ping_limit','400'),
-('server.motd',''),
+('server.motd','Welcome, survivor! New here? Type /help. Wiki: wiki.scavengesurvive-reborn.com | Discord: discord.scavengesurvive-reborn.com'),
 ('server.rules',''),
 ('server.staff',''),
 ('server.whitelist','0'),

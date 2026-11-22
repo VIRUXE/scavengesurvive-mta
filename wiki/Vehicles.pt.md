@@ -42,7 +42,7 @@ Cada veículo pertence a um **grupo** (Civil, Industrial, Médico, Militar, Pol�
 - Muitos estão depenados: cerca de 40 % dos carros e camiões não têm de uma a quatro rodas, cerca de 35 % dos veículos não têm bateria e cerca de 30 % não têm motor de arranque (ver [Baterias e motores de arranque](Car-Batteries-and-Starters)).
 - Quase todos os depósitos estão praticamente vazios; cerca de um veículo em dez tem mais de um litro ou assim.
 - Um veículo com uma porta danificada e um depósito está trancado metade das vezes.
-- Um veículo levado do seu ponto de aparecimento e depois não usado durante 3 dias é removido com a mala, um destroço desaparece 30 segundos depois de explodir, e os veículos novos regressam devagar através do sistema de escassez, nunca a menos de 150 m de um jogador; ver [Saque e reaparecimento](Loot-and-Respawn).
+- Um veículo levado do seu ponto de aparecimento e depois não usado durante 3 dias é removido com a mala, a não ser que tenha uma fechadura personalizada (`/lock` sozinho não o salva), um destroço desaparece 30 segundos depois de explodir, e os veículos novos regressam devagar através do sistema de escassez, nunca a menos de 150 m de um jogador; ver [Saque e reaparecimento](Loot-and-Respawn).
 
 ## Mala {#trunk}
 Vai à traseira de um veículo destrancado e prime `F` para abrir a mala. Funciona como um [contentor](Containers-and-Bags): o número de espaços na tabela abaixo conta-se em tamanhos de itens ([Tamanhos dos itens](Item-Sizes)). Uma mala trancada pode ser arrombada, ver [Reparações e fechaduras](Repairing-and-Locks). Uma mala de 0 espaços quer dizer que o veículo não tem.

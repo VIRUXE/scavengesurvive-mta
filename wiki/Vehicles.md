@@ -46,7 +46,7 @@ Every vehicle belongs to a **group** (Civilian, Industrial, Medical, Military, P
 - Many are stripped: about 40 % of cars and trucks are missing one to four wheels, about 35 % of vehicles have no battery and about 30 % no starter motor (see [Car Batteries & Starters](Car-Batteries-and-Starters)).
 - Nearly every tank is almost empty; about one vehicle in ten holds more than a litre or so.
 - A vehicle with a damaged door and a tank is locked half of the time.
-- A vehicle driven away from its spawn point and then not used for 3 days is removed with its trunk, a wreck is gone 30 seconds after it blows up, and new vehicles come back slowly through the scarcity system, never within 150 m of a player; see [Loot & Respawn](Loot-and-Respawn).
+- A vehicle driven away from its spawn point and then not used for 3 days is removed with its trunk unless it has a custom lock (`/lock` alone does not save it), a wreck is gone 30 seconds after it blows up, and new vehicles come back slowly through the scarcity system, never within 150 m of a player; see [Loot & Respawn](Loot-and-Respawn).
 
 ## Trunk
 

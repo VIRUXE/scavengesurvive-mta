@@ -60,7 +60,7 @@ Short answers to the questions new players ask, with the page that has the long 
 
 **How long does loot stay on the ground?** 120 minutes if nobody touches it, a dead player's items included. Picking an item up resets that. See [Loot & Respawn](Loot-and-Respawn).
 
-**My parked car disappeared.** A vehicle driven away from its spawn point and not used for 3 days is removed with everything in its trunk. Getting in, opening the trunk or hitching it counts as use. A wrecked vehicle vanishes 30 seconds after it blows up. See [Vehicles](Vehicles) and [Loot & Respawn](Loot-and-Respawn).
+**My parked car disappeared.** A vehicle driven away from its spawn point and not used for 3 days is removed with everything in its trunk. Getting in, opening the trunk or hitching it counts as use, and a vehicle with a custom lock (Locksmith Kit or Lock and Chain) is never removed; `/lock` alone does not protect it. A wrecked vehicle vanishes 30 seconds after it blows up. See [Vehicles](Vehicles) and [Loot & Respawn](Loot-and-Respawn).
 
 **Where do I spawn?** At one of 14 spots at the water's edge, never the same one twice in a row. The map is on [Death](Death).
 

@@ -28,6 +28,7 @@ Push-to-talk voice (MTA's voice key, set in MTA's settings) follows the same rul
 ## Lines from the server
 
 - When you join, you read the orange copyright line and, if the staff have set one, `MoTD: ...` (`/motd` repeats it); everyone reads `Name has joined`.
+- Every 5 minutes a ` >  ` tip in blue teaches one thing about the game, in your language and naming the keys you have bound; 32 tips take turns. `/tooltips` turns them off along with the help tips ([HUD](HUD)).
 - ` >  ...` lines in yellow or white are the server talking to you: notices, staff messages, command replies.
 - `[Admin]` lines exist for the staff only; you never see them.
 

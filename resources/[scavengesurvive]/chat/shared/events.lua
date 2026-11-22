@@ -13,5 +13,6 @@ addEvent("chatRadioOpened", true)
 addEvent("chatVoiceBlocked", true)
 addEvent("voiceAudienceChanged", true) -- how many hear the talking player, sent to them when it changes
 addEvent("helpOpened", true) -- the /help window (client/help.lua)
+addEvent("chatTipSent", true) -- index of the rotating tip to show (client/help.lua)
 -- client-local
 addEvent("uiDialogResponded", false)

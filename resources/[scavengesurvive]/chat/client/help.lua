@@ -12,6 +12,7 @@ local function loadFile(path, chunkName)
 end
 local help = loadFile("shared/logic/help.lua", "=chat/help.lua")
 local chatLogic = loadFile("shared/logic/chat.lua", "=chat/chat.lua")
+local tips = loadFile("shared/logic/tips.lua", "=chat/tips.lua").TIPS
 local T = help.T
 local TOPICS = help.TOPICS
 
@@ -284,6 +285,15 @@ end)
 
 addEventHandler("helpOpened", localPlayer, function()
     open()
+end)
+
+-- A rotating tip from the server (server/main.lua): its index in shared/logic/tips.lua, shown in this player's
+-- language with the keys they have bound, as the help window names them.
+addEventHandler("chatTipSent", localPlayer, function(index)
+    local tip = tips[tonumber(index)]
+    if tip then
+        outputChatBox(" >  #33CCFF" .. text(tip), 255, 255, 0, true)
+    end
 end)
 
 addEventHandler("onClientResourceStop", resourceRoot, close)

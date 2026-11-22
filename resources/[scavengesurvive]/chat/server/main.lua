@@ -603,6 +603,38 @@ playerCommand("motd", function(p)
     outputChatBox(" >  MoTD: #33CCFF" .. exports.staff:getMotd(), p, 255, 255, 0, true)
 end)
 
+-- Rotating tips (upstream server/info-message.pwn, which sent infomessage/messages to everyone every
+-- infomessage/interval minutes): the next tip of shared/logic/tips.lua every chat.tip_minutes to the logged-in
+-- players with /tooltips on; client/help.lua shows it in the reader's language with their own keys. A restart picks
+-- a random place in the list.
+local tips
+do
+    local f = fileOpen("shared/logic/tips.lua", true)
+    local src = fileRead(f, fileGetSize(f))
+    fileClose(f)
+    tips = assert(loadstring(src, "=chat/tips.lua"))()
+end
+local tipIndex = 0
+
+local function sendTip()
+    tipIndex = tipIndex % #tips.TIPS + 1
+    for _, p in ipairs(getElementsByType("player")) do
+        if exports.auth:tooltipsOn(p) then
+            triggerClientEvent(p, "chatTipSent", p, tipIndex)
+        end
+    end
+end
+
+local function startTips()
+    tipIndex = math.random(#tips.TIPS) - 1
+    db.one("SELECT svalue FROM settings WHERE skey = 'chat.tip_minutes'", {}, function(row)
+        local minutes = tonumber(row and row.svalue) or tips.MINUTES
+        if minutes > 0 then
+            setTimer(sendTip, math.max(1, minutes) * 60000, 0)
+        end
+    end)
+end
+
 addEventHandler("onPlayerJoin", root, function()
     for _, line in ipairs(logic.joinLines(getPlayerName(source), exports.staff:getMotd())) do
         outputChatBox(line.text, source, line.r, line.g, line.b, true)
@@ -632,6 +664,7 @@ end)
 
 addEventHandler("onResourceStart", resourceRoot, function()
     ready = db.connect("chat")
+    startTips()
     for _, p in ipairs(getElementsByType("player")) do
         local charId = exports.character:getCharacterId(p)
         if charId then

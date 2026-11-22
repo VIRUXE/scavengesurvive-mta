@@ -56,7 +56,7 @@ Respostas curtas às perguntas que os jogadores novos fazem, com a página que t
 
 **Quanto tempo fica o loot no chão?** 120 minutos se ninguém lhe tocar, incluindo os itens de um jogador morto. Apanhar um item repõe a contagem. Vê [Saque e reaparecimento](Loot-and-Respawn).
 
-**O meu carro estacionado desapareceu.** Um veículo conduzido para longe do seu ponto de aparecimento e não usado durante 3 dias é removido com tudo o que tem na mala. Entrar, abrir a mala ou engatá-lo conta como uso. Um veículo destruído desaparece 30 segundos depois de explodir. Vê [Veículos](Vehicles) e [Saque e reaparecimento](Loot-and-Respawn).
+**O meu carro estacionado desapareceu.** Um veículo conduzido para longe do seu ponto de aparecimento e não usado durante 3 dias é removido com tudo o que tem na mala. Entrar, abrir a mala ou engatá-lo conta como uso, e um veículo com fechadura personalizada (Kit de serralheiro ou Cadeado e corrente) nunca é removido; `/lock` sozinho não o protege. Um veículo destruído desaparece 30 segundos depois de explodir. Vê [Veículos](Vehicles) e [Saque e reaparecimento](Loot-and-Respawn).
 
 **Onde apareço?** Num de 14 pontos à beira da água, nunca o mesmo duas vezes seguidas. O mapa está em [Morte](Death).
 
