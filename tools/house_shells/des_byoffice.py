@@ -221,7 +221,11 @@ def wall_in_blank_doorway(bm, uv, cols):
     """The vanilla kitchen's west wall has a blank doorway (NICHE: a door-sized recess 0.3 deep, no door, nothing
     behind it). Its faces go and the wall runs on flush over it, mapped and lit like the wall face beside it."""
     x_wall, (y0, y1), (z0, z1) = NICHE
-    dead = [f for f in bm.faces if all(v.co.x < x_wall + 0.01 for v in f.verts) and all(y0 - 0.01 < v.co.y < y1 + 0.01 for v in f.verts)]
+    # only up to the niche's head: the wall's gable triangle above it stays (taken with it, it left a hole at the ceiling)
+    dead = [
+        f for f in bm.faces
+        if all(v.co.x < x_wall + 0.01 and y0 - 0.01 < v.co.y < y1 + 0.01 and v.co.z < z1 + 0.01 for v in f.verts)
+    ]
     ref = next(
         f for f in bm.faces
         if f not in dead and f.normal.x > 0.9 and abs(f.calc_center_median().x - x_wall) < 0.01 and f.calc_center_median().z < z1
