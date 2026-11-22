@@ -143,7 +143,7 @@ return {
     [19556] = { dff = "boxingglover", txdModel = 80, dist = 100 },
     [19557] = { dff = "sexymask1", txdModel = 178, dist = 100 },
     [19558] = { dff = "pizzahat1", txdModel = 155, dist = 100 },
-    [19559] = { dff = "hikerbackpack1", txdModel = 26, dist = 100 },
+    [19559] = { dff = "hikerbackpack1", txd = "hikerbackpack1", dist = 100 },
     [19560] = { dff = "meattray1", txd = "meattray1", dist = 100 },
     [19561] = { dff = "cerealbox1", txdModel = 2541, dist = 100 },
     [19562] = { dff = "cerealbox2", txdModel = 2541, dist = 100 },
