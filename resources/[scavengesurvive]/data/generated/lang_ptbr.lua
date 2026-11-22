@@ -163,7 +163,7 @@ return {
     DogsBreat_T = "Pressione [R] para recarregar, pressione [Y] para colocar no coldre e segure [N] para remover munição.",
     Door_T = "Coloque isto no chão e depois pressione [F] nele com um Martelo e escolha construí-lo em pé (uma parede) ou deitado (um piso)",
     Doormat_T = "Este item ainda não tem utilidade",
-    Dynamite_T = "Esse item ainda não tem uso",
+    Dynamite_T = "Pressione [F] para acender o pavio e soltá-la, ela explode 5 segundos depois; três bananas e uma Chave de fenda em uma Bancada de trabalho fazem um TNT",
     EMPTY = "Vazio",
     EasterEgg_T = "Esse item ainda não tem uso",
     EmpPhoneB_T = "Combine com um Celular do seu inventário para sincronizar os dois, pressione [F] para plantar e depois pressione [F] com o celular na mão para detonar",

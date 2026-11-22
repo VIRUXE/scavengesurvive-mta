@@ -163,7 +163,7 @@ return {
     DogsBreat_T = "Appuyez sur [R] pour recharger, sur [Y] pour ranger l'arme et maintenez [N] pour retirer les munitions",
     Door_T = "Posez-le au sol, puis appuyez sur [F] dessus avec un Marteau et choisissez de le construire debout (un mur) ou à plat (un sol)",
     Doormat_T = "Cet objet n'a pas encore d'utilité",
-    Dynamite_T = "Cet objet n'a pas encore d'utilité",
+    Dynamite_T = "Appuyez sur [F] pour allumer la mèche et la lâcher, elle explose 5 secondes plus tard ; trois bâtons et un Tournevis à un Établi font un TNT",
     EMPTY = "Vide",
     EasterEgg_T = "Cet objet n'a pas encore d'utilité",
     EmpPhoneB_T = "Combinez-le avec un Téléphone portable depuis votre inventaire pour les synchroniser, appuyez sur [F] pour le poser, puis appuyez sur [F] avec le téléphone en main pour le faire exploser",

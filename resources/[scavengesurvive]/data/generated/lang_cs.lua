@@ -163,7 +163,7 @@ return {
     DogsBreat_T = "Stiskni [R] pro přebití, stiskni [Y] pro uložení do pouzdra a podrž [N] pro vysypání zásobníku",
     Door_T = "Polož to na zem, pak u toho zmáčkni [F] s Kladivem a vyber, jestli to postavit nastojato (zeď) nebo naležato (podlaha)",
     Doormat_T = "Zatím žádné využití",
-    Dynamite_T = "Zatím žádné využití",
+    Dynamite_T = "Zmáčkni [F] pro zapálení doutnáku a položení, vybuchne za 5 sekund; ze tří náloží vyrobíš se Šroubovákem na Pracovním stole jedno TNT",
     EMPTY = "Prázdno",
     EasterEgg_T = "Zatím žádné využití",
     EmpPhoneB_T = "Zkombinuj to s Mobilním telefonem z inventáře pro jejich synchronizaci, zmáčkni [F] pro nastražení, pak zmáčkni [F] s telefonem v ruce pro odpálení",

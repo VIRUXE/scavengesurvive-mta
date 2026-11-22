@@ -163,7 +163,7 @@ return {
     DogsBreat_T = "Apasă [R] ca să reîncarci, apasă [Y] ca să pui arma la centură și ține apăsat [N] ca să scoți muniția",
     Door_T = "Pune-l jos, apoi apasă [F] la el cu un ciocan și alege să-l construiești în picioare (un perete) sau culcat (o podea)",
     Doormat_T = "Acest obiect nu are încă nicio utilizare",
-    Dynamite_T = "Acest obiect nu are încă nicio utilizare",
+    Dynamite_T = "Apasă [F] ca să aprinzi fitilul și s-o lași jos, explodează după 5 secunde; trei batoane și o șurubelniță la o bancă de lucru fac un TNT",
     EMPTY = "Gol",
     EasterEgg_T = "Acest obiect nu are încă nicio utilizare",
     EmpPhoneB_T = "Combină-l cu un telefon mobil din inventar ca să le sincronizezi, apasă [F] ca să-l plasezi, apoi apasă [F] cu telefonul în mână ca să-l detonezi",

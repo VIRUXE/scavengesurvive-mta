@@ -163,7 +163,7 @@ return {
     DogsBreat_T = "Prime [R] para recarregar, prime [Y] para guardar no coldre e mantém [N] para retirar as munições",
     Door_T = "Pousa isto e depois prime [F] nele com um Martelo e escolhe construí-lo de pé (uma parede) ou deitado (um chão)",
     Doormat_T = "Este item ainda não tem utilidade",
-    Dynamite_T = "Este item ainda não tem utilidade",
+    Dynamite_T = "Prime [F] para acender o rastilho e largá-la, explode 5 segundos depois; três barras e uma Chave de fendas numa Bancada de trabalho fazem um TNT",
     EMPTY = "Vazio",
     EasterEgg_T = "Este item ainda não tem utilidade",
     EmpPhoneB_T = "Combina-o com um Telemóvel do teu inventário para os sincronizar, prime [F] para o colocar e depois prime [F] com o telemóvel na mão para detonar",

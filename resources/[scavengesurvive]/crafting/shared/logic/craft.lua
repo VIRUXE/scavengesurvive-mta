@@ -106,6 +106,7 @@ end
 -- build time but workbench.pwn never reads it: the hold is 3.6 s per item on the bench (M.workbenchTime).
 local WORKBENCH = {
     { "IedBomb", "Screwdriver", { FireworkBox = 1, PowerSupply = 1 } },
+    { "Explosive", "Screwdriver", { Dynamite = 3 } }, -- port recipe: upstream Dynamite had no use
     { "TntTimebomb", "Screwdriver", { Explosive = 1, Timer = 1 } },
     { "TntTripMine", "Screwdriver", { Explosive = 1, Accelerometer = 1 } },
     { "TntProxMine", "Screwdriver", { Explosive = 1, MotionSense = 1 } },

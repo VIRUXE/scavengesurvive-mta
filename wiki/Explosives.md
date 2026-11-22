@@ -4,7 +4,7 @@
 
 ![Timed TNT](images/items/1252_barrelexpos.png) ![Proximity TNT](images/items/1576_drug_orange.png) ![IED](images/items/2033_cj_sawnoff2.png) ![EMP](images/items/343_teargas.png) ![Molotov](images/items/344_molotov.png) ![Petrol Bomb](images/items/1650_petrolcanm.png)
 
-There are 12 charges: three kinds of explosion (TNT, IED and EMP) times four triggers (timed, proximity, trip mine and phone remote). They are crafted at a [Workbench](Workbench) with a Screwdriver.
+There are 12 charges: three kinds of explosion (TNT, IED and EMP) times four triggers (timed, proximity, trip mine and phone remote). They are crafted at a [Workbench](Workbench) with a Screwdriver. A stick of [Dynamite](Dynamite) is a thirteenth, found ready-made as loot: a small charge on a timed fuse, and three sticks with a Screwdriver at a Workbench make a TNT.
 
 ## Charges
 
@@ -21,6 +21,7 @@ Players near a blast are wounded in the torso or a leg and are usually knocked o
 |:--|:--|:--|--:|--:|
 | Timed TNT | Medium | Timed | 8 m | 2 |
 | Proximity TNT | Medium | Proximity | 8 m | 2 |
+| Dynamite | Small | Timed | 3 m | 2 |
 | Phone Remote TNT | Medium | Radio | 8 m | 2 |
 | Trip Mine TNT | Medium | Motion | 8 m | 2 |
 | Timed IED | Small | Timed | 3 m | 2 |

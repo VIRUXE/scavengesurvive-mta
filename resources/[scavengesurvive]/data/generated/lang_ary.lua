@@ -163,7 +163,7 @@ return {
     DogsBreat_T = "Brek [R] bach t3ammer, brek [Y] bach t7et sla7 f jnbek w chedd [N] bach t7iyed rsas",
     Door_T = "7ettha f l2rd, w brek [F] 3liha b Mterqa w khtar wach tbniha waqfa (7it) wla mbsouta (ard)",
     Doormat_T = "Had l7aja mazal ma fiha 7ta fayda",
-    Dynamite_T = "Had l7aja mazal ma fiha 7ta fayda",
+    Dynamite_T = "Brek [F] bach tch3el lftila w tlo7ha, katfja7 mn b3d 5 tawani; tlata dyal lqwaleb m3a Tournevis f Etabli kaysne3o TNT",
     EMPTY = "Khawi",
     EasterEgg_T = "Hadi mazal ma fiha 7ta fayda",
     EmpPhoneB_T = "Jme3ha m3a Portable mn inventaire bach tsynchronisihom, brek [F] bach tzra3ha, w brek [F] w portable f yeddik bach tfja7ha",

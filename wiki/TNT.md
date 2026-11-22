@@ -17,7 +17,13 @@
 | Vehicle trunks, military | The trunks of 4 vehicle types (Barracks, Launch, Patriot, Rhino) | 6.0 % |
 | Supply drop "Ordnance Supplies" | 36 drop points | 7.3 % |
 
+- Crafted, see below.
+
 ## Crafting
+
+**Made by**
+
+- At a [Workbench](Workbench) with a [Screwdriver](Screwdriver) (kept): 3× [Dynamite](Dynamite)
 
 **Used in**
 

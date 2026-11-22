@@ -163,7 +163,7 @@ return {
     DogsBreat_T = "Stisni [R] da ponovo napuniš, stisni [Y] da ga staviš u futrolu i drži [N] da izbaciš municiju",
     Door_T = "Spusti ovo na tlo, pa pritisni [F] kod njega s čekićem i odaberi hoćeš li ga izgraditi uspravno (zid) ili položeno (pod)",
     Doormat_T = "Ovaj predmet još nema upotrebu",
-    Dynamite_T = "Ovaj predmet još nema upotrebu",
+    Dynamite_T = "Pritisni [F] da zapališ fitilj i spustiš ga, eksplodira 5 sekundi kasnije; tri štapina i odvijač na radnom stolu daju jedan TNT",
     EMPTY = "Prazno",
     EasterEgg_T = "Ovo još nema upotrebu",
     EmpPhoneB_T = "Kombiniraj ga s mobitelom iz inventara da ih sinkroniziraš, pritisni [F] da ga postaviš, pa pritisni [F] s mobitelom u ruci da ga detoniraš",

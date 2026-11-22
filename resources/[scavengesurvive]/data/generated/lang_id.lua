@@ -163,7 +163,7 @@ return {
     DogsBreat_T = "Tekan [R] untuk mengisi ulang, tekan [Y] untuk menyarungkan dan tahan [N] untuk mengeluarkan amunisi",
     Door_T = "Letakkan benda ini, lalu tekan [F] padanya dengan Palu dan pilih untuk membangunnya berdiri (dinding) atau mendatar (lantai)",
     Doormat_T = "Benda ini belum ada kegunaannya",
-    Dynamite_T = "Item ini tidak berfungsi",
+    Dynamite_T = "Tekan [F] untuk menyalakan sumbu dan menjatuhkannya, meledak 5 detik kemudian; tiga batang dan Obeng di Meja Kerja menjadi satu TNT",
     EMPTY = "Kosong",
     EasterEgg_T = "Item ini tidak berguna",
     EmpPhoneB_T = "Gabungkan dengan Ponsel dari inventarismu untuk menyambungkan keduanya, tekan [F] untuk memasangnya, lalu tekan [F] sambil memegang ponsel untuk meledakkan",

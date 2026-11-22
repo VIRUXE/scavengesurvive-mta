@@ -163,7 +163,7 @@ return {
     DogsBreat_T = "Pulsa [R] para recargar, pulsa [Y] para enfundar y mantén [N] para quitar la munición",
     Door_T = "Déjalo en el suelo y luego pulsa [F] sobre él con un Martillo y elige construirlo de pie (una pared) o tumbado (un suelo)",
     Doormat_T = "Este objeto aún no tiene uso",
-    Dynamite_T = "Este objeto aún no tiene uso",
+    Dynamite_T = "Pulsa [F] para encender la mecha y soltarla, explota 5 segundos después; tres cartuchos y un Destornillador en un Banco de trabajo hacen un TNT",
     EMPTY = "Vacío",
     EasterEgg_T = "Este objeto aún no tiene uso",
     EmpPhoneB_T = "Combínalo con un Teléfono móvil de tu inventario para sincronizarlos, pulsa [F] para colocarlo y luego pulsa [F] con el teléfono en la mano para detonarlo",

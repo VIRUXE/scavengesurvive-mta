@@ -163,7 +163,7 @@ return {
     DogsBreat_T = "Nospied [R], lai pārlādētu, nospied [Y], lai paslēptu ieroci, un turi [N], lai izņemtu munīciju",
     Door_T = "Noliec to, tad nospied [F] pie tā ar Āmuru un izvēlies būvēt to stāvus (siena) vai guļus (grīda)",
     Doormat_T = "Šim priekšmetam pagaidām nav pielietojuma",
-    Dynamite_T = "Šim priekšmetam pagaidām nav pielietojuma",
+    Dynamite_T = "Nospied [F], lai aizdedzinātu degli un nomestu to, tas uzsprāgst pēc 5 sekundēm; no trim stieņiem ar Skrūvgriezi Darbgaldā izgatavo vienu TNT",
     EMPTY = "Tukšs",
     EasterEgg_T = "Šim pagaidām nav pielietojuma",
     EmpPhoneB_T = "Apvieno to ar Mobilo tālruni inventārā, lai tos sinhronizētu, nospied [F], lai to novietotu, tad nospied [F] ar tālruni rokā, lai uzspridzinātu",

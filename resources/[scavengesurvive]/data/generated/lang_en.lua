@@ -163,7 +163,7 @@ return {
     DogsBreat_T = "Press [R] to reload, press [Y] to holster and hold [N] to remove ammo",
     Door_T = "Lay this down, then press [F] at it with a Hammer and choose to build it standing up (a wall) or lying flat (a floor)",
     Doormat_T = "This item has no use yet",
-    Dynamite_T = "This item has no use yet",
+    Dynamite_T = "Press [F] to light the fuse and drop it, it explodes 5 seconds later; three sticks and a Screwdriver at a Workbench make a TNT",
     EMPTY = "Empty",
     EasterEgg_T = "This has no use yet",
     EmpPhoneB_T = "Combine it with a Mobile Phone from your inventory to sync the two, press [F] to plant it, then press [F] with the phone in hand to detonate",
