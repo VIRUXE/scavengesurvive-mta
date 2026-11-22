@@ -5,7 +5,7 @@ SA-MP gamemode by Southclaws, rebuilt for MTA:SA 1.6 in Lua on MariaDB: one aliv
 physical item on the ground, wounds bleed, and death drops it all.
 
 **[www.scavengesurvive-reborn.com](https://www.scavengesurvive-reborn.com)** · **[Discord](https://discord.scavengesurvive-reborn.com)** ·
-**[Wiki](https://github.com/VIRUXE/scavengesurvive-mta/wiki)** · **[What changed from the original](https://www.scavengesurvive-reborn.com/changes.html)**
+**[Wiki](https://wiki.scavengesurvive-reborn.com)** · **[What changed from the original](https://www.scavengesurvive-reborn.com/changes.html)**
 
 ![MTA:SA 1.6](https://img.shields.io/badge/MTA%3ASA-1.6-2b5797?style=flat-square)
 ![Lua 5.1](https://img.shields.io/badge/Lua-5.1-000080?style=flat-square&logo=lua)

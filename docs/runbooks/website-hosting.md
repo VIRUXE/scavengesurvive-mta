@@ -1,6 +1,6 @@
 # Website hosting (scavengesurvive-reborn.com)
 
-**When:** the website, `discord.` or `sv.scavengesurvive-reborn.com` is down, a deploy fails, the deploy key has to be
+**When:** the website, `discord.`, `wiki.` or `sv.scavengesurvive-reborn.com` is down, a deploy fails, the deploy key has to be
 rotated, the Discord invite changes, or the site moves to another host.
 
 **What runs where:**
@@ -8,9 +8,9 @@ rotated, the Discord invite changes, or the site moves to another host.
 | Piece | Where | Notes |
 | --- | --- | --- |
 | Domain | Namecheap (registrar), bought 2026-11-22 | nameservers set to Cloudflare's `arya` / `matias.ns.cloudflare.com` |
-| DNS | Cloudflare, zone `scavengesurvive-reborn.com` (Free) | `A @`, `A discord` → `78.47.205.20` (juniper), `CNAME www` → apex, all proxied; `www` is the canonical host; SSL/TLS **Full (strict)** |
-| Web server | juniper (`juniper.flaviopereira.dev`), nginx | `/etc/nginx/sites-available/scavengesurvive-reborn.com`: `www` serves `/var/www/scavengesurvive-reborn.com/public`, the apex and all `http://` 301 to `https://www`, `discord` 302s to the invite; logs `/var/log/nginx/ssr_*.log` |
-| Certificate | certbot, `--cert-name scavengesurvive-reborn.com` | webroot `/var/www/letsencrypt` (`snippets/acme.conf`), covers apex, `www` and `discord`; renewed by certbot's own timer (HTTP-01 works through the Cloudflare proxy) |
+| DNS | Cloudflare, zone `scavengesurvive-reborn.com` (Free) | `A @`, `A discord`, `A wiki` → `78.47.205.20` (juniper), `CNAME www` → apex, all proxied; `www` is the canonical host; SSL/TLS **Full (strict)** |
+| Web server | juniper (`juniper.flaviopereira.dev`), nginx | `/etc/nginx/sites-available/scavengesurvive-reborn.com`: `www` serves `/var/www/scavengesurvive-reborn.com/public`, the apex and all `http://` 301 to `https://www`, `discord` 302s to the invite, `wiki` 302s `/<Page>` to the same page of the GitHub wiki; logs `/var/log/nginx/ssr_*.log` |
+| Certificate | certbot, `--cert-name scavengesurvive-reborn.com` | webroot `/var/www/letsencrypt` (`snippets/acme.conf`), covers apex, `www`, `discord` and `wiki`; renewed by certbot's own timer (HTTP-01 works through the Cloudflare proxy) |
 | Deploy | `.github/workflows/pages.yml`, job `site` | rsyncs `site/` (minus `PLACEHOLDERS.md`) on every push to `main` that touches `site/`; user `deploy-ssr` (home `/var/www/scavengesurvive-reborn.com`), key in `~/.ssh/authorized_keys` limited to `restrict,command="/usr/bin/rrsync /var/www/scavengesurvive-reborn.com/public"` |
 | Old URL | GitHub Pages, job `pages` | `viruxe.github.io/scavengesurvive-mta/<path>` forwards to `scavengesurvive-reborn.com/<path>` (generated stub, `noindex`) |
 | Game server name | `CNAME sv` → `nasa.flaviopereira.dev`, **DNS only** | the only address players, the site, the wiki and Rich Presence use; no port needed since the server listens on MTA's default 22003. It follows nasa's own record, which nasa's cron `/root/ddns-update.sh` keeps on the WAN IP. Never proxy it: Cloudflare's proxy carries no UDP game traffic |
