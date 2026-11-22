@@ -16,7 +16,7 @@
     const nav = (navigator.language || "en").toLowerCase();
     return nav.startsWith("pt") ? "pt" : "en";
   }
-  function t(key, fallback) { return (i18n.dict && i18n.dict[key]) || fallback; }
+  function t(key, fallback) { return (i18n.lang !== "en" && i18n.dict && i18n.dict[key]) || fallback; }
   function pick(obj) {
     if (obj == null) return "";
     if (typeof obj === "string") return obj;
@@ -444,9 +444,52 @@
     } catch (e) { root.innerHTML = '<p class="empty">No servers listed.</p>'; }
   }
 
+  /* ---------- analytics (Google Analytics 4, only after consent) ---------- */
+  const GA_ID = "G-WDE1RG4126";
+  function loadAnalytics() {
+    if (window.gtag) return;
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = function () { window.dataLayer.push(arguments); };
+    window.gtag("js", new Date());
+    window.gtag("config", GA_ID);
+    const s = document.createElement("script");
+    s.async = true;
+    s.src = "https://www.googletagmanager.com/gtag/js?id=" + GA_ID;
+    document.head.appendChild(s);
+  }
+  function initConsent() {
+    let choice = null;
+    try { choice = localStorage.getItem("ss.consent"); } catch (e) { /* private mode */ }
+    const bar = document.createElement("div");
+    bar.className = "consent";
+    bar.setAttribute("role", "dialog");
+    bar.setAttribute("aria-live", "polite");
+    const render = () => {
+      bar.innerHTML =
+        "<p>" + t("consent.text", "We use Google Analytics cookies to count visits and see which pages people read. Nothing is collected unless you accept.") + "</p>" +
+        '<div class="row"><button class="btn btn--ember" data-consent="granted">' + t("consent.accept", "Accept") + "</button>" +
+        '<button class="btn btn--ghost" data-consent="denied">' + t("consent.decline", "Decline") + "</button></div>";
+    };
+    render();
+    document.addEventListener("ss:lang", render);
+    bar.hidden = choice === "granted" || choice === "denied";
+    document.body.appendChild(bar);
+    if (choice === "granted") loadAnalytics();
+    bar.addEventListener("click", (e) => {
+      const b = e.target.closest("[data-consent]");
+      if (!b) return;
+      const v = b.getAttribute("data-consent");
+      try { localStorage.setItem("ss.consent", v); } catch (e) { /* ignore */ }
+      bar.hidden = true;
+      if (v === "granted") loadAnalytics();
+      else if (window.gtag) location.reload(); // drop the loaded tag
+    });
+    $$("[data-consent-manage]").forEach((a) => a.addEventListener("click", (e) => { e.preventDefault(); bar.hidden = false; }));
+  }
+
   /* ---------- boot ---------- */
   document.addEventListener("DOMContentLoaded", async () => {
-    initNav(); initParticles(); initParallax(); initReveal(); initTilt(); initMap(); initLightbox(); initVideo(); initCopy();
+    initNav(); initParticles(); initParallax(); initReveal(); initTilt(); initMap(); initLightbox(); initVideo(); initCopy(); initConsent();
     await setLang(pickLang());
     initPlaceholders(); initMarquee(); initLive(); initChanges(); initMediaPage(); initServers();
     const y = $("[data-year]"); if (y) y.textContent = String(new Date().getFullYear());

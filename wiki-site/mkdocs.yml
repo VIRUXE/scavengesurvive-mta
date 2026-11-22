@@ -8,7 +8,7 @@ repo_name: scavengesurvive-mta
 edit_uri: ""
 copyright: >-
   Built on the original Scavenge &amp; Survive wiki by Southclaws and its contributors; every page describes this server
-  as it runs today. Text CC BY-SA 4.0.
+  as it runs today. Text CC BY-SA 4.0. <a href="#__consent">Cookie settings</a>
 
 theme:
   name: material
@@ -50,6 +50,19 @@ extra_javascript:
 
 extra:
   homepage: https://www.scavengesurvive-reborn.com
+  # Google Analytics 4 ("Scavenge & Survive - Wiki"), loaded only after the visitor accepts the consent banner; the
+  # website has a property of its own. tools/wiki_site.py gives /pt/ the Portuguese consent texts.
+  analytics:
+    provider: google
+    property: G-HD94VRGH46
+  consent:
+    title: Cookies
+    description: >-
+      We use Google Analytics cookies to count visits and see which pages people read. Nothing is collected unless you
+      accept.
+    actions:
+      - accept
+      - reject
   generator: false
   social:
     - icon: fontawesome/solid/house

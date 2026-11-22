@@ -295,5 +295,9 @@
  "wel.3.t": "Um email, uma vez",
  "wel.3.p": "O registo pede um endereço de email e envia-te um código de 6 dígitos. Ninguém entra até o escrever de volta; o código dura 15 minutos, e um endereço serve no máximo três contas.",
  "drv.f3": "O menu de ações contextual num compartimento do motor aberto (cliente em português)",
- "drv.f4": "Rodas de série como itens de loot: cheias e furadas, em cinco estilos"
+ "drv.f4": "Rodas de série como itens de loot: cheias e furadas, em cinco estilos",
+ "consent.text": "Usamos cookies do Google Analytics para contar visitas e ver que páginas são lidas. Nada é recolhido sem aceitares.",
+ "consent.accept": "Aceitar",
+ "consent.decline": "Recusar",
+ "consent.manage": "Definições de cookies"
 }

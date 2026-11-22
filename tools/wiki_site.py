@@ -53,6 +53,17 @@ SECTIONS_PT = {
     "Vehicles": "Veículos",
     "World": "Mundo",
 }
+# per-language overrides of wiki-site/mkdocs.yml (MkDocs merges them into the INHERITed settings)
+OVERRIDES_PT = """copyright: >-
+  Feita a partir da wiki original do Scavenge &amp; Survive, do Southclaws e dos seus colaboradores; cada página descreve
+  este servidor tal como corre hoje. Texto CC BY-SA 4.0. <a href="#__consent">Definições de cookies</a>
+extra:
+  consent:
+    title: Cookies
+    description: >-
+      Usamos cookies do Google Analytics para contar visitas e ver que páginas são lidas. Nada é recolhido sem
+      aceitares.
+"""
 
 PAGE_LINK = re.compile(r"(\]\(|href=\")([A-Za-z0-9][A-Za-z0-9\-]*)(#[^)\"\s]*)?(?=[)\"])")
 IMAGE_REF = re.compile(r"(\]\(|src=\"|href=\")images/([^)\"\s]+?)\.(png|jpe?g|webp)(?=[)\"\s])")
@@ -171,7 +182,7 @@ def stage(lang: str, files: dict[str, Path], out: Path, pictures: set[str]) -> P
         "      lang: " + lang,
         "nav:",
         yaml_nav(nav(lang, files)),
-        "",
+        OVERRIDES_PT if lang == "pt" else "",
     ]
     cfg = base / "mkdocs.yml"
     cfg.write_text("\n".join(lines), encoding="utf8", newline="\n")
