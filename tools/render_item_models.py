@@ -111,7 +111,7 @@ def samp_ide() -> dict[int, tuple[str, str]]:
 
 
 def stage(models: set[int], gta: Path, work: Path) -> tuple[list[dict], list[str]]:
-    from tools.extract_samp_models import is_samp_model, read_img_entry, read_img_index
+    from tools.extract_samp_models import RETEXTURED, SAMP_MODELS, is_samp_model, read_img_entry, read_img_index
 
     archives = {n: gta / p for n, p in [("samp", "SAMP/SAMP.img"), ("gta3", "models/gta3.img"), ("gta_int", "models/gta_int.img"), ("cutscene", "models/cutscene.img"), ("player", "models/player.img")] if (gta / p).is_file()}
     indexes = {n: read_img_index(p) for n, p in archives.items()}
@@ -149,6 +149,13 @@ def stage(models: set[int], gta: Path, work: Path) -> tuple[list[dict], list[str
                 txds.append(f["txd"])
             elif "txdModel" in f and f["txdModel"] in van and fetch(van[f["txdModel"]][1], ".txd", d / (van[f["txdModel"]][1] + ".txd")):
                 txds.append(van[f["txdModel"]][1])
+        elif model in RETEXTURED:
+            # Render the installed mesh and repaint together, as the client loads them.
+            dff = sam[model][0]
+            txd = RETEXTURED[model]
+            for filename in (f"{dff}.dff", f"{txd}.txd"):
+                (d / filename).write_bytes((SAMP_MODELS / "files" / filename).read_bytes())
+            txds.append(txd)
         else:
             dff, txd = sam.get(model) if is_samp_model(model) and model in sam else van.get(model, (None, None))
             if not dff or not fetch(dff, ".dff", d / (dff + ".dff")):
@@ -231,7 +238,13 @@ def recolour_vehicle(meshes):
 def build_in_blender(jobs_file: Path, out_dir: Path, size: int):
     import bmesh
     import bpy
-    from mathutils import Vector
+    from math import pi
+    from mathutils import Matrix, Vector
+    from tools.port_hats import HATS, SAMP_HAT_TEXTURES
+
+    hat_models = set(SAMP_HAT_TEXTURES) | {hat["model"] for hat in HATS}
+    # Most hats use head-bone space with +X towards the crown. These four are Z-up.
+    upright_hats = {18636, 18961, 19066, 19352}
 
     jobs = json.loads(jobs_file.read_text())
     for job in jobs:
@@ -276,6 +289,11 @@ def build_in_blender(jobs_file: Path, out_dir: Path, size: int):
         if job.get("vehicle"):
             meshes = recolour_vehicle(meshes)
             bpy.context.view_layer.update()
+        is_hat = job["model"] in hat_models and not job.get("vehicle")
+        if is_hat and job["model"] not in upright_hats:
+            for obj in meshes:
+                obj.matrix_world = Matrix.Rotation(-pi / 2, 4, "Y") @ obj.matrix_world
+            bpy.context.view_layer.update()
         pts = [o.matrix_world @ Vector(c) for o in meshes for c in o.bound_box]
         if not pts:
             print("RENDER nothing", job["model"])
@@ -290,6 +308,8 @@ def build_in_blender(jobs_file: Path, out_dir: Path, size: int):
         cam.data.ortho_scale = diag * 1.15
         cam.data.clip_start, cam.data.clip_end = 0.001, diag * 20
         direction = Vector((1.0, 1.0, 0.75) if job.get("vehicle") else (1.0, -1.0, 0.75)).normalized()
+        if is_hat and job["model"] not in upright_hats:
+            direction = Vector((0.85, 1.3, 0.58)).normalized()
         cam.location = mid + direction * diag * 3
         cam.rotation_euler = (mid - cam.location).to_track_quat("-Z", "Y").to_euler()
         scn.render.filepath = str(out_dir / job["file"])

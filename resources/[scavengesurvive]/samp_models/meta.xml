@@ -42,7 +42,7 @@
     <file src="files/apple2.dff"/>
     <file src="files/armyhelmet6.col"/>
     <file src="files/armyhelmet6.dff"/>
-    <file src="files/armyhelmets.txd"/>
+    <file src="files/armyhelmet6.txd"/>
     <file src="files/banana1.col"/>
     <file src="files/banana1.dff"/>
     <file src="files/bandage1.col"/>
@@ -59,6 +59,7 @@
     <file src="files/bdupsmask1.dff"/>
     <file src="files/beanie1.col"/>
     <file src="files/beanie1.dff"/>
+    <file src="files/beanie1.txd"/>
     <file src="files/beerkeg1.col"/>
     <file src="files/beerkeg1.dff"/>
     <file src="files/bloodpool1.col"/>
@@ -83,6 +84,7 @@
     <file src="files/cane01.dff"/>
     <file src="files/captrucker1.col"/>
     <file src="files/captrucker1.dff"/>
+    <file src="files/captrucker1.txd"/>
     <file src="files/carrooflight1.col"/>
     <file src="files/carrooflight1.dff"/>
     <file src="files/case1.col"/>
@@ -98,7 +100,7 @@
     <file src="files/concretebits.txd"/>
     <file src="files/cowboyhat2.col"/>
     <file src="files/cowboyhat2.dff"/>
-    <file src="files/cowboyhats.txd"/>
+    <file src="files/cowboyhat2.txd"/>
     <file src="files/cross1.col"/>
     <file src="files/cross1.dff"/>
     <file src="files/cross1.txd"/>
@@ -172,8 +174,10 @@
     <file src="files/handcuffs01.dff"/>
     <file src="files/hatboater3.col"/>
     <file src="files/hatboater3.dff"/>
+    <file src="files/hatboater3.txd"/>
     <file src="files/hatbowler1.col"/>
     <file src="files/hatbowler1.dff"/>
+    <file src="files/hatbowler1.txd"/>
     <file src="files/headphones.txd"/>
     <file src="files/headphones02.col"/>
     <file src="files/headphones02.dff"/>
@@ -314,7 +318,6 @@
     <file src="files/mobilephone1.col"/>
     <file src="files/mobilephone1.dff"/>
     <file src="files/mobilephone1.txd"/>
-    <file src="files/ogloc.txd"/>
     <file src="files/oilcan1.col"/>
     <file src="files/oilcan1.dff"/>
     <file src="files/oilcan1.txd"/>
@@ -337,7 +340,7 @@
     <file src="files/pd_jail_door02.txd"/>
     <file src="files/pilothat01.col"/>
     <file src="files/pilothat01.dff"/>
-    <file src="files/pilotpolicehat.txd"/>
+    <file src="files/pilothat01.txd"/>
     <file src="files/pisshbox1.col"/>
     <file src="files/pisshbox1.dff"/>
     <file src="files/pizza1.col"/>
@@ -346,6 +349,7 @@
     <file src="files/pizzabox1.dff"/>
     <file src="files/pizzahat1.col"/>
     <file src="files/pizzahat1.dff"/>
+    <file src="files/pizzahat1.txd"/>
     <file src="files/plane001.col"/>
     <file src="files/plane001.dff"/>
     <file src="files/plane003.col"/>
@@ -355,8 +359,10 @@
     <file src="files/police_things.txd"/>
     <file src="files/policecap1.col"/>
     <file src="files/policecap1.dff"/>
+    <file src="files/policecap1.txd"/>
     <file src="files/policehelmet1.col"/>
     <file src="files/policehelmet1.dff"/>
+    <file src="files/policehelmet1.txd"/>
     <file src="files/policeshield1.col"/>
     <file src="files/policeshield1.dff"/>
     <file src="files/pumpkin01.col"/>
@@ -375,7 +381,7 @@
     <file src="files/sampkeycard1.txd"/>
     <file src="files/santahat3.col"/>
     <file src="files/santahat3.dff"/>
-    <file src="files/santahats.txd"/>
+    <file src="files/santahat3.txd"/>
     <file src="files/saucebottle1.col"/>
     <file src="files/saucebottle1.dff"/>
     <file src="files/saucebottle2.col"/>
@@ -415,12 +421,13 @@
     <file src="files/sledgehammer1.txd"/>
     <file src="files/strawhat1.col"/>
     <file src="files/strawhat1.dff"/>
+    <file src="files/strawhat1.txd"/>
     <file src="files/swatagrey.col"/>
     <file src="files/swatagrey.dff"/>
     <file src="files/swatagrey.txd"/>
-    <file src="files/swatgrey.txd"/>
     <file src="files/swathgrey.col"/>
     <file src="files/swathgrey.dff"/>
+    <file src="files/swathgrey.txd"/>
     <file src="files/taser1.col"/>
     <file src="files/taser1.dff"/>
     <file src="files/taser1.txd"/>
@@ -431,6 +438,7 @@
     <file src="files/tomato1.dff"/>
     <file src="files/tophat01.col"/>
     <file src="files/tophat01.dff"/>
+    <file src="files/tophat01.txd"/>
     <file src="files/tube100m90bend1.col"/>
     <file src="files/tube100m90bend1.dff"/>
     <file src="files/tube200m1.col"/>

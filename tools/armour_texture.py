@@ -2,8 +2,8 @@
 
     python -m tools.armour_texture
 
-The original swatgrey.txd remains the SWAT helmet's dictionary. The vest keeps
-its original DFF, UVs and texture name, but model 19515 uses swatagrey.txd.
+The vest keeps its original DFF, UVs and texture name. Model 19515 uses
+swatagrey.txd independently of the SWAT helmet's swathgrey.txd.
 """
 from pathlib import Path
 

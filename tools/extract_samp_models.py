@@ -24,7 +24,7 @@ import struct
 import sys
 from pathlib import Path
 
-from tools.port_hats import PORT_MODEL_MIN
+from tools.port_hats import PORT_MODEL_MIN, SAMP_HAT_TEXTURES
 
 ROOT = Path(__file__).resolve().parents[1]
 RESOURCES = ROOT / "resources" / "[scavengesurvive]"
@@ -39,9 +39,8 @@ COL_FOURCCS = (b"COLL", b"COL2", b"COL3", b"COL4")
 # 19559 (the hiker rucksack) borrowed the wmybp skin's 128x256 atlas; hikerbackpack1.txd is the atlas's top 132 rows
 # (all its UVs reach) repainted at 4x as 512x512, and its hikerbackpack1.dff has V scaled by 256/132 to match. Both
 # files already exist, so a run never copies the originals over them.
-# 19515 keeps the swat atlas layout but has a 512x1024 repaint and its own dictionary;
-# the helmet (19514) continues using the original swatgrey.txd.
-RETEXTURED = {19515: "swatagrey", 19559: "hikerbackpack1"}
+# The armour vest and SWAT helmet use independent repaints of the swat atlas.
+RETEXTURED = {19515: "swatagrey", 19559: "hikerbackpack1", **SAMP_HAT_TEXTURES}
 
 
 def is_samp_model(model: int) -> bool:
@@ -290,6 +289,7 @@ def render_meta(entries, derived=None) -> str:
         lines.append(f'    <file src="{name}.lua"/>')
         lines += [f'    <file src="files/{f}"/>' for f in files]
     lines += ['    <export function="resolve" type="client"/>']
+    lines += ['    <export function="modelDff" type="server"/>']
     lines.append("</meta>")
     return "\n".join(lines) + "\n"
 
@@ -396,7 +396,11 @@ def main(argv=None) -> int:
     out_files = args.out / "files"
     out_files.mkdir(parents=True, exist_ok=True)
     archives = {"samp": (samp_img, samp_index), **{n: (vanilla[n], vanilla_indexes[n]) for n in vanilla}}
-    for e in entries.values():
+    for model, e in entries.items():
+        if model in SAMP_HAT_TEXTURES and not (out_files / f'{e["txd"]}.txd').is_file():
+            from tools.hat_textures import build_dictionary
+
+            build_dictionary(out_files, e["txd"])
         for archive, name in e["src"].values():
             target = out_files / name
             if target.is_file():

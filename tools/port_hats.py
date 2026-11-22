@@ -10,6 +10,14 @@ are left out, as are the cuts that are mostly hair (bikerb's bandana).
 """
 PORT_MODEL_MIN = 20001
 
+# SA-MP head-slot models with a dedicated dictionary built by tools.hat_textures.
+SAMP_HAT_TEXTURES = {
+    18636: "policecap1", 18946: "hatboater3", 18947: "hatbowler1", 18961: "captrucker1",
+    18962: "cowboyhat2", 19066: "santahat3", 19106: "armyhelmet6", 19200: "policehelmet1",
+    19352: "tophat01", 19514: "swathgrey", 19520: "pilothat01", 19528: "witcheshat1",
+    19553: "strawhat1", 19554: "beanie1", 19558: "pizzahat1",
+}
+
 # uname, display name, skin, ped dff name, loot: { table: weight }, blocks: the 8x8 atlas blocks (column, row; row 0 at
 # the top) that are the hat. GTA models a skull patch under its hats, textured with a smear of the face, and the
 # remodel rules cut it off with the hat; faces outside these blocks are left out of the object (they would show

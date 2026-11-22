@@ -3,19 +3,27 @@
     <min_mta_version server="1.6.0" client="1.6.0-9.21695"/>
     <download_priority_group>90</download_priority_group>
     <include resource="lib"/>
-    <script src="server/main.lua" type="server"/>
     <script src="client/main.lua" type="client"/>
     <file src="hats.lua"/>
     <file src="files/beanie1.col"/>
     <file src="files/bikera_hat.dff"/>
+    <file src="files/bikera_hat.txd"/>
     <file src="files/csher_hat.dff"/>
+    <file src="files/csher_hat.txd"/>
     <file src="files/cwmyfr_hat.dff"/>
+    <file src="files/cwmyfr_hat.txd"/>
     <file src="files/hmogar_hat.dff"/>
+    <file src="files/hmogar_hat.txd"/>
     <file src="files/lafd1_hat.dff"/>
+    <file src="files/lafd1_hat.txd"/>
     <file src="files/maccer_hat.dff"/>
+    <file src="files/maccer_hat.txd"/>
     <file src="files/wfyburg_hat.dff"/>
+    <file src="files/wfyburg_hat.txd"/>
     <file src="files/wmygol1_hat.dff"/>
+    <file src="files/wmygol1_hat.txd"/>
     <file src="files/wmyplt_hat.dff"/>
+    <file src="files/wmyplt_hat.txd"/>
     <export function="resolve" type="client"/>
     <export function="modelDff" type="server"/>
 </meta>

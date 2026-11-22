@@ -1,5 +1,5 @@
 -- Hats cut off skins (hats.lua, written by tools/extract_ped_models.py --hats): static objects under the
--- port's own model ids (tools/port_hats.py, 20001+), textured from the base skin's TXD (#77) and using beanie1.col
+-- port's own model ids (tools/port_hats.py, 20001+), each with its own repainted TXD and using beanie1.col
 -- (copied into hat_models/files/ so no resource reads another's files).
 local loader = loadstring(exports.lib:getModule("model_loader"), "=lib/model_loader.lua")()
 
