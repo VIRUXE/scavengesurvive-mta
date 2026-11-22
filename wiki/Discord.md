@@ -18,7 +18,20 @@ What crosses from Discord to the game:
 
 - A message typed in `#in-game-chat` appears for everyone whose global receiver is on, as a global line: `[Discord] name: text`. `/quiet` hides these together with the rest of global chat ([Chat](Chat)).
 
-Nothing else comes in: nobody on Discord can run commands or read local chat.
+Nothing else comes in: nobody on Discord can run game commands or read local chat.
+
+## Bot commands
+
+The bot answers a few slash commands in any channel of the Discord server:
+
+- `/connect`: how to join the server.
+- `/ip`: the server address.
+- `/wiki`: the player wiki.
+- `/site`: the website.
+- `/rules`: the rules ([Fair Play](Fair-Play)).
+- `/help`: lists these commands.
+
+They answer in English, except in `#br-huehuehue`, where the answers (and the links, to the Portuguese wiki) are in Brazilian Portuguese.
 
 If the bridge is down for a while, the game carries on; lines sent in the meantime are simply not relayed.
 
