@@ -26,4 +26,4 @@ Não dá sucata: uma Máquina de sucata destrói-o, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Tent](Tent)
+[Tenda](Tent)

@@ -29,4 +29,4 @@ Vale 5 [Sucata](Scrap-Metal) numa Máquina de sucata, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Campfire & BBQ](Campfire-and-BBQ), [FAQ](FAQ), [Getting Started](Getting-Started), [Loot & Respawn](Loot-and-Respawn), [Melee Weapons](Melee-Weapons), [Skills](Skills), [Trees & Wood](Trees-and-Wood)
+[Fogueira e grelhador](Campfire-and-BBQ), [Perguntas frequentes](FAQ), [Primeiros passos](Getting-Started), [Saque e reaparecimento](Loot-and-Respawn), [Armas corpo a corpo](Melee-Weapons), [Competências](Skills), [Árvores e madeira](Trees-and-Wood)

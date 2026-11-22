@@ -27,4 +27,4 @@ Não dá sucata: uma Máquina de sucata destrói-o, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Defences](Defences), [Vehicle Armour](Vehicle-Armour)
+[Defesas](Defences), [Blindagem de veículos](Vehicle-Armour)

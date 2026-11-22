@@ -32,4 +32,4 @@ Vale 1 [Sucata](Scrap-Metal) numa Máquina de sucata, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Clothes & Hats](Clothes-and-Hats), [Masks](Masks)
+[Roupa e chapéus](Clothes-and-Hats), [Máscaras](Masks)

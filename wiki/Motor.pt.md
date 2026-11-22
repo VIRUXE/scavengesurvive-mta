@@ -44,4 +44,4 @@ Vale 1 [Sucata](Scrap-Metal) numa Máquina de sucata, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Car Batteries & Starters](Car-Batteries-and-Starters), [Constructing](Constructing), [Defences](Defences), [Getting Started](Getting-Started), [Keypads](Keypads), [Repairing & Locks](Repairing-and-Locks), [Skills](Skills), [Workbench](Workbench)
+[Baterias e motores de arranque](Car-Batteries-and-Starters), [Construção](Constructing), [Defesas](Defences), [Primeiros passos](Getting-Started), [Teclados numéricos](Keypads), [Reparações e fechaduras](Repairing-and-Locks), [Competências](Skills), [Bancada de trabalho](Workbench)

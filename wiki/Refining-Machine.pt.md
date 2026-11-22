@@ -30,4 +30,4 @@ Não dá sucata: uma Máquina de sucata destrói-o, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Constructing](Constructing), [FAQ](FAQ), [Machines](Machines), [World & Zones](World-and-Zones)
+[Construção](Constructing), [Perguntas frequentes](FAQ), [Máquinas](Machines), [Mundo e zonas](World-and-Zones)

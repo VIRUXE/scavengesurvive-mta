@@ -30,4 +30,4 @@ Não dá sucata: uma Máquina de sucata destrói-o, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Ammunition](Ammunition), [Constructing](Constructing), [FAQ](FAQ), [Machines](Machines), [Masks](Masks), [Melee Weapons](Melee-Weapons), [World & Zones](World-and-Zones)
+[Munições](Ammunition), [Construção](Constructing), [Perguntas frequentes](FAQ), [Máquinas](Machines), [Máscaras](Masks), [Armas corpo a corpo](Melee-Weapons), [Mundo e zonas](World-and-Zones)

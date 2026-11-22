@@ -28,4 +28,4 @@ Não dá sucata: uma Máquina de sucata destrói-o, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Combining](Combining), [Explosives](Explosives), [Food & Drink](Food-and-Drink), [Medical](Medical)
+[Combinar](Combining), [Explosivos](Explosives), [Comida e bebida](Food-and-Drink), [Medicina](Medical)

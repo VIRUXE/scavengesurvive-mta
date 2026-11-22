@@ -40,4 +40,4 @@ Não dá sucata: uma Máquina de sucata destrói-o, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Bleeding & Wounds](Bleeding-and-Wounds), [Combining](Combining), [Explosives](Explosives), [Getting Started](Getting-Started), [Infection](Infection), [Medical](Medical), [Skills](Skills)
+[Hemorragias e feridas](Bleeding-and-Wounds), [Combinar](Combining), [Explosivos](Explosives), [Primeiros passos](Getting-Started), [Infeção](Infection), [Medicina](Medical), [Competências](Skills)

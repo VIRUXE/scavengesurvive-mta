@@ -29,4 +29,4 @@ Não dá sucata: uma Máquina de sucata destrói-o, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Clothes & Hats](Clothes-and-Hats)
+[Roupa e chapéus](Clothes-and-Hats)

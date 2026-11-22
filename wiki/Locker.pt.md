@@ -31,4 +31,4 @@ Vale 12 [Sucata](Scrap-Metal) numa Máquina de sucata, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Changes from the Original](Changes-from-the-Original), [Constructing](Constructing), [Containers & Bags](Containers-and-Bags), [Tools](Tools)
+[Mudanças face ao original](Changes-from-the-Original), [Construção](Constructing), [Contentores e sacos](Containers-and-Bags), [Ferramentas](Tools)

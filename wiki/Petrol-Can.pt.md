@@ -35,4 +35,4 @@ Vale 2 [Sucata](Scrap-Metal) numa Máquina de sucata, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Campfire & BBQ](Campfire-and-BBQ), [Combining](Combining), [Explosives](Explosives), [Food & Drink](Food-and-Drink), [Fuel](Fuel), [Furniture](Furniture), [Getting Started](Getting-Started), [Machines](Machines), [Melee Weapons](Melee-Weapons)
+[Fogueira e grelhador](Campfire-and-BBQ), [Combinar](Combining), [Explosivos](Explosives), [Comida e bebida](Food-and-Drink), [Combustível](Fuel), [Mobiliário](Furniture), [Primeiros passos](Getting-Started), [Máquinas](Machines), [Armas corpo a corpo](Melee-Weapons)

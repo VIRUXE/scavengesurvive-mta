@@ -38,4 +38,4 @@ Não dá sucata: uma Máquina de sucata destrói-o, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Campfire & BBQ](Campfire-and-BBQ), [Constructing](Constructing), [Trees & Wood](Trees-and-Wood)
+[Fogueira e grelhador](Campfire-and-BBQ), [Construção](Constructing), [Árvores e madeira](Trees-and-Wood)

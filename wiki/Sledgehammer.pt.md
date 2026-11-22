@@ -32,4 +32,4 @@ Vale 1 [Sucata](Scrap-Metal) numa Máquina de sucata, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Constructing](Constructing), [Defences](Defences), [Melee Weapons](Melee-Weapons), [Tools](Tools)
+[Construção](Constructing), [Defesas](Defences), [Armas corpo a corpo](Melee-Weapons), [Ferramentas](Tools)

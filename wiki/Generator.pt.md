@@ -28,4 +28,4 @@ Vale 6 [Sucata](Scrap-Metal) numa Máquina de sucata, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Area 69](Area-69), [Fuel](Fuel), [Inventory](Inventory), [Machines](Machines), [Tools](Tools), [Trailers & Towing](Trailers-and-Towing), [Vehicle Armour](Vehicle-Armour)
+[Área 69](Area-69), [Combustível](Fuel), [Inventário](Inventory), [Máquinas](Machines), [Ferramentas](Tools), [Reboques e rebocar](Trailers-and-Towing), [Blindagem de veículos](Vehicle-Armour)

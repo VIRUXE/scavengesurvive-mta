@@ -27,4 +27,4 @@ Não dá sucata: uma Máquina de sucata destrói-o, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Drugs](Drugs), [Medical](Medical)
+[Drogas](Drugs), [Medicina](Medical)

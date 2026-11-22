@@ -33,4 +33,4 @@ Não dá sucata: uma Máquina de sucata destrói-o, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Containers & Bags](Containers-and-Bags)
+[Contentores e sacos](Containers-and-Bags)

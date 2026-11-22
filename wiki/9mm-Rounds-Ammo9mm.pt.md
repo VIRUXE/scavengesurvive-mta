@@ -38,4 +38,4 @@ Vale 1 [Sucata](Scrap-Metal) numa Máquina de sucata, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Ammunition](Ammunition), [Getting Started](Getting-Started)
+[Munições](Ammunition), [Primeiros passos](Getting-Started)

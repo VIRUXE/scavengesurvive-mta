@@ -32,4 +32,4 @@ Não dá sucata: uma Máquina de sucata destrói-o, ver [Sucata](Scrap).
 
 ## Ver também
 
-[FAQ](FAQ), [Fishing](Fishing), [Food & Drink](Food-and-Drink)
+[Perguntas frequentes](FAQ), [Pesca](Fishing), [Comida e bebida](Food-and-Drink)

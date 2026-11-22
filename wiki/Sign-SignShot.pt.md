@@ -27,4 +27,4 @@ Vale 2 [Sucata](Scrap-Metal) numa Máquina de sucata, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Inventory](Inventory), [Small Items](Small-Items)
+[Inventário](Inventory), [Itens pequenos](Small-Items)

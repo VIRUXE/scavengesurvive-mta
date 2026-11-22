@@ -32,4 +32,4 @@ Vale 1 [Sucata](Scrap-Metal) numa Máquina de sucata, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Firearms](Firearms), [Infection](Infection), [Small Items](Small-Items)
+[Armas de fogo](Firearms), [Infeção](Infection), [Itens pequenos](Small-Items)

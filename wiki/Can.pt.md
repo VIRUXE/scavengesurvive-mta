@@ -36,4 +36,4 @@ Não dá sucata: uma Máquina de sucata destrói-o, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Defences](Defences), [FAQ](FAQ), [Food & Drink](Food-and-Drink), [Gardening](Gardening), [Getting Started](Getting-Started)
+[Defesas](Defences), [Perguntas frequentes](FAQ), [Comida e bebida](Food-and-Drink), [Jardinagem](Gardening), [Primeiros passos](Getting-Started)

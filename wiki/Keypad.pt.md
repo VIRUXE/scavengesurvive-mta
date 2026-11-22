@@ -31,4 +31,4 @@ Vale 1 [Sucata](Scrap-Metal) numa Máquina de sucata, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Defences](Defences), [Getting Started](Getting-Started), [Houses & Trailers](Houses-and-Trailers), [Keypads](Keypads), [Repairing & Locks](Repairing-and-Locks), [Trailers & Towing](Trailers-and-Towing), [Workbench](Workbench)
+[Defesas](Defences), [Primeiros passos](Getting-Started), [Casas e reboques](Houses-and-Trailers), [Teclados numéricos](Keypads), [Reparações e fechaduras](Repairing-and-Locks), [Reboques e rebocar](Trailers-and-Towing), [Bancada de trabalho](Workbench)

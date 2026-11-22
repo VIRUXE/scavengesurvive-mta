@@ -36,4 +36,4 @@ Vale 1 [Sucata](Scrap-Metal) numa Máquina de sucata, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Explosives](Explosives), [Keypads](Keypads), [Small Items](Small-Items), [Tools](Tools), [Workbench](Workbench)
+[Explosivos](Explosives), [Teclados numéricos](Keypads), [Itens pequenos](Small-Items), [Ferramentas](Tools), [Bancada de trabalho](Workbench)

@@ -34,4 +34,4 @@ Vale 2 [Sucata](Scrap-Metal) numa Máquina de sucata, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Combining](Combining), [Getting Started](Getting-Started), [Repairing & Locks](Repairing-and-Locks), [Tools](Tools), [Trailers & Towing](Trailers-and-Towing), [Workbench](Workbench)
+[Combinar](Combining), [Primeiros passos](Getting-Started), [Reparações e fechaduras](Repairing-and-Locks), [Ferramentas](Tools), [Reboques e rebocar](Trailers-and-Towing), [Bancada de trabalho](Workbench)

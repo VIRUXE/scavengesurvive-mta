@@ -36,4 +36,4 @@ Não dá sucata: uma Máquina de sucata destrói-o, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Bleeding & Wounds](Bleeding-and-Wounds), [Getting Started](Getting-Started), [Health](Health), [Medical](Medical), [Skills](Skills)
+[Hemorragias e feridas](Bleeding-and-Wounds), [Primeiros passos](Getting-Started), [Saúde](Health), [Medicina](Medical), [Competências](Skills)

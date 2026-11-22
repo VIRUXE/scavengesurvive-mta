@@ -44,4 +44,4 @@ Vale 1 [Sucata](Scrap-Metal) numa Máquina de sucata, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Constructing](Constructing), [Defences](Defences), [Explosives](Explosives), [Small Items](Small-Items), [Workbench](Workbench)
+[Construção](Constructing), [Defesas](Defences), [Explosivos](Explosives), [Itens pequenos](Small-Items), [Bancada de trabalho](Workbench)

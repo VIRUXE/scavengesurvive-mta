@@ -29,4 +29,4 @@ Vale 1 [Sucata](Scrap-Metal) numa Máquina de sucata, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Car Batteries & Starters](Car-Batteries-and-Starters), [Controls](Controls), [Repairing & Locks](Repairing-and-Locks), [Vehicles](Vehicles), [Workbench](Workbench)
+[Baterias e motores de arranque](Car-Batteries-and-Starters), [Controlos](Controls), [Reparações e fechaduras](Repairing-and-Locks), [Veículos](Vehicles), [Bancada de trabalho](Workbench)

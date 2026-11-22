@@ -38,4 +38,4 @@ Vale 1 [Sucata](Scrap-Metal) numa Máquina de sucata, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Constructing](Constructing), [Defences](Defences), [Furniture](Furniture), [Getting Started](Getting-Started), [HUD](HUD), [Keypads](Keypads), [Machines](Machines), [Melee Weapons](Melee-Weapons), [Repairing & Locks](Repairing-and-Locks), [Skills](Skills), [Tools](Tools), [Trailers & Towing](Trailers-and-Towing), [Vehicle Armour](Vehicle-Armour), [Workbench](Workbench)
+[Construção](Constructing), [Defesas](Defences), [Mobiliário](Furniture), [Primeiros passos](Getting-Started), [HUD](HUD), [Teclados numéricos](Keypads), [Máquinas](Machines), [Armas corpo a corpo](Melee-Weapons), [Reparações e fechaduras](Repairing-and-Locks), [Competências](Skills), [Ferramentas](Tools), [Reboques e rebocar](Trailers-and-Towing), [Blindagem de veículos](Vehicle-Armour), [Bancada de trabalho](Workbench)

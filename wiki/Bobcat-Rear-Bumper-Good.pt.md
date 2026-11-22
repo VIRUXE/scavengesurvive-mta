@@ -27,4 +27,4 @@ Não dá sucata: uma Máquina de sucata destrói-o, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Bobcat Salvage Parts](Bobcat-Salvage-Parts)
+[Peças do Bobcat](Bobcat-Salvage-Parts)

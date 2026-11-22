@@ -29,4 +29,4 @@ Não dá sucata: uma Máquina de sucata destrói-o, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Holster](Holster), [Melee Weapons](Melee-Weapons)
+[Coldre](Holster), [Armas corpo a corpo](Melee-Weapons)

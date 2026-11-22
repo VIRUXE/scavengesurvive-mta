@@ -29,4 +29,4 @@ Vale 3 [Sucata](Scrap-Metal) numa Máquina de sucata, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Controls](Controls), [Inventory](Inventory), [Machines](Machines), [Tools](Tools), [Trailers & Towing](Trailers-and-Towing), [Vehicle Armour](Vehicle-Armour), [Workbench](Workbench)
+[Controlos](Controls), [Inventário](Inventory), [Máquinas](Machines), [Ferramentas](Tools), [Reboques e rebocar](Trailers-and-Towing), [Blindagem de veículos](Vehicle-Armour), [Bancada de trabalho](Workbench)

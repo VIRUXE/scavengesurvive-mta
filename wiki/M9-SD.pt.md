@@ -34,4 +34,4 @@ Não dá sucata: uma Máquina de sucata destrói-o, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Firearms](Firearms), [Holster](Holster)
+[Armas de fogo](Firearms), [Coldre](Holster)

@@ -39,4 +39,4 @@ Não dá sucata: uma Máquina de sucata destrói-o, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Firearms](Firearms), [Holster](Holster), [Supply Drops](Supply-Drops)
+[Armas de fogo](Firearms), [Coldre](Holster), [Lançamentos de provisões](Supply-Drops)

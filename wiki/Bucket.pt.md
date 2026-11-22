@@ -32,4 +32,4 @@ Vale 2 [Sucata](Scrap-Metal) numa Máquina de sucata, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Constructing](Constructing), [Small Items](Small-Items)
+[Construção](Constructing), [Itens pequenos](Small-Items)

@@ -30,4 +30,4 @@ Não dá sucata: uma Máquina de sucata destrói-o, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Constructing](Constructing), [Furniture](Furniture), [Trees & Wood](Trees-and-Wood)
+[Construção](Constructing), [Mobiliário](Furniture), [Árvores e madeira](Trees-and-Wood)

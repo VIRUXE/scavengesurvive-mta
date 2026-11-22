@@ -29,4 +29,4 @@ Não dá sucata: uma Máquina de sucata destrói-o, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Bleeding & Wounds](Bleeding-and-Wounds), [Firearms](Firearms), [Holster](Holster), [Small Items](Small-Items)
+[Hemorragias e feridas](Bleeding-and-Wounds), [Armas de fogo](Firearms), [Coldre](Holster), [Itens pequenos](Small-Items)

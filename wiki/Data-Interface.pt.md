@@ -34,4 +34,4 @@ Vale 1 [Sucata](Scrap-Metal) numa Máquina de sucata, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Area 69](Area-69), [Workbench](Workbench)
+[Área 69](Area-69), [Bancada de trabalho](Workbench)

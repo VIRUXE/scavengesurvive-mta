@@ -30,4 +30,4 @@ Vale 5 [Sucata](Scrap-Metal) numa Máquina de sucata, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Containers & Bags](Containers-and-Bags)
+[Contentores e sacos](Containers-and-Bags)

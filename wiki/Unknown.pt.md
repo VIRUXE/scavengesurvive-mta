@@ -26,4 +26,4 @@ Não dá sucata: uma Máquina de sucata destrói-o, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Gardening](Gardening), [Supply Drops](Supply-Drops)
+[Jardinagem](Gardening), [Lançamentos de provisões](Supply-Drops)

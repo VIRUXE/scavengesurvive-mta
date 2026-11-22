@@ -36,4 +36,4 @@ Não dá sucata: uma Máquina de sucata destrói-o, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Repairing & Locks](Repairing-and-Locks)
+[Reparações e fechaduras](Repairing-and-Locks)

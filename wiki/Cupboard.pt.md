@@ -27,4 +27,4 @@ Não dá sucata: uma Máquina de sucata destrói-o, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Changes from the Original](Changes-from-the-Original), [Containers & Bags](Containers-and-Bags), [FAQ](FAQ), [Furniture](Furniture)
+[Mudanças face ao original](Changes-from-the-Original), [Contentores e sacos](Containers-and-Bags), [Perguntas frequentes](FAQ), [Mobiliário](Furniture)

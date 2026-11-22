@@ -31,4 +31,4 @@ Vale 2 [Sucata](Scrap-Metal) numa Máquina de sucata, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Food & Drink](Food-and-Drink)
+[Comida e bebida](Food-and-Drink)

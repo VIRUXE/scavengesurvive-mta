@@ -30,4 +30,4 @@ Vale 2 [Sucata](Scrap-Metal) numa Máquina de sucata, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Holster](Holster), [Melee Weapons](Melee-Weapons)
+[Coldre](Holster), [Armas corpo a corpo](Melee-Weapons)

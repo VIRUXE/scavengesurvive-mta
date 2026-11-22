@@ -31,4 +31,4 @@ Não dá sucata: uma Máquina de sucata destrói-o, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Food & Drink](Food-and-Drink), [Gardening](Gardening), [Inventory](Inventory)
+[Comida e bebida](Food-and-Drink), [Jardinagem](Gardening), [Inventário](Inventory)

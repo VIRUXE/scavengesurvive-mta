@@ -38,4 +38,4 @@ Não dá sucata: uma Máquina de sucata destrói-o, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Combining](Combining), [Explosives](Explosives), [Food & Drink](Food-and-Drink), [Gardening](Gardening), [Getting Started](Getting-Started), [Inventory](Inventory), [Languages](Languages)
+[Combinar](Combining), [Explosivos](Explosives), [Comida e bebida](Food-and-Drink), [Jardinagem](Gardening), [Primeiros passos](Getting-Started), [Inventário](Inventory), [Idiomas](Languages)

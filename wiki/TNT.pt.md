@@ -40,4 +40,4 @@ Não dá sucata: uma Máquina de sucata destrói-o, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Explosives](Explosives), [Supply Drops](Supply-Drops), [Workbench](Workbench)
+[Explosivos](Explosives), [Lançamentos de provisões](Supply-Drops), [Bancada de trabalho](Workbench)

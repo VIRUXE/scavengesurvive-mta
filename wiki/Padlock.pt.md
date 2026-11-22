@@ -33,4 +33,4 @@ Vale 1 [Sucata](Scrap-Metal) numa Máquina de sucata, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Combining](Combining), [Repairing & Locks](Repairing-and-Locks)
+[Combinar](Combining), [Reparações e fechaduras](Repairing-and-Locks)

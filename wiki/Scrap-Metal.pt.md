@@ -30,4 +30,4 @@ Não dá sucata: uma Máquina de sucata destrói-o, ver [Sucata](Scrap). Uma Má
 
 ## Ver também
 
-[FAQ](FAQ), [Machines](Machines), [Masks](Masks), [Workbench](Workbench)
+[Perguntas frequentes](FAQ), [Máquinas](Machines), [Máscaras](Masks), [Bancada de trabalho](Workbench)

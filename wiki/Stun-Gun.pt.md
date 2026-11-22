@@ -32,4 +32,4 @@ Vale 1 [Sucata](Scrap-Metal) numa Máquina de sucata, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Holster](Holster), [Inventory](Inventory), [Melee Weapons](Melee-Weapons), [Small Items](Small-Items), [Tools](Tools), [Workbench](Workbench)
+[Coldre](Holster), [Inventário](Inventory), [Armas corpo a corpo](Melee-Weapons), [Itens pequenos](Small-Items), [Ferramentas](Tools), [Bancada de trabalho](Workbench)

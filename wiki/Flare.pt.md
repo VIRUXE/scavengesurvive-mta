@@ -30,4 +30,4 @@ Não dá sucata: uma Máquina de sucata destrói-o, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Small Items](Small-Items)
+[Itens pequenos](Small-Items)

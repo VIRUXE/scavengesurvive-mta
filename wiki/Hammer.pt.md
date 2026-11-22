@@ -40,4 +40,4 @@ Vale 1 [Sucata](Scrap-Metal) numa Máquina de sucata, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Constructing](Constructing), [Defences](Defences), [Furniture](Furniture), [Getting Started](Getting-Started), [Melee Weapons](Melee-Weapons), [Repairing & Locks](Repairing-and-Locks), [Tent](Tent), [Tools](Tools), [Trees & Wood](Trees-and-Wood), [Workbench](Workbench)
+[Construção](Constructing), [Defesas](Defences), [Mobiliário](Furniture), [Primeiros passos](Getting-Started), [Armas corpo a corpo](Melee-Weapons), [Reparações e fechaduras](Repairing-and-Locks), [Tenda](Tent), [Ferramentas](Tools), [Árvores e madeira](Trees-and-Wood), [Bancada de trabalho](Workbench)

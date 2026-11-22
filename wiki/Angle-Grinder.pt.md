@@ -29,4 +29,4 @@ Não dá sucata: uma Máquina de sucata destrói-o, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Controls](Controls), [Tools](Tools), [Vehicle Armour](Vehicle-Armour)
+[Controlos](Controls), [Ferramentas](Tools), [Blindagem de veículos](Vehicle-Armour)

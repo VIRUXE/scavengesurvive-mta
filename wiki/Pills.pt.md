@@ -32,4 +32,4 @@ Não dá sucata: uma Máquina de sucata destrói-o, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Drugs](Drugs), [HUD](HUD), [Infection](Infection), [Inventory](Inventory), [Loot & Respawn](Loot-and-Respawn), [Medical](Medical)
+[Drogas](Drugs), [HUD](HUD), [Infeção](Infection), [Inventário](Inventory), [Saque e reaparecimento](Loot-and-Respawn), [Medicina](Medical)

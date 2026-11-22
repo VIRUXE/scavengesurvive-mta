@@ -33,4 +33,4 @@ Vale 1 [Sucata](Scrap-Metal) numa Máquina de sucata, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Campfire & BBQ](Campfire-and-BBQ), [Constructing](Constructing), [Fireworks](Fireworks), [Getting Started](Getting-Started), [Tools](Tools), [Trees & Wood](Trees-and-Wood)
+[Fogueira e grelhador](Campfire-and-BBQ), [Construção](Constructing), [Fogo de artifício](Fireworks), [Primeiros passos](Getting-Started), [Ferramentas](Tools), [Árvores e madeira](Trees-and-Wood)

@@ -26,4 +26,4 @@ Vale 1 [Sucata](Scrap-Metal) numa Máquina de sucata, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Melee Weapons](Melee-Weapons)
+[Armas corpo a corpo](Melee-Weapons)

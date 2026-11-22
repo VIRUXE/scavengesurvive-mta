@@ -32,4 +32,4 @@ Não dá sucata: uma Máquina de sucata destrói-o, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Combining](Combining), [Containers & Bags](Containers-and-Bags), [FAQ](FAQ), [Fishing](Fishing), [Parachute](Parachute)
+[Combinar](Combining), [Contentores e sacos](Containers-and-Bags), [Perguntas frequentes](FAQ), [Pesca](Fishing), [Paraquedas](Parachute)

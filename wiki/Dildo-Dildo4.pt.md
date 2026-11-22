@@ -28,4 +28,4 @@ Não dá sucata: uma Máquina de sucata destrói-o, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Melee Weapons](Melee-Weapons), [Small Items](Small-Items), [World & Zones](World-and-Zones)
+[Armas corpo a corpo](Melee-Weapons), [Itens pequenos](Small-Items), [Mundo e zonas](World-and-Zones)

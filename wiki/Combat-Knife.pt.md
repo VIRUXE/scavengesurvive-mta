@@ -34,4 +34,4 @@ Vale 1 [Sucata](Scrap-Metal) numa Máquina de sucata, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Combining](Combining), [Containers & Bags](Containers-and-Bags), [Death](Death), [FAQ](FAQ), [Gardening](Gardening), [Getting Started](Getting-Started), [Medical](Medical), [Melee Weapons](Melee-Weapons), [Parachute](Parachute), [Small Items](Small-Items)
+[Combinar](Combining), [Contentores e sacos](Containers-and-Bags), [Morte](Death), [Perguntas frequentes](FAQ), [Jardinagem](Gardening), [Primeiros passos](Getting-Started), [Medicina](Medical), [Armas corpo a corpo](Melee-Weapons), [Paraquedas](Parachute), [Itens pequenos](Small-Items)

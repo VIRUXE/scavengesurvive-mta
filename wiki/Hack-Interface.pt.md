@@ -29,4 +29,4 @@ Vale 1 [Sucata](Scrap-Metal) numa Máquina de sucata, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Area 69](Area-69), [Code Hunt & Puzzles](Code-Hunt-and-Puzzles), [FAQ](FAQ), [Keypads](Keypads), [Small Items](Small-Items), [Tools](Tools), [Workbench](Workbench)
+[Área 69](Area-69), [Caça aos códigos e puzzles](Code-Hunt-and-Puzzles), [Perguntas frequentes](FAQ), [Teclados numéricos](Keypads), [Itens pequenos](Small-Items), [Ferramentas](Tools), [Bancada de trabalho](Workbench)

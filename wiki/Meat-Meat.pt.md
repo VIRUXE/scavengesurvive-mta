@@ -34,4 +34,4 @@ Não dá sucata: uma Máquina de sucata destrói-o, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Death](Death), [Food & Drink](Food-and-Drink), [Small Items](Small-Items)
+[Morte](Death), [Comida e bebida](Food-and-Drink), [Itens pequenos](Small-Items)

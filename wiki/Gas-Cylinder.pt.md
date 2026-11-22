@@ -40,4 +40,4 @@ Vale 3 [Sucata](Scrap-Metal) numa Máquina de sucata, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Constructing](Constructing), [Defences](Defences), [Inventory](Inventory), [Tools](Tools), [Vehicle Armour](Vehicle-Armour), [Workbench](Workbench)
+[Construção](Constructing), [Defesas](Defences), [Inventário](Inventory), [Ferramentas](Tools), [Blindagem de veículos](Vehicle-Armour), [Bancada de trabalho](Workbench)

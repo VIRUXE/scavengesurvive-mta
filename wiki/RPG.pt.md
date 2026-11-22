@@ -33,4 +33,4 @@ Não dá sucata: uma Máquina de sucata destrói-o, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Ammunition](Ammunition), [Armour](Armour), [Firearms](Firearms), [Holster](Holster), [Supply Drops](Supply-Drops), [Weapons Caches](Weapons-Caches)
+[Munições](Ammunition), [Colete](Armour), [Armas de fogo](Firearms), [Coldre](Holster), [Lançamentos de provisões](Supply-Drops), [Esconderijos de armas](Weapons-Caches)

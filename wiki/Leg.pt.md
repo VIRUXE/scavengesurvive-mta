@@ -26,4 +26,4 @@ Não dá sucata: uma Máquina de sucata destrói-o, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Inventory](Inventory)
+[Inventário](Inventory)

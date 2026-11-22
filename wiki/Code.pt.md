@@ -25,4 +25,4 @@ Não dá sucata: uma Máquina de sucata destrói-o, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Area 69](Area-69), [Code Hunt & Puzzles](Code-Hunt-and-Puzzles), [Getting Started](Getting-Started), [Scavenge & Survive Reborn](Home), [Inventory](Inventory), [Keypads](Keypads), [Ladders & Ziplines](Ladders-and-Ziplines), [Languages](Languages), [Small Items](Small-Items), [World & Zones](World-and-Zones)
+[Área 69](Area-69), [Caça aos códigos e puzzles](Code-Hunt-and-Puzzles), [Primeiros passos](Getting-Started), [Scavenge & Survive Reborn](Home), [Inventário](Inventory), [Teclados numéricos](Keypads), [Escadas e tirolesas](Ladders-and-Ziplines), [Idiomas](Languages), [Itens pequenos](Small-Items), [Mundo e zonas](World-and-Zones)

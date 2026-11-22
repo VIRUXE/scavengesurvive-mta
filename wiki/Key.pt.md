@@ -37,4 +37,4 @@ Vale 1 [Sucata](Scrap-Metal) numa Máquina de sucata, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Car Batteries & Starters](Car-Batteries-and-Starters), [Code Hunt & Puzzles](Code-Hunt-and-Puzzles), [Combining](Combining), [Constructing](Constructing), [Controls](Controls), [Getting Started](Getting-Started), [HUD](HUD), [Inventory](Inventory), [Repairing & Locks](Repairing-and-Locks), [Workbench](Workbench), [World & Zones](World-and-Zones)
+[Baterias e motores de arranque](Car-Batteries-and-Starters), [Caça aos códigos e puzzles](Code-Hunt-and-Puzzles), [Combinar](Combining), [Construção](Constructing), [Controlos](Controls), [Primeiros passos](Getting-Started), [HUD](HUD), [Inventário](Inventory), [Reparações e fechaduras](Repairing-and-Locks), [Bancada de trabalho](Workbench), [Mundo e zonas](World-and-Zones)

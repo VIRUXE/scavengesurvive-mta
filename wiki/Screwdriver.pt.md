@@ -73,4 +73,4 @@ Vale 1 [Sucata](Scrap-Metal) numa Máquina de sucata, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Constructing](Constructing), [Defences](Defences), [Explosives](Explosives), [Furniture](Furniture), [Keypads](Keypads), [Machines](Machines), [Melee Weapons](Melee-Weapons), [Repairing & Locks](Repairing-and-Locks), [Tools](Tools), [Trees & Wood](Trees-and-Wood), [Workbench](Workbench)
+[Construção](Constructing), [Defesas](Defences), [Explosivos](Explosives), [Mobiliário](Furniture), [Teclados numéricos](Keypads), [Máquinas](Machines), [Armas corpo a corpo](Melee-Weapons), [Reparações e fechaduras](Repairing-and-Locks), [Ferramentas](Tools), [Árvores e madeira](Trees-and-Wood), [Bancada de trabalho](Workbench)

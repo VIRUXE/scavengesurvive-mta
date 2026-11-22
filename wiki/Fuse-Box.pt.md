@@ -33,4 +33,4 @@ Vale 1 [Sucata](Scrap-Metal) numa Máquina de sucata, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Code Hunt & Puzzles](Code-Hunt-and-Puzzles), [Workbench](Workbench), [World & Zones](World-and-Zones)
+[Caça aos códigos e puzzles](Code-Hunt-and-Puzzles), [Bancada de trabalho](Workbench), [Mundo e zonas](World-and-Zones)

@@ -30,4 +30,4 @@ Não dá sucata: uma Máquina de sucata destrói-o, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Containers & Bags](Containers-and-Bags), [Loot & Respawn](Loot-and-Respawn), [Small Items](Small-Items)
+[Contentores e sacos](Containers-and-Bags), [Saque e reaparecimento](Loot-and-Respawn), [Itens pequenos](Small-Items)

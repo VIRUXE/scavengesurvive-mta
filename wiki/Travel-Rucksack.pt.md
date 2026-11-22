@@ -34,4 +34,4 @@ Não dá sucata: uma Máquina de sucata destrói-o, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Containers & Bags](Containers-and-Bags), [FAQ](FAQ), [Fishing](Fishing), [Getting Started](Getting-Started)
+[Contentores e sacos](Containers-and-Bags), [Perguntas frequentes](FAQ), [Pesca](Fishing), [Primeiros passos](Getting-Started)

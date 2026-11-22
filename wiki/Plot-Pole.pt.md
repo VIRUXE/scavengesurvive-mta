@@ -29,4 +29,4 @@ Não dá sucata: uma Máquina de sucata destrói-o, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Constructing](Constructing), [Defences](Defences), [FAQ](FAQ), [Tools](Tools), [Trailers & Towing](Trailers-and-Towing)
+[Construção](Constructing), [Defesas](Defences), [Perguntas frequentes](FAQ), [Ferramentas](Tools), [Reboques e rebocar](Trailers-and-Towing)

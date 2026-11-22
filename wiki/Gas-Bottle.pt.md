@@ -30,4 +30,4 @@ Vale 2 [Sucata](Scrap-Metal) numa Máquina de sucata, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Controls](Controls), [Houses & Trailers](Houses-and-Trailers), [Inventory](Inventory), [Loot & Respawn](Loot-and-Respawn), [Tools](Tools), [Trailers & Towing](Trailers-and-Towing), [Vehicle Armour](Vehicle-Armour)
+[Controlos](Controls), [Casas e reboques](Houses-and-Trailers), [Inventário](Inventory), [Saque e reaparecimento](Loot-and-Respawn), [Ferramentas](Tools), [Reboques e rebocar](Trailers-and-Towing), [Blindagem de veículos](Vehicle-Armour)

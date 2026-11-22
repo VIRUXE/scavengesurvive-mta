@@ -32,4 +32,4 @@ Não dá sucata: uma Máquina de sucata destrói-o, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Campfire & BBQ](Campfire-and-BBQ), [Changes from the Original](Changes-from-the-Original), [Combining](Combining), [Constructing](Constructing), [Death](Death), [Defences](Defences), [Fireworks](Fireworks), [Fishing](Fishing), [Food & Drink](Food-and-Drink), [Fuel](Fuel), [Getting Started](Getting-Started), [Scavenge & Survive Reborn](Home), [Infection](Infection), [Inventory](Inventory), [Tools](Tools), [Trees & Wood](Trees-and-Wood), [World & Zones](World-and-Zones)
+[Fogueira e grelhador](Campfire-and-BBQ), [Mudanças face ao original](Changes-from-the-Original), [Combinar](Combining), [Construção](Constructing), [Morte](Death), [Defesas](Defences), [Fogo de artifício](Fireworks), [Pesca](Fishing), [Comida e bebida](Food-and-Drink), [Combustível](Fuel), [Primeiros passos](Getting-Started), [Scavenge & Survive Reborn](Home), [Infeção](Infection), [Inventário](Inventory), [Ferramentas](Tools), [Árvores e madeira](Trees-and-Wood), [Mundo e zonas](World-and-Zones)

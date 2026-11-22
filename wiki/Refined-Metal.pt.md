@@ -37,4 +37,4 @@ Não dá sucata: uma Máquina de sucata destrói-o, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Constructing](Constructing), [Defences](Defences), [FAQ](FAQ), [Furniture](Furniture), [Machines](Machines), [Trees & Wood](Trees-and-Wood), [Workbench](Workbench)
+[Construção](Constructing), [Defesas](Defences), [Perguntas frequentes](FAQ), [Mobiliário](Furniture), [Máquinas](Machines), [Árvores e madeira](Trees-and-Wood), [Bancada de trabalho](Workbench)

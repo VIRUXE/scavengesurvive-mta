@@ -28,4 +28,4 @@ Vale 1 [Sucata](Scrap-Metal) numa Máquina de sucata, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Surrender & Disarm](Surrender-and-Disarm)
+[Render-se e desarmar](Surrender-and-Disarm)

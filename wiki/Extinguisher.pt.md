@@ -29,4 +29,4 @@ Vale 4 [Sucata](Scrap-Metal) numa Máquina de sucata, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Small Items](Small-Items)
+[Itens pequenos](Small-Items)
