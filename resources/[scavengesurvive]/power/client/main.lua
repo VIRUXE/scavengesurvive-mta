@@ -36,8 +36,15 @@ local function clunk(x, y, z)
     end
 end
 
+-- (re)creates a site's box and lever with the models as resolved now, keeping its lever angle and lights
 local function place(s)
-    local o = { angle = 0, target = 0 }
+    local o = objects[s.id] or { angle = 0, target = 0 }
+    for _, el in ipairs({ o.lever, o.box }) do
+        if isElement(el) then
+            destroyElement(el)
+        end
+    end
+    o.box, o.lever = nil, nil
     local b = s.box
     local boxModel, leverModel = models.resolve(mains.BOX_MODEL), models.resolve(mains.LEVER_MODEL)
     if boxModel then
@@ -53,7 +60,7 @@ local function place(s)
         setElementDimension(o.lever, s.dimension or 0)
         setElementCollisionsEnabled(o.lever, false)
         local p = mains.LEVER_PIVOT
-        attachElements(o.lever, o.box, p[1], p[2], p[3], 0, 0, 0)
+        attachElements(o.lever, o.box, p[1], p[2], p[3], 0, o.angle, 0)
     end
     objects[s.id] = o
 end
@@ -250,6 +257,14 @@ addEventHandler("onClientResourceStart", resourceRoot, function()
         tubeRooms()
     end
     triggerServerEvent("mainsStateRequested", localPlayer)
+end)
+
+-- a model resource (re)started or is stopping: its model ids were freed and may now belong to other models, so the
+-- boxes and levers are made again with the ids as they resolve now (none while prop_models is down)
+addEventHandler("customModelsChanged", root, function()
+    for _, s in ipairs(sites) do
+        place(s)
+    end
 end)
 
 addEventHandler("onClientResourceStop", resourceRoot, function()
