@@ -44,6 +44,7 @@ Every firearm takes one **calibre** of [ammunition](Ammunition). A gun holds a m
 - Hold `N` for 300 ms to unload the gun: all its rounds drop as an ammo tin.
 - A gun cannot hold two different kinds of ammunition at once.
 - `Y` puts the gun away or holsters it; see [Holster](Holster).
+- A gun dropped on the ground or put on a table lies on its side, level along its length; in a [Gun Case](Furniture) it stands in the rack.
 
 ## Damage
 

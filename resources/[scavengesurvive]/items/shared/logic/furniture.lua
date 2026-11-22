@@ -70,12 +70,15 @@ end
 
 -- The shown item's object in a case: caseType / shownType are item type rows (rotx/roty/rotz). Upstream adds the
 -- case's offset to its own position and rotation, then the shown type's rotation (GetItemTypeRotation); it swaps
--- the x and y rotation offsets, which changes nothing since both are -90. x, y, z, rx, ry, rz.
+-- the x and y rotation offsets, which changes nothing since both are -90. A type whose ground rotation was levelled
+-- (the long guns: rotx/roty/rotz pitched so the length lies flat) keeps upstream's rotation in the case, as
+-- displayrotx/y/z, since those Euler offsets only add up for the plain rotx 90. x, y, z, rx, ry, rz.
 function M.displayPose(row, caseType, shownType)
     local f = M.TYPES[row.uname] or {}
-    local rx = (f.rx or 0) + (shownType and shownType.rotx or 0)
-    local ry = (f.ry or 0) + (shownType and shownType.roty or 0)
-    local rz = (row.rz or 0) + (caseType and caseType.rotz or 0) + (shownType and shownType.rotz or 0)
+    local s = shownType or {}
+    local rx = (f.rx or 0) + (s.displayrotx or s.rotx or 0)
+    local ry = (f.ry or 0) + (s.displayroty or s.roty or 0)
+    local rz = (row.rz or 0) + (caseType and caseType.rotz or 0) + (s.displayrotz or s.rotz or 0)
     return row.x, row.y, (row.z or 0) + (f.z or 0), rx, ry, rz % 360
 end
 
