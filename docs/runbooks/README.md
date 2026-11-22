@@ -17,6 +17,7 @@ cut after the local checks (`docs/runbooks/release.md`).
 | [patched-mta-server.md](patched-mta-server.md) | installing or updating the MTA server: `maps` needs the patched `deathmatch` module (server-side buildings) |
 | [release.md](release.md) | tagging a version from `main` |
 | [discord-bridge.md](discord-bridge.md) | the Discord chat relay or Rich Presence stops working, or moving it to another host |
+| [website-hosting.md](website-hosting.md) | scavengesurvive-reborn.com or its Discord link is down, a site deploy fails, rotating the deploy key |
 | [repivot-defences.md](repivot-defences.md) | the hinged defence doors' re-pivoted copies: rebuilding them, deploying, the one-off fix of built rows |
 | [../../ops/mailer/README.md](../../ops/mailer/README.md) | installing the mailer that sends email confirmation codes, or players say the code never arrives |
 
