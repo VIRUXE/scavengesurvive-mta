@@ -261,7 +261,16 @@ def wall_in_blank_doorway(bm, uv, cols):
                 out.append(v)
         return sorted(out)
 
-    ys = cuts(y0, y1, [q.x for q, _ in lit if abs(q.y - z0) < 0.01 or abs(q.y - z1) < 0.01])
+    def snap(v, values):
+        """`v` (NICHE is rounded to the centimetre) moved onto the wall's own coordinate within 3 cm, so the
+        patch's edges meet the wall's exactly instead of leaving a crack millimetres wide."""
+        near = [w for w in values if abs(w - v) < 0.03]
+        return min(near, key=lambda w: abs(w - v)) if near else v
+
+    y0, y1 = (snap(v, [q.x for q, _ in lit]) for v in (y0, y1))
+    z0, z1 = (snap(v, [q.y for q, _ in lit]) for v in (z0, z1))
+    print(f"blank doorway: patch y {y0:.4f}..{y1:.4f} z {z0:.4f}..{z1:.4f}")
+    ys = cuts(y0, y1,[q.x for q, _ in lit if abs(q.y - z0) < 0.01 or abs(q.y - z1) < 0.01])
     zs = cuts(z0, z1, [q.y for q, _ in lit if abs(q.x - y0) < 0.01 or abs(q.x - y1) < 0.01])
     for (ya, yb) in zip(ys, ys[1:]):
         for (za, zb) in zip(zs, zs[1:]):
