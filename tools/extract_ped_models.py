@@ -163,6 +163,7 @@ def render_meta_hats(hats_lua: Path) -> str:
         '    <min_mta_version server="1.6.0" client="1.6.0-9.21695"/>',
         "    <download_priority_group>90</download_priority_group>",
         '    <include resource="lib"/>',
+        '    <script src="server/main.lua" type="server"/>',
         '    <script src="client/main.lua" type="client"/>',
         '    <file src="hats.lua"/>',
     ]
