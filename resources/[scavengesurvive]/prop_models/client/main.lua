@@ -9,6 +9,11 @@ addEvent("customModelsChanged", false)
 
 addEventHandler("onClientResourceStart", resourceRoot, function()
     local count, failed = 0, {}
+    -- Retexture the native body armour pickup with a dictionary containing only gun_armour.
+    local armour = ldr.loadTxd("special_armour")
+    if not armour or not engineImportTXD(armour, 1242) then
+        outputDebugString("prop_models: Special Armour texture did not load", 2)
+    end
     local manifest = loader.loadLuaFile("props.lua", "=prop_models/props.lua")
     for propModel, e in pairs(manifest) do
         local id, err = ldr.loadModel(e)

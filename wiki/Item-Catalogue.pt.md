@@ -274,6 +274,7 @@ Vários itens diferentes podem partilhar o mesmo nome (há, por exemplo, três t
 | ![](images/items/19627_wrench1.png) | [Chave de bocas](Spanner) | 1 |
 | ![](images/items/19816_oxygencylinder1.png) | [Cilindro de gás](Gas-Cylinder) | 5 |
 | ![](images/items/19515_swatagrey.png) | [Colete](Armour) | 4 |
+| ![](images/items/1242_bodyarmour.png) | [Colete especial](Special-Armour) | 4 |
 | ![](images/items/20283_pills.png) | [Comprimidos](Pills) | 1 |
 | ![](images/items/1719_low_console.png) | [Computador](Computer) | 2 |
 | ![](images/items/20278_flux_cap.png) | [Condensador de fluxo](Flux-Capacitor) | 1 |

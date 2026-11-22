@@ -16,7 +16,11 @@ function M.ensure(item, rnd)
         item.data = {}
     end
     if tonumber(item.data.ap) == nil then
-        item.data.ap = M.roll(rnd)
+        if item.uname == "SpecialArmour" then
+            item.data.ap = 100 + math.floor(rnd() * 50)
+        else
+            item.data.ap = M.roll(rnd)
+        end
         return true
     end
     return false

@@ -34,4 +34,4 @@ Worth 2 [Scrap Metal](Scrap-Metal) in a Scrap Machine, see [Scrap](Scrap).
 
 ## See also
 
-[Combining](Combining), [Getting Started](Getting-Started), [Repairing & Locks](Repairing-and-Locks), [Tools](Tools), [Trailers & Towing](Trailers-and-Towing), [Workbench](Workbench)
+[Combining](Combining), [FAQ](FAQ), [Getting Started](Getting-Started), [Loot & Respawn](Loot-and-Respawn), [Repairing & Locks](Repairing-and-Locks), [Tools](Tools), [Trailers & Towing](Trailers-and-Towing), [Workbench](Workbench)

@@ -134,7 +134,7 @@ return {
     [19512] = { dff = "lshouse4int", txd = "all_walls", dist = 200 },
     [19513] = { dff = "whitephone", txd = "whitephone", dist = 100 },
     [19514] = { dff = "swathgrey", txd = "swatgrey", dist = 100 },
-    [19515] = { dff = "swatagrey", txd = "swatgrey", dist = 100 },
+    [19515] = { dff = "swatagrey", txd = "swatagrey", dist = 100 },
     [19520] = { dff = "pilothat01", txd = "pilotpolicehat", dist = 200 },
     [19525] = { dff = "weddingcake1", txd = "weddingcake1", dist = 100 },
     [19528] = { dff = "witcheshat1", txd = "witcheshat1", dist = 100 },

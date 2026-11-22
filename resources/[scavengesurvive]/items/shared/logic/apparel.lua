@@ -49,6 +49,7 @@ local MASKS = {
 
 local ARMOUR = {
     Armour = true,
+    SpecialArmour = true,
     Torso = true,
 }
 
@@ -165,6 +166,7 @@ end
 -- their side and need 0/90/90, the 19xxx ones stand upright at 0/0/0), `shift` is added to the position and
 -- `scale` (one number or { sx, sy, sz }) multiplies.
 local BORROW = {
+    SpecialArmour = { from = "Armour" },
     Beanie = { from = "HelmArmy" },
     StrawHat = { from = "HelmArmy", rot = { 90, 0, 0 } },
     CaptainsCap = { from = "HelmArmy", shift = { -0.015, 0, 0 } },
@@ -254,7 +256,10 @@ function M.attachConfig(slot, uname, skin, wearOffsetsOf)
         elseif borrow then
             borrow = nil -- an override is the final row
         end
-        if not o then
+        if not o and uname == "SpecialArmour" then
+            o = { unpack(default.offsets) }
+            o[7], o[8], o[9] = unpack(default.scale)
+        elseif not o then
             return default
         end
         local shift = borrow and borrow.shift or { 0, 0, 0 }
@@ -266,6 +271,15 @@ function M.attachConfig(slot, uname, skin, wearOffsetsOf)
         local mul = borrow and borrow.scale or { 1, 1, 1 }
         if type(mul) == "number" then
             mul = { mul, mul, mul }
+        end
+        if uname == "SpecialArmour" then
+            -- Model 1242 is upright along Z and smaller than the SA-MP vest.
+            rot = { rot[1], rot[2] + 90, rot[3] }
+            return {
+                bone = default.bone,
+                offsets = { o[1], o[2], o[3], rot[1], rot[2], rot[3] },
+                scale = { (o[9] or 1) * 1.54, (o[8] or 1) * 1.93, (o[7] or 1) * 1.61 },
+            }
         end
         return {
             bone = default.bone,

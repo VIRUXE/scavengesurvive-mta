@@ -384,6 +384,7 @@ Several different items can share a name (there are, for example, three kinds of
 | ![](images/items/19843_metalpanel1.png) | [Small Metal Panel](Small-Metal-Panel) | 11 |
 | ![](images/items/2346_cj_hifi_table.png) | [Small Table](Small-Table) | 10 |
 | ![](images/items/19627_wrench1.png) | [Spanner](Spanner) | 1 |
+| ![](images/items/1242_bodyarmour.png) | [Special Armour](Special-Armour) | 4 |
 | ![](images/items/20246_wheel_sport.png) | [Sport Wheel](Sport-Wheel) | 5 |
 | ![](images/items/20256_wheel_sport_flat.png) | [Sport Wheel (Flat)](Sport-Wheel-Flat) | 5 |
 | ![](images/items/20269_starter_motor.png) | [Starter Motor](Starter-Motor) | 2 |

@@ -39,7 +39,9 @@ COL_FOURCCS = (b"COLL", b"COL2", b"COL3", b"COL4")
 # 19559 (the hiker rucksack) borrowed the wmybp skin's 128x256 atlas; hikerbackpack1.txd is the atlas's top 132 rows
 # (all its UVs reach) repainted at 4x as 512x512, and its hikerbackpack1.dff has V scaled by 256/132 to match. Both
 # files already exist, so a run never copies the originals over them.
-RETEXTURED = {19559: "hikerbackpack1"}
+# 19515 keeps the swat atlas layout but has a 512x1024 repaint and its own dictionary;
+# the helmet (19514) continues using the original swatgrey.txd.
+RETEXTURED = {19515: "swatagrey", 19559: "hikerbackpack1"}
 
 
 def is_samp_model(model: int) -> bool:

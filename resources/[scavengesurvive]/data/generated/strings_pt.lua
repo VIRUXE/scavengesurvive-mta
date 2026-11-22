@@ -865,6 +865,7 @@ return {
     ["Small Table"] = "Mesa pequena",
     Sniper = "Espingarda de precisão",
     ["Snack Machine"] = "Máquina de snacks",
+    ["Special Armour"] = "Colete especial",
     ["Somehow, they were killed by a camera."] = "De alguma forma, foi morto por uma câmara.",
     ["Somehow, they were killed by goggles."] = "De alguma forma, foi morto por uns óculos.",
     ["Someone breaking the rules? /report <name> tells the staff. Found a bug? Type /bug."] = "Alguém a quebrar as regras? /report <name> avisa o staff. Encontraste um bug? Escreve /bug.",

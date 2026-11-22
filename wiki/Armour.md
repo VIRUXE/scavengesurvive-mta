@@ -6,7 +6,15 @@
 
 ## Wearing it
 
+The vest has a sharper charcoal fabric texture with visible weave, reinforced seams and worn straps.
+
 Hold the Armour and press `F`, choose `Wear` on it in the [inventory](Inventory), or click the empty `TORSO` tile while holding it. Click the tile to take it off again; putting on a second piece swaps the first one out. Other players see the vest on your character. It drops on the ground with everything else when you die or use `/dropall`.
+
+## Special Armour
+
+![Special Armour](images/items/1242_bodyarmour.png)
+
+Special Armour can turn up at military loot points and, more rarely, at police loot points. The San Fierro code lockup stash also contains Special Armour, a slate-blue vest with **100 to 149** starting points. It wears in the same torso slot and follows the same damage rules.
 
 ## Points
 

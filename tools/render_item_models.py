@@ -154,7 +154,12 @@ def stage(models: set[int], gta: Path, work: Path) -> tuple[list[dict], list[str
             if not dff or not fetch(dff, ".dff", d / (dff + ".dff")):
                 problems.append(f"{model}: dff {dff} not found")
                 continue
-            if fetch(txd, ".txd", d / (txd + ".txd")):
+            if model == 1242:
+                # The live prop resource imports this repaint into the native model.
+                repaint = RES / "prop_models" / "files" / "special_armour.txd"
+                (d / repaint.name).write_bytes(repaint.read_bytes())
+                txds.append(repaint.stem)
+            elif fetch(txd, ".txd", d / (txd + ".txd")):
                 txds.append(txd)
             else:
                 problems.append(f"{model}: txd {txd} not found (untextured)")

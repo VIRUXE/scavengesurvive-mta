@@ -29,4 +29,4 @@ Vale 1 [Sucata](Scrap-Metal) numa Máquina de sucata, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Combinar](Combining), [Reparações e fechaduras](Repairing-and-Locks)
+[Combinar](Combining), [Saque e reaparecimento](Loot-and-Respawn), [Reparações e fechaduras](Repairing-and-Locks)

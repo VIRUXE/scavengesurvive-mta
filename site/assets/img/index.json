@@ -249,6 +249,17 @@
    }
   }
  },
+ "items/1242_bodyarmour": {
+  "caption": "Special Armour",
+  "sizes": {
+   "256": {
+    "bytes": 4602,
+    "file": "items/1242_bodyarmour.webp",
+    "h": 256,
+    "w": 256
+   }
+  }
+ },
  "items/1271_gunbox": {
   "caption": "gunbox",
   "sizes": {
@@ -880,7 +891,7 @@
   "caption": "swatagrey",
   "sizes": {
    "256": {
-    "bytes": 3958,
+    "bytes": 3758,
     "file": "items/19515_swatagrey.webp",
     "h": 256,
     "w": 256

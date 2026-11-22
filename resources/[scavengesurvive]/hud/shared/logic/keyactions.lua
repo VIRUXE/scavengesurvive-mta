@@ -17,6 +17,7 @@ end
 -- lang:begin
 M.SPECIAL = {
     Armour = "Wear armour",
+    SpecialArmour = "Wear armour",
     Crowbar = "Deconstruct",
     Shield = "Place shield",
     Clothes = "Wear clothes",

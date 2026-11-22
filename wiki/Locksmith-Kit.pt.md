@@ -34,4 +34,4 @@ Vale 2 [Sucata](Scrap-Metal) numa Máquina de sucata, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Combinar](Combining), [Primeiros passos](Getting-Started), [Reparações e fechaduras](Repairing-and-Locks), [Ferramentas](Tools), [Reboques e rebocar](Trailers-and-Towing), [Bancada de trabalho](Workbench)
+[Combinar](Combining), [Perguntas frequentes](FAQ), [Primeiros passos](Getting-Started), [Saque e reaparecimento](Loot-and-Respawn), [Reparações e fechaduras](Repairing-and-Locks), [Ferramentas](Tools), [Reboques e rebocar](Trailers-and-Towing), [Bancada de trabalho](Workbench)

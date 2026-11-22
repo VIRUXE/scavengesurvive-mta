@@ -29,4 +29,4 @@ Worth 1 [Scrap Metal](Scrap-Metal) in a Scrap Machine, see [Scrap](Scrap).
 
 ## See also
 
-[Combining](Combining), [Inventory](Inventory), [Repairing & Locks](Repairing-and-Locks), [Trailers & Towing](Trailers-and-Towing)
+[Combining](Combining), [FAQ](FAQ), [Inventory](Inventory), [Loot & Respawn](Loot-and-Respawn), [Repairing & Locks](Repairing-and-Locks), [Trailers & Towing](Trailers-and-Towing)

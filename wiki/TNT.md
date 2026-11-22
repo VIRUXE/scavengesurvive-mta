@@ -15,7 +15,7 @@
 
 | Source | Where | Share of the table |
 |:--|:--|--:|
-| World loot, military | 106 spawn points: 56 in Bone County, 32 in San Fierro, 18 in Las Venturas | 5.3 % |
+| World loot, military | 106 spawn points: 56 in Bone County, 32 in San Fierro, 18 in Las Venturas | 5.2 % |
 | Vehicle trunks, military | The trunks of 4 vehicle types (Barracks, Launch, Patriot, Rhino) | 6.0 % |
 | Supply drop "Ordnance Supplies" | 36 drop points | 7.3 % |
 

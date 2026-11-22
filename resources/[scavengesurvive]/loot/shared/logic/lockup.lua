@@ -26,7 +26,7 @@ lockup.SECTIONS = {
     },
     -- sidearm, loaded, with two full tins
     { gun = true, tins = 2, { 50, "DesertEagle" }, { 50, "M9PistolSD" } },
-    { { 60, "Armour", "HelmArmy" }, { 40, "Armour", "SwatHelmet" } },
+    { { 60, "SpecialArmour", "HelmArmy" }, { 40, "SpecialArmour", "SwatHelmet" } },
     { { 60, "NightVision" }, { 40, "ThermalVision" } },
     { { 60, "LargeBackpack" }, { 40, "ParaBag" } },
     { { 100, { "Medkit", 2 }, "AutoInjec", "AntiSepBandage" } },

@@ -5,7 +5,16 @@
 O **Colete** (tamanho 4) é uma peça que se veste no tronco. Absorve parte de cada bala que te acerta no peito e vai-se gastando com isso. Para os painéis metálicos soldados a um veículo, ver [Blindagem de veículos](Vehicle-Armour).
 
 ## Vesti-lo {#wearing-it}
+O colete tem uma textura de tecido cinzento-escuro mais nítida, com a trama visível, costuras reforçadas e correias gastas.
+
 Segura o Colete e prime `F`, escolhe `Vestir` nele no [inventário](Inventory), ou clica no quadrado vazio `TORSO` enquanto o seguras. Clica no quadrado para o tirar outra vez; vestir uma segunda peça troca a primeira. Os outros jogadores veem o colete na tua personagem. Cai no chão com tudo o resto quando morres ou usas `/dropall`.
+
+## Colete especial {#special-armour}
+
+![Colete especial](images/items/1242_bodyarmour.png)
+
+
+Podes encontrar o Colete especial em pontos de saque militares e, mais raramente, em pontos de saque policiais. O esconderijo de San Fierro que se abre com o código também contém um Colete especial, de tecido azul-ardósia, com **100 a 149** pontos iniciais. Usa a mesma ranhura de tronco e segue as mesmas regras de dano.
 
 ## Pontos {#points}
 Cada peça de Colete tem entre **25 e 99 pontos**, sorteados quando é feita ou encontrada. O número aparece na legenda do quadrado `TORSO`, por exemplo `COLETE (73)`. Só desce.

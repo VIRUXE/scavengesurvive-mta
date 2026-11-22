@@ -31,7 +31,7 @@ Five items of each size; the [Item Catalogue](Item-Catalogue) lists every item w
 | 1 | 140 | [.308 Rounds](308-Rounds), [Accelerometer](Accelerometer), [Apple Juice](Apple-Juice), [Banana](Banana), [Bandana](Bandana-BandanaBl) |
 | 2 | 73 | [.357 Rounds](357-Rounds-Ammo357), [.50 Rounds](50-Rounds-Ammo50), [9mm Rounds](9mm-Rounds-Ammo9mm), [Advanced Keypad](Advanced-Keypad), [Antiseptic Bandage](Antiseptic-Bandage) |
 | 3 | 36 | [5.56 Rounds](556-Rounds-Ammo556), [7.62 Rounds](762-Rounds), [Angle Grinder](Angle-Grinder), [Baseball Bat](Baseball-Bat), [Big Ass Sword](Big-Ass-Sword) |
-| 4 | 25 | [Armour](Armour), [Backpack](Backpack), [Broom](Broom), [Cardboard Box](Cardboard-Box), [Carton](Carton) |
+| 4 | 26 | [Armour](Armour), [Backpack](Backpack), [Broom](Broom), [Cardboard Box](Cardboard-Box), [Carton](Carton) |
 | 5 | 41 | [AK-47](AK47), [Alloy Wheel](Alloy-Wheel), [Alloy Wheel (Flat)](Alloy-Wheel-Flat), [Campfire](Campfire), [Chainsaw](Chainsaw) |
 | 6 | 442 | [BBQ](BBQ), [Big Crate](Big-Crate), [Fishing Rod](Fishing-Rod), [Heatseeker](Heatseeker), [Large Box](Large-Box) |
 | 7 | 4 | [Flamer](Flamer), [Minigun](Minigun), [Sledgehammer](Sledgehammer), [Tool Box](Tool-Box) |

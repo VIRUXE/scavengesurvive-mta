@@ -6,6 +6,7 @@
     <script src="server/main.lua" type="server"/>
     <script src="client/main.lua" type="client"/>
     <file src="props.lua"/>
+    <file src="files/special_armour.txd"/>
     <file src="files/advanced_keypad.col"/>
     <file src="files/advanced_keypad.dff"/>
     <file src="files/advanced_keypad.txd"/>
