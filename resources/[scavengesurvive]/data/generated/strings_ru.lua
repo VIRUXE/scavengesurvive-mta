@@ -461,6 +461,7 @@ return {
     ["Hitch trailer"] = "Прицепить прицеп",
     ["Hockey Mask"] = "Хоккейная маска",
     ["Hold %s"] = "Удерживать %s",
+    ["Hold [F] next to a tree with a fuelled Chainsaw until it falls; the Wood Logs land around the trunk. Fuel the Chainsaw at a Petrol Can on the ground. A felled tree grows back after three weeks."] = "Удерживайте [F] у дерева с заправленной Бензопилой, пока оно не упадёт; Брёвна окажутся вокруг ствола. Заправьте Бензопилу у Канистры с бензином на земле. Срубленное дерево вырастает заново через три недели.",
     ["Hold [W] to drive forward."] = "Удерживайте [W], чтобы ехать вперёд.",
     ["Hold a Ratchet to take a body part off"] = "Возьмите Трещотку, чтобы снять деталь кузова",
     ["Hold a defence to attach it"] = "Возьмите укрепление в руки, чтобы установить его",

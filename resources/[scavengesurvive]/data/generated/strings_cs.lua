@@ -461,6 +461,7 @@ return {
     ["Hitch trailer"] = "Připojit přívěs",
     ["Hockey Mask"] = "Hokejová maska",
     ["Hold %s"] = "Podrž %s",
+    ["Hold [F] next to a tree with a fuelled Chainsaw until it falls; the Wood Logs land around the trunk. Fuel the Chainsaw at a Petrol Can on the ground. A felled tree grows back after three weeks."] = "Drž [F] u stromu s natankovanou Motorovou pilou, dokud nespadne; Polena dopadnou kolem kmene. Motorovou pilu natankuješ u Kanystru na benzín na zemi. Pokácený strom doroste za tři týdny.",
     ["Hold [W] to drive forward."] = "Drž [W] pro jízdu vpřed.",
     ["Hold a Ratchet to take a body part off"] = "Pro sundání dílu karoserie drž ráčnu",
     ["Hold a defence to attach it"] = "Pro připevnění drž zábranu v ruce",

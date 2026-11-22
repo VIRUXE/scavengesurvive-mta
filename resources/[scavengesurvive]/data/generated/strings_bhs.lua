@@ -439,6 +439,7 @@ return {
     ["Hitch trailer"] = "Zakači prikolicu",
     ["Hockey Mask"] = "Hokejaška maska",
     ["Hold %s"] = "Drži %s",
+    ["Hold [F] next to a tree with a fuelled Chainsaw until it falls; the Wood Logs land around the trunk. Fuel the Chainsaw at a Petrol Can on the ground. A felled tree grows back after three weeks."] = "Drži [F] pored stabla s napunjenom motornom pilom dok ne padne; cjepanice padnu oko debla. Motornu pilu napuni kod kanistera benzina na tlu. Oboreno stablo ponovo izraste nakon tri sedmice.",
     ["Hold [W] to drive forward."] = "Drži [W] za vožnju naprijed.",
     ["Hold a Ratchet to take a body part off"] = "Drži račnu da skineš dio karoserije",
     ["Hold a defence to attach it"] = "Drži obranu da je pričvrstiš",

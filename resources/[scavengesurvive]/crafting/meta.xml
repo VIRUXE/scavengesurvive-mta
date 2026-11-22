@@ -259,9 +259,11 @@
     <file src="client/icons/20297_doctor_bag.png"/>
     <file src="client/icons/20298_bandage.png"/>
     <file src="client/icons/20299_dirty_bandage.png"/>
+    <file src="client/icons/20300_flood_light.png"/>
     <file src="client/icons/20301_imcmptrkdrl_las_def.png"/>
     <file src="client/icons/20302_container_door_def.png"/>
     <file src="client/icons/20303_freight_sfw_door_def.png"/>
+    <file src="client/icons/20309_cord_coil.png"/>
     <file src="client/icons/2034_cj_sawnoff.png"/>
     <file src="client/icons/2037_cj_pistol_ammo.png"/>
     <file src="client/icons/2038_ammo_box_s2.png"/>

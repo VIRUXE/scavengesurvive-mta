@@ -461,6 +461,7 @@ return {
     ["Hitch trailer"] = "Pieslēgt piekabi",
     ["Hockey Mask"] = "Hokeja maska",
     ["Hold %s"] = "Turi %s",
+    ["Hold [F] next to a tree with a fuelled Chainsaw until it falls; the Wood Logs land around the trunk. Fuel the Chainsaw at a Petrol Can on the ground. A felled tree grows back after three weeks."] = "Turi [F] pie koka ar uzpildītu Motorzāģi, līdz tas nokrīt; Malkas pagales nokrīt ap stumbru. Motorzāģi uzpildi pie Benzīna kannas uz zemes. Nozāģēts koks ataug pēc trim nedēļām.",
     ["Hold [W] to drive forward."] = "Turi [W], lai brauktu uz priekšu.",
     ["Hold a Ratchet to take a body part off"] = "Lai noņemtu virsbūves detaļu, paņem rokā Terkšķatslēgu",
     ["Hold a defence to attach it"] = "Lai piestiprinātu aizsargbarjeru, turi to rokā",

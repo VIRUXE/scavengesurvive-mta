@@ -379,6 +379,17 @@ function getProductionRecipes()
             fishing.MAX_WAIT_MS / 1000
         )
     )
+    -- world/shared/logic/trees.lua: a held Chainsaw fells GTA's trees, a felled one grows back after RESPAWN_S
+    add(
+        "fell:tree",
+        "gathering",
+        "WoodLog",
+        {},
+        "Chainsaw",
+        lang.text(
+            "Hold [F] next to a tree with a fuelled Chainsaw until it falls; the Wood Logs land around the trunk. Fuel the Chainsaw at a Petrol Can on the ground. A felled tree grows back after three weeks."
+        )
+    )
     add(
         "harvest:meat",
         "gathering",

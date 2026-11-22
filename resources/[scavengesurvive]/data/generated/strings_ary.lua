@@ -461,6 +461,7 @@ return {
     ["Hitch trailer"] = "Rbet remorque",
     ["Hockey Mask"] = "Masque dyal Hockey",
     ["Hold %s"] = "Chedd %s",
+    ["Hold [F] next to a tree with a fuelled Chainsaw until it falls; the Wood Logs land around the trunk. Fuel the Chainsaw at a Petrol Can on the ground. A felled tree grows back after three weeks."] = "Bqa wrek 3la [F] 7da chejra b Tronconneuse 3amra 7tta tti7; Lkhachbat kayti7o 7da jder. 3emmer Tronconneuse 3nd Bidon dyal Lisans f lard. Chejra li tqet3at katkber 3awed mn b3d tlata dyal simanat.",
     ["Hold [W] to drive forward."] = "Chedd [W] bach tsou9 l 9eddam.",
     ["Hold a Ratchet to take a body part off"] = "Chedd Cliquet bach t7iyed piece",
     ["Hold a defence to attach it"] = "Chedd difa3 bach trekbo",

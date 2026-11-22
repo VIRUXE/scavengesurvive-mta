@@ -442,6 +442,7 @@ return {
     ["Hitch trailer"] = "Engatar reboque",
     ["Hockey Mask"] = "Máscara de hóquei",
     ["Hold %s"] = "Manter %s",
+    ["Hold [F] next to a tree with a fuelled Chainsaw until it falls; the Wood Logs land around the trunk. Fuel the Chainsaw at a Petrol Can on the ground. A felled tree grows back after three weeks."] = "Mantém [F] junto a uma árvore com uma Motosserra abastecida até ela cair; os Troncos de madeira ficam à volta do tronco. Abastece a Motosserra num Jerricã de gasolina no chão. Uma árvore abatida volta a crescer ao fim de três semanas.",
     ["Hold [W] to drive forward."] = "Mantém [W] premido para avançar.",
     ["Hold a Ratchet to take a body part off"] = "Segura uma Catraca para retirar uma peça da carroçaria",
     ["Hold a defence to attach it"] = "Segura uma defesa para a prender",

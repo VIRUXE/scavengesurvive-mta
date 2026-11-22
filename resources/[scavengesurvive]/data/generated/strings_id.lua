@@ -461,6 +461,7 @@ return {
     ["Hitch trailer"] = "Pasang trailer",
     ["Hockey Mask"] = "Topeng Hoki",
     ["Hold %s"] = "Tahan %s",
+    ["Hold [F] next to a tree with a fuelled Chainsaw until it falls; the Wood Logs land around the trunk. Fuel the Chainsaw at a Petrol Can on the ground. A felled tree grows back after three weeks."] = "Tahan [F] di samping pohon dengan Gergaji Mesin yang terisi bensin sampai pohonnya tumbang; Batang Kayu jatuh di sekitar batangnya. Isi Gergaji Mesin di Jeriken Bensin yang ada di tanah. Pohon yang ditebang tumbuh lagi setelah tiga minggu.",
     ["Hold [W] to drive forward."] = "Tahan [W] untuk maju.",
     ["Hold a Ratchet to take a body part off"] = "Pegang Kunci Ratchet untuk melepas bagian bodi",
     ["Hold a defence to attach it"] = "Pegang pertahanan untuk memasangnya",

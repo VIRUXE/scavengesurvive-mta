@@ -461,6 +461,7 @@ return {
     ["Hitch trailer"] = "Cuplează remorca",
     ["Hockey Mask"] = "Mască de hochei",
     ["Hold %s"] = "Ține apăsat %s",
+    ["Hold [F] next to a tree with a fuelled Chainsaw until it falls; the Wood Logs land around the trunk. Fuel the Chainsaw at a Petrol Can on the ground. A felled tree grows back after three weeks."] = "Ține apăsat [F] lângă un copac cu o drujbă alimentată până când cade; buștenii rămân în jurul trunchiului. Alimentează drujba la o canistră de benzină de pe jos. Un copac tăiat crește la loc după trei săptămâni.",
     ["Hold [W] to drive forward."] = "Ține apăsat [W] ca să mergi înainte.",
     ["Hold a Ratchet to take a body part off"] = "Ține un clichet în mână ca să scoți o piesă de caroserie",
     ["Hold a defence to attach it"] = "Ține o apărare în mână ca s-o atașezi",
