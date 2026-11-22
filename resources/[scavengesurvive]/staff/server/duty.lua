@@ -60,7 +60,7 @@ return function(ctx)
         sendDutyView(p)
         ctx.say(
             p,
-            " >  You are now on duty: full health, immune to all damage, survival stats frozen, name tags and city lights on."
+            " >  You are now on duty: full health, immune to all damage, stats frozen, name tags and city lights on."
         )
         ctx.msgStaff(1, " >  %s went on duty", getPlayerName(p))
         log.event("staff.dutyChanged", { player = p, on = true })

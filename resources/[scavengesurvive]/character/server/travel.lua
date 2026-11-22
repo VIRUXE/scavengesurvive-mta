@@ -3,7 +3,7 @@
 -- moved), the Endurance skill gains on the rules, jumps come from the client (rate-limited, counted on foot only)
 -- and /mstats shows the counters in an info window. The counters live for the session (upstream saved them with
 -- the character).
--- ctx = { net, travel, state, gainSkill, isKnockedOut } built by server/main.lua.
+-- Nothing counts on staff duty. ctx = { net, travel, state, gainSkill, isKnockedOut, onDuty } built by server/main.lua.
 local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")()
 return function(ctx)
     local net, travel, state = ctx.net, ctx.travel, ctx.state
@@ -35,6 +35,14 @@ return function(ctx)
 
     function M.reset(player)
         byPlayer[player] = travel.new()
+    end
+
+    -- a second on staff duty counts nothing, and the next one off duty does not count the way moved meanwhile
+    function M.pause(player)
+        local t = byPlayer[player]
+        if t then
+            t.lastX, t.ride = nil, nil
+        end
     end
 
     -- one second of a spawned, living character
@@ -78,7 +86,7 @@ return function(ctx)
 
     net.handler("playerJumped", function(player)
         local st = state.byPlayer[player]
-        if not st or st.dead or getPedOccupiedVehicle(player) or ctx.isKnockedOut(player) then
+        if not st or st.dead or getPedOccupiedVehicle(player) or ctx.isKnockedOut(player) or ctx.onDuty(player) then
             return
         end
         if travel.jump(of(player)) then
@@ -89,7 +97,7 @@ return function(ctx)
     -- a wall climbed or a ladder climbed up, reported by the client that did it (movement is client-owned)
     net.handler("playerClimbed", function(player, kind, metres)
         local st = state.byPlayer[player]
-        if not st or st.dead or getPedOccupiedVehicle(player) or ctx.isKnockedOut(player) then
+        if not st or st.dead or getPedOccupiedVehicle(player) or ctx.isKnockedOut(player) or ctx.onDuty(player) then
             return
         end
         if type(kind) ~= "string" or type(metres) ~= "number" then

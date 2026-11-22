@@ -850,16 +850,17 @@ addEventHandler("onClientRender", root, function()
     if not state.spawned or state.dead or state.hidden then
         return
     end
-    if state.brightness > 0 then
-        dxDrawRectangle(0, 0, sw, sh, tocolor(0, 0, 0, state.brightness))
-    end
     local vehicle = getPedOccupiedVehicle(localPlayer)
     local driver = vehicle and getVehicleOccupant(vehicle, 0) == localPlayer or false
-    -- duty staff have frozen stats, so no survival bars, and no watch (bearing, clock, radio frequency)
+    -- duty staff have frozen stats, so no survival or skill bars, no skill notice, no low-HP darkness, and no watch
+    -- (bearing, clock, radio frequency)
     local onDuty = getElementData(localPlayer, "staff.duty") == true
     -- no needs or skill bars while a defence is being set either: the building tweak pad sits where they are, and a
     -- carmour defence's ghost aimed at a vehicle wants a clear view
     local setting = settingDefence()
+    if state.brightness > 0 and not onDuty then
+        dxDrawRectangle(0, 0, sw, sh, tocolor(0, 0, 0, state.brightness))
+    end
     if not onDuty and not setting then
         drawNeeds()
     end
@@ -870,8 +871,10 @@ addEventHandler("onClientRender", root, function()
     end
     local vt = driver and vehicleType(getElementData(vehicle, "vehicles.type")) or nil
     local dashTop = vt and dashboard.top(vt) or nil -- nil: this vehicle has no dashboard (a bicycle, a trailer)
-    drawSkillNotice(dashTop and dashTop - 16 or nil)
-    if not setting and not skillCornerTaken() then
+    if not onDuty then
+        drawSkillNotice(dashTop and dashTop - 16 or nil)
+    end
+    if not onDuty and not setting and not skillCornerTaken() then
         drawSkillBars(driver)
     end
     if driver then

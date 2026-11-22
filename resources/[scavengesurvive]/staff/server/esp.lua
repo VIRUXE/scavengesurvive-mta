@@ -25,8 +25,6 @@ return function(ctx)
                     z = z,
                     int = int,
                     dim = dim,
-                    hp = math.floor(getElementHealth(p)),
-                    armour = math.floor(getPedArmor(p)),
                     veh = veh and getVehicleName(veh) or nil,
                     dead = isPedDead(p) or nil,
                     authed = state.authed[p] and true or nil,

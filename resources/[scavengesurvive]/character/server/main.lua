@@ -172,6 +172,7 @@ tickCtx.travel = loadFile("server/travel.lua")({
     isKnockedOut = function(p)
         return isKnockedOut(p)
     end,
+    onDuty = onDuty,
 })
 
 -- The client's watch turns red while the combat-log window is open (upstream IsPlayerCombatLogging reads the
@@ -610,9 +611,10 @@ local function changeSkill(player, st, name, amount)
     return amount
 end
 
+-- nothing is learnt on staff duty (the character is out of the game); setSkill, a staff command, still works
 function gainSkill(player, name, mult)
     local st = state.byPlayer[player]
-    if not st or st.dead then
+    if not st or st.dead or onDuty(player) then
         return false
     end
     local amount = skills.gain(st.skills, name, mult)

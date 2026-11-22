@@ -62,6 +62,9 @@ return function(ctx)
                     setElementData(player, "character.bleeding", false, "broadcast", "deny")
                 end
                 walk(player, false)
+                if ctx.travel then
+                    ctx.travel.pause(player) -- no travel stats either
+                end
                 setElementHealth(player, math.max(1, st.hp))
             elseif
                 isElement(player)

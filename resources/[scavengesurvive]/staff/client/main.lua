@@ -105,8 +105,7 @@ local function drawNametags()
                 local sx, sy = getScreenFromWorldPosition(x, y, z + 0.35, 0.06)
                 if sx then
                     local scale = math.max(0.8, 1.6 - dist / 120)
-                    local hp = math.floor(getElementHealth(p))
-                    local text = string.format("%s  %d%%  %dm", getPlayerName(p), hp, dist)
+                    local text = string.format("%s  %dm", getPlayerName(p), dist)
                     shadowText(text, sx, sy, tocolor(255, 255, 0, 255), scale, "default-bold")
                 end
             end
@@ -232,14 +231,7 @@ local function drawEsp()
             if sx and sx > 0 and sx < sw and sy > 0 and sy < sh then
                 dxDrawRectangle(sx - 3, sy + 10, 6, 6, colour)
                 if not (nametags and isElement(p) and isElementStreamedIn(p) and dist < TAG_DISTANCE) then
-                    local text = string.format(
-                        "%s  %d%%%s  %dm%s",
-                        e.name,
-                        e.hp or 0,
-                        (e.armour or 0) > 0 and ("+" .. e.armour) or "",
-                        dist,
-                        e.veh and ("  [" .. e.veh .. "]") or ""
-                    )
+                    local text = string.format("%s  %dm%s", e.name, dist, e.veh and ("  [" .. e.veh .. "]") or "")
                     shadowText(text, sx, sy, colour, math.max(0.8, 1.4 - dist / 400), "default-bold")
                 end
             else
