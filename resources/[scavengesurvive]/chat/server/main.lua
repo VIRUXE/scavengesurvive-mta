@@ -129,9 +129,14 @@ local function nearby(p, range)
 end
 
 -- Who a line in this mode reaches: local and /me within 40 m in the same dimension, global everyone not /quiet,
--- admin every staff member, anything else the speaker's radio frequency.
+-- admin every staff member, anything else the speaker's radio frequency. A staff member spectating talks locally
+-- (text, /me and the local part of voice) to the player they watch only, not around where they are parked.
 local function audience(p, mode)
     if mode == MODE.LOCAL or mode == "me" then
+        local watched = p and exports.staff:getSpectateTarget(p)
+        if isElement(watched) then
+            return { p, watched }
+        end
         return nearby(p, logic.LOCAL_RANGE)
     end
     local out = {}

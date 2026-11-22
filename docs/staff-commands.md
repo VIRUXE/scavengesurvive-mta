@@ -65,7 +65,8 @@ Double-clicking a command (or **Open in panel**) opens the staff panel on that c
 - Level 4 and above, on duty or not, get a chat line when any player leaves (`Name has left (Quit)`, or the kick/ban
   reason): the port's counterpart of the join line everyone sees.
 - `/spec` parks the watcher frozen, invisible and without collisions where they stood, follows the target's
-  dimension and interior, and the arrow keys cycle through players; `/free` or `/spec off` returns them.
+  dimension and interior, and the arrow keys cycle through players; `/free` or `/spec off` returns them. While
+  spectating, local chat, `/me` and the local part of voice reach the watched player only (`exports.staff:getSpectateTarget`).
 - `/field add <name> <x1 y1 x2 y2 x3 y3 x4 y4 minZ maxZ>` draws a detection field (upstream `detfield*.pwn`): the
   `anticheat` resource logs each player's entry once (`anticheat_field_logs`, server log) and never punishes;
   `/field list`, `/field log <name>` (last 10 entries) and `/field remove <name>`. Adds and removes are

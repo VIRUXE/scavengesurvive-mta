@@ -31,7 +31,7 @@ Sem um motivo na linha de comando, uma janela pede-o. *Denúncia enviada. Obriga
 | **Congelar** | *Congelado por um admin* (ou *durante N segundos*): não te podes mexer nem agir até *Já não estás congelado.* |
 | **Teletransportar** | O staff pode levar-te até eles ou ir ao local onde foi feita uma denúncia. |
 | **Curar** | *Foste curado pelo staff.* |
-| **Observar** | Nada: um membro do staff invisível pode estar a ver-te. |
+| **Observar** | Nada: um membro do staff invisível pode estar a ver-te. Se falar no chat local ou por voz local, só tu o ouves. |
 | **Banir** | *Estás banido! Motivo: ...*, depois és desligado. |
 
 ## Banimentos {#bans}

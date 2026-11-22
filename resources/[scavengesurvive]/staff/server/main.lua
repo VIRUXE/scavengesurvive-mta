@@ -508,6 +508,12 @@ function isOnDuty(player)
     return state.duty[player] ~= nil
 end
 
+-- the player this staff member is spectating, or false
+function getSpectateTarget(player)
+    local s = state.spectating[player]
+    return s and isElement(s.target) and s.target or false
+end
+
 -- /freeze state only: isElementFrozen is also true while spectating, at a world button or in the dev studio
 function isFrozen(player)
     return state.frozen[player] ~= nil

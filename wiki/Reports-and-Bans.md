@@ -35,7 +35,7 @@ Without a reason on the command line a window asks for it. *Report filed. Thank 
 | **Freeze** | *Frozen by admin* (or *for N seconds*): you cannot move or act until *You are now unfrozen.* |
 | **Teleport** | Staff can bring you to them or go to where a report was filed. |
 | **Heal** | *You were healed by staff.* |
-| **Spectate** | Nothing: an invisible staff member may be watching. |
+| **Spectate** | Nothing: an invisible staff member may be watching. If they talk in local chat or local voice, only you hear them. |
 | **Ban** | *You are banned! Reason: ...*, then you are disconnected. |
 
 ## Bans
