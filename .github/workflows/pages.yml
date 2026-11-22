@@ -55,7 +55,10 @@ jobs:
             site/ deploy-ssr@juniper.flaviopereira.dev:/
 
   pages:
+    # Deploying in a job of its own: in the same job deploy-pages asked for the artifact milliseconds after the upload
+    # and often got "No artifacts named github-pages" before GitHub listed it.
     name: Redirect GitHub Pages to the domain
+    needs: pages-build
     runs-on: ubuntu-latest
     permissions:
       pages: write
@@ -63,6 +66,16 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4
+
+  pages-build:
+    name: Build the GitHub Pages redirect
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: read
     steps:
       - name: Build the redirect pages
         run: |
@@ -86,8 +99,6 @@ jobs:
       - uses: actions/upload-pages-artifact@v3
         with:
           path: redirect
-      - id: deploy
-        uses: actions/deploy-pages@v4
 
   wiki-site:
     name: Build the wiki and deploy it to juniper
