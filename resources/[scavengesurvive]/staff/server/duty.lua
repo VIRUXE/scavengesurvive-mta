@@ -58,7 +58,10 @@ return function(ctx)
     local function dutyOn(p)
         dutyState(p)
         sendDutyView(p)
-        ctx.say(p, " >  You are now on duty: full health, immune to all damage, survival stats frozen, name tags on.")
+        ctx.say(
+            p,
+            " >  You are now on duty: full health, immune to all damage, survival stats frozen, name tags and city lights on."
+        )
         ctx.msgStaff(1, " >  %s went on duty", getPlayerName(p))
         log.event("staff.dutyChanged", { player = p, on = true })
         ctx.log(p, "duty_on")
@@ -91,7 +94,7 @@ return function(ctx)
         level = 2,
         playerOnly = true,
         usage = "/duty",
-        help = "Toggle staff duty (immune to all damage, stats frozen, name tags, duty skin)",
+        help = "Toggle staff duty (immune to all damage, stats frozen, name tags, city lights, duty skin)",
         needsDb = false,
         fn = function(p)
             if state.spectating[p] then

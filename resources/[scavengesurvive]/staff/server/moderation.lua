@@ -622,8 +622,8 @@ return function(ctx)
     end
 
     -- Not upstream: deletes one world vehicle with its trunk, the only way a sunk one goes (vehicles/server/ground).
-    -- The world is blacked out for everyone (world/client/blackout.lua); this lights the city for the caller only, to
-    -- look at something, until they toggle it again or reconnect.
+    -- The world is blacked out for everyone but staff on duty (world/client/blackout.lua); this lights the city for the
+    -- caller only, off duty too, to look at something, until they toggle it again or reconnect.
     local litFor = {}
     ctx.command({
         name = "lights",

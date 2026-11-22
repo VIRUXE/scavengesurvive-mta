@@ -360,66 +360,187 @@ function roll.overlaps(a, b, gap)
     return true
 end
 
--- Lay an item on `slot` at heading rz against the tallest footprint of `placed` it overlaps. It leans when it can rest
--- that way: its low end on the ground, propped on the other item's near edge, which must lie past its own middle (its
--- weight between the two supports) along one of its two axes; the gentler of the two wins, and the lean is folded into
--- the slope normal the client turns the item by. Overlapping by more than that, or steeper than LEAN_MAX (a small item
--- against a tall one), it would tip over onto the other one, so it lies flat on its top: two gates dropped on the same
--- spot stack instead of one standing half up through the other. Returns x, y, z, rz, nx, ny and its footprint, whose
--- `top` is its highest point, so what lands next stacks above it.
-function roll.leanOn(px, py, slot, rest, modelz, rz, centred, placed)
-    local x, y, z, nx, ny = roll.layAt(px, py, slot, rest, modelz, rz, centred)
-    local gz = slot[3]
-    local fp = roll.footprint(x, y, gz, rz, rest)
-    local under
-    for _, o in ipairs(placed) do
-        if roll.overlaps(fp, o, 0) and (not under or o.top > under.top) then
-            under = o
-        end
+-- the four corners of a footprint, in order around it
+local function corners(fp)
+    local ax, ay, bx, by = fp.c * fp.hx, fp.s * fp.hx, -fp.s * fp.hy, fp.c * fp.hy
+    return {
+        { fp.x - ax - bx, fp.y - ay - by },
+        { fp.x + ax - bx, fp.y + ay - by },
+        { fp.x + ax + bx, fp.y + ay + by },
+        { fp.x - ax + bx, fp.y - ay + by },
+    }
+end
+
+-- the height of a footprint's top at (x, y): its top plane when it has one (a lying item, tilted or not), else `top`
+local function topAt(fp, x, y)
+    if fp.h then
+        return fp.h + fp.gx * (x - fp.x) + fp.gy * (y - fp.y)
     end
-    local h = under and under.top - gz or 0
-    if h <= 0.02 then
-        return x, y, z, rz, nx, ny, fp
-    end
+    return fp.top
+end
+
+-- A lying item's footprint with its top face as a plane, from its row: origin (x, y, z) with the type's modelz
+-- already added back, heading rz, tilted by its ground normal (nx, ny; 0 when it lies level). Its underside passes
+-- `base` under the origin along the normal and its top is `height` over that, so a leaning item's top is low at its
+-- low end and high at its raised one, not its highest point everywhere.
+function roll.lyingFootprint(x, y, z, rz, rest, nx, ny)
+    rest = rest or DEFAULT_REST
+    nx, ny = tonumber(nx) or 0, tonumber(ny) or 0
+    local nz = math.sqrt(math.max(0.01, 1 - nx * nx - ny * ny))
     local base, height = rest[1] or 0, rest[8] or 0.3
-    -- its two axes (the footprint's x and y), each pointing towards what it leans on
-    local best
-    for _, axis in ipairs({ { fp.c, fp.s, fp.hx * 2 }, { -fp.s, fp.c, fp.hy * 2 } }) do
-        local ux, uy, len = axis[1], axis[2], axis[3]
-        local d = (under.x - fp.x) * ux + (under.y - fp.y) * uy
-        if d < 0 then
-            ux, uy, d = -ux, -uy, -d
+    local ux, uy, uz = x - nx * base, y - ny * base, z - nz * base
+    local fp = roll.footprint(x, y, uz, rz, rest)
+    fp.gx, fp.gy = -nx / nz, -ny / nz
+    fp.z = uz + fp.gx * (fp.x - ux) + fp.gy * (fp.y - uy) -- its underside under the footprint's centre
+    fp.h = fp.z + height / nz
+    local top = -math.huge
+    for _, p in ipairs(corners(fp)) do
+        top = math.max(top, topAt(fp, p[1], p[2]))
+    end
+    fp.top = top
+    return fp
+end
+
+-- polygon (list of {x, y}) clipped to footprint fp's rectangle (Sutherland-Hodgman over its four edges)
+local function clipTo(poly, fp)
+    local planes = {
+        { fp.c, fp.s, fp.hx },
+        { -fp.c, -fp.s, fp.hx },
+        { -fp.s, fp.c, fp.hy },
+        { fp.s, -fp.c, fp.hy },
+    }
+    for _, pl in ipairs(planes) do
+        local out = {}
+        local n = #poly
+        for i = 1, n do
+            local a, b = poly[i], poly[i % n + 1]
+            local da = pl[3] - ((a[1] - fp.x) * pl[1] + (a[2] - fp.y) * pl[2])
+            local db = pl[3] - ((b[1] - fp.x) * pl[1] + (b[2] - fp.y) * pl[2])
+            if da >= 0 then
+                out[#out + 1] = a
+            end
+            if (da >= 0) ~= (db >= 0) then
+                local t = da / (da - db)
+                out[#out + 1] = { a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t }
+            end
         end
-        -- where along the item (from its low end) the other one's near edge props it up
-        local reach = under.hx * math.abs(under.c * ux + under.s * uy)
-            + under.hy * math.abs(-under.s * ux + under.c * uy)
-        local run = d - reach + len / 2
-        if len > 0 and run >= len / 2 then
-            local angle = math.atan2(h, run)
-            if angle <= math.rad(roll.LEAN_MAX) and (not best or angle < best.angle) then
-                best = { ux = ux, uy = uy, len = len, angle = angle }
+        poly = out
+        if #poly == 0 then
+            break
+        end
+    end
+    return poly
+end
+
+-- The plane h0 + gx * dx + gy * dy (dx, dy from the footprint's centre) that lies on or over every support point
+-- { dx, dy, h } and is lowest at the centre: where a rigid flat item comes to rest on them, its centre of mass as low as
+-- it can go. A small linear programme in (h0, gx, gy); its optimum stands on three of the points whose triangle holds
+-- the centre (the weight between its supports), so every such triple is tried and the lowest one over all points kept.
+-- Returns h0, gx, gy, or nil when no triple holds it (never with the footprint's own corners among the points).
+local function restingPlane(pts)
+    local n, EPS = #pts, 1e-4
+    local best
+    for i = 1, n - 2 do
+        local a = pts[i]
+        for j = i + 1, n - 1 do
+            local b = pts[j]
+            local abx, aby = b[1] - a[1], b[2] - a[2]
+            for k = j + 1, n do
+                local c = pts[k]
+                local acx, acy = c[1] - a[1], c[2] - a[2]
+                local det = abx * acy - aby * acx
+                if math.abs(det) > 1e-6 then
+                    -- the centre (0, 0) in barycentric terms: inside (or on) the triangle when all three are >= 0
+                    local u = ((-a[1]) * acy - (-a[2]) * acx) / det
+                    local v = (abx * (-a[2]) - aby * (-a[1])) / det
+                    if u >= -EPS and v >= -EPS and u + v <= 1 + EPS then
+                        local h0 = a[3] + u * (b[3] - a[3]) + v * (c[3] - a[3])
+                        if not best or h0 < best[1] - EPS then
+                            local dh1, dh2 = b[3] - a[3], c[3] - a[3]
+                            local gx = (dh1 * acy - dh2 * aby) / det
+                            local gy = (abx * dh2 - acx * dh1) / det
+                            local ok = true
+                            for m = 1, n do
+                                local p = pts[m]
+                                if h0 + gx * p[1] + gy * p[2] < p[3] - EPS then
+                                    ok = false
+                                    break
+                                end
+                            end
+                            if ok then
+                                best = { h0, gx, gy }
+                            end
+                        end
+                    end
+                end
             end
         end
     end
-    if not best then
-        -- on top of it, flat
-        fp.z, fp.top = under.top, under.top + height
-        return x, y, under.top + base - modelz, rz, nil, nil, fp
+    if best then
+        return best[1], best[2], best[3]
     end
-    local ux, uy, len, angle = best.ux, best.uy, best.len, best.angle
-    -- the lean's normal tips away from what it leans on; add the ground's own slope (both small)
-    local sa = math.sin(angle)
-    nx, ny = -ux * sa + (slot[4] or 0), -uy * sa + (slot[5] or 0)
-    local tilt = math.sqrt(nx * nx + ny * ny)
-    if tilt > roll.TILT_MAX then -- a lean on a steep slope: never past TILT_MAX in all
-        nx, ny = nx * roll.TILT_MAX / tilt, ny * roll.TILT_MAX / tilt
+    return nil
+end
+
+-- Lay an item on `slot` at heading rz where it comes to rest on the ground and on what of `placed` its footprint
+-- overlaps, as a rigid flat body would: the support points are its footprint's corners on the ground and the corners of
+-- each overlapped item's top face that fall inside it (with where their edges cross its own), at the height that face
+-- has there, tilted as that item lies; it settles on the plane over all of them lowest at its centre (restingPlane).
+-- Dropped on a pile of gates it leans on the edge that really holds it, or lies across their tops when they hold it
+-- level; never through them. Steeper than LEAN_MAX (a small item against a tall one) it would slide off, so it lies
+-- level on the highest point under it. Returns x, y, z, rz, nx, ny and its footprint, carrying its top face as a plane
+-- so what lands next rests on it as it lies.
+function roll.settle(px, py, slot, rest, modelz, rz, centred, placed)
+    local x, y, z, nx, ny = roll.layAt(px, py, slot, rest, modelz, rz, centred)
+    local gz = slot[3]
+    local fp = roll.footprint(x, y, gz, rz, rest)
+    local supports = {}
+    for _, o in ipairs(placed) do
+        if roll.overlaps(fp, o, 0) and o.top > gz + 0.02 then
+            supports[#supports + 1] = o
+        end
     end
-    local nz = math.sqrt(math.max(0, 1 - nx * nx - ny * ny))
-    -- the origin sits on the leaning plane, `base` out along its normal
-    local along = (x - fp.x) * ux + (y - fp.y) * uy + len / 2
-    local plane = gz + math.tan(angle) * math.max(0, along)
-    fp.top = gz + math.tan(angle) * len + height -- its raised end
-    return x, y, plane + nz * base - modelz, rz, nx, ny, fp
+    if #supports == 0 then
+        return x, y, z, rz, nx, ny, fp
+    end
+    local base, height = rest[1] or 0, rest[8] or 0.3
+    local snx, sny = slot[4] or 0, slot[5] or 0
+    local snz = math.sqrt(math.max(0.01, 1 - snx * snx - sny * sny))
+    local ggx, ggy = -snx / snz, -sny / snz
+    local pts = {}
+    for _, p in ipairs(corners(fp)) do
+        local dx, dy = p[1] - fp.x, p[2] - fp.y
+        pts[#pts + 1] = { dx, dy, gz + ggx * dx + ggy * dy }
+    end
+    local highest = gz
+    for _, o in ipairs(supports) do
+        for _, p in ipairs(clipTo(corners(o), fp)) do
+            local h = topAt(o, p[1], p[2])
+            pts[#pts + 1] = { p[1] - fp.x, p[2] - fp.y, h }
+            highest = math.max(highest, h)
+        end
+    end
+    -- its origin without the ground's lean (layAt set it `base` out along the ground's normal)
+    local ox, oy = x - snx * base, y - sny * base
+    local h0, gx, gy = restingPlane(pts)
+    if not h0 or math.atan(math.sqrt(gx * gx + gy * gy)) > math.rad(roll.LEAN_MAX) then
+        -- it would slide off: level on the highest point under it
+        fp.z, fp.h, fp.gx, fp.gy, fp.top = highest, highest + height, 0, 0, highest + height
+        return ox, oy, highest + base - modelz, rz, nil, nil, fp
+    end
+    local len = math.sqrt(1 + gx * gx + gy * gy)
+    local tnx, tny, tnz = -gx / len, -gy / len, 1 / len
+    local under = h0 + gx * (ox - fp.x) + gy * (oy - fp.y)
+    fp.z, fp.gx, fp.gy, fp.h = h0, gx, gy, h0 + height * len
+    local top = -math.huge
+    for _, p in ipairs(corners(fp)) do
+        top = math.max(top, topAt(fp, p[1], p[2]))
+    end
+    fp.top = top
+    if tnx * tnx + tny * tny < 0.0025 then
+        return ox, oy, under + base - modelz, rz, nil, nil, fp
+    end
+    return ox + tnx * base, oy + tny * base, under + tnz * base - modelz, rz, tnx, tny, fp
 end
 
 -- Lay one item of a roll so it touches nothing in `placed` (footprints already on the ground: this roll, the batch,
@@ -478,7 +599,7 @@ function roll.placeItem(px, py, ground, n, i, rest, modelz, rng, placed)
     end
     local heads = roll.freeHeadings(slot, rest)
     local rz = heads and heads[math.floor(rng() * #heads) + 1] or math.floor(rng() * 360)
-    local x, y, z, lrz, nx, ny, fp = roll.leanOn(px, py, slot, rest, modelz, rz, heads ~= nil, placed)
+    local x, y, z, lrz, nx, ny, fp = roll.settle(px, py, slot, rest, modelz, rz, heads ~= nil, placed)
     placed[#placed + 1] = fp
     return x, y, z, lrz, nx, ny, true
 end

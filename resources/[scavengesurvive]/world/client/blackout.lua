@@ -1,7 +1,8 @@
 -- luacheck: read globals setWorldProperty resetWorldProperty getTime engineRemoveShaderFromWorldTexture getCameraMatrix
 -- The grid is dead: no street lamp, traffic light or neon glows, no lamp throws light on the ground, and no window is
 -- lit. Only what a player carries or burns lights the night (headlights, flashlights, fires, a Flood Light). Staff
--- can switch the city back on for themselves with /lights (staff moderation.lua) to look at something.
+-- on duty (staff.duty element data) see the city lit, and any staff can switch it back on for themselves with
+-- /lights (staff moderation.lua) to look at something.
 -- A Flood Light (items) registers its light here (setLight / removeLight); the shader draws the MAX_LIGHTS of them
 -- nearest the camera in the player's interior and dimension onto the buildings and objects round them.
 -- A building lit by its own mains (power: a Generator wired to its box) registers its room (setRoomLight /
@@ -41,6 +42,7 @@ local CONE = { 0.6, 0.2 } -- cosines of the half angles where a light is full an
 local DAY_GAIN = 0.35 -- how much of a light shows by day (none of it is needed then)
 
 local on = true
+local wanted = true -- false while /lights has the city lit for this player
 local shader
 local lights = {} -- id -> { x, y, z, dx, dy, dz, radius, r, g, b, interior, dimension }
 local lightsDirty = true
@@ -220,6 +222,11 @@ local function apply()
     updateCap()
 end
 
+local function refresh()
+    on = wanted and getElementData(localPlayer, "staff.duty") ~= true
+    apply()
+end
+
 addEventHandler("onClientResourceStart", resourceRoot, function()
     -- lowest priority, so an item's tint or a screen's render target on a single object still wins
     shader = dxCreateShader("client/blackout.fx", -10, 0, false, "world,object")
@@ -237,7 +244,7 @@ addEventHandler("onClientResourceStart", resourceRoot, function()
         setTimer(updateRooms, 1000, 0)
         updateRooms()
     end
-    apply()
+    refresh()
 end)
 
 addEventHandler("onClientResourceStop", resourceRoot, function()
@@ -246,6 +253,12 @@ addEventHandler("onClientResourceStop", resourceRoot, function()
 end)
 
 addEventHandler("playerBlackoutChanged", root, function(state)
-    on = state ~= false
-    apply()
+    wanted = state ~= false
+    refresh()
 end)
+
+addEventHandler("onClientElementDataChange", localPlayer, function(key)
+    if key == "staff.duty" then
+        refresh()
+    end
+end, false)
