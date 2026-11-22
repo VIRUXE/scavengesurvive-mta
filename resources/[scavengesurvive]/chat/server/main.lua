@@ -475,6 +475,10 @@ end)
 -- Voice (MTA built-in, <voice>1</voice> in mtaserver.conf): a talking player is heard by the text audience of
 -- their chat mode joined with the local range, re-chosen every VOICE_REFRESH_MS while they talk. Not logged in or
 -- muted: the voice start is cancelled, a muted player is told once per mute.
+-- MTA treats an empty broadcast list as voice-muted and drops that player's voice packets before
+-- onPlayerVoiceStart fires, so a list left empty could never be chosen again (the speaker stayed unheard until
+-- they reconnected). Between two talks the list is therefore root: the start handler picks the audience before
+-- the first packet is passed on.
 local talking = {} -- player -> refresh timer while the voice key is held
 local heardBy = {} -- player -> listener count last sent to them (voiceAudienceChanged only on a change)
 
@@ -506,6 +510,9 @@ local function voiceStopped(p)
     end
     talking[p] = nil
     heardBy[p] = nil
+    if isElement(p) then
+        setPlayerVoiceBroadcastTo(p, root)
+    end
 end
 
 addEventHandler("onPlayerVoiceStart", root, function()
@@ -666,6 +673,7 @@ addEventHandler("onResourceStart", resourceRoot, function()
     ready = db.connect("chat")
     startTips()
     for _, p in ipairs(getElementsByType("player")) do
+        setPlayerVoiceBroadcastTo(p, root) -- a list the stopped resource left empty would keep them unheard
         local charId = exports.character:getCharacterId(p)
         if charId then
             triggerEvent("characterSpawned", p, charId, false) -- reload this resource's own state only
