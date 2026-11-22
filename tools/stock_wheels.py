@@ -12,6 +12,10 @@ edited in place.
 Ids 20237-20246 are the inflated wheels. 20247-20256 are the same wheels with the tyre caved in. The generic Wheel
 item (20222) is unchanged. Both sets lie face-up: that is how a wheel item rests, so rotx/roty/rotz stay 0 and
 modelz stays 0.
+
+The reviewed HD PNGs in tools/data/wheel_hd/stock_wheels supersede the game's 64px textures.
+write_stock_txd preserves those repaints on rebuild; python -m tools.wheel_hd build writes
+only the two wheel TXDs, without changing models, collisions, item rows or registration.
 """
 from __future__ import annotations
 
@@ -268,7 +272,14 @@ def sync_items() -> None:
 
 
 def write_stock_txd() -> None:
-    """wheels.txd is D3D8 DXT1. MTA's engineLoadTXD rejects that; the port's other TXDs are D3D9 BGRA."""
+    """Prefer the UV-compatible HD repaints, encoded as D3D9 BC1 with full mipmaps."""
+    from tools.wheel_hd import SOURCE, build
+
+    if (SOURCE / TXD_NAME).is_dir():
+        build(TXD_NAME)
+        return
+
+    # Legacy fallback: wheels.txd is D3D8 DXT1; MTA needs a D3D9 native.
     import sys
 
     sys.path.insert(0, "/root/.config/blender/5.2/scripts/addons/DragonFF")

@@ -1,0 +1,128 @@
+[
+  {
+    "file": "stock_wheels/tyre64a.png",
+    "size": [
+      256,
+      256
+    ],
+    "sha256": "fa9e8e6708cb41145085ffe33d7bdecd37039267efc9db66fa2d50a468110331",
+    "original_png_sha256": "143fd0e0382b0e0e73a0c3749a46b812315b43bd80c8e30c17130d8b7cf26fdf"
+  },
+  {
+    "file": "stock_wheels/whee_rim64.png",
+    "size": [
+      256,
+      256
+    ],
+    "sha256": "18e53691c5c6c8016880ff832ea66390cf8281c997ea5a7f7770b3e65325bf2c",
+    "original_png_sha256": "aac53d4e1c66f4c207c7b20c5c819c923fbb722d5f2553f40488733737d49030"
+  },
+  {
+    "file": "stock_wheels/wheel_alloy64.png",
+    "size": [
+      256,
+      256
+    ],
+    "sha256": "e7ab36feb6081d10595568c594fd837955e9733f713ed9f29a2e9e5f71179797",
+    "original_png_sha256": "775b43b961eee498b4b250bbb9223d121c5aeb62647a12835da39a2ed165f054"
+  },
+  {
+    "file": "stock_wheels/wheel_classic64.png",
+    "size": [
+      256,
+      256
+    ],
+    "sha256": "eb50e2ca36aa4b9d2bdf75241da938ad0874b1635aeed9a776d28ffcb7e1d34e",
+    "original_png_sha256": "8b1863e5c258b2d672dc95254112296faa40083b2436dec49feb38ad260a11cf"
+  },
+  {
+    "file": "stock_wheels/wheel_lighttruck64.png",
+    "size": [
+      256,
+      256
+    ],
+    "sha256": "20066af7838e812c3a2ac8713fd3b4f95f75cf0b377e25ad3e725953c9b104d3",
+    "original_png_sha256": "01d3450064646f4348caa9c297f0a0f1fc9c7b62570e2814e91f6b410fd3d4c0"
+  },
+  {
+    "file": "stock_wheels/wheel_lightvan64.png",
+    "size": [
+      256,
+      256
+    ],
+    "sha256": "49da56971f40cd3c32aaf53eaa85c451ca044de9a4c93b554855bbf7a382f5aa",
+    "original_png_sha256": "39461b96638a6e43caaac1b5504747b2ca2301271b9caf5ee69f5c88f195bb8a"
+  },
+  {
+    "file": "stock_wheels/wheel_offroad64.png",
+    "size": [
+      256,
+      256
+    ],
+    "sha256": "0275225ab2159d9d4b5d7a36833bf1df5c3d10e477464dc78ad136481c79b4b4",
+    "original_png_sha256": "706c9884cf7b54756309f4599fba6b5c8fb80053f2d5a4edaaa7b2e6829b7d75"
+  },
+  {
+    "file": "stock_wheels/wheel_saloon64.png",
+    "size": [
+      256,
+      256
+    ],
+    "sha256": "f3a0a1133b835b059fda53acd9dda2edc80af3cec411ecafb731adf590abe62d",
+    "original_png_sha256": "760fc2532ae534ba26f30bece68c5040134fa66502005292afe94769b17b093d"
+  },
+  {
+    "file": "stock_wheels/wheel_smallcar64.png",
+    "size": [
+      256,
+      256
+    ],
+    "sha256": "e5e0cac4d434b3ee2d27ef5cbcc567df2b98476e25f7c9e00aedd04f84974731",
+    "original_png_sha256": "5a25f18b44a727103176d8ebdb305ad1e91ba8e0e6c779902a30d66e7e7c4e9f"
+  },
+  {
+    "file": "stock_wheels/wheel_sport64.png",
+    "size": [
+      256,
+      256
+    ],
+    "sha256": "2dcd582bf78fe3a27903401009974c90eb34f6082f5508b331e58d01b31e02da",
+    "original_png_sha256": "ddb368e2415639252f5e9a2defda2ae6ceb0f333d0a046bc21abf4b704609065"
+  },
+  {
+    "file": "stock_wheels/wheel_truck64.png",
+    "size": [
+      256,
+      256
+    ],
+    "sha256": "e237da9d2b6e59426ef4ff6398550ed02d556751c766ed46f1acad4b117214e4",
+    "original_png_sha256": "096757bcd7338776a4b1712af307d1b94bb75b24923dfa819a1ab04e8d51cc5c"
+  },
+  {
+    "file": "wheel/vehiclegeneric256.png",
+    "size": [
+      1024,
+      1024
+    ],
+    "sha256": "423d003a4e1905043c731ffb596806729fd1846725d978f49105c80dea36e67f",
+    "original_png_sha256": "b4b15815a7cdad11ea2dd500b76a8f4c57b6178a2e8d6e8e8a721b6edd79265f"
+  },
+  {
+    "file": "wheel/vehiclespecdot64.png",
+    "size": [
+      256,
+      256
+    ],
+    "sha256": "ef4e839c312954fc922461d23d7f94b87062967c2d514103e71feaac3e323c74",
+    "original_png_sha256": "ef4e839c312954fc922461d23d7f94b87062967c2d514103e71feaac3e323c74"
+  },
+  {
+    "file": "wheel/vehicletyres128.png",
+    "size": [
+      256,
+      512
+    ],
+    "sha256": "ee7d6f9dea63473d5e63876d6fe2889152dca57ab6213aeb9f3aabb3ba90a234",
+    "original_png_sha256": "a3d4e4f102b72e53ca806804c9fbe635b798cdd591f203840ad31a01c42167ff"
+  }
+]

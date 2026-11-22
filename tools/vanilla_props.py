@@ -88,6 +88,11 @@ def main(argv=None) -> int:
         txd_src = (gta / "models" / c["txd"]).read_bytes()
         (FILES / f"{c['name']}.dff").write_bytes(dff)
         (FILES / f"{c['name']}.txd").write_bytes(trim_txd(txd_src, dff_strings(dff)))
+        if c["name"] == "wheel":
+            from tools.wheel_hd import SOURCE, build
+
+            if (SOURCE / "wheel").is_dir():
+                build("wheel")
         lo, hi = geometry_bounds(dff)
         (FILES / f"{c['name']}.col").write_bytes(box_col(c["name"], lo, hi))
         print(f"vanilla_props: {c['name']} ({c['id']}) from {c['dff']}, bounds {lo} .. {hi}")

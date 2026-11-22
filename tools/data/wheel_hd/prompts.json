@@ -1,0 +1,23 @@
+{
+  "method": "Built-in image_gen edit, opaque background; original local PNGs were inspected before use.",
+  "faces": {
+    "input": "Registered 1280x512 sheet of ten original wheel faces, five columns by two rows, no labels.",
+    "output_id": "exec-6ad6662d-a5e0-4dba-8331-e6f019decca5",
+    "prompt": "Use case: precise-object-edit. Asset type: GTA San Andreas wheel diffuse texture atlas, exact UV registration. Repaint this blurry 5-column by 2-row atlas at high resolution, output 2560x1024. This is a flat texture, not a photograph or 3D wheel render. Keep EXACTLY the same 10 wheel centers, diameters, rim-to-rubber radii, design, spoke count, lug locations, dish shading, and black square backgrounds. Each cell must remain exactly square, no gaps, no labels, no borders. Sharpen existing geometry edges and repaint crisp steel/chrome/aluminium rim surfaces, dark recesses and round lug holes. Tyre sidewalls: fine concentric moulded rings, subtle dark raised radial lettering and small embossed size markings, restrained weathered charcoal rubber grain. Same GTA SA painted diffuse aesthetic and existing muted colors, avoid modern photoreal glossy studio shading. Preserve each style individually: row1 five-spoke steel wheel, heavy truck many round slots, fine basket mesh sport, compact steel hubcap, rounded saloon alloy; row2 five-spoke rugged offroad, six-slot light van steel, simple light truck steel with four large openings, smooth classic domed chrome cap, five-spoke alloy. Do not change the atlas layout or replace wheel designs. Keep black backgrounds and make every circle precisely centered in its original cell."
+  },
+  "tread": {
+    "input": "Original stock_wheels/tyre64a.png",
+    "output_id": "exec-d98dfcbd-2cd1-4d7a-b928-5aa8a54cd68a",
+    "prompt": "Use case precise-object-edit. Repaint this flat GTA SA tyre tread diffuse tile sharply at 1024 square. Keep identical UV layout: three main nearly vertical narrow deep grooves and diagonal sipes cut into the rubber ribs, travel direction vertical, across width horizontal. The texture must tile seamlessly at top and bottom, also left and right. Crisp dark recessed cuts with restrained brighter worn edges, micro moulded rubber grain, charcoal black rather than grey, no tyre face, no wheel, no perspective, no lighting gradients, no text. Preserve approximate original darkness and groove locations. Readable old GTA SA painted tyre rubber, more physical detail than blurry source. Square full bleed texture only."
+  },
+  "generic_atlas": {
+    "input": "Original wheel/vehiclegeneric256.png",
+    "output_id": "exec-9dda6671-d2d1-4bd8-8b35-250610e7bb5b",
+    "prompt": "Use case precise-object-edit. Asset type GTA San Andreas vehicle parts diffuse UV atlas. Repaint attached 256x256 texture at 1024x1024 with exactly unchanged pixel layout, island boundaries, sizes, positions and colors. Crisp metallic edges, rubber grain, brake/engine cast metal relief, bolts, black recesses, ribbed strips. Preserve large white upper left rectangle, the seat patch next to it, all rows and columns of black grey metal swatches and white gradients in lower right. Same GTA SA early 2000s diffuse hand-painted style. No new objects or layout changes, no perspective, no text outside existing areas. Critical the lower right brushed metal patches must keep EXACT rectangular boundaries, horizontal highlight stripes and black-to-white gradients as these map onto a wheel rim. Do not add tyres or wheel circles. Whole image remains a parts texture atlas."
+  },
+  "generic_tread": {
+    "input": "Original wheel/vehicletyres128.png",
+    "output_id": "exec-f9161fb5-0eac-47b9-834b-30d8a549e953",
+    "prompt": "Use case precise-object-edit. Repaint attached GTA SA vehicle tyre texture atlas at 512x1024, exact original UV layout and proportions. Multiple small tread pattern and black rubber rectangular UV islands in identical positions, preserve all boundaries and small light grey rectangles. Enhance rubber grain and make tread cuts, zigzag grooves and transverse block edges crisp with modest highlights in same dark charcoal palette. Particularly preserve and sharpen zigzag tread patch in left half between 50 and 75 percent down image, as this is used on a wheel. Flat texture atlas, no wheel object, no perspective, no global lighting, no rearranging patches. Old GTA San Andreas painted diffuse appearance."
+  }
+}
