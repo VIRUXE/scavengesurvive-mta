@@ -21,7 +21,7 @@ Buildings you can walk into. They are scenery that the map places in the world: 
 
 - *Doors:* every entrance has a swing door cut to the size of its opening. Walk into it to push it open. Some houses have a double door. There is no lock on a house door.
 - *Windows:* the windows are real glazing: a frame with sill and trim, recessed glass and curtains behind it, instead of flat panes pasted on the wall. The glass is lit so it does not look like a dark hole at night.
-- *Weather:* it does not rain indoors.
+- *Weather:* the weather stays outside. Under a roof with walls around you there is no rain, fog, sandstorm or heat haze. This holds for every enclosed place, including what players build.
 - *Contents:* a house is a bare shell with no furniture. Loot can lie inside, and what players drop or store there stays.
 
 <!-- shot:shot-house-interior -->

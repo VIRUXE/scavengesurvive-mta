@@ -39,7 +39,7 @@ Each point is of one kind, and the kind decides what it can hold:
 
 The weather is the same for everyone and changes on its own. A change never comes sooner than 10 minutes after the last one; from then on there is a 10 % chance every minute of a new roll, so a spell of weather lasts about 20 minutes on average, sometimes much longer. Every weather of San Andreas can come up, but rain, the sandstorm and the dull countryside skies are drawn only a third to a half as often as the clear ones, and the server never starts up in a sandstorm.
 
-Rain matters: a campfire burns out fast in it ([Campfire & BBQ](Campfire-and-BBQ)), and it does not rain indoors ([Houses & Trailers](Houses-and-Trailers)). LSD and heroin change the sky for you alone ([Drugs](Drugs)).
+Rain matters: a campfire burns out fast in it ([Campfire & BBQ](Campfire-and-BBQ)), and no rain, fog or sandstorm gets indoors ([Houses & Trailers](Houses-and-Trailers)). LSD and heroin change the sky for you alone ([Drugs](Drugs)).
 
 ## Day and night
 

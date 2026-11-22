@@ -36,7 +36,7 @@ Cada ponto é de um só tipo, e o tipo decide o que pode ter:
 
 O tempo é igual para toda a gente e muda sozinho. Uma mudança nunca vem antes de 10 minutos depois da anterior; a partir daí há 10 % de probabilidade em cada minuto de um novo sorteio, por isso um período de tempo dura cerca de 20 minutos em média, às vezes muito mais. Pode aparecer qualquer tempo de San Andreas, mas a chuva, a tempestade de areia e os céus cinzentos do campo são sorteados só um terço a metade das vezes dos céus limpos, e o servidor nunca arranca com uma tempestade de areia.
 
-A chuva importa: uma fogueira apaga-se depressa com ela ([Fogueira e churrasqueira](Campfire-and-BBQ)), e não chove em espaços fechados ([Casas e reboques](Houses-and-Trailers)). O LSD e a heroína mudam o céu só para ti ([Drogas](Drugs)).
+A chuva importa: uma fogueira apaga-se depressa com ela ([Fogueira e churrasqueira](Campfire-and-BBQ)), e a chuva, o nevoeiro e a tempestade de areia não entram em espaços fechados ([Casas e reboques](Houses-and-Trailers)). O LSD e a heroína mudam o céu só para ti ([Drogas](Drugs)).
 
 ## Dia e noite {#day-and-night}
 O relógio do jogo segue o relógio real do servidor: um minuto de jogo por minuto real, um dia e uma noite completos a cada 24 horas. Nada o acelera.

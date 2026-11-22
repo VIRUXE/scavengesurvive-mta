@@ -20,7 +20,7 @@ Edifícios onde podes entrar. São cenário que o mapa coloca no mundo: podes en
 
 - *Portas:* cada entrada tem uma porta batente cortada à medida da abertura. Anda contra ela para a empurrar. Algumas casas têm porta dupla. Não há trinco nas portas das casas.
 - *Janelas:* as janelas têm vidro a sério: uma moldura com peitoril e guarnição, vidro recuado e cortinas atrás, em vez de painéis planos colados à parede. O vidro é iluminado para não parecer um buraco escuro à noite.
-- *Tempo:* não chove lá dentro.
+- *Tempo:* o tempo fica lá fora. Debaixo de um teto e com paredes à volta não há chuva, nevoeiro, tempestade de areia nem ondas de calor. Vale para qualquer espaço fechado, incluindo o que os jogadores constroem.
 - *Conteúdo:* uma casa é uma casca vazia, sem mobília. Pode haver loot lá dentro, e o que os jogadores largam ou guardam lá fica.
 
 <!-- shot:shot-house-interior -->
