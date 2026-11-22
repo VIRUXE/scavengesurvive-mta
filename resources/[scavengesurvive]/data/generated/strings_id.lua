@@ -892,6 +892,7 @@ return {
     ["Somehow, they were killed by a camera."] = "Entah bagaimana, dia terbunuh oleh kamera.",
     ["Somehow, they were killed by goggles."] = "Entah bagaimana, dia terbunuh oleh kacamata.",
     ["Someone cheating or breaking the rules? /report <name> tells the staff."] = "Ada yang curang atau melanggar aturan? /report <nama> memberi tahu staf.",
+    ["Someone is looking in this trunk"] = "Ada yang sedang melihat isi bagasi ini",
     ["Something is already cooking"] = "Sedang ada yang dimasak",
     ["Something is already hitched there"] = "Sudah ada yang terkait di sana",
     ["Something went wrong, try again."] ="Terjadi kesalahan, coba lagi.",

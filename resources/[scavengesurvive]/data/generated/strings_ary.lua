@@ -922,6 +922,7 @@ return {
     ["Somehow, they were killed by a camera."] = "Ma3reftch kifach, 9tlatou camera.",
     ["Somehow, they were killed by goggles."] = "Ma3reftch kifach, 9tlouh lunettes.",
     ["Someone cheating or breaking the rules? /report <name> tells the staff."] = "Chi wa7ed kaycheati wla kaykhrej 3la lqawanin? /report <smiya> kaygoul l staff.",
+    ["Someone is looking in this trunk"] = "Kayn chi wa7ed kaychouf f had lkoffre",
     ["Something is already cooking"] = "Kayn chi 7aja deja kattib",
     ["Something is already hitched there"] = "Kayna chi 7aja mchedda tmma deja",
     ["Something went wrong, try again."] ="Chi 7aja ma mchatch mzyan, 3awed jerreb.",

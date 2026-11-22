@@ -837,6 +837,7 @@ return {
     ["Somehow, they were killed by a camera."] = "Nekako je ubijen kamerom.",
     ["Somehow, they were killed by goggles."] = "Nekako je ubijen naočalama.",
     ["Someone cheating or breaking the rules? /report <name> tells the staff."] = "Neko vara ili krši pravila? /report <ime> javlja osoblju.",
+    ["Someone is looking in this trunk"] = "Neko gleda u ovaj gepek",
     ["Something is already cooking"] = "Nešto se već peče",
     ["Something is already hitched there"] = "Tu je već nešto zakačeno",
     ["Something went wrong, try again."] ="Nešto je pošlo po zlu, pokušaj ponovo.",

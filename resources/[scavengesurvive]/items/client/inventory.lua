@@ -835,4 +835,12 @@ return function(ctx)
             last = nil
         end
     end)
+
+    -- a restart of items forgets on the server who has a trunk open (the lid could then be shut on a viewer), while
+    -- the list lives in ui and would stay up: it goes with the resource
+    addEventHandler("onClientResourceStop", resourceRoot, function()
+        if last then
+            exports.ui:listClose()
+        end
+    end)
 end

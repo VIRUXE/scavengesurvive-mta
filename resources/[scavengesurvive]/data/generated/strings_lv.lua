@@ -914,6 +914,7 @@ return {
     ["Somehow, they were killed by a camera."] = "Kaut kā viņu nogalināja fotoaparāts.",
     ["Somehow, they were killed by goggles."] = "Kaut kā viņu nogalināja brilles.",
     ["Someone cheating or breaking the rules? /report <name> tells the staff."] = "Kāds krāpjas vai pārkāpj noteikumus? /report <vārds> paziņo personālam.",
+    ["Someone is looking in this trunk"] = "Kāds skatās šajā bagāžniekā",
     ["Something is already cooking"] = "Kaut kas jau tiek gatavots",
     ["Something is already hitched there"] = "Tur jau kaut kas ir piekabināts",
     ["Something went wrong, try again."] ="Kaut kas nogāja greizi, mēģini vēlreiz.",

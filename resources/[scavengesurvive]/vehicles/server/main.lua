@@ -3133,10 +3133,17 @@ net.handler("vehicleInteractRequested", function(player, vehicle, capX, capY, ca
         -- the interaction list's "Open trunk" entry (capX == "trunk_open") only ever opens: on an open lid it brings
         -- the window back instead of shutting it
         if not held and trunkOpen and capX ~= "trunk_open" then
-            if exports.items:trunkViewers(vehicle) == 0 then
-                setVehicleDoorOpenRatio(vehicle, 1, 0, 500)
-                markUsed(vehicle)
+            local viewers = exports.items:trunkViewers(vehicle)
+            if viewers ~= 0 then
+                log.event(
+                    "vehicle.trunkClosed",
+                    vehicleLine(vehicle, { player = player, ok = false, code = "TRUNK_IN_USE", viewers = viewers })
+                )
+                return toast(player, lang.textFor(player, "Someone is looking in this trunk"))
             end
+            setVehicleDoorOpenRatio(vehicle, 1, 0, 500)
+            markUsed(vehicle)
+            log.event("vehicle.trunkClosed", vehicleLine(vehicle, { player = player, ok = true, viewers = 0 }))
             return
         end
         setVehicleDoorOpenRatio(vehicle, 1, 1, 500)

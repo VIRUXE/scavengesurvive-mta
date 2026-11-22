@@ -47,6 +47,8 @@ Cada veículo pertence a um **grupo** (Civil, Industrial, Médico, Militar, Pol�
 ## Mala {#trunk}
 Vai à traseira de um veículo destrancado e prime `F` para abrir a mala. Funciona como um [contentor](Containers-and-Bags): o número de espaços na tabela abaixo conta-se em tamanhos de itens ([Tamanhos dos itens](Item-Sizes)). Uma mala trancada pode ser arrombada, ver [Reparações e fechaduras](Repairing-and-Locks). Uma mala de 0 espaços quer dizer que o veículo não tem.
 
+Uma mala aberta fica aberta: prime `F` outra vez na traseira, de mãos vazias, para a fechar. Não fecha enquanto alguém ainda estiver a mexer nela, e és avisado disso.
+
 ## Porta-luvas {#glovebox}
 Os carros e os camiões de cabine têm um porta-luvas no tablier. Senta-te no lugar do condutor ou do passageiro da frente e prime `F` para o abrir; sair fecha-o. É um [contentor](Containers-and-Bags) pequeno de 4 espaços que só aceita itens de tamanho 1 (comprimidos, bilhetes, um telemóvel, uma faca, uma pistola), por isso tudo o que for maior é recusado. A tranca do veículo não interessa, já estás lá dentro. Um veículo recém-aparecido pode ter até dois itens pequenos lá dentro. Motas, barcos, aeronaves, tanques, reboques e o Airstream não têm.
 

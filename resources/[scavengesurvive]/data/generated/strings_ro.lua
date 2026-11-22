@@ -892,6 +892,7 @@ return {
     ["Somehow, they were killed by a camera."] = "Cumva, a fost ucis de o cameră foto.",
     ["Somehow, they were killed by goggles."] = "Cumva, a fost ucis de o pereche de ochelari.",
     ["Someone cheating or breaking the rules? /report <name> tells the staff."] = "Cineva trișează sau încalcă regulile? /report <nume> anunță staff-ul.",
+    ["Someone is looking in this trunk"] = "Cineva se uită în acest portbagaj",
     ["Something is already cooking"] = "Se gătește deja ceva",
     ["Something is already hitched there"] = "Ceva este deja agățat acolo",
     ["Something went wrong, try again."] ="Ceva n-a mers bine, încearcă din nou.",

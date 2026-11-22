@@ -892,6 +892,7 @@ return {
     ["Somehow, they were killed by a camera."] = "Каким-то образом смерть наступила от фотоаппарата.",
     ["Somehow, they were killed by goggles."] = "Каким-то образом смерть наступила от очков.",
     ["Someone cheating or breaking the rules? /report <name> tells the staff."] = "Кто-то читерит или нарушает правила? /report <имя> сообщит персоналу.",
+    ["Someone is looking in this trunk"] = "Кто-то смотрит в этот багажник",
     ["Something is already cooking"] = "Что-то уже готовится",
     ["Something is already hitched there"] = "Здесь уже что-то прицеплено",
     ["Something went wrong, try again."] ="Что-то пошло не так, попробуйте ещё раз.",

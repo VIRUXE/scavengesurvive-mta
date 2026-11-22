@@ -914,6 +914,7 @@ return {
     ["Somehow, they were killed by a camera."] = "Nějak ho zabil fotoaparát.",
     ["Somehow, they were killed by goggles."] = "Nějak ho zabily brýle.",
     ["Someone cheating or breaking the rules? /report <name> tells the staff."] = "Někdo podvádí nebo porušuje pravidla? /report <jméno> to řekne personálu.",
+    ["Someone is looking in this trunk"] = "Někdo se dívá do tohoto kufru",
     ["Something is already cooking"] = "Už se něco vaří",
     ["Something is already hitched there"] = "Něco už je tam zapřažené",
     ["Something went wrong, try again."] ="Něco se pokazilo, zkus to znovu.",

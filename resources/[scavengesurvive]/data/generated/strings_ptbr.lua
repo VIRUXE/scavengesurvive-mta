@@ -892,6 +892,7 @@ return {
     ["Somehow, they were killed by a camera."] = "De algum jeito, foi morto por uma câmera.",
     ["Somehow, they were killed by goggles."] = "De algum jeito, foi morto por óculos.",
     ["Someone cheating or breaking the rules? /report <name> tells the staff."] = "Alguém trapaceando ou quebrando as regras? /report <nome> avisa a staff.",
+    ["Someone is looking in this trunk"] = "Alguém está mexendo neste porta-malas",
     ["Something is already cooking"] = "Já tem algo cozinhando",
     ["Something is already hitched there"] = "Já tem algo engatado aí",
     ["Something went wrong, try again."] ="Algo deu errado, tente de novo.",
