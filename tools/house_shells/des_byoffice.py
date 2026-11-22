@@ -232,7 +232,8 @@ def wall_in_blank_doorway(bm, uv, cols):
     colours = [tuple(ref.loops[0][c]) for c in cols]
     mat = ref.material_index
     bmesh.ops.delete(bm, geom=dead, context="FACES")
-    f = bm.faces.new([bm.verts.new(v) for v in ((x_wall, y1, z0), (x_wall, y0, z0), (x_wall, y0, z1), (x_wall, y1, z1))])
+    # wound to face +x, into the kitchen (the game culls back faces: the other way the kitchen looked out under the stilts)
+    f = bm.faces.new([bm.verts.new(v) for v in ((x_wall, y0, z0), (x_wall, y1, z0), (x_wall, y1, z1), (x_wall, y0, z1))])
     f.material_index = mat
     f.normal_update()
     for loop in f.loops:
@@ -274,10 +275,39 @@ print(f"vestibule: {len(fake)} faces removed")
 for name, where in INTERIOR:
     add_interior(name, where)
 
+# one pipe, inside and out: the house's own chimney (steel256128, on the roof 0.75 m from where the stove's flue
+# rises) moves over the flue's riser, its open foot lifted to CHIMNEY_FOOT, between the ceiling and the roof; the
+# riser stops at RISER_TOP, above the ceiling, inside the roof space (cut at FLUE_TOP it poked 0.12 m out of the
+# roof, a second stub beside the chimney)
+CHIMNEY_FOOT, RISER_TOP = 2.92, 2.98  # model frame; ceiling at the riser <= 2.83, roof 3.08
+banding, steel = s.mat(STOVE_TEX), s.mat("steel256128")
+top = [v for f in s.bm.faces if f.material_index == banding for v in f.verts if v.co.z > FLUE_TOP - 0.01]
+riser = Vector((sum(v.co.x for v in top) / len(top), sum(v.co.y for v in top) / len(top), 0))
+chimney_verts = {v for f in s.bm.faces if f.material_index == steel for v in f.verts}
+lo = Vector([min(v.co[i] for v in chimney_verts) for i in range(2)] + [0])
+hi = Vector([max(v.co[i] for v in chimney_verts) for i in range(2)] + [0])
+shift = riser - (lo + hi) / 2
+foot = min(v.co.z for v in chimney_verts)
+for v in chimney_verts:
+    v.co += shift
+    if v.co.z < foot + 0.01:
+        v.co.z = CHIMNEY_FOOT
+for v in {v for f in s.bm.faces if f.material_index == banding for v in f.verts}:
+    if (v.co.xy - riser.xy).length < 0.2 and v.co.z > RISER_TOP:
+        v.co.z = RISER_TOP
+print(f"chimney: moved {shift.x:.2f}, {shift.y:.2f} over the riser at {riser.x:.2f}, {riser.y:.2f}")
+
 
 def plan_face(verts, tex, uv_scale=None, uvs=None):
     """A face given in plan coordinates, inside light, planar UVs at `uv_scale` metres per repeat."""
-    s.face([plan_to_model(v) for v in verts], s.mat(tex), uvs=uvs, scale=uv_scale)
+    return s.face([plan_to_model(v) for v in verts], s.mat(tex), uvs=uvs, scale=uv_scale)
+
+
+def stain(f, day):
+    """Prelights face `f` with the `day` colour (night a third of it): the same boards, stained another colour."""
+    night = tuple(c / 3 for c in day[:3]) + (1.0,)
+    for loop in f.loops:
+        loop[s.day], loop[s.night] = day, night
 
 
 # glazed windows with curtains: the sash part of each painted window is cut through the house's skin and the
@@ -334,10 +364,13 @@ def board_uvs(verts):
 bmesh.ops.delete(s.bm, geom=dead, context="FACES")
 x0, x1, y0, y1 = WING
 B = 2.0  # metres per repeat of boardwalk_la, as the vanilla floor
+# the raised wing and its step are stained darker than the main room's boards, the risers darker still, so the
+# change of level reads at a glance (in the same boards it did not)
+WING_STAIN, RISER_STAIN = (0.46, 0.25, 0.14, 1.0), (0.20, 0.12, 0.08, 1.0)  # red-brown; the main floor is grey-beige
 for q in ([(x0, y0, WING_FLOOR), (x1, y0, WING_FLOOR), (x1, y1, WING_FLOOR), (x0, y1, WING_FLOOR)], [(x0, y0 - STEP_D, STEP_Z), (x1, y0 - STEP_D, STEP_Z), (x1, y0, STEP_Z), (x0, y0, STEP_Z)]):
-    plan_face(q, "boardwalk_la", uvs=board_uvs(q))
-plan_face([(x0, y0, STEP_Z), (x1, y0, STEP_Z), (x1, y0, WING_FLOOR), (x0, y0, WING_FLOOR)], "boardwalk_la", B)  # risers face -y
-plan_face([(x0, y0 - STEP_D, FLOOR), (x1, y0 - STEP_D, FLOOR), (x1, y0 - STEP_D, STEP_Z), (x0, y0 - STEP_D, STEP_Z)], "boardwalk_la", B)
+    stain(plan_face(q, "boardwalk_la", uvs=board_uvs(q)), WING_STAIN)
+stain(plan_face([(x0, y0, STEP_Z), (x1, y0, STEP_Z), (x1, y0, WING_FLOOR), (x0, y0, WING_FLOOR)], "boardwalk_la", B), RISER_STAIN)  # risers face -y
+stain(plan_face([(x0, y0 - STEP_D, FLOOR), (x1, y0 - STEP_D, FLOOR), (x1, y0 - STEP_D, STEP_Z), (x0, y0 - STEP_D, STEP_Z)], "boardwalk_la", B), RISER_STAIN)
 for x, d in ((x0, -1), (x1, 1)):  # the step's ends, seen from the kitchen and the doorway end
     q = [(x, y0 - STEP_D, FLOOR), (x, y0, FLOOR), (x, y0, WING_FLOOR), (x, y0 - STEP_D, WING_FLOOR)]
     plan_face(list(reversed(q)) if d < 0 else q, "burglry_wall1", 2.0)

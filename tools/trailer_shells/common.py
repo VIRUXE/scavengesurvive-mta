@@ -240,8 +240,14 @@ class Shell:
         bm = self.bm
 
         def near(f):
+            # by the face's extent, not its centre: a large wall triangle whose centre lies well off the opening
+            # still has to be split at its edges, or a piece of it beside the hole goes with the hole
             c = f.calc_center_median()
-            return lo_d - EPS <= c[n] <= hi_d + EPS and o.u0 - 0.5 < c[a] < o.u1 + 0.5 and o.z0 - 0.5 < c.z < o.z1 + 0.5
+            if not lo_d - EPS <= c[n] <= hi_d + EPS:
+                return False
+            us = [v.co[a] for v in f.verts]
+            zs = [v.co.z for v in f.verts]
+            return min(us) < o.u1 + EPS and max(us) > o.u0 - EPS and min(zs) < o.z1 + EPS and max(zs) > o.z0 - EPS
 
         for co, no in ((o.u0, a), (o.u1, a), (o.z0, 2), (o.z1, 2)):
             faces = [f for f in bm.faces if near(f)]
