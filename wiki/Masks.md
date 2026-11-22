@@ -51,7 +51,7 @@ The Hockey, Zorro, Pussy and Devil masks only change your look. No mask hides yo
 
 ## Knocked off
 
-A headshot knocks your mask off, hat too if you wear one. Both fall to the ground at your feet and can be picked up again, by you or by whoever shot you.
+A headshot knocks your mask off, and your hat and [goggles](Goggles) too if you wear them. They fall to the ground at your feet and can be picked up again, by you or by whoever shot you.
 
 ## Scrap
 

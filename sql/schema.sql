@@ -232,7 +232,7 @@ CREATE TABLE IF NOT EXISTS `items` (
   `container_id` int(11) DEFAULT NULL,
   `slot` tinyint(4) DEFAULT NULL,
   `holder_char_id` int(11) DEFAULT NULL,
-  `holder_kind` enum('held','holster','bag','hat','mask','armour','parachute') DEFAULT NULL,
+  `holder_kind` enum('held','holster','bag','hat','mask','armour','parachute','eyes') DEFAULT NULL,
   `loot_spawn_id` int(11) DEFAULT NULL,
   `loot_zone` varchar(8) DEFAULT NULL,
   `despawn_at` datetime DEFAULT NULL,
@@ -2272,7 +2272,7 @@ BEGIN
   DECLARE v_slot INT DEFAULT 0;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
 
-  IF p_holder_kind NOT IN ('hat', 'mask', 'armour', 'holster', 'bag', 'parachute') THEN
+  IF p_holder_kind NOT IN ('hat', 'mask', 'eyes', 'armour', 'holster', 'bag', 'parachute') THEN
     SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid holder_kind for item_unwear';
   END IF;
 
@@ -2301,8 +2301,8 @@ BEGIN
           'slot', p_holder_kind
         ) AS payload;
     ELSE
-      
-      
+      -- the hand is taken: into the inventory, counted by size like container_put (the old fixed six slots let a
+      -- big item past a full inventory, or refused one with gaps in its slot numbers)
       SELECT inventory_container_id INTO v_inv FROM characters WHERE id = p_char_id;
       SELECT size INTO v_inv_size FROM containers WHERE id = v_inv FOR UPDATE;
       SELECT t.size INTO v_item_size FROM items i JOIN item_types t ON t.uname = i.type_uname WHERE i.id = v_item_id;
@@ -2348,7 +2348,7 @@ BEGIN
   DECLARE v_held INT DEFAULT 0;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
 
-  IF p_holder_kind NOT IN ('hat', 'mask', 'armour', 'holster', 'bag', 'parachute') THEN
+  IF p_holder_kind NOT IN ('hat', 'mask', 'eyes', 'armour', 'holster', 'bag', 'parachute') THEN
     SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid holder_kind for item_wear';
   END IF;
 
@@ -2369,7 +2369,7 @@ BEGIN
     END IF;
   END IF;
 
-  
+  -- the item has to be on the character or in a container they reach: one lying in the world (or none) is refused
   IF NOT (
     p_char_id IS NOT NULL AND (
       v_item_char <=> p_char_id
@@ -2381,14 +2381,14 @@ BEGIN
     ROLLBACK;
     SELECT 0 AS ok, 'NOT_OWNER' AS code, NULL AS payload;
   ELSEIF v_item_char <=> p_char_id AND v_item_kind = p_holder_kind THEN
-    
+    -- already in that slot (a second click, a stale list): swapping it with itself would move it into the hand
     ROLLBACK;
     SELECT 0 AS ok, 'ALREADY_WORN' AS code, NULL AS payload;
   ELSE
     SELECT id INTO v_old_id
       FROM items WHERE holder_char_id = p_char_id AND holder_kind = p_holder_kind FOR UPDATE;
-    
-    
+    -- the swapped-out item goes to the hand the new one leaves, else into the container slot it leaves, else into
+    -- the hand, which then has to be empty (uq_items_holder_kind would otherwise abort with 1062)
     SELECT COUNT(*) INTO v_held
       FROM items WHERE holder_char_id = p_char_id AND holder_kind = 'held' AND id <> p_item_id;
     IF v_old_id IS NOT NULL AND v_item_kind IS NOT NULL AND v_item_kind <> 'held' AND v_held > 0 THEN
@@ -2412,7 +2412,7 @@ BEGIN
             WHERE id = v_old_id;
         END IF;
       ELSEIF v_item_container IS NOT NULL THEN
-        
+        -- nothing takes the slot it left: close the gap, as container_take does
         UPDATE items SET slot = slot - 1 WHERE container_id = v_item_container AND slot > v_item_slot ORDER BY slot ASC;
       END IF;
 

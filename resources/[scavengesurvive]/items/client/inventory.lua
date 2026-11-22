@@ -12,6 +12,7 @@ return function(ctx)
     local liquids = ctx and ctx.liquids -- shared/logic/liquids.lua: "(Water 0.4/0.50)" on liquid containers
     local gas = ctx and ctx.gas -- shared/logic/gas.lua: "(6.3/11 kg)" on a Gas Bottle
     local masks = ctx and ctx.masks -- shared/logic/masks.lua: "(filter 63%)" on a mask
+    local goggles = ctx and ctx.goggles -- shared/logic/goggles.lua: "(battery 63%)" on goggles
     local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")() -- names in the player's language
     -- lang:begin
     local MESSAGES = {
@@ -211,6 +212,10 @@ return function(ctx)
         FILTER_SPENT = "Your mask's filter is spent",
         FILTER_FITTED = "Fresh filter fitted",
         FILTER_NO_MASK = "Wear a respirator or a gas mask to fit a filter",
+        GOGGLES_FLAT = "The goggles' battery is flat: use a Tool Battery from your hand to change it",
+        GOGGLES_BATTERY = "Battery changed: the old one is in your hand",
+        GOGGLES_NO_GAIN = "The battery in the goggles holds as much as this one",
+        GOGGLES_TOOL_FLAT = "That Tool Battery is flat",
         STUNGUNOUTC = "Out of charge",
         MOLOPOURBOT = "Fuel poured in bottle",
         FUELNOTPETR = "Fuel can does not contain petrol",
@@ -241,6 +246,7 @@ return function(ctx)
     local SLOT_NAMES = {
         hat = "HEAD",
         mask = "FACE",
+        eyes = "EYES",
         held = "HAND",
         holster = "HOLSTER",
         armour = "TORSO",
@@ -344,6 +350,8 @@ return function(ctx)
             name = gas.label(name, it.data)
         elseif masks and masks.spec(it.uname) then
             name = masks.label(name, it.uname, it.data, lang.text)
+        elseif goggles and goggles.spec(it.uname) then
+            name = goggles.label(name, it.uname, it.data, lang.text)
         elseif cooking and cooking.isFood(t) then
             name = cooking.label(t, name, it.data)
         elseif liquids and liquids.isContainer(t) then
@@ -580,7 +588,8 @@ return function(ctx)
     end
 
     -- Tiles: a title bar on top of a see-through square (the preview model shows through, upstream filled the
-    -- tile 0xFFFFFF08) and a caption below, two columns by three rows to the right of the dialog.
+    -- tile 0xFFFFFF08) and a caption below, two columns by three rows to the right of the dialog, and the goggles'
+    -- tile (the port's own slot) in a third column beside the head and the face.
     local TILE_TITLE_H, TILE_CAPTION_H = 14, 20
     local function getLayout()
         local sw, sh = guiGetScreenSize()
@@ -601,6 +610,7 @@ return function(ctx)
         return {
             { id = "hat", name = SLOT_NAMES.hat, item = gear.hat, col = 0, row = 0 },
             { id = "mask", name = SLOT_NAMES.mask, item = gear.mask, col = 1, row = 0 },
+            { id = "eyes", name = SLOT_NAMES.eyes, item = gear.eyes, col = 2, row = 0 },
             { id = "held", name = SLOT_NAMES.held, item = last.held, col = 0, row = 1 },
             { id = "holster", name = SLOT_NAMES.holster, item = gear.holster, col = 1, row = 1 },
             { id = "armour", name = SLOT_NAMES.armour, item = gear.armour, col = 0, row = 2 },
@@ -628,6 +638,9 @@ return function(ctx)
         end
         if sl.id == "mask" and masks then
             name = masks.label(name, sl.item.uname, sl.item.data, lang.text)
+        end
+        if sl.id == "eyes" and goggles then
+            name = goggles.label(name, sl.item.uname, sl.item.data, lang.text)
         end
         return string.upper(name)
     end

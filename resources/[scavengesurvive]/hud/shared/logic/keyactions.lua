@@ -26,6 +26,8 @@ M.SPECIAL = {
     Note = "Read note", -- not upstream lines: the port's note and locator use the interact key (#136)
     Locator = "Locate phone",
     FishRod = "Cast line", -- #141
+    NightVision = "Wear goggles", -- the port's own goggles (items goggles.lua)
+    ThermalVision = "Wear goggles",
 }
 M.BODY_PART_VERB = "Install body part"
 M.GLOVEBOX_VERB = "Open glovebox" -- listed so tools/lang_qa collects it
@@ -77,6 +79,7 @@ M.BUTTON_LABELS = {
 --   installPart (a held body part is at its matching empty vehicle slot),
 --   tow ("fit" / "hitch" / "front": vehicles' towHint, a Tow Bar or Rope in hand at a vehicle, M.TOW),
 --   atFuelCap (a Petrol Can in hand at a vehicle's fuel cap, facing it and looking at it),
+--   goggles ("on" / "off": Night Vision or Thermal Vision goggles worn, switched on or not),
 --   held = false | { uname, category, isWeapon },
 --   crowbarTarget,                        -- the name of what F with a Crowbar works on, in the reader's
 --                                         -- language (hud outlines it): "Deconstruct · <name>"
@@ -94,7 +97,8 @@ M.BUTTON_LABELS = {
 --   supports = { [capability] = true },   -- eat, drink, openbag, wearbag, special, holster, reload, unload, give,
 --                                         -- removebag, uncuff, trunk, repair, engine, lights, doors, radio
 -- }
--- keys = { interact, putaway, drop, inventory, reload, engine, lights, doors, radio, hitch, glovebox, bay } (display
+-- keys = { interact, putaway, drop, inventory, reload, engine, lights, doors, radio, hitch, glovebox, bay,
+-- goggles } (display
 -- names; bay is the engine key, E: bonnet, cowl and the engine's parts)
 -- Returns { { key = "F", text = "Open Trunk" }, ... } in upstream order.
 function M.lines(ctx, keys)
@@ -107,6 +111,10 @@ function M.lines(ctx, keys)
     end
     if not ctx.spawned or ctx.uiOpen or ctx.knockedOut or ctx.hudOff then
         return out
+    end
+    -- not an upstream line: worn goggles have a key of their own, on foot and at the wheel alike
+    if ctx.goggles then
+        add("goggles", ctx.goggles == "on" and tr("Goggles off") or tr("Goggles on"))
     end
     if ctx.driver then
         add("engine", tr("Toggle engine"), "engine")
@@ -283,6 +291,8 @@ function M.lines(ctx, keys)
         add("interact", tr(M.SPECIAL.Crowbar) .. " · " .. ctx.crowbarTarget, "special")
     elseif ctx.installPart then -- a vehicle body part held at the empty slot it fits (hud installPartHint)
         add("interact", tr(M.BODY_PART_VERB), "special")
+    elseif h.uname == "ToolBattery" and ctx.goggles and not ctx.nearItem then
+        add("interact", tr("Change goggles battery"), "special")
     elseif M.SPECIAL[h.uname] then
         add("interact", tr(M.SPECIAL[h.uname]), "special")
     elseif h.category == "food" then

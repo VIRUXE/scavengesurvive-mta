@@ -142,6 +142,21 @@ return function(ctx)
         end
     end
 
+    -- the worn goggles: "items.vision" is the vision they show while switched on ("nightvision" / "thermalvision",
+    -- false while off or without any; every client flips them down over the wearer's eyes by it) and
+    -- "items.eyesBattery" the whole % of battery left (false before the first wear)
+    function M.publishEyes(player)
+        if isElement(player) then
+            local item = state.eyes[player]
+            local g = item and ctx.goggles.spec(item.uname)
+            local on = g and state.eyesOn[player] == true
+            local has = g and type(item.data) == "table" and tonumber(item.data.battery) ~= nil
+            local left = has and ctx.goggles.percent(ctx.goggles.battery(item.data)) or false
+            setElementData(player, "items.vision", on and g.mode or false, "broadcast", "deny")
+            setElementData(player, "items.eyesBattery", left, "broadcast", "deny")
+        end
+    end
+
     -- the worn vest's points, for the wearer's HUD bar (false: no vest)
     function M.publishArmour(player)
         if isElement(player) then
@@ -186,9 +201,16 @@ return function(ctx)
             if slot == "mask" and item and ctx.masks.ensure(item, math.random) then
                 M.queueData(item)
             end
+            -- goggles found lying about get their battery the first time they are put on
+            if slot == "eyes" and item and ctx.goggles.ensure(item, math.random) then
+                M.queueData(item)
+            end
             state[slot][player] = item
             publish(player, "items." .. slot, item)
-            if slot == "mask" then
+            if slot == "eyes" then
+                state.eyesOn[player] = nil -- goggles go on and come off switched off
+                M.publishEyes(player)
+            elseif slot == "mask" then
                 M.publishMask(player)
             elseif slot == "armour" then
                 M.publishArmour(player)
@@ -197,13 +219,15 @@ return function(ctx)
     end
 
     function M.clearGear(player)
-        local gearSlots = { "hat", "mask", "armour", "holster" }
+        local gearSlots = { "hat", "mask", "eyes", "armour", "holster" }
         for _, slot in ipairs(gearSlots) do
             if state[slot] then
                 state[slot][player] = nil
                 publish(player, "items." .. slot, nil)
             end
         end
+        state.eyesOn[player] = nil
+        M.publishEyes(player)
         M.publishMask(player)
         M.publishArmour(player)
         M.setGear(player, "parachute", nil)
@@ -408,8 +432,8 @@ return function(ctx)
                     return
                 end
                 local held, bag
-                local gear = { hat = nil, mask = nil, armour = nil, holster = nil, parachute = nil }
-                local isGear = { hat = true, mask = true, armour = true, holster = true, parachute = true }
+                local gear = { hat = nil, mask = nil, eyes = nil, armour = nil, holster = nil, parachute = nil }
+                local isGear = { hat = true, mask = true, eyes = true, armour = true, holster = true, parachute = true }
                 for _, row in ipairs(rows) do
                     row.data = decodeData(row.data)
                     if row.kind == "bag" then
@@ -1454,8 +1478,8 @@ return function(ctx)
         return true
     end
 
-    -- A worn hat or mask knocked off (char/headgear-pop.pwn, weapons on a headshot): the one row it is moves to the
-    -- ground at the player's feet, the slot empties and the clients around see it lie there.
+    -- A worn hat, mask or pair of goggles knocked off (char/headgear-pop.pwn, weapons on a headshot): the one row it
+    -- is moves to the ground at the player's feet, the slot empties and the clients around see it lie there.
     function M.popGear(player, slot)
         local cid, item = charId(player), state[slot] and state[slot][player]
         if not cid or not item then

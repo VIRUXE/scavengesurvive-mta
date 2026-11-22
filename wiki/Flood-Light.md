@@ -22,3 +22,7 @@ No recipe makes or uses it.
 ## Scrap
 
 Worth 3 [Scrap Metal](Scrap-Metal) in a Scrap Machine, see [Scrap](Scrap).
+
+## See also
+
+[Goggles](Goggles)

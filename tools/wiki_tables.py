@@ -61,7 +61,7 @@ BODYPARTS = RES / "vehicles" / "shared" / "logic" / "bodyparts.lua"
 GROUPS = {"weapon": "Weapons", "ammo": "Ammunition", "food": "Food", "liquid": "Drink", "bag": "Bags", "safebox": "Containers", "generic": "Other items"}
 CHARGES = {"EMP": "EMP", "INCEN": "Incendiary", "SMALL": "Small", "MEDIUM": "Medium", "LARGE": "Large"}
 TRIGGERS = {"TIMED": "Timed", "PROXIMITY": "Proximity", "MOTION": "Motion", "RADIO": "Radio"}
-SLOTS = {"hat": "Hat", "mask": "Mask", "armour": "Armour", "bag": "Bag, worn on the back"}
+SLOTS = {"hat": "Hat", "mask": "Mask", "eyes": "Goggles, over the eyes", "armour": "Armour", "bag": "Bag, worn on the back"}
 KINDS = ("world", "vehicle", "airdrop")
 NOT_SEE_ALSO = {"Item-Catalogue", "Item-Sizes", "Scrap"}
 # tooltips of lang_en.lua that describe upstream rather than the port (their Portuguese: wiki_lang.TOOLTIPS_PT)
@@ -315,10 +315,10 @@ def machine_results() -> dict:
 
 
 def apparel_slots() -> dict:
-    """uname -> wear slot (English), from apparel.lua's HATS, CUT_HATS, MASKS, ARMOUR, BAGS and HOLSTERS tables."""
+    """uname -> wear slot (English), from apparel.lua's HATS, CUT_HATS, MASKS, EYES, ARMOUR, BAGS and HOLSTERS tables."""
     src = APPAREL.read_text(encoding="utf8")
     out = {}
-    for table, slot in (("HATS", "hat"), ("CUT_HATS", "hat"), ("MASKS", "mask"), ("ARMOUR", "armour"), ("BAGS", "bag")):
+    for table, slot in (("HATS", "hat"), ("CUT_HATS", "hat"), ("MASKS", "mask"), ("EYES", "eyes"), ("ARMOUR", "armour"), ("BAGS", "bag")):
         for u in re.findall(r"^    (\w+) = true,", lua_block(src, "local " + table + " = {"), re.M):
             out[u] = SLOTS[slot]
     for u, bone in re.findall(r"^    (\w+) = \{ bone = (\d)", lua_block(src, "local HOLSTERS = {"), re.M):

@@ -27,6 +27,11 @@
     <file src="sounds/breath_gasmask.wav"/>
     <file src="sounds/breath_wheeze.wav"/>
     <file src="server/masks.lua"/>
+    <file src="shared/logic/goggles.lua"/>
+    <file src="server/goggles.lua"/>
+    <file src="client/goggles.lua"/>
+    <file src="client/goggles_night.fx"/>
+    <file src="client/goggles_thermal.fx"/>
     <file src="shared/logic/carry.lua"/>
     <file src="shared/logic/skins.lua"/>
     <file src="shared/logic/clothes.lua"/>

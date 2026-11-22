@@ -4,7 +4,7 @@
 local M = {}
 
 -- the attach.lua slots an editor can open
-M.SLOTS = { "hat", "mask", "armour", "bag", "holster", "held", "cuffs" }
+M.SLOTS = { "hat", "mask", "eyes", "armour", "bag", "holster", "held", "cuffs" }
 local IS_SLOT = {}
 for _, s in ipairs(M.SLOTS) do
     IS_SLOT[s] = true

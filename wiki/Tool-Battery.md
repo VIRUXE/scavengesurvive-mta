@@ -29,4 +29,4 @@ Worth 1 [Scrap Metal](Scrap-Metal) in a Scrap Machine, see [Scrap](Scrap).
 
 ## See also
 
-[Melee Weapons](Melee-Weapons), [Small Items](Small-Items), [Vehicle Armour](Vehicle-Armour)
+[Goggles](Goggles), [Melee Weapons](Melee-Weapons), [Small Items](Small-Items), [Vehicle Armour](Vehicle-Armour)

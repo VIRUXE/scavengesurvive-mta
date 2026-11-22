@@ -22,3 +22,7 @@ Nenhuma receita o faz ou usa.
 ## Sucata
 
 Vale 3 [Sucata](Scrap-Metal) numa Máquina de sucata, ver [Sucata](Scrap).
+
+## Ver também
+
+[Óculos](Goggles)

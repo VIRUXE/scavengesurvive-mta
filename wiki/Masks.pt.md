@@ -46,7 +46,7 @@ Quanto melhor uma máscara protege, mais custa respirar através dela: encurta a
 As máscaras de hóquei, do Zorro, de gatinha e de diabo só mudam o teu aspeto. Nenhuma máscara esconde o teu nome no chat nem altera o dano que sofres, e nenhuma filtra gás lacrimogéneo.
 
 ## Arrancada {#knocked-off}
-Um tiro na cabeça arranca-te a máscara, e o chapéu também se usares um. Ambos caem no chão aos teus pés e podem ser apanhados de novo, por ti ou por quem te acertou.
+Um tiro na cabeça arranca-te a máscara, e também o chapéu e os [óculos](Goggles) se os usares. Caem no chão aos teus pés e podem ser apanhados de novo, por ti ou por quem te acertou.
 
 ## Sucata {#scrap}
 Só a Máscara de gás vale alguma coisa numa Máquina de sucata (1 Sucata); as outras máscaras e os lenços de cabeça são destruídos por ela. Ver [Sucata](Scrap).

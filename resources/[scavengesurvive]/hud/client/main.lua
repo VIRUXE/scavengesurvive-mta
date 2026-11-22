@@ -150,6 +150,7 @@ local function refreshKeys()
         glovebox = keyName("glovebox", "e"),
         bay = keyName("enginebay", "e"),
         reload = keyName("reloadweapon", "r"),
+        goggles = keyName("goggles", "j"),
         engine = "Y",
         lights = "N",
         doors = controlKey("sub_mission", "2", "2"),
@@ -779,6 +780,9 @@ local function drawKeyActions(driver)
         atFuelCap = held and held.uname == "GasCan" and exports.vehicles:nearbyFuelCap() ~= false or false,
         cuffedNearby = not held and hasCuffedPlayerNearby() or false,
         hasHolster = getElementData(localPlayer, "items.holster") ~= false,
+        goggles = getElementData(localPlayer, "items.eyes")
+                and (getElementData(localPlayer, "items.vision") and "on" or "off")
+            or false,
         supports = SUPPORTS,
     }, state.keys)
     if (#choices > 1 or (#choices == 1 and not choices[1].item)) and #lines > 0 then

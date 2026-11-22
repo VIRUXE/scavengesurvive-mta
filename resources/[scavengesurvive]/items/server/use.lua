@@ -116,8 +116,12 @@ return function(ctx)
         if fromHand and uname == ctx.masks.FILTER_UNAME then
             return ctx.maskWear.useFilter(player, itemId)
         end
+        -- a Tool Battery in hand with goggles on the head trades places with the one inside them
+        if fromHand and uname == ctx.goggles.BATTERY_UNAME and state.eyes[player] then
+            return ctx.gogglesWear.useBattery(player, itemId)
+        end
         local wearSlot = ctx.apparel.slotFor(uname)
-        if fromHand and (wearSlot == "hat" or wearSlot == "mask" or wearSlot == "armour") then
+        if fromHand and (wearSlot == "hat" or wearSlot == "mask" or wearSlot == "eyes" or wearSlot == "armour") then
             return ctx.wear(player, itemId)
         end
         if uname == "Shield" and fromHand then

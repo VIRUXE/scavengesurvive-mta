@@ -57,6 +57,7 @@ This is a port of Southclaws' Scavenge & Survive for SA-MP, and the game is the 
 - [Holster](Holster)
 - [Clothes & Hats](Clothes-and-Hats)
 - [Masks](Masks)
+- [Goggles](Goggles)
 - [Armour](Armour)
 - [Aimshout](Aimshout)
 - [Surrender & Disarm](Surrender-and-Disarm)

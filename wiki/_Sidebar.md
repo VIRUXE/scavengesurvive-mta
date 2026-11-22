@@ -28,6 +28,7 @@
 - [Holster](Holster)
 - [Clothes & Hats](Clothes-and-Hats)
 - [Masks](Masks)
+- [Goggles](Goggles)
 - [Toxic Cloud](Toxic-Cloud)
 - [Armour](Armour)
 - [Aimshout](Aimshout)

@@ -51,6 +51,7 @@ Isto é uma adaptação do Scavenge & Survive do Southclaws para SA-MP, e o jogo
 - [Coldre](Holster)
 - [Roupa e chapéus](Clothes-and-Hats)
 - [Máscaras](Masks)
+- [Óculos](Goggles)
 - [Colete](Armour)
 - [Aimshout](Aimshout)
 - [Render-se e desarmar](Surrender-and-Disarm)

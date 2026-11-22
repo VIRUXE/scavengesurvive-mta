@@ -17,6 +17,7 @@ local cooking = loadModule("shared/logic/cooking.lua")
 local liquids = loadModule("shared/logic/liquids.lua")
 local gas = loadModule("shared/logic/gas.lua")
 local masks = loadModule("shared/logic/masks.lua")
+local goggles = loadModule("shared/logic/goggles.lua")
 local small = loadModule("shared/logic/smallitems.lua")
 local gardening = loadModule("shared/logic/gardening.lua")
 local machines = loadModule("shared/logic/machines.lua")
@@ -42,7 +43,7 @@ worldCtx.power = loadModule("client/power.lua")({ machines = machines, lang = la
 local world = loadModule("client/world.lua")(worldCtx)
 loadModule("client/vending.lua")({ world = world, vending = worldCtx.vending })
 local carry = loadModule("shared/logic/carry.lua")
-local attach = loadModule("client/attach.lua")({ models = models, apparel = apparel, carry = carry })
+local attach = loadModule("client/attach.lua")({ models = models, apparel = apparel, carry = carry, goggles = goggles })
 -- Reach checks distinguish crowbar work on installed panels from loose-item pickup.
 worldCtx.heldUname = function()
     local _, uname = attach.heldObject(localPlayer)
@@ -54,6 +55,8 @@ inventoryCtx.cooking = cooking
 inventoryCtx.liquids = liquids
 inventoryCtx.gas = gas
 inventoryCtx.masks = masks
+inventoryCtx.goggles = goggles
+
 -- The local player's worn mask, from the element data every client gets: its type and the item data rebuilt from
 -- its state (masks.dataOf), or nil without one.
 local function wornMask(player)
@@ -65,6 +68,8 @@ local function wornMask(player)
 end
 
 loadModule("client/breath.lua")({ masks = masks, worn = wornMask })
+loadModule("client/goggles.lua")({ goggles = goggles, lang = lang })
+
 -- Exported (character): what the legs still do with the mask on, { sprint, jump, maxMs, cooldownMs }, or false.
 function maskLegs()
     local uname, data = wornMask()
@@ -113,10 +118,11 @@ function nearbyCooker()
     return world.nearbyCooker(2.0) or false
 end
 
--- client export for the hud: whether the item is a hat, mask or armour that F wears from the hand (#154)
+-- client export for the hud: whether the item is a hat, mask, pair of goggles or armour that F wears from the
+-- hand (#154)
 function isHandWearable(uname)
     local slot = apparel.slotFor(uname)
-    return slot == "hat" or slot == "mask" or slot == "armour"
+    return slot == "hat" or slot == "mask" or slot == "eyes" or slot == "armour"
 end
 
 function nearbyContainerItem()

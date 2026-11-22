@@ -23,6 +23,7 @@ As teclas abaixo são as predefinidas. As teclas dos itens (`F`, `N`, `Y`, `H`, 
 | Guardar / sacar | `Y` | Guarda o que seguras, ou saca o item do teu coldre. Ver [Coldre](Holster). |
 | Inventário | `H` | Abre e fecha o [inventário](Inventory). |
 | Recarregar | `R` | Recarrega a arma de fogo que tens nas mãos. |
+| Ligar / desligar os óculos | `J` | Liga e desliga os [óculos](Goggles) que tens postos, a pé ou num veículo (o comando `goggles`). |
 | Mover um item colocado | `LALT` | Enquanto ajustas um item que acabaste de colocar, liberta o rato para o painel de ajuste (o botão Mover volta a escondê-lo). Enter ou Concluído termina; largar, guardar ou abrir o inventário também termina. |
 
 ## Num veículo {#in-a-vehicle}

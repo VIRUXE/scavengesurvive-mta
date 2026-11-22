@@ -29,4 +29,4 @@ Vale 1 [Sucata](Scrap-Metal) numa Máquina de sucata, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Armas corpo a corpo](Melee-Weapons), [Itens pequenos](Small-Items), [Blindagem de veículos](Vehicle-Armour)
+[Óculos](Goggles), [Armas corpo a corpo](Melee-Weapons), [Itens pequenos](Small-Items), [Blindagem de veículos](Vehicle-Armour)

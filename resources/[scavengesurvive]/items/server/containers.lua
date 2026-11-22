@@ -549,6 +549,7 @@ return function(ctx)
             payload.gear = {
                 hat = state.hat and state.hat[c.player] or false,
                 mask = state.mask and state.mask[c.player] or false,
+                eyes = state.eyes and state.eyes[c.player] or false,
                 armour = state.armour and state.armour[c.player] or false,
                 holster = state.holster and state.holster[c.player] or false,
             }

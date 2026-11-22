@@ -678,6 +678,12 @@ return function(ctx)
                 or held.uname == "HerpDerp"
                 or held.uname == "Parachute"
                 or exports.items:isHandWearable(held.uname)
+                -- a Tool Battery changes the battery of worn goggles, unless something it fits lies in reach
+                or (
+                    held.uname == "ToolBattery"
+                    and getElementData(localPlayer, "items.eyes")
+                    and (exports.items:nearestItemDistance() or 1000) > PICKUP_REACH
+                )
             )
         then
             blockEnterUntil = getTickCount() + TRUNK_ENTER_BLOCK_MS

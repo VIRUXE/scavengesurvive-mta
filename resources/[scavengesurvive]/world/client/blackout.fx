@@ -16,10 +16,17 @@
 // inside one the cap is lifted, so the building's baked night colours (its lamps' pools) show as GTA lit them, and
 // the room's light is added on top. Past the room's box the light dies off over ROOM_FADE metres, so it spills out of
 // a doorway or a ramp and fades instead of stopping at a hard edge.
+//
+// Goggles (items/client/goggles.lua) see through the dark. Vision is (night, thermal), each 0 or 1, set while GTA's
+// own vision effect is on: that effect relights peds, vehicles and objects itself, and the buildings follow here.
+// Night vision lifts whatever light there is to at least NIGHT_SEEN of the surface's own shade (lit windows no
+// brighter than the wall, GTA then multiplies the frame by green); thermal paints every building and object cold
+// blue whatever the hour, so the living, which GTA lights red, stand out as the only heat.
 texture gTexture0 < string textureState = "0,Texture"; >;
 float4x4 gViewInverse : VIEWINVERSE;
 float Cap = 1;
 float Gain = 1;
+float2 Vision = float2(0, 0);
 float2 Cone = float2(0.6, 0.2);
 float4 Light0Pos = float4(0, 0, 0, 0);
 float4 Light0Dir = float4(0, 0, -1, 0);
@@ -44,6 +51,9 @@ static const float GLOW = 4.0; // metres round the lamp lit whichever way they l
 static const float GLOW_SHARE = 0.35;
 static const float MAX_LIGHT = 1.6;
 static const float ROOM_FADE = 4.0;
+static const float NIGHT_SEEN = 0.45; // the darkest a surface shows through night vision
+static const float NIGHT_SHADE = 0.75; // how much of its own shading adds to that
+static const float3 COLD = float3(0.0, 0.05, 0.4); // a cold surface through thermal vision, before its shading
 
 sampler Sampler0 = sampler_state
 {
@@ -56,9 +66,18 @@ float3 cappedAt(float4 diffuse, float cap)
     return diffuse.rgb * min(1, cap / peak);
 }
 
+// what the goggles make of a surface the shader lit as `light`
+float3 seen(float3 light, float4 diffuse)
+{
+    float3 shade = cappedAt(diffuse, 0.6);
+    float3 night = max(light, NIGHT_SEEN + NIGHT_SHADE * shade);
+    float3 thermal = COLD * (1 + max(shade.r, max(shade.g, shade.b)));
+    return lerp(lerp(light, night, Vision.x), thermal, Vision.y);
+}
+
 float3 capped(float4 diffuse)
 {
-    return cappedAt(diffuse, Cap);
+    return seen(cappedAt(diffuse, Cap), diffuse);
 }
 
 // 1 inside the room while it is lit, falling to 0 at ROOM_FADE metres outside its box, else 0
@@ -87,7 +106,7 @@ float4 psLit(float4 diffuse : COLOR0, float2 uv : TEXCOORD0, float3 wp : TEXCOOR
     float room = saturate(in0 + in1);
     added += Room0Col.rgb * Room0Min.w * in0 + Room1Col.rgb * Room1Min.w * in1;
     float3 light = min(cappedAt(diffuse, lerp(Cap, 1, room)) + added * Gain, MAX_LIGHT);
-    return tex2D(Sampler0, uv) * float4(light, diffuse.a);
+    return tex2D(Sampler0, uv) * float4(seen(light, diffuse), diffuse.a);
 }
 
 float4 ps(float4 diffuse : COLOR0, float2 uv : TEXCOORD0) : COLOR0

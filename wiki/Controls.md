@@ -24,6 +24,7 @@ The keys below are the defaults. The item keys (`F`, `N`, `Y`, `H`, `R`) are ord
 | Put away / draw | `Y` | Puts away what you hold, or draws the item from your holster. See [Holster](Holster). |
 | Inventory | `H` | Opens and closes the [inventory](Inventory). |
 | Reload | `R` | Reloads the firearm in your hands. |
+| Goggles on / off | `J` | Switches worn [goggles](Goggles) on and off, on foot or in a vehicle (the `goggles` command). |
 | Move a placed item | `LALT` | While nudging an item you just placed, frees the mouse for the tweak pad (the Move button hides it again). Enter or Done finishes; dropping, putting away or opening the inventory finishes it too. |
 
 ## In a vehicle

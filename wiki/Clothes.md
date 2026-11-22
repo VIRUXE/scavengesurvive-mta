@@ -31,4 +31,4 @@ Cannot be scrapped: a Scrap Machine destroys it, see [Scrap](Scrap).
 
 ## See also
 
-[Armour](Armour), [Changes from the Original](Changes-from-the-Original), [Clothes & Hats](Clothes-and-Hats), [Combining](Combining), [Constructing](Constructing), [Death](Death), [Furniture](Furniture), [Getting Started](Getting-Started), [Scavenge & Survive Reborn](Home), [Inventory](Inventory), [Masks](Masks), [Medical](Medical), [Small Items](Small-Items)
+[Armour](Armour), [Changes from the Original](Changes-from-the-Original), [Clothes & Hats](Clothes-and-Hats), [Combining](Combining), [Constructing](Constructing), [Death](Death), [Furniture](Furniture), [Getting Started](Getting-Started), [Goggles](Goggles), [Scavenge & Survive Reborn](Home), [Inventory](Inventory), [Masks](Masks), [Medical](Medical), [Small Items](Small-Items)

@@ -1,17 +1,19 @@
 -- Held items and worn gear as client-side objects placed on the player's bones every frame, from the upstream
 -- SA-MP attach data (item type: boneid + attx/y/z + attrx/y/z; bag: per-skin spine offsets with scale; hat, mask and
--- armour: per-skin wearOffsets, see shared/logic/apparel.lua).
+-- armour: per-skin wearOffsets, see shared/logic/apparel.lua; goggles sit over the eyes while "items.vision" says
+-- they are switched on and pushed up on the forehead while it does not, shared/logic/goggles.lua).
 -- The server only publishes what is carried: element data "items.held" / "items.bag" = type uname or false.
--- ctx = { models } from client/main.lua (client/models.lua).
+-- ctx = { models, apparel, carry, goggles } from client/main.lua (client/models.lua and the shared/logic modules).
 return function(ctx)
     local libModels = loadstring(exports.lib:getModule("models"), "=lib/models.lua")()
-    local models, apparel, carry = ctx.models, ctx.apparel, ctx.carry
+    local models, apparel, carry, goggles = ctx.models, ctx.apparel, ctx.carry, ctx.goggles
     local SLOTS = {
         ["items.held"] = "held",
         ["items.bag"] = "bag",
         ["character.cuffed"] = "cuffs",
         ["items.hat"] = "hat",
         ["items.mask"] = "mask",
+        ["items.eyes"] = "eyes",
         ["items.armour"] = "armour",
         ["items.holster"] = "holster",
     }
@@ -223,6 +225,9 @@ return function(ctx)
         return t and t.wearOffsets
     end
 
+    -- player -> "items.vision" (the vision their goggles show, or false), kept ahead of element data like onDuty
+    local vision = {}
+
     local function apparelAttachment(slot, uname, player)
         if not apparel then
             return nil
@@ -231,7 +236,16 @@ return function(ctx)
         if not cfg then
             return nil
         end
-        return attachment(uname, cfg.bone, cfg.offsets, cfg.scale)
+        local offsets = cfg.offsets
+        if slot == "eyes" and goggles then
+            if vision[player] == nil then
+                vision[player] = getElementData(player, "items.vision") or false
+            end
+            if not vision[player] then
+                offsets = goggles.upOffsets(offsets) -- switched off: up on the forehead
+            end
+        end
+        return attachment(uname, cfg.bone, offsets, cfg.scale)
     end
 
     local function setSlot(player, slot, uname)
@@ -253,7 +267,7 @@ return function(ctx)
             tracked[player][slot] = bagAttachment(uname, player)
         elseif slot == "cuffs" then
             tracked[player][slot] = cuffAttachment()
-        elseif slot == "hat" or slot == "mask" or slot == "armour" or slot == "holster" then
+        elseif slot == "hat" or slot == "mask" or slot == "eyes" or slot == "armour" or slot == "holster" then
             tracked[player][slot] = apparelAttachment(slot, uname, player)
         else
             tracked[player][slot] = heldAttachment(uname, player)
@@ -267,6 +281,7 @@ return function(ctx)
     local function forgetPlayer(player)
         onDuty[player] = nil
         loaded[player] = nil
+        vision[player] = nil
         if tracked[player] then
             for _, slot in pairs(SLOTS) do
                 clearSlot(player, slot)
@@ -378,6 +393,13 @@ return function(ctx)
             end
             return
         end
+        if key == "items.vision" and getElementType(source) == "player" then
+            if source == localPlayer or isElementStreamedIn(source) then
+                vision[source] = value or false -- goggles switched on or off come down over the eyes or go up
+                setSlot(source, "eyes", getElementData(source, "items.eyes"))
+            end
+            return
+        end
         local slot = SLOTS[key]
         if not slot or getElementType(source) ~= "player" then
             return
@@ -403,9 +425,14 @@ return function(ctx)
         forgetPlayer(source)
     end)
 
-    -- bag, hat, mask and armour offsets are per skin
-    local PER_SKIN =
-        { ["items.bag"] = "bag", ["items.hat"] = "hat", ["items.mask"] = "mask", ["items.armour"] = "armour" }
+    -- bag, hat, mask, goggles and armour offsets are per skin
+    local PER_SKIN = {
+        ["items.bag"] = "bag",
+        ["items.hat"] = "hat",
+        ["items.mask"] = "mask",
+        ["items.eyes"] = "eyes",
+        ["items.armour"] = "armour",
+    }
     addEventHandler("onClientElementModelChange", root, function()
         if swapping or getElementType(source) ~= "player" then
             return -- our own switch to or from a hatless twin changes no row

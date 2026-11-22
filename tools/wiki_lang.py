@@ -75,6 +75,7 @@ TEXTS = {
         "Food per bite": "Comida por dentada",
         "Fuel": "Combustível",
         "Fuel tank": "Depósito",
+        "Goggles, over the eyes": "Óculos, sobre os olhos",
         "Group": "Grupo",
         "Hat": "Chapéu",
         "Hit points": "Pontos de vida",

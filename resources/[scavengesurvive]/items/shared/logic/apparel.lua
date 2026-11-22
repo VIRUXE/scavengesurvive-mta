@@ -49,6 +49,12 @@ local MASKS = {
     BandanaPat = true,
 }
 
+-- Goggles (shared/logic/goggles.lua): GTA's own goggle models, worn over the eyes whatever the hat and the mask
+local EYES = {
+    NightVision = true,
+    ThermalVision = true,
+}
+
 local ARMOUR = {
     Armour = true,
     SpecialArmour = true,
@@ -103,7 +109,7 @@ local HOLSTERS = {
 
 --- Resolves the apparel slot name for an item unique name.
 ---@param uname string
----@return string|nil "hat"|"mask"|"armour"|"bag"|"holster"|nil
+---@return string|nil "hat"|"mask"|"eyes"|"armour"|"bag"|"holster"|nil
 function M.slotFor(uname)
     if not uname then
         return nil
@@ -113,6 +119,9 @@ function M.slotFor(uname)
     end
     if MASKS[uname] then
         return "mask"
+    end
+    if EYES[uname] then
+        return "eyes"
     end
     if ARMOUR[uname] then
         return "armour"
@@ -237,6 +246,8 @@ end
 local DEFAULTS = {
     hat = { bone = 2, offsets = { 0.152, 0.0, -0.006, 0.0, 0.0, 0.0 }, scale = { 1.0, 1.0, 1.0 } },
     mask = { bone = 2, offsets = { 0.08, 0.03, 0.0, -85.5, 8.6, -92.8 }, scale = { 1.0, 1.0, 1.0 } },
+    -- GTA's goggle models are built in the head bone's own space and drawn 0.084 along its Y (CPed::Render)
+    eyes = { bone = 2, offsets = { 0.0, 0.084, 0.0, 0.0, 0.0, 0.0 }, scale = { 1.0, 1.0, 1.0 } },
     armour = { bone = 1, offsets = { 0.064, 0.048, 0.006, -1.2, -1.3, -0.9 }, scale = { 1.138, 1.294, 1.108 } },
 }
 

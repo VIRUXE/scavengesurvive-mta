@@ -7,6 +7,9 @@
 -- nearest the camera in the player's interior and dimension onto the buildings and objects round them.
 -- A building lit by its own mains (power: a Generator wired to its box) registers its room (setRoomLight /
 -- removeRoomLight); inside the MAX_ROOMS of them in the player's interior and dimension the cap is lifted.
+-- Goggles switched on (items: the local player's "items.vision" element data, "nightvision" / "thermalvision") see
+-- through it: the shader then shows the buildings as that vision does, to match what GTA's own effect does to
+-- everything else.
 local PROPERTIES = {
     SpriteBrightness = 0, -- the coronas of every 2DFX light (lamps, traffic lights, signs)
     LightsOnGround = 0, -- the light pools those lamps cast on roads and walls
@@ -41,6 +44,8 @@ local LIGHT_RANGE = 120 -- metres from the camera a light still counts
 local CONE = { 0.6, 0.2 } -- cosines of the half angles where a light is full and where it is gone
 local DAY_GAIN = 0.35 -- how much of a light shows by day (none of it is needed then)
 
+local VISIONS = { nightvision = { 1, 0 }, thermalvision = { 0, 1 } }
+
 local on = true
 local wanted = true -- false while /lights has the city lit for this player
 local shader
@@ -62,6 +67,17 @@ local function nightBalance()
         return 0
     end
     return (t - 1200) / 60
+end
+
+-- vision: the local player's "items.vision" (passed in by its change event, which fires before the data changes)
+local function updateVision(vision)
+    if shader then
+        local v = VISIONS[vision] or { 0, 0 }
+        if isPedDead(localPlayer) or getElementData(localPlayer, "staff.duty") == true then
+            v = { 0, 0 }
+        end
+        dxSetShaderValue(shader, "Vision", v[1], v[2])
+    end
 end
 
 local function updateCap()
@@ -243,6 +259,7 @@ addEventHandler("onClientResourceStart", resourceRoot, function()
         -- a change of interior or dimension changes which rooms count
         setTimer(updateRooms, 1000, 0)
         updateRooms()
+        updateVision(getElementData(localPlayer, "items.vision"))
     end
     refresh()
 end)
@@ -257,8 +274,14 @@ addEventHandler("playerBlackoutChanged", root, function(state)
     refresh()
 end)
 
-addEventHandler("onClientElementDataChange", localPlayer, function(key)
+addEventHandler("onClientElementDataChange", localPlayer, function(key, _, value)
     if key == "staff.duty" then
         refresh()
+    elseif key == "items.vision" then
+        updateVision(value)
     end
 end, false)
+
+addEventHandler("onClientPlayerWasted", localPlayer, function()
+    updateVision(false)
+end)

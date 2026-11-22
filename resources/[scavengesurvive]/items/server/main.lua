@@ -15,6 +15,7 @@ local ammo = loadFile("shared/logic/ammo.lua")
 local apparel = loadFile("shared/logic/apparel.lua")
 local armourLogic = loadFile("shared/logic/armour.lua")
 local masksLogic = loadFile("shared/logic/masks.lua")
+local gogglesLogic = loadFile("shared/logic/goggles.lua")
 local skins = loadFile("shared/logic/skins.lua")
 apparel.skins = skins
 local clothes = loadFile("shared/logic/clothes.lua")
@@ -46,6 +47,8 @@ local state = {
     worn = {}, -- player -> { id, uname, hp, data } bag on the back
     hat = {}, -- player -> { id, uname, hp, data } worn hat
     mask = {}, -- player -> { id, uname, hp, data } worn mask
+    eyes = {}, -- player -> { id, uname, hp, data } worn goggles (server/goggles.lua)
+    eyesOn = {}, -- player -> true while those goggles are switched on
     armour = {}, -- player -> { id, uname, hp, data } worn armour
     holster = {}, -- player -> { id, uname, hp, data } holstered weapon
     parachute = {}, -- player -> { id, uname, hp, data } worn parachute (server/parachute.lua)
@@ -187,6 +190,7 @@ hands = loadFile("server/hands.lua")({
     apparel = apparel,
     armour = armourLogic,
     masks = masksLogic,
+    goggles = gogglesLogic,
     type = itemType,
     defaultAmmo = defaultAmmo,
     charId = charId,
@@ -233,6 +237,19 @@ maskWear = loadFile("server/masks.lua")({
     masks = masksLogic,
     toast = toast,
     log = log,
+    sendInventory = function(player)
+        return containers.refreshInventory(player)
+    end,
+})
+local gogglesWear = loadFile("server/goggles.lua")({
+    net = net,
+    state = state,
+    hands = hands,
+    goggles = gogglesLogic,
+    charId = charId,
+    toast = toast,
+    log = log,
+    isBadInteract = isBadInteract,
     sendInventory = function(player)
         return containers.refreshInventory(player)
     end,
@@ -470,6 +487,8 @@ loadFile("server/use.lua")({
     openSide = containers.openSide,
     masks = masksLogic,
     maskWear = maskWear,
+    goggles = gogglesLogic,
+    gogglesWear = gogglesWear,
 })
 
 addEventHandler("onResourceStart", resourceRoot, function()
@@ -900,19 +919,20 @@ function maskBreathed(player, concentration, dt)
     return maskWear.breathed(player, tonumber(concentration) or 0, tonumber(dt) or 0)
 end
 
--- export: the item a player wears in a slot ("hat", "mask", "armour", "holster") as { id, uname, data }, or false
+-- export: the item a player wears in a slot ("hat", "mask", "eyes", "armour", "holster") as { id, uname, data }, or
+-- false
 function getGear(player, slot)
     local item = isElement(player) and state[slot] and state[slot][player]
     return item and { id = item.id, uname = item.uname, data = item.data } or false
 end
 
--- weapons: a headshot knocks the hat and mask off (hands.popGear, #137)
+-- weapons: a headshot knocks the hat, the goggles and the mask off (hands.popGear, #137)
 function popHeadgear(player)
     if not isElement(player) then
         return false
     end
     local any = false
-    for _, slot in ipairs({ "hat", "mask" }) do
+    for _, slot in ipairs({ "hat", "eyes", "mask" }) do
         if hands.popGear(player, slot) then
             any = true
         end

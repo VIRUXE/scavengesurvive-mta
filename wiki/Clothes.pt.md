@@ -31,4 +31,4 @@ Não dá sucata: uma Máquina de sucata destrói-o, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Colete](Armour), [Mudanças face ao original](Changes-from-the-Original), [Roupa e chapéus](Clothes-and-Hats), [Combinar](Combining), [Construção](Constructing), [Morte](Death), [Mobiliário](Furniture), [Primeiros passos](Getting-Started), [Scavenge & Survive Reborn](Home), [Inventário](Inventory), [Máscaras](Masks), [Medicina](Medical), [Itens pequenos](Small-Items)
+[Colete](Armour), [Mudanças face ao original](Changes-from-the-Original), [Roupa e chapéus](Clothes-and-Hats), [Combinar](Combining), [Construção](Constructing), [Morte](Death), [Mobiliário](Furniture), [Primeiros passos](Getting-Started), [Óculos](Goggles), [Scavenge & Survive Reborn](Home), [Inventário](Inventory), [Máscaras](Masks), [Medicina](Medical), [Itens pequenos](Small-Items)
