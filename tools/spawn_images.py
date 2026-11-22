@@ -4,7 +4,7 @@
 
 Reads docs/images/items/all/index.json (written by tools.render_item_models --all --set all) and the wiki's item pages
 (the same uname -> page plan as tools.wiki_tables) into resources/[scavengesurvive]/discordchat/shared/spawn_images.lua.
-nginx serves the renders at https://ss.flaviopereira.dev/reborn/images/items/.
+nginx serves the renders at https://dl.scavengesurvive-reborn.com/images/items/.
 """
 from __future__ import annotations
 

@@ -70,7 +70,7 @@ end
 
 local function spawnImageBase()
     local base = get("spawnImageBase")
-    return (type(base) == "string" and base ~= "") and base or "https://ss.flaviopereira.dev/reborn/images/"
+    return (type(base) == "string" and base ~= "") and base or "https://dl.scavengesurvive-reborn.com/images/"
 end
 
 local function postSpawn(res, embed)
