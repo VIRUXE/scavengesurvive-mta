@@ -1,6 +1,6 @@
 # Website hosting (scavengesurvive-reborn.com)
 
-**When:** the website or `discord.scavengesurvive-reborn.com` is down, a deploy fails, the deploy key has to be
+**When:** the website, `discord.` or `sv.scavengesurvive-reborn.com` is down, a deploy fails, the deploy key has to be
 rotated, the Discord invite changes, or the site moves to another host.
 
 **What runs where:**
@@ -13,6 +13,7 @@ rotated, the Discord invite changes, or the site moves to another host.
 | Certificate | certbot, `--cert-name scavengesurvive-reborn.com` | webroot `/var/www/letsencrypt` (`snippets/acme.conf`), covers apex, `www` and `discord`; renewed by certbot's own timer (HTTP-01 works through the Cloudflare proxy) |
 | Deploy | `.github/workflows/pages.yml`, job `site` | rsyncs `site/` (minus `PLACEHOLDERS.md`) on every push to `main` that touches `site/`; user `deploy-ssr` (home `/var/www/scavengesurvive-reborn.com`), key in `~/.ssh/authorized_keys` limited to `restrict,command="/usr/bin/rrsync /var/www/scavengesurvive-reborn.com/public"` |
 | Old URL | GitHub Pages, job `pages` | `viruxe.github.io/scavengesurvive-mta/<path>` forwards to `scavengesurvive-reborn.com/<path>` (generated stub, `noindex`) |
+| Game server name | `A sv` → nasa's WAN IP, **DNS only** (TTL 60) | the only address players, the site, the wiki and Rich Presence use; no port needed since the server listens on MTA's default 22003. nasa's existing cron `/root/ddns-update.sh` (every 5 min, reads the WAN IP from the router) rewrites it together with `nasa.flaviopereira.dev`; its Cloudflare token `nasa-ddns-update` has DNS:Edit on both zones, ids in `/root/.cloudflare-ddns.env` (`SV_*`). Never proxy it: Cloudflare's proxy carries no UDP game traffic |
 | Discord invite | `discord.gg/CAs9Nsta8d` | never expires, made for this link in the Scavenge & Survive Reborn server (lands in `#general`) |
 
 ## Checks

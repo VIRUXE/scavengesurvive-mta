@@ -8,6 +8,6 @@
         <!-- Discord application "Scavenge & Survive" (discord.com/developers/applications) -->
         <setting name="*appId" value="1564023462010429470"/>
         <!-- mtasa:// or https:// link for the presence button, empty hides it -->
-        <setting name="*joinUrl" value="mtasa://185.103.74.67:22003"/>
+        <setting name="*joinUrl" value="mtasa://sv.scavengesurvive-reborn.com"/>
     </settings>
 </meta>
