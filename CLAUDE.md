@@ -27,10 +27,13 @@ production and the dev box run 13.2.0 outside packages (`docs/runbooks/upgrade-m
   `site/lang/pt.json` holds the Portuguese, `python -m tools.site_i18n` reports what a language lacks (`--dump` prints the
   English). `site/data/changes.json` is the census of differences from upstream (every entry with its source), `placeholders.json`
   the screenshots, renders and films still to be made (`site/PLACEHOLDERS.md` has the briefs; set `file` to fill one),
-  `servers.json` the server list. A feature that lands also lands as a `changes.json` entry.
+  `servers.json` the server list.
 - `wiki/` is the source of the GitHub wiki (one `.md` per page, GitHub-wiki link syntax): the same workflow mirrors it to the wiki
   repository on push and leaves the wiki's `images/` alone, so edit pages here, never in the wiki UI. `python -m tools.wiki_tables`
   regenerates the data tables and item pages into it. `<!-- shot:<id> -->` markers are screenshot slots sharing ids with the site.
+- **Every new feature, and every fix to behaviour inherited from upstream, updates the wiki and the website in the same
+  change**, unasked: a `site/data/changes.json` entry (English and Portuguese), the hand-written wiki topic page it
+  belongs to (e.g. `wiki/Explosives.md`), and `python -m tools.wiki_tables` for the generated tables and item pages.
 - No tests: the project has none and none are ever to be created (user decision 2026-10-31).
 - `ops/` (dev Loki + Grafana compose, dashboards, alert rules), `docs/runbooks/` (operations), `docs/staff-commands.md` (staff parity table), `docs/reviews/<date>-*.md` (live checks).
 
