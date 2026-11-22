@@ -19,6 +19,7 @@ Stand at the front of the vehicle with the right tool in your hands and press `F
 The wrong tool says *You need another tool*. When you get into the driver's seat a tip tells you how broken the vehicle is. Under 450 health the engine can cut out at speed, and under 300 it will not run at all.
 
 - **Tyres**: with the engine off, hold a Tyre Wrench beside a wheel (not at the front or rear) and press `F`. The camera moves to the hub: click a lug nut, or pick one with `A` and `D`, and hold the mouse button to undo it; do all of them and the wheel comes off as a Wheel item. To fit one, put a Wheel on the ground within 3 m of the bare hub, then hold the Tyre Wrench and press `F` again and thread the nuts back on. A car with no wheels left freezes after two seconds.
+  Vehicle wheels retain their original designs with HD tyre, rim and brake textures at four times the original resolution. This also covers bicycles, motorbikes, trucks, trailers, aircraft landing gear and all 17 upgrade wheels. The wheel items use the same shared tyre artwork.
 - **Headlights**: hold a Headlight at the front. A broken light is replaced and the item is used up.
 - **Battery and starter motor**: with empty hands a tap of `F` at the front opens the bonnet, or lifts a loose battery or a loose starter motor into your hands. A Battery or Starter Motor in hand goes into its empty slot loose with a tap. Hold `F` with a Ratchet at the open bonnet for a menu: repair the engine, or tighten or unbolt those parts. See [Car Batteries & Starters](Car-Batteries-and-Starters).
 

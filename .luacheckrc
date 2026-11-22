@@ -9,6 +9,7 @@ files["resources/**/modules/**"] = { std = "lua51+mta_shared+mta_server" }
 stds.mta_shared = dofile(".luacheck/mta_shared.lua")
 stds.mta_server = dofile(".luacheck/mta_server.lua")
 stds.mta_client = dofile(".luacheck/mta_client.lua")
+files["resources/**/vehicles/client/wheel_hd.lua"] = { std = "lua51+mta_shared+mta_client", read_globals = { "dxCreateShader", "dxSetShaderValue", "engineApplyShaderToWorldTexture", "engineRemoveShaderFromWorldTexture", "getVehicleUpgradeOnSlot" } }
 files["resources/**/lib/shared/**"] = { std = "lua51+mta_shared", globals = { "getModule" } }
 files["resources/**/lib/modules/surface.lua"] = { std = "lua51+mta_shared+mta_client" }
 files["resources/**/lib/modules/model_loader.lua"] = { std = "lua51+mta_shared+mta_client", read_globals = { "engineSetModelPhysicalPropertiesGroup", "engineGetModelPhysicalPropertiesGroup" } }
