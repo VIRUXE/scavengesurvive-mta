@@ -5,6 +5,7 @@
 -- flag freezes its stats and makes it immune to all damage (character and weapons check staff.duty) until
 -- character exposes a suspend/resume export.
 local log = loadstring(exports.lib:getModule("log"), "=lib/log.lua")()
+local geom = assert(loadstring(exports.lib:getModule("geom"), "=lib/geom.lua"))()
 return function(ctx)
     local db, logic, state = ctx.db, ctx.logic, ctx.state
     local M = {}
@@ -166,12 +167,36 @@ return function(ctx)
         end)
     end
 
-    local function teleportToPlayer(who, target, withVehicle)
+    -- Where someone brought next to a staff member in the air (flying on duty, a helicopter) lands instead of falling
+    -- from there: the first surface (or water) under the spot, LIFT over it. The spot itself when it already has
+    -- ground within NEAR metres under it, or when the server's world cannot tell (lib geom.lua: main world only).
+    local GROUND_NEAR, GROUND_LIFT = 3, 1.0
+    local function landingZ(x, y, z, interior, dimension)
+        if interior ~= 0 or dimension ~= 0 or not geom.ready() or geom.below(x, y, z, 0.5, GROUND_NEAR) then
+            return z
+        end
+        local hz = geom.below(x, y, z, 0.5, z + 100)
+        local wz = geom.water(x, y)
+        if wz and wz < z and (not hz or wz > hz) then
+            hz = wz
+        end
+        return hz and hz + GROUND_LIFT or z
+    end
+
+    local function teleportToPlayer(who, target, withVehicle, land)
         local x, y, z = getElementPosition(target)
         local _, _, rz = getElementRotation(target)
         local rad = math.rad(rz)
         local tx, ty = x - math.sin(rad) * 1.5, y + math.cos(rad) * 1.5
-        teleport(who, tx, ty, z + 0.5, getElementInterior(target), getElementDimension(target), not withVehicle)
+        local interior, dimension = getElementInterior(target), getElementDimension(target)
+        local tz = z + 0.5
+        if land then
+            tz = landingZ(tx, ty, tz, interior, dimension)
+        end
+        teleport(who, tx, ty, tz, interior, dimension, not withVehicle)
+        local veh = getPedOccupiedVehicle(who)
+        local moved = (withVehicle and veh and getVehicleOccupant(veh) == who) and veh or who
+        setElementVelocity(moved, 0, 0, 0)
     end
 
     -- First empty seat of a vehicle (the driver's seat counts only when nobody is in it), or nil.
@@ -246,7 +271,7 @@ return function(ctx)
                 if seat and not withVehicle then
                     seatInto(target, veh, seat)
                 else
-                    teleportToPlayer(target, p, withVehicle)
+                    teleportToPlayer(target, p, withVehicle, true)
                 end
                 ctx.say(p, " >  You have teleported %s", getPlayerName(target))
                 ctx.sayLang(target, "TELEPORTEDY", getPlayerName(p))

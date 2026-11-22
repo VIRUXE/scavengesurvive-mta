@@ -40,6 +40,9 @@ Double-clicking a command (or **Open in panel**) opens the staff panel on that c
 - `/kick` by someone who is not the highest level online becomes a **request** sent to the highest staff online.
 - `staff.max_warnings` (5) warnings = a `staff.warn_ban_hours` (24 h) ban; the counter restarts afterwards.
 - `/takeback [player]` undoes your last `/goto`, `/get` or `/gotopos` (or the last one for that player), up to 20 kept per staff member until they leave.
+- `/get` while you are in the air (flying on duty, a helicopter) puts the player, or the car they drive when it goes
+  along, on the ground (or water) under you instead of dropping them from your height (port addition; main world only,
+  needs the server's collision world).
 - `/goto`, `/get`, `/gotopos`, `/spec` need **duty** unless the actor is level 5. `/tp` is an alias of `/gotopos`
   (a port addition).
 - Bans record name, IP **and serial** (upstream had no serial field; ADR 0007). `auth` refuses a joining player whose
