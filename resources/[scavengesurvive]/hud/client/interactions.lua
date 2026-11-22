@@ -17,7 +17,7 @@ return function(held, force)
     if feature == "ladder_on" or feature == "zipline_on" then
         return actions
     end
-    for _, provider in ipairs({ "items", "vehicles", "world", "loot", "dumpsters" }) do
+    for _, provider in ipairs({ "items", "vehicles", "world", "loot", "dumpsters", "power" }) do
         local resource = getResourceFromName(provider)
         -- with something in hand items gives only a Hammer's build entries (a defence lying unbuilt)
         if resource and getResourceState(resource) == "running" then

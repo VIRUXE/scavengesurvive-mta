@@ -174,14 +174,14 @@ return function(ctx)
     -- The interact key -----------------------------------------------------------------------------------------
 
     -- hands.lua itemPickupRequested: a tap on a machine. true when the row is a machine. A Generator is no container:
-    -- the tap tells its fuel and the hold lifts it (machineMenuRequested).
+    -- the tap starts or stops its engine (server/generators.lua) and the hold lifts it (machineMenuRequested).
     function M.interact(player, _, _, row)
         if not machines.isMachine(row.uname) then
             return false
         end
         local st = machines.state(decodeData(row.data))
         if machines.kind(row.uname) == "generator" then
-            text(player, "GENFUEL", st.fuel, machines.MAX_FUEL)
+            ctx.generators.toggle(player, row)
             return true
         end
         if st.cooking then
@@ -233,6 +233,9 @@ return function(ctx)
             hands.syncHeldData(player, cur, { amount = r.amount, liquid = machines.PETROL })
         end
         write(r.row, { fuel = r.fuel, cooking = nil })
+        if r.kind == "generator" and isElement(player) then
+            text(player, "GENFUEL", r.fuel, machines.GEN_TANK)
+        end
     end
 
     local function refuelTick(player)
@@ -245,7 +248,7 @@ return function(ctx)
             return stopRefuel(player, true)
         end
         local done
-        r.fuel, r.amount, done = machines.refuelStep(r.fuel, r.amount)
+        r.fuel, r.amount, done = machines.refuelStep(r.fuel, r.amount, r.kind)
         r.moved = true
         if done then
             stopRefuel(player, true)
@@ -254,9 +257,10 @@ return function(ctx)
 
     local function startRefuel(player, row, st, held, amount)
         stopRefuel(player, true)
-        refuels[player] = { row = row, held = held, fuel = st.fuel, amount = amount, moved = false }
+        local kind = machines.kind(row.uname)
+        refuels[player] = { row = row, held = held, fuel = st.fuel, amount = amount, moved = false, kind = kind }
         refuels[player].timer = setTimer(refuelTick, machines.REFUEL_TICK_MS, 0, player)
-        triggerClientEvent(player, "machineRefuelStarted", player, machines.refuelMs(st.fuel))
+        triggerClientEvent(player, "machineRefuelStarted", player, machines.refuelMs(st.fuel, kind))
         text(player, "REFUELLING")
     end
 
@@ -268,12 +272,16 @@ return function(ctx)
             end
             local held = state.held[p]
             local amount = held and machines.petrolIn(itemType(held.uname), held.data, liquids)
+            local generator = machines.kind(row.uname) == "generator"
+            if amount and generator and st.running then
+                return text(p, "GENRUNNING")
+            end
             if amount then
                 return startRefuel(p, row, st, held, amount)
             end
-            if machines.kind(row.uname) == "generator" then
+            if generator then
                 if held then
-                    return text(p, "GENFUEL", st.fuel, machines.MAX_FUEL)
+                    return text(p, "GENFUEL", st.fuel, machines.GEN_TANK)
                 end
                 if isBadInteract(p) then
                     return

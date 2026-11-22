@@ -66,7 +66,7 @@ return function(ctx)
         .. "AND IFNULL(dimension, 0) = ? AND ABS(x - ?) <= ? AND ABS(y - ?) <= ?"
     -- the item data is either {machine} or [{machine}] (fuelOf below): the fuel's path in whichever it is
     local PATH = "IF(JSON_VALUE(data, '$.machine.fuel') IS NULL, '$[0].machine.fuel', '$.machine.fuel')"
-    local FUEL = "CAST(JSON_VALUE(data, " .. PATH .. ") AS DECIMAL(10, 2))"
+    local FUEL = "CAST(JSON_VALUE(data, " .. PATH .. ") AS DECIMAL(10, 4))"
     local DRAW = "UPDATE items SET data = JSON_SET(data, "
         .. PATH
         .. ", "
@@ -414,11 +414,13 @@ return function(ctx)
 
     -- Welding --------------------------------------------------------------------------------------------------
 
-    -- the Generator's fuel from its item data ({ machine = { fuel } }, either JSON shape)
+    -- the Generator's fuel from its item data ({ machine = { fuel, running } }, either JSON shape), 0 while its
+    -- engine is not running (items server/generators.lua starts and stops it)
     local function fuelOf(data)
         local d = decodeData(data)
         d = type(d) == "table" and (type(d[1]) == "table" and d[1] or d) or {}
-        return type(d.machine) == "table" and tonumber(d.machine.fuel) or 0
+        local m = type(d.machine) == "table" and d.machine or {}
+        return tonumber(m.running) == 1 and tonumber(m.fuel) or 0
     end
 
     local function nearestGenerator(rows, x, y, z)

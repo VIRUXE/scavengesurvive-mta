@@ -38,6 +38,7 @@
     <file src="shared/logic/machines.lua"/>
     <file src="shared/logic/floodlight.lua"/>
     <file src="client/floodlight.lua"/>
+    <file src="client/power.lua"/>
     <file src="server/machines.lua"/>
     <file src="shared/logic/furniture.lua"/>
     <file src="shared/logic/firework.lua"/>

@@ -1,0 +1,22 @@
+<meta>
+    <info author="scavengesurvive-mta" type="script" name="power" description="Mains boxes: a Generator wired to a building's inlet lights it" version="0.1.0"/>
+    <min_mta_version server="1.6.0" client="1.6.0-9.21695"/>
+    <include resource="lib"/>
+    <include resource="prop_models"/>
+    <script src="shared/events.lua" type="shared"/>
+    <script src="server/main.lua" type="server"/>
+    <script src="client/main.lua" type="client"/>
+    <file src="client/tube.fx"/>
+    <file src="shared/logic/mains.lua"/>
+    <file src="data/sites.lua"/>
+    <export function="setFeed" type="server"/>
+    <export function="isLeverOn" type="server"/>
+    <export function="getSites" type="server"/>
+    <export function="getState" type="server"/>
+    <export function="inletOf" type="server"/>
+    <export function="cordRestOf" type="server"/>
+    <export function="interactionActions" type="client"/>
+    <export function="inletNear" type="client"/>
+    <export function="litSites" type="client"/>
+    <export function="inletOf" type="client"/>
+</meta>

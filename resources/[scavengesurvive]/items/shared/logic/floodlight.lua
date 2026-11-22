@@ -1,14 +1,13 @@
 -- The Flood Light (the port's own, server/floodlight.lua): a work light on a tripod that lights the room it stands in
 -- (world/client/blackout.fx). It runs off a Tool Battery installed in it, which goes flat in BATTERY_MINUTES, or off
--- a fuelled Generator lying within GENERATOR_REACH, which burns GEN_FUEL_PER_MIN while it lights it and spares the
--- battery. Item data { lit = 1 | nil, battery = charge | nil }: the charge in the Tool Battery's own units (0 ..
--- BATTERY_CHARGES, vehicles/shared/logic/carmour.lua, which the Angle Grinder spends a whole one of per pass), kept
+-- a running Generator lying within GENERATOR_REACH, which spares the battery (its burn counts the light's 500 W,
+-- server/generators.lua). Item data { lit = 1 | nil, battery = charge | nil }: the charge in the Tool Battery's own
+-- units (0 .. BATTERY_CHARGES, vehicles/shared/logic/carmour.lua, which the Angle Grinder spends a whole one of per pass), kept
 -- fractional here; a Tool Battery taken out keeps it as its { charge = n }.
 local UNAME = "FloodLight"
 local BATTERY_UNAME = "ToolBattery"
 local BATTERY_CHARGES = 3 -- a full Tool Battery (carmour.BATTERY_CHARGES)
 local BATTERY_MINUTES = 10 -- a full Tool Battery lights it this long
-local GEN_FUEL_PER_MIN = 1.0 -- Generator fuel (of machines.MAX_FUEL, 100) burnt a minute while it lights one
 
 -- the light (flood_light.dff, tools/make_props.py FLOOD_LAMP / FLOOD_AIM): where on the model it comes from and the
 -- way it points
@@ -61,13 +60,9 @@ local function percent(charge)
     return math.floor((tonumber(charge) or 0) / BATTERY_CHARGES * 100 + 0.5)
 end
 
--- what one draw of `seconds` takes from a battery, and from a Generator's tank
+-- what one draw of `seconds` takes from a battery
 local function batteryDraw(seconds)
     return BATTERY_CHARGES * seconds / (BATTERY_MINUTES * 60)
-end
-
-local function fuelDraw(seconds)
-    return GEN_FUEL_PER_MIN * seconds / 60
 end
 
 -- the light's origin and aim in the world for an object matrix (getElementMatrix): x, y, z, dx, dy, dz
@@ -101,6 +96,5 @@ return {
     toolCharge = toolCharge,
     percent = percent,
     batteryDraw = batteryDraw,
-    fuelDraw = fuelDraw,
     lampPose = lampPose,
 }

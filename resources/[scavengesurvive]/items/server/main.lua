@@ -360,6 +360,21 @@ hands.setParachute(parachute)
 containers.setParachute(parachute)
 -- the Fishing Rod (#141)
 loadFile("server/fishing.lua")({ db = db, net = net, state = state, toast = toast, world = world, fishing = fishing })
+-- the Generator's engine, its fuel burn and the Extension Cords from it into a building's mains (power)
+local generators = loadFile("server/generators.lua")({
+    db = db,
+    net = net,
+    state = state,
+    toast = toast,
+    world = world,
+    hands = hands,
+    charId = charId,
+    decodeData = hands.decodeData,
+    updateHeldData = function(player, data)
+        return updateHeldData(player, data)
+    end,
+    machines = machines,
+})
 -- the scrap machine, the refining machine and the water purifier (#145)
 local machinesSrv = loadFile("server/machines.lua")({
     db = db,
@@ -375,6 +390,7 @@ local machinesSrv = loadFile("server/machines.lua")({
     decodeData = hands.decodeData,
     charId = charId,
     isBadInteract = isBadInteract,
+    generators = generators,
 })
 hands.setMachines(machinesSrv)
 containers.setMachines(machines, liquids)
@@ -434,6 +450,7 @@ addEventHandler("onResourceStart", resourceRoot, function()
     machinesSrv.start()
     vendingSrv.start()
     floodLight.start()
+    generators.start()
     -- restart: every spawned character gets its held item and worn bag back and a fresh world projection
     for _, p in ipairs(getElementsByType("player")) do
         if charId(p) then

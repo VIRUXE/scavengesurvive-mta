@@ -281,6 +281,13 @@ CREATE TABLE IF NOT EXISTS `loot_spawns` (
   KEY `ix_loot_spawns_zone` (`zone`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
+CREATE TABLE IF NOT EXISTS `power_sites` (
+  `id` varchar(32) NOT NULL,
+  `lever_on` tinyint(1) NOT NULL DEFAULT 0,
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE IF NOT EXISTS `reports` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(24) NOT NULL,
@@ -1860,6 +1867,37 @@ BEGIN
       SELECT 1 AS ok, 'OK' AS code, JSON_OBJECT('item_id', CAST(v_item AS SIGNED), 'gas', v_gas, 'hp', CAST(v_hp AS SIGNED)) AS payload;
     END IF;
   END IF;
+END//
+
+CREATE OR REPLACE PROCEDURE `generator_burn`(IN p_gens LONGTEXT)
+BEGIN
+  
+  
+  DECLARE v_gens INT DEFAULT 0;
+  DECLARE v_empty INT DEFAULT 0;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
+  SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+  START TRANSACTION;
+  UPDATE items i
+    JOIN JSON_TABLE(p_gens, '$[*]' COLUMNS (g INT PATH '$.g', f DECIMAL(12, 6) PATH '$.f')) j ON j.g = i.id
+    SET i.data = JSON_SET(i.data,
+      IF(JSON_VALUE(i.data, '$.machine.fuel') IS NULL, '$[0].machine.fuel', '$.machine.fuel'),
+      GREATEST(0, CAST(JSON_VALUE(i.data,
+        IF(JSON_VALUE(i.data, '$.machine.fuel') IS NULL, '$[0].machine.fuel', '$.machine.fuel')) AS DECIMAL(12, 6)) - j.f))
+    WHERE i.type_uname = 'Generator' AND i.x IS NOT NULL;
+  SET v_gens = ROW_COUNT();
+  UPDATE items i
+    JOIN JSON_TABLE(p_gens, '$[*]' COLUMNS (g INT PATH '$.g')) j ON j.g = i.id
+    SET i.data = JSON_REMOVE(i.data,
+      IF(JSON_VALUE(i.data, '$.machine.running') IS NULL, '$[0].machine.running', '$.machine.running'))
+    WHERE i.type_uname = 'Generator' AND i.x IS NOT NULL
+      AND COALESCE(JSON_VALUE(i.data, '$.machine.running'), JSON_VALUE(i.data, '$[0].machine.running')) IS NOT NULL
+      AND CAST(COALESCE(JSON_VALUE(i.data, '$.machine.fuel'), JSON_VALUE(i.data, '$[0].machine.fuel'), 0)
+        AS DECIMAL(12, 6)) <= 0;
+  SET v_empty = ROW_COUNT();
+  COMMIT;
+  SELECT 1 AS ok, 'OK' AS code,
+    JSON_OBJECT('generators', CAST(v_gens AS SIGNED), 'emptied', CAST(v_empty AS SIGNED)) AS payload;
 END//
 
 CREATE OR REPLACE PROCEDURE `item_create`(

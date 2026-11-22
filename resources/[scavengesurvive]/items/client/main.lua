@@ -36,6 +36,8 @@ worldCtx.floodlight = loadModule("client/floodlight.lua")({
     flood = loadModule("shared/logic/floodlight.lua"),
     lang = lang,
 })
+-- the Generator's engine and the Extension Cords plugged into a building's mains (power)
+worldCtx.power = loadModule("client/power.lua")({ machines = machines, lang = lang })
 local world = loadModule("client/world.lua")(worldCtx)
 loadModule("client/vending.lua")({ world = world, vending = worldCtx.vending })
 local carry = loadModule("shared/logic/carry.lua")
@@ -111,8 +113,8 @@ end
 
 -- the machine within reach: its id and type, or false
 function nearbyMachine()
-    local id, uname = world.nearbyMachine(2.0)
-    return id or false, uname or false
+    local id, uname, running = world.nearbyMachine(2.0)
+    return id or false, uname or false, running == true
 end
 
 -- what a Crowbar's F works on (world.crowbarTarget): id, object (or false), uname; else false

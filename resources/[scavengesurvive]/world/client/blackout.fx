@@ -10,6 +10,12 @@
 // generated camera-space position turned back by the inverse view matrix, so the pixel shader gets it as TEXCOORD1.
 // There are no shadows: the light passes through walls, which the short radius keeps to the next room. A card that
 // cannot run ps_2_a gets the plain blackout and no lights.
+//
+// A building lit by its own mains (the power resource, a Generator wired to its box) is up to two rooms,
+// RoomNMin / RoomNMax (xyz; Min.w = the light added over the night colours, Max.w = 1 while lit) and RoomNCol:
+// inside one the cap is lifted, so the building's baked night colours (its lamps' pools) show as GTA lit them, and
+// the room's light is added on top. Past the room's box the light dies off over ROOM_FADE metres, so it spills out of
+// a doorway or a ramp and fades instead of stopping at a hard edge.
 texture gTexture0 < string textureState = "0,Texture"; >;
 float4x4 gViewInverse : VIEWINVERSE;
 float Cap = 1;
@@ -27,20 +33,39 @@ float4 Light2Col = float4(0, 0, 0, 0);
 float4 Light3Pos = float4(0, 0, 0, 0);
 float4 Light3Dir = float4(0, 0, -1, 0);
 float4 Light3Col = float4(0, 0, 0, 0);
+float4 Room0Min = float4(0, 0, -10000, 0);
+float4 Room0Max = float4(0, 0, -10000, 0);
+float4 Room0Col = float4(0, 0, 0, 0);
+float4 Room1Min = float4(0, 0, -10000, 0);
+float4 Room1Max = float4(0, 0, -10000, 0);
+float4 Room1Col = float4(0, 0, 0, 0);
 
 static const float GLOW = 4.0; // metres round the lamp lit whichever way they lie
 static const float GLOW_SHARE = 0.35;
 static const float MAX_LIGHT = 1.6;
+static const float ROOM_FADE = 4.0;
 
 sampler Sampler0 = sampler_state
 {
     Texture = (gTexture0);
 };
 
-float3 capped(float4 diffuse)
+float3 cappedAt(float4 diffuse, float cap)
 {
     float peak = max(max(diffuse.r, diffuse.g), max(diffuse.b, 0.0001));
-    return diffuse.rgb * min(1, Cap / peak);
+    return diffuse.rgb * min(1, cap / peak);
+}
+
+float3 capped(float4 diffuse)
+{
+    return cappedAt(diffuse, Cap);
+}
+
+// 1 inside the room while it is lit, falling to 0 at ROOM_FADE metres outside its box, else 0
+float inside(float4 mn, float4 mx, float3 wp)
+{
+    float3 past = max(max(mn.xyz - wp, wp - mx.xyz), 0);
+    return saturate(1 - length(past) / ROOM_FADE) * mx.w;
 }
 
 float3 spot(float4 pos, float4 dir, float4 col, float3 wp)
@@ -57,7 +82,11 @@ float4 psLit(float4 diffuse : COLOR0, float2 uv : TEXCOORD0, float3 wp : TEXCOOR
 {
     float3 added = spot(Light0Pos, Light0Dir, Light0Col, wp) + spot(Light1Pos, Light1Dir, Light1Col, wp)
         + spot(Light2Pos, Light2Dir, Light2Col, wp) + spot(Light3Pos, Light3Dir, Light3Col, wp);
-    float3 light = min(capped(diffuse) + added * Gain, MAX_LIGHT);
+    float in0 = inside(Room0Min, Room0Max, wp);
+    float in1 = inside(Room1Min, Room1Max, wp);
+    float room = saturate(in0 + in1);
+    added += Room0Col.rgb * Room0Min.w * in0 + Room1Col.rgb * Room1Min.w * in1;
+    float3 light = min(cappedAt(diffuse, lerp(Cap, 1, room)) + added * Gain, MAX_LIGHT);
     return tex2D(Sampler0, uv) * float4(light, diffuse.a);
 }
 

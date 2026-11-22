@@ -21,10 +21,10 @@ M.TOW_ACCEL_FLOOR = 0.4 -- the tower never drops below this share of its stock a
 M.GAS_CAPACITY = { Canister = 20, GasBottle = 11 }
 M.HOSE = 2.5 -- metres of hose: gas lying this near a Welder can be hooked up to it
 M.GAS_PER_HP = 0.44 -- kg of gas a weld burns per hitpoint the defence can take: a 5 HP panel is 2.2 kg
-M.FUEL_PER_WELD = 5 -- Generator fuel (of 100) one weld burns
+M.FUEL_PER_WELD = 0.05 -- litres of the Generator's fuel one weld burns (8 s near its rated load)
 M.WELD_MS = 8000
 M.PRY_MS = 3000 -- a Crowbar taking an attached panel off
-M.GENERATOR_REACH = 8.0 -- the Welder's cable: a Generator with fuel this near the Welder powers it
+M.GENERATOR_REACH = 8.0 -- the Welder's cable: a running Generator with fuel this near the Welder powers it
 M.LEAD = 5.0 -- metres of lead between the Welder and its torch
 M.WORK_REACH = 1.6 -- the player this near a panel's box welds or pries it
 M.ATTACH_REACH = 4.5 -- the player this near the spot a panel is attached to

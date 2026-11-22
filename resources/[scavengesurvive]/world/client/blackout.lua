@@ -4,6 +4,8 @@
 -- can switch the city back on for themselves with /lights (staff moderation.lua) to look at something.
 -- A Flood Light (items) registers its light here (setLight / removeLight); the shader draws the MAX_LIGHTS of them
 -- nearest the camera in the player's interior and dimension onto the buildings and objects round them.
+-- A building lit by its own mains (power: a Generator wired to its box) registers its room (setRoomLight /
+-- removeRoomLight); inside the MAX_ROOMS of them in the player's interior and dimension the cap is lifted.
 local PROPERTIES = {
     SpriteBrightness = 0, -- the coronas of every 2DFX light (lamps, traffic lights, signs)
     LightsOnGround = 0, -- the light pools those lamps cast on roads and walls
@@ -42,6 +44,8 @@ local on = true
 local shader
 local lights = {} -- id -> { x, y, z, dx, dy, dz, radius, r, g, b, interior, dimension }
 local lightsDirty = true
+local MAX_ROOMS = 2 -- client/blackout.fx's Room0 .. Room1
+local rooms = {} -- id -> { x1, y1, z1, x2, y2, z2, r, g, b, fill, interior, dimension }
 
 -- GTA's own day/night balance for building colours (CCustomBuildingRenderer::UpdateDayNightBalanceParam): night
 -- until 06:00, fading out by 07:00, day until 20:00, fading in by 21:00
@@ -135,6 +139,66 @@ function setLight(id, x, y, z, dx, dy, dz, radius, r, g, b, interior, dimension)
     return true
 end
 
+-- the rooms in the player's interior and dimension go into the shader (the first MAX_ROOMS by id), the rest dark
+local function updateRooms()
+    if not shader then
+        return
+    end
+    local int, dim = getElementInterior(localPlayer), getElementDimension(localPlayer)
+    local ids = {}
+    for id, r in pairs(rooms) do
+        if r.interior == int and r.dimension == dim then
+            ids[#ids + 1] = id
+        end
+    end
+    table.sort(ids)
+    for i = 0, MAX_ROOMS - 1 do
+        local r = rooms[ids[i + 1] or ""]
+        local key = "Room" .. i
+        if r then
+            dxSetShaderValue(shader, key .. "Min", r.x1, r.y1, r.z1, r.fill)
+            dxSetShaderValue(shader, key .. "Max", r.x2, r.y2, r.z2, 1)
+            dxSetShaderValue(shader, key .. "Col", r.r, r.g, r.b, 1)
+        else
+            dxSetShaderValue(shader, key .. "Min", 0, 0, -10000, 0)
+            dxSetShaderValue(shader, key .. "Max", 0, 0, -10000, 0)
+        end
+    end
+end
+
+-- export: a room lit by its building's mains (an id of the caller's own, e.g. "mains:<site>"): the box x1 .. x2,
+-- y1 .. y2, z1 .. z2, the light's colour r, g, b (0 .. 1) and how much it adds (fill), in that interior and dimension
+function setRoomLight(id, x1, y1, z1, x2, y2, z2, r, g, b, fill, interior, dimension)
+    if type(id) ~= "string" or not tonumber(x1) or not tonumber(x2) then
+        return false
+    end
+    rooms[id] = {
+        x1 = math.min(x1, x2),
+        y1 = math.min(y1, y2),
+        z1 = math.min(z1, z2),
+        x2 = math.max(x1, x2),
+        y2 = math.max(y1, y2),
+        z2 = math.max(z1, z2),
+        r = tonumber(r) or 1,
+        g = tonumber(g) or 1,
+        b = tonumber(b) or 1,
+        fill = tonumber(fill) or 0.3,
+        interior = tonumber(interior) or 0,
+        dimension = tonumber(dimension) or 0,
+    }
+    updateRooms()
+    return true
+end
+
+-- export: the room's light is gone
+function removeRoomLight(id)
+    if rooms[id] then
+        rooms[id] = nil
+        updateRooms()
+    end
+    return true
+end
+
 -- export: the light is gone
 function removeLight(id)
     if lights[id] then
@@ -169,6 +233,9 @@ addEventHandler("onClientResourceStart", resourceRoot, function()
         dxSetShaderValue(shader, "Cone", CONE[1], CONE[2])
         setTimer(updateCap, 1000, 0)
         setTimer(updateLights, 250, 0)
+        -- a change of interior or dimension changes which rooms count
+        setTimer(updateRooms, 1000, 0)
+        updateRooms()
     end
     apply()
 end)

@@ -2,8 +2,9 @@
 --   a Tool Battery in hand used on one lying there goes into it (the battery item is used up, its charge kept);
 --   the interaction chooser at one (client/floodlight.lua) switches it on or off (floodLightActionRequested "toggle")
 --     and takes its battery out into the empty hands ("battery");
---   every TICK_MS the lit ones draw their power in one floodlight_drain call: from the nearest fuelled Generator
---     within its cable, else from the battery; one with neither goes dark and every client is sent it again;
+--   every TICK_MS the lit ones draw their power in one floodlight_drain call: a running Generator within its cable
+--     powers it (the Generator's burn, server/generators.lua, counts the light's load), else the battery does; one
+--     with neither goes dark and every client is sent it again;
 --   picked up, it switches off.
 -- ctx = { db, net, state, toast, world, hands, destroy, charId, decodeData, updateHeldData, flood, machines } built by
 -- server/main.lua.
@@ -67,18 +68,16 @@ return function(ctx)
         return getDistanceBetweenPoints3D(a.x, a.y, a.z, b.x, b.y, b.z)
     end
 
-    local function fuelOf(gen)
-        return machines.state(decodeData(gen.data)).fuel
+    local function running(gen)
+        return machines.state(decodeData(gen.data)).running == true
     end
 
-    -- the nearest Generator in `gens` within the cable of `light` with at least `need` fuel left (fuel read through
-    -- fuelOf, or the gen's .fuel when the tick tracks it), or nil
-    local function nearestGenerator(gens, light, need)
+    -- the nearest running Generator in `gens` within the cable of `light`, or nil
+    local function nearestGenerator(gens, light)
         local best, bestDist = nil, flood.GENERATOR_REACH
         for _, g in ipairs(gens) do
             local d = sameWorld(g, light) and dist(g, light)
-            local fuel = g.fuel or fuelOf(g)
-            if d and d <= bestDist and fuel >= need then
+            if d and d <= bestDist and running(g) then
                 best, bestDist = g, d
             end
         end
@@ -89,7 +88,7 @@ return function(ctx)
         local r = flood.GENERATOR_REACH
         local params = { row.interior or 0, row.dimension or 0, row.x, r, row.y, r }
         db.query(GENERATORS_NEAR, params, function(gens)
-            cb(nearestGenerator(gens or {}, row, flood.fuelDraw(flood.TICK_MS / 1000)))
+            cb(nearestGenerator(gens or {}, row))
         end)
     end
 
@@ -287,18 +286,10 @@ return function(ctx)
             end
             db.query(GENERATORS, {}, function(gens)
                 gens = gens or {}
-                for _, g in ipairs(gens) do
-                    g.fuel = fuelOf(g)
-                end
-                local seconds = flood.TICK_MS / 1000
-                local need, draw = flood.fuelDraw(seconds), flood.batteryDraw(seconds)
-                local lightRows, genDraws, dark = {}, {}, {}
+                local draw = flood.batteryDraw(flood.TICK_MS / 1000)
+                local lightRows, dark = {}, {}
                 for _, light in ipairs(lights) do
-                    local gen = nearestGenerator(gens, light, need)
-                    if gen then
-                        gen.fuel = gen.fuel - need
-                        genDraws[gen.id] = (genDraws[gen.id] or 0) + need
-                    else
+                    if not nearestGenerator(gens, light) then
                         local d = flood.data(decodeData(light.data))
                         local battery = d.battery or 0
                         if battery > draw then
@@ -311,13 +302,8 @@ return function(ctx)
                         lightRows[#lightRows + 1] = { l = light.id, o = raw(light), d = encode(d) }
                     end
                 end
-                local genRows = {}
-                for id, f in pairs(genDraws) do
-                    genRows[#genRows + 1] = { g = id, f = f }
-                end
                 local lj = #lightRows > 0 and encode(lightRows) or "[]"
-                local gj = #genRows > 0 and encode(genRows) or "[]"
-                db.call("floodlight_drain", { lj, gj }, function(res)
+                db.call("floodlight_drain", { lj, "[]" }, function(res)
                     if not res or not res.ok then
                         log.event("floodlight.drained", { ok = false, code = res and res.code or "DB_ERROR" }, "warn")
                         return

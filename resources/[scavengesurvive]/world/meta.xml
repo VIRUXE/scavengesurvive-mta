@@ -43,6 +43,8 @@
     <export function="tryInteract" type="client"/>
     <export function="setLight" type="client"/>
     <export function="removeLight" type="client"/>
+    <export function="setRoomLight" type="client"/>
+    <export function="removeRoomLight" type="client"/>
     <export function="nearbyFeature" type="client"/>
     <export function="interactionActions" type="client"/>
     <export function="chooseInteraction" type="client"/>

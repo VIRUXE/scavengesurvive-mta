@@ -82,11 +82,21 @@ then runs itself in Blender (DragonFF) for each prop's dff and col.
                      wheel on a wall bracket; origin under the wheel at the loop's lowest point, the wall at -y (HOIST_*).
                      Harry Plums' warehouse door in Doherty (world/shared/logic/doors.lua).
 
+    mains_box 20307  a worn 0.40 x 0.50 x 0.18 m wall isolator enclosure, hinged door, warning plate, blue CEE inlet
+                     and 0.25 m conduit. Origin at the centre of the back, wall Y=0, front +Y. Separate handle at
+                     MAINS_LEVER_PIVOT = (-0.085, 0.209, -0.015); cord starts at MAINS_INLET = (0.11, 0.247, -0.14).
+                     One enclosing collision box, including conduit and inlet; vanilla textures in MAINS_TEXTURES.
+    mains_lever 20308  a red 0.18 m isolator handle with black hub; origin at the pivot, OFF points +Z, ON is a
+                     +90 degree rotation about Y (points +X). A tiny collision box confined to the hub.
+    cord_coil 20309  a roughly 0.30 m coil of 12 mm yellow-orange cable, four hand-wound turns with two trailing
+                     ends: blue three-pin CEE plug and black/orange covered socket. Origin on the floor, one box
+                     of collision; vanilla yellow with orange prelight and blue plastic (CORD_TEXTURES).
+
     flood_light 20300  a halogen site work light on a tripod, 1.57 m tall: black legs and lower mast, a chrome upper mast,
                      a yellow lamp head on a black yoke, its face (the SF light tower's ws_floodlight reflector) toward +Y
                      and FLOOD_TILT degrees down; the light comes from FLOOD_LAMP along FLOOD_AIM. The Flood Light item.
 
-Origin (except welder_torch, grinder, ratchet and tow_bar): the centre of the base (x, y) with z = 0 at the lowest point; the front faces +Y.
+Origin (except welder_torch, grinder, ratchet, tow_bar, mains_box and mains_lever): the centre of the base (x, y) with z = 0 at the lowest point; the front faces +Y.
 """
 from __future__ import annotations
 
@@ -2197,6 +2207,137 @@ def build_flood_light(ctx):
     return [((0.0, 0.0, 0.67), (0.05, 0.05, 0.67)), ((0.0, 0.0, hz), (0.2, 0.09, 0.15))]
 
 
+MAINS_LEVER_PIVOT = (-0.085, 0.209, -0.015)  # back-centred mains_box space, axis +Y
+MAINS_INLET = (0.11, 0.247, -0.14)  # centre of the blue inlet's mouth, facing +Y
+MAINS_TEXTURES = [("ship_brijsfw.txd", "fusebox2_128"), ("ballys01.txd", "CJ_blackplastic"), ("milbase.txd", "lightblue_64"), ("cj_airprt.txd", "CJ_red_COUNTER"), ("gazsfnlite.txd", "fusebox1_128"), ("industrialext.txd", "cj_chromepipe"), ("helixbarrier.txd", "yellow")]
+LEVER_TEXTURES = [("ballys01.txd", "CJ_blackplastic"), ("cj_airprt.txd", "CJ_red_COUNTER"), ("industrialext.txd", "cj_chromepipe")]
+CORD_TEXTURES = [("helixbarrier.txd", "yellow"), ("ballys01.txd", "CJ_blackplastic"), ("industrialext.txd", "cj_chromepipe"), ("milbase.txd", "lightblue_64")]
+POWER_BLUE = (0.25, 0.42, 1.0, 1.0)  # blue prelight on the opaque vanilla lightblue_64
+
+
+def build_mains_box(ctx):
+    """Wall at Y=0, front +Y, back-centred origin. MAINS_LEVER_PIVOT=(-0.085, 0.209, -0.015),
+    MAINS_INLET=(0.11, 0.247, -0.14). The lever is a separate DFF, with a clear 90 degree +Y sweep."""
+    bm, box, paint = ctx["bm"], ctx["box"], ctx["paint"]
+    steel, black, plastic, red, label, chrome, yellow = range(7)
+    tube = _tube(ctx)
+    blue_tube = tube
+    white, dim = (0.92, 0.92, 0.90, 1.0), (0.50, 0.50, 0.48, 1.0)
+    # Folded steel housing with a narrow dark gasket behind the raised door; all back faces on/inside Y=0.
+    box((0.0, 0.082, 0.0), (0.40, 0.164, 0.50), steel, white)
+    box((0.0, 0.166, 0.0), (0.378, 0.008, 0.478), black, None)
+    box((0.0, 0.175, 0.0), (0.368, 0.010, 0.468), steel, white)
+    for z in (-0.16, 0.16):
+        tube((-0.19, 0.176, z - 0.025), (-0.19, 0.176, z + 0.025), 0.009, 8, steel, dim, False)
+    box((0.166, 0.185, 0.015), (0.015, 0.010, 0.042), black, None)  # door latch
+    tube((0.166, 0.190, 0.015), (0.166, 0.194, 0.015), 0.004, 6, chrome, dim, False)
+    # Small identification plate: the printed lower strip of the vanilla fusebox, only on the front.
+    box((0.0, 0.184, 0.188), (0.146, 0.006, 0.044), black, None)
+    f = bm.faces.new([bm.verts.new(p) for p in ((0.068, 0.188, 0.169), (-0.068, 0.188, 0.169), (-0.068, 0.188, 0.207), (0.068, 0.188, 0.207))])
+    paint(f, [(0.29, 0.04), (0.71, 0.04), (0.71, 0.17), (0.29, 0.17)], white, (0.28, 0.28, 0.28, 1.0), label)
+    # Red-bordered yellow electrical hazard label; a black lightning silhouette made from two convex faces.
+    box((0.095, 0.184, 0.085), (0.100, 0.006, 0.100), red, None)
+    box((0.095, 0.188, 0.085), (0.088, 0.003, 0.088), yellow, white)
+    for points in (((0.010, 0.032), (-0.018, -0.005), (0.006, -0.005)), ((-0.006, 0.005), (0.018, 0.005), (-0.010, -0.032))):
+        face = bm.faces.new([bm.verts.new((0.095 + x, 0.190, 0.085 + z)) for x, z in points])
+        paint(face, [(0, 0), (1, 0), (1, 1)], (0.15, 0.15, 0.15, 1.0), (0.045, 0.045, 0.045, 1.0), black)
+    # Yellow isolator bezel, black stationary boss; no handle geometry in this model.
+    x, y, z = MAINS_LEVER_PIVOT
+    box((x, 0.184, z), (0.126, 0.006, 0.126), yellow, white)
+    tube((x, 0.187, z), (x, 0.201, z), 0.044, 16, black, None, False)
+    tube((x, 0.201, z), (x, y, z), 0.022, 12, chrome, dim, False)
+    # CEE 16 A inlet: mounting flange, blue barrel, dark inset mouth and three metal pins.
+    x, y, z = MAINS_INLET
+    box((x, 0.187, z), (0.092, 0.014, 0.106), plastic, POWER_BLUE)
+    blue_tube((x, 0.194, z), (x, y - 0.012, z), 0.037, 16, plastic, POWER_BLUE, False)
+    _torus(ctx, (x, y - 0.003, z), 0.0335, 0.004, 16, 6, plastic, POWER_BLUE, axis="y")
+    tube((x, y - 0.009, z), (x, y - 0.008, z), 0.029, 16, black, None, False)
+    for dx, dz in ((-0.012, 0.009), (0.012, 0.009), (0.0, -0.013)):
+        tube((x + dx, y - 0.008, z + dz), (x + dx, y - 0.002, z + dz), 0.003, 6, chrome, white, False)
+    # Flip cover hinged above the mouth, visibly raised rather than obscuring the connection point.
+    blue_tube((x - 0.040, 0.215, z + 0.041), (x + 0.040, 0.215, z + 0.041), 0.006, 8, plastic, POWER_BLUE, False)
+    blue_tube((x, 0.212, z + 0.070), (x, 0.220, z + 0.070), 0.035, 16, plastic, POWER_BLUE, False)
+    # Top cable gland and grey conduit, 0.25 m beyond the cabinet; open dark cut end.
+    tube((0.075, 0.075, 0.245), (0.075, 0.075, 0.271), 0.024, 10, steel, dim, False)
+    tube((0.075, 0.075, 0.265), (0.075, 0.075, 0.500), 0.016, 10, steel, white, False)
+    tube((0.075, 0.075, 0.500), (0.075, 0.075, 0.501), 0.012, 10, black, None, False)
+    return [((0.0, 0.124, 0.1255), (0.20, 0.124, 0.3755))]
+
+
+def build_mains_lever(ctx):
+    """Origin exactly at the Y-axis pivot; OFF points +Z, ON rotates +90 degrees about Y to +X.
+    Fit without offset/rotation at MAINS_LEVER_PIVOT on the box. Overall height 0.18 m including the hub."""
+    box, tube = ctx["box"], _tube(ctx)
+    black, red, chrome = 0, 1, 2
+    tube((0, 0, 0), (0, 0.026, 0), 0.027, 16, black, None, False)
+    tube((0, 0.027, 0), (0, 0.030, 0), 0.009, 8, chrome, (0.7, 0.7, 0.7, 1), False)
+    box((0, 0.018, 0.058), (0.021, 0.022, 0.100), black, None)
+    box((0, 0.020, 0.106), (0.034, 0.030, 0.060), red, None)
+    tube((0, 0.005, 0.136), (0, 0.035, 0.136), 0.017, 12, red, None, False)
+    return [((0.0, 0.013, 0.0), (0.018, 0.013, 0.018))]
+
+
+def _cord_sweep(ctx, points, material, col):
+    """Continuous six-sided 12 mm cable with shared bend rings, closed end caps, no overlapping cylinders."""
+    from mathutils import Vector
+    path = [Vector(p) for p in points]
+    bm, paint, rings = ctx["bm"], ctx["paint"], []
+    night = (col[0] * 0.3, col[1] * 0.3, col[2] * 0.32, 1.0)
+    for i, p in enumerate(path):
+        tangent = (path[min(i + 1, len(path) - 1)] - path[max(i - 1, 0)]).normalized()
+        side = tangent.cross(Vector((0, 0, 1))).normalized()
+        up = side.cross(tangent).normalized()
+        rings.append([bm.verts.new(p + 0.006 * (side * math.cos(k * math.tau / 6) + up * math.sin(k * math.tau / 6))) for k in range(6)])
+    run = 0.0
+    for i, (a, b) in enumerate(zip(rings, rings[1:])):
+        u0 = run / 0.30
+        run += (path[i + 1] - path[i]).length
+        u1 = run / 0.30
+        for k in range(6):
+            j = (k + 1) % 6
+            paint(bm.faces.new((a[k], a[j], b[j], b[k])), [(u0, k / 6), (u0, (k + 1) / 6), (u1, (k + 1) / 6), (u1, k / 6)], col, night, material)
+    for ring in (rings[0], rings[-1]):
+        paint(bm.faces.new(ring), [(0.5, 0.5)] * 6, col, night, material)
+
+
+def build_cord_coil(ctx):
+    """Four turns of 12 mm orange rubber cable, coil about 0.30 m across, blue CEE male and black/orange
+    covered female heads on opposite trailing ends. Ground-centred origin and one collision box."""
+    tube = _tube(ctx)
+    white = (0.95, 0.95, 0.95, 1.0)
+    orange = (1.0, 0.66, 0.32, 1.0)  # warm yellow-orange cable, using SA's day/night prelight
+    path = [(-0.182, -0.178, 0.025), (-0.147, -0.164, 0.016), (-0.105, -0.128, 0.006), (-0.040, -0.103, 0.006)]
+    for i in range(4 * 28 + 1):
+        a = -math.pi / 2 + math.tau * i / 28
+        lap = i / 28
+        r = 0.090 + 0.014 * lap + 0.002 * math.sin(3 * a + lap)
+        path.append((r * math.cos(a), r * math.sin(a), 0.006 + 0.0035 * lap + 0.001 * math.sin(a) ** 2))
+    path += [(0.068, -0.159, 0.009), (0.146, -0.148, 0.012), (0.184, -0.108, 0.027)]
+    _cord_sweep(ctx, path, 0, orange)
+    # Male plug axis follows its cable tail, with a moulded strain relief, blue locking collar and three pins.
+    from mathutils import Vector
+    def at(p, direction, t):
+        return Vector(p) + Vector(direction) * t
+    p, direction = path[0], (-0.94, -0.34, 0)
+    tube(at(p, direction, -0.004), at(p, direction, 0.018), 0.010, 8, 1, None, False)
+    tube(at(p, direction, 0.016), at(p, direction, 0.060), 0.023, 12, 3, POWER_BLUE, False)
+    tube(at(p, direction, 0.055), at(p, direction, 0.071), 0.027, 12, 3, POWER_BLUE, False)
+    tube(at(p, direction, 0.071), at(p, direction, 0.073), 0.021, 12, 1, None, False)
+    side = Vector((0.34, -0.94, 0))
+    for dx, dz in ((-0.009, 0.006), (0.009, 0.006), (0, -0.010)):
+        offset = side * dx + Vector((0, 0, dz))
+        tube(at(p, direction, 0.073) + offset, at(p, direction, 0.086) + offset, 0.003, 6, 2, white, False)
+    # Female head: rubber boot, orange safety collar and a closed black weather flap with thumb tab.
+    p, direction = path[-1], (0.60, 0.80, 0)
+    tube(at(p, direction, -0.004), at(p, direction, 0.021), 0.011, 8, 1, None, False)
+    tube(at(p, direction, 0.018), at(p, direction, 0.065), 0.026, 12, 1, None, False)
+    tube(at(p, direction, 0.046), at(p, direction, 0.062), 0.028, 12, 0, orange, False)
+    tube(at(p, direction, 0.064), at(p, direction, 0.071), 0.027, 12, 1, None, False)
+    ctx["box"](at(p, direction, 0.067) + Vector((0, 0, 0.026)), (0.018, 0.014, 0.008), 1, None)
+    hx, hy, hz = _ground(ctx)
+    return [((0.0, 0.0, hz), (hx, hy, hz))]
+
+
 PROPS_TABLE = [
     {"name": "ls_hatch", "id": 20201, "dist": 150, "source": "zombtest1.txd", "textures": ["pave_manhole1"], "build": build_ls_hatch},
     {"name": "welder", "id": 20202, "dist": 100, "source": "dynbarrels.txd", "textures": ["redmetal", "yellowmetal", "alumplat64"], "build": build_welder},
@@ -2242,6 +2383,9 @@ PROPS_TABLE = [
     {"name": "dirty_bandage", "id": 20299, "dist": 30, "sources": BANDAGE_TEXTURES, "build": build_dirty_bandage},
     {"name": "flood_light", "id": 20300, "dist": 120, "sources": FLOOD_TEXTURES, "build": build_flood_light},
     {"name": "shutter_chain", "id": 20306, "dist": 80, "sources": HOIST_TEXTURES, "build": build_shutter_chain},
+    {"name": "mains_box", "id": 20307, "dist": 80, "sources": MAINS_TEXTURES, "build": build_mains_box},
+    {"name": "mains_lever", "id": 20308, "dist": 50, "sources": LEVER_TEXTURES, "build": build_mains_lever},
+    {"name": "cord_coil", "id": 20309, "dist": 50, "sources": CORD_TEXTURES, "build": build_cord_coil},
     # the explosives' trigger variants (items <Base><TRIGGERS[kind]>, e.g. TntTimebomb)
     {"name": "tnt_timer", "id": 20284, "dist": 50, "sources": with_triggers(TNT_TEXTURES), "build": lambda ctx, k="timer", s=with_triggers(TNT_TEXTURES): build_tnt(ctx, k, s)},
     {"name": "tnt_trip", "id": 20285, "dist": 50, "sources": with_triggers(TNT_TEXTURES), "build": lambda ctx, k="trip", s=with_triggers(TNT_TEXTURES): build_tnt(ctx, k, s)},
@@ -2309,6 +2453,7 @@ def render_meta(out_dir: Path) -> str:
         '    <min_mta_version server="1.6.0" client="1.6.0-9.21695"/>',
         "    <download_priority_group>90</download_priority_group>",
         '    <include resource="lib"/>',
+        '    <script src="server/main.lua" type="server"/>',
         '    <script src="client/main.lua" type="client"/>',
         '    <file src="props.lua"/>',
     ]

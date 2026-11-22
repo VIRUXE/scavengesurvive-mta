@@ -16,6 +16,7 @@ return function(ctx)
     local furniture = ctx.furniture
     local vending = ctx.vending
     local floodlight = ctx.floodlight
+    local power = ctx.power
     local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")()
     local surface = loadstring(exports.lib:getModule("surface"), "=lib/surface.lua")()
     local SIGN_RANGE = 25 -- metres a sign's text can be read from
@@ -145,6 +146,9 @@ return function(ctx)
         end
         if r.uname == "FloodLight" then
             return floodlight.label(t and t.name or r.uname, r.data)
+        end
+        if r.uname == machines.GENERATOR_UNAME then
+            return power.label(t and t.name or r.uname, r.data)
         end
         if r.uname == gardening.BAG then
             return gardening.seedLabel(t and t.name or r.uname, gardening.seedsFor(r.id, r.data))
@@ -333,6 +337,7 @@ return function(ctx)
                 destroyElement(e.smoke)
             end
             floodlight.clear(id, e)
+            power.clear(id, e)
             if isElement(e.shown) then
                 destroyElement(e.shown)
             end
@@ -963,6 +968,7 @@ return function(ctx)
                 updatePlant(e, r)
                 updateSmoke(e, r)
                 floodlight.update(r.id, e, r)
+                power.update(r.id, e, r)
                 updateShown(e, r)
                 updateCovering(e, r)
                 updateVending(e, r)
@@ -988,6 +994,7 @@ return function(ctx)
                 updatePlant(e, r)
                 updateSmoke(e, r)
                 floodlight.update(r.id, e, r)
+                power.update(r.id, e, r)
                 updateShown(e, r)
                 updateCovering(e, r)
                 updateVending(e, r)
@@ -1224,7 +1231,7 @@ return function(ctx)
                 local dx, dy, dz = e.x - px, e.y - py, e.z - pz
                 local same = (r.dimension or 0) == dim and (r.interior or 0) == int
                 if same and dx * dx + dy * dy <= reach * reach and math.abs(dz) < 3 and inReach(id, e) then
-                    return id, e.uname
+                    return id, e.uname, machines.state(r.data).running == true
                 end
             end
         end
@@ -1318,6 +1325,9 @@ return function(ctx)
     -- Explicit targets for the shared interaction chooser; never substitute a nearer item on selection. With
     -- something in hand (uname) only the build entries of a Hammer.
     function M.interactionActions(uname)
+        if uname == power.CORD_UNAME then
+            return power.heldActions(uname)
+        end
         if uname then
             return buildActions(uname)
         end
@@ -1355,8 +1365,16 @@ return function(ctx)
                     verb, event = lang.text("Inspect plant pot"), "potInspectRequested"
                 elseif e.uname == "Torso" then
                     verb, event = lang.text("Investigate"), "bodyInspectRequested"
+                elseif e.uname == power.CORD_UNAME and power.isPlugged(id) then
+                    -- a plugged cord comes out only at its ends: here at the box, or at its Generator
+                    verb, event = lang.text("Unplug the cord"), "cordUnplugRequested"
                 elseif e.uname == machines.GENERATOR_UNAME then
-                    verb = lang.text("Check fuel") -- the lift is the carry entry below
+                    for _, a in ipairs(power.generatorActions(id, obj)) do
+                        actions[#actions + 1] = a
+                    end
+                    -- the lift is the carry entry below
+                    verb = machines.state(r.data).running and lang.text("Stop generator")
+                        or lang.text("Start generator")
                 elseif machines.isMachine(e.uname) then
                     verb = lang.text("Access machine")
                 end

@@ -1,6 +1,7 @@
 -- server-local (triggered and handled on one side, or between resources)
 addEvent("itemCreated", false)
 addEvent("itemMoved", false)
+addEvent("mainsLeverChanged", false) -- power: a lever pulled (site id, on), or (nil, nil) for every site's feed
 addEvent("itemHolstered", false) -- a held item put on the holster (tutorial tip)
 addEvent("itemPickupAttempted", false) -- cancellable: anticheat vetoes the pickup of a hacker trap
 addEvent("itemDestroyed", false)
@@ -44,6 +45,8 @@ addEvent("machineMenuRequested", true)
 addEvent("machineHoldReleased", true)
 addEvent("machineStartRequested", true)
 addEvent("floodLightActionRequested", true) -- the interaction chooser at a Flood Light: "toggle" or "battery"
+addEvent("cordPlugRequested", true) -- an Extension Cord in hand at a mains inlet (power): the site id
+addEvent("cordUnplugRequested", true) -- the chooser at a plugged cord's box or Generator: the cord's item id
 addEvent("parachuteSpent", true)
 addEvent("vendingGlassHit", true)
 addEvent("itemGroundMeasured", true)

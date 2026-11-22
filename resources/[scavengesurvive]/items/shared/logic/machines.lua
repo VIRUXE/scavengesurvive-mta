@@ -2,8 +2,9 @@
 -- water-purifier.pwn): three constructed items, each with a 12-slot container and a fuel tank filled from a Petrol
 -- Can. A cook runs 90 s per item plus up to 30 s, burns 3.5 fuel per item and turns the contents into Scrap Metal
 -- (by the scrap value of each item, anything else destroyed), Refined Metal (one per Scrap Metal) or Water (every
--- bottle of sea water, its amount kept). State is the machine's item data: { machine = { fuel, cooking = { at, ms } } }
--- with at the cook's unix start and ms its length. Pure: no MTA calls at file scope.
+-- bottle of sea water, its amount kept). State is the machine's item data: { machine = { fuel, cooking = { at, ms },
+-- running } } with at the cook's unix start and ms its length; running = 1 while a Generator's engine runs. Pure: no
+-- MTA calls at file scope.
 local M = {}
 
 -- M.tr(text): a label word in the reader's language; the client sets it to lib lang.text, identity elsewhere
@@ -14,7 +15,10 @@ local function tr(s)
     return M.tr(s)
 end
 
--- Generator is the port's own: a fuel-only machine (no container, no cook) that powers the Welder (vehicles, carmour)
+-- Generator is the port's own: a fuel-only machine (no container, no cook) that powers the Welder (vehicles, carmour),
+-- the Flood Light and a building's mains (power). It is a Honda EU2200i: a 3.6 L tank, its engine started and
+-- stopped by hand, burning GEN_IDLE_LPH at no load up to GEN_FULL_LPH at its GEN_RATED_W (Honda's figures: 8.1 h on a
+-- tank at a quarter load, 3.2 h at the rated one). Its fuel is in litres, the Petrol Can's own unit.
 M.TYPES = { ScrapMachine = "scrap", RefineMachine = "refine", WaterMachine = "water", Generator = "generator" }
 M.GENERATOR_UNAME = "Generator"
 M.CONTAINER_SIZE = 12 -- DefineMachineType(..., 12)
@@ -24,6 +28,11 @@ M.MAX_ITEMS = 12 -- MAX_MACHINE_ITEMS: the scrap machine yields at most MAX_ITEM
 M.COOK_S_PER_ITEM = 90 -- machine.pwn _machine_StartCooking: (itemcount * 90) + random(30)
 M.COOK_JITTER_S = 30
 M.REFUEL_STEP = 1.1 -- machine.pwn OnHoldActionUpdate: 1.1 a tick from the can into the tank
+M.GEN_TANK = 3.6 -- litres
+M.GEN_REFUEL_STEP = 0.06 -- litres a tick from the can (a full tank in 6 s)
+M.GEN_RATED_W = 1800
+M.GEN_IDLE_LPH = 0.3 -- litres an hour at no load (Eco Throttle)
+M.GEN_FULL_LPH = 1.05 -- litres an hour at the rated load
 M.REFUEL_TICK_MS = 100
 M.REFUEL_REACH = 4.0 -- the hold ends when the player walks off (the side container's own limit)
 M.RESULTS = { scrap = "ScrapMetal", refine = "RefinedMetal", water = "Bottle" }
@@ -165,11 +174,23 @@ local function unwrap(data)
     return data
 end
 
--- { fuel, cooking = { at, ms } | nil } from the item data (either JSON shape)
+-- the kind's tank: litres for the Generator, upstream's fuel units for the others
+function M.maxFuel(kind)
+    return kind == "generator" and M.GEN_TANK or M.MAX_FUEL
+end
+
+-- litres a Generator burns in `seconds` with `watts` of load on it
+function M.genBurn(watts, seconds)
+    local load = math.max(0, math.min(1, (tonumber(watts) or 0) / M.GEN_RATED_W))
+    return (M.GEN_IDLE_LPH + (M.GEN_FULL_LPH - M.GEN_IDLE_LPH) * load) * seconds / 3600
+end
+
+-- { fuel, cooking = { at, ms } | nil, running = true | nil } from the item data (either JSON shape)
 function M.state(data)
     local m = unwrap(data).machine
     m = type(m) == "table" and m or {}
     local st = { fuel = math.max(0, tonumber(m.fuel) or 0), cooking = nil }
+    st.running = (tonumber(m.running) == 1 and st.fuel > 0) or nil
     local c = type(m.cooking) == "table" and m.cooking or nil
     if c and tonumber(c.at) and tonumber(c.ms) then
         st.cooking = { at = tonumber(c.at), ms = tonumber(c.ms) }
@@ -184,7 +205,7 @@ function M.encode(data, st)
     for k, v in pairs(d) do
         out[k] = v
     end
-    out.machine = { fuel = st.fuel }
+    out.machine = { fuel = st.fuel, running = st.running and 1 or nil }
     if st.cooking then
         out.machine.cooking = { at = st.cooking.at, ms = st.cooking.ms }
     end
@@ -219,19 +240,24 @@ function M.petrolIn(t, data, liquids)
     return amount
 end
 
--- one refuel tick: the tank and the can after up to REFUEL_STEP moved, and whether the hold is over (tank full
--- or can empty)
-function M.refuelStep(fuel, canAmount)
-    local move = math.min(M.REFUEL_STEP, canAmount, M.MAX_FUEL - fuel)
+-- one refuel tick: the tank and the can after up to a step moved, and whether the hold is over (tank full or can
+-- empty)
+function M.refuelStep(fuel, canAmount, kind)
+    local max = M.maxFuel(kind)
+    local step = kind == "generator" and M.GEN_REFUEL_STEP or M.REFUEL_STEP
+    local move = math.min(step, canAmount, max - fuel)
     if move <= 0 then
         return fuel, canAmount, true
     end
     fuel, canAmount = fuel + move, canAmount - move
-    return fuel, canAmount, fuel >= M.MAX_FUEL or canAmount <= 0
+    return fuel, canAmount, fuel >= max - 1e-6 or canAmount <= 0
 end
 
--- the hold's full length: upstream StartHoldAction(MAX_FUEL * 100, fuel * 100)
-function M.refuelMs(fuel)
+-- the hold's full length: upstream StartHoldAction(MAX_FUEL * 100, fuel * 100); the Generator's tank at its step
+function M.refuelMs(fuel, kind)
+    if kind == "generator" then
+        return math.max(0, math.floor((M.GEN_TANK - fuel) / M.GEN_REFUEL_STEP * M.REFUEL_TICK_MS + 0.5))
+    end
     return math.max(0, math.floor((M.MAX_FUEL - fuel) * 100 + 0.5))
 end
 
@@ -303,7 +329,11 @@ M.TEXT = {
     MACHCOOKTIM = "Cook time: %s",
     MACHITEMTYP = "This machine only accepts %s",
     REFUELLING = "Refuelling...",
-    GENFUEL = "Generator fuel: %.1f / %.0f",
+    GENFUEL = "Generator fuel: %.2f / %.1f L",
+    GENSTARTED = "Generator started: %.2f L in the tank",
+    GENSTOPPED = "Generator stopped",
+    GENEMPTY = "The Generator has no fuel",
+    GENRUNNING = "Stop the Generator before refuelling it",
 }
 -- lang:end
 
