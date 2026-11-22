@@ -20,7 +20,7 @@ You do not need an MTA account, a forum account or a Discord account. Your in-ga
 
 The server's address is `sv.scavengesurvive-reborn.com`.
 
-In MTA's main menu choose **Quick Connect**, type the address and connect. MTA fetches the server's files, which takes a moment the first time, and drops you into the game.
+Start MTA, press **F8** to open its console and type `connect sv.scavengesurvive-reborn.com` (or find the server in the server browser). Quick Connect is no use here: it only reconnects to the last server you were on. MTA fetches the server's files, which takes a moment the first time, and drops you into the game.
 
 A friend who already plays can also pull you in through Discord: with Rich Presence on, their status carries a **Join server** button that starts MTA and connects it for you. See [Discord](Discord).
 
