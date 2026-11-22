@@ -55,24 +55,35 @@ incremental builds there).
 
 ## Build on Linux x64 (production, `deathmatch.so`)
 
-Upstream builds in `utils/docker/Dockerfile` (Ubuntu focal, GCC 10). Without docker, build natively on the host that
-will run it (so its glibc is new enough); GCC 14 needs C errors relaxed for the vendored Lua, GCC 15+ also defaults to
-C23, so use `gcc-14`:
+Upstream builds `release/1.6.0` in `utils/docker/Dockerfile` (Ubuntu focal, GCC 10). Without docker, build natively
+on the host that will run it (so its glibc is new enough). `release/1.6.0` does not compile with GCC 14+ (the vendored
+Lua's `lapi.c`, and the Lua argument parser rejects `noexcept` functions); `server-config/mta-patches/linux-gcc15.patch`
+is upstream's own fix from `master` (`f5e59ac65` and `362e171e4`, "Fix compilation issues after update to GCC 15"),
+rebased onto `release/1.6.0` and limited to what `deathmatch` compiles: it only drops `noexcept` from Lua definitions
+and fixes types, nothing a script can see. Production's (nasa, Debian testing) was built with `gcc-15`:
 
 ```sh
 git clone --branch release/1.6.0 https://github.com/multitheftauto/mtasa-blue.git src && cd src
 git checkout <commit>
 git apply <repo>/server-config/mta-patches/server-buildings.patch
+git apply <repo>/server-config/mta-patches/linux-gcc15.patch      # GCC 14 or newer only
 cp <repo>/server-config/mta-patches/build_overrides.h Shared/build_overrides.h   # then set the build number
 utils/premake5 --gccprefix=x86_64-linux-gnu- --os=linux gmake
-make -C Build -j"$(nproc)" config=release_x64 AR=gcc-ar-14 CC=gcc-14 CXX=g++-14 \
-  CFLAGS="-Wno-error=int-conversion -Wno-error=incompatible-pointer-types -Wno-error=implicit-function-declaration" \
-  Deathmatch
+make -C Build -j"$(nproc)" config=release_x64 AR=gcc-ar-15 CC=gcc-15 CXX=g++-15 Deathmatch
 ```
 
-The result is `Bin/server/x64/deathmatch.so`. Before installing, compare it with the official one:
+Add `LDFLAGS="-static-libstdc++ -static-libgcc"` to that `make` (upstream's `GLIBC_COMPAT` build links them
+statically too), then `strip --strip-debug` the result, `Bin/server/x64/deathmatch.so` (250 MB with debug info, 15 MB
+without). Before installing, compare it with the official one:
 `strings <so> | grep 'MTA:SA Server v'` must print the same line, `nm -D --defined-only` the same exported symbols
-(`InitGameModeInterface`, `GetLibMtaVersion`), and `ldd` must find every library.
+of MTA's own (`InitServer`, `ReleaseServer`, `GetLibMtaVersion`, the `lua_*`; the libstdc++ internals it re-exports
+differ with the compiler), the same `NEEDED` libraries (`libm`, `libc`, `ld-linux`), and `ldd` must find them all.
+A module built natively needs the build host's glibc or newer.
+
+To see it load without touching the live server, copy `mta-server64` and `x64/*.so*` into a scratch directory, put
+the new module in its `x64/`, give it a stock `mtaserver.conf` on other ports (`serverport`, `httpport`, `ase 0`,
+`donotbroadcastlan 1`) and a test resource that calls `createBuilding`, the getters and a stop and start, and run
+`timeout 90 ./mta-server64 -n -u -t`: core refuses a module of another build at start.
 
 ## Swap and roll back
 
