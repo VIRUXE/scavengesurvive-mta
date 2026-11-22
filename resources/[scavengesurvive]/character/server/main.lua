@@ -677,6 +677,22 @@ function applyWound(player, bleedAdd, hpLoss, killer, cause, bodypart)
     return true
 end
 
+-- Staff /heal: removes every wound at once (a Medkit or Doctor's Bag takes a few, the oldest first). Returns how many
+-- there were, or false without a living character.
+function clearWounds(player)
+    local st = state.byPlayer[player]
+    if not st or st.dead then
+        return false
+    end
+    local n = #st.wounds
+    for i = n, 1, -1 do
+        st.wounds[i] = nil
+    end
+    st.dirty = true
+    tick.sendStats(player, true)
+    return n
+end
+
 function wakeUpPlayer(player)
     local ko = state.knockout[player]
     if ko and isTimer(ko.timer) then

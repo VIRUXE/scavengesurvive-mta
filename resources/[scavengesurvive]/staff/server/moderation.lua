@@ -559,13 +559,13 @@ return function(ctx)
         end,
     })
 
-    -- Not upstream (its level5.pwn /health only set the caller's own hp); restores hp to full and stops the bleeding
-    -- on the caller or a named player. Food is left alone.
+    -- Not upstream (its level5.pwn /health only set the caller's own hp); restores hp to full, stops the bleeding and
+    -- removes every wound and the wound infection on the caller or a named player. Food is left alone.
     ctx.command({
         name = "heal",
         level = 3,
         usage = "/heal [player]",
-        help = "Restore a player's health and stop their bleeding",
+        help = "Restore a player's health, stop their bleeding and remove their wounds",
         needsDb = false,
         fn = function(p, args)
             local target = args[1] and ctx.target(p, args[1], true) or (not args[1] and p)
@@ -578,7 +578,9 @@ return function(ctx)
             end
             exports.character:modifyStat(target, "bleed", -st.bleed)
             exports.character:modifyStat(target, "hp", 100 - st.hp)
-            ctx.say(p, " >  Healed %s", getPlayerName(target))
+            exports.character:clearWounds(target)
+            exports.character:setInfection(target, "wound", false)
+            ctx.say(p, " >  Healed %s (%d wounds removed)", getPlayerName(target), st.wounds)
             if target ~= p then
                 ctx.say(target, " >  You were healed by staff.")
             end

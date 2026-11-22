@@ -59,6 +59,7 @@
     <export function="medicalChoices" type="server"/>
     <export function="medicalLabel" type="client"/>
     <export function="applyWound" type="server"/>
+    <export function="clearWounds" type="server"/>
     <export function="knockOutPlayer" type="server"/>
     <export function="wakeUpPlayer" type="server"/>
     <export function="isKnockedOut" type="server"/>
