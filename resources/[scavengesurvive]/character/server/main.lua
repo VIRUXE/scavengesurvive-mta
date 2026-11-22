@@ -677,9 +677,10 @@ function applyWound(player, bleedAdd, hpLoss, killer, cause, bodypart)
     return true
 end
 
--- Staff /heal: removes every wound at once (a Medkit or Doctor's Bag takes a few, the oldest first). Returns how many
--- there were, or false without a living character.
-function clearWounds(player)
+-- Staff /heal: full hp, no bleed, every wound removed at once (a Medkit or Doctor's Bag takes a few, the oldest first)
+-- and no wound infection. On duty it heals the character's own hp and bleed kept in st.dutyKeep too, or duty's end
+-- would put the old ones back. Returns how many wounds there were, or false without a living character.
+function healCharacter(player)
     local st = state.byPlayer[player]
     if not st or st.dead then
         return false
@@ -688,7 +689,13 @@ function clearWounds(player)
     for i = n, 1, -1 do
         st.wounds[i] = nil
     end
+    st.hp, st.bleed = 100, 0
+    if st.dutyKeep then
+        st.dutyKeep.hp, st.dutyKeep.bleed = 100, 0
+    end
+    st.infection.wound = false
     st.dirty = true
+    setElementHealth(player, 100)
     tick.sendStats(player, true)
     return n
 end

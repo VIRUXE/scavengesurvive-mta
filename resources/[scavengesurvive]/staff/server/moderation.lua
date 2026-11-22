@@ -572,15 +572,11 @@ return function(ctx)
             if not target or not isElement(target) then
                 return
             end
-            local st = exports.character:getStats(target)
-            if not st then
+            local wounds = exports.character:healCharacter(target)
+            if not wounds then
                 return ctx.say(p, " >  %s has no living character.", getPlayerName(target))
             end
-            exports.character:modifyStat(target, "bleed", -st.bleed)
-            exports.character:modifyStat(target, "hp", 100 - st.hp)
-            exports.character:clearWounds(target)
-            exports.character:setInfection(target, "wound", false)
-            ctx.say(p, " >  Healed %s (%d wounds removed)", getPlayerName(target), st.wounds)
+            ctx.say(p, " >  Healed %s (%d wounds removed)", getPlayerName(target), wounds)
             if target ~= p then
                 ctx.say(target, " >  You were healed by staff.")
             end
