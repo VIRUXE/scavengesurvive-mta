@@ -1,7 +1,8 @@
 -- Changing clothes (core/char/clothes.pwn): using a Clothes item of the character's gender starts a hold of
 -- clothes.HOLD_MS; moving, dying or leaving cancels it. At the end clothes_swap puts the clothes the character wore
 -- into the item and the item's skin on the character (characters.skin, persisted).
--- ctx = { db, state, clothes, skins, charId, toast, sendInventory } built by server/main.lua.
+-- ctx = { db, state, clothes, skins, charId, toast, sendInventory, openContainerId, sendHeld } built by
+-- server/main.lua.
 return function(ctx)
     local db, state, clothes, skins = ctx.db, ctx.state, ctx.clothes, ctx.skins
     local charId, toast = ctx.charId, ctx.toast
@@ -63,7 +64,7 @@ return function(ctx)
             local held = state.held[cc.player]
             if held and held.id == cc.itemId then
                 held.data = nextData
-                triggerClientEvent(cc.player, "heldItemChanged", cc.player, held)
+                ctx.sendHeld(cc.player, held)
             end
             if ctx.sendInventory then
                 ctx.sendInventory(cc.player)

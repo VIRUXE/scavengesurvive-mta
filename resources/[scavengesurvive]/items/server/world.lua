@@ -1,6 +1,7 @@
 local spatial = loadstring(exports.lib:getModule("spatial"), "=lib/spatial.lua")()
 -- World projection: the world items each client sees (spatial query every 2 s, diffed per player).
--- ctx = { db, state, geometry, diff, charId } built by server/main.lua; state.sent / state.settings are shared.
+-- ctx = { db, state, geometry, diff, charId, clientData } built by server/main.lua; state.sent / state.settings
+-- are shared.
 return function(ctx)
     local db, state, geometry, diff = ctx.db, ctx.state, ctx.geometry, ctx.diff
     local M = {}
@@ -68,27 +69,9 @@ return function(ctx)
         return ids
     end
 
-    -- Strip sensitive server-only fields (e.g. defence passcodes) before sending world item data to clients.
-    local function sanitizeData(data)
-        if type(data) ~= "table" then
-            return data
-        end
-        if data.passcode ~= nil then
-            data.passcode = nil
-        end
-        if type(data[1]) == "table" and data[1].passcode ~= nil then
-            data[1].passcode = nil
-        end
-        local d = data.defence or (type(data[1]) == "table" and data[1].defence)
-        if type(d) == "table" then
-            if d.passcode ~= nil then
-                local p = tostring(d.passcode)
-                d.locked = (p ~= "" and p ~= "0" and p ~= "0000")
-                d.passcode = nil
-            end
-        end
-        return data
-    end
+    -- an item's data with its secrets (keypad passcodes, padlock combos and dials, key codes) taken out before a
+    -- client gets it: smallitems.clientData, the one place that decides what a client may see
+    local sanitizeData = ctx.clientData
     M.sanitizeData = sanitizeData
 
     function M.syncPlayer(player)
@@ -108,7 +91,7 @@ return function(ctx)
                         r.data = nil
                     end
                     if type(r.data) == "table" then
-                        sanitizeData(r.data)
+                        r.data = sanitizeData(r.data)
                     end
                     visible[#visible + 1] = r
                 end

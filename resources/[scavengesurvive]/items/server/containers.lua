@@ -527,7 +527,7 @@ return function(ctx)
                         uname = r.uname,
                         hp = r.hp,
                         category = r.category,
-                        data = itData,
+                        data = small.clientData(itData), -- no codes: someone else's padlock can lie in a box
                     }
                     into.cap.used = into.cap.used + (tonumber(r.isize) or 1)
                     -- an armed motion mine goes off when the bag, box or trunk it lies in is opened (not on a refresh
@@ -546,14 +546,15 @@ return function(ctx)
             if triggered then
                 return
             end
+            local clientItem = small.clientItem
             payload.gear = {
-                hat = state.hat and state.hat[c.player] or false,
-                mask = state.mask and state.mask[c.player] or false,
-                eyes = state.eyes and state.eyes[c.player] or false,
-                armour = state.armour and state.armour[c.player] or false,
-                holster = state.holster and state.holster[c.player] or false,
+                hat = clientItem(state.hat and state.hat[c.player] or false),
+                mask = clientItem(state.mask and state.mask[c.player] or false),
+                eyes = clientItem(state.eyes and state.eyes[c.player] or false),
+                armour = clientItem(state.armour and state.armour[c.player] or false),
+                holster = clientItem(state.holster and state.holster[c.player] or false),
             }
-            payload.held = state.held and state.held[c.player] or false
+            payload.held = clientItem(state.held and state.held[c.player] or false)
             triggerClientEvent(c.player, "inventoryOpened", c.player, payload)
             if not c.how and payload.trunkContainerId then
                 M.refreshViewers(payload.trunkContainerId, c.player)

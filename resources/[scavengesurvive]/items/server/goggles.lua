@@ -65,7 +65,7 @@ return function(ctx)
         hands.queueData(held)
         shown[player] = nil
         hands.publishEyes(player)
-        triggerClientEvent(player, "heldItemChanged", player, held)
+        hands.sendHeld(player, held)
         sendInventory(player)
         toast(player, "GOGGLES_BATTERY")
         log.event("items.gogglesBatterySwapped", {

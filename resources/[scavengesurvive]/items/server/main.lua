@@ -112,6 +112,7 @@ local world = loadFile("server/world.lua")({
     geometry = geometry,
     diff = diff,
     charId = charId,
+    clientData = small.clientData,
 })
 
 -- Deletes an item the player owns (held, in their inventory or worn bag). cb(ok) runs only while the player exists.
@@ -203,6 +204,7 @@ hands = loadFile("server/hands.lua")({
     isKnockedOut = isKnockedOut,
     isPlayerCuffed = isPlayerCuffed,
     setPlayerCuffed = setPlayerCuffed,
+    clientItem = small.clientItem,
 })
 
 local containers = loadFile("server/containers.lua")({
@@ -261,7 +263,7 @@ local cookers = loadFile("server/cooking.lua")(cookingCtx)
 hands.setCooking(cookers)
 -- the held items' ammo, batched (hands.queueData)
 setTimer(hands.flushData, 5000, 0)
-local medical = loadFile("server/medical.lua")({ db = db, state = state, destroy = destroy })
+local medical = loadFile("server/medical.lua")({ db = db, state = state, destroy = destroy, sendHeld = hands.sendHeld })
 local function isOnDuty(player)
     local staffRes = getResourceFromName("staff")
     return staffRes ~= false and getResourceState(staffRes) == "running" and exports.staff:isOnDuty(player) == true
@@ -276,7 +278,7 @@ local function writeHeldData(player, itemId, data)
     local held = state.held[player]
     if held and held.id == itemId then
         held.data = data
-        triggerClientEvent(player, "heldItemChanged", player, held)
+        hands.sendHeld(player, held)
     end
 end
 local drinking = loadFile("server/drinking.lua")({
@@ -314,6 +316,7 @@ local clothesInstance = loadFile("server/clothes.lua")({
     toast = toast,
     sendInventory = containers.sendInventory,
     openContainerId = containers.openContainerId,
+    sendHeld = hands.sendHeld,
 })
 containers.setClothes(clothesInstance)
 -- seed bags and plant pots (#142)
@@ -589,11 +592,6 @@ addEventHandler("onResourceStop", resourceRoot, function()
     end
 end)
 
-function getHeld(player)
-    local item = state.held[player]
-    return item and { id = item.id, uname = item.uname, hp = item.hp, data = item.data } or false
-end
-
 function refreshPlayer(player)
     if not isElement(player) then
         return false
@@ -794,11 +792,14 @@ function destroyContainerItem(itemId, reason)
     return true
 end
 
-function getHeld(player)
+-- export: the item in hand ({ id, uname, hp, data } or false). Other resources' servers read its real data (a key's
+-- code); forClient = true gives the copy a client may be sent instead (smallitems.clientItem: no codes).
+function getHeld(player, forClient)
     if not isElement(player) then
         return false
     end
-    return state.held[player] or false
+    local item = state.held[player] or false
+    return forClient and small.clientItem(item) or item
 end
 
 function setHeld(player, item)
@@ -959,7 +960,7 @@ function updateHeldData(player, nextData)
     item.data = nextData
     hands.publishAmmo(player, item)
     hands.queueData(item)
-    triggerClientEvent(player, "heldItemChanged", player, item)
+    hands.sendHeld(player, item)
     return true
 end
 

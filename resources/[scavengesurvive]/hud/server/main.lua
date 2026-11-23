@@ -9,7 +9,7 @@ net.handler("hudStateRequested", function(player)
         snapshot.wounds, snapshot.woundParts = stats.wounds, stats.woundParts
         triggerClientEvent(player, "characterStatsSynced", player, snapshot)
     end
-    triggerClientEvent(player, "heldItemChanged", player, exports.items:getHeld(player) or false)
+    triggerClientEvent(player, "heldItemChanged", player, exports.items:getHeld(player, true) or false)
     local freq, mode = exports.chat:getRadio(player)
     triggerClientEvent(player, "chatRadioChanged", player, freq, mode)
 end)

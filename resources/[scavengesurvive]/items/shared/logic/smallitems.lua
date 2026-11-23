@@ -92,6 +92,56 @@ function M.comboDials(data)
 end
 
 M.fourDigits = fourDigits
+
+-- An item's data as a client may see it, a copy (the server keeps the real one). Every path that sends item data
+-- to a client (world sync, inventory, containers, the hand, the gear) goes through here, because a modified client
+-- reads everything it is sent:
+--   passcode  a built defence's keypad code: dropped; the defence keeps `locked` (whether one is set);
+--   combo     a Combination Padlock's (or Lock and Chain's) code: dropped, the client never has it (comboShut reads
+--             `shut`; the close-up gets its dials from comboPadlockOpened);
+--   dials     where those dials stand: dropped, a padlock shut without turning them still shows its code;
+--   code      a key's or a keyed padlock's cut code: 1 when cut, which is all lockLabel and keyLabel read.
+local function clientValue(k, v)
+    if k == "passcode" or k == "combo" or k == "dials" then
+        return nil
+    end
+    if k == "code" then
+        local n = tonumber(v)
+        return n and (n ~= 0 and 1 or 0) or nil
+    end
+    if type(v) ~= "table" then
+        return v
+    end
+    local out = {}
+    for ck, cv in pairs(v) do
+        out[ck] = clientValue(ck, cv)
+    end
+    if k == "defence" and v.passcode ~= nil then
+        local p = tostring(v.passcode)
+        out.locked = p ~= "" and p ~= "0" and p ~= "0000"
+    end
+    return out
+end
+
+function M.clientData(data)
+    if type(data) ~= "table" then
+        return data
+    end
+    return clientValue(nil, data)
+end
+
+-- an item ({ id, uname, hp, data, ... }) as a client may see it: a shallow copy with clientData; false stays false
+function M.clientItem(item)
+    if type(item) ~= "table" then
+        return item
+    end
+    local out = {}
+    for k, v in pairs(item) do
+        out[k] = v
+    end
+    out.data = M.clientData(item.data)
+    return out
+end
 M.COMBO_SHUT_MODEL = 20263 -- prop_models combo_padlock_shut (the item's own model is the padlock open)
 
 -- "Combination Padlock (Unlocked)" / "(Locked)"

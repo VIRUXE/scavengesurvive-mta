@@ -16,6 +16,7 @@ return function(ctx)
         return false
     end
     local isKnockedOut = ctx.isKnockedOut
+    local clientItem = ctx.clientItem
     local log = loadstring(exports.lib:getModule("log"), "=lib/log.lua")()
     local VANILLA_MELEE_MAX = 15
     local RELOAD_COOLDOWN_MS = 1000
@@ -63,6 +64,14 @@ return function(ctx)
 
     function M.setSmall(s)
         small = s
+    end
+
+    -- heldItemChanged with the hand as its holder's client may see it (smallitems.clientItem: no codes); every
+    -- module that tells a client its hand changed sends it through here
+    function M.sendHeld(player, item)
+        if isElement(player) then
+            triggerClientEvent(player, "heldItemChanged", player, item and clientItem(item) or false)
+        end
     end
 
     -- server/parachute.lua: the worn Parachute is GTA's parachute weapon
@@ -379,12 +388,7 @@ return function(ctx)
                 end
             end
         end
-        triggerClientEvent(
-            player,
-            "heldItemChanged",
-            player,
-            item and { id = item.id, uname = item.uname, hp = item.hp, data = item.data } or false
-        )
+        M.sendHeld(player, item and { id = item.id, uname = item.uname, hp = item.hp, data = item.data } or false)
     end
 
     local function syncHeldData(player, item, nextData)
@@ -405,14 +409,7 @@ return function(ctx)
                 toast(player, "WEAPNOAMMOL")
             end
         end
-        if isElement(player) then
-            triggerClientEvent(
-                player,
-                "heldItemChanged",
-                player,
-                { id = item.id, uname = item.uname, hp = item.hp, data = item.data }
-            )
-        end
+        M.sendHeld(player, { id = item.id, uname = item.uname, hp = item.hp, data = item.data })
     end
 
     M.syncHeldData = syncHeldData
