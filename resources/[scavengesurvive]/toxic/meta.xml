@@ -10,7 +10,6 @@
     <script src="client/main.lua" type="client"/>
     <file src="shared/logic/cloud.lua"/>
     <file src="shared/logic/enclosure.lua"/>
-    <file src="server/exposure.lua"/>
     <file src="files/puff.png"/>
     <file src="client/cloud.fx"/>
     <export function="startCloud" type="server"/>

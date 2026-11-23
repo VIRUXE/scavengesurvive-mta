@@ -9,11 +9,8 @@
     <script src="client/language.lua" type="client"/>
     <script src="client/login.lua" type="client"/>
     <script src="client/whitelist.lua" type="client"/>
-    <file src="server/accounts.lua"/>
-    <file src="shared/logic/rules.lua"/>
     <file src="shared/logic/access.lua"/>
     <file src="shared/logic/prompt.lua"/>
-    <file src="shared/logic/email.lua"/>
     <export function="getAccountId" type="server"/>
     <export function="getAccountName" type="server"/>
     <export function="getAdminLevel" type="server"/>

@@ -14,11 +14,8 @@
     <script src="server/main.lua" type="server"/>
     <script src="client/main.lua" type="client"/>
     <file src="shared/logic/geometry.lua"/>
-    <file src="shared/logic/diff.lua"/>
     <file src="shared/logic/ammo.lua"/>
     <file src="shared/logic/apparel.lua"/>
-    <file src="shared/logic/armour.lua"/>
-    <file src="server/armour.lua"/>
     <file src="shared/logic/masks.lua"/>
     <file src="client/breath.lua"/>
     <file src="sounds/breath_cloth.wav"/>
@@ -26,9 +23,7 @@
     <file src="sounds/breath_respirator.wav"/>
     <file src="sounds/breath_gasmask.wav"/>
     <file src="sounds/breath_wheeze.wav"/>
-    <file src="server/masks.lua"/>
     <file src="shared/logic/goggles.lua"/>
-    <file src="server/goggles.lua"/>
     <file src="client/goggles.lua"/>
     <file src="client/goggles_night.fx"/>
     <file src="client/goggles_thermal.fx"/>
@@ -43,31 +38,20 @@
     <file src="shared/logic/smallitems.lua"/>
     <file src="shared/logic/fishing.lua"/>
     <file src="shared/logic/production.lua"/>
-    <file src="server/fishing.lua"/>
     <file src="shared/logic/gardening.lua"/>
-    <file src="server/gardening.lua"/>
-    <file src="server/smallitems.lua"/>
-    <file src="server/parachute.lua"/>
     <file src="client/parachute.lua"/>
     <file src="shared/logic/machines.lua"/>
     <file src="shared/logic/floodlight.lua"/>
     <file src="client/floodlight.lua"/>
     <file src="client/power.lua"/>
-    <file src="server/machines.lua"/>
     <file src="shared/logic/furniture.lua"/>
     <file src="shared/logic/firework.lua"/>
     <file src="client/firework.lua"/>
-    <file src="server/furniture.lua"/>
     <file src="shared/logic/vending.lua"/>
-    <file src="server/vending.lua" download="false"/>
     <file src="client/vending.lua"/>
     <file src="client/text.lua"/>
     <file src="client/combo.lua"/>
     <file src="client/models.lua"/>
-    <file src="server/cooking.lua"/>
-    <file src="server/fixed.lua"/>
-    <file src="server/drinking.lua"/>
-    <file src="server/cuffs.lua"/>
     <file src="client/preview.lua"/>
     <file src="client/world.lua"/>
     <file src="client/replace.fx"/>

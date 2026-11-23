@@ -19,7 +19,7 @@ local function logAt(fields, element)
 end
 
 local function loadFile(path, name)
-    local f = fileOpen(path, true)
+    local f = assert(fileOpen(path, true), "world: cannot open " .. path)
     local src = fileRead(f, fileGetSize(f))
     fileClose(f)
     return assert(loadstring(src, name))()

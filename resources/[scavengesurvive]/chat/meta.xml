@@ -12,7 +12,6 @@
     <script src="client/main.lua" type="client"/>
     <script src="client/help.lua" type="client"/>
     <file src="shared/logic/chat.lua"/>
-    <file src="shared/logic/translate.lua"/>
     <file src="shared/logic/help.lua"/>
     <file src="shared/logic/tips.lua"/>
     <export function="getRadio" type="server"/>

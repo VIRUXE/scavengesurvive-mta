@@ -9,7 +9,6 @@
     <include resource="vehicles"/>
     <script src="shared/events.lua" type="shared"/>
     <script src="server/main.lua" type="server"/>
-    <file src="shared/logic/explosives.lua"/>
     <export function="detonateItem" type="server"/>
     <export function="linkPhoneBomb" type="server"/>
     <export function="checkTripMine" type="server"/>

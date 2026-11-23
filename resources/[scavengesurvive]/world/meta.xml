@@ -13,25 +13,11 @@
     <script src="client/sounds.lua" type="client"/>
     <file src="client/screen.fx"/>
     <file src="client/blackout.fx"/>
-    <file src="server/buttons.lua"/>
-    <file src="server/boxes.lua"/>
-    <file src="server/vending.lua" download="false"/>
-    <file src="data/vending.lua" download="false"/>
-    <file src="server/trees.lua" download="false"/>
-    <file src="server/geom.lua" download="false"/>
-    <file src="geom/overlay.toml" download="false"/>
-    <file src="geom/port.map" download="false"/>
-    <file src="shared/logic/trees.lua" download="false"/>
-    <file src="data/trees.lua" download="false"/>
-    <file src="shared/logic/weather.lua"/>
     <file src="shared/logic/features.lua"/>
-    <file src="shared/logic/fixtures.lua"/>
-    <file src="shared/logic/boxes.lua"/>
     <file src="shared/logic/buttons.lua"/>
     <file src="shared/logic/doors.lua"/>
     <file src="shared/logic/puzzles.lua"/>
     <file src="shared/logic/area69.lua"/>
-    <file src="data/puzzles.lua"/>
     <file src="data/features.lua"/>
     <export function="getWeather" type="server"/>
     <export function="setGlobalWeather" type="server"/>

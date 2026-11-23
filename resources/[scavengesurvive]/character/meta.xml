@@ -22,21 +22,12 @@
     <file src="files/thirst_swallow2.wav"/>
     <file src="files/thirst_smack.wav"/>
     <file src="files/thirst_throat.wav"/>
-    <file src="shared/logic/survival.lua"/>
-    <file src="shared/logic/spawnpoints.lua"/>
-    <file src="shared/logic/combatlog.lua"/>
-    <file src="shared/logic/drop.lua"/>
-    <file src="shared/logic/skills.lua"/>
     <file src="shared/logic/medical.lua"/>
     <file src="shared/logic/hunger.lua"/>
     <file src="shared/logic/wounds.lua"/>
     <file src="shared/logic/travel.lua"/>
-    <file src="shared/logic/bodies.lua"/>
-    <file src="server/travel.lua"/>
     <file src="shared/logic/poses.lua"/>
-    <file src="server/poses.lua"/>
     <file src="shared/logic/bleeding.lua"/>
-    <file src="server/blood.lua"/>
     <export function="getCharacterId" type="server"/>
     <export function="restartCharacter" type="server"/>
     <export function="getPlayerByCharacterId" type="server"/>

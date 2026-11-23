@@ -14,25 +14,6 @@
     <script src="server/build.lua" type="server"/>
     <script src="client/main.lua" type="client"/>
     <file src="shared/logic/placement.lua"/>
-    <file src="shared/logic/zones.lua" download="false"/>
-    <file src="shared/glazed_windows.lua" download="false"/>
-    <file src="shared/shell_doors.lua" download="false"/>
-    <file src="shared/stretched_shells.lua" download="false"/>
-    <file src="data/zones.lua" download="false"/>
-    <file src="data/index.lua" download="false"/>
-    <file src="data/BC.lua" download="false"/>
-    <file src="data/BOXES.lua" download="false"/>
-    <file src="data/VENDING.lua" download="false"/>
-    <file src="data/COLFIX.lua" download="false"/>
-    <file src="data/FC.lua" download="false"/>
-    <file src="data/GEN.lua" download="false"/>
-    <file src="data/KAIJA.lua" download="false"/>
-    <file src="data/LS.lua" download="false"/>
-    <file src="data/LV.lua" download="false"/>
-    <file src="data/OCEAN.lua" download="false"/>
-    <file src="data/RC.lua" download="false"/>
-    <file src="data/SF.lua" download="false"/>
-    <file src="data/TR.lua" download="false"/>
     <export function="getZoneAt" type="server"/>
     <export function="getPlayerZone" type="server"/>
     <export function="getMapStats" type="server"/>

@@ -8,7 +8,7 @@ local log = assert(loadstring(exports.lib:getModule("log"), "=lib/log.lua"))()
 db.connect("building")
 
 local function loadModule(path)
-    local f = fileOpen(path, true)
+    local f = assert(fileOpen(path, true), "building: cannot open " .. path)
     local src = fileRead(f, fileGetSize(f))
     fileClose(f)
     return assert(loadstring(src, "=building/" .. path))()

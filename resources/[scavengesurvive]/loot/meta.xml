@@ -8,13 +8,7 @@
     <script src="shared/events.lua" type="shared"/>
     <script src="server/main.lua" type="server"/>
     <script src="client/main.lua" type="client"/>
-    <file src="shared/logic/roll.lua"/>
-    <file src="shared/logic/settle.lua"/>
     <file src="shared/logic/drops.lua"/>
-    <file src="shared/logic/lockup.lua"/>
-    <file src="shared/item_rest.lua"/>
-    <file src="server/drops.lua"/>
-    <file src="server/overlay.lua"/>
     <export function="rollNear" type="server"/>
     <export function="pickItem" type="server"/>
     <export function="initialData" type="server"/>

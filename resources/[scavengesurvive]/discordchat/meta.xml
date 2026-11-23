@@ -4,8 +4,6 @@
     <include resource="chat"/>
     <script src="shared/events.lua" type="server"/>
     <script src="server/main.lua" type="server"/>
-    <file src="shared/logic/discordchat.lua"/>
-    <file src="shared/spawn_images.lua"/>
     <export function="logItemSpawn" type="server"/>
     <export function="sendStaffLog" type="server"/>
     <settings>

@@ -3,7 +3,7 @@
 -- Node relay, see docs/runbooks/discord-bridge.md). Only global chat and player connection events cross.
 
 local function loadFile(path)
-    local f = fileOpen(path, true)
+    local f = assert(fileOpen(path, true), "discordchat: cannot open " .. path)
     local src = fileRead(f, fileGetSize(f))
     fileClose(f)
     return assert(loadstring(src, "=discordchat/" .. path))()

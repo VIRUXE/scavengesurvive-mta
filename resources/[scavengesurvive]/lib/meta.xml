@@ -3,22 +3,10 @@
     <min_mta_version server="1.6.0" client="1.6.0"/>
     <download_priority_group>100</download_priority_group>
     <script src="shared/main.lua" type="shared"/>
-    <file src="modules/db.lua"/>
-    <file src="modules/modelpack.lua"/>
-    <file src="modules/spatial.lua"/>
-    <file src="modules/net.lua"/>
-    <file src="modules/rpc.lua"/>
-    <file src="modules/util.lua"/>
-    <file src="modules/log.lua"/>
-    <file src="modules/budget.lua"/>
-    <file src="modules/spawn_guard.lua"/>
-    <file src="modules/events_registry.lua"/>
     <file src="modules/surface.lua"/>
-    <file src="modules/geom.lua" download="false"/>
     <file src="modules/model_loader.lua"/>
     <file src="modules/models.lua"/>
     <file src="modules/standins.lua"/>
-    <file src="modules/sageom.lua" download="false"/>
     <file src="modules/lang.lua"/>
     <file src="modules/outline.lua"/>
     <export function="getModule" type="server"/>
