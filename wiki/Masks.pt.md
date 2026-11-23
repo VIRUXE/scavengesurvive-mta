@@ -1,12 +1,14 @@
 # Máscaras
 
-![Máscara de gás](images/items/19472_gasmask01.png) ![Máscara de hóquei](images/items/19036_hockeymask1.png) ![Máscara do Zorro](images/items/18974_maskzorro1.png) ![Máscara de gatinha](images/items/19557_sexymask1.png) ![Máscara de diabo](images/items/11704_bdupsmask1.png) ![Lenço de cabeça](images/items/18917_mask7.png)
+![Máscara de gás](images/items/19472_gasmask01.png) ![Respirador de meia face](images/items/20311_half_respirator.png) ![Máscara de pó](images/items/20310_dust_mask.png) ![Máscara de hóquei](images/items/19036_hockeymask1.png) ![Máscara do Zorro](images/items/18974_maskzorro1.png) ![Máscara de gatinha](images/items/19557_sexymask1.png) ![Máscara de diabo](images/items/11704_bdupsmask1.png) ![Lenço de cabeça](images/items/18917_mask7.png)
 
 As máscaras usam-se na cara, no mosaico `FACE` do [inventário](Inventory). Onze itens vão para lá: cinco máscaras, a máscara de pó e o respirador de meia face, e o lenço de cabeça em quatro padrões, todos de tamanho 1.
 
 | Item | |
 |:--|:--|
 | [Máscara de gás](Gas-Mask) | ![](images/items/19472_gasmask01.png) |
+| [Respirador de meia face](Half-Respirator) | ![](images/items/20311_half_respirator.png) |
+| [Máscara de pó](Dust-Mask) | ![](images/items/20310_dust_mask.png) |
 | [Máscara de hóquei](Hockey-Mask) | ![](images/items/19036_hockeymask1.png) |
 | [Máscara do Zorro](Zorro-Mask) | ![](images/items/18974_maskzorro1.png) |
 | [Máscara de gatinha](Pussy-Mask) | ![](images/items/19557_sexymask1.png) |

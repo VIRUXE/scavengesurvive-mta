@@ -223,7 +223,7 @@ local NUDGE = {
     BandanaGr = BANDANA_NUDGE,
     BandanaWh = BANDANA_NUDGE,
     BandanaPat = BANDANA_NUDGE,
-    DustMask = BANDANA_NUDGE, -- drawn with the white bandana until its own model exists
+    DustMask = BANDANA_NUDGE, -- its model (prop_models dust_mask) is built in the bandana's frame and wears its rows
     ZorroMask = { [192] = { 0.04, 0, 0 } },
 }
 
