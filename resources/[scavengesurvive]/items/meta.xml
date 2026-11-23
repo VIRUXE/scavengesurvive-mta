@@ -111,6 +111,11 @@
     <export function="isFemaleSkin" type="server"/>
     <export function="rollSpawnSkin" type="server"/>
     <export function="getProductionRecipesIn" type="server"/>
+    <export function="setWorldHidden" type="client"/>
+    <export function="getWorldModel" type="client"/>
+    <export function="buildWorldRow" type="client"/>
+    <export function="destroyWorldRow" type="client"/>
+    <export function="destroyWorldRows" type="client"/>
     <export function="setAttachPreview" type="client"/>
     <export function="getAttachConfig" type="client"/>
     <export function="nearbyCooker" type="client"/>

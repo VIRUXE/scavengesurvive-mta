@@ -1,0 +1,15 @@
+[Unit]
+Description=Scavenge & Survive replay events from the game log (tools/replay_import_log.py)
+After=mariadb.service
+
+[Service]
+Type=oneshot
+User=mta
+WorkingDirectory=/gta/sa/mta/servers/scavengesurvive/scavengesurvive-mta
+ExecStart=/usr/bin/python3 -m tools.replay_import_log --state /var/lib/ssmta-replay/offset.json
+StateDirectory=ssmta-replay
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadOnlyPaths=/gta

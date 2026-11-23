@@ -289,6 +289,38 @@ CREATE TABLE IF NOT EXISTS `power_sites` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS `replay_chunk` (
+  `char_id` int(11) NOT NULL,
+  `t0` datetime(3) NOT NULL,
+  `n` smallint(6) NOT NULL,
+  `data` mediumblob NOT NULL,
+  PRIMARY KEY (`char_id`,`t0`),
+  KEY `ix_replay_chunk_t0` (`t0`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+
+CREATE TABLE IF NOT EXISTS `replay_event` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `at` datetime(3) NOT NULL,
+  `kind` varchar(48) NOT NULL,
+  `char_id` int(11) DEFAULT NULL,
+  `other_char_id` int(11) DEFAULT NULL,
+  `account_id` int(11) DEFAULT NULL,
+  `item_id` int(11) DEFAULT NULL,
+  `vehicle_id` int(11) DEFAULT NULL,
+  `x` float DEFAULT NULL,
+  `y` float DEFAULT NULL,
+  `z` float DEFAULT NULL,
+  `interior` tinyint(4) NOT NULL DEFAULT 0,
+  `dimension` int(11) NOT NULL DEFAULT 0,
+  `sig` char(16) NOT NULL,
+  `data` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`data`)),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `ux_replay_event_sig` (`sig`),
+  KEY `ix_replay_event_at` (`at`),
+  KEY `ix_replay_event_char_at` (`char_id`,`at`),
+  KEY `ix_replay_event_other_at` (`other_char_id`,`at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+
 CREATE TABLE IF NOT EXISTS `reports` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(24) NOT NULL,
@@ -2567,6 +2599,144 @@ BEGIN
   END IF;
 END//
 
+-- Recorder chunks (replay/server/recorder.lua): p_rows is toJSON's "[[{id, ago, n, data}, ...]]"; "ago" is the age of the
+-- chunk's first sample in milliseconds, so the game server and the database need no shared clock. The data is the
+-- chunk's JSON text, stored compressed.
+CREATE OR REPLACE PROCEDURE `replay_chunk_save`(IN p_rows JSON)
+BEGIN
+  DECLARE v_n INT DEFAULT 0;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
+  SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+  START TRANSACTION;
+  INSERT IGNORE INTO replay_chunk (char_id, t0, n, data)
+    SELECT j.id, NOW(3) - INTERVAL (j.ago * 1000) MICROSECOND, j.n, COMPRESS(j.data)
+    FROM JSON_TABLE(p_rows, '$[0][*]' COLUMNS (
+      id INT PATH '$.id', ago INT PATH '$.ago', n INT PATH '$.n', data LONGTEXT PATH '$.data')) j
+    JOIN characters c ON c.id = j.id;
+  SET v_n = ROW_COUNT();
+  COMMIT;
+  SELECT 1 AS ok, 'OK' AS code, JSON_OBJECT('saved', CAST(v_n AS SIGNED)) AS payload;
+END//
+
+-- Recorder chunks of one character that overlap [p_from, p_to]: t0 as unix milliseconds, n, the JSON text
+CREATE OR REPLACE PROCEDURE `replay_chunks`(IN p_char_id INT, IN p_from DATETIME(3), IN p_to DATETIME(3))
+BEGIN
+  SELECT CAST(UNIX_TIMESTAMP(t0) * 1000 AS SIGNED) AS t0_ms, n, CAST(UNCOMPRESS(data) AS CHAR) AS data
+  FROM replay_chunk
+  WHERE char_id = p_char_id AND t0 >= p_from - INTERVAL 40 SECOND AND t0 <= p_to
+  ORDER BY t0;
+END//
+
+-- Events for replay (replay/server/events.lua mirrors the game log into it, tools/replay_import_log.py backfills it):
+-- p_rows is "[[{ago | at, kind, char, other, account, item, vehicle, x, y, z, int, dim, sig, data}, ...]]". "at" is
+-- an absolute 'YYYY-MM-DD HH:MM:SS' (the importer), "ago" milliseconds before now (the live mirror). "sig" is the first
+-- 16 hex digits of the md5 of the log line, so the same line arriving twice is kept once.
+CREATE OR REPLACE PROCEDURE `replay_event_save`(IN p_rows JSON)
+BEGIN
+  DECLARE v_n INT DEFAULT 0;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
+  SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+  START TRANSACTION;
+  INSERT IGNORE INTO replay_event (at, kind, char_id, other_char_id, account_id, item_id, vehicle_id, x, y, z, interior, dimension, sig, data)
+    SELECT IF(j.at_s IS NOT NULL, j.at_s, NOW(3) - INTERVAL (IFNULL(j.ago, 0) * 1000) MICROSECOND),
+      j.kind, j.char_id, j.other_char_id, j.account_id, j.item_id, j.vehicle_id, j.x, j.y, j.z,
+      IFNULL(j.interior, 0), IFNULL(j.dimension, 0), j.sig, j.data
+    FROM JSON_TABLE(p_rows, '$[0][*]' COLUMNS (
+      at_s VARCHAR(32) PATH '$.at', ago INT PATH '$.ago', kind VARCHAR(48) PATH '$.kind',
+      char_id INT PATH '$.char', other_char_id INT PATH '$.other', account_id INT PATH '$.account',
+      item_id INT PATH '$.item', vehicle_id INT PATH '$.vehicle', x FLOAT PATH '$.x', y FLOAT PATH '$.y', z FLOAT PATH '$.z',
+      interior INT PATH '$.int', dimension INT PATH '$.dim', sig CHAR(16) PATH '$.sig',
+      data LONGTEXT FORMAT JSON PATH '$.data')) j;
+  SET v_n = ROW_COUNT();
+  COMMIT;
+  SELECT 1 AS ok, 'OK' AS code, JSON_OBJECT('saved', CAST(v_n AS SIGNED)) AS payload;
+END//
+
+-- Events in [p_from, p_to]: everything the character did or had done to it, and what other characters did near the
+-- character's trail at that moment (within about p_radius metres and 10 s), at most p_limit rows, oldest first
+CREATE OR REPLACE PROCEDURE `replay_events`(IN p_char_id INT, IN p_from DATETIME(3), IN p_to DATETIME(3),
+  IN p_radius FLOAT, IN p_limit INT)
+BEGIN
+  CALL replay_trail_cells(p_char_id, p_from, p_to, p_radius, 1);
+  SELECT e.id, CAST(UNIX_TIMESTAMP(e.at) * 1000 AS SIGNED) AS t_ms, e.kind, e.char_id, e.other_char_id, e.account_id,
+    e.item_id, e.vehicle_id, e.x, e.y, e.z, e.interior, e.dimension, CAST(e.data AS CHAR) AS data
+  FROM replay_event e
+  WHERE e.at >= p_from AND e.at <= p_to
+    AND (e.char_id = p_char_id OR e.other_char_id = p_char_id
+      OR (e.x IS NOT NULL AND e.kind NOT LIKE 'chat.%' AND e.kind NOT LIKE 'session.%' AND EXISTS (
+        SELECT 1 FROM replay_cells c
+        WHERE c.cx = FLOOR(e.x / p_radius) AND c.cy = FLOOR(e.y / p_radius) AND c.tb = FLOOR(UNIX_TIMESTAMP(e.at) / 10))))
+  ORDER BY e.at, e.id
+  LIMIT p_limit;
+  DROP TEMPORARY TABLE IF EXISTS replay_cells;
+END//
+
+-- Other characters whose 2 s trail was near the character's (about p_radius metres, 10 s) during [p_from, p_to]:
+-- id, name, skin, account level and id, how many trail points, first and last such moment (unix ms). Busiest first,
+-- at most 24.
+CREATE OR REPLACE PROCEDURE `replay_nearby`(IN p_char_id INT, IN p_from DATETIME(3), IN p_to DATETIME(3), IN p_radius FLOAT)
+BEGIN
+  CALL replay_trail_cells(p_char_id, p_from, p_to, p_radius, 1);
+  SELECT c.id, a.name, c.skin, a.admin_level, a.id AS account_id, COUNT(*) AS points,
+    CAST(UNIX_TIMESTAMP(MIN(t.at)) * 1000 AS SIGNED) AS first_ms, CAST(UNIX_TIMESTAMP(MAX(t.at)) * 1000 AS SIGNED) AS last_ms
+  FROM character_track t
+    JOIN replay_cells r ON r.cx = FLOOR(t.x / p_radius) AND r.cy = FLOOR(t.y / p_radius) AND r.tb = FLOOR(UNIX_TIMESTAMP(t.at) / 10)
+    JOIN characters c ON c.id = t.char_id
+    JOIN accounts a ON a.id = c.account_id
+  WHERE t.at >= p_from AND t.at <= p_to AND t.char_id <> p_char_id
+  GROUP BY c.id, a.name, c.skin, a.admin_level, a.id
+  ORDER BY points DESC
+  LIMIT 24;
+  DROP TEMPORARY TABLE IF EXISTS replay_cells;
+END//
+
+-- The 2 s trail (character_track) of one character in [p_from, p_to], unix milliseconds
+CREATE OR REPLACE PROCEDURE `replay_track`(IN p_char_id INT, IN p_from DATETIME(3), IN p_to DATETIME(3))
+BEGIN
+  SELECT CAST(UNIX_TIMESTAMP(at) * 1000 AS SIGNED) AS t_ms, x, y, z, interior, dimension, vehicle, vehicle_seat
+  FROM character_track
+  WHERE char_id = p_char_id AND at >= p_from AND at <= p_to
+  ORDER BY at;
+END//
+
+-- The 2 s trail of a character as a set of grid cells: every trail point puts its own cell and the eight around it
+-- (cells are p_radius metres wide) into the memory table `p_table`, with its time in 10 s buckets (and the bucket on
+-- either side) when p_timed. A thing counts as near the trail when its own cell (and bucket) is in the table, which
+-- is an index lookup instead of a distance test per pair: the pair tests took seconds on a 20 minute range.
+CREATE OR REPLACE PROCEDURE `replay_trail_cells`(IN p_char_id INT, IN p_from DATETIME(3), IN p_to DATETIME(3),
+  IN p_radius FLOAT, IN p_timed TINYINT)
+BEGIN
+  DROP TEMPORARY TABLE IF EXISTS replay_cells;
+  CREATE TEMPORARY TABLE replay_cells (cx INT NOT NULL, cy INT NOT NULL, tb BIGINT NOT NULL, PRIMARY KEY (cx, cy, tb)) ENGINE=MEMORY;
+  INSERT IGNORE INTO replay_cells (cx, cy, tb)
+    SELECT FLOOR(s.x / p_radius) + a.d, FLOOR(s.y / p_radius) + b.d,
+      IF(p_timed, FLOOR(UNIX_TIMESTAMP(s.at) / 10) + c.d, 0)
+    FROM character_track s
+      JOIN (SELECT -1 AS d UNION ALL SELECT 0 UNION ALL SELECT 1) a
+      JOIN (SELECT -1 AS d UNION ALL SELECT 0 UNION ALL SELECT 1) b
+      JOIN (SELECT -1 AS d UNION ALL SELECT 0 UNION ALL SELECT 1) c
+    WHERE s.char_id = p_char_id AND s.at BETWEEN p_from - INTERVAL 10 SECOND AND p_to + INTERVAL 10 SECOND;
+END//
+
+-- Positioned world rows of items (ground items, defences, tents, anything with a place and no holder) that existed at
+-- some moment of [p_from, p_to] near the character's trail (the cell grid of replay_trail_cells, any time): one row
+-- per version, from the system-versioned history of `items` (kept 14 days by ev_item_history). t_on_ms / t_off_ms
+-- are unix milliseconds; t_off_ms is NULL for a row still current.
+CREATE OR REPLACE PROCEDURE `replay_world`(IN p_char_id INT, IN p_from DATETIME(3), IN p_to DATETIME(3),
+  IN p_radius FLOAT, IN p_limit INT)
+BEGIN
+  CALL replay_trail_cells(p_char_id, p_from, p_to, p_radius, 0);
+  SELECT i.id, i.type_uname, i.x, i.y, i.z, i.rz, i.interior, i.dimension, CAST(i.data AS CHAR) AS data, i.container_id,
+    CAST(UNIX_TIMESTAMP(i.row_start) * 1000 AS SIGNED) AS t_on_ms,
+    IF(i.row_end > NOW(6) + INTERVAL 1 YEAR, NULL, CAST(UNIX_TIMESTAMP(i.row_end) * 1000 AS SIGNED)) AS t_off_ms
+  FROM items FOR SYSTEM_TIME FROM p_from TO p_to AS i
+  WHERE i.x IS NOT NULL AND i.holder_char_id IS NULL AND EXISTS (
+    SELECT 1 FROM replay_cells c WHERE c.cx = FLOOR(i.x / p_radius) AND c.cy = FLOOR(i.y / p_radius) AND c.tb = 0)
+  ORDER BY i.id, i.row_start
+  LIMIT p_limit;
+  DROP TEMPORARY TABLE IF EXISTS replay_cells;
+END//
+
 CREATE OR REPLACE PROCEDURE `staff_ban`(IN p_name VARCHAR(24), IN p_account_id INT, IN p_ip VARCHAR(45), IN p_serial CHAR(32),
                                       IN p_reason VARCHAR(128), IN p_by_account_id INT, IN p_by_name VARCHAR(24), IN p_seconds INT)
 BEGIN
@@ -3035,6 +3205,11 @@ CREATE OR REPLACE EVENT `ev_despawn_items` ON SCHEDULE EVERY 1 MINUTE STARTS '20
 
 CREATE OR REPLACE EVENT `ev_expire_bans` ON SCHEDULE EVERY 1 MINUTE STARTS '2026-10-25 12:32:28' ON COMPLETION NOT PRESERVE ENABLE DO UPDATE bans SET active = 0 WHERE active = 1 AND expires_at IS NOT NULL AND expires_at < NOW()//
 
-CREATE OR REPLACE EVENT `ev_item_history` ON SCHEDULE EVERY 1 HOUR STARTS '2026-10-25 12:32:28' ON COMPLETION NOT PRESERVE ENABLE DO DELETE HISTORY FROM items BEFORE SYSTEM_TIME NOW() - INTERVAL 7 DAY//
+CREATE OR REPLACE EVENT `ev_item_history` ON SCHEDULE EVERY 1 HOUR STARTS '2026-10-25 12:32:28' ON COMPLETION NOT PRESERVE ENABLE DO DELETE HISTORY FROM items BEFORE SYSTEM_TIME NOW() - INTERVAL 14 DAY//
+
+CREATE OR REPLACE EVENT `ev_replay_purge` ON SCHEDULE EVERY 1 DAY STARTS '2026-11-24 04:10:00' ON COMPLETION NOT PRESERVE ENABLE DO BEGIN
+  DELETE FROM replay_chunk WHERE t0 < NOW() - INTERVAL 14 DAY;
+  DELETE FROM replay_event WHERE at < NOW() - INTERVAL 30 DAY;
+END//
 
 DELIMITER ;

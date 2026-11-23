@@ -37,6 +37,12 @@ return function(ctx)
     -- element data as { id, lx, ly, lz, lrz }: their stored spot in the trailer's frame): id -> { vehicle, lx, ly, lz,
     -- lrz, attached, dz }. Their objects hang on the trailer until the list drops them and their row comes again.
     local riding = {}
+    -- A staff member's /replay hides the live items for that client only (setWorldHidden): their elements move to a
+    -- dimension nobody is in, and elements built for the replay itself (buildReplayRow) ignore it.
+    local HIDE_DIM = 65000
+    local hidden = false
+    local replayEntries = {} -- handle -> entry built by buildReplayRow, never listed in `objects`
+    local nextReplayHandle = 0
 
     local function itemType(uname)
         if typeCache[uname] == nil then
@@ -313,37 +319,44 @@ return function(ctx)
         e.glass, e.snacks = nil, nil
     end
 
+    -- every element an item draws with, destroyed (a row that left the world, or a replay's version of one)
+    local function destroyEntry(e, id)
+        clearVending(e)
+        if isElement(e.obj) then
+            destroyElement(e.obj)
+        end
+        for _, part in ipairs(e.parts or {}) do
+            if isElement(part) then
+                destroyElement(part)
+            end
+        end
+        for _, fx in ipairs(e.fires or {}) do
+            if isElement(fx) then
+                destroyElement(fx)
+            end
+        end
+        if isElement(e.plant) then
+            destroyElement(e.plant)
+        end
+        if isElement(e.smoke) then
+            destroyElement(e.smoke)
+        end
+        if not e.replay then
+            floodlight.clear(id, e)
+            power.clear(id, e)
+        end
+        if isElement(e.shown) then
+            destroyElement(e.shown)
+        end
+        if isElement(e.covering) then
+            destroyElement(e.covering)
+        end
+    end
+
     local function forget(id)
         local e = objects[id]
         if e then
-            clearVending(e)
-            if isElement(e.obj) then
-                destroyElement(e.obj)
-            end
-            for _, part in ipairs(e.parts or {}) do
-                if isElement(part) then
-                    destroyElement(part)
-                end
-            end
-            for _, fx in ipairs(e.fires or {}) do
-                if isElement(fx) then
-                    destroyElement(fx)
-                end
-            end
-            if isElement(e.plant) then
-                destroyElement(e.plant)
-            end
-            if isElement(e.smoke) then
-                destroyElement(e.smoke)
-            end
-            floodlight.clear(id, e)
-            power.clear(id, e)
-            if isElement(e.shown) then
-                destroyElement(e.shown)
-            end
-            if isElement(e.covering) then
-                destroyElement(e.covering)
-            end
+            destroyEntry(e, id)
             objects[id] = nil
         end
         labelVisibility[id] = nil
@@ -626,7 +639,7 @@ return function(ctx)
     local function place(obj, r)
         setElementCollisionsEnabled(obj, false)
         setElementInterior(obj, r.interior or 0)
-        setElementDimension(obj, r.dimension or 0)
+        setElementDimension(obj, hidden and not r.replay and HIDE_DIM or r.dimension or 0)
     end
 
     -- The pitched tent: six objects around the pack. None collide, so whoever pitched it from the middle walks out.
@@ -674,6 +687,8 @@ return function(ctx)
                 or furniture.is(r.uname)
                 or vending.is(r.uname)
         )
+        -- a hidden live row needs no collision change here: its hide dimension already keeps it out of reach, and
+        -- turning collisions off would outlast setHidden(false)
         if def then
             -- its row already holds the raised z and full heading, data the pose
             setElementPosition(obj, r.x, r.y, r.z)
@@ -744,7 +759,7 @@ return function(ctx)
             local fx = createEffect("fire", s.x, s.y, s.z)
             if fx then
                 setElementInterior(fx, r.interior or 0)
-                setElementDimension(fx, r.dimension or 0)
+                setElementDimension(fx, hidden and not r.replay and HIDE_DIM or r.dimension or 0)
                 e.fires[#e.fires + 1] = fx
             end
         end
@@ -762,7 +777,7 @@ return function(ctx)
         local fx = createEffect(machines.SMOKE_EFFECT, r.x, r.y, r.z + 0.5)
         if fx then
             setElementInterior(fx, r.interior or 0)
-            setElementDimension(fx, r.dimension or 0)
+            setElementDimension(fx, hidden and not r.replay and HIDE_DIM or r.dimension or 0)
             e.smoke = fx
         end
     end
@@ -931,6 +946,39 @@ return function(ctx)
         end
     end)
 
+    -- one world item's elements built from its row: the object (or a pitched tent's parts) and whatever hangs on it
+    local function buildEntry(r, t, isPitched)
+        local e = {
+            pitched = isPitched,
+            row = r,
+            uname = r.uname,
+            hp = r.hp,
+            x = r.x,
+            y = r.y,
+            z = r.z,
+            name = formatName(t, r),
+            defence = builtDefence(r) ~= nil,
+            replay = r.replay or nil,
+        }
+        if isPitched then
+            e.parts = createTentParts(r)
+        else
+            e.obj = createItemObject(r, t)
+        end
+        updateFires(e, r)
+        updatePlant(e, r)
+        updateSmoke(e, r)
+        if not r.replay then
+            floodlight.update(r.id, e, r)
+            power.update(r.id, e, r)
+        end
+        updateShown(e, r)
+        updateCovering(e, r)
+        updateVending(e, r)
+        markItemElements(e)
+        return e
+    end
+
     addEventHandler("inventorySynced", resourceRoot, function(delta)
         for _, id in ipairs(delta.remove or {}) do
             toMeasure[id] = nil
@@ -974,31 +1022,7 @@ return function(ctx)
                 updateVending(e, r)
                 markItemElements(e)
             else
-                e = {
-                    pitched = isPitched,
-                    row = r,
-                    uname = r.uname,
-                    hp = r.hp,
-                    x = r.x,
-                    y = r.y,
-                    z = r.z,
-                    name = formatName(t, r),
-                    defence = builtDefence(r) ~= nil,
-                }
-                if isPitched then
-                    e.parts = createTentParts(r)
-                else
-                    e.obj = createItemObject(r, t)
-                end
-                updateFires(e, r)
-                updatePlant(e, r)
-                updateSmoke(e, r)
-                floodlight.update(r.id, e, r)
-                power.update(r.id, e, r)
-                updateShown(e, r)
-                updateCovering(e, r)
-                updateVending(e, r)
-                markItemElements(e)
+                e = buildEntry(r, t, isPitched)
                 objects[r.id] = e
             end
             attachRider(r.id)
@@ -1026,6 +1050,9 @@ return function(ctx)
     end)
 
     addEventHandler("onClientRender", root, function()
+        if hidden then
+            return
+        end
         local px, py, pz = getElementPosition(localPlayer)
         local cx, cy, cz = getCameraMatrix()
         local now = getTickCount()
@@ -1129,6 +1156,10 @@ return function(ctx)
     addEventHandler("onClientResourceStop", resourceRoot, function()
         for id in pairs(objects) do
             forget(id)
+        end
+        for handle in pairs(replayEntries) do
+            destroyEntry(replayEntries[handle], handle)
+            replayEntries[handle] = nil
         end
     end)
 
@@ -1615,6 +1646,56 @@ return function(ctx)
     for _, vehicle in ipairs(getElementsByType("vehicle")) do
         if getElementData(vehicle, "vehicles.cargo") then
             applyCargo(vehicle)
+        end
+    end
+
+    -- /replay (staff): the live world items go away for this client only while a replay shows the world as it was.
+    -- Their elements move to a dimension nobody is in (visibility and collision both follow), then come back.
+    function M.setHidden(flag)
+        flag = flag == true
+        if hidden == flag then
+            return
+        end
+        hidden = flag
+        for _, e in pairs(objects) do
+            local dim = flag and HIDE_DIM or e.row.dimension or 0
+            for _, el in ipairs(elementsOf(e)) do
+                setElementDimension(el, dim)
+            end
+        end
+    end
+
+    -- the model an item row draws with (a locker's open twin, a shut padlock, the type's stand-in), or false
+    function M.modelOf(row)
+        local t = itemType(row.uname)
+        return t and modelFor(row, t) or false
+    end
+
+    -- A replay draws a row exactly as the live world does (same objects, tilts, tents, coverings, vending panes), but
+    -- apart from the live ones: no labels, reach checks, lights or power. Returns a handle and the main element.
+    function M.buildReplayRow(row)
+        local t = itemType(row.uname)
+        if not t then
+            return false
+        end
+        row.replay = true
+        local e = buildEntry(row, t, isPitchedTent(row))
+        nextReplayHandle = nextReplayHandle + 1
+        replayEntries[nextReplayHandle] = e
+        return nextReplayHandle, e.obj or (e.parts and e.parts[1]) or false
+    end
+
+    function M.destroyReplayRow(handle)
+        local e = replayEntries[handle]
+        if e then
+            destroyEntry(e, handle)
+            replayEntries[handle] = nil
+        end
+    end
+
+    function M.destroyReplayRows()
+        for handle in pairs(replayEntries) do
+            M.destroyReplayRow(handle)
         end
     end
 

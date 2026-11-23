@@ -39,6 +39,7 @@
     <resource src="hud" startup="1" protected="0"/>
     <resource src="ranking" startup="1" protected="0"/>
     <resource src="dashboard" startup="1" protected="0"/>
+    <resource src="replay" startup="1" protected="0"/>
     <resource src="staff" startup="1" protected="0"/>
     <resource src="dev" startup="1" protected="0"/>
     <!-- spawn fit review overlay for developers (/spawncheck); start it when reviewing -->

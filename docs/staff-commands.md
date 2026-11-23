@@ -8,7 +8,7 @@ details); bans and warnings write theirs inside the `staff_ban` / `staff_warn` p
 | Level | Upstream name | Commands |
 | --- | --- | --- |
 | 1 | Game Master | `/a`, `/mute`, `/unmute`, `/warn`, `/kick`, `/idlekick`, `/announce` (upstream `/msg`), `/tell <player> <message>` (port-only, partial names), `/clearchat`, `/aliases`, `/serial`, `/history`, `/reports`, `/acmds` |
-| 2 | Moderator | `/duty`, `/goto`, `/get`, `/gotopos`, `/takeback`, `/freeze`, `/unfreeze`, `/ban`, `/unban`, `/banlist`, `/banned`, `/spec`, `/free`, `/nametags`, `/profile`, `/setmotd`, `/deletereports`, `/field`, `/gender` |
+| 2 | Moderator | `/duty`, `/goto`, `/get`, `/gotopos`, `/takeback`, `/freeze`, `/unfreeze`, `/ban`, `/unban`, `/banlist`, `/banned`, `/spec`, `/free`, `/nametags`, `/profile`, `/setmotd`, `/deletereports`, `/field`, `/gender`, `/replay` |
 | 3 | Administrator | `/di <radius>` (port-only: delete loose world items around you), `/whitelist`, `/ip`, `/setactive`, `/resetpassword`, `/adminlist`, `/heal [player]` (port-only: full hp, bleeding stopped, every wound and the wound infection removed), `/hunger <0-100> [player]` and `/thirst <0-100> [player]` (port-only: set the food or thirst bar, 100 is full; lowering it on an on-duty player is refused), `/delveh [vehicle id]` (alias `/dv`, port-only: delete a vehicle and its trunk by id, the one you sit in or the nearest within 10 m; the only way a sunk vehicle goes), `/veh <name|model>` (alias `/vehicle`: spawn a vehicle in front of you) and `/veh <get|goto|enter|owner|delete|respawn|reset|lock|unlock|removekey|destroy> [vehicle id]` (upstream `/vehicle`; the vehicle by id, the one you sit in or the nearest within 10 m; every action but `owner` needs duty below Lead (spawning does not); `owner` shows the vehicle's state, `reset` is `respawn`, and respawn refuses while an off-duty player stands by it) |
 | 4 | Lead | `/players`, `/setadmin`, `/restart`, `/sc [type]` (supply crate here), `/wc` (weapons cache here), `/toxic` (where the toxic cloud is), `/toxic here` (form one over you), `/toxic cross` (send one across the map), `/toxic stop` (end it) |
 | 5 | Developer | everything above, `/setskill <skill> <0-1> [player]`, `/knockout <ms> [player]` (0 wakes up); the debug toggles live in the `dev` resource (`/sethp`, `/setfood`, `/setbleed`, `/weather` (a window: weather, who, for how long), `/additem` (items with contents, e.g. a Petrol Can, open the picker to choose liquid and amount), `/spawnveh`, `/rr`, `/move`, `/fly`) |
@@ -67,6 +67,17 @@ Double-clicking a command (or **Open in panel**) opens the staff panel on that c
 - `/spec` parks the watcher frozen, invisible and without collisions where they stood, follows the target's
   dimension and interior, and the arrow keys cycle through players; `/free` or `/spec off` returns them. While
   spectating, local chat, `/me` and the local part of voice reach the watched player only (`exports.staff:getSpectateTarget`).
+- `/replay <player|#charId> <from> [<to>|<length>]` rebuilds what one player did in a time range, for the viewer
+  only (resource `replay`, design `docs/superpowers/specs/2026-11-23-replay-design.md`). Times are `2026-11-18 19:15`,
+  `19:15` (today), `-2h` (ago) or a length like `30m`. The viewer's live world items, vehicles and players are hidden on
+  their screen only, and the items, defences and containers are rebuilt as they stood at each second from the `items`
+  history (14 days); the player plays as a ghost from the 5 Hz recorder (`replay_chunk`, 14 days) or, before it existed
+  or where it has a gap, from the 2 s `character_track` trail (marked sparse). Other characters near the trail play as
+  grey ghosts. Events come from `replay_event` (game log lines read by `tools/replay_import_log.py`, `ops/replay/`).
+  A CEGUI window holds play/pause, speed, cameras, skip-idle, go-to-time and the event list; the timeline bar under it
+  scrubs. Keys: Space, `[` `]`, arrows (Shift 10 s), PgUp/PgDn events, C camera, Tab cursor. `/replay stop` ends it and
+  puts the viewer back; `/replay list <player>` shows the recorded ranges. A staff account above the viewer's level
+  is never sent; passcodes and keypad codes are stripped.
 - `/field add <name> <x1 y1 x2 y2 x3 y3 x4 y4 minZ maxZ>` draws a detection field (upstream `detfield*.pwn`): the
   `anticheat` resource logs each player's entry once (`anticheat_field_logs`, server log) and never punishes;
   `/field list`, `/field log <name>` (last 10 entries) and `/field remove <name>`. Adds and removes are

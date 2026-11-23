@@ -422,6 +422,7 @@ for _, name in ipairs({
     "fields",
     "vehicles",
     "spawncheck",
+    "replay",
 }) do
     modules[name] = loadFile("server/" .. name .. ".lua")(ctx)
     ctx[name] = modules[name]

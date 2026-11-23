@@ -1,0 +1,39 @@
+<meta>
+    <info author="scavengesurvive-mta" type="script" name="replay" description="Flight recorder and staff replay (/replay): what a player did in a time range, rebuilt in the world" version="0.1.0"/>
+    <min_mta_version server="1.6.0" client="1.6.0"/>
+    <include resource="lib"/>
+    <include resource="auth"/>
+    <include resource="character"/>
+    <script src="shared/events.lua" type="shared"/>
+    <script src="server/main.lua" type="server"/>
+    <script src="client/main.lua" type="client"/>
+    <script src="client/pose.lua" type="client"/>
+    <file src="client/world.lua"/>
+    <file src="client/actors.lua"/>
+    <file src="client/camera.lua"/>
+    <file src="client/ui.lua"/>
+    <file src="client/debug.lua"/>
+    <file src="shared/logic/interp.lua"/>
+    <file src="shared/logic/timeline.lua"/>
+    <export function="startSession" type="server"/>
+    <export function="stopSession" type="server"/>
+    <export function="isReplaying" type="server"/>
+    <export function="getKinds" type="server"/>
+    <export function="parseRange" type="server"/>
+    <export function="dryRun" type="server"/>
+    <export function="getDryRun" type="server"/>
+    <export function="debugDemo" type="client"/>
+    <export function="debugStop" type="client"/>
+    <export function="debugState" type="client"/>
+    <export function="debugControl" type="client"/>
+    <settings>
+        <!-- 1 = the 5 Hz flight recorder runs; 0 = nothing is recorded (existing data stays) -->
+        <setting name="*record" value="1" friendlyname="Record characters for /replay"/>
+        <!-- days a recorder chunk is kept (ev_replay_purge purges at a fixed 14; keep both in step) -->
+        <setting name="*keep_days" value="14" friendlyname="Days recorder chunks are kept"/>
+        <!-- longest range /replay accepts, seconds -->
+        <setting name="*max_range_s" value="10800" friendlyname="Longest replay range (s)"/>
+        <!-- metres around the subject's trail where items, events and other players are replayed -->
+        <setting name="*radius" value="120" friendlyname="Replay radius around the trail (m)"/>
+    </settings>
+</meta>

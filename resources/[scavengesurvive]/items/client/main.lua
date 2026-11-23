@@ -358,3 +358,26 @@ addEventHandler("onClientRender", root, function()
         end
     end
 end)
+
+-- /replay (staff, the replay resource): hides the live world items for this client only, and draws rows of past states
+function setWorldHidden(flag)
+    world.setHidden(flag)
+end
+
+-- the model an item row draws with
+function getWorldModel(row)
+    return world.modelOf(row)
+end
+
+-- draws one item row (a table with uname, x, y, z, rz, interior, dimension, data) like the live world: handle, element
+function buildWorldRow(row)
+    return world.buildReplayRow(row)
+end
+
+function destroyWorldRow(handle)
+    world.destroyReplayRow(handle)
+end
+
+function destroyWorldRows()
+    world.destroyReplayRows()
+end
