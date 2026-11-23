@@ -1286,6 +1286,8 @@ return {
     ["You took the gas bottle off"] = "Kamu melepas botol gas",
     ["You try to turn on the computer but the hard disk is missing.\nYou wonder where it could be and think it's mighty suspicious.\nThere is nothing useful nearby."] = "Kamu mencoba menyalakan komputer, tapi hard disk-nya hilang.\nKamu bertanya-tanya di mana benda itu dan merasa ini sangat mencurigakan.\nTidak ada yang berguna di dekat sini.",
     ["You were handed an item"] = "Kamu diberi sebuah benda",
+    ["You were stuck, so you and your vehicle were moved to open ground nearby."] = "Kamu terjebak, jadi kamu dan kendaraanmu dipindahkan ke tanah terbuka di dekatnya.",
+    ["You were stuck, so you were moved to open ground nearby."] = "Kamu terjebak, jadi kamu dipindahkan ke tanah terbuka di dekatnya.",
     ["You will have a better chance in a group, but be careful who you trust."] = "Peluangmu lebih besar dalam kelompok, tapi hati-hati siapa yang kamu percaya.",
     ["Your Scavenge & Survive confirmation code: %s"] = "Kode konfirmasi Scavenge & Survive kamu: %s",
     ["Your first bag is the best thing you can find. Look for one first."] = "Tas pertamamu adalah barang terbaik yang bisa kamu temukan. Cari tas dulu.",

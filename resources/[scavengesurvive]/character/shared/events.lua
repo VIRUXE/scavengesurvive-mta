@@ -8,6 +8,7 @@ addEvent("characterStatsChanged", false)
 addEvent("characterItemsDropped", false)
 addEvent("tutorialCharacterDied", false) -- the tutorial character would have died; the tutorial resource ends it
 addEvent("itemCreated", false) -- items' event, triggered by death.lua for the body (#139)
+addEvent("vehicleRescued", false) -- vehicles' event; ground.lua carries a vehicle out with a wedged player
 
 -- client to server (handlers registered with net.handler)
 addEvent("respawnRequested", true)

@@ -62,6 +62,8 @@ Short answers to the questions new players ask, with the page that has the long 
 
 **My parked car disappeared.** A vehicle driven away from its spawn point and not used for 3 days is removed with everything in its trunk. Getting in, opening the trunk or hitching it counts as use, and a vehicle with a custom lock (Locksmith Kit or Lock and Chain) is never removed; `/lock` alone does not protect it. A wrecked vehicle vanishes 30 seconds after it blows up. See [Vehicles](Vehicles) and [Loot & Respawn](Loot-and-Respawn).
 
+**I got stuck and can't move.** If you stand somewhere with too little room over your head to stand up (getting off a bike under a low ledge, for instance) and stay put for 5 seconds, you are moved to the nearest open ground within 25 m, and a chat line tells you so. The vehicle you just got off comes along when it is still within 10 m and under the same low cover: it is parked on the nearest flat, open spot with room for it. Crouching under something low does not count. Anywhere else, use `/report` or ask the staff on [Discord](Discord).
+
 **Where do I spawn?** At one of 14 spots at the water's edge, never the same one twice in a row. The map is on [Death](Death).
 
 ## Staff and rules

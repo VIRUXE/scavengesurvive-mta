@@ -58,6 +58,8 @@ Respostas curtas às perguntas que os jogadores novos fazem, com a página que t
 
 **O meu carro estacionado desapareceu.** Um veículo conduzido para longe do seu ponto de aparecimento e não usado durante 3 dias é removido com tudo o que tem na mala. Entrar, abrir a mala ou engatá-lo conta como uso, e um veículo com fechadura personalizada (Kit de serralheiro ou Cadeado e corrente) nunca é removido; `/lock` sozinho não o protege. Um veículo destruído desaparece 30 segundos depois de explodir. Vê [Veículos](Vehicles) e [Saque e reaparecimento](Loot-and-Respawn).
 
+**Fiquei preso e não me consigo mexer.** Se estiveres num sítio sem altura para ficares de pé (ao saíres de uma mota debaixo de uma saliência baixa, por exemplo) e ficares parado 5 segundos, és movido para o chão aberto mais próximo, até 25 m, e uma linha no chat avisa-te. O veículo de onde acabaste de sair vem contigo se ainda estiver a menos de 10 m e debaixo da mesma cobertura baixa: fica estacionado no sítio plano e aberto mais próximo com espaço para ele. Agachar debaixo de algo baixo não conta. Noutros casos, usa `/report` ou pede ajuda à equipa no [Discord](Discord).
+
 **Onde apareço?** Num de 14 pontos à beira da água, nunca o mesmo duas vezes seguidas. O mapa está em [Morte](Death).
 
 ## Equipa e regras {#staff-and-rules}

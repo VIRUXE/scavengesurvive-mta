@@ -1286,6 +1286,8 @@ return {
     ["You took the gas bottle off"] = "Ai scos tubul de gaz",
     ["You try to turn on the computer but the hard disk is missing.\nYou wonder where it could be and think it's mighty suspicious.\nThere is nothing useful nearby."] = "Încerci să pornești calculatorul, dar lipsește hard diskul.\nTe întrebi unde o fi și ți se pare foarte suspect.\nNu e nimic util în apropiere.",
     ["You were handed an item"] = "Ai primit un obiect",
+    ["You were stuck, so you and your vehicle were moved to open ground nearby."] = "Erai blocat, așa că tu și vehiculul tău ați fost mutați pe un teren liber din apropiere.",
+    ["You were stuck, so you were moved to open ground nearby."] = "Erai blocat, așa că ai fost mutat pe un teren liber din apropiere.",
     ["You will have a better chance in a group, but be careful who you trust."] = "Vei avea șanse mai bune într-un grup, dar ai grijă în cine ai încredere.",
     ["Your Scavenge & Survive confirmation code: %s"] = "Codul tău de confirmare Scavenge & Survive: %s",
     ["Your first bag is the best thing you can find. Look for one first."] = "Prima geantă e cel mai bun lucru pe care îl poți găsi. Caută una înainte de toate.",

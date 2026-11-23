@@ -1286,6 +1286,8 @@ return {
     ["You took the gas bottle off"] = "Вы сняли газовый баллончик",
     ["You try to turn on the computer but the hard disk is missing.\nYou wonder where it could be and think it's mighty suspicious.\nThere is nothing useful nearby."] = "Вы пытаетесь включить компьютер, но жёсткий диск отсутствует.\nГде же он может быть? Это очень подозрительно.\nПоблизости нет ничего полезного.",
     ["You were handed an item"] = "Вам передали предмет",
+    ["You were stuck, so you and your vehicle were moved to open ground nearby."] = "Вы застряли, поэтому вас и ваш транспорт переместили на открытое место поблизости.",
+    ["You were stuck, so you were moved to open ground nearby."] = "Вы застряли, поэтому вас переместили на открытое место поблизости.",
     ["You will have a better chance in a group, but be careful who you trust."] = "В группе шансов больше, но будьте осторожны, кому вы доверяете.",
     ["Your Scavenge & Survive confirmation code: %s"] = "Ваш код подтверждения Scavenge & Survive: %s",
     ["Your first bag is the best thing you can find. Look for one first."] = "Первая сумка — лучшее, что можно найти. Ищите её в первую очередь.",

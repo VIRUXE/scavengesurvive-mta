@@ -727,6 +727,8 @@ return {
     ["You badly need water"] = "Tev steidzami vajag ūdeni",
     ["You carry everything it takes."] = "Tev ir viss nepieciešamais.",
     ["You feel weak from hunger"] = "Tu jūties vājš no bada",
+    ["You were stuck, so you and your vehicle were moved to open ground nearby."] = "Tu biji iestrēdzis, tāpēc tevi un tavu transportlīdzekli pārvietoja uz brīvu vietu tuvumā.",
+    ["You were stuck, so you were moved to open ground nearby."] = "Tu biji iestrēdzis, tāpēc tevi pārvietoja uz brīvu vietu tuvumā.",
     ["Your mouth is dry"] = "Tev ir sausa mute",
     ["Your pockets have 6 slots. A bag adds 7 (Small Bag) to 19 (Travel Rucksack). Find one first!"] = "Kabatās ir 6 vietas. Soma pievieno no 7 (Maza soma) līdz 19 (Ceļojuma mugursoma). Vispirms atrodi somu!",
     ["Your stomach growls"] = "Tev kurkst vēderā",

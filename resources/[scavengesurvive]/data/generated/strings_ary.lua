@@ -737,6 +737,8 @@ return {
     ["You badly need water"] = "Khassek lma daba",
     ["You carry everything it takes."] = "3andek kolchi li khass.",
     ["You feel weak from hunger"] = "Ntaya m3ya mn ljo3",
+    ["You were stuck, so you and your vehicle were moved to open ground nearby."] = "Kenti m7bous, so7bnak nta w tomobiltek l blassa 7alla 9rib.",
+    ["You were stuck, so you were moved to open ground nearby."] = "Kenti m7bous, so7bnak l blassa 7alla 9rib.",
     ["Your mouth is dry"] = "Fommek nashef",
     ["Your pockets have 6 slots. A bag adds 7 (Small Bag) to 19 (Travel Rucksack). Find one first!"] = "Jyoubek fihom 6 blayes. Sac kayzid mn 7 (Sac Sghir) l 19 (Sac a Dos dyal Safar). 9elleb 3la wa7ed lewwel!",
     ["Your stomach growls"] = "Kerrek katgerger",

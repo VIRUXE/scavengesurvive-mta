@@ -727,6 +727,8 @@ return {
     ["You badly need water"] = "Naléhavě potřebuješ vodu",
     ["You carry everything it takes."] = "Máte u sebe vše potřebné.",
     ["You feel weak from hunger"] = "Cítíš se slabý hlady",
+    ["You were stuck, so you and your vehicle were moved to open ground nearby."] = "Zasekl ses, takže jsi byl i se svým vozidlem přesunut na volné místo poblíž.",
+    ["You were stuck, so you were moved to open ground nearby."] = "Zasekl ses, takže jsi byl přesunut na volné místo poblíž.",
     ["Your mouth is dry"] = "Máš vyprahlo v puse",
     ["Your stomach growls"] = "Kručí ti v břiše",
     online = "online",

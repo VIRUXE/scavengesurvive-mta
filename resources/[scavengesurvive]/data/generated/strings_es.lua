@@ -1286,6 +1286,8 @@ return {
     ["You took the gas bottle off"] = "Has quitado la bombona de gas",
     ["You try to turn on the computer but the hard disk is missing.\nYou wonder where it could be and think it's mighty suspicious.\nThere is nothing useful nearby."] = "Intentas encender el ordenador, pero falta el disco duro.\nTe preguntas dónde estará y lo encuentras muy sospechoso.\nNo hay nada útil cerca.",
     ["You were handed an item"] = "Te han dado un objeto",
+    ["You were stuck, so you and your vehicle were moved to open ground nearby."] = "Estabas atascado, así que te movimos a ti y a tu vehículo a un terreno despejado cercano.",
+    ["You were stuck, so you were moved to open ground nearby."] = "Estabas atascado, así que te movimos a un terreno despejado cercano.",
     ["You will have a better chance in a group, but be careful who you trust."] = "Tendrás más posibilidades en grupo, pero ten cuidado en quién confías.",
     ["Your Scavenge & Survive confirmation code: %s"] = "Tu código de confirmación de Scavenge & Survive: %s",
     ["Your first bag is the best thing you can find. Look for one first."] = "Tu primera bolsa es lo mejor que puedes encontrar. Busca una antes que nada.",

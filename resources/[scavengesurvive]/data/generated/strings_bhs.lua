@@ -1209,6 +1209,8 @@ return {
     ["You took the gas bottle off"] = "Skinuo si bocu s plinom",
     ["You try to turn on the computer but the hard disk is missing.\nYou wonder where it could be and think it's mighty suspicious.\nThere is nothing useful nearby."] = "Pokušavaš uključiti računar, ali nedostaje tvrdi disk.\nPitaš se gdje bi mogao biti i misliš da je to vrlo sumnjivo.\nU blizini nema ništa korisno.",
     ["You were handed an item"] = "Dobio si predmet",
+    ["You were stuck, so you and your vehicle were moved to open ground nearby."] = "Bio si zaglavljen, pa ste ti i tvoje vozilo premješteni na otvoreno tlo u blizini.",
+    ["You were stuck, so you were moved to open ground nearby."] = "Bio si zaglavljen, pa si premješten na otvoreno tlo u blizini.",
     ["You will have a better chance in a group, but be careful who you trust."] = "U grupi imaš više šanse, ali pazi kome vjeruješ.",
     ["Your Scavenge & Survive confirmation code: %s"] = "Tvoj Scavenge & Survive kod za potvrdu: %s",
     ["Your first bag is the best thing you can find. Look for one first."] = "Prva torba je najbolja stvar koju možeš naći. Prvo traži nju.",
