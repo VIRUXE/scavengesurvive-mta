@@ -293,6 +293,8 @@ function pushActions(heldUname)
             and getPedContactElement(localPlayer) ~= v
             and outside(v, px, py, pz) <= plogic.REACH
         then
+            local handling = getVehicleHandling(v)
+            local canPush = plogic.canPushMass(getElementModel(v), handling and handling.mass)
             local vx, vy = getElementPosition(v)
             local _, _, rz = getElementRotation(v)
             local angle = vlogic.angleToVehicle(px, py, vx, vy, rz)
@@ -300,12 +302,14 @@ function pushActions(heldUname)
                 local vehicleType = exports.data:vehicleType(getElementData(v, "vehicles.type"))
                 local name = vehicleType and lang.text(vehicleType.name) or getVehicleName(v)
                 local id = "vehicle:" .. tostring(getElementData(v, "vehicles.id")) .. ":"
-                actions[#actions + 1] = {
-                    id = id .. "push",
-                    label = lang.text("Push") .. " · " .. name,
-                    event = "vehiclePushRequested",
-                    target = v,
-                }
+                if canPush then
+                    actions[#actions + 1] = {
+                        id = id .. "push",
+                        label = lang.text("Push") .. " · " .. name,
+                        event = "vehiclePushRequested",
+                        target = v,
+                    }
+                end
                 -- at the rear the interact key alone would have opened the trunk: it joins the list (as with towing)
                 if vlogic.isRear(angle) and getElementData(v, "vehicles.containerId") then
                     actions[#actions + 1] = {

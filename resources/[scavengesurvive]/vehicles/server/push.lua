@@ -79,7 +79,7 @@ return function(ctx)
             return refuse(player, vehicle, "CANNOT_PUSH")
         end
         local handling = getVehicleHandling(vehicle)
-        if (handling and handling.mass or 0) > plogic.MAX_MASS then
+        if not plogic.canPushMass(getElementModel(vehicle), handling and handling.mass) then
             return refuse(player, vehicle, "TOO_HEAVY")
         end
         local px, py, pz = getElementPosition(player)

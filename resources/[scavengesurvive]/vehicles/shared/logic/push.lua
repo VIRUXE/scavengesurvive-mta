@@ -13,6 +13,10 @@ M.REACH = 1.3 -- metres from the bumper the hands still touch it
 M.ACCEL = 1.2 -- m/s per second while the player leans in
 M.MIN_SKILL_DISTANCE = 3 -- metres a push must move the vehicle to count for the skill
 
+function M.canPushMass(model, mass)
+    return model == 573 or (mass or 0) <= M.MAX_MASS -- Duneride and Doomride share the same handling model
+end
+
 -- Front or rear by the angle round the vehicle (shared/logic/vehicle.lua angleToVehicle: 0 front, 180 rear):
 -- +1 when the push moves it forward (the player at its rear), -1 backward (at its front), nil from a side.
 function M.side(angle)
