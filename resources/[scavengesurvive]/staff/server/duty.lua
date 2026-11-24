@@ -81,7 +81,7 @@ return function(ctx)
         end
         setNametags(p, false)
         ctx.ghosts.hideFor(p)
-        ctx.esp.hideFor(p)
+        ctx.esp.sendTo(p)
         log.event("staff.dutyChanged", { player = p, on = false, silent = silent == true })
         if not silent then
             ctx.say(p, " >  You are off duty.")

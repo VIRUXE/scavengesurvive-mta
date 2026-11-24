@@ -181,19 +181,14 @@ end
 
 -- Duty ESP: every player's position as pushed by server/esp.lua. A marker and label on screen, an edge arrow when the
 -- player is off screen. Streamed-in players use their live bone position, the rest the last snapshot.
-local esp, espShown, espHinted = {}, true, false
+local esp, espHinted = {}, false
 
 addEventHandler("staffEspChanged", root, function(list)
     esp = type(list) == "table" and list or {}
     if #esp > 0 and not espHinted then
         espHinted = true
-        outputChatBox(" >  Player and nearby vehicle ESP shown while on duty. /esp hides it.", 255, 255, 0)
+        outputChatBox(" >  Player and nearby vehicle ESP is active. /esp hides it.", 255, 255, 0)
     end
-end)
-
-addCommandHandler("esp", function()
-    espShown = not espShown
-    outputChatBox(" >  ESP " .. (espShown and "shown" or "hidden"), 255, 255, 0)
 end)
 
 addEventHandler("onClientResourceStop", resourceRoot, function()
@@ -212,7 +207,7 @@ local function espColour(e)
 end
 
 local function drawEsp()
-    if #esp == 0 or not espShown then
+    if #esp == 0 then
         return
     end
     local sw, sh = guiGetScreenSize()
@@ -263,13 +258,13 @@ local function drawEsp()
     end
 end
 
--- Vehicle ESP: shown with the player ESP (on duty, /esp toggles both), only for streamed-in vehicles within
+-- Vehicle ESP: shown with the player ESP, only for streamed-in vehicles within
 -- VEH_ESP_DISTANCE of the camera. Label: model, DB id, health, fuel, lock state (vehicles element data).
 local VEH_ESP_DISTANCE = 120
 local LOCK_LABELS = { [0] = "open", [1] = "locked (ext)", [2] = "locked" }
 
 local function drawVehicleEsp()
-    if #esp == 0 or not espShown then
+    if #esp == 0 then
         return
     end
     local cx, cy, cz = getCameraMatrix()

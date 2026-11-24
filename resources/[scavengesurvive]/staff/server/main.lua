@@ -443,6 +443,7 @@ local function forget(p)
     modules.bans.release(p)
     modules.moderation.forget(p)
     modules.duty.forget(p)
+    modules.esp.forget(p)
 end
 
 -- the quit type, with the reason a kick or ban carried (colour codes stripped)
