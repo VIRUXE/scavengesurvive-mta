@@ -75,6 +75,8 @@ local BOX_W, PAD, GAP = 150, 4, 14 -- canvas units
 local active, done, invOpen, lastClose, startedAt = false, false, false, -10000, 0
 -- the server's guide: the step, what to do and the item it names
 local stage, hint, tool, goodUntil = 0, nil, nil, 0
+-- a good spare wheel lies within reach of an empty hub (worked out with the arrow, every 250 ms)
+local spareAtHub = false
 local tipAt = {} -- toast code -> when its tip was last shown
 -- the marker over what to touch next, where it points and when that was last worked out
 local arrowMarker, arrowTarget, arrowChecked
@@ -216,8 +218,17 @@ end
 
 local GREEN, GREY, YELLOW = tocolor(120, 220, 120, 255), tocolor(170, 170, 170, 255), tocolor(0xE8, 0xE8, 0x90, 255)
 
+-- the server's TYRES_FIT only knows the Wrench is held: until a spare lies at the empty hub, fitting would put the
+-- flat just taken off straight back on, so the hint stays on laying the spare
+local function shownHint()
+    if hint == "TYRES_FIT" and not spareAtHub then
+        return "TYRES_HUB"
+    end
+    return hint
+end
+
 local function hintText()
-    local fmt = HINTS[hint]
+    local fmt = HINTS[shownHint()]
     if not fmt then
         return ""
     end
@@ -321,6 +332,53 @@ local function nearestWheel(v, wanted)
     return bx, by, bz
 end
 
+-- the kit's spares (logic.ITEMS): the Bobcat's own wheel style, inflated
+local SPARE = "WheelLighttruck"
+-- vehicles' lugnuts fit a wheel lying within 3 m of the player; the hub stands in for where they kneel
+local SPARE_REACH = 2.5
+
+-- the positions of the spares lying in the tutorial's dimension
+local function spares()
+    local out = {}
+    local dim = getElementDimension(localPlayer)
+    for _, obj in pairs(exports.items:worldObjectsOfType(SPARE) or {}) do
+        if isElement(obj) and getElementDimension(obj) == dim then
+            out[#out + 1] = { getElementPosition(obj) }
+        end
+    end
+    return out
+end
+
+local function spareNearEmptyHub(v, list)
+    local states = { getVehicleWheelStates(v) }
+    for i, name in ipairs(WHEELS) do
+        if states[i] == 2 then
+            local x, y, z = getVehicleComponentPosition(v, name, "world")
+            if x then
+                for _, s in ipairs(list) do
+                    if getDistanceBetweenPoints3D(x, y, z, s[1], s[2], s[3]) < SPARE_REACH then
+                        return true
+                    end
+                end
+            end
+        end
+    end
+    return false
+end
+
+-- the spare nearest the player
+local function nearestSpare(list)
+    local px, py, pz = getElementPosition(localPlayer)
+    local bx, by, bz, bestD
+    for _, s in ipairs(list) do
+        local d = getDistanceBetweenPoints3D(px, py, pz, s[1], s[2], s[3])
+        if not bestD or d < bestD then
+            bx, by, bz, bestD = s[1], s[2], s[3], d
+        end
+    end
+    return bx, by, bz
+end
+
 local function atComponent(v, name, fx, fy, fz)
     local x, y, z = getVehicleComponentPosition(v, name, "world")
     if x then
@@ -356,6 +414,13 @@ local function targetFor()
         local x, y, z = atComponent(v, "bonnet_dummy", 0, 2.4, 0.6)
         return x, y, z
     elseif stage == 3 and hint ~= "TYRES_ENGINE_OFF" then
+        -- a hub stands empty and no spare lies at it yet: the arrow shows where a spare is
+        if shownHint() == "TYRES_HUB" and not spareAtHub then
+            local sx, sy, sz = nearestSpare(spares())
+            if sx then
+                return sx, sy, sz
+            end
+        end
         return nearestWheel(v, function(state)
             return state ~= 0
         end)
@@ -378,6 +443,8 @@ addEventHandler("onClientRender", root, function()
     local now = getTickCount()
     if not arrowChecked or now - arrowChecked > 250 then
         arrowChecked = now
+        local v = stage == 3 and bobcat()
+        spareAtHub = v and spareNearEmptyHub(v, spares()) or false
         arrowTarget = { targetFor() }
     end
     local x, y, z = unpack(arrowTarget)
