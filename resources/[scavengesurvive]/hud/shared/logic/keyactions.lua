@@ -215,6 +215,13 @@ function M.lines(ctx, keys)
         local doorText = { open = tr("Close door"), locked = tr("Door locked") }
         add("interact", doorText[ctx.nearDoor] or tr("Open door"))
     end
+    if not busyF then
+        if ctx.combinationLock == "fit" and not ctx.nearDoor then
+            add("interact", tr("(Hold) Fit combination lock"))
+        elseif ctx.combinationLock == "enter" then
+            add("enter", tr("Enter combination"))
+        end
+    end
     -- a Ratchet at a body part of a vehicle (vehicles bodyparts, not an upstream line): a hold takes the part off
     if ctx.bodyPart and not busyF then
         add("interact", ctx.bodyPart)

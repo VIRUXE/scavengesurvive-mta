@@ -286,10 +286,12 @@ return function(ctx)
         if type(code) == "string" then
             ground, passes = code:match("^GRIND_PASS:(%d+):(%d+)$")
         end
+        local combo = type(code) == "string" and code:match("^LOCKCHN_COMBO:(%d%d%d%d)$")
         local charge = type(code) == "string" and code:match("^BATTERY_LEVEL:(%d+)$")
         local needTool = type(code) == "string" and code:match("^NEEDANOTOOL:(%w+)$")
         local toolType = needTool and lang.itemType(needTool)
-        local msg = charge and lang.format("Car Battery: %d%%", tonumber(charge) or 0)
+        local msg = combo and lang.format("Locked. Your combination is %s.", combo)
+            or charge and lang.format("Car Battery: %d%%", tonumber(charge) or 0)
             or needTool and lang.format(
                 "You need a %s to continue repairing this vehicle",
                 toolType and toolType.name or needTool
@@ -300,7 +302,7 @@ return function(ctx)
             or MESSAGES[code] and lang.text(MESSAGES[code])
             or upstreamLine(code)
             or tostring(code)
-        exports.ui:actionTextShow(msg, 3000)
+        exports.ui:actionTextShow(msg, combo and 8000 or 3000)
     end)
 
     local function itemType(uname)

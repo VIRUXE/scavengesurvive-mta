@@ -118,7 +118,16 @@ return function(ctx)
 
     function M.useComboPadlock(player, itemId, data, _, openContainerId)
         openCombos[player] = { itemId = itemId, openContainerId = openContainerId }
-        triggerClientEvent(player, "comboPadlockOpened", player, itemId, small.comboShut(data), small.comboDials(data))
+        local shut = small.comboShut(data)
+        triggerClientEvent(
+            player,
+            "comboPadlockOpened",
+            player,
+            itemId,
+            shut,
+            small.comboDials(data),
+            not shut and small.comboCode(data) or nil
+        )
     end
 
     -- fn(player, fromHand, data) with the padlock the player opened, still theirs
@@ -155,6 +164,7 @@ return function(ctx)
                     return
                 end
                 nextData.combo = dials
+                triggerClientEvent(pl, "comboPadlockChanged", pl, itemId, false, nil, dials)
                 log.event("item.codeSet", { player = pl, item_id = itemId, uname = "ComboPadlock", ok = true })
                 toast(pl, "PADLOCK_CODE_SET")
             elseif action == "push" then
@@ -168,7 +178,7 @@ return function(ctx)
                 local opened = nextData.shut == nil
                 local line = { player = pl, item_id = itemId, uname = "ComboPadlock", shut = opened and 0 or 1 }
                 log.event("item.lockToggled", line)
-                triggerClientEvent(pl, "comboPadlockChanged", pl, itemId, not opened, true)
+                triggerClientEvent(pl, "comboPadlockChanged", pl, itemId, not opened, true, opened and code or nil)
             else
                 return
             end

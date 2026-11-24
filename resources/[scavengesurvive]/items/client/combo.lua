@@ -19,7 +19,7 @@ return function(ctx)
     -- lang:begin
     local HINTS = {
         dials = "Left/Right: dial   Up/Down or 0-9: turn   S: scramble",
-        open = "Space: push the shackle down   R: make this the code   Esc: done",
+        open = "Space: push the shackle down   R: save these digits as the code   Esc: done",
         shut = "Space: push the shackle (it opens on the right code)   Esc: done",
     }
     -- lang:end
@@ -98,7 +98,7 @@ return function(ctx)
         setCameraTarget(localPlayer)
     end
 
-    local function open(itemId, shut, dials)
+    local function open(itemId, shut, dials, savedCode)
         close(true)
         local body = createObject(models.forSamp(BODY_MODEL) or models.FALLBACK, 0, 0, -1000)
         local shackle = createObject(models.forSamp(SHACKLE_MODEL) or models.FALLBACK, 0, 0, -1000)
@@ -124,6 +124,7 @@ return function(ctx)
         setElementRotation(body, 0, 0, heading)
         attachElements(shackle, body)
         s = { itemId = itemId, shut = shut, body = body, shackle = shackle, sel = 1, dials = {} }
+        s.savedCode = savedCode
         s.start = { px, py, pz }
         for i = 1, 4 do
             s.dials[i] = tonumber(tostring(dials or "0000"):sub(i, i)) or 0
@@ -146,15 +147,20 @@ return function(ctx)
         drawDials()
     end
 
-    addEventHandler("comboPadlockOpened", root, function(itemId, shut, dials)
-        open(itemId, shut == true, dials)
+    addEventHandler("comboPadlockOpened", root, function(itemId, shut, dials, savedCode)
+        open(itemId, shut == true, dials, savedCode)
     end)
 
     -- the server's answer to a push: moved false = a shut padlock on the wrong code, the shackle only gives a little
-    addEventHandler("comboPadlockChanged", root, function(itemId, shut, moved)
+    addEventHandler("comboPadlockChanged", root, function(itemId, shut, moved, savedCode)
         if not s or s.itemId ~= itemId then
             return
         end
+        if moved == nil then
+            s.savedCode = savedCode
+            return
+        end
+        s.savedCode = savedCode
         s.busy = nil
         if not moved then
             playSoundFrontEnd(4)
@@ -257,8 +263,11 @@ return function(ctx)
         end
         local sw, sh = guiGetScreenSize()
         local lines = { lang.text(HINTS.dials), lang.text(s.shut and HINTS.shut or HINTS.open) }
+        if not s.shut and s.savedCode then
+            table.insert(lines, 1, lang.format("Saved combination: %s", s.savedCode))
+        end
         for i, text in ipairs(lines) do
-            local y = sh - 70 + (i - 1) * 22
+            local y = sh - 26 - #lines * 22 + (i - 1) * 22
             dxDrawText(text, 1, y + 1, sw + 1, y + 21, tocolor(0, 0, 0, 200), 1.1, "default-bold", "center")
             dxDrawText(text, 0, y, sw, y + 20, tocolor(255, 255, 255, 235), 1.1, "default-bold", "center")
         end

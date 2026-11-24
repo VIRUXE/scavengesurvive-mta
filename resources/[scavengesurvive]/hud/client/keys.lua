@@ -91,6 +91,8 @@ return function(ctx)
         return nearVeh, nearDist
     end
 
+    ctx.getNearbyVehicle = getNearbyVehicle
+
     -- the tweak pad (building): while an item is being nudged into place the interact key does nothing, and
     -- dropping, putting away or opening the inventory finishes the tweak first (upstream item-tweak.pwn's hooks)
     local function tweaking()

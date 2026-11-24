@@ -463,6 +463,11 @@ local function create(row, fresh)
     setElementData(v, "vehicles.fuel", tonumber(row.fuel) or 0, "broadcast", "deny")
     setElementData(v, "vehicles.locked", lockState, "broadcast", "deny")
 
+    local lockType = exports.data:vehicleType(row.type_uname)
+    if row.keypad_code and row.keypad_code ~= "" and not (lockType and lockType.door) then
+        setElementData(v, "vehicles.combinationLock", true, "broadcast", "deny")
+    end
+
     local cid = row.container_id and tonumber(row.container_id) or nil
     setElementData(v, "vehicles.containerId", cid or false, "broadcast", "deny")
     local gid = row.glovebox_id and tonumber(row.glovebox_id) or nil
@@ -1907,6 +1912,7 @@ local function breakDoorLock(vehicle, player)
     setVehicleLocked(vehicle, false)
     setElementData(vehicle, "vehicles.locked", 0, "broadcast", "deny")
     vinf.keypad = nil
+    removeElementData(vehicle, "vehicles.combinationLock")
     db.exec(BREAK_LOCK_SQL, { vinf.id })
     log.event("vehicle.lockToggled", vehicleLine(vehicle, { player = player, locked = 0, via = "broken" }))
 end
@@ -2919,15 +2925,14 @@ net.handler("vehicleInteractRequested", function(player, vehicle, capX, capY, ca
                         if vi then
                             vi.locked = vlogic.LOCK_EXTERNAL
                             vi.keypad = combo
+                            setElementData(veh, "vehicles.combinationLock", true, "broadcast", "deny")
                             setVehicleLocked(veh, true)
                             setElementData(veh, "vehicles.locked", 1, "broadcast", "deny")
                             db.exec("UPDATE vehicles SET locked = 1, keypad_code = ? WHERE id = ?", { combo, vi.id })
                             local line =
                                 vehicleLine(veh, { player = p, locked = 1, via = "combolock", item_id = kitId })
                             log.event("vehicle.lockToggled", line)
-                        end
-                        if isElement(p) then
-                            toast(p, "LOCKCHN_LOCKED")
+                            toast(p, "LOCKCHN_COMBO:" .. combo)
                         end
                     end)
                 end
@@ -3109,6 +3114,7 @@ net.handler("vehicleInteractRequested", function(player, vehicle, capX, capY, ca
                     setVehicleLocked(veh, false)
                     setElementData(veh, "vehicles.locked", 0, "broadcast", "deny")
                     vinf.keypad = nil
+                    removeElementData(veh, "vehicles.combinationLock")
                     db.exec(BREAK_LOCK_SQL, { vinf.id })
                     log.event("vehicle.lockToggled", vehicleLine(veh, { player = p, locked = 0, via = "broken" }))
                     toast(p, "LOCKBROKEN")

@@ -9,6 +9,7 @@ local function loadFile(path, chunkName)
     return assert(loadstring(src, chunkName))()
 end
 local canvas = loadFile(":ui/shared/logic/canvas.lua", "=ui/canvas.lua")
+local vlogic = loadFile(":vehicles/shared/logic/vehicle.lua", "=vehicles/logic.lua")
 local keyactions = loadFile("shared/logic/keyactions.lua", "=hud/keyactions.lua")
 local watch = loadFile("shared/logic/watch.lua", "=hud/watch.lua")
 local vehiclepanel = loadFile("shared/logic/vehiclepanel.lua", "=hud/vehiclepanel.lua")
@@ -143,6 +144,7 @@ end
 
 local function refreshKeys()
     state.keys = {
+        enter = controlKey("enter_exit", "f", "f"),
         interact = keyName("interact", "f"),
         putaway = keyName("putaway", "y"),
         drop = keyName("dropitem", "n"),
@@ -728,6 +730,37 @@ local interactionActions = loadFile("client/interactions.lua", "=hud/interaction
 -- the table client/keys.lua gets; it puts crowbarFocus on it (what F with a Crowbar works on)
 local keysCtx = {}
 
+local function combinationLockHint(held)
+    if getPedOccupiedVehicle(localPlayer) or not keysCtx.getNearbyVehicle then
+        return nil
+    end
+    local vehicle, distance = keysCtx.getNearbyVehicle()
+    if not vehicle or distance > 5.5 then
+        return nil
+    end
+    local locked = tonumber(getElementData(vehicle, "vehicles.locked")) or 0
+    local combination = getElementData(vehicle, "vehicles.combinationLock") == true
+    if held and held.uname == "ComboLockChain" then
+        local vt = exports.data:vehicleType(getElementData(vehicle, "vehicles.type"))
+        if
+            vt
+            and not vt.door
+            and distance <= vlogic.maxReachDistance(vt.size)
+            and vlogic.canCraftKey(
+                locked,
+                held.uname,
+                vlogic.isDoorless(getElementModel(vehicle), vt.notLockable),
+                combination and 1 or 0,
+                true
+            )
+        then
+            return "fit"
+        end
+    elseif not held and combination and locked > 0 and distance <= vlogic.DOOR_SERVER_REACH then
+        return "enter"
+    end
+end
+
 local function drawKeyActions(driver)
     local held = state.held
     local isCalibreWep = held and held.category == "weapon" and held.calibre ~= nil and not held.liquid or false
@@ -762,6 +795,7 @@ local function drawKeyActions(driver)
         nearFeature = nearFeature(),
         nearCrate = exports.loot:nearbyCrate() or exports.dumpsters:nearbyDumpster() or nil,
         nearDoor = walkInDoor(),
+        combinationLock = combinationLockHint(held),
         nearBonnet = nearBonnetHint(held),
         nearItem = nearItem,
         nearInspectable = not held and inspectUname or false,
