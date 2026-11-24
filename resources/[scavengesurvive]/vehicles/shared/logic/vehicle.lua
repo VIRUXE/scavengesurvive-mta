@@ -45,13 +45,19 @@ M.COWLS = {
     [487] = { frames = { cowl_l = 1, cowl_r = -1 }, openDeg = 90, x = 0, y = -0.72, reach = 2.2 },
 }
 
+-- Models with a serviceable engine bay and no bonnet component in the model survey.
+local NO_BONNET = {
+    [407] = true, -- Firetruck
+    [573] = true, -- Duneride
+    [578] = true, -- DFT-30, Steamroller, APC-30
+}
+
 -- "bonnet", "cowl", or nil for an engine with nothing over it (vt.category: the vehicle type's)
 function M.engineCover(model, category)
     if M.COWLS[model] then
         return "cowl"
     end
-    -- The Duneride (573) has no bonnet component but still has a serviceable engine bay.
-    if model == 573 or category == "helicopter" or category == "plane" then
+    if NO_BONNET[model] or category == "helicopter" or category == "plane" then
         return nil
     end
     return "bonnet"
