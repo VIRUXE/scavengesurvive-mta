@@ -56,7 +56,14 @@ local function snapshot(requester)
     for _, p in ipairs(getElementsByType("player")) do
         local account = exports.auth:getAccountId(p)
         local s, dead, paused = exports.character:getAliveSeconds(p)
-        local row = { name = getPlayerName(p), s = 0, state = "none", run = false, me = p == requester or nil }
+        local row = {
+            name = getPlayerName(p),
+            s = 0,
+            state = "none",
+            run = false,
+            ping = getPlayerPing(p),
+            me = p == requester or nil,
+        }
         if account and s then
             row.s = s
             if dead then

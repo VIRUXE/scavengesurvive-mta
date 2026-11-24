@@ -23,6 +23,9 @@ local COL = {
     running = tocolor(0x33, 0xFF, 0x33, 255),
     resting = tocolor(120, 190, 120, 255), -- alive, player offline
     dead = tocolor(200, 70, 70, 255),
+    pingOk = tocolor(120, 220, 120, 255),
+    pingMid = tocolor(230, 200, 80, 255),
+    pingBad = tocolor(220, 80, 80, 255),
 }
 local FONT, TITLE_FONT = "default-bold", "bankgothic"
 
@@ -71,6 +74,15 @@ local function table_(x, y, w, title, heads, rows, rowH, nRows)
     end
 end
 
+local function pingCell(ping)
+    ping = tonumber(ping)
+    if not ping then
+        return { "-", COL.dim }
+    end
+    local colour = ping < 100 and COL.pingOk or ping < 200 and COL.pingMid or COL.pingBad
+    return { tostring(ping), colour }
+end
+
 local function onlineRows(elapsed)
     local out = {}
     for _, r in ipairs(data.online) do
@@ -83,7 +95,7 @@ local function onlineRows(elapsed)
         else
             cell = { "-", COL.dim }
         end
-        out[#out + 1] = { name = r.name, me = r.me, cells = { cell } }
+        out[#out + 1] = { name = r.name, me = r.me, cells = { cell, pingCell(r.ping) } }
     end
     return out
 end
@@ -112,7 +124,7 @@ local function render()
     local online, top = onlineRows(elapsed), topRows(elapsed)
     local rowH = 11 * s
     local nRows = math.max(#online, logic.TOP)
-    local leftW, rightW, gap, margin = 170 * s, 230 * s, 8 * s, 8 * s
+    local leftW, rightW, gap, margin = 230 * s, 230 * s, 8 * s, 8 * s
     local w = leftW + rightW + gap + margin * 2
     local titleH = 22 * s
     local h = margin + titleH + rowH * (nRows + 2) + margin
@@ -131,7 +143,16 @@ local function render()
     local count = string.format("%d/%d", data.players or #data.online, data.max or 0)
     text(count, x + margin, y + margin, x + w - margin, y + margin + titleH, COL.dim, 0.6, nil, "right")
     local cy = y + margin + titleH
-    table_(x + margin, cy, leftW, lang.text("Online now"), { lang.text("Time alive") }, online, rowH, nRows)
+    table_(
+        x + margin,
+        cy,
+        leftW,
+        lang.text("Online now"),
+        { lang.text("Time alive"), lang.text("Ping") },
+        online,
+        rowH,
+        nRows
+    )
     local heads = { lang.text("Best"), lang.text("Current") }
     table_(x + margin + leftW + gap, cy, rightW, lang.text("Top 10 personal bests"), heads, top, rowH, nRows)
 end
