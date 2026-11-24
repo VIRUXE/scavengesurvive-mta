@@ -1,9 +1,5 @@
 local models = loadstring(exports.lib:getModule("models"), "=lib/models.lua")()
 local objects = {}
-local beds = {
-    [422] = { width = 1.35, depth = 1.65, rear = -2.12, floor = 0.03 }, -- Bobcat
-    [543] = { width = 1.45, depth = 1.8, rear = -2.35, floor = 0.05 }, -- Sadler
-}
 
 local function clear(vehicle)
     for _, object in ipairs(objects[vehicle] or {}) do
@@ -34,20 +30,50 @@ local function posedBounds(object, rx, ry, rz)
     local cx, width = extent(1)
     local cy, depth = extent(2)
     local cz, height = extent(3)
-    return cx, cy, cz - height / 2, width, depth
+    return cx, cy, cz - height / 2, width, depth, height
+end
+
+-- Each rectangle is free space on the floor or on a previously placed prop.
+local function placeCargo(spaces, prop, random)
+    local best, scale
+    for i, area in ipairs(spaces) do
+        local fit = math.min(1, area.w / prop.w, area.d / prop.d)
+        if not best or fit > scale or (fit == scale and area.z < spaces[best].z) then
+            best, scale = i, fit
+        end
+    end
+    local area = table.remove(spaces, best)
+    local w, d = prop.w * scale, prop.d * scale
+    local dx = random() * math.max(0, area.w - w)
+    local dy = random() * math.max(0, area.d - d)
+    local x, y = area.x + dx, area.y + dy
+    local function add(left, rear, width, depth, z)
+        if width > 0.001 and depth > 0.001 then
+            spaces[#spaces + 1] = { x = left, y = rear, w = width, d = depth, z = z }
+        end
+    end
+    add(area.x, area.y, dx, area.d, area.z)
+    add(x + w, area.y, area.w - dx - w, area.d, area.z)
+    add(x, area.y, w, dy, area.z)
+    add(x, y + d, w, area.d - dy - d, area.z)
+    add(x, y, w, d, area.z + prop.height * scale)
+    return x + w / 2, y + d / 2, area.z, scale
 end
 
 local function draw(vehicle)
     clear(vehicle)
     if getElementType(vehicle) ~= "vehicle" or not isElementStreamedIn(vehicle) then return end
-    local bed = beds[getElementModel(vehicle)]
+    local bed = pickupBeds[getElementModel(vehicle)]
     if not bed then return end
     local load = getElementData(vehicle, "vehicles.bedLoad")
     if type(load) ~= "string" then return end
     local items = split(load, ",")
-    local columns = math.ceil(math.sqrt(#items * bed.width / bed.depth))
-    local rows = math.ceil(#items / columns)
-    local width, depth = bed.width / columns, bed.depth / rows
+    local seed = tonumber(getElementData(vehicle, "vehicles.id")) or 1
+    local function random()
+        seed = (seed * 48271) % 2147483647
+        return seed / 2147483647
+    end
+    local cargo = {}
     objects[vehicle] = {}
     for i, uname in ipairs(items) do
         local t = exports.data:itemType(uname)
@@ -59,16 +85,23 @@ local function draw(vehicle)
             setElementDimension(object, getElementDimension(vehicle))
             setElementInterior(object, getElementInterior(vehicle))
             local rx, ry = t and t.rotx or 0, t and t.roty or 0
-            local rz = (t and t.rotz or 0) + ((i * 37) % 31 - 15)
-            local cx, cy, bottom, spanX, spanY = posedBounds(object, rx, ry, rz)
-            local scale = math.min(1, width * 0.94 / math.max(0.01, spanX),
-                depth * 0.94 / math.max(0.01, spanY))
-            setObjectScale(object, scale)
-            local x = -bed.width / 2 + ((i - 1) % columns + 0.5) * width
-            local y = bed.rear + (math.floor((i - 1) / columns) + 0.5) * depth
-            attachElements(object, vehicle, x - cx * scale, y - cy * scale,
-                bed.floor - bottom * scale, rx, ry, rz)
+            local rz = (t and t.rotz or 0) + random() * 360
+            local cx, cy, bottom, w, d, height = posedBounds(object, rx, ry, rz)
+            cargo[#cargo + 1] = { object = object, rx = rx, ry = ry, rz = rz, cx = cx, cy = cy,
+                bottom = bottom, w = math.max(w, 0.01), d = math.max(d, 0.01), height = height, index = i }
         end
+    end
+    table.sort(cargo, function(a, b)
+        local aa, ba = a.w * a.d, b.w * b.d
+        if aa == ba then return a.index < b.index end
+        return aa > ba
+    end)
+    local spaces = { { x = -bed.width / 2, y = bed.rear, w = bed.width, d = bed.depth, z = bed.floor } }
+    for _, prop in ipairs(cargo) do
+        local x, y, z, scale = placeCargo(spaces, prop, random)
+        setObjectScale(prop.object, scale)
+        attachElements(prop.object, vehicle, x - prop.cx * scale, y - prop.cy * scale,
+            z - prop.bottom * scale, prop.rx, prop.ry, prop.rz)
     end
 end
 

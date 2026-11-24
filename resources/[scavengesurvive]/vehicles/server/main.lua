@@ -3859,7 +3859,7 @@ do
         local trucks, ids, placeholders = {}, {}, {}
         for vehicle, record in pairs(info) do
             local id = tonumber(record.containerId)
-            if (record.uname == "Sadler" or record.uname == "Bobcat") and id and isElement(vehicle) then
+            if id and isElement(vehicle) and pickupBeds[getElementModel(vehicle)] then
                 trucks[id] = vehicle
                 ids[#ids + 1] = id
                 placeholders[#ids] = "?"
