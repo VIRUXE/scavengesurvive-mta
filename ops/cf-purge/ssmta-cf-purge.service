@@ -1,0 +1,16 @@
+[Unit]
+Description=Scavenge & Survive: purge changed MTA client files from the Cloudflare edge (ops/cf-purge)
+After=network-online.target
+ConditionPathExists=/etc/ssmta-cf-purge.env
+
+[Service]
+User=mta
+# CF_API_TOKEN (Zone > Cache Purge) and CF_ZONE_ID, mode 0640 root:mta
+EnvironmentFile=/etc/ssmta-cf-purge.env
+ExecStart=/usr/bin/python3 -I /gta/sa/mta/servers/scavengesurvive/scavengesurvive-mta/ops/cf-purge/watch.py
+Restart=always
+RestartSec=10
+MemoryMax=200M
+
+[Install]
+WantedBy=multi-user.target
