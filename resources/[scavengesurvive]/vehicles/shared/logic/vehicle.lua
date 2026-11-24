@@ -50,7 +50,8 @@ function M.engineCover(model, category)
     if M.COWLS[model] then
         return "cowl"
     end
-    if category == "helicopter" or category == "plane" then
+    -- The Duneride (573) has no bonnet component but still has a serviceable engine bay.
+    if model == 573 or category == "helicopter" or category == "plane" then
         return nil
     end
     return "bonnet"
