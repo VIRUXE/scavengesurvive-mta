@@ -21,6 +21,7 @@
     <file src="generated/lang_cs.lua"/>
     <file src="generated/lang_lv.lua"/>
     <file src="generated/lang_ary.lua"/>
+    <file src="generated/lang_sr.lua"/>
     <file src="generated/strings_es.lua"/>
     <file src="generated/strings_fr.lua"/>
     <file src="generated/strings_pt.lua"/>
@@ -29,6 +30,7 @@
     <file src="generated/strings_cs.lua"/>
     <file src="generated/strings_lv.lua"/>
     <file src="generated/strings_ary.lua"/>
+    <file src="generated/strings_sr.lua"/>
     <file src="generated/strings_ro.lua"/>
     <file src="generated/strings_id.lua"/>
     <file src="generated/strings_bhs.lua"/>

@@ -114,6 +114,7 @@ local LANGUAGE_NAMES = {
     cs = "Čeština",
     lv = "Latviešu",
     ary = "Darija (Maghribiya)",
+    sr = "Srpski",
 }
 
 function Data.languageName(code)

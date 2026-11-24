@@ -49,6 +49,7 @@ LANGUAGES = {
     "cs": "Czech",
     "lv": "Latvian",
     "ary": "Moroccan Darija, written in Latin script (Arabizi: 3, 7, 9 for ع ح ق)",
+    "sr": "Serbian, Latin script (ekavian)",
 }
 
 SYSTEM = """You translate the chat of Scavenge and Survive, a multiplayer survival server for GTA San Andreas \
@@ -69,7 +70,7 @@ swearing, emoticons and gaming abbreviations (lol, xd, gg, afk, brb) natural for
 - Never translate player names, @mentions, coordinates, numbers or commands starting with /.
 - GTA place names (Los Santos, San Fierro, Las Venturas, Grove Street, Mount Chiliad, ...) stay as they are.
 - Leave out any target whose language the line is already written in. Portuguese written in either variety counts \
-as both pt and ptbr; Bosnian, Croatian and Serbian count as bhs.
+as both pt and ptbr; Bosnian, Croatian and Serbian count as both bhs and sr.
 - If the line has nothing to translate (only a name, a number, "ok", "xd", an emoticon), return an empty "t".
 - Reply with one JSON object and nothing else:
 {"source": "<code of the language the line is written in: one of the target codes, or an ISO 639-1 code>", \
@@ -180,8 +181,8 @@ claude_paused_until = 0.0
 # the game's codes to Google's (Google's "pt" is Brazilian; Google writes Darija/Arabic in Arabic script, which MTA
 # can't shape, so Darija readers get French); and Google's detected source back to a game code
 GOOGLE_TARGETS = {"en": "en", "es": "es", "fr": "fr", "pt": "pt-PT", "ptbr": "pt", "ru": "ru", "ro": "ro",
-                  "id": "id", "bhs": "hr", "cs": "cs", "lv": "lv", "ary": "fr"}
-GOOGLE_SOURCES = {"pt": "pt", "bs": "bhs", "hr": "bhs", "sr": "bhs"}
+                  "id": "id", "bhs": "hr", "cs": "cs", "lv": "lv", "ary": "fr", "sr": "sr-Latn"}
+GOOGLE_SOURCES = {"pt": "pt", "bs": "bhs", "hr": "bhs", "sr": "sr"}
 
 
 def same_language(source, code):

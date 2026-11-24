@@ -17,6 +17,7 @@ English has 562 keys.
 | `cs` | Čeština | 562 | 0 | 0 | 0 | 0 | 0 |
 | `lv` | Latviešu | 562 | 0 | 0 | 0 | 0 | 0 |
 | `ary` | Darija | 562 | 0 | 0 | 0 | 0 | 0 |
+| `sr` | Srpski | 562 | 0 | 0 | 0 | 0 | 0 |
 
 ## Placeholder mismatches
 
@@ -51,6 +52,7 @@ English has 1362 texts.
 | `cs` | Čeština | 40 | 37 | 2 | 10 |
 | `lv` | Latviešu | 40 | 32 | 2 | 10 |
 | `ary` | Darija | 40 | 67 | 2 | 10 |
+| `sr` | Srpski | 0 | 41 | 0 | 0 |
 
 - `es` lacks: `Special Armour`, `Dust Mask`, `Half Respirator`, `Filter`, `The lips are blue and the lungs burnt: they breathed poison gas.`, ` >  #AAAAAARecent global chat:`, `Poison Resistance`, `Goggles off`, `Goggles on`, `(Hold) Fit combination lock`, `Enter combination`, `Change goggles battery`, `Wear goggles`, `Saved combination: %s`, `Space: push the shackle down   R: save these digits as the code   Esc: done`, `Battery %d%%`, `Poison: %d%%`, `Your mask is used up and falls apart`, `Your mask's filter is spent`, `Fresh filter fitted`, `Wear a respirator or a gas mask to fit a filter`, `The goggles' battery is flat: use a Tool Battery from your hand to change it`, `Battery changed: the old one is in your hand`, `The battery in the goggles holds as much as this one`, `EYES`, `battery flat`, `battery`, `filter spent`, `filter`, `%s`, `Dead`, `Survival ranking`, `Online now`, `Time alive`, `Best`, `Current`, `Top 10 personal bests`, `%dd`, `%dh`, `%dm`
 - `es` has placeholders unlike English in: `Turn the lights off ({dropitem}) when you park: with the engine off they drain the battery 12% an hour.`
