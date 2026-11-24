@@ -14,6 +14,7 @@
     <script src="client/overheat.lua" type="client"/>
     <script src="client/carmour.lua" type="client"/>
     <script src="client/towing.lua" type="client"/>
+    <script src="client/pickup_bed.lua" type="client"/>
     <script src="client/push.lua" type="client"/>
     <file src="shared/logic/vehicle.lua"/>
     <file src="shared/logic/lugnuts.lua"/>

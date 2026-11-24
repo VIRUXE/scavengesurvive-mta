@@ -3850,3 +3850,43 @@ do
         setSunk = setSunk,
     })
 end
+
+-- Read all active pickup bed trunks together so saved, seeded and player-loaded cargo share one display.
+do
+    local pending = false
+    setTimer(function()
+        if pending then return end
+        local trucks, ids, placeholders = {}, {}, {}
+        for vehicle, record in pairs(info) do
+            local id = tonumber(record.containerId)
+            if (record.uname == "Sadler" or record.uname == "Bobcat") and id and isElement(vehicle) then
+                trucks[id] = vehicle
+                ids[#ids + 1] = id
+                placeholders[#ids] = "?"
+            end
+        end
+        if #ids == 0 then return end
+        pending = true
+        local sql = "SELECT container_id, type_uname FROM items WHERE container_id IN ("
+            .. table.concat(placeholders, ",") .. ") ORDER BY id"
+        if not db.query(sql, ids, function(rows)
+            pending = false
+            if not rows then return end
+            local loads = {}
+            for _, row in ipairs(rows) do
+                local id = tonumber(row.container_id)
+                loads[id] = loads[id] or {}
+                table.insert(loads[id], row.type_uname)
+            end
+            for id, vehicle in pairs(trucks) do
+                local record = info[vehicle]
+                if record and tonumber(record.containerId) == id and isElement(vehicle) then
+                    local load = loads[id] and table.concat(loads[id], ",") or false
+                    if getElementData(vehicle, "vehicles.bedLoad") ~= load then
+                        setElementData(vehicle, "vehicles.bedLoad", load, "broadcast", "deny")
+                    end
+                end
+            end
+        end) then pending = false end
+    end, 2000, 0)
+end
