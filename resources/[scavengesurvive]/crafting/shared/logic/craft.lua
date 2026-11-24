@@ -31,7 +31,8 @@ local NOTES = {
     padlockKey = "Gives the padlock a new lock and you its key. The kit is kept; an older key no longer fits.",
     lockChain = "The padlock needs its key first. The lock locks a bike or other doorless vehicle, "
         .. "and the padlock's key opens it.",
-    comboChain = "The padlock has to be open. The lock locks a bike or other doorless vehicle, and its code opens it.",
+    comboChain = "The padlock has to be open. Set a code you'll remember on it first: the lock locks a bike or "
+        .. "other doorless vehicle, and only that code opens it.",
 }
 -- the numbered steps the /recipes window shows (M.steps)
 local STEPS = {

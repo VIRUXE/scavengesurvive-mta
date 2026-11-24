@@ -289,7 +289,10 @@ net.handler("combineRequested", function(player, invItemId)
                     exports.items:updateHeldData(c2.player, keptData)
                 end
                 exports.items:sendInventory(c2.player)
-                toast(c2.player, r.rekey and "KEY_CRAFTED" or "CRAFTED")
+                -- a Combination Lock and Chain keeps its padlock's code, and the vehicle it locks opens only to it:
+                -- say the code now, while the player can still note it (a player lost a bike to an unset code)
+                local combo = r.copyData == "ComboPadlock" and resultData and resultData.combo
+                toast(c2.player, combo and ("COMBOCHAIN_MADE:" .. combo) or (r.rekey and "KEY_CRAFTED" or "CRAFTED"))
             end, { player = c.player })
         end,
         { player = player, held = held, cid = cid, openId = openId }
