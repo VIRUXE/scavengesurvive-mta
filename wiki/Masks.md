@@ -1,14 +1,14 @@
 # Masks
 
-![Gas Mask](images/items/19472_gasmask01.png) ![Hockey Mask](images/items/19036_hockeymask1.png) ![Zorro Mask](images/items/18974_maskzorro1.png) ![Pussy Mask](images/items/19557_sexymask1.png) ![Devil Mask](images/items/11704_bdupsmask1.png) ![Bandana](images/items/18917_mask7.png)
+![Gas Mask](images/items/19472_gasmask01.png) ![Half Respirator](images/items/20311_half_respirator.png) ![Dust Mask](images/items/20310_dust_mask.png) ![Hockey Mask](images/items/19036_hockeymask1.png) ![Zorro Mask](images/items/18974_maskzorro1.png) ![Pussy Mask](images/items/19557_sexymask1.png) ![Devil Mask](images/items/11704_bdupsmask1.png) ![Bandana](images/items/18917_mask7.png)
 
 Masks are worn on the face, in the `FACE` tile of the [inventory](Inventory). Eleven items go there: five masks, the Dust Mask and the Half Respirator, and the bandana in four patterns, all size 1.
 
 | Item | |
 |:--|:--|
 | [Gas Mask](Gas-Mask) | ![](images/items/19472_gasmask01.png) |
-| [Half Respirator](Half-Respirator) | |
-| [Dust Mask](Dust-Mask) | |
+| [Half Respirator](Half-Respirator) | ![](images/items/20311_half_respirator.png) |
+| [Dust Mask](Dust-Mask) | ![](images/items/20310_dust_mask.png) |
 | [Hockey Mask](Hockey-Mask) | ![](images/items/19036_hockeymask1.png) |
 | [Zorro Mask](Zorro-Mask) | ![](images/items/18974_maskzorro1.png) |
 | [Pussy Mask](Pussy-Mask) | ![](images/items/19557_sexymask1.png) |

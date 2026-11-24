@@ -92,11 +92,18 @@ then runs itself in Blender (DragonFF) for each prop's dff and col.
                      ends: blue three-pin CEE plug and black/orange covered socket. Origin on the floor, one box
                      of collision; vanilla yellow with orange prelight and blue plastic (CORD_TEXTURES).
 
+    dust_mask 20310  a white disposable FFP2 cup mask with an aluminium nose clip and two elastic straps round the head;
+                     the Dust Mask item. half_respirator 20311  a black rubber half-face respirator with a P100 filter
+                     cartridge on each cheek, an exhalation valve and a harness; the Half Respirator item. Both are
+                     modelled on a reference head (FACE) and stored in the frame of the model each replaced (_to_worn),
+                     so the items keep their per-skin wear rows. filter_cartridge 20312  one of those cartridges lying
+                     grille up; the Filter item.
+
     flood_light 20300  a halogen site work light on a tripod, 1.57 m tall: black legs and lower mast, a chrome upper mast,
                      a yellow lamp head on a black yoke, its face (the SF light tower's ws_floodlight reflector) toward +Y
                      and FLOOD_TILT degrees down; the light comes from FLOOD_LAMP along FLOOD_AIM. The Flood Light item.
 
-Origin (except welder_torch, grinder, ratchet, tow_bar, mains_box and mains_lever): the centre of the base (x, y) with z = 0 at the lowest point; the front faces +Y.
+Origin (except welder_torch, grinder, ratchet, tow_bar, mains_box, mains_lever, dust_mask and half_respirator): the centre of the base (x, y) with z = 0 at the lowest point; the front faces +Y.
 """
 from __future__ import annotations
 
@@ -2368,6 +2375,286 @@ def build_cord_coil(ctx):
     return [((0.0, 0.0, hz), (hx, hy, hz))]
 
 
+# The toxic cloud's masks. A worn mask is placed by its item type's per-skin wearOffsets row on the head bone
+# (items/shared/logic/apparel.lua, items/client/attach.lua). The two masks keep the rows of the models they replaced
+# (DustMask: the bandana mask9, HalfRespirator: the Gas Mask's gasmask01), so they are modelled in head-bone space on
+# one reference head, then moved into the old model's frame by the inverse of the reference skin's row (_to_worn):
+# every other skin's row fits them as it fitted the old model.
+#
+# FACE: omyst.dff (skin 60, the reference) in head-bone space (GTA node 5: x up the skull, y out of the face, z to the
+# side), ray cast on the rest-pose mesh in Blender: the distance in mm from the axis (x, FACE_CY, 0) to the skin, a row
+# per x from FACE_X0 in 0.01 m steps, a column per angle round the axis from -180 degrees in 10 degree steps
+# (0 = straight out of the face, +90 = toward +z).
+FACE_CY, FACE_X0 = 0.02, -0.06
+FACE = (
+    (88, 88, 87, 87, 87, 84, 81, 71, 70, 64, 56, 51, 48, 47, 45, 44, 45, 47, 44, 41, 40, 39, 39, 40, 41, 43, 48, 56, 63, 64, 70, 75, 78, 85, 84, 85),
+    (82, 79, 76, 75, 75, 76, 75, 72, 71, 63, 55, 50, 47, 46, 44, 43, 44, 46, 43, 40, 39, 38, 39, 39, 41, 43, 48, 55, 64, 65, 68, 71, 73, 78, 79, 79),
+    (83, 81, 77, 76, 76, 77, 76, 73, 71, 62, 54, 50, 47, 46, 51, 59, 72, 86, 91, 80, 58, 46, 38, 39, 40, 43, 47, 54, 63, 65, 68, 71, 74, 78, 80, 80),
+    (83, 81, 78, 77, 77, 77, 76, 74, 70, 61, 54, 49, 52, 61, 68, 77, 83, 93, 97, 89, 78, 67, 56, 48, 42, 42, 46, 53, 62, 66, 69, 71, 74, 79, 80, 80),
+    (84, 82, 79, 78, 78, 77, 76, 74, 70, 61, 55, 58, 64, 75, 78, 84, 85, 95, 99, 90, 81, 75, 69, 62, 54, 49, 46, 52, 61, 67, 69, 71, 75, 79, 80, 81),
+    (84, 82, 80, 79, 79, 77, 76, 75, 69, 63, 64, 68, 72, 76, 83, 87, 88, 96, 101, 91, 83, 81, 72, 67, 64, 60, 56, 54, 59, 67, 69, 71, 74, 80, 81, 81),
+    (84, 82, 80, 81, 80, 77, 76, 76, 69, 68, 70, 72, 73, 77, 84, 89, 91, 99, 105, 93, 85, 83, 74, 69, 66, 64, 62, 60, 60, 67, 69, 70, 74, 81, 81, 81),
+    (85, 83, 81, 81, 80, 76, 76, 77, 73, 72, 72, 73, 75, 79, 86, 91, 93, 100, 90, 94, 88, 84, 77, 71, 67, 65, 64, 64, 64, 68, 69, 70, 74, 81, 81, 82),
+    (86, 85, 83, 84, 83, 80, 80, 93, 76, 73, 73, 74, 76, 80, 87, 92, 92, 104, 107, 94, 89, 86, 79, 72, 69, 66, 65, 65, 67, 82, 74, 74, 78, 83, 84, 84),
+    (93, 92, 91, 92, 88, 86, 88, 92, 76, 75, 75, 76, 78, 82, 89, 92, 91, 101, 105, 93, 88, 87, 80, 74, 70, 68, 66, 66, 68, 82, 86, 80, 83, 87, 89, 89),
+    (100, 99, 99, 99, 94, 91, 98, 92, 77, 76, 76, 77, 80, 84, 89, 92, 91, 103, 112, 91, 89, 87, 82, 76, 71, 69, 68, 67, 69, 81, 96, 84, 87, 92, 95, 96),
+    (106, 104, 105, 104, 97, 93, 99, 91, 78, 77, 77, 78, 81, 86, 90, 92, 89, 107, 116, 90, 90, 88, 84, 77, 73, 70, 69, 68, 70, 81, 98, 86, 89, 95, 101, 102),
+    (107, 106, 107, 106, 99, 95, 98, 96, 79, 78, 78, 79, 82, 85, 89, 90, 86, 102, 107, 84, 87, 87, 82, 77, 73, 70, 69, 69, 71, 82, 99, 88, 91, 97, 103, 103),
+    (109, 108, 108, 106, 101, 97, 94, 87, 80, 77, 77, 78, 82, 84, 88, 87, 84, 97, 102, 81, 83, 85, 80, 77, 73, 70, 69, 69, 71, 78, 85, 90, 93, 99, 105, 105),
+    (110, 109, 110, 107, 102, 99, 94, 87, 80, 77, 76, 77, 81, 85, 87, 84, 81, 91, 96, 78, 79, 83, 80, 78, 72, 69, 68, 69, 71, 77, 84, 91, 95, 100, 107, 107),
+    (112, 111, 112, 107, 103, 100, 93, 86, 80, 76, 75, 76, 80, 88, 92, 96, 93, 94, 100, 91, 90, 91, 85, 78, 71, 68, 67, 68, 71, 76, 83, 93, 96, 100, 108, 109),
+    (112, 111, 113, 108, 104, 102, 93, 85, 79, 76, 74, 76, 79, 86, 92, 98, 97, 98, 100, 95, 94, 91, 83, 77, 70, 67, 66, 67, 70, 76, 83, 94, 97, 101, 109, 110),
+    (109, 108, 110, 105, 102, 101, 91, 84, 78, 75, 74, 75, 79, 82, 88, 93, 92, 94, 96, 91, 89, 89, 79, 74, 70, 66, 65, 66, 69, 75, 82, 92, 95, 99, 105, 107),
+    (106, 105, 106, 101, 99, 96, 88, 81, 76, 73, 72, 74, 75, 78, 84, 88, 87, 89, 90, 86, 84, 83, 75, 70, 68, 65, 64, 64, 67, 72, 79, 87, 92, 96, 100, 104),
+)
+# the reference skin's row of the model each mask replaced (x, y, z, rx, ry, rz, sx, sy, sz): DustMask "60" (the
+# bandana's), HalfRespirator "60" (the Gas Mask's), data/generated/item_types.lua
+MASK_REF = {
+    "dust_mask": (0.088999, 0.034, -0.002999, -85.499992, 8.599997, -92.800048, 0.998, 1.0, 0.914),
+    "half_respirator": (0.009, 0.137999, -0.003999, 90.0, 90.0, 0.0, 1.0, 1.19, 1.0),
+}
+# a dropped mask's rotx, roty, rotz (its item type's): lying on its rim, the face side up, the straps under the ground
+MASK_GROUND = {"dust_mask": (0, 0, 0), "half_respirator": (0, 270, 0)}
+
+
+def _face_r(x, a):
+    """The reference skin's distance (m) from the axis at height x and angle a (degrees), bilinear in FACE."""
+    fx = min(max((x - FACE_X0) / 0.01, 0.0), len(FACE) - 1.001)
+    i, tx = int(fx), fx - int(fx)
+    fa = ((a + 180.0) % 360.0) / 10.0
+    j, ta = int(fa) % 36, fa - int(fa)
+    k = (j + 1) % 36
+    r0 = FACE[i][j] * (1 - ta) + FACE[i][k] * ta
+    r1 = FACE[i + 1][j] * (1 - ta) + FACE[i + 1][k] * ta
+    return (r0 * (1 - tx) + r1 * tx) / 1000.0
+
+
+def _face_hi(x, a):
+    """_face_r's highest value round (x, a), with room for the nose: FACE's 1 cm, 10 degree grid cuts the top off it."""
+    nose = 0.007 * math.exp(-(((x - 0.05) / 0.016) ** 2) - (a / 14) ** 2)
+    return max(_face_r(x + dx, a + da) for dx in (-0.006, 0.0, 0.006) for da in (-7, 0, 7)) + nose
+
+
+def _face_at(x, a, r):
+    """The head-space point at height x, angle a (degrees), distance r from the axis."""
+    from mathutils import Vector
+    return Vector((x, FACE_CY + r * math.cos(math.radians(a)), r * math.sin(math.radians(a))))
+
+
+def _dome_r(x, a, centre, semi):
+    """Distance from the axis (x, FACE_CY, 0) along angle a to the ellipsoid (centre, semi-axes), or 0 if it misses."""
+    d = (0.0, math.cos(math.radians(a)), math.sin(math.radians(a)))
+    o = (x - centre[0], FACE_CY - centre[1], -centre[2])
+    qa = sum((d[i] / semi[i]) ** 2 for i in range(3))
+    qb = 2 * sum(o[i] * d[i] / semi[i] ** 2 for i in range(3))
+    qc = sum((o[i] / semi[i]) ** 2 for i in range(3)) - 1
+    disc = qb * qb - 4 * qa * qc
+    return max(0.0, (-qb + math.sqrt(disc)) / (2 * qa)) if disc > 0 else 0.0
+
+
+def _cup(ctx, rim, centre_x, radius, thickness, material, col, rings=8):
+    """A closed shell over the face: `rim(t)` -> (x, a) for t in [0, 1) is its edge on the skin, `radius(x, a, s)` its
+    outer distance from the axis at (x, a), s running 0 at the middle to 1 at the rim, the inner surface `thickness`
+    under it. The texture is mapped flat across the front. Returns the outer surface's points by ring."""
+    bm, paint = ctx["bm"], ctx["paint"]
+    night = (col[0] * 0.3, col[1] * 0.3, col[2] * 0.32, 1.0)
+    n = 40
+    edge = [rim(k / n) for k in range(n)]
+    xs, as_ = [p[0] for p in edge], [p[1] for p in edge]
+    x0, x1, a0, a1 = min(xs), max(xs), min(as_), max(as_)
+
+    def uv(x, a):
+        return ((a - a0) / (a1 - a0), (x - x0) / (x1 - x0))
+
+    outer, inner, uvs = [], [], []
+    for i in range(1, rings + 1):
+        s = i / rings
+        ro, ri, ru = [], [], []
+        for x, a in edge:
+            px, pa = centre_x + s * (x - centre_x), s * a
+            r = radius(px, pa, s)
+            ro.append(bm.verts.new(_face_at(px, pa, r)))
+            ri.append(bm.verts.new(_face_at(px, pa, r - thickness)))
+            ru.append(uv(px, pa))
+        outer.append(ro)
+        inner.append(ri)
+        uvs.append(ru)
+    for surface in (outer, inner):
+        paint(bm.faces.new(surface[0]), uvs[0], col, night, material)
+        for i in range(rings - 1):
+            for k in range(n):
+                j = (k + 1) % n
+                paint(bm.faces.new((surface[i][k], surface[i][j], surface[i + 1][j], surface[i + 1][k])), [uvs[i][k], uvs[i][j], uvs[i + 1][j], uvs[i + 1][k]], col, night, material)
+    for k in range(n):
+        j = (k + 1) % n
+        paint(bm.faces.new((outer[-1][k], outer[-1][j], inner[-1][j], inner[-1][k])), [uvs[-1][k], uvs[-1][j], uvs[-1][j], uvs[-1][k]], col, night, material)
+    return outer
+
+
+def _strap(ctx, start, x_at, lift, radius, material, col, sides=4):
+    """A strap round the back of the head from angle `start` (degrees, on the +z side) to -`start`: at angle a it runs
+    at height x_at(a), `lift` off the skin."""
+    steps = 40
+    angles = [start + (360 - 2 * start) * k / steps for k in range(steps + 1)]
+    path = [_face_at(x_at(a), a, _face_r(x_at(a), a) + lift) for a in angles]
+    _sweep(ctx, path, radius, sides, material, col)
+
+
+def _to_worn(ctx, name, body):
+    """Moves everything built so far from head-bone space into the replaced model's frame: the inverse of the reference
+    row MASK_REF[name] as items/client/attach.lua applies it (translation, rotation Rx Ry Rz, then scale). Returns one
+    collision box round `body` (the mask without its straps, which a dropped mask lays below the ground) and prints the
+    item type's modelz for its ground rotation MASK_GROUND[name]."""
+    import bmesh
+    from mathutils import Euler, Matrix
+    x, y, z, rx, ry, rz, sx, sy, sz = MASK_REF[name]
+    worn = Matrix.Translation((x, y, z)) @ Matrix.Rotation(math.radians(rx), 4, "X") @ Matrix.Rotation(math.radians(ry), 4, "Y") @ Matrix.Rotation(math.radians(rz), 4, "Z") @ Matrix.Diagonal((sx, sy, sz, 1.0))
+    bmesh.ops.transform(ctx["bm"], matrix=worn.inverted(), verts=list(ctx["bm"].verts))
+    lo = [min(v.co[i] for v in body) for i in range(3)]
+    hi = [max(v.co[i] for v in body) for i in range(3)]
+    ground = Euler([math.radians(r) for r in MASK_GROUND[name]], "ZXY").to_matrix()
+    print(f"make_props: {name} modelz {-min((ground @ v.co).z for v in body):.4f} at rotx/roty/rotz {MASK_GROUND[name]}")
+    return [(tuple((lo[i] + hi[i]) / 2 for i in range(3)), tuple((hi[i] - lo[i]) / 2 for i in range(3)))]
+
+
+# (source TXD, texture) per dust mask material, all vanilla and found with gta-scout: the clothes shop's white cloth
+# (the bandage's gauze) for the moulded fibre cup, brushed aluminium for the nose clip, white paper for the elastic
+# straps (a texture of their own, so tools/render_item_models.py can leave them out of the icon)
+DUST_MASK_TEXTURES = [("cj_exp.txd", "mp_cloth_wall"), ("hubprops2_sfse.txd", "Alumox64b"), ("lee_kitch.txd", "mp_snow")]
+DUST_RIM = (0.014, 0.059, 0.058, 64.0)  # the cup's edge on the skin: middle height, rise to the nose bridge, drop under the chin, half width (degrees)
+DUST_DOME = ((0.018, 0.035, -0.003), (0.085, 0.112, 0.088))  # the cup's front: an ellipsoid's centre and semi-axes, head space
+
+
+def _dust_rim(t):
+    xc, up, down, w = DUST_RIM
+    s, c = math.sin(2 * math.pi * t), math.cos(2 * math.pi * t)
+    return xc + (up if s > 0 else down) * s, w * c * (1 - 0.5 * max(0.0, s) ** 2)
+
+
+def build_dust_mask(ctx):
+    """A disposable FFP2 dust mask as worn: a white moulded fibre cup from the nose bridge to under the chin, a bent
+    aluminium nose clip along its top edge, two thin elastic straps round the head (over the crown and round the neck).
+    Built on the reference head and moved into the bandana's frame (_to_worn)."""
+    cloth, alu, elastic = 0, 1, 2
+    white, strap = (0.96, 0.96, 0.95, 1.0), (0.86, 0.86, 0.84, 1.0)
+    xc = DUST_RIM[0]
+    centre, semi = DUST_DOME
+
+    def radius(x, a, s):
+        seal = _face_hi(x, a) + 0.0025
+        return seal + (1 - s ** 3) * max(0.0, _dome_r(x, a, centre, semi) - seal)
+
+    _cup(ctx, _dust_rim, xc, radius, 0.0018, cloth, white)
+    # the nose clip: a strip of aluminium just inside the top edge, bent over the bridge
+    bm, paint = ctx["bm"], ctx["paint"]
+    rows = []
+    for s in (0.86, 0.95):
+        row = []
+        for k in range(9):
+            x, a = _dust_rim(0.17 + 0.16 * k / 8)
+            px, pa = xc + s * (x - xc), s * a
+            r = radius(px, pa, s) + 0.0008
+            row.append((bm.verts.new(_face_at(px, pa, r)), bm.verts.new(_face_at(px, pa, r - 0.0012))))
+        rows.append(row)
+    grey = (0.8, 0.8, 0.82, 1.0)
+    night = (0.24, 0.24, 0.26, 1.0)
+    for side in (0, 1):
+        for k in range(8):
+            q = (rows[0][k][side], rows[0][k + 1][side], rows[1][k + 1][side], rows[1][k][side])
+            paint(bm.faces.new(q), [(k / 8, 0), ((k + 1) / 8, 0), ((k + 1) / 8, 1), (k / 8, 1)], grey, night, alu)
+    for k in range(8):
+        for r in (0, 1):
+            paint(bm.faces.new((rows[r][k][0], rows[r][k + 1][0], rows[r][k + 1][1], rows[r][k][1])), [(0, 0), (1, 0), (1, 1), (0, 1)], grey, night, alu)
+    for k in (0, 8):
+        paint(bm.faces.new((rows[0][k][0], rows[1][k][0], rows[1][k][1], rows[0][k][1])), [(0, 0), (1, 0), (1, 1), (0, 1)], grey, night, alu)
+    # the straps leave the cup's sides and run round the back of the head: one over the crown, one round the neck
+    def back(a):  # 0 at the cup's side, 1 from behind the ear on
+        a = abs((a + 180) % 360 - 180)
+        return min(1.0, max(0.0, (a - 52) / 70))
+
+    body = list(bm.verts)
+    _strap(ctx, 52, lambda a: 0.045 + 0.04 * back(a), 0.001, 0.0013, elastic, strap)
+    _strap(ctx, 52, lambda a: -0.015 - 0.025 * back(a), 0.0015, 0.0013, elastic, strap)
+    return _to_worn(ctx, "dust_mask", body)
+
+
+# (source TXD, texture) per half respirator and filter material, all vanilla and found with gta-scout: black rubber
+# (the face piece, its harness), black plastic (bayonet mounts, the valve cover), light grey plastic (the cartridge
+# shells), a pink rendered wall (the P100 filter pads' colour code), a vent grille (the valve's and filters' faces), a
+# second black rubber for the harness (a texture of its own, so tools/render_item_models.py can leave it out of the icon)
+RESPIRATOR_TEXTURES = [("cj_airprt.txd", "CJ_RUBBER"), ("ballys01.txd", "CJ_blackplastic"), ("des_telescopestuff.txd", "dish_panel_a"), ("pinkcarpark_sfs.txd", "ws_pink_wall1"), ("bistro.txd", "vent_64"), ("cj_airprt.txd", "CJ_BLACK_RUB2")]
+RESP_RIM = (0.018, 0.054, 0.06, 56.0)  # as DUST_RIM
+RESP_DOME = ((0.022, 0.03, -0.003), (0.086, 0.11, 0.085))
+FILTER_MAGENTA = (0.95, 0.62, 0.84, 1.0)  # day colour over the pink: deepens it toward the P100 magenta
+FILTER_R, FILTER_DEPTH = 0.033, 0.026  # a cartridge's radius and its depth from the mount's face
+
+
+def _resp_rim(t):
+    xc, up, down, w = RESP_RIM
+    s, c = math.sin(2 * math.pi * t), math.cos(2 * math.pi * t)
+    return xc + (up if s > 0 else down) * s, w * c * (1 - 0.6 * max(0.0, s) ** 2)
+
+
+def _cartridge(ctx, base, n):
+    """A round bayonet filter cartridge (3M 6000 series style) standing on `base` along the unit vector `n`: a black
+    bayonet mount, a light grey shell, a magenta filter pad and a grille on its face."""
+    tube = _tube(ctx)
+    black, shell, white, vent = 1, 2, 3, 4
+    grey = (0.85, 0.85, 0.85, 1.0)
+    at = lambda t: base + n * t  # noqa: E731
+    tube(at(0.0), at(0.007), 0.019, 16, black, None, False)
+    tube(at(0.006), at(0.02), FILTER_R, 20, shell, grey, False)
+    tube(at(0.0185), at(FILTER_DEPTH - 0.002), FILTER_R + 0.0012, 20, white, FILTER_MAGENTA, False)
+    tube(at(FILTER_DEPTH - 0.0025), at(FILTER_DEPTH), FILTER_R - 0.006, 20, vent, (0.7, 0.7, 0.7, 1.0), False)
+
+
+def build_half_respirator(ctx):
+    """A reusable half-face respirator as worn: a black rubber face piece from the nose bridge to under the chin, a
+    round magenta-coded filter cartridge on each cheek, an exhalation valve under the nose and a rubber harness over
+    the crown and round the neck. Built on the reference head and moved into the Gas Mask's frame (_to_worn)."""
+    from mathutils import Vector
+    rubber, black, vent = 0, 1, 4
+    dark = (0.8, 0.8, 0.8, 1.0)
+    xc = RESP_RIM[0]
+    centre, semi = RESP_DOME
+
+    def radius(x, a, s):
+        seal = _face_hi(x, a) + 0.003
+        return seal + (1 - s ** 2.5) * max(0.0, _dome_r(x, a, centre, semi) - seal)
+
+    _cup(ctx, _resp_rim, xc, radius, 0.004, rubber, dark)
+    for side in (1, -1):
+        a, x = 48 * side, 0.004
+        p = _face_at(x, a, radius(x, a, 0.75) - 0.004)
+        n = Vector((-0.2, math.cos(math.radians(64)), side * math.sin(math.radians(64)))).normalized()
+        _cartridge(ctx, p, n)
+    # the exhalation valve under the nose, its cover's grille facing forward and down
+    tube = _tube(ctx)
+    p = _face_at(-0.004, 0, radius(-0.004, 0, 0.0) - 0.003)
+    n = Vector((-0.35, 1.0, 0.0)).normalized()
+    tube(p, p + n * 0.016, 0.017, 16, black, None, False)
+    tube(p + n * 0.015, p + n * 0.0175, 0.014, 16, vent, (0.6, 0.6, 0.6, 1.0), False)
+
+    def back(a):
+        a = abs((a + 180) % 360 - 180)
+        return min(1.0, max(0.0, (a - 50) / 70))
+
+    body = list(ctx["bm"].verts)
+    harness = 5
+    _strap(ctx, 50, lambda a: 0.05 + 0.04 * back(a), 0.002, 0.0028, harness, dark)
+    _strap(ctx, 50, lambda a: -0.02 - 0.025 * back(a), 0.0025, 0.0028, harness, dark)
+    return _to_worn(ctx, "half_respirator", body)
+
+
+def build_filter_cartridge(ctx):
+    """One respirator filter cartridge as a loose item, lying on its bayonet mount with the magenta pad and grille up
+    (_cartridge). Origin at the base's centre."""
+    from mathutils import Vector
+    _cartridge(ctx, Vector((0.0, 0.0, 0.0)), Vector((0.0, 0.0, 1.0)))
+    hx, hy, hz = _ground(ctx)
+    return [((0.0, 0.0, hz), (hx, hy, hz))]
+
+
 PROPS_TABLE = [
     {"name": "ls_hatch", "id": 20201, "dist": 150, "source": "zombtest1.txd", "textures": ["pave_manhole1"], "build": build_ls_hatch},
     {"name": "welder", "id": 20202, "dist": 100, "source": "dynbarrels.txd", "textures": ["redmetal", "yellowmetal", "alumplat64"], "build": build_welder},
@@ -2416,6 +2703,9 @@ PROPS_TABLE = [
     {"name": "mains_box", "id": 20307, "dist": 80, "sources": MAINS_TEXTURES, "build": build_mains_box},
     {"name": "mains_lever", "id": 20308, "dist": 50, "sources": LEVER_TEXTURES, "build": build_mains_lever},
     {"name": "cord_coil", "id": 20309, "dist": 50, "sources": CORD_TEXTURES, "build": build_cord_coil},
+    {"name": "dust_mask", "id": 20310, "dist": 40, "sources": DUST_MASK_TEXTURES, "build": build_dust_mask},
+    {"name": "half_respirator", "id": 20311, "dist": 40, "sources": RESPIRATOR_TEXTURES, "build": build_half_respirator},
+    {"name": "filter_cartridge", "id": 20312, "dist": 30, "sources": RESPIRATOR_TEXTURES[:5], "build": build_filter_cartridge},
     # the explosives' trigger variants (items <Base><TRIGGERS[kind]>, e.g. TntTimebomb)
     {"name": "tnt_timer", "id": 20284, "dist": 50, "sources": with_triggers(TNT_TEXTURES), "build": lambda ctx, k="timer", s=with_triggers(TNT_TEXTURES): build_tnt(ctx, k, s)},
     {"name": "tnt_trip", "id": 20285, "dist": 50, "sources": with_triggers(TNT_TEXTURES), "build": lambda ctx, k="trip", s=with_triggers(TNT_TEXTURES): build_tnt(ctx, k, s)},

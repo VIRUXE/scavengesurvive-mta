@@ -6,6 +6,15 @@
     <script src="server/main.lua" type="server"/>
     <script src="client/main.lua" type="client"/>
     <file src="props.lua"/>
+    <file src="files/dust_mask.col"/>
+    <file src="files/dust_mask.dff"/>
+    <file src="files/dust_mask.txd"/>
+    <file src="files/filter_cartridge.col"/>
+    <file src="files/filter_cartridge.dff"/>
+    <file src="files/filter_cartridge.txd"/>
+    <file src="files/half_respirator.col"/>
+    <file src="files/half_respirator.dff"/>
+    <file src="files/half_respirator.txd"/>
     <file src="files/special_armour.txd"/>
     <file src="files/advanced_keypad.col"/>
     <file src="files/advanced_keypad.dff"/>

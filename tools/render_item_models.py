@@ -175,6 +175,8 @@ def stage(models: set[int], gta: Path, work: Path) -> tuple[list[dict], list[str
 
 
 EFFECT_TEXTURES = {"laserbeam64x64", "laserbeam64x64a"}
+# faces an icon leaves out by model: the toxic cloud masks' head straps (tools/make_props.py), so the icon shows the mask
+ICON_HIDDEN = {20310: {"mp_snow"}, 20311: {"cj_black_rub2"}}
 
 
 class CaseDict(dict):
@@ -278,8 +280,9 @@ def build_in_blender(jobs_file: Path, out_dir: Path, size: int):
         lost = sorted({n.label for o in meshes for sl in o.material_slots if sl.material and sl.material.node_tree for n in sl.material.node_tree.nodes if n.type == "TEX_IMAGE" and not n.image and n.label.lower() not in EFFECT_TEXTURES})
         if lost:
             print("RENDER missing", job["model"], job["dff"], ",".join(lost))
+        hidden = EFFECT_TEXTURES | ICON_HIDDEN.get(job["model"], set())
         for o in meshes:  # effect geometry (a laser's beam) would shrink the item to a speck
-            drop = [i for i, sl in enumerate(o.material_slots) if sl.material and sl.material.node_tree and any(n.type == "TEX_IMAGE" and n.label.lower() in EFFECT_TEXTURES for n in sl.material.node_tree.nodes)]
+            drop = [i for i, sl in enumerate(o.material_slots) if sl.material and sl.material.node_tree and any(n.type == "TEX_IMAGE" and n.label.lower() in hidden for n in sl.material.node_tree.nodes)]
             if drop:
                 bm = bmesh.new()
                 bm.from_mesh(o.data)

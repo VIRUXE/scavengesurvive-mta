@@ -268,13 +268,13 @@ Several different items can share a name (there are, for example, three kinds of
 | ![](images/items/20299_dirty_bandage.png) | [Dirty Bandage](Dirty-Bandage) | 2 |
 | ![](images/items/20297_doctor_bag.png) | [Doctor's Bag](Doctors-Bag) | 3 |
 | ![](images/items/11737_rockstarmat1.png) | [Doormat](Doormat) | 3 |
-|  | [Dust Mask](Dust-Mask) | 1 |
+| ![](images/items/20310_dust_mask.png) | [Dust Mask](Dust-Mask) | 1 |
 | ![](images/items/1654_dynamite.png) | [Dynamite](Dynamite) | 2 |
 | ![](images/items/19345_easter_egg05.png) | [Easter Egg](Easter-Egg) | 3 |
 | ![](images/items/20281_lockpick.png) | [Electronic Lockpick](Electronic-Lockpick) | 2 |
 | ![](images/items/344_molotov.png) | [Empty Molotov](Empty-Molotov) | 1 |
 | ![](images/items/20309_cord_coil.png) | [Extension Cord](Extension-Cord) | 3 |
-|  | [Filter](Filter) | 1 |
+| ![](images/items/20312_filter_cartridge.png) | [Filter](Filter) | 1 |
 | ![](images/items/20002_lafd1_hat.png) | [Fire Helmet](Fire-Helmet) | 1 |
 | ![](images/items/20274_fireworks.png) | [Fireworks](Fireworks) | 2 |
 | ![](images/items/18632_fishingrod.png) | [Fishing Rod](Fishing-Rod) | 6 |
@@ -296,7 +296,7 @@ Several different items can share a name (there are, for example, three kinds of
 | ![](images/items/20207_grind_disc.png) | [Grinding Disc](Grinding-Disc) | 1 |
 | ![](images/items/1945_kg5.png) | [Gyroscope Unit](Gyroscope-Unit) | 1 |
 | ![](images/items/20279_hack_device.png) | [Hack Interface](Hack-Interface) | 1 |
-|  | [Half Respirator](Half-Respirator) | 1 |
+| ![](images/items/20311_half_respirator.png) | [Half Respirator](Half-Respirator) | 1 |
 | ![](images/items/19418_handcuffs01.png) | [Handcuffs](Handcuffs) | 1 |
 | ![](images/items/328_gun_boxbig.png) | [Hard Drive](Hard-Drive) | 1 |
 | ![](images/items/19280_carrooflight1.png) | [Headlight](Headlight) | 1 |

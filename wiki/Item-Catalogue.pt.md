@@ -298,7 +298,7 @@ Vários itens diferentes podem partilhar o mesmo nome (há, por exemplo, três t
 | ![](images/items/20309_cord_coil.png) | [Extensão elétrica](Extension-Cord) | 3 |
 | ![](images/items/11716_metalknife1.png) | [Faca](Knife) | 1 |
 | ![](images/items/19280_carrooflight1.png) | [Farol](Headlight) | 1 |
-|  | [Filtro](Filter) | 1 |
+| ![](images/items/20312_filter_cartridge.png) | [Filtro](Filter) | 1 |
 | ![](images/items/20274_fireworks.png) | [Fogo de artifício](Fireworks) | 2 |
 | ![](images/items/19632_firewood1.png) | [Fogueira](Campfire) | 5 |
 | ![](images/items/20270_power_supply.png) | [Fonte de alimentação](Power-Supply) | 1 |
@@ -344,7 +344,7 @@ Vários itens diferentes podem partilhar o mesmo nome (há, por exemplo, três t
 | ![](images/items/19557_sexymask1.png) | [Máscara de gatinha](Pussy-Mask) | 1 |
 | ![](images/items/19472_gasmask01.png) | [Máscara de gás](Gas-Mask) | 1 |
 | ![](images/items/19036_hockeymask1.png) | [Máscara de hóquei](Hockey-Mask) | 1 |
-|  | [Máscara de pó](Dust-Mask) | 1 |
+| ![](images/items/20310_dust_mask.png) | [Máscara de pó](Dust-Mask) | 1 |
 | ![](images/items/18974_maskzorro1.png) | [Máscara do Zorro](Zorro-Mask) | 1 |
 | ![](images/items/19345_easter_egg05.png) | [Ovo da Páscoa](Easter-Egg) | 3 |
 | ![](images/items/18875_pager1.png) | [Pager](Pager) | 1 |
@@ -370,7 +370,7 @@ Vários itens diferentes podem partilhar o mesmo nome (há, por exemplo, três t
 | ![](images/items/5153_stuntramp7_las2.png) | [Rampa de madeira](Wood-Ramp) | 11 |
 | ![](images/items/20206_grinder.png) | [Rebarbadora](Angle-Grinder) | 3 |
 | ![](images/items/3221_drv_in_spkrs.png) | [Recetor](Receiver) | 3 |
-|  | [Respirador de meia face](Half-Respirator) | 1 |
+| ![](images/items/20311_half_respirator.png) | [Respirador de meia face](Half-Respirator) | 1 |
 | ![](images/items/20222_wheel.png) | [Roda](Wheel) | 5 |
 | ![](images/items/20244_wheel_classic.png) | [Roda clássica](Classic-Wheel) | 5 |
 | ![](images/items/20254_wheel_classic_flat.png) | [Roda clássica (furada)](Classic-Wheel-Flat) | 5 |
