@@ -39,7 +39,7 @@ Os tempos são o tempo de base e o que passa a ser com a competência a 1,0.
 | Pesca | uma mordidela que prenda na tua linha | a espera por uma mordidela (30 a 120 s) é cortada até metade, e a probabilidade de uma mordidela apanhar um peixe sobe de 30 % para 65 % |
 | Silvicultura | abater uma árvore com uma Motosserra | velocidade de corte: com 1,0 uma árvore demora metade do tempo |
 | Resistência | percorrer distância a pé, ver abaixo | um salto a correr ou a sprintar vai mais longe: a sua velocidade é multiplicada por `1 + 1,3 x competência`, até 2,3 vezes |
-| Força | [empurrar um veículo](Vehicles#pushing) pelo menos 3 m (ganho total a partir de 15 m); trepar: cada 5.ª parede ou vedação transposta, ou cada 15 m subidos em escadas (no máximo um ganho de trepar por 10 s) | a velocidade do empurrão: 0,8 m/s sem treino, até 1,8 m/s com 1,0, antes da vida e do peso do veículo |
+| Força | [empurrar um veículo](Vehicles#pushing) pelo menos 3 m (ganho total a partir de 15 m); trepar: cada 5.ª parede ou vedação transposta, ou cada 15 m subidos em escadas (no máximo um ganho de trepar por 10 s) | a velocidade do empurrão: 0,8 m/s sem treino, até 1,8 m/s com 1,0, antes da vida e do peso do veículo; o veículo mais pesado que consegues empurrar: 3000 kg sem treino, até 10 000 kg com 1,0 |
 | O nome de um item | [fabricar](Constructing) esse item, no chão ou numa [bancada de trabalho](Workbench) | a mesma receita da próxima vez: o gesto de construir no chão, ou os 3,6 s por ingrediente da bancada; o desmantelamento desse item com o Pé de cabra também fica mais curto, sem treinar |
 
 ### Resistência {#endurance}

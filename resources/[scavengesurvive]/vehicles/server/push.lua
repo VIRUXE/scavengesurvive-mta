@@ -79,7 +79,8 @@ return function(ctx)
             return refuse(player, vehicle, "CANNOT_PUSH")
         end
         local handling = getVehicleHandling(vehicle)
-        if not plogic.canPushMass(getElementModel(vehicle), handling and handling.mass) then
+        local skill = exports.character:getSkill(player, plogic.SKILL)
+        if not plogic.canPushMass(handling and handling.mass, skill) then
             return refuse(player, vehicle, "TOO_HEAVY")
         end
         local px, py, pz = getElementPosition(player)
@@ -94,7 +95,6 @@ return function(ctx)
             return refuse(player, vehicle, "NOT_AT_END")
         end
         local stats = exports.character:getStats(player)
-        local skill = exports.character:getSkill(player, plogic.SKILL)
         local speed = plogic.speed(skill, stats and stats.hp or 100, handling and handling.mass)
         pushes[player] = { vehicle = vehicle, x = vx, y = vy, z = vz }
         pusherOf[vehicle] = player

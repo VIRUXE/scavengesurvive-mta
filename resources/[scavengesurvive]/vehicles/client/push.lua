@@ -281,6 +281,13 @@ function pushActions(heldUname)
         }
     end
     local actions = {}
+    local skill = 0
+    for _, row in ipairs(exports.character:skillRows() or {}) do
+        if row.name == plogic.SKILL then
+            skill = row.amount
+            break
+        end
+    end
     local px, py, pz = getElementPosition(localPlayer)
     for _, v in ipairs(getElementsWithinRange(px, py, pz, 8, "vehicle")) do
         if
@@ -294,7 +301,7 @@ function pushActions(heldUname)
             and outside(v, px, py, pz) <= plogic.REACH
         then
             local handling = getVehicleHandling(v)
-            local canPush = plogic.canPushMass(getElementModel(v), handling and handling.mass)
+            local canPush = plogic.canPushMass(handling and handling.mass, skill)
             local vx, vy = getElementPosition(v)
             local _, _, rz = getElementRotation(v)
             local angle = vlogic.angleToVehicle(px, py, vx, vy, rz)

@@ -6,15 +6,20 @@
 local M = {}
 
 M.SKILL = "Strength"
-M.MAX_MASS = 3000 -- kg: anything heavier (trucks, buses, armour) does not move by hand
+local UNTRAINED_MASS = 3000 -- kg
+local MAX_MASS = 10000 -- kg at full Strength
 -- getVehicleType values that roll on wheels and stand on their own (a bike falls over, a boat or helicopter has none)
 M.TYPES = { Automobile = true, ["Monster Truck"] = true, Quad = true, Trailer = true, Plane = true }
 M.REACH = 1.3 -- metres from the bumper the hands still touch it
 M.ACCEL = 1.2 -- m/s per second while the player leans in
 M.MIN_SKILL_DISTANCE = 3 -- metres a push must move the vehicle to count for the skill
 
-function M.canPushMass(model, mass)
-    return model == 573 or (mass or 0) <= M.MAX_MASS -- Duneride and Doomride share the same handling model
+local function strength(skill)
+    return math.max(0, math.min(1, tonumber(skill) or 0))
+end
+
+function M.canPushMass(mass, skill)
+    return (mass or 0) <= UNTRAINED_MASS + (MAX_MASS - UNTRAINED_MASS) * strength(skill)
 end
 
 -- Front or rear by the angle round the vehicle (shared/logic/vehicle.lua angleToVehicle: 0 front, 180 rear):
@@ -31,7 +36,7 @@ end
 -- Top speed in m/s: 0.8 untrained to 1.8 for a Master, times 0.4..1 from health, times the mass factor (a 1400 kg
 -- car is 1, lighter ones go a little faster, a 3000 kg one about two thirds).
 function M.speed(skill, hp, mass)
-    skill = math.max(0, math.min(1, tonumber(skill) or 0))
+    skill = strength(skill)
     local health = 0.4 + 0.6 * math.max(0, math.min(1, (tonumber(hp) or 0) / 100))
     local m = math.max(200, tonumber(mass) or 1400)
     local weight = math.max(0.35, math.min(1.3, math.sqrt(1400 / m)))
