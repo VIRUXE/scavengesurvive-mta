@@ -18,10 +18,23 @@ Optional: SSMTA_CF_ROOT, SSMTA_CF_BASE_URL, SSMTA_CF_POLL_S (5), SSMTA_CF_SETTLE
 
 import json
 import os
+import socket
 import sys
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
+
+# nasa resolves api.cloudflare.com to IPv6 first but has no IPv6 route: urllib tries each address in turn and waits out
+# the timeout on every one of them before it reaches IPv4 (minutes per call). Try the IPv4 addresses first.
+_getaddrinfo = socket.getaddrinfo
+
+
+def _ipv4_first(*args, **kwargs):
+    return sorted(_getaddrinfo(*args, **kwargs), key=lambda info: info[0] != socket.AF_INET)
+
+
+socket.getaddrinfo = _ipv4_first
 
 ROOT = os.environ.get(
     "SSMTA_CF_ROOT",
