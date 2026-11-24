@@ -119,8 +119,10 @@ local function nearby(p, range)
     local dim = getElementDimension(p)
     local out = {}
     for _, o in ipairs(getElementsByType("player")) do
-        if getElementDimension(o) == dim then
-            local ox, oy, oz = getElementPosition(o)
+        -- Spectators receive proximity chat at the watched player's position.
+        local listener = exports.staff:getSpectateTarget(o) or o
+        if getElementDimension(listener) == dim then
+            local ox, oy, oz = getElementPosition(listener)
             if getDistanceBetweenPoints3D(x, y, z, ox, oy, oz) <= range then
                 out[#out + 1] = o
             end
