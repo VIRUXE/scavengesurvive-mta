@@ -43,15 +43,19 @@ retain the original layout. Native alpha is retained. Magenta review borders
 are removed before resampling by extending adjacent painted pixels, preventing
 registration colours from entering compressed textures or mips.
 
+The Cargobob (model 548) uses one atlas for its airframe, cockpit and wheels.
+The build places the reviewed wheel patch over the 1024×1024 airframe repaint
+in `body/fc2b924e4b093e92.png` and ships the full atlas in one DDS.
+
 ## Runtime and budget
 
 `build.json` records input/output SHA-256, DDS dimensions, format, mip payload
 size, sampled UV region and sampler transform. Output: **103 DXT1 and 11 DXT5
-files**, complete chains through 1x1, **6,583,416 bytes (6.28 MiB)**. Each source
+files**, complete chains through 1x1, **7,238,776 bytes (6.90 MiB)**. Each source
 content produces one DDS and each client creates its texture/shader once on
 first use. Scripts and mapping add about 50 KiB to the download.
 
-To stay below 8 MiB, 45 atlas regions are cropped in the DDS, padded to powers of
+To stay below 8 MiB, 44 atlas regions are cropped in the DDS, padded to powers of
 two with extended edge texels, never stretched. The crop shader remaps existing
 UVs and retains the original texture outside the sampled rectangle. It inherits
 GTA vertex processing and diffuse lighting. Full textures use stage-zero fixed

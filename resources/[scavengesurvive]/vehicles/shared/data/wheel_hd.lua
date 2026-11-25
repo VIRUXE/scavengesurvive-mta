@@ -781,9 +781,9 @@ return {
         ["fc2b924e4b093e92"] = {
             file = "files/wheel_hd/fc2b924e4b093e92.dds",
             format = "dxt1",
-            cropped = true,
-            region = { 0.24609375, 0.80859375, 0.375, 0.9375 },
-            transform = { 4, 4, -0.984375, -3.234375 },
+            cropped = false,
+            region = { 0, 0, 1, 1 },
+            transform = { 1, 1, 0, 0 },
         },
         ["ff1b4926d2266cfb"] = {
             file = "files/wheel_hd/ff1b4926d2266cfb.dds",

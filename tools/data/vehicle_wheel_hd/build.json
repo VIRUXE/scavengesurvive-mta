@@ -2019,25 +2019,26 @@
     "file": "files/wheel_hd/fc2b924e4b093e92.dds",
     "format": "dxt1",
     "size": [
-      256,
-      256
+      1024,
+      1024
     ],
     "region": [
-      0.24609375,
-      0.80859375,
-      0.375,
-      0.9375
+      0.0,
+      0.0,
+      1.0,
+      1.0
     ],
     "transform": [
-      4.0,
-      4.0,
-      -0.984375,
-      -3.234375
+      1.0,
+      1.0,
+      0.0,
+      0.0
     ],
-    "cropped": true,
-    "bytes": 43832,
-    "dds_sha256": "af8f5e554c8f1223edc038cfbff5c8eaae06a43c0b78a96d0fc015a082efab4f",
-    "source_sha256": "c4f26707ceea9f62adcb342349a91fe1d03b0033d72039b233a81c35c2041ce6"
+    "cropped": false,
+    "bytes": 699192,
+    "dds_sha256": "12ff93e3ee2d762af477346b95e35cee730f5baac07c32f6fff98a7b54311517",
+    "source_sha256": "c4f26707ceea9f62adcb342349a91fe1d03b0033d72039b233a81c35c2041ce6",
+    "body_sha256": "74a5bb927b0abe9d4284b347a2f28e9b439d86ab35bd11af053df9f21a29df7d"
   },
   "8e06ab8e487f1649": {
     "file": "files/wheel_hd/8e06ab8e487f1649.dds",
