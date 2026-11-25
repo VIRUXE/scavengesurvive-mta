@@ -542,11 +542,101 @@ function roll.settle(px, py, slot, rest, modelz, rz, centred, placed)
     return ox + tnx * base, oy + tny * base, under + tnz * base - modelz, rz, tnx, tny, fp
 end
 
--- Lay one item of a roll so it touches nothing in `placed` (footprints already on the ground: this roll, the batch,
--- and items lying nearby). Its own slot first (slot i of the roll's ring), then the point's other slots nearest first;
--- on each, its free headings in random order (eight random ones when its class is unchecked). When nothing is free it
--- settles on what it overlaps on its own slot (roll.settle): items may touch, they never vanish. Appends its footprint
--- to `placed` and returns x, y, z, rz, nx, ny, leaning (true when it had to lean).
+local function worldCandidates(ground, own)
+    local cands, seen = {}, { [("%g,%g"):format(own[1], own[2])] = true }
+    for _, ring in ipairs(ground.s) do
+        for _, slot in ipairs(ring) do
+            if type(slot) == "table" and #slot >= 5 then
+                local key = ("%g,%g"):format(slot[1], slot[2])
+                if not seen[key] then
+                    seen[key] = true
+                    local d = (slot[1] - own[1]) ^ 2 + (slot[2] - own[2]) ^ 2
+                    cands[#cands + 1] = { slot = slot, d = d }
+                end
+            end
+        end
+    end
+    return cands
+end
+
+local function nearestFirst(a, b)
+    return a.d < b.d
+end
+
+-- Prefer the authored slot and rolled heading. Search other slots and widen the search across the same surface
+-- when the pose is obstructed. Keep the nearest world-clear pose in reserve if other loot crowds every fit.
+roll.WORLD_SEARCH_RADIUS = 4.5
+local SEARCH_RADII = { 0.5, 1, 1.5, 2.25, 3.25, roll.WORLD_SEARCH_RADIUS }
+local SEARCH_STEP = 0.35
+local SEARCH_HEADINGS = { 0, 22.5, -22.5, 45, -45, 67.5, -67.5, 90 }
+
+function roll.placeWorldItem(px, py, ground, n, i, rest, modelz, rz, placed, world, boxClear)
+    local own = ground.s[n] and ground.s[n][i]
+    if type(own) ~= "table" or #own < 5 then
+        local angle = math.rad(i * 360 / n)
+        own = { math.cos(angle) * 0.6, math.sin(angle) * 0.6, ground.z }
+    end
+    local reserve
+    local function trySlot(dx, dy)
+        local hz, nx, ny, nz = world.below(px + dx, py + dy, own[3], SEARCH_STEP, SEARCH_STEP)
+        if not hz or math.abs(hz - own[3]) > SEARCH_STEP or nz < 0.65 then
+            return nil
+        end
+        local slot = { dx, dy, hz, nx, ny }
+        for _, offset in ipairs(SEARCH_HEADINGS) do
+            local heading = (rz + offset) % 360
+            local x, y, z, sx, sy = roll.layAt(px, py, slot, rest, modelz, heading, true)
+            local fp = roll.lyingFootprint(x, y, z + modelz, heading, rest, sx, sy)
+            local overlaps = false
+            for _, other in ipairs(placed) do
+                if roll.overlaps(fp, other, roll.GAP) then
+                    overlaps = true
+                    break
+                end
+            end
+            if
+                (not overlaps or not reserve)
+                and boxClear(rest, x, y, z + modelz, heading, sx or 0, sy or 0, world.clear)
+            then
+                local candidate = { x = x, y = y, z = z, rz = heading, nx = sx, ny = sy, fp = fp }
+                if not overlaps then
+                    return candidate
+                end
+                reserve = candidate
+            end
+        end
+        return nil
+    end
+
+    local fit = trySlot(own[1], own[2])
+    if not fit then
+        local cands = worldCandidates(ground, own)
+        for _, radius in ipairs(SEARCH_RADII) do
+            for k = 0, 11 do
+                local angle = k * math.pi / 6
+                cands[#cands + 1] = {
+                    slot = { own[1] + radius * math.cos(angle), own[2] + radius * math.sin(angle) },
+                    d = radius * radius,
+                }
+            end
+        end
+        table.sort(cands, nearestFirst)
+        for _, cand in ipairs(cands) do
+            fit = trySlot(cand.slot[1], cand.slot[2])
+            if fit then
+                break
+            end
+        end
+    end
+    fit = fit or reserve
+    if fit then
+        placed[#placed + 1] = fit.fp
+        return fit.x, fit.y, fit.z, fit.rz, fit.nx, fit.ny
+    end
+end
+
+-- The measured slots also work when live world collision is unavailable. When all slots are crowded, settle on
+-- the existing items instead of losing the roll.
 function roll.placeItem(px, py, ground, n, i, rest, modelz, rng, placed)
     rest = rest or DEFAULT_REST
     local own = ground.s[n] and ground.s[n][i]
@@ -559,9 +649,7 @@ function roll.placeItem(px, py, ground, n, i, rest, modelz, rng, placed)
             end
         end
     end
-    table.sort(cands, function(a, b)
-        return a.d < b.d
-    end)
+    table.sort(cands, nearestFirst)
     for _, cand in ipairs(cands) do
         local slot = cand.slot
         local heads = roll.freeHeadings(slot, rest)

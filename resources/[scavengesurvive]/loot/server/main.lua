@@ -3,6 +3,7 @@ local net = loadstring(exports.lib:getModule("net"), "=lib/net.lua")()
 local util = loadstring(exports.lib:getModule("util"), "=lib/util.lua")()
 local budget = loadstring(exports.lib:getModule("budget"), "=lib/budget.lua")()
 local log = loadstring(exports.lib:getModule("log"), "=lib/log.lua")()
+local geom = loadstring(exports.lib:getModule("geom"), "=lib/geom.lua")()
 local function loadFile(path)
     local f = assert(fileOpen(path, true), "loot: cannot open " .. path)
     local src = fileRead(f, fileGetSize(f))
@@ -264,7 +265,7 @@ end
 -- (shared/logic/settle.lua). Types on the game's own models have no file here and lie as declared.
 local MODEL_PACKS = { "samp_models", "hat_models", "door_models", "prop_models", "box_models", "car_part_models" }
 local NO_SETTLE = { Dice = true } -- lies on the face it rolled (items/client/world.lua)
-local tipped = {} -- item type -> its tipped pose (settle.pose), false when it lies as declared
+local shapes = {}
 
 local function modelDff(model)
     for _, name in ipairs(MODEL_PACKS) do
@@ -285,14 +286,19 @@ local function modelDff(model)
     return nil
 end
 
-local function tippedPose(uname, def)
-    if tipped[uname] == nil then
-        tipped[uname] = false
-        local bytes = def and not NO_SETTLE[uname] and modelDff(tonumber(def.model))
+local function itemShape(uname, def)
+    local model = def and tonumber(def.model)
+    if not model or NO_SETTLE[uname] then
+        return nil, itemRest[uname]
+    end
+    if shapes[uname] == nil then
+        local bytes = modelDff(model)
         if bytes then
-            local ok, pose = pcall(function()
+            local ok, pose, bounds = pcall(function()
                 local mesh = settle.mesh(bytes)
-                return mesh and settle.pose(mesh, def.rotx, def.roty, def.rotz)
+                if mesh then
+                    return settle.pose(mesh, def.rotx, def.roty, def.rotz)
+                end
             end)
             if not ok then
                 util.log(
@@ -304,10 +310,13 @@ local function tippedPose(uname, def)
                     tostring(pose)
                 )
             end
-            tipped[uname] = ok and pose or false
+            shapes[uname] = { pose = ok and pose, bounds = ok and bounds }
+        elseif itemRest[uname] then
+            shapes[uname] = {}
         end
     end
-    return tipped[uname]
+    local shape = shapes[uname]
+    return shape and shape.pose, itemRest[uname] or (shape and shape.bounds)
 end
 
 -- An item laid flush at origin (x, y, z) with heading rz on a surface of normal (nx, ny; nil when level), as
@@ -315,7 +324,7 @@ end
 -- its rest height changes, and its heading and normal become those of the tipped pose. Returns x, y, z, rz, nx, ny,
 -- unchanged for a type that lies well as declared.
 local function settleByShape(uname, def, rest, x, y, z, rz, nx, ny)
-    local pose = rest and tippedPose(uname, def)
+    local pose = rest and itemShape(uname, def)
     if not pose then
         return x, y, z, rz, nx, ny
     end
@@ -328,8 +337,8 @@ end
 
 -- One spawn's roll for loot_roll: { s = id, cd = cooldown seconds, items = { { u, data, x, y, z, rz, nx, ny } } },
 -- or nil for a spawn whose loot table is unknown (disabled instead). `placed` holds the footprints already on the
--- ground around (the batch so far and items lying nearby): an item takes a free spot of the point when there is one,
--- else it leans on what it touches (roll.placeItem); `leaning` counts those.
+-- ground around (the batch so far and items lying nearby). Try the loaded world's collision first, then the
+-- measured slots if an item has no fit or the world is unavailable. `leaning` counts items placed on other loot.
 local function rollSpawn(s, placed)
     -- now and then a point rolls a related table instead of its own (roll.CROSS_TABLES)
     local tableName = roll.crossTable(s.table_name, math.random, setting("loot.cross_table_multiplier", 1.0))
@@ -360,7 +369,13 @@ local function rollSpawn(s, placed)
     local ground = type(s.ground) == "string" and fromJSON(s.ground) or nil
     if type(ground) ~= "table" or type(ground.s) ~= "table" then
         ground = nil
+    else
+        ground.z = tonumber(ground.z) or s.z
     end
+    local liveGround = (tonumber(s.interior) or 0) == 0
+        and (tonumber(s.dimension) or 0) == 0
+        and geom.ready()
+        and (ground or { z = s.z, s = {} })
     local items, leaning = {}, 0
     for i, uname in ipairs(unames) do
         local def = exports.data:itemType(uname)
@@ -370,10 +385,28 @@ local function rollSpawn(s, placed)
                 data = initialData(def, tableName), -- JSON text or nil
                 rz = math.random(0, 359),
             }
-            local rest = itemRest[uname]
+            local pose, rest = itemShape(uname, def)
             local modelz = rest and (def.modelz or 0) or 0
             local x, y, z, rz, nx, ny, lean
-            if ground then
+            if liveGround and rest then
+                x, y, z, rz, nx, ny = roll.placeWorldItem(
+                    s.x,
+                    s.y,
+                    liveGround,
+                    #unames,
+                    i,
+                    pose and pose.bounds or rest,
+                    modelz,
+                    item.rz,
+                    placed,
+                    geom,
+                    settle.boxClear
+                )
+                if x and pose then
+                    rz, nx, ny = settle.lay(pose, rz, nx, ny)
+                end
+            end
+            if not x and ground then
                 x, y, z, rz, nx, ny, lean =
                     roll.placeItem(s.x, s.y, ground, #unames, i, rest or UNSHAPED, modelz, math.random, placed)
                 if x then
@@ -515,11 +548,8 @@ end
 -- is left) while their zone has allowance and no player is within world.min_player_distance, and places the batch
 -- with one loot_roll call. done(ok, spots, items): ok false when the call failed (the caller reloads the allowance),
 -- spots and items what was placed. A quiet batch emits no lootSpawned. The caller holds budgetBusy.
--- Footprints of the items lying within NEAR metres of any of `rows` (one query; the batch's own rolls add theirs as
--- they are laid), so a roll never lays an item touching one already on the ground. NEAR covers the furthest a new
--- item's footprint reaches from its point (outer ring 1.3 m, nudge 0.45 m, centring and half a clamped 3 m
--- footprint: 4 m) plus the furthest a lying item's footprint reaches from its origin (~2.2 m). cb(placed).
-local NEAR = 6.5
+-- Include loot near the expanded placement search, with room for slot offsets and both item footprints.
+local NEAR = roll.WORLD_SEARCH_RADIUS + 6.5
 local function lyingNear(rows, cb)
     local polys = {}
     for _, s in ipairs(rows) do
@@ -552,12 +582,13 @@ local function lyingNear(rows, cb)
             if x and y and z then
                 -- its stored z is its origin less its type's modelz; its top face lies as it lies
                 local def = exports.data:itemType(r.type_uname)
+                local rest = itemRest[r.type_uname] or select(2, itemShape(r.type_uname, def))
                 placed[#placed + 1] = roll.lyingFootprint(
                     x,
                     y,
                     z + (def and def.modelz or 0),
                     tonumber(r.rz) or 0,
-                    itemRest[r.type_uname],
+                    rest,
                     r.ground_nx,
                     r.ground_ny
                 )
@@ -688,7 +719,7 @@ function rollNear(x, y, radius, onDone)
         end
     end
     local batch = setting("loot.roll_batch", 300)
-    local sql = "SELECT s.id, s.x, s.y, s.z, s.zone, s.table_name, s.weight, s.size, s.rooftop, s.ground "
+    local sql = "SELECT s.id, s.x, s.y, s.z, s.zone, s.table_name, s.weight, s.size, s.rooftop, s.ground, s.interior, s.dimension "
         .. "FROM loot_spawns s "
         .. "JOIN loot_spawn_state st ON st.spawn_id = s.id WHERE s.enabled = 1 AND st.next_roll_at <= NOW() "
         .. "AND NOT EXISTS (SELECT 1 FROM items i WHERE i.loot_spawn_id = s.id) "
@@ -722,7 +753,7 @@ end
 
 -- Due points of one zone in random order, from anywhere in the zone, weighted by roll.DRAW_WEIGHTS: the smallest
 -- exponential key -LOG(1 - RAND()) / weight comes first, so a point of weight 20 is drawn 20 times as readily.
-local DUE_IN_ZONE = "SELECT s.id, s.x, s.y, s.z, s.zone, s.table_name, s.weight, s.size, s.rooftop, s.ground "
+local DUE_IN_ZONE = "SELECT s.id, s.x, s.y, s.z, s.zone, s.table_name, s.weight, s.size, s.rooftop, s.ground, s.interior, s.dimension "
     .. "FROM loot_spawns s "
     .. "JOIN loot_spawn_state st ON st.spawn_id = s.id WHERE s.enabled = 1 AND s.zone = ? "
     .. "AND st.next_roll_at <= NOW() AND NOT EXISTS (SELECT 1 FROM items i WHERE i.loot_spawn_id = s.id) "

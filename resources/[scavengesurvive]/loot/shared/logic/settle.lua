@@ -4,9 +4,9 @@
 -- put down in that rotation and tips as a rigid body would: about what it stands on, towards its centre of mass,
 -- until the centre of mass is over what touches the ground. A door then lies on its mirror and its far edge.
 --
--- settle.mesh(bytes) reads a .dff; settle.pose(mesh, rotx, roty, rotz) is the tipped pose of a type (false when it
--- lies well as declared, or stands on purpose); settle.lay(pose, rz, nx, ny) is that pose at a heading on a surface,
--- as the heading and ground normal an item row stores (items/client/world.lua turns the object by them).
+-- settle.mesh(bytes) reads a .dff; settle.pose(mesh, rotx, roty, rotz) returns the tipped pose (false when the
+-- model lies as declared) and the bounds in the declared rotation. The tipped pose also carries its rotated bounds.
+-- settle.lay(pose, rz, nx, ny) returns the final heading and normal for the client to draw.
 local SUPPORT = 0.004 -- metres over the lowest point that still count as touching the ground
 local INSIDE = 0.01 -- the centre of mass may sit this far outside what touches and still be held
 local MIN_TILT = 2 -- degrees: a pose that tips less is left as declared
@@ -413,9 +413,18 @@ local function tip(pts, com)
     return rot
 end
 
--- The tipped pose of a mesh declared to lie in (rotx, roty, rotz): { rot = the turn after the rest rotation, base =
--- how far its origin then sits over the ground, tilt = degrees }. false when it tips less than MIN_TILT (it lies well
--- as declared) or more than MAX_TILT (it stands that way on purpose: a bottle, a bumper on its edge).
+-- Bounds use the same layout as item_rest.lua.
+local function bounds(pts, rotation)
+    local x0, y0, z0 = math.huge, math.huge, math.huge
+    local x1, y1, z1 = -x0, -y0, -z0
+    for _, p in ipairs(pts) do
+        local x, y, z = apply(rotation, p[1], p[2], p[3])
+        x0, y0, z0 = math.min(x0, x), math.min(y0, y), math.min(z0, z)
+        x1, y1, z1 = math.max(x1, x), math.max(y1, y), math.max(z1, z)
+    end
+    return { -z0, (x0 + x1) / 2, (y0 + y1) / 2, 0, 0, x1 - x0, y1 - y0, z1 - z0 }
+end
+
 local function pose(m, rotx, roty, rotz)
     local rest = eulerMatrix(rotx or 0, roty or 0, rotz or 0)
     local pts = {}
@@ -425,14 +434,10 @@ local function pose(m, rotx, roty, rotz)
     local rot = tip(pts, { apply(rest, m.com[1], m.com[2], m.com[3]) })
     local tilt = math.deg(math.acos(math.max(-1, math.min(1, rot[9]))))
     if tilt < MIN_TILT or tilt > MAX_TILT then
-        return false
+        return false, bounds(m.pts, rest)
     end
-    local low = math.huge
-    for _, p in ipairs(pts) do
-        local _, _, z = apply(rot, p[1], p[2], p[3])
-        low = math.min(low, z)
-    end
-    return { rot = rot, base = -low, tilt = tilt }
+    local tipped = bounds(pts, rot)
+    return { rot = rot, base = tipped[1], tilt = tilt, bounds = tipped }, bounds(m.pts, rest)
 end
 
 -- A tipped pose lying at heading rz (degrees) on a surface of normal (nx, ny; nil when level), as an item row stores
@@ -454,4 +459,45 @@ local function lay(p, rz, nx, ny)
     return heading, tx, ty
 end
 
-return { mesh = mesh, pose = pose, lay = lay }
+-- Sample the resting box in its actual heading and ground tilt. Start just above its underside so contact
+-- with the supporting floor is allowed. Crosswise rays at each height also catch obstacles inside the box.
+local function boxClear(rest, x, y, z, rz, nx, ny, clear)
+    local tilt = tiltMatrix(nx, ny)
+    local a = math.rad(rz)
+    local c, s = math.cos(a), math.sin(a)
+    local function point(px, py, pz)
+        local dx, dy, dz = apply(tilt, px * c - py * s, px * s + py * c, pz)
+        return x + dx, y + dy, z + dz
+    end
+    local function segment(ax, ay, az, bx, by, bz)
+        local x1, y1, z1 = point(ax, ay, az)
+        return clear(x1, y1, z1, point(bx, by, bz)) == true
+    end
+    local hx, hy = rest[6] / 2 + 0.03, rest[7] / 2 + 0.03
+    local cx, cy = rest[2], rest[3]
+    local bottom = -rest[1] + math.min(0.04, rest[8] / 2)
+    local top = rest[8] - rest[1] + 0.02
+    if not segment(cx, cy, bottom, cx, cy, top) then
+        return false
+    end
+    local layers = math.max(1, math.ceil((top - bottom) / 0.35))
+    local cols, rows = math.ceil(2 * hx / 0.45), math.ceil(2 * hy / 0.45)
+    for level = 0, layers do
+        local height = bottom + (top - bottom) * level / layers
+        for i = 0, rows do
+            local py = cy - hy + 2 * hy * i / rows
+            if not segment(cx - hx, py, height, cx + hx, py, height) then
+                return false
+            end
+        end
+        for i = 0, cols do
+            local px = cx - hx + 2 * hx * i / cols
+            if not segment(px, cy - hy, height, px, cy + hy, height) then
+                return false
+            end
+        end
+    end
+    return true
+end
+
+return { mesh = mesh, pose = pose, lay = lay, boxClear = boxClear }
