@@ -2,7 +2,7 @@
 -- loaded) keeps that position on the server even after GTA puts the client's copy back on a road, so F on what the
 -- player sees is refused (2026-11-15, Sandking #318 at z -93). Every SCAN_MS the server tests each empty vehicle it
 -- has not yet seen standing on something against its own copy of the world (lib geom.lua, ml_sageom):
---   ok      a surface within BELOW metres under it
+--   ok      a surface within BELOW metres under it, or a known gap in the server's parking-floor collision
 --   sunk    fully under water: its top (TOP_ABOVE by size class over its origin) under the water surface, nothing
 --           solid between it and that surface, and a bed under it; it stays there for staff to delete and the fleet
 --           refill replaces it (ctx.setSunk); a later ok or rescue clears the mark
@@ -20,6 +20,8 @@ return function(ctx)
     local TOP = 1500
     local WATER = 10
     local BED = 200 -- how deep under a sunk vehicle the sea or lake bed is looked for
+    local EAST_BEACH_GARAGE = 17679 -- lae2_bigblock
+    local GARAGE_LEVEL_MIN_Z, GARAGE_LEVEL_MAX_Z = 33.5, 36.5
     -- how far a vehicle's highest point sits over its origin, by vehicle_types size; generous, so a vehicle half in
     -- the water is never called sunk
     local TOP_ABOVE = { small = 1.5, medium = 2.0, large = 3.0 }
@@ -57,7 +59,11 @@ return function(ctx)
         if geom.below(x, y, z, 0.5, BELOW) then
             return "ok"
         end
-        local surface = geom.below(x, y, TOP, 0, TOP - z - 0.5)
+        local surface, _, _, _, model = geom.below(x, y, TOP, 0, TOP - z - 0.5)
+        -- Server rays can miss this drive-in level. A parked vehicle there would be lifted onto the roof.
+        if model == EAST_BEACH_GARAGE and z >= GARAGE_LEVEL_MIN_Z and z <= GARAGE_LEVEL_MAX_Z then
+            return "ok"
+        end
         local wz = geom.water(x, y)
         if not surface or (wz and math.abs(wz - z) <= WATER) then
             return "unknown"

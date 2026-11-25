@@ -95,6 +95,13 @@ M.FUEL_CAP_REACH, M.FUEL_CAP_FACE_DEG, M.FUEL_CAP_LOOK_DEG = 1.4, 45, 35
 M.FUEL_CAP_HOLD_REACH, M.FUEL_CAP_HOLD_FACE_DEG, M.FUEL_CAP_HOLD_LOOK_DEG = 1.9, 70, 50
 M.FUEL_CAP_HEIGHT = 1.8 -- the cap is at most this far above or below the player's centre
 
+-- The Hydra's bounding box reaches the wingtips. Put its cap on the left fuselage ahead of the wing.
+function M.fixedFuelCapOffset(model)
+    if model == 520 then
+        return -1.1, 2.5, -0.35
+    end
+end
+
 -- A cap offset as sent by a client: three finite numbers inside a vehicle's extent, or nil.
 function M.fuelCapOffset(lx, ly, lz)
     lx, ly, lz = tonumber(lx), tonumber(ly), tonumber(lz)

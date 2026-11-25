@@ -337,6 +337,11 @@ local function updateWheelFreeze(v)
         killTimer(wheelFreezeTimers[v])
     end
     wheelFreezeTimers[v] = nil
+    -- Restoring saved wheel states can run while the restart handoff puts an aircraft back in flight.
+    local vehicleType = getVehicleType(v)
+    if vehicleType == "Plane" or vehicleType == "Helicopter" then
+        return
+    end
     local frontLeft, rearLeft, frontRight, rearRight = getVehicleWheelStates(v)
     if frontLeft == 2 and rearLeft == 2 and frontRight == 2 and rearRight == 2 then
         wheelFreezeTimers[v] = setTimer(function()
@@ -2641,6 +2646,12 @@ net.handler("vehicleInteractRequested", function(player, vehicle, capX, capY, ca
     -- Case F: a Petrol Can at the fuel cap, facing it (the client also had the player looking at it) pours into the
     -- tank; it comes before the trunk, as some caps sit at the rear
     local capLx, capLy, capLz = vlogic.fuelCapOffset(capX, capY, capZ)
+    if capLx then
+        local fixedX, fixedY, fixedZ = vlogic.fixedFuelCapOffset(getElementModel(vehicle))
+        if fixedX then
+            capLx, capLy, capLz = fixedX, fixedY, fixedZ
+        end
+    end
     if
         uname == "GasCan"
         and capLx

@@ -122,14 +122,17 @@ addEventHandler("vehicleWheelInstalled", root, function(wheel)
 end)
 
 -- The fuel cap: refuelling happens only standing at it, facing it and looking at it (vlogic.atFuelCap/lookingAt).
--- Its position is the model's gas_cap dummy; a model without one gets a spot on the left flank behind the middle.
+-- Use a fixed offset where configured, then the model's gas_cap dummy or a spot on the left flank.
 local capOffsets = {} -- model -> { x, y, z } in the vehicle's frame
 
 local function fuelCapOffset(vehicle)
     local model = getElementModel(vehicle)
     local off = capOffsets[model]
     if not off then
-        local x, y, z = getVehicleModelDummyPosition(model, "gas_cap")
+        local x, y, z = vlogic.fixedFuelCapOffset(model)
+        if not x then
+            x, y, z = getVehicleModelDummyPosition(model, "gas_cap")
+        end
         if x and (x ~= 0 or y ~= 0 or z ~= 0) then
             off = { x, y, z }
         else
