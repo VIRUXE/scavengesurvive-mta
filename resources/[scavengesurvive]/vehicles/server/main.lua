@@ -822,6 +822,7 @@ end
 -- which would drop drivers on the road with the engine off. The stop leaves each vehicle's live motion and switches
 -- in root element data and each occupant's seat in their own, which outlive the resource; the load puts it all back.
 local HANDOFF_KEY, SEAT_KEY, HANDOFF_TTL_S = "vehicles.handoff", "vehicles.handoffSeat", 120
+local AIRCRAFT_HANDOFF_HOLD_MS = 10000
 
 local function saveHandoff()
     local list, now = {}, unixNow()
@@ -831,12 +832,15 @@ local function saveHandoff()
             local rx, ry, rz = getElementRotation(v)
             local vx, vy, vz = getElementVelocity(v)
             local tx, ty, tz = getElementAngularVelocity(v)
+            local kind = getVehicleType(v)
             list[tostring(i.id)] = {
                 pos = { x, y, z, rx, ry, rz },
                 vel = { vx, vy, vz, tx, ty, tz },
                 engine = getVehicleEngineState(v),
                 lights = getVehicleOverrideLights(v),
                 acc = i.acc or false,
+                airborne = (kind == "Helicopter" or kind == "Plane") and not isVehicleOnGround(v)
+                    and not isElementInWater(v),
             }
             for seat, ped in pairs(getVehicleOccupants(v) or {}) do
                 if getElementType(ped) == "player" then
@@ -872,12 +876,13 @@ local function applyHandoff(v, s)
         info[v].acc = true
         setElementData(v, "vehicles.acc", true, "broadcast", "deny")
     end
-    return m
+    return { velocity = m, airborne = s.airborne }
 end
 
 -- Seats the players the stop took out of their vehicles, then gives the vehicles back their speed.
 local function reseatHandoff(byId, motion)
     local now = unixNow()
+    local held = {}
     for _, player in ipairs(getElementsByType("player")) do
         local s = getElementData(player, SEAT_KEY)
         if s ~= nil then
@@ -887,11 +892,23 @@ local function reseatHandoff(byId, motion)
         if v and isElement(v) and not isPedDead(player) and not getPedOccupiedVehicle(player) then
             setElementDimension(player, getElementDimension(v))
             setElementInterior(player, getElementInterior(v))
-            warpPedIntoVehicle(player, v, s.seat)
+            if warpPedIntoVehicle(player, v, s.seat) and motion[v] and motion[v].airborne and not held[v]
+                and not isElementFrozen(v)
+            then
+                held[v] = setElementFrozen(v, true)
+                if held[v] then
+                    setTimer(function(vehicle)
+                        if isElement(vehicle) then
+                            setElementFrozen(vehicle, false)
+                        end
+                    end, AIRCRAFT_HANDOFF_HOLD_MS, 1, v)
+                end
+            end
         end
     end
-    for v, m in pairs(motion) do
-        if isElement(v) then
+    for v, state in pairs(motion) do
+        if isElement(v) and not held[v] then
+            local m = state.velocity
             setElementVelocity(v, m[1], m[2], m[3])
             setElementAngularVelocity(v, m[4], m[5], m[6])
         end
