@@ -26,6 +26,17 @@ local function letterSet(text, map)
     return set
 end
 
+-- A water type (the Skimmer) is still a plane for fuel and the glovebox, but it only rolls on boat points.
+function spawn.onPoint(t, cats, sizes)
+    if not sizes[t.size] then
+        return false
+    end
+    if t.water then
+        return cats.boat == true
+    end
+    return cats[t.category] == true
+end
+
 -- Candidates for a group spawn: the group's types whose category and size are allowed, each kept only when its own
 -- spawn chance hits (upstream PickRandomVehicleTypeFromGroup). fits(t), when given, drops the types that do not fit
 -- the point (vehicle_spawn_removed, tools/spawn_ground.py).
@@ -35,8 +46,7 @@ function spawn.candidates(row, types, rng, fits)
     for _, t in ipairs(types.list) do
         if
             t.group == row.group_name
-            and cats[t.category]
-            and sizes[t.size]
+            and spawn.onPoint(t, cats, sizes)
             and (not fits or fits(t))
             and rng() * 100 < t.spawnChance
         then
@@ -57,7 +67,9 @@ function spawn.roll(row, types, chance, rng, fits)
     local t
     if row.type_name and row.type_name ~= false then
         t = types.byUname[row.type_name]
-        if not t or (fits and not fits(t)) or rng() * 100 >= t.spawnChance then
+        local cats = letterSet(row.categories, spawn.CATEGORY)
+        -- a named point keeps its type even when the size letters would not; a water type still needs a boat point
+        if not t or (t.water and not cats.boat) or (fits and not fits(t)) or rng() * 100 >= t.spawnChance then
             return nil
         end
     else
