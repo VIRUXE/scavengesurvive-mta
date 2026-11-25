@@ -122,9 +122,10 @@ float4 psLit(float4 diffuse : COLOR0, float2 uv : TEXCOORD0, float3 wp : TEXCOOR
     float3 light = min(cappedAt(diffuse, lerp(Cap, 1, room)) + added * Gain, MAX_LIGHT);
     float4 surface = tex2D(Sampler0, uv);
 #ifdef DIRT_DETAIL
-    // One repeat per three metres, in world space so the grain crosses mesh joins.
-    // The mip chain averages toward neutral grey at a distance.
-    surface.rgb *= 1 + (tex2D(DirtSampler, wp.xy / 3).g - 128.0 / 255.0) * 0.85;
+    // One repeat per two metres, in world space so the grain crosses mesh joins. The mip chain averages toward
+    // neutral grey (x1) at a distance. Only literals the shader already has: one more and ps_2_a runs out of constant
+    // registers, and ps_3_0 gets no texture coordinates from GTA's fixed-function vertex stage (flat ground).
+    surface.rgb *= tex2D(DirtSampler, wp.xy * 0.5).g + 0.5;
 #endif
     return surface * float4(seen(light, diffuse), diffuse.a);
 }
@@ -143,11 +144,7 @@ technique lit
         TexCoordIndex[1] = 131073;
         TextureTransformFlags[1] = 3;
         TextureTransform[1] = (gViewInverse);
-#ifdef DIRT_DETAIL
-        PixelShader = compile ps_3_0 psLit();
-#else
         PixelShader = compile ps_2_a psLit();
-#endif
     }
 }
 
