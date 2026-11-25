@@ -14,8 +14,8 @@ Translates game chat for the `chat` resource with Claude Haiku through the Claud
   `/etc/ssmta-translator.env` as `SSMTA_GOOGLE_TRANSLATE_KEY`, mode 0600), one call per target and without context.
   Claude is then skipped for 15 min after a usage-limit error, 1 min after anything else. `GET /health` shows
   `claude_paused_s`; replies carry `"via": "claude"` or `"google"`. Google calls are forced onto IPv4.
-- `chat/server/main.lua` only calls it when the audience mixes languages (the speaker's, every reader's, plus
-  English for global lines, which Discord gets in English).
+- `chat/server/main.lua` requests each reader's language, plus English for global lines relayed to Discord.
+  The translator detects the language of the message itself.
 
 ## Install
 1. `claude` logged in as root (`claude auth status` shows `authMethod: claude.ai`).

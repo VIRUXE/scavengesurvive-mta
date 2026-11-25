@@ -195,8 +195,8 @@ local function logMessage(p, text, mode, freq)
 end
 
 -- ---------------------------------------------------------------------------------------------------------
--- Translation: when a line's audience mixes languages (the speaker's, every reader's, plus English for a global
--- line, which Discord gets in English), the line goes to the local translator service (ops/translator: one Claude
+-- Translation: request the readers' languages, plus English for global lines relayed to Discord.
+-- The line goes to the local translator service (ops/translator: one Claude
 -- Haiku session that sees the recent conversation). Each reader whose language it is not written in then gets the
 -- line again, translated, under the original. One call per line for every language; calls queue in order.
 local trPausedUntil = 0
@@ -223,9 +223,6 @@ end
 local function translateFor(speaker, modeName, format, text, players, rgb, relay)
     local plain = tr.stripColours(text)
     local byLang, langs = {}, {}
-    if speaker then
-        langs[langOf(speaker)] = true
-    end
     for _, pl in ipairs(players) do
         if pl ~= speaker and isElement(pl) then
             local code = langOf(pl)
@@ -241,9 +238,8 @@ local function translateFor(speaker, modeName, format, text, players, rgb, relay
     for code in pairs(langs) do
         targets[#targets + 1] = code
     end
-    -- a player's line needs a second language in the audience; a Discord line's language is unknown, so any reader
-    -- language is worth asking for (the translator leaves out the ones it is already written in)
-    if #targets < (speaker and 2 or 1) or getTickCount() < trPausedUntil or not tr.worthTranslating(plain) then
+    -- The speaker's language preference can differ from the language they actually wrote in.
+    if #targets == 0 or getTickCount() < trPausedUntil or not tr.worthTranslating(plain) then
         if relay then
             relay(text)
         end
