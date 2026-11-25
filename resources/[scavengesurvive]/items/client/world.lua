@@ -374,7 +374,7 @@ return function(ctx)
         local own = ign
         for _ = 1, REACH_RAY_STEPS do
             local left = getDistanceBetweenPoints3D(sx, sy, sz, tx, ty, tz)
-            if left < 0.1 then
+            if left < 0.001 then
                 return true
             end
             local hit, hx, hy, hz, el = processLineOfSight(sx, sy, sz, tx, ty, tz, true, F, F, true, F, F, F, F, ign)
@@ -386,49 +386,31 @@ return function(ctx)
             if not passable then
                 return false
             end
-            local k = 0.05 / math.max(left, 0.05)
+            local k = math.min(0.001, getDistanceBetweenPoints3D(hx, hy, hz, tx, ty, tz)) / left
             sx, sy, sz = hx + (tx - sx) * k, hy + (ty - sy) * k, hz + (tz - sz) * k
             ign = el
         end
         return false
     end
 
-    -- true when a built defence other than the item's own lies straight over it, below the reach test's higher point
-    -- (a floor, a ramp or a door laid flat on top of it): that point is then above the floor, not by the item
-    local function underDefence(e, own)
-        local ign = own
-        local sz, tz = e.z + 0.05, e.z + 0.6
-        for _ = 1, REACH_RAY_STEPS do
-            if sz >= tz then
-                return false
-            end
-            local hit, _, _, hz, el = processLineOfSight(e.x, e.y, sz, e.x, e.y, tz, true, F, F, true, F, F, F, F, ign)
-            if not hit then
-                return false
-            end
-            if el and el ~= own and defenceElements[el] then
-                return true
-            end
-            sz, ign = hz + 0.05, el
-        end
-        return false
-    end
-
-    -- true when no wall or map object lies between the player and the world item (a carton in a pile, a table or a
-    -- low kerb does not count): the server picks by distance alone and cannot test this. An item under a built floor
-    -- is reached at its low point only, never over the floor.
-    local function reachable(id, e)
+    -- The higher target helps with uneven ground. Keep it on the item's side of roofs and floors.
+    local function reachable(id, e, fresh)
         local now = getTickCount()
         local cached = reachCache[id]
         local tool = ctx.heldUname and ctx.heldUname() or nil
-        if cached and cached.tool == tool and now - cached.at < REACH_CACHE_MS then
+        if not fresh and cached and cached.tool == tool and now - cached.at < REACH_CACHE_MS then
             return cached.ok
         end
         local sx, sy, sz = getElementPosition(localPlayer)
         sz = sz + 0.5
         local own = isElement(e.obj) and e.obj or nil
-        local ok = rayClear(sx, sy, sz, e.x, e.y, e.z + 0.15, own)
-            or (not underDefence(e, own) and rayClear(sx, sy, sz, e.x, e.y, e.z + 0.6, own))
+        local low, high = e.z + 0.05, e.z + 0.6
+        local ok = rayClear(sx, sy, sz, e.x, e.y, low, own)
+        local raised = false
+        if not ok then
+            raised = rayClear(e.x, e.y, low, e.x, e.y, high, own)
+            ok = raised and rayClear(sx, sy, sz, e.x, e.y, high, own)
+        end
         -- A mounted panel can be sunk slightly into masonry to cover an opening. Crowbar work reaches its
         -- surface, up to 20 cm before the stored target; loose-item pickup never gets this allowance.
         -- The server still checks the tool, inside face, distance and hold before removing a defence.
@@ -448,7 +430,7 @@ return function(ctx)
         -- Large loose items may have a visible edge even when their origin lies in masonry.
         -- Sample inside their transformed bounds; every sample still needs an unobstructed ray.
         local t = itemType(e.uname)
-        if not ok and not e.defence and own and t and (t.size or 0) >= 9 then
+        if not ok and raised and not e.defence and own and t and (t.size or 0) >= 9 then
             local ax, ay, az, bx, by, bz = models.bounds(own)
             local m = getElementMatrix(own)
             if ax and m then
@@ -530,10 +512,10 @@ return function(ctx)
     -- to it), or its cross-section, carried along the line from where it lies to the hands, clears every wall. A
     -- workbench seen through a window is opened there, never lifted out through it; a can on the sill still is.
     local PASS_SHRINK = 0.8 -- the bounds are loose and a carried item may tilt a little
-    local function passes(id, e)
+    local function passes(id, e, fresh)
         local now = getTickCount()
         local cached = passCache[id]
-        if cached and now - cached.at < REACH_CACHE_MS then
+        if not fresh and cached and now - cached.at < REACH_CACHE_MS then
             return cached.ok
         end
         local own = isElement(e.obj) and e.obj or nil
@@ -585,12 +567,12 @@ return function(ctx)
 
     -- an item in reach that empty hands would lift but that does not fit through the way (passes): the hold and the
     -- chooser offer no pickup and the server leaves it out of one; containers and machines still open on a tap
-    local function stuck(id, e)
+    local function stuck(id, e, fresh)
         if e.defence or (ctx.heldUname and ctx.heldUname()) or machines.isMachine(e.uname) then
             return false
         end
         local t = itemType(e.uname)
-        return not (t and t.category == "safebox") and not passes(id, e)
+        return not (t and t.category == "safebox") and not passes(id, e, fresh)
     end
 
     -- every element the item draws, so that a ray passes through it
@@ -1597,30 +1579,51 @@ return function(ctx)
         return bestId or false
     end
 
-    -- the ids of the world items within reach that a wall hides, or that empty hands would lift but that do not fit
-    -- through the way (at most 32): the server leaves them out of a pickup
-    function M.blockedNear(reach)
+    local function pickupDistanceSquared(e, px, py, pz, dim, int)
+        local r = e.row
+        if (r.dimension or 0) == dim and (r.interior or 0) == int and not e.pitched then
+            return (e.x - px) ^ 2 + (e.y - py) ^ 2 + (e.z - pz) ^ 2
+        end
+    end
+
+    -- Only offer items that are present and reachable when F fires, including in a crowded loot pile.
+    function M.pickupCandidates(reach, targetId)
         local px, py, pz = getElementPosition(localPlayer)
         local dim, int = getElementDimension(localPlayer), getElementInterior(localPlayer)
-        local blocked = {}
+        local candidates, blocked = {}, false
+        local tool = ctx.heldUname and ctx.heldUname()
         for id, e in pairs(objects) do
-            local r = e.row
-            local dx, dy, dz = e.x - px, e.y - py, e.z - pz
-            local same = (r.dimension or 0) == dim and (r.interior or 0) == int
-            if
-                same
-                and dx * dx + dy * dy <= reach * reach
-                and math.abs(dz) < 3
-                and (not inReach(id, e) or stuck(id, e))
-            then
-                blocked[#blocked + 1] = id
-                if #blocked >= 32 then
-                    break
+            local dist = pickupDistanceSquared(e, px, py, pz, dim, int)
+            if dist and dist <= reach * reach then
+                local aimedDefence = id == targetId and tool == "Crowbar" and e.defence
+                if (aimedDefence or faced(e)) and reachable(id, e, true) and not stuck(id, e, true) then
+                    candidates[#candidates + 1] = { id = id, dist = (id == targetId) and -1 or dist }
+                else
+                    blocked = true
                 end
             end
         end
-        return blocked
+        table.sort(candidates, function(a, b)
+            return a.dist < b.dist or (a.dist == b.dist and a.id < b.id)
+        end)
+        local ids = {}
+        for i = 1, math.min(#candidates, 64) do
+            ids[i] = candidates[i].id
+        end
+        return ids, blocked
     end
+
+    function M.canCarryWorldItem(id, reach)
+        local e = objects[id]
+        if not e then
+            return false
+        end
+        local px, py, pz = getElementPosition(localPlayer)
+        local dist =
+            pickupDistanceSquared(e, px, py, pz, getElementDimension(localPlayer), getElementInterior(localPlayer))
+        return dist and dist <= reach * reach and faced(e) and reachable(id, e, true) and passes(id, e, true)
+    end
+
     -- the objects (a pitched tent's every part) of the world items within radius of (x, y, z) in the player's world
     function M.itemObjectsNear(x, y, z, radius)
         local dim, int = getElementDimension(localPlayer), getElementInterior(localPlayer)

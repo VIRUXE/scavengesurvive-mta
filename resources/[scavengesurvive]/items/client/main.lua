@@ -180,9 +180,12 @@ function itemObject(id)
     return world.objectOf(id)
 end
 
--- the ids of the world items within reach that a wall hides: the hud sends them with a pickup so the server skips them
-function blockedItemsNear()
-    return world.blockedNear(2.0)
+function pickupCandidates(targetId)
+    return world.pickupCandidates(2.0, targetId)
+end
+
+function canCarryWorldItem(itemId)
+    return world.canCarryWorldItem(itemId, 2.0) == true
 end
 
 function getAttachConfig(slot)

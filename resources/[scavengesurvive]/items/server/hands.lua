@@ -929,7 +929,7 @@ return function(ctx)
         end, { player = player, row = row })
     end
 
-    net.handler("itemPickupRequested", function(player, blocked, targetId)
+    net.handler("itemPickupRequested", function(player, selection, targetId)
         local cid = charId(player)
         if not cid then
             return
@@ -955,29 +955,32 @@ return function(ctx)
         if not targetId and not dutyOnly and tryPlayerInteraction(player, cid, held) then
             return
         end
-        local x, y = getElementPosition(player)
+        if type(selection) ~= "table" or type(selection.candidates) ~= "table" then
+            return
+        end
+        local ids = world.cleanIds(selection.candidates)
         local r = tonumber(state.settings["items.pickup_radius"]) or 2.0
         local unames = held and targetsFor(held.uname)
-        local int, dim = getElementInterior(player), getElementDimension(player)
-        local sql = world.findNearestSql(x, y, r, int, dim, unames, world.cleanIds(blocked), targetId)
-        db.one(sql, {}, function(row, c)
-            if not isElement(c.player) then
+        local function interact(row, c)
+            if
+                not isElement(c.player)
+                or charId(c.player) ~= c.charId
+                or state.held[c.player] ~= c.held
+                or isBadInteract(c.player, c.dutyOnly)
+            then
                 return
             end
-            if row and c.targetId then
-                local px, py, pz = getElementPosition(c.player)
-                if
-                    isBadInteract(c.player, c.dutyOnly)
-                    or getElementInterior(c.player) ~= (row.interior or 0)
-                    or getElementDimension(c.player) ~= (row.dimension or 0)
-                    or getDistanceBetweenPoints3D(px, py, pz, row.x, row.y, row.z) > c.radius
-                then
-                    return
-                end
+            local rowType = row and itemType(row.uname)
+            local recessed = c.held
+                and c.held.uname == "Crowbar"
+                and rowType
+                and rowType.defence
+                and builtDefence(decodeData(row.data))
+            if row and not world.inPickupReach(c.player, row, c.radius, rowType, recessed) then
+                return toast(c.player, "ITEM_WALL_BLOCKED")
             end
             if c.dutyOnly then
-                local t = row and itemType(row.uname)
-                if t and t.defence and buildingRunning() and builtDefence(decodeData(row.data)) then
+                if rowType and rowType.defence and buildingRunning() and builtDefence(decodeData(row.data)) then
                     return exports.building:interactDefence(c.player, row)
                 end
                 return
@@ -985,7 +988,7 @@ return function(ctx)
             local curHeld = state.held[c.player]
             local curUname = curHeld and curHeld.uname
             if not row then
-                if not curHeld and #world.cleanIds(c.blocked) > 0 then
+                if not curHeld and c.blocked then
                     return toast(c.player, "ITEM_WALL_BLOCKED")
                 end
                 if curUname == "Crowbar" then
@@ -993,7 +996,7 @@ return function(ctx)
                 elseif curUname == "FireLighter" then
                     runCrafting("groundCraft", c.player)
                 elseif curHeld and furnitureSrv then -- none of the item's own targets near: a table may take it
-                    furnitureSrv.interactNear(c.player, c.charId, curHeld, c.radius, true)
+                    furnitureSrv.interactNear(c.player, c.charId, curHeld, c.radius, c.ids, true)
                 end
                 return
             end
@@ -1002,7 +1005,6 @@ return function(ctx)
             -- Defences: a Hammer builds one through the interaction chooser (building defenceBuildRequested), never
             -- here; once built it is never picked up again, a Crowbar takes it down from behind and anything else
             -- works its door or keypad
-            local rowType = itemType(row.uname)
             if curUname == "MobilePhone" and rowType and rowType.explosive and rowType.explosive.trigger == "RADIO" then
                 local expRes = getResourceFromName("explosives")
                 if expRes and getResourceState(expRes) == "running" then
@@ -1048,7 +1050,7 @@ return function(ctx)
                     return
                 end
             end
-            if furnitureSrv and furnitureSrv.interact(c.player, c.charId, curHeld, row) then
+            if furnitureSrv and furnitureSrv.interact(c.player, c.charId, curHeld, row, c.ids, c.radius) then
                 return
             end
 
@@ -1089,7 +1091,7 @@ return function(ctx)
             end
             if curHeld and (not ammo or (not ammo.isCalibreWeapon(curType) and not ammo.isAmmoItem(curType))) then
                 if furnitureSrv then -- the nearest item may lie on a table: the table takes this one too
-                    return furnitureSrv.interactNear(c.player, c.charId, curHeld, c.radius)
+                    return furnitureSrv.interactNear(c.player, c.charId, curHeld, c.radius, c.ids)
                 end
                 return toast(c.player, "HANDS_FULL")
             end
@@ -1098,14 +1100,24 @@ return function(ctx)
                 return tryTransferFromWorld(c.player, c.charId, curHeld, curType, row)
             end
             M.pickup(c.player, c.charId, row)
-        end, {
+        end
+        local request = {
             player = player,
             charId = cid,
             radius = r,
             targetId = targetId,
-            blocked = world.cleanIds(blocked),
+            blocked = selection.blocked == true,
             dutyOnly = dutyOnly,
-        })
+            held = held,
+            ids = ids,
+        }
+        if #ids == 0 then
+            return interact(nil, request)
+        end
+        local x, y, z = getElementPosition(player)
+        local int, dim = getElementInterior(player), getElementDimension(player)
+        local sql = world.findNearestSql(x, y, r, int, dim, unames, { z = z, ids = ids, targetId = targetId })
+        db.one(sql, {}, interact, request)
     end, { rate = 5 })
 
     -- a hold of the interact key on a bag or a box lying there (upstream "Hold F to pick up / Press F to open"): the
@@ -1128,7 +1140,13 @@ return function(ctx)
             .. "FROM items i WHERE i.id = ? AND i.container_id IS NULL AND i.holder_char_id IS NULL "
             .. "AND i.holder_kind IS NULL AND i.x IS NOT NULL"
         db.one(sql, { worldItemId }, function(row, c)
-            if not isElement(c.player) or not row then
+            if
+                not isElement(c.player)
+                or charId(c.player) ~= c.charId
+                or isBadInteract(c.player)
+                or state.held[c.player]
+                or not row
+            then
                 return
             end
             local t = itemType(row.uname)
@@ -1136,13 +1154,7 @@ return function(ctx)
             if not t or (t.category ~= "bag" and t.category ~= "safebox" and row.uname ~= "Generator") then
                 return
             end
-            local sameInt = (row.interior or 0) == getElementInterior(c.player)
-            local sameDim = (row.dimension or 0) == getElementDimension(c.player)
-            if not (sameInt and sameDim) then
-                return
-            end
-            local px, py = getElementPosition(c.player)
-            if getDistanceBetweenPoints2D(px, py, row.x, row.y) > c.radius then
+            if not world.inPickupReach(c.player, row, c.radius, t) then
                 return
             end
             M.pickup(c.player, c.charId, row)

@@ -26,9 +26,8 @@ return function(ctx)
             .. "'), p.pos)"
     end
 
-    -- unames: optional list of type unames (server constants) the nearest item must be one of; exclude: optional list
-    -- of item ids to leave out (the client's walled-off items, already cleaned to integers by M.cleanIds)
-    function M.findNearestSql(x, y, r, interior, dimension, unames, exclude, targetId)
+    -- Pickup queries also constrain height and membership in the client's reachable candidates.
+    function M.findNearestSql(x, y, r, interior, dimension, unames, pickup)
         local point = string.format("POINT(%g, %g)", x, y)
         -- Match the same rounded centre/radius as the existing exact predicate.
         local qx, qy, qr =
@@ -45,25 +44,34 @@ return function(ctx)
             where = where
                 .. string.format(" AND IFNULL(i.interior, 0) = %d AND IFNULL(i.dimension, 0) = %d", interior, dimension)
         end
-        if exclude and #exclude > 0 then
-            where = where .. " AND i.id NOT IN (" .. table.concat(exclude, ", ") .. ")"
-        end
-        if targetId then
-            where = where .. string.format(" AND i.id = %d", targetId)
+        if pickup then
+            where = where
+                .. string.format(
+                    " AND POWER(i.x - %.9f, 2) + POWER(i.y - %.9f, 2) + POWER(i.z - %.9f, 2) <= %.9f",
+                    x,
+                    y,
+                    pickup.z,
+                    r * r
+                )
+                .. " AND i.id IN ("
+                .. table.concat(pickup.ids, ", ")
+                .. ")"
+            if pickup.targetId then
+                where = where .. string.format(" AND i.id = %d", pickup.targetId)
+            end
         end
         return "SELECT " .. COLS .. FROM .. where .. " ORDER BY ST_Distance(p.pos, " .. point .. ") ASC LIMIT 1"
     end
 
-    -- a client's list of item ids as at most 32 positive integers (anything else is dropped)
+    -- A client's candidates are a bounded list of database item IDs.
     function M.cleanIds(list)
         local ids = {}
-        if type(list) ~= "table" then
-            return ids
-        end
-        for _, v in ipairs(list) do
-            local n = math.floor(tonumber(v) or 0)
-            if n > 0 and #ids < 32 then
-                ids[#ids + 1] = n
+        if type(list) == "table" then
+            for i = 1, math.min(#list, 64) do
+                local id = tonumber(list[i])
+                if id and id >= 1 and id <= 2147483647 and id % 1 == 0 then
+                    ids[#ids + 1] = id
+                end
             end
         end
         return ids
@@ -137,6 +145,29 @@ return function(ctx)
     -- own world measures them (every SNAP_SCAN_MS, lib geom.lua); elsewhere the client that draws one reports it
     -- (itemGroundMeasured), if the player is near it.
     local geom = assert(loadstring(exports.lib:getModule("geom"), "=lib/geom.lua"))()
+
+    -- Recheck the player's current position after the query. Map collision supplies an independent
+    -- wall check where available. Built defences and visible edges of large models use the client geometry.
+    function M.inPickupReach(player, row, radius, itemType, recessed)
+        local int, dim = getElementInterior(player), getElementDimension(player)
+        if int ~= (row.interior or 0) or dim ~= (row.dimension or 0) then
+            return false
+        end
+        local px, py, pz = getElementPosition(player)
+        if getDistanceBetweenPoints3D(px, py, pz, row.x, row.y, row.z) > radius then
+            return false
+        end
+        if recessed or int ~= 0 or dim ~= 0 or not geom.ready() then
+            return true
+        end
+        local x, y, low, high = row.x, row.y, row.z + 0.05, row.z + 0.6
+        if geom.clear(px, py, pz + 0.5, x, y, low) then
+            return true
+        end
+        return geom.clear(x, y, low, x, y, high)
+            and ((itemType and (itemType.size or 0) >= 9) or geom.clear(px, py, pz + 0.5, x, y, high))
+    end
+
     local SNAP_SQL = "SELECT i.x, i.y, i.z, i.interior, i.dimension FROM items i"
         .. " JOIN item_ground_snap s ON s.item_id = i.id AND s.z = i.z WHERE i.id = ? AND i.x IS NOT NULL"
     local SNAP_MAIN_SQL = "SELECT i.id, i.x, i.y, i.z FROM items i JOIN item_ground_snap s ON s.item_id = i.id"

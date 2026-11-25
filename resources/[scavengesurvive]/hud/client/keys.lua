@@ -137,6 +137,17 @@ return function(ctx)
         end
     end)
 
+    local function requestWorldInteraction(targetId)
+        local candidates, blocked = exports.items:pickupCandidates(targetId)
+        triggerServerEvent("itemPickupRequested", localPlayer, { candidates = candidates, blocked = blocked }, targetId)
+    end
+
+    local function requestWorldCarry(itemId)
+        if exports.items:canCarryWorldItem(itemId) then
+            triggerServerEvent("itemLongPickupRequested", localPlayer, itemId)
+        end
+    end
+
     -- the nearest phone bomb (an explosive with the RADIO trigger) lying within reach and not behind a wall, or false:
     -- F with a Mobile Phone in hand syncs the two there (upstream use-item-with-item) instead of calling the phone
     local phoneBombTypes = nil
@@ -152,9 +163,9 @@ return function(ctx)
         end
         local px, py, pz = getElementPosition(localPlayer)
         local dim, int = getElementDimension(localPlayer), getElementInterior(localPlayer)
-        local blocked = {}
-        for _, id in ipairs(exports.items:blockedItemsNear() or {}) do
-            blocked[id] = true
+        local reachable = {}
+        for _, id in ipairs(exports.items:pickupCandidates() or {}) do
+            reachable[id] = true
         end
         local nearest, nearestDist = false, PICKUP_REACH
         for _, uname in ipairs(phoneBombTypes) do
@@ -162,7 +173,7 @@ return function(ctx)
                 local x, y, z = getElementPosition(obj)
                 local dist = getDistanceBetweenPoints3D(px, py, pz, x, y, z)
                 local here = getElementDimension(obj) == dim and getElementInterior(obj) == int
-                if here and not blocked[id] and dist <= nearestDist then
+                if here and reachable[id] and dist <= nearestDist then
                     nearest, nearestDist = id, dist
                 end
             end
@@ -424,7 +435,7 @@ return function(ctx)
                     killTimer(interactHoldTimer)
                     interactHoldTimer = nil
                     if heldMs >= 500 then
-                        triggerServerEvent("itemPickupRequested", localPlayer, exports.items:blockedItemsNear())
+                        requestWorldInteraction()
                     elseif gasId then
                         triggerServerEvent("weldCylinderHookRequested", localPlayer, gasId)
                     else
@@ -439,12 +450,7 @@ return function(ctx)
             local targetId = crowbarFocus()
             if targetId then
                 blockEnterUntil = getTickCount() + TRUNK_ENTER_BLOCK_MS
-                return triggerServerEvent(
-                    "itemPickupRequested",
-                    localPlayer,
-                    exports.items:blockedItemsNear(),
-                    targetId
-                )
+                return requestWorldInteraction(targetId)
             end
         end
         -- a ground bag opens on a tap and is picked up on a 500 ms hold; a sign or a body lying there (empty hands)
@@ -478,7 +484,7 @@ return function(ctx)
                         if bagId and bagCategory == "bag" then
                             triggerServerEvent("itemBagOpenRequested", localPlayer, bagId)
                         elseif bagId or machineId then
-                            triggerServerEvent("itemPickupRequested", localPlayer, exports.items:blockedItemsNear())
+                            requestWorldInteraction()
                         elseif inspectUname == "Sign" then
                             triggerServerEvent("signEditRequested", localPlayer, inspectId)
                         elseif inspectUname == "PlantPot" then
@@ -497,9 +503,9 @@ return function(ctx)
                         if bagId and bagStuck then -- seen through a window or a gap it does not fit through
                             triggerEvent("toastShown", localPlayer, "ITEM_WALL_BLOCKED")
                         elseif bagId and bagCategory ~= "fixed" then -- a snack machine opens on a hold too
-                            triggerServerEvent("itemLongPickupRequested", localPlayer, bagId)
+                            requestWorldCarry(bagId)
                         else
-                            triggerServerEvent("itemPickupRequested", localPlayer, exports.items:blockedItemsNear())
+                            requestWorldInteraction()
                         end
                     end
                 end
@@ -508,7 +514,7 @@ return function(ctx)
         end
         if groundItemFirst then
             blockEnterUntil = getTickCount() + TRUNK_ENTER_BLOCK_MS
-            return triggerServerEvent("itemPickupRequested", localPlayer, exports.items:blockedItemsNear())
+            return requestWorldInteraction()
         end
         local nearVeh, nearDist = getNearbyVehicle()
         local held = ctx.getHeld()
@@ -615,11 +621,11 @@ return function(ctx)
                 triggerServerEvent("vehicleInteractRequested", localPlayer, nearVeh)
             end
             triggerServerEvent("fuelPumpInteractRequested", localPlayer)
-            return triggerServerEvent("itemPickupRequested", localPlayer)
+            return requestWorldInteraction()
         end
         if uname == "Chainsaw" then
             triggerServerEvent("itemUseRequested", localPlayer, held.id)
-            return triggerServerEvent("itemPickupRequested", localPlayer)
+            return requestWorldInteraction()
         end
         -- a Fishing Rod casts as far as the key was held (a bar fills over 10 s); with the line out F reels it in
         if uname == "FishRod" then
@@ -655,7 +661,7 @@ return function(ctx)
             local bombId = nearbyPhoneBomb()
             if bombId then
                 blockEnterUntil = getTickCount() + TRUNK_ENTER_BLOCK_MS
-                return triggerServerEvent("itemPickupRequested", localPlayer, exports.items:blockedItemsNear(), bombId)
+                return requestWorldInteraction(bombId)
             end
         end
         -- food is eaten; a held treatment starts its hold, and letting go of the key cancels it (items, #94);
@@ -705,7 +711,7 @@ return function(ctx)
         if itemDist and itemDist <= PICKUP_REACH then
             blockEnterUntil = getTickCount() + TRUNK_ENTER_BLOCK_MS
         end
-        triggerServerEvent("itemPickupRequested", localPlayer, exports.items:blockedItemsNear())
+        requestWorldInteraction()
     end)
 
     isKeyHeld = function(key, cmd)
@@ -883,7 +889,9 @@ return function(ctx)
                     if current.clientResource then
                         call(getResourceFromName(current.clientResource), current.clientFunction, current.target)
                     elseif current.event == "itemPickupRequested" then
-                        triggerServerEvent(current.event, localPlayer, exports.items:blockedItemsNear(), current.target)
+                        requestWorldInteraction(current.target)
+                    elseif current.event == "itemLongPickupRequested" then
+                        requestWorldCarry(current.target)
                     elseif current.action then
                         triggerServerEvent(current.event, localPlayer, current.target, current.action)
                     else

@@ -133,10 +133,10 @@ return function(ctx)
 
     -- empty hands at a desk or table: the highest item lying on it (same x/y as the furniture, so the nearest item
     -- is a tie the furniture can win), else the furniture itself
-    local function takeFromTop(player, cid, row)
+    local function takeFromTop(player, cid, row, ids, radius)
         local f = string.format
-        local sql = "SELECT i.id, i.type_uname AS uname, i.hitpoints AS hp, i.data FROM world_items_pos p "
-            .. "JOIN items i ON i.id = p.item_id WHERE "
+        local sql = "SELECT i.id, i.type_uname AS uname, i.hitpoints AS hp, i.data, i.x, i.y, i.z,"
+            .. " i.interior, i.dimension FROM world_items_pos p JOIN items i ON i.id = p.item_id WHERE "
             .. spatial.bounds(
                 tonumber(f("%f", row.x)),
                 tonumber(f("%f", row.y)),
@@ -145,18 +145,25 @@ return function(ctx)
             .. f(" AND ST_Distance(p.pos, POINT(%f, %f)) <= %f", row.x, row.y, furniture.ON_TOP_REACH)
             .. f(" AND i.z > %f AND IFNULL(i.interior, 0) = %d", (row.z or 0) + 0.1, row.interior or 0)
             .. f(" AND IFNULL(i.dimension, 0) = %d", row.dimension or 0)
+            .. " AND i.id IN ("
+            .. table.concat(ids, ", ")
+            .. ")"
             .. " AND i.type_uname NOT IN ('"
             .. table.concat(furniture.unames(), "', '")
             .. "') ORDER BY i.z DESC LIMIT 1"
         db.one(sql, {}, function(top)
-            if isElement(player) and not state.held[player] then
-                hands.pickup(player, cid, top or row)
+            if not isElement(player) or ctx.charId(player) ~= cid or state.held[player] then
+                return
+            end
+            local target = top or row
+            if world.inPickupReach(player, target, radius, ctx.type(target.uname)) then
+                hands.pickup(player, cid, target)
             end
         end)
     end
 
     -- The interact key on a world item (hands.lua itemPickupRequested). true = handled here.
-    function M.interact(player, cid, held, row)
+    function M.interact(player, cid, held, row, ids, radius)
         if not furniture.is(row.uname) then
             return false
         end
@@ -170,7 +177,7 @@ return function(ctx)
         elseif display then
             takeFromCase(player, cid, row)
         else
-            takeFromTop(player, cid, row)
+            takeFromTop(player, cid, row, ids, radius)
         end
         return true
     end
@@ -178,15 +185,18 @@ return function(ctx)
     -- an item in hand whose nearest world item was not furniture (an item already lying on a table is a tie with
     -- it, or the item looks for targets of its own): the nearest furniture in reach takes it, else the hands are
     -- full (quiet: say nothing)
-    function M.interactNear(player, cid, held, radius, quiet)
-        local x, y = getElementPosition(player)
+    function M.interactNear(player, cid, held, radius, ids, quiet)
+        if #ids == 0 then
+            return not quiet and toast(player, "HANDS_FULL")
+        end
+        local x, y, z = getElementPosition(player)
         local int, dim = getElementInterior(player), getElementDimension(player)
-        local sql = world.findNearestSql(x, y, radius, int, dim, furniture.unames())
+        local sql = world.findNearestSql(x, y, radius, int, dim, furniture.unames(), { z = z, ids = ids })
         db.one(sql, {}, function(row)
             if not isElement(player) or not state.held[player] or state.held[player].id ~= held.id then
                 return
             end
-            if not row then
+            if not row or not world.inPickupReach(player, row, radius, ctx.type(row.uname)) then
                 return not quiet and toast(player, "HANDS_FULL")
             end
             M.interact(player, cid, held, row)
