@@ -27,6 +27,7 @@ db.connect("explosives")
 
 local activeArming = {} -- player -> { itemId, timer }
 local pendingArm = {} -- player -> { itemId, trigger }
+local timedFuses = {} -- itemId -> timer
 local activeProx = {} -- colshape -> { itemId, x, y, z }
 local proxByItem = {} -- itemId -> colshape
 local lastArmTick = {} -- player -> tick
@@ -77,6 +78,16 @@ local function toast(player, code)
     if isElement(player) then
         triggerClientEvent(player, "toastShown", player, code)
     end
+end
+
+local function warnLiveFuse(player, itemId)
+    local fuse = timedFuses[itemId]
+    if not isTimer(fuse) then
+        return false
+    end
+    local remaining = getTimerDetails(fuse)
+    toast(player, ("TIMED_FUSE_HELD:%d"):format(math.max(1, math.ceil(remaining / 1000))))
+    return true
 end
 
 local function cancelArming(player)
@@ -182,8 +193,11 @@ local function finishArming(player, itemId, trigger, uname)
     })
     if trigger == logic.TRIGGERS.TIMED then
         outputServerLog(string.format("[EXPLOSIVE] Time bomb %d placed by %s", itemId, getPlayerName(player)))
-        toast(player, "ARMEDBOMB5S")
-        setTimer(detonateItem, logic.TIMED_FUSE_MS, 1, itemId)
+        timedFuses[itemId] = setTimer(function(id)
+            timedFuses[id] = nil
+            detonateItem(id)
+        end, logic.TIMED_FUSE_MS, 1, itemId)
+        toast(player, ("TIMED_FUSE_ARMED:%d"):format(math.ceil(logic.TIMED_FUSE_MS / 1000)))
     elseif trigger == logic.TRIGGERS.PROXIMITY then
         outputServerLog(string.format("[EXPLOSIVE] Prox bomb %d placed by %s", itemId, getPlayerName(player)))
         toast(player, "PROXMIARMED")
@@ -200,6 +214,9 @@ addEventHandler("itemMoved", root, function(itemId, from, to)
     if not isElement(player) then
         return
     end
+    if to == "held" then
+        warnLiveFuse(player, itemId)
+    end
     local pending = pendingArm[player]
     if pending and pending.itemId == itemId and from == "held" and to == "world" then
         pendingArm[player] = nil
@@ -212,6 +229,9 @@ end)
 
 local function startArming(player, heldItem, trigger)
     if not isElement(player) or not heldItem then
+        return
+    end
+    if warnLiveFuse(player, heldItem.id) then
         return
     end
     pendingArm[player] = { itemId = heldItem.id, trigger = trigger, uname = heldItem.uname }

@@ -289,11 +289,15 @@ return function(ctx)
         local combo = type(code) == "string" and code:match("^LOCKCHN_COMBO:(%d%d%d%d)$")
         local made = type(code) == "string" and code:match("^COMBOCHAIN_MADE:(%d%d%d%d)$")
         local charge = type(code) == "string" and code:match("^BATTERY_LEVEL:(%d+)$")
+        local fuseArmed = type(code) == "string" and code:match("^TIMED_FUSE_ARMED:(%d+)$")
+        local fuseHeld = type(code) == "string" and code:match("^TIMED_FUSE_HELD:(%d+)$")
         local needTool = type(code) == "string" and code:match("^NEEDANOTOOL:(%w+)$")
         local toolType = needTool and lang.itemType(needTool)
         local msg = combo and lang.format("Locked. Your combination is %s. Remember it: nothing else opens it.", combo)
             or made and lang.format("Lock and chain made. Its combination is %s: write it down.", made)
             or charge and lang.format("Car Battery: %d%%", tonumber(charge) or 0)
+            or fuseArmed and lang.format("Live explosive! Detonates within %d s. Move away.", tonumber(fuseArmed))
+            or fuseHeld and lang.format("Fuse still burning! Drop it and move away. Detonates within %d s.", tonumber(fuseHeld))
             or needTool and lang.format(
                 "You need a %s to continue repairing this vehicle",
                 toolType and toolType.name or needTool
