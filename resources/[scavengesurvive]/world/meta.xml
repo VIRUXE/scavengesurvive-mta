@@ -13,6 +13,7 @@
     <script src="client/sounds.lua" type="client"/>
     <file src="client/screen.fx"/>
     <file src="client/blackout.fx"/>
+    <file src="files/dirt_detail.dds"/>
     <file src="shared/logic/features.lua"/>
     <file src="shared/logic/buttons.lua"/>
     <file src="shared/logic/doors.lua"/>

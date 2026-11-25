@@ -39,6 +39,49 @@ local UNSHADED_TEXTURES = {
     "hud*",
 }
 
+-- Near terrain materials from the GTA Scout catalogue. The originals still supply
+-- colour, tracks and transitions. Distant LOD textures need no extra grain.
+local DIRT_TEXTURES = {
+    "bow_church_dirt",
+    "cw2_mountdirt",
+    "cw2_mountdirt2forest",
+    "cw2_mountdirt2grass",
+    "cw2_mountdirtscree",
+    "des_crackeddirt1",
+    "des_dirt1",
+    "des_dirt2",
+    "des_dirt2 trackl",
+    "des_dirt2blend",
+    "des_dirt2grgrass",
+    "des_dirt2stones",
+    "des_dirt2track",
+    "des_dirt2trackr",
+    "des_dirtgravel",
+    "des_dirttrack1",
+    "des_dirttrack1r",
+    "des_dirttrackl",
+    "des_dirttrackx",
+    "des_scrub1_dirt1",
+    "desertgravel256",
+    "desertgravelgrass256",
+    "desertgravelgrassroad",
+    "desertgryard256",
+    "desertstones256",
+    "desmud",
+    "desmudgrass",
+    "desmudtrail",
+    "desmudtrail2",
+    "desmudtrail3",
+    "desstones_dirt1",
+    "dirtblendlit",
+    "dirttracksforest",
+    "dirttracksgrass256",
+    "sw_dirt01",
+    "was_scrpyd_ground_muddark",
+    "was_scrpyd_ground_muddier",
+    "ws_patchygravel",
+}
+
 local MAX_LIGHTS = 4 -- client/blackout.fx's Light0 .. Light3
 local LIGHT_RANGE = 120 -- metres from the camera a light still counts
 local CONE = { 0.6, 0.2 } -- cosines of the half angles where a light is full and where it is gone
@@ -49,10 +92,18 @@ local VISIONS = { nightvision = { 1, 0 }, thermalvision = { 0, 1 } }
 local on = true
 local wanted = true -- false while /lights has the city lit for this player
 local shader
+local dirtShader
 local lights = {} -- id -> { x, y, z, dx, dy, dz, radius, r, g, b, interior, dimension }
 local lightsDirty = true
 local MAX_ROOMS = 2 -- client/blackout.fx's Room0 .. Room1
 local rooms = {} -- id -> { x1, y1, z1, x2, y2, z2, r, g, b, fill, interior, dimension }
+
+local function setLightingValue(name, ...)
+    dxSetShaderValue(shader, name, ...)
+    if dirtShader then
+        dxSetShaderValue(dirtShader, name, ...)
+    end
+end
 
 -- GTA's own day/night balance for building colours (CCustomBuildingRenderer::UpdateDayNightBalanceParam): night
 -- until 06:00, fading out by 07:00, day until 20:00, fading in by 21:00
@@ -76,15 +127,15 @@ local function updateVision(vision)
         if isPedDead(localPlayer) or getElementData(localPlayer, "staff.duty") == true then
             v = { 0, 0 }
         end
-        dxSetShaderValue(shader, "Vision", v[1], v[2])
+        setLightingValue("Vision", v[1], v[2])
     end
 end
 
 local function updateCap()
     if shader then
         local night = nightBalance()
-        dxSetShaderValue(shader, "Cap", on and 1 - (1 - NIGHT_CAP) * night or 1)
-        dxSetShaderValue(shader, "Gain", DAY_GAIN + (1 - DAY_GAIN) * night)
+        setLightingValue("Cap", on and 1 - (1 - NIGHT_CAP) * night or 1)
+        setLightingValue("Gain", DAY_GAIN + (1 - DAY_GAIN) * night)
     end
 end
 
@@ -118,12 +169,12 @@ local function updateLights()
         local l = n and n.l
         local key = "Light" .. i
         if l then
-            dxSetShaderValue(shader, key .. "Pos", l.x, l.y, l.z, l.radius)
-            dxSetShaderValue(shader, key .. "Dir", l.dx, l.dy, l.dz, 0)
-            dxSetShaderValue(shader, key .. "Col", l.r, l.g, l.b, 1)
+            setLightingValue(key .. "Pos", l.x, l.y, l.z, l.radius)
+            setLightingValue(key .. "Dir", l.dx, l.dy, l.dz, 0)
+            setLightingValue(key .. "Col", l.r, l.g, l.b, 1)
         else
-            dxSetShaderValue(shader, key .. "Pos", 0, 0, -10000, 0)
-            dxSetShaderValue(shader, key .. "Col", 0, 0, 0, 0)
+            setLightingValue(key .. "Pos", 0, 0, -10000, 0)
+            setLightingValue(key .. "Col", 0, 0, 0, 0)
         end
     end
 end
@@ -174,12 +225,12 @@ local function updateRooms()
         local r = rooms[ids[i + 1] or ""]
         local key = "Room" .. i
         if r then
-            dxSetShaderValue(shader, key .. "Min", r.x1, r.y1, r.z1, r.fill)
-            dxSetShaderValue(shader, key .. "Max", r.x2, r.y2, r.z2, 1)
-            dxSetShaderValue(shader, key .. "Col", r.r, r.g, r.b, 1)
+            setLightingValue(key .. "Min", r.x1, r.y1, r.z1, r.fill)
+            setLightingValue(key .. "Max", r.x2, r.y2, r.z2, 1)
+            setLightingValue(key .. "Col", r.r, r.g, r.b, 1)
         else
-            dxSetShaderValue(shader, key .. "Min", 0, 0, -10000, 0)
-            dxSetShaderValue(shader, key .. "Max", 0, 0, -10000, 0)
+            setLightingValue(key .. "Min", 0, 0, -10000, 0)
+            setLightingValue(key .. "Max", 0, 0, -10000, 0)
         end
     end
 end
@@ -243,6 +294,30 @@ local function refresh()
     apply()
 end
 
+local function loadDirtDetail()
+    -- Use the same lighting pass on dirt so it also receives floodlights and vision effects.
+    local variant, technique = dxCreateShader("client/blackout.fx", { DIRT_DETAIL = "1" }, -9, 0, false, "world")
+    if not variant then
+        return
+    end
+    if technique ~= "lit" then
+        destroyElement(variant)
+        return
+    end
+    local detail = dxCreateTexture("files/dirt_detail.dds", "dxt1", true, "wrap")
+    if not detail or not dxSetShaderValue(variant, "DirtDetail", detail) then
+        destroyElement(variant)
+        if detail then
+            destroyElement(detail)
+        end
+        return
+    end
+    for _, name in ipairs(DIRT_TEXTURES) do
+        engineApplyShaderToWorldTexture(variant, name)
+    end
+    dirtShader = variant
+end
+
 addEventHandler("onClientResourceStart", resourceRoot, function()
     -- lowest priority, so an item's tint or a screen's render target on a single object still wins
     shader = dxCreateShader("client/blackout.fx", -10, 0, false, "world,object")
@@ -253,7 +328,8 @@ addEventHandler("onClientResourceStart", resourceRoot, function()
         for _, name in ipairs(UNSHADED_TEXTURES) do
             engineRemoveShaderFromWorldTexture(shader, name)
         end
-        dxSetShaderValue(shader, "Cone", CONE[1], CONE[2])
+        loadDirtDetail()
+        setLightingValue("Cone", CONE[1], CONE[2])
         setTimer(updateCap, 1000, 0)
         setTimer(updateLights, 250, 0)
         -- a change of interior or dimension changes which rooms count

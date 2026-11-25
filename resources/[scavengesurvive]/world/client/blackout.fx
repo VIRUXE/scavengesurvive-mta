@@ -60,6 +60,20 @@ sampler Sampler0 = sampler_state
     Texture = (gTexture0);
 };
 
+#ifdef DIRT_DETAIL
+texture DirtDetail;
+sampler DirtSampler = sampler_state
+{
+    Texture = (DirtDetail);
+    AddressU = Wrap;
+    AddressV = Wrap;
+    MinFilter = Anisotropic;
+    MagFilter = Linear;
+    MipFilter = Linear;
+    MaxAnisotropy = 4;
+};
+#endif
+
 float3 cappedAt(float4 diffuse, float cap)
 {
     float peak = max(max(diffuse.r, diffuse.g), max(diffuse.b, 0.0001));
@@ -106,7 +120,13 @@ float4 psLit(float4 diffuse : COLOR0, float2 uv : TEXCOORD0, float3 wp : TEXCOOR
     float room = saturate(in0 + in1);
     added += Room0Col.rgb * Room0Min.w * in0 + Room1Col.rgb * Room1Min.w * in1;
     float3 light = min(cappedAt(diffuse, lerp(Cap, 1, room)) + added * Gain, MAX_LIGHT);
-    return tex2D(Sampler0, uv) * float4(seen(light, diffuse), diffuse.a);
+    float4 surface = tex2D(Sampler0, uv);
+#ifdef DIRT_DETAIL
+    // One repeat per three metres, in world space so the grain crosses mesh joins.
+    // The mip chain averages toward neutral grey at a distance.
+    surface.rgb *= 1 + (tex2D(DirtSampler, wp.xy / 3).g - 128.0 / 255.0) * 0.85;
+#endif
+    return surface * float4(seen(light, diffuse), diffuse.a);
 }
 
 float4 ps(float4 diffuse : COLOR0, float2 uv : TEXCOORD0) : COLOR0
@@ -123,7 +143,11 @@ technique lit
         TexCoordIndex[1] = 131073;
         TextureTransformFlags[1] = 3;
         TextureTransform[1] = (gViewInverse);
+#ifdef DIRT_DETAIL
+        PixelShader = compile ps_3_0 psLit();
+#else
         PixelShader = compile ps_2_a psLit();
+#endif
     }
 }
 
