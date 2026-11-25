@@ -15,6 +15,7 @@ local function loadModule(path)
 end
 
 local defences = loadModule("shared/logic/defences.lua")
+local touchesDefence = loadModule("server/defence_collision.lua")(loadModule("server/defence_collision_models.lua"))
 local plotPoleColshapes = {} -- itemId -> colshape
 local activeBreaks = {} -- player -> timer
 local movingDefences = {} -- itemId -> timer
@@ -25,7 +26,7 @@ local passFails = {} -- player -> fail count
 local lastPassEntry = {} -- player -> timestamp (tick count)
 local keypadTries = {} -- player -> { defence id, wrong codes since the last right one }
 
-local DEFENCE_ROW = "SELECT id, type_uname, data, x, y, z, rz, interior, dimension FROM items "
+local DEFENCE_ROW = "SELECT id, type_uname, data, x, y, z, rz, ground_nx, ground_ny, interior, dimension FROM items "
     .. "WHERE id = ? AND container_id IS NULL AND holder_char_id IS NULL"
 
 local geom = assert(loadstring(exports.lib:getModule("geom"), "=lib/geom.lua"))()
@@ -158,6 +159,7 @@ local tweak = loadModule("server/tweak.lua")({
     decodeData = decodeData,
     toast = toast,
     DEFENCE_ROW = DEFENCE_ROW,
+    touchesDefence = touchesDefence,
 })
 
 local function isPasscodeUnset(passcode)
@@ -426,10 +428,14 @@ end
 -- timer, no longer a loot spawn's item; done(x, y, z, rz, data) once the row is written
 local function activateDefence(row, t, pose, done, player)
     local x, y, z, rz, st = defences.build(t.defence, pose, row.x, row.y, row.z, row.rz, t.rotz)
+    st = setGroundTilt(st, x, y, z, row.interior, row.dimension)
+    if tweak.blocked(player, row, touchesDefence(row, t.model, st, x, y, z, rz), "ITEMTWKBLOC") then
+        return
+    end
     local d = decodeData(row.data)
     -- the builder's character: only they work a Large Frame's covering (defences.coveringAccess)
     st.owner = player and isElement(player) and charId(player) or nil
-    d.defence = setGroundTilt(st, x, y, z, row.interior, row.dimension)
+    d.defence = st
     local sql = "UPDATE items SET x = ?, y = ?, z = ?, rz = ?, data = ?, despawn_at = NULL, loot_spawn_id = NULL "
         .. "WHERE id = ? AND x IS NOT NULL"
     db.exec(sql, { x, y, z, rz, encodeData(d), row.id }, function()

@@ -3,12 +3,12 @@
 -- world_items_pos in step), the world item re-sent to the clients that see it. The tweak ends with Done, or when
 -- the builder quits, dies, gets into a vehicle or starts anything that moves an item (hud/client/keys.lua ends it
 -- before dropping, putting away or opening the inventory, as upstream's hooks did).
--- ctx = { db, net, util, defences, tweak, decodeData, toast, DEFENCE_ROW }
+-- ctx = { db, net, util, defences, tweak, decodeData, toast, DEFENCE_ROW, touchesDefence }
 return function(ctx)
     local db, net, util = ctx.db, ctx.net, ctx.util
     local defences, tweak = ctx.defences, ctx.tweak
     local decodeData, toast = ctx.decodeData, ctx.toast
-    local tweaks = {} -- player -> { id, uname, ox, oy, oz, interior, dimension, arrow }
+    local tweaks = {} -- player -> { id, uname, ox, oy, oz, arrow }
     local M = {}
 
     local function lang(player)
@@ -24,9 +24,7 @@ return function(ctx)
     end
 
     -- the heading of a row's front (the arrow's direction), from the stored rz less its built pose
-    local function headingOf(row)
-        local t = itemType(row.type_uname)
-        local st = defences.state(decodeData(row.data))
+    local function headingOf(row, t, st)
         return tweak.heading(row.rz, t and t.defence, st and st.pose)
     end
 
@@ -49,8 +47,6 @@ return function(ctx)
             ox = row.x,
             oy = row.y,
             oz = row.z,
-            interior = row.interior or 0,
-            dimension = row.dimension or 0,
             arrow = arrow == true,
             lift = arrow == true and tweak.canLift(row.type_uname),
         }
@@ -64,7 +60,7 @@ return function(ctx)
             row.x,
             row.y,
             row.z,
-            headingOf(row),
+            headingOf(row, itemType(row.type_uname), defences.state(decodeData(row.data))),
             arrow == true,
             labels,
             tweaks[player].lift
@@ -99,13 +95,14 @@ return function(ctx)
         return true
     end
 
-    -- Players inside the item's no-go sphere: the tweaker is told to step away, the others that they are in the way.
-    local function blocked(player, tw, row)
+    -- Tell nearby players who block the proposed change.
+    function M.blocked(player, row, blocks, actorMessage)
+        local interior, dimension = row.interior or 0, row.dimension or 0
         local any = false
         for _, p in ipairs(getElementsByType("player")) do
-            if getElementInterior(p) == tw.interior and getElementDimension(p) == tw.dimension then
+            if getElementInterior(p) == interior and getElementDimension(p) == dimension then
                 local px, py, pz = getElementPosition(p)
-                if tweak.blocks(px, py, pz, row.x, row.y, row.z) then
+                if blocks(px, py, pz) then
                     any = true
                     if p ~= player then
                         toast(p, "ITEMTWKBLOC")
@@ -114,22 +111,32 @@ return function(ctx)
             end
         end
         if any then
-            toast(player, "ITEMTWKMOVE")
+            toast(player, actorMessage or "ITEMTWKMOVE")
         end
         return any
     end
 
     local function step(player, tw, row, action)
-        if blocked(player, tw, row) then
-            return
-        end
-        local heading = headingOf(row)
+        local t = itemType(row.type_uname)
+        local st = defences.state(decodeData(row.data))
+        local heading = headingOf(row, t, st)
         local nx, ny, nh, dz = tweak.apply(action, row.x, row.y, heading)
         local nz = row.z + dz
         if not tweak.inRange(nx, ny, tw.ox, tw.oy) or not tweak.inLift(nz, tw.oz) then
             return toast(player, "ITEMTWKTFAR")
         end
         local nrz = ((row.rz or 0) + (nh - heading)) % 360
+        local blocks
+        if t and st then
+            blocks = ctx.touchesDefence(row, t.model, st, nx, ny, nz, nrz)
+        else
+            blocks = function(px, py, pz)
+                return tweak.blocks(px, py, pz, row.x, row.y, row.z)
+            end
+        end
+        if M.blocked(player, row, blocks) then
+            return
+        end
         db.exec(
             "UPDATE items SET x = ?, y = ?, z = ?, rz = ? WHERE id = ? AND x IS NOT NULL "
                 .. "AND container_id IS NULL AND holder_char_id IS NULL",

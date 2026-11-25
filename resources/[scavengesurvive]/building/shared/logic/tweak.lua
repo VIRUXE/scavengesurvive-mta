@@ -1,6 +1,6 @@
 -- Nudging a freshly built item (upstream core/world/item-tweak.pwn, TweakItem): after a defence is built or an item
 -- constructed on the ground, its builder moves it 5 cm at a time and turns it 2 degrees at a time, never further
--- than 1.5 m from where it was built, and never while anyone (the builder included) stands within 2.2 m of it.
+-- than 1.5 m from where it was built. Loose items keep the upstream 2.2 m clearance rule.
 -- Pure geometry and layout; the server applies the steps, the client draws the pad and the arrow.
 local M = {}
 
