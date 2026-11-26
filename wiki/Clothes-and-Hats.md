@@ -21,7 +21,7 @@ To take something off, click its tile in the inventory. It goes into your hands,
 
 ## Hats and helmets
 
-There are 24 wearable hats and helmets. All go on the head slot and can be worn on any skin. Fifteen are ordinary hats; nine are headgear taken from the clothes of GTA's own characters (sheriff, firefighter, pilot, biker, ...), which exist as hats you can pick up and wear on any other skin.
+There are 29 wearable hats and helmets. All go on the head slot and can be worn on any skin. Twenty are ordinary hats; nine are headgear taken from the clothes of GTA's own characters (sheriff, firefighter, pilot, biker, ...), which exist as hats you can pick up and wear on any other skin.
 
 | | Hat | Size | Found |
 |:--|:--|--:|:--|
@@ -40,6 +40,11 @@ There are 24 wearable hats and helmets. All go on the head slot and can be worn 
 | ![](images/items/19553_strawhat1.png) | Straw Hat | 1 | loot |
 | ![](images/items/19528_witcheshat1.png) | Witches Hat | 1 | loot |
 | ![](images/items/19558_pizzahat1.png) | Pizza Hat | 1 | loot |
+| ![](images/items/18645_motorcyclehelmet1.png) | Flamed Helmet | 1 | civilian loot, civilian vehicles |
+| ![](images/items/18976_motorcyclehelmet2.png) | Motocross Helmet | 1 | civilian loot, civilian vehicles |
+| ![](images/items/18977_motorcyclehelmet3.png) | Red Motorcycle Helmet | 1 | civilian loot, civilian vehicles |
+| ![](images/items/18978_motorcyclehelmet4.png) | White Motorcycle Helmet | 1 | civilian loot, civilian vehicles |
+| ![](images/items/18979_motorcyclehelmet5.png) | Purple Motorcycle Helmet | 1 | civilian loot, civilian vehicles |
 | ![](images/items/20001_csher_hat.png) | Sheriff's Hat | 1 | police loot, police vehicles |
 | ![](images/items/20002_lafd1_hat.png) | Fire Helmet | 1 | industrial loot, industrial vehicles |
 | ![](images/items/20003_hmogar_hat.png) | Gardener's Hat | 1 | civilian loot |

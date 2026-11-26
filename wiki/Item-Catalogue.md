@@ -279,6 +279,7 @@ Several different items can share a name (there are, for example, three kinds of
 | ![](images/items/20274_fireworks.png) | [Fireworks](Fireworks) | 2 |
 | ![](images/items/18632_fishingrod.png) | [Fishing Rod](Fishing-Rod) | 6 |
 | ![](images/items/2993_kmb_goflag.png) | [Flag](Flag) | 3 |
+| ![](images/items/18645_motorcyclehelmet1.png) | [Flamed Helmet](Flamed-Helmet) | 1 |
 | ![](images/items/345_missile.png) | [Flare](Flare) | 2 |
 | ![](images/items/2034_cj_sawnoff.png) | [Flare Gun](Flare-Gun) | 2 |
 | ![](images/items/18641_flashlight1.png) | [Flashlight](Flashlight) | 2 |
@@ -331,6 +332,7 @@ Several different items can share a name (there are, for example, three kinds of
 | ![](images/items/19610_microphone1.png) | [Microphone](Microphone) | 1 |
 | ![](images/items/18865_mobilephone1.png) | [Mobile Phone](Mobile-Phone) | 1 |
 | ![](images/items/327_gun_boxwee.png) | [Motion Sensor](Motion-Sensor) | 1 |
+| ![](images/items/18976_motorcyclehelmet2.png) | [Motocross Helmet](Motocross-Helmet) | 1 |
 | ![](images/items/20268_motor.png) | [Motor](Motor) | 2 |
 | ![](images/items/20005_bikera_hat.png) | [Motorcycle Helmet](Motorcycle-Helmet) | 1 |
 |  | [Night Vision](Night-Vision) | 2 |
@@ -360,11 +362,13 @@ Several different items can share a name (there are, for example, three kinds of
 | ![](images/items/20290_ied_prox.png) | [Proximity IED](Proximity-IED) | 2 |
 | ![](images/items/20286_tnt_prox.png) | [Proximity TNT](Proximity-TNT) | 2 |
 | ![](images/items/19320_pumpkin01.png) | [Pumpkin](Pumpkin) | 5 |
+| ![](images/items/18979_motorcyclehelmet5.png) | [Purple Motorcycle Helmet](Purple-Motorcycle-Helmet) | 1 |
 | ![](images/items/19557_sexymask1.png) | [Pussy Mask](Pussy-Mask) | 1 |
 | ![](images/items/2966_mobile1993b.png) | [Radio](Radio) | 1 |
 | ![](images/items/20006_cwmyfr_hat.png) | [Rancher's Hat](Ranchers-Hat) | 1 |
 | ![](images/items/20236_ratchet.png) | [Ratchet](Ratchet) | 1 |
 | ![](images/items/3221_drv_in_spkrs.png) | [Receiver](Receiver) | 3 |
+| ![](images/items/18977_motorcyclehelmet3.png) | [Red Motorcycle Helmet](Red-Motorcycle-Helmet) | 1 |
 | ![](images/items/11713_fireextpanel1.png) | [Red Panel](Red-Panel) | 5 |
 | ![](images/items/19941_goldbar1.png) | [Refined Metal](Refined-Metal) | 1 |
 | ![](images/items/943_generator_low.png) | [Refining Machine](Refining-Machine) | 12 |
@@ -419,6 +423,7 @@ Several different items can share a name (there are, for example, three kinds of
 | ![](images/items/19525_weddingcake1.png) | [Wedding Cake](Wedding-Cake) | 1 |
 | ![](images/items/20202_welder.png) | [Welder](Welder) | 6 |
 | ![](images/items/20222_wheel.png) | [Wheel](Wheel) | 5 |
+| ![](images/items/18978_motorcyclehelmet4.png) | [White Motorcycle Helmet](White-Motorcycle-Helmet) | 1 |
 | ![](images/items/19528_witcheshat1.png) | [Witches Hat](Witches-Hat) | 1 |
 | ![](images/items/19793_firewoodlog1.png) | [Wood Log](Wood-Log) | 1 |
 | ![](images/items/5153_stuntramp7_las2.png) | [Wood Ramp](Wood-Ramp) | 11 |

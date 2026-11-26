@@ -18,6 +18,11 @@ local HATS = {
     StrawHat = true,
     WitchesHat = true,
     PizzaHat = true,
+    FlameHelm = true,
+    MotocrossHelm = true,
+    RedMotoHelm = true,
+    WhiteMotoHelm = true,
+    PurpleMotoHelm = true,
 }
 
 -- Hats cut off the skins that model their own headgear (tools/port_hats.py, #77). The mesh keeps the ped's head
@@ -176,6 +181,10 @@ end
 -- and size). `rot` replaces the row's rotation (each model has its own pivot: the 186xx/189xx hats lie on
 -- their side and need 0/90/90, the 19xxx ones stand upright at 0/0/0), `shift` is added to the position and
 -- `scale` (one number or { sx, sy, sz }) multiplies.
+-- Motorcycle shells share one fit, measured on male01 so the crown is up and the visor faces forward.
+-- The motocross helmet's peak sits a little further forward.
+local MOTO_SHELL = { from = "HelmArmy", rot = { 0, 90, 90 }, shift = { -0.070, 0.028, 0.003 } }
+local MOTOCROSS = { from = "HelmArmy", rot = { 0, 90, 90 }, shift = { -0.057, 0.033, 0.004 } }
 local BORROW = {
     SpecialArmour = { from = "Armour" },
     Beanie = { from = "HelmArmy" },
@@ -183,6 +192,11 @@ local BORROW = {
     CaptainsCap = { from = "HelmArmy", shift = { -0.015, 0, 0 } },
     SwatHelmet = { from = "PoliceHelm" },
     PizzaHat = { from = "HelmArmy", rot = { 0, 0, -20 } },
+    FlameHelm = MOTO_SHELL,
+    RedMotoHelm = MOTO_SHELL,
+    WhiteMotoHelm = MOTO_SHELL,
+    PurpleMotoHelm = MOTO_SHELL,
+    MotocrossHelm = MOTOCROSS,
     PussyMask = { from = "HockeyMask", rot = { 0, -20, 0 }, shift = { 0.02, 0.015, 0 }, scale = 0.85 },
     DevilMask = { from = "HockeyMask", rot = { 180, 90, 0 }, shift = { -0.06, 0.065, 0 }, scale = 0.45 },
     Torso = { from = "Armour" },

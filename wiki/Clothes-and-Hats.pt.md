@@ -19,7 +19,7 @@ A tua personagem usa quatro tipos de equipamento por cima da pele. Cada um tem a
 Para tirar algo, clica no seu quadrado no inventário. Vai para as tuas mãos, ou para o inventário se as mãos estiverem ocupadas (e o inventário tiver espaço). Vestir algo numa ranhura ocupada troca o item antigo. As mochilas são diferentes: prime `Y` para vestir uma e `N` com as mãos vazias para a tirar.
 
 ## Chapéus e capacetes {#hats-and-helmets}
-Há 24 chapéus e capacetes vestíveis. Todos vão na ranhura da cabeça e podem ser usados com qualquer skin. Quinze são chapéus normais; nove são adereços de cabeça tirados da roupa de personagens do próprio GTA (xerife, bombeiro, piloto, motard, ...), que existem como chapéus que podes apanhar e usar com qualquer outra skin.
+Há 29 chapéus e capacetes vestíveis. Todos vão na ranhura da cabeça e podem ser usados com qualquer skin. Vinte são chapéus normais; nove são adereços de cabeça tirados da roupa de personagens do próprio GTA (xerife, bombeiro, piloto, motard, ...), que existem como chapéus que podes apanhar e usar com qualquer outra skin.
 
 | | Chapéu | Tamanho | Onde se encontra |
 |:--|:--|--:|:--|
@@ -38,6 +38,11 @@ Há 24 chapéus e capacetes vestíveis. Todos vão na ranhura da cabeça e podem
 | ![](images/items/19553_strawhat1.png) | Chapéu de palha | 1 | loot |
 | ![](images/items/19528_witcheshat1.png) | Chapéu de bruxa | 1 | loot |
 | ![](images/items/19558_pizzahat1.png) | Chapéu de piza | 1 | loot |
+| ![](images/items/18645_motorcyclehelmet1.png) | Capacete com chamas | 1 | loot civil, veículos civis |
+| ![](images/items/18976_motorcyclehelmet2.png) | Capacete de motocross | 1 | loot civil, veículos civis |
+| ![](images/items/18977_motorcyclehelmet3.png) | Capacete de mota vermelho | 1 | loot civil, veículos civis |
+| ![](images/items/18978_motorcyclehelmet4.png) | Capacete de mota branco | 1 | loot civil, veículos civis |
+| ![](images/items/18979_motorcyclehelmet5.png) | Capacete de mota roxo | 1 | loot civil, veículos civis |
 | ![](images/items/20001_csher_hat.png) | Chapéu de xerife | 1 | loot de polícia, veículos da polícia |
 | ![](images/items/20002_lafd1_hat.png) | Capacete de bombeiro | 1 | loot industrial, veículos industriais |
 | ![](images/items/20003_hmogar_hat.png) | Chapéu de jardineiro | 1 | loot civil |

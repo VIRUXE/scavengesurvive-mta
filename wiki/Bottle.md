@@ -22,7 +22,7 @@
 | World loot, civilian | 7,674 spawn points: 3,006 in Los Santos, 2,632 in San Fierro, 1,373 in Las Venturas, 285 in Red County, 164 in Bone County, 143 in Flint County, 71 in Tierra Robada (116 of them inside houses) | 1.9 % |
 | World loot, industrial | 2,431 spawn points: 791 in Los Santos, 406 in Las Venturas, 386 in San Fierro, 273 in Flint County, 270 in Red County, 233 in Bone County, 72 in Tierra Robada | 1.0 % |
 | Vehicle trunks, industrial | The trunks of 14 vehicle types (Articulated, Baggage, Bobcat, Boxville, Coastguard and 9 more) | 3.2 % |
-| Vehicle trunks, civilian | The trunks of 31 vehicle types (BF Injection, Blista Compact, Bloodring Banger, Clover, Comet and 26 more) | 1.9 % |
+| Vehicle trunks, civilian | The trunks of 31 vehicle types (BF Injection, Blista Compact, Bloodring Banger, Clover, Comet and 26 more) | 1.8 % |
 
 - A Water Purifier turns one holding Sea Water into one holding Water, see [Machines](Machines).
 

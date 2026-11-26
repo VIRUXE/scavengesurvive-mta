@@ -250,8 +250,13 @@ Vários itens diferentes podem partilhar o mesmo nome (há, por exemplo, três t
 | ![](images/items/328_gun_boxbig.png) | [Caixa de fusíveis](Fuse-Box) | 2 |
 | ![](images/items/18632_fishingrod.png) | [Cana de pesca](Fishing-Rod) | 6 |
 | ![](images/items/19514_swathgrey.png) | [Capacete SWAT](Swat-Helmet) | 1 |
+| ![](images/items/18645_motorcyclehelmet1.png) | [Capacete com chamas](Flamed-Helmet) | 1 |
 | ![](images/items/20002_lafd1_hat.png) | [Capacete de bombeiro](Fire-Helmet) | 1 |
 | ![](images/items/20005_bikera_hat.png) | [Capacete de mota](Motorcycle-Helmet) | 1 |
+| ![](images/items/18978_motorcyclehelmet4.png) | [Capacete de mota branco](White-Motorcycle-Helmet) | 1 |
+| ![](images/items/18979_motorcyclehelmet5.png) | [Capacete de mota roxo](Purple-Motorcycle-Helmet) | 1 |
+| ![](images/items/18977_motorcyclehelmet3.png) | [Capacete de mota vermelho](Red-Motorcycle-Helmet) | 1 |
+| ![](images/items/18976_motorcyclehelmet2.png) | [Capacete de motocross](Motocross-Helmet) | 1 |
 | ![](images/items/19200_policehelmet1.png) | [Capacete de polícia](Police-Helmet) | 1 |
 | ![](images/items/19106_armyhelmet6.png) | [Capacete militar](Army-Helmet) | 2 |
 | ![](images/items/19352_tophat01.png) | [Cartola](Top-Hat) | 2 |

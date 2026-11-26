@@ -12,6 +12,8 @@ PORT_MODEL_MIN = 20001
 
 # SA-MP head-slot models with a dedicated dictionary built by tools.hat_textures.
 SAMP_HAT_TEXTURES = {
+    18645: "motorcyclehelmet1", 18976: "motorcyclehelmet2", 18977: "motorcyclehelmet3",
+    18978: "motorcyclehelmet4", 18979: "motorcyclehelmet5",
     18636: "policecap1", 18946: "hatboater3", 18947: "hatbowler1", 18961: "captrucker1",
     18962: "cowboyhat2", 19066: "santahat3", 19106: "armyhelmet6", 19200: "policehelmet1",
     19352: "tophat01", 19514: "swathgrey", 19520: "pilothat01", 19528: "witcheshat1",
