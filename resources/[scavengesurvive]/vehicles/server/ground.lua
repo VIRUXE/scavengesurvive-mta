@@ -11,6 +11,12 @@
 --           areas run on under the land along the coasts, so a car under the coastal ground has water far above it)
 --   anything else (mid-air, open sky over deep water) is left alone.
 -- Main world only. While the server's world is not ready (lib geom.lua) nothing is tested.
+--
+-- Separately, once a second: GTA puts an empty vehicle that fell through the world on the nearest car path
+-- node (the middle of the road; the node's XY, then the suspension drops it onto the surface). The syncer
+-- reports that point and vehicle_flush would keep it, with left_spawn still 0 because the jump is under the
+-- leave radius. The vehicle is put back on the pose create() stored. Driving, a hand push and a rope tow
+-- rewrite that pose first, so where a player left it stays, and an unused car stays on its stall.
 return function(ctx)
     local geom = ctx.geom
     local SCAN_MS = 10000
@@ -25,6 +31,9 @@ return function(ctx)
     -- how far a vehicle's highest point sits over its origin, by vehicle_types size; generous, so a vehicle half in
     -- the water is never called sunk
     local TOP_ABOVE = { small = 1.5, medium = 2.0, large = 3.0 }
+    local PARK_SNAP = 8 -- metres of XY; the same distance create() uses when a stored row is already on a node
+    local DRIVE_GRACE_MS = 3000 -- after someone gets out, the car is still braking; that stop is not a snap
+    local SNAP_LOG_MS = 60000 -- a client that snaps again every second must not flood the log
 
     local verified = setmetatable({}, { __mode = "k" }) -- vehicle -> { x, y, z } of its last "ok"
     local sizes = {} -- type uname -> size class
@@ -111,4 +120,72 @@ return function(ctx)
     end
 
     setTimer(scan, SCAN_MS, 0)
+
+    -- The road-node reset. Not part of the geom scan: it does not need the world, and a minute's flush must not
+    -- win the race. `rest` is the last place the server accepted. A player moving the vehicle (in it, pushing
+    -- it, towing it) rewrites `rest`; an empty vehicle that jumps further than PARK_SNAP is put back.
+    local function acceptRest(v, i, x, y, z)
+        local rx, ry, rz = getElementRotation(v, "ZXY")
+        i.rest = { x = x, y = y, z = z, rx = rx, ry = ry, rz = rz }
+    end
+
+    local function held(v)
+        return getElementData(v, "vehicles.pushedBy") or ctx.isTowed(v) or ctx.isRoped(v)
+    end
+
+    local function restorePark(v, i, x, y, z)
+        if not i.rest or i.transient or i.sunk then
+            return
+        end
+        local now = getTickCount()
+        if not empty(v) then
+            i.drivenUntil = now + DRIVE_GRACE_MS
+            acceptRest(v, i, x, y, z)
+            return
+        end
+        if held(v) or (i.drivenUntil and now < i.drivenUntil) then
+            acceptRest(v, i, x, y, z)
+            return
+        end
+        local r = i.rest
+        local dx, dy = x - r.x, y - r.y
+        if dx * dx + dy * dy <= PARK_SNAP * PARK_SNAP then
+            -- an unused car stays on the stall it was given; a used one may settle or be nudged a short way
+            if (i.touched or i.leftSpawn) and dx * dx + dy * dy > 0.01 then
+                acceptRest(v, i, x, y, z)
+            end
+            return
+        end
+        setElementVelocity(v, 0, 0, 0)
+        setElementAngularVelocity(v, 0, 0, 0)
+        setElementPosition(v, r.x, r.y, r.z)
+        setElementRotation(v, r.rx or 0, r.ry or 0, r.rz or 0, "ZXY")
+        verified[v] = { x = r.x, y = r.y, z = r.z }
+        triggerEvent("vehicleRescued", v)
+        if not i.snapLogged or now - i.snapLogged >= SNAP_LOG_MS then
+            i.snapLogged = now
+            ctx.log.event(
+                "vehicle.rescued",
+                ctx.vehicleLine(v, {
+                    from_x = x,
+                    from_y = y,
+                    from_z = z,
+                    to_x = r.x,
+                    to_y = r.y,
+                    to_z = r.z,
+                    reason = "road_snap",
+                }),
+                "warn"
+            )
+        end
+    end
+
+    setTimer(function()
+        for v, i in pairs(ctx.info) do
+            if isElement(v) and getElementInterior(v) == 0 and getElementDimension(v) == 0 then
+                local x, y, z = getElementPosition(v)
+                restorePark(v, i, x, y, z)
+            end
+        end
+    end, 1000, 0)
 end

@@ -126,9 +126,9 @@ local SELECT_VEHICLES = "SELECT v.id, v.spawn_id, v.type_uname, v.model, v.x, v.
     .. "v.health, v.fuel, v.locked, v.damage, v.carmour, v.gas_bottles, v.key_code, v.keypad_code, "
     .. "v.trailer_id, v.towbar, v.rope_tow_id, v.left_spawn, "
     .. "v.battery, v.battery_since, v.battery_state, v.battery_capacity, v.starter, "
-    .. "v.starter_state, v.sunk, "
+    .. "v.starter_state, v.sunk, v.last_used_at, "
     .. "c.id AS container_id, g.id AS glovebox_id, "
-    .. "s.x AS spawn_x, s.y AS spawn_y FROM vehicles v "
+    .. "s.x AS spawn_x, s.y AS spawn_y, s.z AS spawn_z, s.rz AS spawn_rz FROM vehicles v "
     .. "LEFT JOIN containers c ON c.owner_vehicle_id = v.id AND c.kind = 'vehicle' "
     .. "LEFT JOIN containers g ON g.owner_vehicle_id = v.id AND g.kind = 'glovebox' "
     .. "LEFT JOIN vehicle_spawns s ON s.id = v.spawn_id"
@@ -200,7 +200,8 @@ local DELETE_ABANDONED = "DELETE FROM vehicles WHERE left_spawn = 1 AND sunk = 0
 
 local settings = {}
 local types = nil -- spawn.index(...) of the data resource's vehicle types
--- vehicle element -> { id, uname, fuel, locked, keyCode, trailerId, containerId, spawnId, spawnX, spawnY, leftSpawn }
+-- vehicle element -> { id, uname, fuel, locked, keyCode, trailerId, containerId, spawnId, spawnX, spawnY,
+-- leftSpawn, rest, touched, drivenUntil }
 local info = {}
 local activeActions = {} -- player -> { actionType, vehicle, timer, extra }
 local rolling = false
@@ -251,6 +252,7 @@ local function markUsed(v)
     if not i then
         return
     end
+    i.touched = true -- ground.lua keeps an unused car on its stall; once someone has used it, the anchor follows them
     local now = getTickCount()
     if now - i.usedTick >= USED_TICK_MS then
         i.usedTick = now
@@ -431,8 +433,68 @@ local function parseColors(s)
     return #out == 12 and out or nil
 end
 
+-- Metres of XY. A GTA car-path node sits further out than suspension settle; ground.lua uses the same distance
+-- when it puts a vehicle back. Driving, a push and a rope tow rewrite `rest` before that check.
+local PARK_SNAP = 8
+
+local function angDiff(a, b)
+    return math.abs((((a - b) + 180) % 360) - 180)
+end
+
+-- The pose this type was given at this point (vehicle_spawn_poses), or nil. Both headings share the spot; the
+-- one closer to the point's own heading wins when the stored heading was the road's, not the parking stall's.
+local function parkedPose(row)
+    local sid, model = tonumber(row.spawn_id), tonumber(row.model)
+    if not sid or not model then
+        return nil
+    end
+    local a, b = poses[poseKey(sid, model, 0)], poses[poseKey(sid, model, 1)]
+    if not a then
+        return b
+    end
+    if not b then
+        return a
+    end
+    local base = tonumber(row.spawn_rz) or tonumber(row.rz) or 0
+    if angDiff(a[6], base) <= angDiff(b[6], base) then
+        return a
+    end
+    return b
+end
+
+-- A flush can already have stored the road node (see server/ground.lua). An untouched vehicle still at its
+-- point is created on the pose instead, so a restart does not bring it back in the middle of the road.
+local function healPark(row)
+    if (tonumber(row.left_spawn) or 0) > 0 then
+        return
+    end
+    if row.last_used_at and row.last_used_at ~= false then
+        return
+    end
+    local sx, sy = tonumber(row.spawn_x), tonumber(row.spawn_y)
+    if not sx or not sy then
+        return
+    end
+    local x, y = tonumber(row.x) or 0, tonumber(row.y) or 0
+    local dx, dy = x - sx, y - sy
+    if dx * dx + dy * dy <= PARK_SNAP * PARK_SNAP then
+        return
+    end
+    row._from = { x, y, tonumber(row.z) or 0 }
+    local pose = parkedPose(row)
+    if pose then
+        row.x, row.y, row.z, row.rx, row.ry, row.rz = pose[1], pose[2], pose[3], pose[4], pose[5], pose[6]
+    else
+        row.x, row.y = sx, sy
+        row.z = tonumber(row.spawn_z) or row.z
+        row.rx, row.ry = 0, 0
+        row.rz = tonumber(row.spawn_rz) or row.rz
+    end
+end
+
 -- row: a vehicles table row joined with containers; fresh: a vehicle that has just spawned (its glovebox is stocked)
 local function create(row, fresh)
+    healPark(row)
     local v = createVehicle(row.model, row.x, row.y, row.z, 0, 0, row.rz)
     local rx, ry = tonumber(row.rx) or 0, tonumber(row.ry) or 0
     if v and (rx ~= 0 or ry ~= 0) then -- tilted to its slope; stored in "ZXY" order (the GTA object convention)
@@ -492,6 +554,16 @@ local function create(row, fresh)
         spawnX = row.spawn_x and tonumber(row.spawn_x) or nil,
         spawnY = row.spawn_y and tonumber(row.spawn_y) or nil,
         leftSpawn = (tonumber(row.left_spawn) or 0) > 0,
+        -- where ground.lua puts it back when GTA drops it on a road node. Driving, a push or a rope rewrites this.
+        rest = {
+            x = tonumber(row.x) or 0,
+            y = tonumber(row.y) or 0,
+            z = tonumber(row.z) or 0,
+            rx = tonumber(row.rx) or 0,
+            ry = tonumber(row.ry) or 0,
+            rz = tonumber(row.rz) or 0,
+        },
+        touched = row.last_used_at ~= nil and row.last_used_at ~= false,
         sunk = (tonumber(row.sunk) or 0) > 0,
         damage = row.damage and row.damage ~= "" and row.damage ~= false and fromJSON(row.damage) or {},
         usedTick = 0,
@@ -569,6 +641,22 @@ local function create(row, fresh)
                 end
             )
         end
+    end
+
+    if row._from then
+        log.event(
+            "vehicle.rescued",
+            vehicleLine(v, {
+                from_x = row._from[1],
+                from_y = row._from[2],
+                from_z = row._from[3],
+                to_x = info[v].rest.x,
+                to_y = info[v].rest.y,
+                to_z = info[v].rest.z,
+                reason = "road_snap",
+            }),
+            "warn"
+        )
     end
 
     return v
@@ -866,6 +954,13 @@ local function applyHandoff(v, s)
     local p, m = s.pos, s.vel
     setElementPosition(v, p[1], p[2], p[3])
     setElementRotation(v, p[4], p[5], p[6])
+    local i = info[v]
+    -- create() puts an unused car back on its stall and that is the pose ground.lua keeps. A car someone has
+    -- used keeps the live position from the stop, which can sit a flush ahead of the stored row.
+    if i and i.rest and (i.touched or i.leftSpawn) then
+        local rx, ry, rz = getElementRotation(v, "ZXY")
+        i.rest = { x = p[1], y = p[2], z = p[3], rx = rx, ry = ry, rz = rz }
+    end
     if s.engine then
         setVehicleEngineState(v, true)
     end
@@ -3427,7 +3522,7 @@ do
     local make = assert(loadstring(src, "=vehicles/server/towing.lua"))()
     local ctx = { db = db, info = info, toast = toast, activeActions = activeActions, log = log }
     ctx.cancelHoldAction, ctx.vlogic, ctx.rope, ctx.toLocal = cancelHoldAction, vlogic, rope, toLocal
-    ctx.vehicleLine, ctx.charId = vehicleLine, charId
+    ctx.vehicleLine, ctx.charId, ctx.markUsed = vehicleLine, charId, markUsed
     -- a fitted or removed bar changes the hitch of whoever drives the vehicle
     ctx.rebindTow = function(v)
         local driver = getVehicleController(v)
@@ -3475,6 +3570,7 @@ do
         isTowed = function(v)
             return towSrv.towed(v)
         end,
+        markUsed = markUsed,
     })
 end
 
@@ -3876,6 +3972,12 @@ do
         log = log,
         vehicleLine = vehicleLine,
         setSunk = setSunk,
+        isTowed = function(v)
+            return towSrv.towed(v)
+        end,
+        isRoped = function(v)
+            return towSrv.roped(v)
+        end,
     })
 end
 

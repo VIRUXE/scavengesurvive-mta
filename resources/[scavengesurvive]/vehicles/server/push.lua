@@ -3,7 +3,7 @@
 -- both: "vehicles.pushedBy" on the vehicle (every client stops holding it still) and "vehicles.pushing" on the
 -- player (every client poses the arms against it). It ends when the player asks, walks off, gets in anything,
 -- dies or leaves, or someone else gets into the vehicle; a push that moved it far enough trains Strength.
--- ctx = { info, vlogic, plogic, log, vehicleLine, isTowed } built by server/main.lua.
+-- ctx = { info, vlogic, plogic, log, vehicleLine, isTowed, markUsed } built by server/main.lua.
 return function(ctx)
     local info, vlogic, plogic, log, vehicleLine = ctx.info, ctx.vlogic, ctx.plogic, ctx.log, ctx.vehicleLine
     local M = {}
@@ -39,7 +39,17 @@ return function(ctx)
             setElementSyncer(v, syncer, false)
         end
         local x, y, z = getElementPosition(v)
+        -- ground.lua would read this move as the road-node reset and pull an untouched vehicle back
+        local i = info[v]
+        if i and i.rest and not i.touched and not i.leftSpawn then
+            local rx, ry, rz = getElementRotation(v, "ZXY")
+            i.rest = { x = x, y = y, z = z, rx = rx, ry = ry, rz = rz }
+        end
         local dist = getDistanceBetweenPoints3D(p.x, p.y, p.z, x, y, z)
+        -- a real shove is the player moving it: the restart heal must not put it back on the stall
+        if dist >= 1 then
+            ctx.markUsed(v)
+        end
         local mult = plogic.skillMult(dist)
         if mult and isElement(player) then
             exports.character:gainSkill(player, plogic.SKILL, mult)

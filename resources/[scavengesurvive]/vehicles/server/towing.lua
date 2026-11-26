@@ -15,12 +15,13 @@
 -- Element data, both "broadcast" and set here only: "vehicles.towbar" (true on a vehicle with a fitted bar) and
 -- "vehicles.ropeTow" (on a tower, the vehicle its rope pulls).
 -- ctx = { db, info, toast, activeActions, cancelHoldAction, vlogic, rope, toLocal, log, vehicleLine, charId,
--- rebindTow } built by server/main.lua.
+-- rebindTow, markUsed } built by server/main.lua.
 local lang = loadstring(exports.lib:getModule("lang"), "=lib/lang.lua")()
 return function(ctx)
     local db, info, toast, activeActions = ctx.db, ctx.info, ctx.toast, ctx.activeActions
     local vlogic, rope, log, vehicleLine = ctx.vlogic, ctx.rope, ctx.log, ctx.vehicleLine
     local cancelHoldAction, charId, rebindTow = ctx.cancelHoldAction, ctx.charId, ctx.rebindTow
+    local markUsed = ctx.markUsed
     local M = {}
 
     local FIT_MS = 6000
@@ -198,6 +199,7 @@ return function(ctx)
             if isElement(tower) and isElement(towed) and info[tower] then
                 info[tower].ropeTowId = tinf.id
                 link(tower, towed)
+                markUsed(towed) -- dragging it is using it: a restart must not heal it back onto the stall
             end
         end)
     end
