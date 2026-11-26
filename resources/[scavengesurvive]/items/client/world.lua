@@ -366,34 +366,41 @@ return function(ctx)
 
     local REACH_CACHE_MS = 250
     local REACH_RAY_STEPS = 6 -- items and held objects a ray may pass through before it counts as blocked
+    local SINK_ALLOW = 0.25 -- a surface this close to the origin is the ground the item is clipped into, not a floor
     local F = false
 
     -- a ray from the chest to a point; items and carried objects are passed through, anything else blocks it, and
-    -- so does a built defence other than the target's own model (ign): a motor that moved it aside moved it off the ray
-    local function rayClear(sx, sy, sz, tx, ty, tz, ign)
+    -- so does a built defence other than the target's own model (ign): a motor that moved it aside moved it off the ray.
+    -- blocked, the blocking surface's z, and that element. Steps that run out count as blocked with no surface.
+    local function rayCast(sx, sy, sz, tx, ty, tz, ign)
         local own = ign
         for _ = 1, REACH_RAY_STEPS do
             local left = getDistanceBetweenPoints3D(sx, sy, sz, tx, ty, tz)
             if left < 0.001 then
-                return true
+                return false
             end
             local hit, hx, hy, hz, el = processLineOfSight(sx, sy, sz, tx, ty, tz, true, F, F, true, F, F, F, F, ign)
             if not hit then
-                return true
+                return false
             end
             local passable = el
                 and (el == own or (not defenceElements[el] and (itemElements[el] or getElementAttachedTo(el))))
             if not passable then
-                return false
+                return true, hz, el
             end
             local k = math.min(0.001, getDistanceBetweenPoints3D(hx, hy, hz, tx, ty, tz)) / left
             sx, sy, sz = hx + (tx - sx) * k, hy + (ty - sy) * k, hz + (tz - sz) * k
             ign = el
         end
-        return false
+        return true
     end
 
-    -- The higher target helps with uneven ground. Keep it on the item's side of roofs and floors.
+    local function rayClear(sx, sy, sz, tx, ty, tz, ign)
+        return not rayCast(sx, sy, sz, tx, ty, tz, ign)
+    end
+
+    -- The higher target helps with uneven ground. A surface within SINK_ALLOW of the origin is ground the item is
+    -- clipped into, so the raised aim may cross it. A hit further above, or any built defence, stays a floor or roof.
     local function reachable(id, e, fresh)
         local now = getTickCount()
         local cached = reachCache[id]
@@ -408,7 +415,12 @@ return function(ctx)
         local ok = rayClear(sx, sy, sz, e.x, e.y, low, own)
         local raised = false
         if not ok then
-            raised = rayClear(e.x, e.y, low, e.x, e.y, high, own)
+            local blocked, hz, el = rayCast(e.x, e.y, low, e.x, e.y, high, own)
+            local skin = blocked
+                and hz ~= nil
+                and hz <= e.z + SINK_ALLOW
+                and not (el and defenceElements[el])
+            raised = not blocked or skin
             ok = raised and rayClear(sx, sy, sz, e.x, e.y, high, own)
         end
         -- A mounted panel can be sunk slightly into masonry to cover an opening. Crowbar work reaches its

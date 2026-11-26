@@ -4,12 +4,16 @@ localPlayer, root, resourceRoot = {}, {}, {}
 local now, mode, heldTool = 0, "wall", nil
 local playerZ, playerDimension, playerInterior = 0, 0, 0
 local geomReady = true
+local skinZ, floorZ = 0.08, -0.65
 local function collision(sx, sy, sz, tx, ty, tz)
     if mode == "clear" then
         return false
     end
-    if mode == "map floor" or mode == "built floor" then
-        local floor = -0.65
+    if mode == "ground skin" or mode == "map floor" or mode == "built floor" then
+        local floor = floorZ
+        if mode == "ground skin" then
+            floor = skinZ
+        end
         if (sz > floor) == (tz > floor) then
             return false
         end
@@ -81,6 +85,14 @@ itemReachGeom = {
         assert(mode ~= "built floor", "the server collision has map geometry only")
         return not collision(...)
     end,
+    ray = function(...)
+        assert(mode ~= "built floor", "the server collision has map geometry only")
+        local hit, x, y, z = collision(...)
+        if not hit then
+            return nil
+        end
+        return x, y, z
+    end,
 }
 
 local models = {
@@ -120,7 +132,7 @@ end
 local objects = up(world.pickupCandidates, "objects")
 local reachable = up(world.pickupCandidates, "reachable")
 local types = up(up(reachable, "itemType"), "typeCache")
-local defenceElements = up(up(reachable, "rayClear"), "defenceElements")
+local defenceElements = up(up(reachable, "rayCast"), "defenceElements")
 defenceElements[builtFloor] = true
 types.Door = { size = 9 }
 types.Thermal = { size = 1 }
@@ -162,6 +174,19 @@ for _, floor in ipairs({ "map floor", "built floor" }) do
     playerZ = 0
 end
 
+objects[1].z = 0
+skinZ, playerZ = 0.08, 0
+assert(reaches("ground skin"), "an item clipped into the ground can use the raised aim")
+-- The ped origin sits about a metre above the ground, so the knee ray stays above the skin.
+playerZ = 1
+assert(world.pickupCandidates(2)[1] == 1, "F offers an item clipped into the ground")
+playerZ = 0
+skinZ = 0.40
+assert(not reaches("ground skin"), "a floor above the origin still blocks the raised aim")
+floorZ = 0.08
+assert(not reaches("built floor"), "a built floor just above an item still blocks")
+floorZ, skinZ, objects[1].z = -0.65, 0.08, -1
+
 mode = "clear"
 assert(world.pickupCandidates(2)[1] == 1, "ordinary ground loot is eligible")
 mode = "map floor"
@@ -189,7 +214,18 @@ mode = "wall"
 assert(not serverWorld.inPickupReach(localPlayer, row, 2, types.Thermal), "server map collision rejects wall pickup")
 mode = "clear"
 assert(serverWorld.inPickupReach(localPlayer, row, 2, types.Thermal), "server permits clear pickup")
-playerZ = 3
+local skinRow = { x = 0, y = 1, z = 0 }
+mode, skinZ, playerZ = "ground skin", 0.08, 0
+assert(
+    serverWorld.inPickupReach(localPlayer, skinRow, 2, types.Thermal),
+    "server allows an item clipped into the ground"
+)
+skinZ = 0.40
+assert(
+    not serverWorld.inPickupReach(localPlayer, skinRow, 2, types.Thermal),
+    "server rejects a floor above the origin"
+)
+mode, skinZ, playerZ = "clear", 0.08, 3
 assert(not serverWorld.inPickupReach(localPlayer, row, 2, types.Thermal), "server rejects a distant floor")
 playerZ, playerDimension = 0, 1
 assert(not serverWorld.inPickupReach(localPlayer, row, 2, types.Thermal), "server rejects a different dimension")

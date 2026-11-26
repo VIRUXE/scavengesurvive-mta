@@ -148,6 +148,8 @@ return function(ctx)
 
     -- Recheck the player's current position after the query. Map collision supplies an independent
     -- wall check where available. Built defences and visible edges of large models use the client geometry.
+    -- A surface within SINK_ALLOW of the origin is the ground the item is clipped into; a higher surface is a floor.
+    local SINK_ALLOW = 0.25
     function M.inPickupReach(player, row, radius, itemType, recessed)
         local int, dim = getElementInterior(player), getElementDimension(player)
         if int ~= (row.interior or 0) or dim ~= (row.dimension or 0) then
@@ -161,11 +163,23 @@ return function(ctx)
             return true
         end
         local x, y, low, high = row.x, row.y, row.z + 0.05, row.z + 0.6
-        if geom.clear(px, py, pz + 0.5, x, y, low) then
+        local chest = pz + 0.5
+        if geom.clear(px, py, chest, x, y, low) then
             return true
         end
-        return geom.clear(x, y, low, x, y, high)
-            and ((itemType and (itemType.size or 0) >= 9) or geom.clear(px, py, pz + 0.5, x, y, high))
+        local verticalClear = geom.clear(x, y, low, x, y, high)
+        local skin = false
+        if not verticalClear then
+            local _, _, hz = geom.ray(x, y, low, x, y, high)
+            skin = hz ~= nil and hz <= row.z + SINK_ALLOW
+        end
+        if not verticalClear and not skin then
+            return false
+        end
+        if itemType and (itemType.size or 0) >= 9 then
+            return true
+        end
+        return geom.clear(px, py, chest, x, y, high) == true
     end
 
     local SNAP_SQL = "SELECT i.x, i.y, i.z, i.interior, i.dimension FROM items i"
