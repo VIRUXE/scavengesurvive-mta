@@ -111,6 +111,7 @@ return function(ctx)
 
     local function teleport(who, toX, toY, toZ, interior, dimension, onFoot)
         local veh = getPedOccupiedVehicle(who)
+        ctx.teleportGrace(who)
         setElementInterior(who, interior or 0)
         setElementDimension(who, dimension or 0)
         if veh and getVehicleOccupant(veh) == who and not onFoot then
@@ -126,6 +127,7 @@ return function(ctx)
     end
 
     local function seatInto(who, veh, seat)
+        ctx.teleportGrace(who)
         removePedFromVehicle(who)
         setElementInterior(who, getElementInterior(veh))
         setElementDimension(who, getElementDimension(veh))

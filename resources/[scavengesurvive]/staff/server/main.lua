@@ -67,6 +67,16 @@ function ctx.lang(p)
     return exports.auth:getLanguage(p) or "en"
 end
 
+-- A staff teleport or seat warp leaves the player briefly where the game has not caught up yet (a moving vehicle
+-- runs into the ped before the warp syncs): `weapons` ignores vehicle and fall damage until this server tick.
+-- Server-only element data (not synced).
+local TELEPORT_GRACE_MS = 3000
+function ctx.teleportGrace(p)
+    if isElement(p) then
+        setElementData(p, "staff.teleportGrace", getTickCount() + TELEPORT_GRACE_MS, false)
+    end
+end
+
 -- Chat lines use the upstream " >  " prefix and yellow; #RRGGBB codes inside are honoured.
 function ctx.say(p, fmt, ...)
     local msg = string.format(fmt, ...)

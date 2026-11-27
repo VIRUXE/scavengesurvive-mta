@@ -202,6 +202,7 @@ return function(ctx)
             return
         end
         local x, y, z = getElementPosition(v)
+        ctx.teleportGrace(p)
         removePedFromVehicle(p)
         setElementInterior(p, getElementInterior(v))
         setElementDimension(p, getElementDimension(v))
@@ -218,6 +219,7 @@ return function(ctx)
         if not seat then
             return ctx.say(p, " >  %s is full.", label(v))
         end
+        ctx.teleportGrace(p)
         removePedFromVehicle(p)
         setElementInterior(p, getElementInterior(v))
         setElementDimension(p, getElementDimension(v))

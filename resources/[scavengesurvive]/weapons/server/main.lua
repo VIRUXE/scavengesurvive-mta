@@ -114,6 +114,12 @@ local function nonFirearm(victim, attacker, weapon, loss)
     if getElementData(victim, "staff.duty") == true then
         return
     end
+    -- just moved by a staff teleport or seat warp (staff ctx.teleportGrace): a ram or fall then is the warp not
+    -- having synced yet (a moving vehicle running into the ped), not something that happened to the character
+    local grace = getElementData(victim, "staff.teleportGrace")
+    if (weapon == 49 or weapon == 50 or weapon == 54) and grace and getTickCount() < grace then
+        return
+    end
     local ctx = {}
     local credit
     if weapon == 49 or weapon == 50 then
