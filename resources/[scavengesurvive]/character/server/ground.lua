@@ -37,6 +37,7 @@ return function(ctx)
     local FREE = 25
     local FREE_STEP = 1.5
     local FREE_ANGLES = 16
+    local FREE_LEVEL = 1.2 -- a step up at most: ground at the level they are wedged on
     local FREE_UP = 6 -- a free spot's surface may be this much over the floor they are wedged on...
     local FREE_DOWN = 4 -- ...or this much under it
     local FLAT = 0.7 -- normal z of a surface a ped can stand on
@@ -60,22 +61,26 @@ return function(ctx)
     end
 
     -- the nearest spot around (x, y) for something wedged on `floor` that `fits` (tx, ty, surface): tx, ty, surface or
-    -- nil. The first pass only takes spots in a straight, unblocked line from it (nothing is put through a wall), the
-    -- second any.
+    -- nil. The first two passes only take spots in a straight, unblocked line from it (nothing is put through a wall),
+    -- the last two any; of each pair the first looks for ground at its own level (from FREE_LEVEL over the floor down)
+    -- and the second from FREE_UP over it, so a roof or a floor above is only taken when nothing at its level fits
+    -- (2026-11-27: the topmost surface came first, and a player in a house was put on its roof).
     local function freeSpot(x, y, floor, fits)
-        for pass = 1, 2 do
+        for pass = 1, 4 do
+            local up = (pass % 2 == 1) and FREE_LEVEL or FREE_UP
+            local sight = pass <= 2
             for r = FREE_STEP, FREE, FREE_STEP do
                 for i = 0, FREE_ANGLES - 1 do
                     local a = (i / FREE_ANGLES) * 2 * math.pi
                     local tx, ty = x + math.cos(a) * r, y + math.sin(a) * r
-                    local hz, _, _, nz = geom.below(tx, ty, floor + FREE_UP, 0, FREE_UP + FREE_DOWN)
+                    local hz, _, _, nz = geom.below(tx, ty, floor + up, 0, up + FREE_DOWN)
                     local wz = hz and geom.water(tx, ty)
                     if
                         hz
                         and nz >= FLAT
                         and not (wz and wz > hz)
                         and fits(tx, ty, hz)
-                        and (pass == 2 or geom.clear(x, y, floor + 0.5, tx, ty, hz + 0.5))
+                        and (not sight or geom.clear(x, y, floor + 0.5, tx, ty, hz + 0.5))
                     then
                         return tx, ty, hz
                     end

@@ -6,7 +6,10 @@ The module carries the vanilla map; world/server/geom.lua hands it this overlay 
 queries (lib geom.lua) match what players stand on. Two files in resources/[scavengesurvive]/world/geom/:
 
 - port.map: the maps resource's objects and removals and the puzzles' objects, main world only (dimension and interior
-  -1 or 0), as MTA <object>/<removeWorldObject> rows: the same selection as tools/spawn_ground.py's overlay().
+  -1 or 0), as MTA <object>/<removeWorldObject> rows: the same selection as tools/spawn_ground.py's overlay(). The
+  swing doors (maps placement.lua SWING_DOORS) stay out: each client swings its own, so to the server a doorway is
+  open (a door left in stood shut across it as a block: a player standing still in the doorway read as wedged under
+  a low ceiling and was "rescued" onto the roof, 2026-11-27, and a drop there lay on top of the door).
 - overlay.toml: that map plus a [[col]] entry per model of every model pack (samp_models, hat_models, door_models,
   prop_models, box_models, car_part_models) with its id, from the pack's own files/ (no game files needed), and one per vanilla model
   house_shell rebuilds (the houses, trailers, log cabins and des_westrn9_), with the vanilla id, so the server stands
@@ -40,6 +43,15 @@ from tools.spawn_ground import MODEL_PACKS, RES, lua_models  # noqa: E402
 OUT = RES / "world" / "geom"
 MANIFEST_COL = re.compile(r'\[(\d+)\] = \{[^}]*?\bcol = "([^"]+)"')
 SHELL = RES / "house_shell"
+PLACEMENT = RES / "maps" / "shared" / "logic" / "placement.lua"
+
+
+def swing_doors() -> set[str]:
+    """The models of placement.SWING_DOORS, as the map rows spell them."""
+    block = re.search(r"placement\.SWING_DOORS = \{(.*?)\n\}", PLACEMENT.read_text(encoding="utf8"), re.S)[1]
+    doors = set(re.findall(r"\[(\d+)\] = true", block))
+    assert doors, "placement.SWING_DOORS not found"
+    return doors
 
 
 def shell_cols() -> list[tuple[int, str]]:
@@ -82,10 +94,11 @@ def shell_rows() -> list[str]:
 
 def port_map() -> tuple[str, int, int]:
     rows, objects, removals = ["<map>"], 0, 0
+    doors = swing_doors()
     for path in sorted(MAPS.glob("*.lua")) + [PUZZLES]:
         text = path.read_text(encoding="utf8")
         for m, x, y, z, rx, ry, rz, world, interior in ROW.findall(text):
-            if int(world) in (-1, 0) and int(interior) in (-1, 0):
+            if int(world) in (-1, 0) and int(interior) in (-1, 0) and m not in doors:
                 rows.append(f'<object model="{m}" posX="{x}" posY="{y}" posZ="{z}" rotX="{rx}" rotY="{ry}" rotZ="{rz}" interior="0"/>')
                 objects += 1
         if "removals = {" in text:
