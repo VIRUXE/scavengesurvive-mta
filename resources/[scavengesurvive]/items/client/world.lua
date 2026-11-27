@@ -367,11 +367,13 @@ return function(ctx)
     local REACH_CACHE_MS = 250
     local REACH_RAY_STEPS = 6 -- items and held objects a ray may pass through before it counts as blocked
     local SINK_ALLOW = 0.25 -- a surface this close to the origin is the ground the item is clipped into, not a floor
+    local PANEL_SUNK, PANEL_SUNK_Z = 0.45, 0.8 -- how far behind a wall a Crowbar still reaches a built defence
     local F = false
 
     -- a ray from the chest to a point; items and carried objects are passed through, anything else blocks it, and
     -- so does a built defence other than the target's own model (ign): a motor that moved it aside moved it off the ray.
-    -- blocked, the blocking surface's z, and that element. Steps that run out count as blocked with no surface.
+    -- blocked, the blocking surface's z, that element, and the surface's x and y. Steps that run out count as
+    -- blocked with no surface.
     local function rayCast(sx, sy, sz, tx, ty, tz, ign)
         local own = ign
         for _ = 1, REACH_RAY_STEPS do
@@ -386,7 +388,7 @@ return function(ctx)
             local passable = el
                 and (el == own or (not defenceElements[el] and (itemElements[el] or getElementAttachedTo(el))))
             if not passable then
-                return true, hz, el
+                return true, hz, el, hx, hy
             end
             local k = math.min(0.001, getDistanceBetweenPoints3D(hx, hy, hz, tx, ty, tz)) / left
             sx, sy, sz = hx + (tx - sx) * k, hy + (ty - sy) * k, hz + (tz - sz) * k
@@ -420,17 +422,22 @@ return function(ctx)
             raised = not blocked or skin
             ok = raised and rayClear(sx, sy, sz, e.x, e.y, high, own)
         end
-        -- A mounted panel can be sunk slightly into masonry to cover an opening. Crowbar work reaches its
-        -- surface, up to 20 cm before the stored target; loose-item pickup never gets this allowance.
-        -- The server still checks the tool, inside face, distance and hold before removing a defence.
+        -- A mounted panel sits sunk into the wall or the window it covers: built by a player pressed against it,
+        -- its centre lies 20 to 30 cm behind that surface. Crowbar work reaches it through a surface up to
+        -- PANEL_SUNK in front of it, measured flat so a panel high on the wall counts the same (and no more than
+        -- PANEL_SUNK_Z above or below the aim, so no floor or ceiling); another built defence still blocks, and
+        -- loose-item pickup never gets this allowance. The server still checks the tool, inside face, distance
+        -- and hold before removing a defence.
         if not ok and e.defence and tool == "Crowbar" then
             for _, height in ipairs({ 0.15, 0.6 }) do
-                local tx, ty, tz = e.x, e.y, e.z + height
-                local distance = getDistanceBetweenPoints3D(sx, sy, sz, tx, ty, tz)
-                local inset = math.min(0.2 / math.max(distance, 0.001), 1)
-                if
-                    rayClear(sx, sy, sz, tx + (sx - tx) * inset, ty + (sy - ty) * inset, tz + (sz - tz) * inset, own)
-                then
+                local tz = e.z + height
+                local blocked, hz, el, hx, hy = rayCast(sx, sy, sz, e.x, e.y, tz, own)
+                local sunk = blocked
+                    and hx ~= nil
+                    and not (el and defenceElements[el])
+                    and (hx - e.x) ^ 2 + (hy - e.y) ^ 2 <= PANEL_SUNK * PANEL_SUNK
+                    and math.abs(hz - tz) <= PANEL_SUNK_Z
+                if not blocked or sunk then
                     ok = true
                     break
                 end
