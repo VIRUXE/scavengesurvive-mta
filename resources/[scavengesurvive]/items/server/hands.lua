@@ -929,6 +929,7 @@ return function(ctx)
         end, { player = player, row = row })
     end
 
+    local PANEL_QUERY_RADIUS = 6.0
     net.handler("itemPickupRequested", function(player, selection, targetId)
         local cid = charId(player)
         if not cid then
@@ -976,7 +977,16 @@ return function(ctx)
                 and rowType
                 and rowType.defence
                 and builtDefence(decodeData(row.data))
-            if row and not world.inPickupReach(c.player, row, c.radius, rowType, recessed) then
+            -- a built defence under the Crowbar is found by PANEL_QUERY_RADIUS and building measures to the panel;
+            -- anything else found that far off was not found at all (the Crowbar then tries what it takes apart)
+            if row and not recessed and c.queryRadius > c.radius then
+                local px, py, pz = getElementPosition(c.player)
+                if getDistanceBetweenPoints3D(px, py, pz, row.x, row.y, row.z) > c.radius then
+                    row, rowType = nil, nil
+                end
+            end
+            local reach = recessed and c.queryRadius or c.radius
+            if row and not world.inPickupReach(c.player, row, reach, rowType, recessed) then
                 return toast(c.player, "ITEM_WALL_BLOCKED")
             end
             if c.dutyOnly then
@@ -1101,10 +1111,15 @@ return function(ctx)
             end
             M.pickup(c.player, c.charId, row)
         end
+        -- The Crowbar's outlined target may be a built defence whose origin lies further off than its near end (a
+        -- sheet 3.8 m wide): the row is looked up within PANEL_QUERY_RADIUS, and building's removeDefence then
+        -- measures to the panel itself. Anything else found there still has to lie within the pickup radius.
+        local queryRadius = (targetId and held and held.uname == "Crowbar") and PANEL_QUERY_RADIUS or r
         local request = {
             player = player,
             charId = cid,
             radius = r,
+            queryRadius = queryRadius,
             targetId = targetId,
             blocked = selection.blocked == true,
             dutyOnly = dutyOnly,
@@ -1116,7 +1131,7 @@ return function(ctx)
         end
         local x, y, z = getElementPosition(player)
         local int, dim = getElementInterior(player), getElementDimension(player)
-        local sql = world.findNearestSql(x, y, r, int, dim, unames, { z = z, ids = ids, targetId = targetId })
+        local sql = world.findNearestSql(x, y, queryRadius, int, dim, unames, { z = z, ids = ids, targetId = targetId })
         db.one(sql, {}, interact, request)
     end, { rate = 5 })
 

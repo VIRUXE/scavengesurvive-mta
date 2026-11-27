@@ -401,6 +401,35 @@ return function(ctx)
         return not rayCast(sx, sy, sz, tx, ty, tz, ign)
     end
 
+    -- The point of a built defence's bounds nearest to (x, y, z) and how far that is, never further than its origin:
+    -- a Rusty Corrugated Metal sheet is 3.8 m wide, and a player standing against its end has its middle 3 m away.
+    -- The Crowbar's reach is measured to this point (the server: building's defenceDistance).
+    local function nearestPanelPoint(e, x, y, z)
+        local centre = getDistanceBetweenPoints3D(x, y, z, e.x, e.y, e.z)
+        local obj = isElement(e.obj) and e.obj or nil
+        local m = obj and getElementMatrix(obj)
+        local x0, y0, z0, x1, y1, z1
+        if m then
+            x0, y0, z0, x1, y1, z1 = getElementBoundingBox(obj)
+        end
+        if not x0 then
+            return e.x, e.y, e.z, centre
+        end
+        -- the point in the object's frame (the rotation part is orthonormal: its transpose inverts it), clamped
+        local dx, dy, dz = x - m[4][1], y - m[4][2], z - m[4][3]
+        local lx = math.max(x0, math.min(x1, dx * m[1][1] + dy * m[1][2] + dz * m[1][3]))
+        local ly = math.max(y0, math.min(y1, dx * m[2][1] + dy * m[2][2] + dz * m[2][3]))
+        local lz = math.max(z0, math.min(z1, dx * m[3][1] + dy * m[3][2] + dz * m[3][3]))
+        local wx = m[4][1] + lx * m[1][1] + ly * m[2][1] + lz * m[3][1]
+        local wy = m[4][2] + lx * m[1][2] + ly * m[2][2] + lz * m[3][2]
+        local wz = m[4][3] + lx * m[1][3] + ly * m[2][3] + lz * m[3][3]
+        local near = getDistanceBetweenPoints3D(x, y, z, wx, wy, wz)
+        if near >= centre then
+            return e.x, e.y, e.z, centre
+        end
+        return wx, wy, wz, near
+    end
+
     -- The higher target helps with uneven ground. A surface within SINK_ALLOW of the origin is ground the item is
     -- clipped into, so the raised aim may cross it. A hit further above, or any built defence, stays a floor or roof.
     local function reachable(id, e, fresh)
@@ -428,15 +457,17 @@ return function(ctx)
         -- PANEL_SUNK_Z above or below the aim, so no floor or ceiling); another built defence still blocks, and
         -- loose-item pickup never gets this allowance. The server still checks the tool, inside face, distance
         -- and hold before removing a defence.
+        -- The aims: over its origin, low and higher, then the point of the panel nearest the chest, for a wide
+        -- sheet whose middle is off to the side.
         if not ok and e.defence and tool == "Crowbar" then
-            for _, height in ipairs({ 0.15, 0.6 }) do
-                local tz = e.z + height
-                local blocked, hz, el, hx, hy = rayCast(sx, sy, sz, e.x, e.y, tz, own)
+            local nx, ny, nz = nearestPanelPoint(e, sx, sy, sz)
+            for _, aim in ipairs({ { e.x, e.y, e.z + 0.15 }, { e.x, e.y, e.z + 0.6 }, { nx, ny, nz } }) do
+                local blocked, hz, el, hx, hy = rayCast(sx, sy, sz, aim[1], aim[2], aim[3], own)
                 local sunk = blocked
                     and hx ~= nil
                     and not (el and defenceElements[el])
-                    and (hx - e.x) ^ 2 + (hy - e.y) ^ 2 <= PANEL_SUNK * PANEL_SUNK
-                    and math.abs(hz - tz) <= PANEL_SUNK_Z
+                    and (hx - aim[1]) ^ 2 + (hy - aim[2]) ^ 2 <= PANEL_SUNK * PANEL_SUNK
+                    and math.abs(hz - aim[3]) <= PANEL_SUNK_Z
                 if not blocked or sunk then
                     ok = true
                     break
@@ -1490,6 +1521,7 @@ return function(ctx)
     -- nearest. The hud outlines and names it and sends its id with the press, so the server works on that one.
     -- Checked at most every CROWBAR_TARGET_MS: id, object, uname, or false.
     local CROWBAR_AIM_COS = 0.94
+    local CROWBAR_PANEL_REACH = 2.0 -- chest to the nearest point of a built defence (nearestPanelPoint)
     local CROWBAR_TARGET_MS = 100
     local deconstructSet = nil
     local crowbarPick = { at = -math.huge }
@@ -1526,8 +1558,9 @@ return function(ctx)
                 local dx, dy = e.x - px, e.y - py
                 local flat = dx * dx + dy * dy
                 local built = e.defence and builtDefence(r)
-                if built and flat <= 4.0 and reachable(id, e) then
-                    cands[#cands + 1] = { id = id, e = e, dist = flat }
+                local near = built and select(4, nearestPanelPoint(e, px, py, pz + 0.5))
+                if built and near <= CROWBAR_PANEL_REACH and reachable(id, e) then
+                    cands[#cands + 1] = { id = id, e = e, dist = near * near }
                 elseif not built and flat <= 6.0 and deconstructable(e.uname) and inReach(id, e) then
                     cands[#cands + 1] = { id = id, e = e, dist = flat }
                 end
@@ -1614,8 +1647,12 @@ return function(ctx)
         local tool = ctx.heldUname and ctx.heldUname()
         for id, e in pairs(objects) do
             local dist = pickupDistanceSquared(e, px, py, pz, dim, int)
+            local aimedDefence = id == targetId and tool == "Crowbar" and e.defence
+            if dist and aimedDefence then -- the Crowbar's target is as far as its nearest point
+                local _, _, _, near = nearestPanelPoint(e, px, py, pz + 0.5)
+                dist = math.min(dist, near * near)
+            end
             if dist and dist <= reach * reach then
-                local aimedDefence = id == targetId and tool == "Crowbar" and e.defence
                 if (aimedDefence or faced(e)) and reachable(id, e, true) and not stuck(id, e, true) then
                     candidates[#candidates + 1] = { id = id, dist = (id == targetId) and -1 or dist }
                 else

@@ -15,7 +15,8 @@ local function loadModule(path)
 end
 
 local defences = loadModule("shared/logic/defences.lua")
-local touchesDefence = loadModule("server/defence_collision.lua")(loadModule("server/defence_collision_models.lua"))
+local collisionModels = loadModule("server/defence_collision_models.lua")
+local touchesDefence = loadModule("server/defence_collision.lua")(collisionModels)
 local plotPoleColshapes = {} -- itemId -> colshape
 local activeBreaks = {} -- player -> timer
 local movingDefences = {} -- itemId -> timer
@@ -187,7 +188,32 @@ local function isPlayerNearDefence(player, row, maxDist)
     return true
 end
 
-local function holdDefenceAction(player, row, tool, label, ms, finish)
+-- How far a player's chest (px, py, pz + 0.5) is from a built defence: to the nearest point of its model's bounds
+-- (a Rusty Corrugated Metal sheet is 3.8 m wide, its middle may be 3 m from a player standing against its end),
+-- never more than the distance from the player to its origin. The object's rotation is ZXY, as in
+-- defence_collision.lua; a lying defence's ground tilt is left out.
+local function defenceDistance(row, t, st, px, py, pz)
+    local centre = getDistanceBetweenPoints3D(px, py, pz, row.x, row.y, row.z)
+    local shape = t and collisionModels[t.model]
+    if not shape or not st then
+        return centre
+    end
+    local ax, ay, az = math.rad(st.rx or 0), math.rad(st.ry or 0), math.rad(row.rz or 0)
+    local sx, cx, sy, cy, sz, cz = math.sin(ax), math.cos(ax), math.sin(ay), math.cos(ay), math.sin(az), math.cos(az)
+    local dx, dy, dz = px - row.x, py - row.y, pz + 0.5 - row.z
+    local x1, y1 = dx * cz + dy * sz, -dx * sz + dy * cz
+    local y2, z2 = y1 * cx + dz * sx, -y1 * sx + dz * cx
+    local mx, my, mz = x1 * cy - z2 * sy, y2, x1 * sy + z2 * cy
+    local b = shape.bounds
+    local ex = math.max(b[1] - mx, mx - b[4], 0)
+    local ey = math.max(b[2] - my, my - b[5], 0)
+    local ez = math.max(b[3] - mz, mz - b[6], 0)
+    return math.min(centre, math.sqrt(ex * ex + ey * ey + ez * ez))
+end
+
+-- distance(player): how far the player is from the defence when the hold ends (the Crowbar's defenceDistance);
+-- without it the distance to the row's origin
+local function holdDefenceAction(player, row, tool, label, ms, finish, distance)
     cancelBreak(player)
     triggerClientEvent(player, "vehicleHoldStarted", player, label, ms)
     triggerClientEvent(player, "itemHoldTargetsShown", player, { row.id }, ms) -- the defence stays outlined
@@ -202,7 +228,8 @@ local function holdDefenceAction(player, row, tool, label, ms, finish)
             return
         end
         local px, py, pz = getElementPosition(pl)
-        if getDistanceBetweenPoints3D(px, py, pz, x, y, z) > 3.5 then
+        local far = distance and distance(pl) or getDistanceBetweenPoints3D(px, py, pz, x, y, z)
+        if far > 3.5 then
             return
         end
         db.one(DEFENCE_ROW, { itemId }, function(cur, c)
@@ -556,7 +583,7 @@ net.handler("defenceRemovalSpotChosen", function(player, id, x, y)
         or heldUname(player) ~= "Crowbar"
         or getElementInterior(player) ~= (row.interior or 0)
         or getElementDimension(player) ~= (row.dimension or 0)
-        or getDistanceBetweenPoints3D(px, py, pz, row.x, row.y, row.z) > 3
+        or pending.distance(player) > 3
     then
         return
     end
@@ -588,8 +615,12 @@ function removeDefence(player, itemId)
         if not (t and t.defence and st) then
             return
         end
-        local px, py, pz = getElementPosition(c.player)
-        if getDistanceBetweenPoints3D(px, py, pz, row.x, row.y, row.z) > 3.0 then
+        local px, py = getElementPosition(c.player)
+        local function distance(pl)
+            local x, y, z = getElementPosition(pl)
+            return defenceDistance(row, t, st, x, y, z)
+        end
+        if distance(c.player) > 3.0 then
             return
         end
         if not defences.isBehind(t.defence, row.rz, row.x, row.y, px, py, st.pose) then
@@ -608,7 +639,7 @@ function removeDefence(player, itemId)
                 movingDefences[cur.id] = nil
             end
             clearRemovalSpot(pl)
-            local pending = { id = cur.id, row = cur }
+            local pending = { id = cur.id, row = cur, distance = distance }
             removalSpots[pl] = pending
             pending.timer = setTimer(function()
                 if removalSpots[pl] == pending then
@@ -657,7 +688,7 @@ function removeDefence(player, itemId)
                 )
             end
             triggerClientEvent(pl, "itemDropSpotRequested", pl, cur.id)
-        end)
+        end, distance)
     end, { player = player })
 end
 
