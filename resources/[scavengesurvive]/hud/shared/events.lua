@@ -1,6 +1,7 @@
 -- client to server (handlers registered with net.handler)
 addEvent("hudStateRequested", true)
 addEvent("characterSkillsRequested", true) -- handled by character: the skill rows, sent again at hud start
+addEvent("hudClientErrorReported", true) -- TEMP 2026-11-27
 addEvent("itemPickupRequested", true)
 addEvent("itemBagOpenRequested", true)
 addEvent("itemLongPickupRequested", true)

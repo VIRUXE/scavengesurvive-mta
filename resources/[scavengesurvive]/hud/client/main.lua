@@ -1,3 +1,20 @@
+-- TEMP (2026-11-27, HUD dead at join for some players): relay this client's script errors to the server log
+do
+    local sent = 0
+    addEventHandler("onClientDebugMessage", root, function(message, level, file, line)
+        if level ~= 1 or sent >= 15 then
+            return
+        end
+        sent = sent + 1
+        triggerServerEvent(
+            "hudClientErrorReported",
+            localPlayer,
+            tostring(message),
+            tostring(file or ""),
+            tonumber(line) or 0
+        )
+    end)
+end
 -- The HUD as the SA-MP footage shows it (docs/ui-reference-samp.md): the stock GTA components upstream kept,
 -- the hunger and thirst bars, ammo under the weapon icon, the key-actions column, the watch, the vehicle panel and
 -- driver's dashboard and the low-health brightness overlay. The canvas and text primitives come from the ui
