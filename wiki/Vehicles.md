@@ -39,7 +39,7 @@ An [EMP](Explosives) switches engines off within 12 m. Its new battery effect al
 
 ## Types and spawning
 
-Every vehicle belongs to a **group** (Civilian, Industrial, Medical, Military, Police or Unique), a **type** (car, truck, motorbike, pushbike, helicopter, plane or boat) and a size (small, medium or large). Spawn points are tied to a group and to the types and sizes allowed there. Each type has its own **spawn chance**: the percentage that a given vehicle is allowed when a spawn point picks it. Rare types such as the Rhino are almost never seen.
+Every vehicle belongs to a **group** (Civilian, Industrial, Medical, Military, Police or Unique), a **type** (car, truck, motorbike, pushbike, helicopter, plane or boat) and a size (small, medium or large). Spawn points are tied to a group and to the types and sizes allowed there. Each type has its own **spawn chance**: the percentage that a given vehicle is allowed when a spawn point picks it. Rare types such as the Rhino are almost never seen. The showroom floors of the Doherty car dealership in San Fierro only ever hold ordinary civilian cars.
 
 - Each spawn point has a chance to hold a vehicle (12 % by default, three times the original 4 %).
 - Nearly every vehicle is found damaged (health mostly 300 to 500 out of 1000), with panels, doors, lights and tyres broken at random.
