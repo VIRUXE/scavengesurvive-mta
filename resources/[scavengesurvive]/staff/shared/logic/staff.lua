@@ -505,8 +505,8 @@ function staff.bugRows(bugs)
     local rows = {}
     for _, b in ipairs(bugs) do
         local reason = tostring(b.reason or "")
-        local label = tostring(b.name or "") .. ": " .. reason:sub(1, 31)
-        if #reason >= 31 then
+        local label = tostring(b.name or "") .. ": " .. utf8.sub(reason, 1, 31)
+        if utf8.len(reason) >= 31 then
             label = label .. "[...]"
         end
         rows[#rows + 1] = { id = b.id, label = label }

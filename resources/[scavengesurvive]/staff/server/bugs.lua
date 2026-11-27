@@ -8,7 +8,8 @@ return function(ctx)
 
     local function file(p, reason)
         local sql = "INSERT INTO bug_reports (name, account_id, reason) VALUES (?, ?, ?)"
-        local params = { ctx.name(p), ctx.accountId(p), reason:sub(1, logic.BUG_REASON_MAX), n = 3 }
+        -- cut in characters, not bytes: half a Cyrillic letter is invalid UTF-8 and the INSERT fails
+        local params = { ctx.name(p), ctx.accountId(p), utf8.sub(reason, 1, logic.BUG_REASON_MAX), n = 3 }
         db.exec(sql, params, function(ok, r, _, insertId)
             log.event("staff.bugReported", {
                 player = r,
