@@ -37,7 +37,7 @@ drops.OPEN_RADIUS = 3.0 -- the button's range in the SIF button library
 drops.TITLES = { supply = "Supply Crate", cache = "Weapon Cache", lockup = "Lockup Stash" }
 drops.UNKNOWN_TYPE = "Unknown"
 drops.UNKNOWN_LOCATION = "an unknown location"
-drops.SIGNAL_TEXT = "[EBS]: WEAPONS CACHE SIGNAL: BEARING: %.1fDEG DISTANCE: %.1fM"
+drops.SIGNAL_TEXT = "[EBS]: WEAPONS CACHE SIGNAL: BEARING: %.1fDEG DISTANCE: %.1fM FROM: %s"
 drops.SUPPLY_TEXT = '[EBS]: SUPPLY DROP: #33CCFF"%s"#FFFF00 INCOMING AT: #FFAA00"%s"'
 -- lang:end
 drops.CACHE_TABLE = "airdrop_military_weapons"
@@ -173,9 +173,11 @@ end
 
 -- The announcements as chat lines. format(template, ...) is string.format by default; the server passes a
 -- translating one (lib lang.formatFor) and the names already in the reader's language.
-function drops.signalText(ref, cacheX, cacheY, format)
+-- origin: the name of the place the reference is in. Upstream never said where the bearing was taken from
+-- (weapons-cache.pwn:194), which left the signal unusable.
+function drops.signalText(ref, cacheX, cacheY, origin, format)
     local bearing, dist = drops.bearing(ref.x, ref.y, cacheX, cacheY)
-    return " >  " .. (format or string.format)(drops.SIGNAL_TEXT, bearing, dist)
+    return " >  " .. (format or string.format)(drops.SIGNAL_TEXT, bearing, dist, origin)
 end
 
 function drops.supplyText(name, location, format)

@@ -15,9 +15,9 @@ The crate appears on the ground at once. Nothing falls from the sky, there is no
 
 The server sends three lines to everyone, 200 seconds apart:
 
-> [EBS]: WEAPONS CACHE SIGNAL: BEARING: 142.0DEG DISTANCE: 612.3M
+> [EBS]: WEAPONS CACHE SIGNAL: BEARING: 142.0DEG DISTANCE: 612.3M FROM: DOHERTY
 
-The bearing is in degrees clockwise from north, the distance in metres, both measured from a **reference point** that is not the cache and is not named: one of the other cache positions, picked at random within a kilometre of the cache. Each of the three signals uses its own reference point. A single signal therefore tells you little; three bearings from three unnamed points narrow it down to the streets of San Fierro where the cache positions cluster, and the map of them at the bottom of [Supply Drops](Supply-Drops) shows where those are. Your [watch](Watch) gives your own bearing.
+The bearing is in degrees clockwise from north, the distance in metres, both measured from a **reference point** that is not the cache: one of the other cache positions, picked at random within a kilometre of the cache. The line ends with the area that point is in, the same name the game shows at the bottom of the screen when you walk into it. Each of the three signals uses its own reference point. An area is several streets wide, so a single signal gives a rough direction; three bearings from three named areas cross near the cache, and the map of cache positions at the bottom of [Supply Drops](Supply-Drops) shows which spots are candidates. Your [watch](Watch) gives your own bearing.
 
 ## What it holds
 

@@ -40,7 +40,7 @@ files["resources/**/maps/server/**"] = { std = "lua51+mta_shared+mta_server", gl
 files["resources/**/maps/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "getMapStats" }, read_globals = { "restoreWorldModel", "engineSetModelLODDistance", "engineResetModelLODDistance" } }
 files["resources/**/maps/data/**"] = { std = "lua51", max_line_length = false }
 -- moveObject, createBlipAttachedTo, removeElementData (server) and createEffect, moveObject (client) postdate the generated lists
-files["resources/**/loot/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "rollNear", "pickItem", "dropSupply", "dropWeaponCache", "supplyDropTypes", "dropStatus", "lootAllowances", "refillNow", "rollWorldNow", "stockContainer", "stockVehicleContainer", "restPose", "restData" }, read_globals = { "moveObject", "createBlipAttachedTo", "removeElementData", "getResourceExportedFunctions" } }
+files["resources/**/loot/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "rollNear", "pickItem", "dropSupply", "dropWeaponCache", "supplyDropTypes", "dropStatus", "lootAllowances", "refillNow", "rollWorldNow", "stockContainer", "stockVehicleContainer", "restPose", "restData" }, read_globals = { "moveObject", "createBlipAttachedTo", "removeElementData", "getResourceExportedFunctions", "getZoneName" } }
 files["resources/**/*_models/server/**"] = { std = "lua51+mta_shared+mta_server", globals = { "modelDff" } }
 files["resources/**/loot/client/**"] = { std = "lua51+mta_shared+mta_client", globals = { "interactionActions", "nearbyCrate", "tryOpenCrate" }, read_globals = { "createEffect", "moveObject" } }
 -- isPedDucked and getVehicleController postdate the generated .luacheck/mta_server.lua list

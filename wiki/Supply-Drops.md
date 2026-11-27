@@ -51,9 +51,9 @@ A weapons cache is a crate of military gear that appears at once on the ground, 
 - A new cache is made every 25 to 35 minutes while no other cache is active and at least 4 players are online. It never appears within 500 m of a player.
 - The server sends three chat signals, 200 seconds apart:
 
-  > [EBS]: WEAPONS CACHE SIGNAL: BEARING: 142.0DEG DISTANCE: 612.3M
+  > [EBS]: WEAPONS CACHE SIGNAL: BEARING: 142.0DEG DISTANCE: 612.3M FROM: DOHERTY
 
-  The bearing is in degrees clockwise from north, the distance in metres, measured from a reference point that is not named. Use more than one signal to work out where it is.
+  The bearing is in degrees clockwise from north, the distance in metres, measured from a reference point in the area the line names. Use more than one signal to work out where it is, see [Weapons Caches](Weapons-Caches).
 - The crate carries a floating *Weapon Cache* label, holds 22 to 32 items from the Military Weapons table and opens like a supply crate (`F`, 32 slots).
 - Like the supply crate, a cache stays until the next cache replaces it, and the same spot is not used twice within 24 hours.
 

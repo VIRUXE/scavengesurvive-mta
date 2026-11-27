@@ -188,6 +188,9 @@ return function(ctx)
                 if not c.objects or #c.objects == 0 then
                     c.objects = createObjects(kind, x, y, z)
                 end
+                -- rebuildCrates may have put the old crate back while the two inserts ran (loot and world starting
+                -- together): it goes now, or its row and items stay behind for good
+                removeCrate(kind)
                 crates[kind] = c
                 tagObjects(c)
                 fillContainer(c, entries(), tableName, label)
@@ -197,14 +200,21 @@ return function(ctx)
 
     local function rebuildCrates()
         db.query("SELECT id, kind, container_id, x, y, z FROM world_crates ORDER BY id", {}, function(rows)
+            -- one crate per kind, the newest: an older row of the same kind is a leftover (a crate made while this
+            -- query was out) and is deleted with its container and items
             for _, r in ipairs(rows or {}) do
-                local c = { id = r.id, kind = r.kind, containerId = r.container_id, x = r.x, y = r.y, z = r.z }
-                if crates[r.kind] then
-                    destroyObjects(crates[r.kind].objects)
+                local current = crates[r.kind]
+                if current and current.id >= r.id then
+                    if current.id ~= r.id then
+                        db.exec("DELETE FROM containers WHERE id = ?", { r.container_id })
+                    end
+                else
+                    removeCrate(r.kind)
+                    local c = { id = r.id, kind = r.kind, containerId = r.container_id, x = r.x, y = r.y, z = r.z }
+                    c.objects = createObjects(r.kind, r.x, r.y, r.z)
+                    crates[r.kind] = c
+                    tagObjects(c)
                 end
-                c.objects = createObjects(r.kind, r.x, r.y, r.z)
-                crates[r.kind] = c
-                tagObjects(c)
             end
             if rows and #rows > 0 then
                 util.log("loot", "info", "%d crate(s) rebuilt from world_crates", #rows)
@@ -349,8 +359,12 @@ return function(ctx)
             return rng()
         end)
         if ref then
-            say(function(_, format)
-                return drops.signalText(ref, x, y, format)
+            -- GTA's own area name at the reference (what the HUD shows a player standing there), in capitals like
+            -- the rest of the line
+            local area = getZoneName(ref.x, ref.y, ref.z)
+            local origin = area and area ~= "Unknown" and area:upper() or false
+            say(function(_, format, tr)
+                return drops.signalText(ref, x, y, origin or tr(drops.UNKNOWN_LOCATION):upper(), format)
             end)
         else
             util.log("loot", "warn", "weapons cache: no reference point within %d m", drops.CACHE_REFERENCE_RADIUS)

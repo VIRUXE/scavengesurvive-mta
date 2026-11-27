@@ -7,7 +7,7 @@ Os lançamentos de provisões e os esconderijos de armas são pontos quentes de 
 ## Lançamentos de provisões {#supply-drops}
 Um caixote cai do céu num ponto predefinido do mapa. O chat anuncia-o quando começa a cair, dizendo o nome do sítio onde vai aterrar; em metade das vezes o tipo do lançamento fica escondido e aparece como *Unknown*:
 
-> [EBS]: LANÇAMENTO DE PROVISÕES: "Armas militares" CHEGADA A: "<nome do local>"
+> [RÁDIO DE EMERGÊNCIA]: LANÇAMENTO DE PROVISÕES: "Armas militares" CHEGADA A: "<nome do local>"
 
 O caixote deixa um rasto de fumo ao cair; o lançamento demora entre dois minutos e meio e cinco, menos onde o ponto de aterragem é alto. Quem estiver onde ele aterra é empurrado para longe, e o sítio continua a fumegar durante 3 minutos. Depois de cair, o caixote leva uma etiqueta flutuante *Supply Crate* e fica onde aterrou até o lançamento seguinte o substituir (conteúdo incluído); sobrevive a um reinício do servidor.
 
@@ -47,9 +47,9 @@ Um esconderijo de armas é um caixote de equipamento militar que aparece de repe
 - Um esconderijo novo é criado a cada 25 a 35 minutos enquanto nenhum outro esconderijo estiver ativo e houver pelo menos 4 jogadores online. Nunca aparece a menos de 500 m de um jogador.
 - O servidor envia três sinais no chat, com 200 segundos de intervalo:
 
-  > [EBS]: SINAL DE ESCONDERIJO DE ARMAS: RUMO: 142.0DEG DISTÂNCIA: 612.3M
+  > [RÁDIO DE EMERGÊNCIA]: SINAL DE ESCONDERIJO DE ARMAS: RUMO: 142.0DEG DISTÂNCIA: 612.3M A PARTIR DE: DOHERTY
 
-  O rumo é em graus no sentido dos ponteiros do relógio a partir do norte, a distância em metros, medidos a partir de um ponto de referência que não é nomeado. Usa mais do que um sinal para descobrir onde fica.
+  O rumo é em graus no sentido dos ponteiros do relógio a partir do norte, a distância em metros, medidos a partir de um ponto de referência na zona que a linha indica. Usa mais do que um sinal para descobrir onde fica, vê [Esconderijos de armas](Weapons-Caches).
 - O caixote leva uma etiqueta flutuante *Esconderijo de armas*, tem de 22 a 32 itens da tabela de Armas militares e abre como um caixote de provisões (`F`, 32 espaços).
 - Tal como o caixote de provisões, um esconderijo fica até o esconderijo seguinte o substituir, e o mesmo sítio não é usado duas vezes em 24 horas.
 
