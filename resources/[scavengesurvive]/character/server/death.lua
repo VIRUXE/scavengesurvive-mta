@@ -34,7 +34,7 @@ return function(ctx)
     local pending = {} -- player -> { id, spots, z, cb, timer }
     local nextId = 0
 
-    local function answer(player, hits)
+    local function answer(player, hits, moved)
         local q = pending[player]
         if not q then
             return
@@ -43,13 +43,22 @@ return function(ctx)
         if isTimer(q.timer) then
             killTimer(q.timer)
         end
-        q.cb(drop.settle(q.spots, hits, q.z))
+        q.cb(drop.settle(drop.applyMoved(q.spots, moved, q.x, q.y), hits, q.z))
+    end
+
+    -- as items' hand drop (server/hands.lua reachable): from the chest to the spot's floor, low or a little higher
+    local function walled(x, y, z)
+        local sz, gz = z + 0.5, z - BODY_DROP
+        return function(px, py)
+            return geom.clear(x, y, sz, px, py, gz + 0.15) == false and geom.clear(x, y, sz, px, py, gz + 0.6) == false
+        end
     end
 
     local function groundSpots(player, x, y, z, int, dim, measure, cb)
         answer(player, nil)
         local spots = drop.spots(x, y)
         if int == 0 and dim == 0 and geom.ready() then
+            drop.pullIn(spots, x, y, walled(x, y, z))
             local hits = {}
             for i, s in ipairs(spots) do
                 local hz, nx, ny, nz = geom.below(s[1], s[2], z, PROBE_ABOVE, PROBE_ABOVE + PROBE_BELOW)
@@ -61,16 +70,17 @@ return function(ctx)
             return cb(drop.settle(spots, nil, z))
         end
         nextId = nextId + 1
-        local q = { id = nextId, spots = spots, z = z, cb = cb }
+        local q = { id = nextId, spots = spots, x = x, y = y, z = z, cb = cb }
         q.timer = setTimer(answer, GROUND_WAIT_MS, 1, player, nil)
         pending[player] = q
-        triggerClientEvent(player, "groundSurfaceRequested", player, q.id, spots, z)
+        triggerClientEvent(player, "groundSurfaceRequested", player, q.id, spots, x, y, z)
     end
 
-    net.handler("groundSurfaceReported", function(player, id, hits)
+    -- moved: the spots the client pulled in from walls (client/ground.lua), checked by drop.applyMoved
+    net.handler("groundSurfaceReported", function(player, id, hits, moved)
         local q = pending[player]
         if q and q.id == id and type(hits) == "table" then
-            answer(player, hits)
+            answer(player, hits, moved)
         end
     end)
 

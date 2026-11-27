@@ -27,7 +27,7 @@ Scavenge & Survive Reborn is a port of Southclaws' Scavenge & Survive for SA-MP 
 - The 221 maps (23,211 objects) are built on your client in about 1.3 seconds on join.
 - Bugs of the original are fixed: the unreachable sixth spawn skin, the bandage infecting the healer, the Heroin sky on the injector, unsaved skills, drug stacking, Air and Adrenaline applied twice.
 - The spawn skin is rolled from all 29 clothes types; hats and masks fit all 310 human skins ([Clothes & Hats](Clothes-and-Hats), [Masks](Masks)).
-- A death drops everything in a ring of 9 spots 1.5 m out, each facing a random way ([Death](Death)).
+- A death drops everything in a ring of 9 spots 1.5 m out, each facing a random way and never behind a wall ([Death](Death)).
 - A campfire takes only uncooked food and can cook again ([Campfire & BBQ](Campfire-and-BBQ)).
 - An antiseptic bandage is spent, and Medical XP given, only when the treatment worked ([Medical](Medical)).
 - Skills close 2 % of the gap per action, Repair shortens holds ([Skills](Skills)).

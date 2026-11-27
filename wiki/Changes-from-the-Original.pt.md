@@ -25,7 +25,7 @@ O Scavenge & Survive Reborn é uma adaptação do Scavenge & Survive do Southcla
 - Os 221 mapas (23 211 objetos) são construídos no teu cliente em cerca de 1,3 segundos ao entrares.
 - Corrigiram-se erros do original: a sexta skin de arranque inalcançável, a ligadura que infetava quem tratava, o céu de Heroína na seringa, as competências não guardadas, a acumulação de drogas, o Ar e a Adrenalina aplicados duas vezes.
 - A skin de arranque é sorteada entre os 29 tipos de roupa; chapéus e máscaras servem em todas as 310 skins humanas ([Roupa e chapéus](Clothes-and-Hats), [Máscaras](Masks)).
-- Uma morte larga tudo num anel de 9 posições a 1,5 m, cada item virado para um lado ao acaso ([Morte](Death)).
+- Uma morte larga tudo num anel de 9 posições a 1,5 m, cada item virado para um lado ao acaso e nunca atrás de uma parede ([Morte](Death)).
 - Uma fogueira só aceita comida crua e pode voltar a cozinhar ([Fogueira e grelhador](Campfire-and-BBQ)).
 - Uma ligadura antisséptica só é gasta, e só se dá XP de Medicina, quando o tratamento resultou ([Medicina](Medical)).
 - As competências fecham 2 % da diferença por ação, e a Reparação encurta as esperas ([Competências](Skills)).
