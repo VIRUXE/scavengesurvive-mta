@@ -33,12 +33,33 @@ addEventHandler("onClientResourceStart", resourceRoot, function()
     stats.ms = getTickCount() - started
     outputDebugString(("maps: %d stand-ins swapped in %d ms"):format(stats.standins, stats.ms), 3)
     triggerEvent("mapsBuilt", resourceRoot, stats)
+    triggerServerEvent("mapRemovalsRequested", localPlayer)
+end)
+
+-- the server's removeWorldModel rows (server/build.lua), made again here: the server's own left LODs standing
+local removed = {}
+addEvent("mapRemovalsSent", true)
+addEventHandler("mapRemovalsSent", resourceRoot, function(rows)
+    if type(rows) ~= "table" then
+        return
+    end
+    for _, r in ipairs(rows) do
+        -- { model, x, y, z, radius } -> model, radius, x, y, z
+        if removeWorldModel(r[1], r[5], r[2], r[3], r[4]) then
+            removed[#removed + 1] = r
+        end
+    end
+    stats.removals = #removed
 end)
 
 addEventHandler("onClientResourceStop", resourceRoot, function()
     for model in pairs(DRAW_DISTANCES) do
         engineResetModelLODDistance(model)
     end
+    for _, r in ipairs(removed) do
+        restoreWorldModel(r[1], r[5], r[2], r[3], r[4])
+    end
+    removed = {}
     setOcclusionsEnabled(true)
 end)
 

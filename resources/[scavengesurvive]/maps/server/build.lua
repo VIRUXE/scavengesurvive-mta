@@ -10,6 +10,7 @@
 local util = loadstring(exports.lib:getModule("util"), "=lib/util.lua")()
 local standins = loadstring(exports.lib:getModule("standins"), "=lib/standins.lua")()
 local sageom = loadstring(exports.lib:getModule("sageom"), "=lib/sageom.lua")()
+local net = loadstring(exports.lib:getModule("net"), "=lib/net.lua")()
 
 local function readLua(path)
     local f = fileOpen(path, true)
@@ -131,6 +132,13 @@ addEventHandler("onResourceStart", root, function(res)
     end
     util.log("maps", "info", "sageom started: %d buildings and %d removals handed over", n, #removed)
 end)
+
+-- The removals above reach each client, which takes the building out but can leave its LOD standing: the driving
+-- school sheds' LODs (11371, 11372) still stood at -2028,-111 and -2076,-108 once the server built the maps, gone as
+-- soon as the client made the same removeWorldModel calls itself. So each client makes them too (client/main.lua).
+net.handler("mapRemovalsRequested", function(player)
+    triggerClientEvent(player, "mapRemovalsSent", resourceRoot, removed)
+end, { rate = 2 })
 
 addEventHandler("onResourceStop", resourceRoot, function()
     for _, r in ipairs(removed) do
