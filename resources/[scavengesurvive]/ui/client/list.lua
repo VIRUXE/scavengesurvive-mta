@@ -100,7 +100,9 @@ return function(ctx)
         end
         if state.options then
             triggerEvent("uiListActionSelected", root, state.base.id, state.options.rowId, row.id)
-            state.options = nil
+            if state then -- the action's handler may have closed the list
+                state.options = nil
+            end
             return
         end
         if row.actions and #row.actions > 0 then
