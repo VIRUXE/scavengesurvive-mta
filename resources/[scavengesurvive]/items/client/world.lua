@@ -416,10 +416,7 @@ return function(ctx)
         local raised = false
         if not ok then
             local blocked, hz, el = rayCast(e.x, e.y, low, e.x, e.y, high, own)
-            local skin = blocked
-                and hz ~= nil
-                and hz <= e.z + SINK_ALLOW
-                and not (el and defenceElements[el])
+            local skin = blocked and hz ~= nil and hz <= e.z + SINK_ALLOW and not (el and defenceElements[el])
             raised = not blocked or skin
             ok = raised and rayClear(sx, sy, sz, e.x, e.y, high, own)
         end
@@ -439,10 +436,14 @@ return function(ctx)
                 end
             end
         end
-        -- Large loose items may have a visible edge even when their origin lies in masonry.
-        -- Sample inside their transformed bounds; every sample still needs an unobstructed ray.
+        -- Large loose items may have a visible edge even when their origin lies in masonry, and so may a mounted
+        -- panel turned off the wall's line (one end in the room, its centre deeper than the inset above): the
+        -- Crowbar reaches that end. Sample inside their transformed bounds; every sample still needs an
+        -- unobstructed ray.
         local t = itemType(e.uname)
-        if not ok and raised and not e.defence and own and t and (t.size or 0) >= 9 then
+        local looseLarge = raised and not e.defence and t and (t.size or 0) >= 9
+        local skewedPanel = e.defence and tool == "Crowbar"
+        if not ok and own and (looseLarge or skewedPanel) then
             local ax, ay, az, bx, by, bz = models.bounds(own)
             local m = getElementMatrix(own)
             if ax and m then
