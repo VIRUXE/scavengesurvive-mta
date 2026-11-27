@@ -1007,10 +1007,15 @@ end
 addEventHandler("onClientResourceStart", resourceRoot, function()
     setPlayerHudComponentVisible("all", false)
     triggerServerEvent("hudStateRequested", localPlayer) -- a restarted hud asks for the stats and the hand
-    local ok, rows = pcall(function()
-        return exports.character:skillRows() -- and takes the skills character already holds
-    end)
-    state.skills = ok and type(rows) == "table" and rows or {}
+    -- takes the skills character already holds; on a join character's client may not be up yet, so the server
+    -- sends the rows again (characterSkillsSynced) instead of a failing call
+    local character = getResourceFromName("character")
+    local rows = character and getResourceState(character) == "running" and exports.character:skillRows()
+    if type(rows) == "table" then
+        state.skills = rows
+    else
+        triggerServerEvent("characterSkillsRequested", localPlayer)
+    end
     refreshKeys()
     setTimer(refreshKeys, 1000, 0)
     setTimer(function()
