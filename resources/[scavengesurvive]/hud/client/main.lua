@@ -9,7 +9,23 @@ local function loadFile(path, chunkName)
     return assert(loadstring(src, chunkName))()
 end
 local canvas = loadFile(":ui/shared/logic/canvas.lua", "=ui/canvas.lua")
-local vlogic = loadFile(":vehicles/shared/logic/vehicle.lua", "=vehicles/logic.lua")
+-- vehicles' logic is read on first use, never at start: hud downloads in an earlier priority group than vehicles, so
+-- on a client that does not have that file cached yet it is not on disk when hud starts (2026-11-27: the failed
+-- read killed the whole HUD and its keys). nil until the file is there.
+local vlogicModule = false
+local function vehicleLogic()
+    if not vlogicModule then
+        local f = fileOpen(":vehicles/shared/logic/vehicle.lua", true)
+        if not f then
+            return nil
+        end
+        local src = fileRead(f, fileGetSize(f))
+        fileClose(f)
+        local chunk = src and loadstring(src, "=vehicles/logic.lua")
+        vlogicModule = chunk and chunk() or false
+    end
+    return vlogicModule or nil
+end
 local keyactions = loadFile("shared/logic/keyactions.lua", "=hud/keyactions.lua")
 local watch = loadFile("shared/logic/watch.lua", "=hud/watch.lua")
 local vehiclepanel = loadFile("shared/logic/vehiclepanel.lua", "=hud/vehiclepanel.lua")
@@ -734,8 +750,9 @@ local function combinationLockHint(held)
     if getPedOccupiedVehicle(localPlayer) or not keysCtx.getNearbyVehicle then
         return nil
     end
+    local vlogic = vehicleLogic()
     local vehicle, distance = keysCtx.getNearbyVehicle()
-    if not vehicle or distance > 5.5 then
+    if not vlogic or not vehicle or distance > 5.5 then
         return nil
     end
     local locked = tonumber(getElementData(vehicle, "vehicles.locked")) or 0
