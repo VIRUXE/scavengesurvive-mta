@@ -6,7 +6,7 @@ Tools you hold are used at a vehicle by standing next to it and pressing the int
 
 ![Spanner](images/items/19627_wrench1.png) ![Screwdriver](images/items/18644_screwdriver1.png) ![Hammer](images/items/18635_gtasahammer1.png) ![Ratchet](images/items/20236_ratchet.png)
 
-Stand at the front of the vehicle with the right tool in your hands and press `F`. The bonnet has to be open already (empty hands, a tap of `F`) and after 3 seconds (shorter with the Repair [skill](Skills)) the vehicle gains 150 health, up to a field-repair limit of 990 out of 1000. The tool you need depends on how damaged it is, and it changes as it heals, so you repair in stages:
+Stand at the front of the vehicle with the right tool in your hands and press `F`. The bonnet has to be open already (empty hands, a tap of `F`); a vehicle whose engine has no bonnet that opens (Hotknife, Bullet, Bus, Coach, Camper, Tug, Sweeper, the fire trucks...) is repaired straight away. After 3 seconds (shorter with the Repair [skill](Skills)) the vehicle gains 150 health, up to a field-repair limit of 990 out of 1000. The tool you need depends on how damaged it is, and it changes as it heals, so you repair in stages:
 
 | Vehicle health | Tool |
 |:--|:--|

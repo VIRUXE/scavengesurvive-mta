@@ -5,7 +5,7 @@ As ferramentas que seguras usam-se num veículo ficando ao lado dele e premindo 
 ## Reparar {#repairing}
 ![Chave de bocas](images/items/19627_wrench1.png) ![Chave de fendas](images/items/18644_screwdriver1.png) ![Martelo](images/items/18635_gtasahammer1.png) ![Catraca](images/items/20236_ratchet.png)
 
-Põe-te à frente do veículo com a ferramenta certa nas mãos e prime `F`. O capot tem de estar já aberto (mãos vazias, um toque em `F`) e, ao fim de 3 segundos (menos com a [competência](Skills) Reparação), o veículo ganha 150 de vida, até ao limite de reparação no terreno de 990 em 1000. A ferramenta de que precisas depende do estado dos danos e muda à medida que ele melhora, por isso a reparação faz-se por fases:
+Põe-te à frente do veículo com a ferramenta certa nas mãos e prime `F`. O capot tem de estar já aberto (mãos vazias, um toque em `F`); um veículo cujo motor não tem capot que abra (Hotknife, Bullet, Bus, Coach, Camper, Tug, Sweeper, os carros de bombeiros...) repara-se logo. Ao fim de 3 segundos (menos com a [competência](Skills) Reparação), o veículo ganha 150 de vida, até ao limite de reparação no terreno de 990 em 1000. A ferramenta de que precisas depende do estado dos danos e muda à medida que ele melhora, por isso a reparação faz-se por fases:
 
 | Vida do veículo | Ferramenta |
 |:--|:--|

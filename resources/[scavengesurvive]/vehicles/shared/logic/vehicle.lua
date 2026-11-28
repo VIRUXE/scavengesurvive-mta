@@ -45,11 +45,27 @@ M.COWLS = {
     [487] = { frames = { cowl_l = 1, cowl_r = -1 }, openDeg = 90, x = 0, y = -0.72, reach = 2.2 },
 }
 
--- Models with a serviceable engine bay and no bonnet component in the model survey.
+-- Models with a serviceable engine bay whose bonnet (door 0) never opens on a client: no bonnet component, so
+-- setVehicleDoorOpenRatio(v, 0, 1) reads back 0 once streamed in (client scan of every car model, 2026-11-28).
 local NO_BONNET = {
+    [406] = true, -- Dumper
     [407] = true, -- Firetruck
+    [431] = true, -- Bus
+    [432] = true, -- Rhino
+    [434] = true, -- Hotknife
+    [437] = true, -- Coach
+    [444] = true, -- Monster
+    [483] = true, -- Camper
+    [532] = true, -- Combine Harvester
+    [541] = true, -- Bullet
+    [544] = true, -- Firetruck LA
+    [556] = true, -- Monster A
     [573] = true, -- Duneride
+    [574] = true, -- Sweeper
     [578] = true, -- DFT-30, Steamroller, APC-30
+    [583] = true, -- Tug
+    [588] = true, -- Hotdog
+    [601] = true, -- S.W.A.T.
 }
 
 -- "bonnet", "cowl", or nil for an engine with nothing over it (vt.category: the vehicle type's)
