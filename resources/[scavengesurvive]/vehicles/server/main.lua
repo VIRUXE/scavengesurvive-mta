@@ -361,9 +361,9 @@ local function updateWheelFreeze(v)
     end
 end
 
--- Missing passenger doors leave the cabin unsecured (bonnet and boot are separate).
+-- Missing passenger doors leave the cabin unsecured (bonnet and boot are separate). Only the doors the model has count.
 local function hasMissingDoor(vehicle)
-    for door = 2, 5 do
+    for _, door in ipairs(vlogic.sideDoors(getElementModel(vehicle))) do
         if getVehicleDoorState(vehicle, door) == 4 then
             return true
         end

@@ -320,6 +320,129 @@ M.DOORLESS_MODELS = {
     [572] = true, -- Mower
 }
 
+-- Side doors (MTA 2 front left, 3 front right, 4 rear left, 5 rear right) of the models that lack some, read from
+-- gta3.img (the door_*_ok atomics in each dff, 2026-11-28). Every other model has all four, or none (DOORLESS_MODELS).
+-- A door the model lacks still carries a state (spawn damage rolls all four), so nothing reads it as a missing door.
+local SIDE_DOORS = {
+    [401] = { 2, 3 }, -- Bravura
+    [402] = { 2, 3 }, -- Buffalo
+    [403] = { 2, 3 }, -- Linerunner
+    [406] = { 2 }, -- Dumper
+    [407] = { 2, 3 }, -- Firetruck
+    [408] = { 2, 3 }, -- Trashmaster
+    [410] = { 2, 3 }, -- Manana
+    [411] = { 2, 3 }, -- Infernus
+    [412] = { 2, 3 }, -- Voodoo
+    [414] = { 2, 3 }, -- Mule
+    [415] = { 2, 3 }, -- Cheetah
+    [417] = { 2, 3 }, -- Leviathan
+    [419] = { 2, 3 }, -- Esperanto
+    [422] = { 2, 3 }, -- Bobcat
+    [423] = { 2, 3 }, -- Mr Whoopee
+    [425] = { 2 }, -- Hunter
+    [429] = { 2, 3 }, -- Banshee
+    [431] = { 2, 3 }, -- Bus
+    [432] = { 2 }, -- Rhino
+    [433] = { 2, 3 }, -- Barracks
+    [434] = { 2, 3 }, -- Hotknife
+    [436] = { 2, 3 }, -- Previon
+    [437] = { 2, 3 }, -- Coach
+    [439] = { 2, 3 }, -- Stallion
+    [442] = { 2, 3 }, -- Romero
+    [443] = { 2, 3 }, -- Packer
+    [444] = { 2, 3 }, -- Monster
+    [447] = { 2, 3 }, -- Seasparrow
+    [449] = { 2, 3 }, -- tram
+    [451] = { 2, 3 }, -- Turismo
+    [455] = { 2, 3 }, -- Flatbed
+    [456] = { 2, 3 }, -- Yankee
+    [469] = { 2, 3 }, -- Sparrow
+    [474] = { 2, 3 }, -- Hermes
+    [475] = { 2, 3 }, -- Sabre
+    [476] = { 2 }, -- Rustler
+    [477] = { 2, 3 }, -- ZR-350
+    [478] = { 2, 3 }, -- Walton
+    [480] = { 2, 3 }, -- Comet
+    [483] = { 2, 3, 4 }, -- Camper
+    [488] = { 2, 3 }, -- News Chopper
+    [489] = { 2, 3 }, -- Rancher
+    [491] = { 2, 3 }, -- Virgo
+    [494] = { 2, 3 }, -- Hotring Racer
+    [495] = { 2, 3 }, -- Sandking
+    [496] = { 2, 3 }, -- Blista Compact
+    [499] = { 2, 3 }, -- Benson
+    [500] = { 2, 3 }, -- Mesa
+    [502] = { 2, 3 }, -- Hotring Racer A
+    [503] = { 2, 3 }, -- Hotring Racer B
+    [505] = { 2, 3 }, -- Rancher Lure
+    [506] = { 2, 3 }, -- Super GT
+    [508] = { 2, 3, 5 }, -- Journey
+    [511] = { 2, 3 }, -- Beagle
+    [512] = { 2 }, -- Cropduster
+    [513] = { 2 }, -- Stuntplane
+    [514] = { 2, 3 }, -- Petrol
+    [515] = { 2, 3 }, -- Roadpain
+    [517] = { 2, 3 }, -- Majestic
+    [518] = { 2, 3 }, -- Buccaneer
+    [519] = { 2 }, -- Shamal
+    [520] = { 2 }, -- Hydra
+    [524] = { 2, 3 }, -- Cement Truck
+    [525] = { 2, 3 }, -- Tow Truck
+    [526] = { 2, 3 }, -- Fortune
+    [527] = { 2, 3 }, -- Cadrona
+    [528] = { 2, 3 }, -- FBI Truck
+    [532] = { 2 }, -- Combine
+    [533] = { 2, 3 }, -- Feltzer
+    [534] = { 2, 3 }, -- Remington
+    [535] = { 2, 3 }, -- Slamvan
+    [536] = { 2, 3 }, -- Blade
+    [537] = { 2, 3 }, -- freight
+    [538] = { 2, 3 }, -- streak
+    [541] = { 2, 3 }, -- Bullet
+    [542] = { 2, 3 }, -- Clover
+    [543] = { 2, 3 }, -- Sadler
+    [544] = { 2, 3 }, -- Firetruck LA
+    [545] = { 2, 3 }, -- Hustler
+    [549] = { 2, 3 }, -- Tampa
+    [552] = { 2, 3 }, -- Utility
+    [553] = { 2 }, -- Nevada
+    [554] = { 2, 3 }, -- Yosemite
+    [555] = { 2, 3 }, -- Windsor
+    [556] = { 2, 3 }, -- Monster A
+    [557] = { 2, 3 }, -- Monster B
+    [558] = { 2, 3 }, -- Uranus
+    [559] = { 2, 3 }, -- Jester
+    [562] = { 2, 3 }, -- Elegy
+    [563] = { 2, 3 }, -- Raindance
+    [565] = { 2, 3 }, -- Flash
+    [570] = { 2, 3 }, -- streakc
+    [573] = { 2, 3 }, -- Duneride
+    [574] = { 2, 3 }, -- Sweeper
+    [575] = { 2, 3 }, -- Broadway
+    [576] = { 2, 3 }, -- Tornado
+    [577] = { 2, 3 }, -- AT-400
+    [578] = { 2, 3 }, -- DFT-30
+    [583] = { 2, 3 }, -- Tug
+    [587] = { 2, 3 }, -- Euros
+    [588] = { 2, 3 }, -- Hotdog
+    [589] = { 2, 3 }, -- Club
+    [590] = { 2, 3 }, -- freibox
+    [592] = { 2, 3 }, -- Andromada
+    [593] = { 2, 3 }, -- Dodo
+    [599] = { 2, 3 }, -- Ranger
+    [600] = { 2, 3 }, -- Picador
+    [601] = { 2, 3 }, -- S.W.A.T.
+    [602] = { 2, 3 }, -- Alpha
+    [603] = { 3 }, -- Phoenix
+    [605] = { 2, 3 }, -- Sadler Damaged
+}
+local ALL_SIDE_DOORS = { 2, 3, 4, 5 }
+
+-- the MTA door ids of the model's side doors
+function M.sideDoors(model)
+    return SIDE_DOORS[model] or ALL_SIDE_DOORS
+end
+
 -- a vehicle type flagged not lockable upstream, or a doorless model
 function M.isDoorless(model, notLockable)
     return notLockable == true or M.DOORLESS_MODELS[model] == true
