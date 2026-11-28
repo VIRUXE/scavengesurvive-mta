@@ -43,7 +43,9 @@ worldCtx.power = loadModule("client/power.lua")({ machines = machines, lang = la
 local world = loadModule("client/world.lua")(worldCtx)
 loadModule("client/vending.lua")({ world = world, vending = worldCtx.vending })
 local carry = loadModule("shared/logic/carry.lua")
-local attach = loadModule("client/attach.lua")({ models = models, apparel = apparel, carry = carry, goggles = goggles })
+local torch = loadModule("client/flashlight.lua")({ flashlight = loadModule("shared/logic/flashlight.lua") })
+local attachCtx = { models = models, apparel = apparel, carry = carry, goggles = goggles, torch = torch }
+local attach = loadModule("client/attach.lua")(attachCtx)
 -- Reach checks distinguish crowbar work on installed panels from loose-item pickup.
 worldCtx.heldUname = function()
     local _, uname = attach.heldObject(localPlayer)
@@ -68,7 +70,7 @@ local function wornMask(player)
 end
 
 loadModule("client/breath.lua")({ masks = masks, worn = wornMask })
-loadModule("client/goggles.lua")({ goggles = goggles, lang = lang })
+loadModule("client/goggles.lua")({ goggles = goggles, lang = lang, torch = torch })
 
 -- Exported (character): what the legs still do with the mask on, { sprint, jump, maxMs, cooldownMs }, or false.
 function maskLegs()

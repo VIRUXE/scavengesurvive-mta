@@ -28,6 +28,7 @@ addEvent("itemUnloadRequested", true)
 addEvent("itemWearRequested", true)
 addEvent("itemUnwearRequested", true)
 addEvent("gogglesToggleRequested", true)
+addEvent("flashlightToggleRequested", true) -- the goggles key with a Flashlight in the hand
 addEvent("containerPickupRequested", true)
 addEvent("itemContainerMoveRequested", true)
 addEvent("combineRequested", true)

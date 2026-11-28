@@ -3,10 +3,14 @@
 // around it. Cap is 1 by day (no change) and falls to NightCap as the game's own day/night balance rises
 // (client/blackout.lua). The hue is kept, only the brightness is limited.
 //
-// Lights a player brings (a Flood Light, items/client/floodlight.lua) add on top of that: up to four spot lights,
-// each LightNPos (xyz, w = radius), LightNDir (xyz, the aim) and LightNCol (rgb), fading with distance and across
-// the cone (Cone: the cosines where it is full and where it is gone), with a glow round the lamp itself that lights
-// the room behind it too. GTA's vertex processing is left as it is: the world position comes from texture stage 1's
+// Lights a player brings (a Flood Light, items/client/floodlight.lua; a Flashlight, items/client/flashlight.lua) add
+// on top of that: up to four spot lights, fading with distance and across the cone, with a glow round the lamp
+// itself that lights the room behind it too. Each is LightNPos (xyz, w = 1 / radius), LightNDir (xyz = the aim
+// divided by the cone's width, the difference of the cosines of the half angles where it is full and where it is
+// gone; w = the glow's share) and LightNCol (rgb; w = the cosine where it is gone, divided by that width too).
+// client/blackout.lua does those divisions: anything the shader worked out from a uniform took a constant register
+// of its own, and ps_2_a has 32 (four per-light cones worked out here asked for 34 and the shader did not compile).
+// GTA's vertex processing is left as it is: the world position comes from texture stage 1's
 // generated camera-space position turned back by the inverse view matrix, so the pixel shader gets it as TEXCOORD1.
 // There are no shadows: the light passes through walls, which the short radius keeps to the next room. A card that
 // cannot run ps_2_a gets the plain blackout and no lights.
@@ -27,18 +31,17 @@ float4x4 gViewInverse : VIEWINVERSE;
 float Cap = 1;
 float Gain = 1;
 float2 Vision = float2(0, 0);
-float2 Cone = float2(0.6, 0.2);
 float4 Light0Pos = float4(0, 0, 0, 0);
-float4 Light0Dir = float4(0, 0, -1, 0);
+float4 Light0Dir = float4(0, 0, 0, 0);
 float4 Light0Col = float4(0, 0, 0, 0);
 float4 Light1Pos = float4(0, 0, 0, 0);
-float4 Light1Dir = float4(0, 0, -1, 0);
+float4 Light1Dir = float4(0, 0, 0, 0);
 float4 Light1Col = float4(0, 0, 0, 0);
 float4 Light2Pos = float4(0, 0, 0, 0);
-float4 Light2Dir = float4(0, 0, -1, 0);
+float4 Light2Dir = float4(0, 0, 0, 0);
 float4 Light2Col = float4(0, 0, 0, 0);
 float4 Light3Pos = float4(0, 0, 0, 0);
-float4 Light3Dir = float4(0, 0, -1, 0);
+float4 Light3Dir = float4(0, 0, 0, 0);
 float4 Light3Col = float4(0, 0, 0, 0);
 float4 Room0Min = float4(0, 0, -10000, 0);
 float4 Room0Max = float4(0, 0, -10000, 0);
@@ -48,7 +51,6 @@ float4 Room1Max = float4(0, 0, -10000, 0);
 float4 Room1Col = float4(0, 0, 0, 0);
 
 static const float GLOW = 4.0; // metres round the lamp lit whichever way they lie
-static const float GLOW_SHARE = 0.35;
 static const float MAX_LIGHT = 1.6;
 static const float ROOM_FADE = 4.0;
 static const float NIGHT_SEEN = 0.45; // the darkest a surface shows through night vision
@@ -105,10 +107,10 @@ float3 spot(float4 pos, float4 dir, float4 col, float3 wp)
 {
     float3 d = pos.xyz - wp;
     float dist = max(length(d), 0.001);
-    float fall = saturate(1 - dist / max(pos.w, 0.001));
-    float cone = saturate((dot(-d / dist, dir.xyz) - Cone.y) / (Cone.x - Cone.y));
+    float fall = saturate(1 - dist * pos.w);
+    float cone = saturate(dot(-d / dist, dir.xyz) - col.w);
     float glow = saturate(1 - dist / GLOW);
-    return col.rgb * (fall * fall * cone + GLOW_SHARE * glow * glow);
+    return col.rgb * (fall * fall * cone + dir.w * glow * glow);
 }
 
 float4 psLit(float4 diffuse : COLOR0, float2 uv : TEXCOORD0, float3 wp : TEXCOORD1) : COLOR0

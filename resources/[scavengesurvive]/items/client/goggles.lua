@@ -8,8 +8,10 @@
 --     green through two tubes, thermal's heat palette on a coarse sensor, the picture dipping as the battery runs
 --     low;
 --   shows the battery left under the picture.
--- The goggles key (the "goggles" command, J unless rebound) asks the server to switch them on or off.
--- ctx = { goggles, lang }
+-- The goggles key (the "goggles" command, J unless rebound) asks the server to switch them on or off. With a
+-- Flashlight in the hand the key is shared and client/flashlight.lua answers it: a tap is the Flashlight's, a hold
+-- switches the goggles.
+-- ctx = { goggles, lang, torch }
 -- luacheck: read globals setCameraGoggleEffect dxCreateScreenSource dxUpdateScreenSource playSFX
 return function(ctx)
     local goggles, lang = ctx.goggles, ctx.lang
@@ -118,6 +120,9 @@ return function(ctx)
     end
 
     addCommandHandler("goggles", function()
+        if ctx.torch.takesKey() then
+            return
+        end
         if getElementData(localPlayer, "items.eyes") and not isPedDead(localPlayer) then
             triggerServerEvent("gogglesToggleRequested", localPlayer)
         end

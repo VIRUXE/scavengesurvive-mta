@@ -3,10 +3,13 @@
 -- armour: per-skin wearOffsets, see shared/logic/apparel.lua; goggles sit over the eyes while "items.vision" says
 -- they are switched on and pushed up on the forehead while it does not, shared/logic/goggles.lua).
 -- The server only publishes what is carried: element data "items.held" / "items.bag" = type uname or false.
--- ctx = { models, apparel, carry, goggles } from client/main.lua (client/models.lua and the shared/logic modules).
+-- A Flashlight switched on raises the holder's arm and shines from the held object (ctx.torch, client/flashlight.lua).
+-- ctx = { models, apparel, carry, goggles, torch } from client/main.lua (client/models.lua, client/flashlight.lua and
+-- the shared/logic modules).
 return function(ctx)
     local libModels = loadstring(exports.lib:getModule("models"), "=lib/models.lua")()
     local models, apparel, carry, goggles = ctx.models, ctx.apparel, ctx.carry, ctx.goggles
+    local torch = ctx.torch
     local SLOTS = {
         ["items.held"] = "held",
         ["items.bag"] = "bag",
@@ -282,6 +285,7 @@ return function(ctx)
         onDuty[player] = nil
         loaded[player] = nil
         vision[player] = nil
+        torch.forget(player)
         if tracked[player] then
             for _, slot in pairs(SLOTS) do
                 clearSlot(player, slot)
@@ -361,6 +365,7 @@ return function(ctx)
         for player, slots in pairs(tracked) do
             if isElement(player) and (player == localPlayer or isElementStreamedIn(player)) then
                 poseCarry(player, slots)
+                torch.pose(player, slots.held)
                 -- what a player carries is hidden with them (a close-up camera hides the local player)
                 local hidden = getElementAlpha(player) == 0
                 for _, a in pairs(slots) do
@@ -372,6 +377,7 @@ return function(ctx)
                         end
                     end
                 end
+                torch.shine(player, slots.held)
             end
         end
     end)

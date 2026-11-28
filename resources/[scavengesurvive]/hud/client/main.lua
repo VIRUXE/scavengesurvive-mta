@@ -851,6 +851,11 @@ local function drawKeyActions(driver)
         goggles = getElementData(localPlayer, "items.eyes")
                 and (getElementData(localPlayer, "items.vision") and "on" or "off")
             or false,
+        flashlight = held
+                and held.uname == "Flashlight"
+                and not getPedOccupiedVehicle(localPlayer)
+                and (getElementData(localPlayer, "items.torch") and "on" or "off")
+            or false,
         supports = SUPPORTS,
     }, state.keys)
     if (#choices > 1 or (#choices == 1 and not choices[1].item)) and #lines > 0 then

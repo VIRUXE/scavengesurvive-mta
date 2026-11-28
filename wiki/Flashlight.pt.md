@@ -3,7 +3,7 @@
 
 ![Lanterna](images/items/18641_flashlight1.png)
 
-*Prime \[F\] para a ligar ou desligar; a luz ainda não está implementada.*
+*Segura-a na mão e prime \[J\] para a ligar ou desligar: o braço sobe e ela lança um feixe estreito em frente que ilumina paredes, chão e quem lá estiver, e todos à volta o veem. Com óculos postos, toca em \[J\] para a lanterna e mantém para os óculos.*
 
 | Propriedade | Valor |
 |:--|:--|
@@ -18,9 +18,9 @@
 | Saque do mundo, polícia | 52 pontos de aparecimento: 15 em San Fierro, 11 em Las Venturas, 9 em Los Santos, 9 em Red County, 4 em Bone County, 3 em Flint County, 1 em Tierra Robada | 3,5 % |
 | Saque do mundo, industrial | 2 431 pontos de aparecimento: 791 em Los Santos, 406 em Las Venturas, 386 em San Fierro, 273 em Flint County, 270 em Red County, 233 em Bone County, 72 em Tierra Robada | 2,1 % |
 | Saque do mundo, civil | 7 674 pontos de aparecimento: 3 006 em Los Santos, 2 632 em San Fierro, 1 373 em Las Venturas, 285 em Red County, 164 em Bone County, 143 em Flint County, 71 em Tierra Robada (116 delas dentro de casas) | 0,1 % |
-| Malas de veículos, polícia | As malas de 5 tipos de veículo (Enforcer, FBI Truck, HPV1000, Police Car, Ranger) | 3,8 % |
-| Malas de veículos, industrial | As malas de 14 tipos de veículo (Articulated, Baggage, Bobcat, Boxville, Coastguard e mais 9) | 1,5 % |
-| Malas de veículos, civil | As malas de 31 tipos de veículo (BF Injection, Blista Compact, Bloodring Banger, Clover, Comet e mais 26) | 0,1 % |
+| Malas de veículos, polícia | As malas de 9 tipos de veículo (Enforcer, FBI Rancher, FBI Truck, HPV1000, Police Car e mais 4) | 3,8 % |
+| Malas de veículos, industrial | As malas de 38 tipos de veículo (Articulated, Articulated Trailer, Articulated Trailer 2, Baggage, Baggage Box A e mais 33) | 1,5 % |
+| Malas de veículos, civil | As malas de 132 tipos de veículo (AT-400, Admiral, Alpha, Andromada, BF Injection e mais 127) | 0,1 % |
 
 ## Fabrico
 
@@ -29,3 +29,7 @@ Nenhuma receita o faz ou usa.
 ## Sucata
 
 Vale 1 [Sucata](Scrap-Metal) numa Máquina de sucata, ver [Sucata](Scrap).
+
+## Ver também
+
+[Óculos](Goggles)

@@ -72,7 +72,7 @@ TOOLTIPS = {
     "IedProxMine": PROX_MINE,
     "EmpProxMine": PROX_MINE,
     "PetrolBomb": "Press [F] to arm it: an incendiary charge that goes up in a 5 m fireball after 5 seconds and damages no items",
-    "Flashlight": "Press [F] to switch it on or off; its light is not implemented yet",
+    "Flashlight": "Hold it in your hand and press [J] to switch it on or off: the arm comes up and it throws a narrow beam ahead that lights walls, ground and whoever stands in it, and everyone nearby sees it. With goggles worn too, tap [J] for the Flashlight and hold it for the goggles",
 }
 
 # the language being written: t() translates this tool's own texts, LANG the number formats

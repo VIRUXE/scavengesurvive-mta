@@ -19,7 +19,7 @@ Clica no mosaico para os tirar. Ficam postos depois de um reinício do servidor 
 
 ## Ligar e desligar
 
-Prime `J` para ligar e desligar os óculos que tens postos (o comando `goggles`, que podes associar a outra tecla nas definições do MTA). A personagem puxa-os para a frente dos olhos; desligados ficam levantados na testa, e todos à tua volta veem como estão.
+Prime `J` para ligar e desligar os óculos que tens postos (o comando `goggles`, que podes associar a outra tecla nas definições do MTA). A personagem puxa-os para a frente dos olhos; desligados ficam levantados na testa, e todos à tua volta veem como estão. Com uma [Lanterna](Flashlight) na mão a tecla é partilhada: um toque em `J` liga ou desliga a lanterna, manter a tecla liga ou desliga os óculos.
 
 - A **Visão noturna** amplifica a pouca luz que houver. Transforma a noite em dia, a verde, vista por dois tubos que cortam as margens do que vês. À luz do dia a imagem fica queimada, por isso é uma ferramenta para o escuro.
 - A **Visão térmica** ignora a luz e mostra o calor. As pessoas brilham contra um cenário frio a qualquer hora, ao ar livre ou numa sala às escuras, mas o mundo em si é um vulto ténue: serve para encontrar pessoas, não o caminho. Um corpo arrefece depois de morto.

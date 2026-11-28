@@ -166,6 +166,14 @@ return function(ctx)
         end
     end
 
+    -- "items.torch": whether the Flashlight in the hand is switched on (server/flashlight.lua); every client raises
+    -- the holder's arm and draws the beam by it
+    function M.publishTorch(player)
+        if isElement(player) then
+            setElementData(player, "items.torch", state.torchOn[player] == true, "broadcast", "deny")
+        end
+    end
+
     -- the worn vest's points, for the wearer's HUD bar (false: no vest)
     function M.publishArmour(player)
         if isElement(player) then
@@ -350,6 +358,10 @@ return function(ctx)
             end
         end
         state.held[player] = nil
+        if state.torchOn[player] then
+            state.torchOn[player] = nil -- a Flashlight leaves the hand switched off
+            M.publishTorch(player)
+        end
     end
 
     -- item = { id, uname, hp, data } or nil; client receives { id, uname, hp, data }

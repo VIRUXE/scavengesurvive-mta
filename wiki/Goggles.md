@@ -19,7 +19,7 @@ Click the tile to take them off. They stay on through a server restart and fall 
 
 ## Switching them on
 
-Press `J` to switch worn goggles on and off (the `goggles` command, which you can bind to another key in MTA's settings). Your character pulls them down over the eyes; switched off they sit pushed up on the forehead, and everyone around you sees which it is.
+Press `J` to switch worn goggles on and off (the `goggles` command, which you can bind to another key in MTA's settings). Your character pulls them down over the eyes; switched off they sit pushed up on the forehead, and everyone around you sees which it is. With a [Flashlight](Flashlight) in your hand the key is shared: a tap of `J` switches the Flashlight, holding it switches the goggles.
 
 - **Night Vision** amplifies what little light there is. It turns the night into day, in green, seen through two tubes that cut off the edges of your view. In daylight the picture burns out, so it is a tool for the dark.
 - **Thermal Vision** ignores light and shows warmth. People glow against cold surroundings whatever the hour, in the open or in a dark room, but the world itself is a dim shape: you find people with it, not your way. A body cools once it is dead.

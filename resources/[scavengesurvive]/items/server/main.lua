@@ -49,6 +49,7 @@ local state = {
     mask = {}, -- player -> { id, uname, hp, data } worn mask
     eyes = {}, -- player -> { id, uname, hp, data } worn goggles (server/goggles.lua)
     eyesOn = {}, -- player -> true while those goggles are switched on
+    torchOn = {}, -- player -> true while the Flashlight in the hand is switched on (server/flashlight.lua)
     armour = {}, -- player -> { id, uname, hp, data } worn armour
     holster = {}, -- player -> { id, uname, hp, data } holstered weapon
     parachute = {}, -- player -> { id, uname, hp, data } worn parachute (server/parachute.lua)
@@ -255,6 +256,15 @@ local gogglesWear = loadFile("server/goggles.lua")({
     sendInventory = function(player)
         return containers.refreshInventory(player)
     end,
+})
+loadFile("server/flashlight.lua")({
+    net = net,
+    state = state,
+    hands = hands,
+    flashlight = loadFile("shared/logic/flashlight.lua"),
+    charId = charId,
+    log = log,
+    isBadInteract = isBadInteract,
 })
 local fixed = loadFile("server/fixed.lua")({ db = db, world = world, log = util.log })
 local cookingCtx = { db = db, state = state, type = itemType, toast = toast, world = world, hands = hands }

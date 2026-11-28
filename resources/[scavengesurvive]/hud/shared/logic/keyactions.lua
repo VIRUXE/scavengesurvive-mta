@@ -80,6 +80,8 @@ M.BUTTON_LABELS = {
 --   tow ("fit" / "hitch" / "front": vehicles' towHint, a Tow Bar or Rope in hand at a vehicle, M.TOW),
 --   atFuelCap (a Petrol Can in hand at a vehicle's fuel cap, facing it and looking at it),
 --   goggles ("on" / "off": Night Vision or Thermal Vision goggles worn, switched on or not),
+--   flashlight ("on" / "off": a Flashlight in the hand on foot, switched on or not; a tap of the goggles' key is
+--     its own then and a hold the goggles'),
 --   held = false | { uname, category, isWeapon },
 --   crowbarTarget,                        -- the name of what F with a Crowbar works on, in the reader's
 --                                         -- language (hud outlines it): "Deconstruct · <name>"
@@ -113,7 +115,13 @@ function M.lines(ctx, keys)
         return out
     end
     -- not an upstream line: worn goggles have a key of their own, on foot and at the wheel alike
-    if ctx.goggles then
+    -- a Flashlight in the hand shares that key: a tap is its own, a hold the goggles' (items client/flashlight.lua)
+    if ctx.flashlight then
+        add("goggles", ctx.flashlight == "on" and tr("Flashlight off") or tr("Flashlight on"))
+        if ctx.goggles then
+            add("goggles", ctx.goggles == "on" and tr("(Hold) Goggles off") or tr("(Hold) Goggles on"))
+        end
+    elseif ctx.goggles then
         add("goggles", ctx.goggles == "on" and tr("Goggles off") or tr("Goggles on"))
     end
     if ctx.driver then

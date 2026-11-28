@@ -18,7 +18,7 @@ TOOLTIPS_PT = {
     "IedProxMine": PROX_MINE_PT,
     "EmpProxMine": PROX_MINE_PT,
     "PetrolBomb": "Prime [F] para a armar: uma carga incendiária que explode numa bola de fogo de 5 m ao fim de 5 segundos e não estraga itens",
-    "Flashlight": "Prime [F] para a ligar ou desligar; a luz ainda não está implementada",
+    "Flashlight": "Segura-a na mão e prime [J] para a ligar ou desligar: o braço sobe e ela lança um feixe estreito em frente que ilumina paredes, chão e quem lá estiver, e todos à volta o veem. Com óculos postos, toca em [J] para a lanterna e mantém para os óculos",
 }
 
 # fmt: off
