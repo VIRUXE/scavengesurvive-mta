@@ -26,9 +26,9 @@ Other items called Shotgun Shells: [Shotgun Shells (`AmmoFlechette`)](Shotgun-Sh
 |:--|:--|--:|
 | World loot, police | 52 spawn points: 15 in San Fierro, 11 in Las Venturas, 9 in Los Santos, 9 in Red County, 4 in Bone County, 3 in Flint County, 1 in Tierra Robada | 2.5 % |
 | World loot, civilian | 7,674 spawn points: 3,006 in Los Santos, 2,632 in San Fierro, 1,373 in Las Venturas, 285 in Red County, 164 in Bone County, 143 in Flint County, 71 in Tierra Robada (116 of them inside houses) | 0.7 % |
-| Vehicle trunks, police | The trunks of 5 vehicle types (Enforcer, FBI Truck, HPV1000, Police Car, Ranger) | 1.8 % |
-| Vehicle trunks, industrial | The trunks of 14 vehicle types (Articulated, Baggage, Bobcat, Boxville, Coastguard and 9 more) | 0.5 % |
-| Vehicle trunks, civilian | The trunks of 31 vehicle types (BF Injection, Blista Compact, Bloodring Banger, Clover, Comet and 26 more) | 0.3 % |
+| Vehicle trunks, police | The trunks of 9 vehicle types (Enforcer, FBI Rancher, FBI Truck, HPV1000, Police Car and 4 more) | 1.8 % |
+| Vehicle trunks, industrial | The trunks of 38 vehicle types (Articulated, Articulated Trailer, Articulated Trailer 2, Baggage, Baggage Box A and 33 more) | 0.5 % |
+| Vehicle trunks, civilian | The trunks of 132 vehicle types (AT-400, Admiral, Alpha, Andromada, BF Injection and 127 more) | 0.3 % |
 | Supply drop "Low Grade Weapons" | 36 drop points | 7.0 % |
 
 ## Crafting

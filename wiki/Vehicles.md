@@ -79,75 +79,219 @@ The Rhino's gun overheats. A red heat bar appears at the bottom of the screen wh
 Fuel tank is in litres, trunk in slots, spawn chance in percent.
 
 <!-- table:vehicles -->
-|  | Vehicle | Type | Group | Fuel tank | Trunk slots | Spawn chance |
-|:--|:--|:--|:--|--:|--:|--:|
-| ![](images/vehicles/472_coastg.png) | Coastguard | boat | Police | 120 L | 24 | 35 |
-| ![](images/vehicles/473_dinghy.png) | Dinghy | boat | Civilian | 81 L | 10 | 64 |
-| ![](images/vehicles/595_launch.png) | Launch | boat | Military | 213 L | 26 | 40 |
-| ![](images/vehicles/484_marquis.png) | Marquis | boat | Civilian | 900 L | 100 | 50 |
-| ![](images/vehicles/453_reefer.png) | Reefer | boat | Civilian | 245 L | 48 | 60 |
-| ![](images/vehicles/446_squalo.png) | Squalo | boat | Civilian | 50 L | 28 | 20 |
-| ![](images/vehicles/454_tropic.png) | Tropic | boat | Civilian | 260 L | 44 | 55 |
-| ![](images/vehicles/539_vortex.png) | Vortex | boat | Unique | 45 L | 4 | 0.1 |
-| ![](images/vehicles/485_baggage.png) | Baggage | car | Industrial | 14.5 L | 8 | 35.5 |
-| ![](images/vehicles/496_blistac.png) | Blista Compact | car | Civilian | 40 L | 38 | 68 |
-| ![](images/vehicles/504_bloodra.png) | Bloodring Banger | car | Unique | 65 L | 32 | 0.5 |
-| ![](images/vehicles/542_clover.png) | Clover | car | Civilian | 62 L | 34 | 75 |
-| ![](images/vehicles/480_comet.png) | Comet | car | Civilian | 50 L | 20 | 10 |
-| ![](images/vehicles/573_duneride.png) | Doomride | car | Unique | 180 L | 80 | 0.5 |
-| ![](images/vehicles/418_moonbeam.png) | Moonbeam | car | Civilian | 60 L | 65 | 30 |
-| ![](images/vehicles/596_copcarla.png) | Police Car | car | Police | 78 L | 42 | 80 |
-| ![](images/vehicles/597_copcarsf.png) | Police Car | car | Police | 70 L | 42 | 80 |
-| ![](images/vehicles/598_copcarvg.png) | Police Car | car | Police | 75 L | 42 | 80 |
-| ![](images/vehicles/479_regina.png) | Regina | car | Civilian | 74 L | 48 | 75 |
-| ![](images/vehicles/475_sabre.png) | Sabre | car | Civilian | 60 L | 24 | 17 |
-| ![](images/vehicles/475_sabre.png) | Scimitar | car | Unique | 56 L | 24 | 3.3 |
-| ![](images/vehicles/405_sentinel.png) | Sentinel | car | Civilian | 58.8 L | 42 | 78 |
-| ![](images/vehicles/560_sultan.png) | Sultan | car | Civilian | 65 L | 40 | 15 |
-| ![](images/vehicles/549_tampa.png) | Tampa | car | Civilian | 58 L | 38 | 64 |
-| ![](images/vehicles/487_maverick.png) | Maverick | helicopter | Civilian | 240 L | 32 | 1 |
-| ![](images/vehicles/447_seaspar.png) | Seasparrow | helicopter | Civilian | 96 L | 10 | 0.31 |
-| ![](images/vehicles/462_faggio.png) | Faggio | motorbike | Civilian | 8 L | 10 | 45 |
-| ![](images/vehicles/463_freeway.png) | Freeway | motorbike | Civilian | 19 L | 15 | 8 |
-| ![](images/vehicles/523_copbike.png) | HPV1000 | motorbike | Police | 60 L | 15 | 45 |
-| ![](images/vehicles/468_sanchez.png) | Sanchez | motorbike | Civilian | 10 L | 8 | 15 |
-| ![](images/vehicles/586_wayfarer.png) | Wayfarer | motorbike | Civilian | 47 L | 15 | 10 |
-| ![](images/vehicles/476_rustler.png) | Rustler | plane | Civilian | 88 L | 15 | 0.8 |
-| ![](images/vehicles/510_mtbike.png) | Mountain Bike | pushbike | Civilian | 0 L | 2 | 8 |
-| ![](images/vehicles/578_dft30.png) | APC-30 | truck | Unique | 60 L | 0 | 0.1 |
-|  | Airstream | truck | Civilian | 0 L | 0 | 3 |
-| ![](images/vehicles/416_ambulan.png) | Ambulance | truck | Medical | 80 L | 70 | 30 |
-| ![](images/vehicles/591_artict3.png) | Articulated | truck | Industrial | 0 L | 100 | 18 |
-| ![](images/vehicles/424_bfinject.png) | BF Injection | truck | Civilian | 40 L | 24 | 15 |
-| ![](images/vehicles/568_bandito.png) | Bandito | truck | Unique | 48 L | 15 | 0.1 |
-| ![](images/vehicles/433_barracks.png) | Barracks | truck | Military | 200 L | 100 | 3 |
-| ![](images/vehicles/422_bobcat.png) | Bobcat | truck | Civilian | 60 L | 40 | 76 |
-| ![](images/vehicles/498_boxville.png) | Boxville | truck | Industrial | 75 L | 70 | 55 |
-| ![](images/vehicles/578_dft30.png) | DFT-30 | truck | Industrial | 60 L | 0 | 35 |
-| ![](images/vehicles/573_duneride.png) | Duneride | truck | Civilian | 180 L | 85 | 10 |
-| ![](images/vehicles/427_enforcer.png) | Enforcer | truck | Police | 90 L | 64 | 10 |
-| ![](images/vehicles/528_fbitruck.png) | FBI Truck | truck | Police | 80 L | 45 | 3 |
-| ![](images/vehicles/407_firetruk.png) | Firetruck | truck | Medical | 115 L | 65 | 0.5 |
-| ![](images/vehicles/455_flatbed.png) | Flatbed | truck | Industrial | 70 L | 100 | 15 |
-| ![](images/vehicles/579_huntley.png) | Huntley | truck | Civilian | 70 L | 50 | 57 |
-| ![](images/vehicles/508_journey.png) | Journey | truck | Civilian | 60 L | 76 | 10 |
-| ![](images/vehicles/403_linerun.png) | Linerunner | truck | Industrial | 120 L | 12 | 15 |
-| ![](images/vehicles/500_mesa.png) | Mesa | truck | Civilian | 77 L | 48 | 70 |
-| ![](images/vehicles/470_patriot.png) | Patriot | truck | Military | 94 L | 50 | 22 |
-| ![](images/vehicles/489_rancher.png) | Rancher | truck | Civilian | 110 L | 52 | 44 |
-| ![](images/vehicles/599_copcarru.png) | Ranger | truck | Police | 110 L | 48 | 30 |
-| ![](images/vehicles/432_rhino.png) | Rhino | truck | Military | 1900 L | 12 | 0.01 |
-| ![](images/vehicles/515_rdtrain.png) | Roadpain | truck | Unique | 210 L | 0 | 1.4 |
-| ![](images/vehicles/440_rumpo.png) | Rumpo | truck | Industrial | 55 L | 80 | 45 |
-| ![](images/vehicles/543_sadler.png) | Sadler | truck | Civilian | 60 L | 40 | 34 |
-| ![](images/vehicles/495_sandking.png) | Sandking | truck | Unique | 120 L | 46 | 3.5 |
-| ![](images/vehicles/578_dft30.png) | Steamroller | truck | Unique | 60 L | 0 | 0.1 |
-| ![](images/vehicles/611_utiltr1.png) | Trailer | truck | Industrial | 0 L | 50 | 20 |
-| ![](images/vehicles/403_linerun.png) | Truckfort | truck | Unique | 265 L | 76 | 1.1 |
-| ![](images/vehicles/583_tug.png) | Tug | truck | Industrial | 10 L | 8 | 10 |
-| ![](images/vehicles/478_walton.png) | Walton | truck | Civilian | 60 L | 46 | 40 |
-| ![](images/vehicles/456_yankee.png) | Yankee | truck | Industrial | 60 L | 80 | 40 |
-| ![](images/vehicles/554_yosemite.png) | Yosemite | truck | Civilian | 60 L | 44 | 70 |
+|  | Vehicle | Type | Group | Wheel | Fuel tank | Trunk slots | Spawn chance |
+|:--|:--|:--|:--|:--|--:|--:|--:|
+| ![](images/vehicles/472_coastg.png) | Coastguard | boat | Civilian |  | 120 L | 24 | 7 |
+| ![](images/vehicles/473_dinghy.png) | Dinghy | boat | Civilian |  | 81 L | 10 | 64 |
+|  | Jetmax | boat | Civilian |  | 70 L | 14 | 8 |
+| ![](images/vehicles/595_launch.png) | Launch | boat | Civilian |  | 213 L | 26 | 7 |
+| ![](images/vehicles/484_marquis.png) | Marquis | boat | Civilian |  | 900 L | 100 | 50 |
+|  | Predator | boat | Civilian |  | 120 L | 20 | 6 |
+| ![](images/vehicles/453_reefer.png) | Reefer | boat | Civilian |  | 245 L | 48 | 60 |
+|  | Speeder | boat | Civilian |  | 70 L | 16 | 8 |
+| ![](images/vehicles/446_squalo.png) | Squalo | boat | Civilian |  | 50 L | 28 | 20 |
+| ![](images/vehicles/454_tropic.png) | Tropic | boat | Civilian |  | 260 L | 44 | 55 |
+| ![](images/vehicles/539_vortex.png) | Vortex | boat | Civilian |  | 45 L | 4 | 1.5 |
+|  | Admiral | car | Civilian | [Saloon Wheel](Saloon-Wheel) | 60 L | 40 | 22 |
+|  | Alpha | car | Civilian | [Sport Wheel](Sport-Wheel) | 55 L | 20 | 4 |
+| ![](images/vehicles/485_baggage.png) | Baggage | car | Industrial | [Small Car Wheel](Small-Car-Wheel) | 14.5 L | 8 | 35.5 |
+|  | Banshee | car | Civilian | [Sport Wheel](Sport-Wheel) | 55 L | 20 | 5 |
+|  | Blade | car | Civilian | [Classic Wheel](Classic-Wheel) | 55 L | 28 | 10 |
+| ![](images/vehicles/496_blistac.png) | Blista Compact | car | Civilian | [Small Car Wheel](Small-Car-Wheel) | 40 L | 38 | 68 |
+| ![](images/vehicles/504_bloodra.png) | Bloodring Banger | car | Unique | [Classic Wheel](Classic-Wheel) | 65 L | 32 | 0.5 |
+|  | Bravura | car | Civilian | [Saloon Wheel](Saloon-Wheel) | 50 L | 34 | 36 |
+|  | Broadway | car | Civilian | [Classic Wheel](Classic-Wheel) | 55 L | 28 | 8 |
+|  | Buccaneer | car | Civilian | [Classic Wheel](Classic-Wheel) | 55 L | 30 | 12 |
+|  | Buffalo | car | Civilian | [Sport Wheel](Sport-Wheel) | 60 L | 30 | 6 |
+|  | Bullet | car | Civilian | [Sport Wheel](Sport-Wheel) | 55 L | 16 | 2 |
+|  | Cabbie | car | Civilian | [Classic Wheel](Classic-Wheel) | 52 L | 34 | 22 |
+|  | Caddy | car | Industrial | [Steel Rim Wheel](Steel-Rim-Wheel) | 12 L | 4 | 8 |
+|  | Cadrona | car | Civilian | [Small Car Wheel](Small-Car-Wheel) | 50 L | 32 | 30 |
+|  | Cheetah | car | Civilian | [Sport Wheel](Sport-Wheel) | 55 L | 16 | 2 |
+| ![](images/vehicles/542_clover.png) | Clover | car | Civilian | [Classic Wheel](Classic-Wheel) | 62 L | 34 | 75 |
+|  | Club | car | Civilian | [Small Car Wheel](Small-Car-Wheel) | 48 L | 22 | 8 |
+| ![](images/vehicles/480_comet.png) | Comet | car | Civilian | [Sport Wheel](Sport-Wheel) | 50 L | 20 | 5 |
+| ![](images/vehicles/573_duneride.png) | Doomride | car | Unique | [Truck Wheel](Truck-Wheel) | 180 L | 80 | 0.5 |
+|  | Elegant | car | Civilian | [Saloon Wheel](Saloon-Wheel) | 60 L | 40 | 22 |
+|  | Elegy | car | Civilian | [Sport Wheel](Sport-Wheel) | 55 L | 24 | 5 |
+|  | Emperor | car | Civilian | [Saloon Wheel](Saloon-Wheel) | 55 L | 36 | 32 |
+|  | Esperanto | car | Civilian | [Classic Wheel](Classic-Wheel) | 55 L | 34 | 28 |
+|  | Euros | car | Civilian | [Sport Wheel](Sport-Wheel) | 52 L | 22 | 5 |
+|  | Feltzer | car | Civilian | [Sport Wheel](Sport-Wheel) | 55 L | 22 | 5 |
+|  | Flash | car | Civilian | [Small Car Wheel](Small-Car-Wheel) | 50 L | 22 | 6 |
+|  | Fortune | car | Civilian | [Saloon Wheel](Saloon-Wheel) | 52 L | 30 | 24 |
+|  | Glendale | car | Civilian | [Classic Wheel](Classic-Wheel) | 55 L | 36 | 34 |
+|  | Glendale Damaged | car | Civilian | [Classic Wheel](Classic-Wheel) | 50 L | 32 | 20 |
+|  | Greenwood | car | Civilian | [Saloon Wheel](Saloon-Wheel) | 55 L | 36 | 28 |
+|  | Hermes | car | Civilian | [Classic Wheel](Classic-Wheel) | 55 L | 30 | 12 |
+|  | Hotknife | car | Civilian | [Classic Wheel](Classic-Wheel) | 50 L | 16 | 2 |
+|  | Hotring Racer | car | Unique | [Racing Wheel](Racing-Wheel) | 50 L | 8 | 1.5 |
+|  | Hotring Racer A | car | Unique | [Racing Wheel](Racing-Wheel) | 50 L | 8 | 1.5 |
+|  | Hotring Racer B | car | Unique | [Racing Wheel](Racing-Wheel) | 50 L | 8 | 1.5 |
+|  | Hustler | car | Civilian | [Classic Wheel](Classic-Wheel) | 50 L | 24 | 6 |
+|  | Infernus | car | Civilian | [Sport Wheel](Sport-Wheel) | 60 L | 18 | 2 |
+|  | Intruder | car | Civilian | [Saloon Wheel](Saloon-Wheel) | 55 L | 36 | 26 |
+|  | Jester | car | Civilian | [Sport Wheel](Sport-Wheel) | 52 L | 22 | 5 |
+|  | Kart | car | Civilian | [Kart Wheel](Kart-Wheel) | 8 L | 0 | 2 |
+|  | Majestic | car | Civilian | [Saloon Wheel](Saloon-Wheel) | 55 L | 32 | 12 |
+|  | Manana | car | Civilian | [Small Car Wheel](Small-Car-Wheel) | 48 L | 32 | 40 |
+|  | Merit | car | Civilian | [Alloy Wheel](Alloy-Wheel) | 58 L | 38 | 22 |
+| ![](images/vehicles/418_moonbeam.png) | Moonbeam | car | Civilian | [Light Van Wheel](Light-Van-Wheel) | 60 L | 65 | 30 |
+|  | Mower | car | Civilian | [Steel Rim Wheel](Steel-Rim-Wheel) | 8 L | 0 | 4 |
+|  | Nebula | car | Civilian | [Saloon Wheel](Saloon-Wheel) | 55 L | 34 | 26 |
+|  | Oceanic | car | Civilian | [Classic Wheel](Classic-Wheel) | 55 L | 32 | 26 |
+|  | Perennial | car | Civilian | [Small Car Wheel](Small-Car-Wheel) | 55 L | 40 | 40 |
+|  | Phoenix | car | Civilian | [Sport Wheel](Sport-Wheel) | 55 L | 22 | 5 |
+| ![](images/vehicles/596_copcarla.png) | Police Car | car | Police | [Saloon Wheel](Saloon-Wheel) | 78 L | 42 | 80 |
+| ![](images/vehicles/597_copcarsf.png) | Police Car | car | Police | [Saloon Wheel](Saloon-Wheel) | 70 L | 42 | 80 |
+| ![](images/vehicles/598_copcarvg.png) | Police Car | car | Police | [Saloon Wheel](Saloon-Wheel) | 75 L | 42 | 80 |
+|  | Premier | car | Civilian | [Saloon Wheel](Saloon-Wheel) | 58 L | 38 | 26 |
+|  | Previon | car | Civilian | [Small Car Wheel](Small-Car-Wheel) | 55 L | 34 | 8 |
+|  | Primo | car | Civilian | [Saloon Wheel](Saloon-Wheel) | 52 L | 34 | 30 |
+|  | RC Bandit | car | Civilian |  | 4 L | 0 | 0 |
+|  | RC Cam | car | Civilian |  | 4 L | 0 | 0 |
+|  | RC Tiger | car | Civilian |  | 4 L | 0 | 0 |
+| ![](images/vehicles/479_regina.png) | Regina | car | Civilian | [Saloon Wheel](Saloon-Wheel) | 74 L | 48 | 75 |
+|  | Remington | car | Civilian | [Classic Wheel](Classic-Wheel) | 55 L | 28 | 10 |
+|  | Romero | car | Civilian | [Classic Wheel](Classic-Wheel) | 55 L | 36 | 6 |
+| ![](images/vehicles/475_sabre.png) | Sabre | car | Civilian | [Classic Wheel](Classic-Wheel) | 60 L | 24 | 12 |
+|  | Savanna | car | Civilian | [Classic Wheel](Classic-Wheel) | 58 L | 32 | 10 |
+| ![](images/vehicles/475_sabre.png) | Scimitar | car | Unique | [Classic Wheel](Classic-Wheel) | 56 L | 24 | 3.3 |
+| ![](images/vehicles/405_sentinel.png) | Sentinel | car | Civilian | [Alloy Wheel](Alloy-Wheel) | 58.8 L | 42 | 78 |
+|  | Solair | car | Civilian | [Saloon Wheel](Saloon-Wheel) | 60 L | 42 | 30 |
+|  | Stafford | car | Civilian | [Alloy Wheel](Alloy-Wheel) | 60 L | 38 | 8 |
+|  | Stallion | car | Civilian | [Classic Wheel](Classic-Wheel) | 55 L | 28 | 12 |
+|  | Stratum | car | Civilian | [Sport Wheel](Sport-Wheel) | 55 L | 36 | 18 |
+|  | Stretch | car | Civilian | [Alloy Wheel](Alloy-Wheel) | 70 L | 30 | 3 |
+| ![](images/vehicles/560_sultan.png) | Sultan | car | Civilian | [Sport Wheel](Sport-Wheel) | 65 L | 40 | 6 |
+|  | Sunrise | car | Civilian | [Saloon Wheel](Saloon-Wheel) | 55 L | 34 | 24 |
+|  | Super GT | car | Civilian | [Sport Wheel](Sport-Wheel) | 55 L | 16 | 2 |
+|  | Tahoma | car | Civilian | [Saloon Wheel](Saloon-Wheel) | 55 L | 34 | 22 |
+| ![](images/vehicles/549_tampa.png) | Tampa | car | Civilian | [Classic Wheel](Classic-Wheel) | 58 L | 38 | 64 |
+|  | Taxi | car | Civilian | [Saloon Wheel](Saloon-Wheel) | 55 L | 36 | 18 |
+|  | Tornado | car | Civilian | [Classic Wheel](Classic-Wheel) | 55 L | 28 | 10 |
+|  | Turismo | car | Civilian | [Sport Wheel](Sport-Wheel) | 55 L | 16 | 2 |
+|  | Uranus | car | Civilian | [Sport Wheel](Sport-Wheel) | 52 L | 24 | 6 |
+|  | Vincent | car | Civilian | [Saloon Wheel](Saloon-Wheel) | 55 L | 36 | 26 |
+|  | Virgo | car | Civilian | [Classic Wheel](Classic-Wheel) | 55 L | 32 | 24 |
+|  | Voodoo | car | Civilian | [Classic Wheel](Classic-Wheel) | 58 L | 30 | 14 |
+|  | Washington | car | Civilian | [Alloy Wheel](Alloy-Wheel) | 60 L | 40 | 24 |
+|  | Willard | car | Civilian | [Saloon Wheel](Saloon-Wheel) | 52 L | 34 | 28 |
+|  | Windsor | car | Civilian | [Classic Wheel](Classic-Wheel) | 58 L | 34 | 8 |
+|  | ZR-350 | car | Civilian | [Sport Wheel](Sport-Wheel) | 55 L | 22 | 5 |
+|  | Cargobob | helicopter | Civilian |  | 480 L | 36 | 1.5 |
+|  | Hunter | helicopter | Civilian |  | 280 L | 0 | 0.8 |
+|  | Leviathan | helicopter | Civilian |  | 500 L | 40 | 1.5 |
+| ![](images/vehicles/487_maverick.png) | Maverick | helicopter | Civilian |  | 240 L | 32 | 2.5 |
+|  | News Chopper | helicopter | Civilian |  | 160 L | 12 | 3 |
+|  | Police Maverick | helicopter | Civilian |  | 180 L | 16 | 1 |
+|  | RC Goblin | helicopter | Civilian |  | 4 L | 0 | 0 |
+|  | RC Raider | helicopter | Civilian |  | 4 L | 0 | 0 |
+|  | Raindance | helicopter | Civilian |  | 420 L | 30 | 1 |
+| ![](images/vehicles/447_seaspar.png) | Seasparrow | helicopter | Civilian |  | 96 L | 0 | 1 |
+|  | Sparrow | helicopter | Civilian |  | 70 L | 0 | 3 |
+|  | BF-400 | motorbike | Civilian |  | 12 L | 4 | 6 |
+|  | FCR-900 | motorbike | Civilian |  | 16 L | 4 | 4 |
+| ![](images/vehicles/462_faggio.png) | Faggio | motorbike | Civilian |  | 8 L | 10 | 45 |
+| ![](images/vehicles/463_freeway.png) | Freeway | motorbike | Civilian |  | 19 L | 15 | 8 |
+| ![](images/vehicles/523_copbike.png) | HPV1000 | motorbike | Police |  | 60 L | 15 | 45 |
+|  | NRG-500 | motorbike | Civilian |  | 14 L | 4 | 3 |
+|  | PCJ-600 | motorbike | Civilian |  | 14 L | 6 | 6 |
+|  | Pizzaboy | motorbike | Civilian |  | 8 L | 4 | 12 |
+|  | Quad | motorbike | Civilian |  | 14 L | 6 | 8 |
+| ![](images/vehicles/468_sanchez.png) | Sanchez | motorbike | Civilian |  | 10 L | 8 | 15 |
+| ![](images/vehicles/586_wayfarer.png) | Wayfarer | motorbike | Civilian |  | 47 L | 15 | 10 |
+|  | AT-400 | plane | Civilian |  | 1200 L | 60 | 1.5 |
+|  | Andromada | plane | Civilian |  | 1400 L | 80 | 1 |
+|  | Beagle | plane | Civilian |  | 160 L | 24 | 4 |
+|  | Cropduster | plane | Civilian |  | 70 L | 0 | 4 |
+|  | Dodo | plane | Civilian |  | 90 L | 16 | 4 |
+|  | Hydra | plane | Civilian |  | 220 L | 0 | 0.6 |
+|  | Nevada | plane | Civilian |  | 400 L | 48 | 3 |
+|  | RC Baron | plane | Civilian |  | 4 L | 0 | 0 |
+| ![](images/vehicles/476_rustler.png) | Rustler | plane | Civilian |  | 88 L | 0 | 2 |
+|  | Shamal | plane | Civilian |  | 700 L | 40 | 2 |
+|  | Skimmer | plane | Civilian |  | 80 L | 0 | 4 |
+|  | Stuntplane | plane | Civilian |  | 60 L | 0 | 3 |
+|  | BMX | pushbike | Civilian |  | 0 L | 1 | 10 |
+|  | Bike | pushbike | Civilian |  | 0 L | 1 | 12 |
+| ![](images/vehicles/510_mtbike.png) | Mountain Bike | pushbike | Civilian |  | 0 L | 2 | 8 |
+| ![](images/vehicles/578_dft30.png) | APC-30 | truck | Unique | [Truck Wheel](Truck-Wheel) | 60 L | 0 | 0.3 |
+|  | Airstream | truck | Civilian | [Light Van Wheel](Light-Van-Wheel) | 0 L | 0 | 3 |
+| ![](images/vehicles/416_ambulan.png) | Ambulance | truck | Medical | [Light Van Wheel](Light-Van-Wheel) | 80 L | 70 | 30 |
+| ![](images/vehicles/591_artict3.png) | Articulated | truck | Industrial | [Truck Wheel](Truck-Wheel) | 0 L | 100 | 1 |
+|  | Articulated Trailer | truck | Industrial | [Truck Wheel](Truck-Wheel) | 0 L | 100 | 4 |
+|  | Articulated Trailer 2 | truck | Industrial | [Truck Wheel](Truck-Wheel) | 0 L | 100 | 3 |
+| ![](images/vehicles/424_bfinject.png) | BF Injection | truck | Civilian | [Offroad Wheel](Offroad-Wheel) | 40 L | 24 | 15 |
+|  | Baggage Box A | truck | Industrial | [Steel Rim Wheel](Steel-Rim-Wheel) | 0 L | 20 | 8 |
+|  | Baggage Box B | truck | Industrial | [Steel Rim Wheel](Steel-Rim-Wheel) | 0 L | 20 | 6 |
+| ![](images/vehicles/568_bandito.png) | Bandito | truck | Unique | [Offroad Wheel](Offroad-Wheel) | 48 L | 15 | 0.3 |
+| ![](images/vehicles/433_barracks.png) | Barracks | truck | Military | [Truck Wheel](Truck-Wheel) | 200 L | 100 | 3 |
+|  | Benson | truck | Industrial | [Light Truck Wheel](Light-Truck-Wheel) | 100 L | 80 | 10 |
+|  | Berkley RC Van | truck | Unique | [Light Van Wheel](Light-Van-Wheel) | 50 L | 28 | 2 |
+| ![](images/vehicles/422_bobcat.png) | Bobcat | truck | Civilian | [Light Truck Wheel](Light-Truck-Wheel) | 60 L | 40 | 76 |
+|  | BoxBurg | truck | Industrial | [Light Van Wheel](Light-Van-Wheel) | 70 L | 60 | 8 |
+| ![](images/vehicles/498_boxville.png) | Boxville | truck | Industrial | [Light Van Wheel](Light-Van-Wheel) | 75 L | 70 | 55 |
+|  | Burrito | truck | Civilian | [Light Van Wheel](Light-Van-Wheel) | 65 L | 60 | 26 |
+|  | Bus | truck | Civilian | [Truck Wheel](Truck-Wheel) | 150 L | 40 | 6 |
+|  | Camper | truck | Civilian | [Light Van Wheel](Light-Van-Wheel) | 80 L | 70 | 6 |
+|  | Cement Truck | truck | Industrial | [Truck Wheel](Truck-Wheel) | 120 L | 10 | 5 |
+|  | Coach | truck | Civilian | [Truck Wheel](Truck-Wheel) | 160 L | 36 | 5 |
+|  | Combine | truck | Industrial | [Tractor Wheel](Tractor-Wheel) | 80 L | 20 | 2 |
+| ![](images/vehicles/578_dft30.png) | DFT-30 | truck | Industrial | [Truck Wheel](Truck-Wheel) | 60 L | 0 | 35 |
+|  | Dozer | truck | Industrial | [Heavy Plant Wheel](Heavy-Plant-Wheel) | 40 L | 0 | 2 |
+|  | Dumper | truck | Industrial | [Heavy Plant Wheel](Heavy-Plant-Wheel) | 200 L | 20 | 4 |
+| ![](images/vehicles/573_duneride.png) | Duneride | truck | Civilian | [Truck Wheel](Truck-Wheel) | 180 L | 85 | 10 |
+| ![](images/vehicles/427_enforcer.png) | Enforcer | truck | Police | [Truck Wheel](Truck-Wheel) | 90 L | 64 | 10 |
+|  | FBI Rancher | truck | Police | [Light Truck Wheel](Light-Truck-Wheel) | 100 L | 48 | 6 |
+| ![](images/vehicles/528_fbitruck.png) | FBI Truck | truck | Police | [Truck Wheel](Truck-Wheel) | 80 L | 45 | 3 |
+| ![](images/vehicles/407_firetruk.png) | Firetruck | truck | Medical | [Truck Wheel](Truck-Wheel) | 115 L | 65 | 0.5 |
+|  | Firetruck LA | truck | Medical | [Truck Wheel](Truck-Wheel) | 115 L | 60 | 2 |
+| ![](images/vehicles/455_flatbed.png) | Flatbed | truck | Industrial | [Truck Wheel](Truck-Wheel) | 70 L | 100 | 15 |
+|  | Forklift | truck | Industrial | [Steel Rim Wheel](Steel-Rim-Wheel) | 12 L | 0 | 8 |
+|  | Hotdog | truck | Civilian | [Light Van Wheel](Light-Van-Wheel) | 50 L | 24 | 3 |
+| ![](images/vehicles/579_huntley.png) | Huntley | truck | Civilian | [Alloy Wheel](Alloy-Wheel) | 70 L | 50 | 57 |
+| ![](images/vehicles/508_journey.png) | Journey | truck | Civilian | [Light Van Wheel](Light-Van-Wheel) | 60 L | 76 | 10 |
+|  | Landstalker | truck | Civilian | [Alloy Wheel](Alloy-Wheel) | 80 L | 48 | 30 |
+| ![](images/vehicles/403_linerun.png) | Linerunner | truck | Industrial | [Truck Wheel](Truck-Wheel) | 120 L | 12 | 5 |
+| ![](images/vehicles/500_mesa.png) | Mesa | truck | Civilian | [Offroad Wheel](Offroad-Wheel) | 77 L | 48 | 70 |
+|  | Monster | truck | Unique | [Monster Truck Wheel](Monster-Truck-Wheel) | 90 L | 12 | 2 |
+|  | Monster A | truck | Unique | [Monster Truck Wheel](Monster-Truck-Wheel) | 90 L | 8 | 1.5 |
+|  | Monster B | truck | Unique | [Monster Truck Wheel](Monster-Truck-Wheel) | 90 L | 8 | 1.5 |
+|  | Mr Whoopee | truck | Civilian | [Light Van Wheel](Light-Van-Wheel) | 50 L | 30 | 3 |
+|  | Mule | truck | Industrial | [Light Truck Wheel](Light-Truck-Wheel) | 80 L | 70 | 22 |
+|  | Newsvan | truck | Civilian | [Light Van Wheel](Light-Van-Wheel) | 60 L | 40 | 6 |
+|  | Packer | truck | Industrial | [Truck Wheel](Truck-Wheel) | 140 L | 16 | 6 |
+| ![](images/vehicles/470_patriot.png) | Patriot | truck | Military | [Offroad Wheel](Offroad-Wheel) | 94 L | 50 | 22 |
+|  | Petrol | truck | Industrial | [Truck Wheel](Truck-Wheel) | 200 L | 12 | 6 |
+|  | Petrol Trailer | truck | Industrial | [Truck Wheel](Truck-Wheel) | 0 L | 40 | 4 |
+|  | Picador | truck | Civilian | [Light Truck Wheel](Light-Truck-Wheel) | 60 L | 40 | 22 |
+|  | Pony | truck | Civilian | [Light Van Wheel](Light-Van-Wheel) | 60 L | 55 | 28 |
+| ![](images/vehicles/489_rancher.png) | Rancher | truck | Civilian | [Light Truck Wheel](Light-Truck-Wheel) | 110 L | 52 | 44 |
+|  | Rancher Lure | truck | Civilian | [Light Truck Wheel](Light-Truck-Wheel) | 90 L | 46 | 20 |
+| ![](images/vehicles/599_copcarru.png) | Ranger | truck | Police | [Light Truck Wheel](Light-Truck-Wheel) | 110 L | 48 | 30 |
+| ![](images/vehicles/432_rhino.png) | Rhino | truck | Military | [Truck Wheel](Truck-Wheel) | 1900 L | 12 | 1 |
+| ![](images/vehicles/515_rdtrain.png) | Roadpain | truck | Unique | [Truck Wheel](Truck-Wheel) | 210 L | 0 | 1.4 |
+| ![](images/vehicles/440_rumpo.png) | Rumpo | truck | Industrial | [Light Van Wheel](Light-Van-Wheel) | 55 L | 80 | 45 |
+|  | S.W.A.T. | truck | Police | [Truck Wheel](Truck-Wheel) | 100 L | 50 | 3 |
+| ![](images/vehicles/543_sadler.png) | Sadler | truck | Civilian | [Light Truck Wheel](Light-Truck-Wheel) | 60 L | 40 | 34 |
+|  | Sadler Damaged | truck | Civilian | [Light Truck Wheel](Light-Truck-Wheel) | 55 L | 36 | 20 |
+| ![](images/vehicles/495_sandking.png) | Sandking | truck | Unique | [Offroad Wheel](Offroad-Wheel) | 120 L | 46 | 3.5 |
+|  | Securicar | truck | Industrial | [Truck Wheel](Truck-Wheel) | 70 L | 50 | 6 |
+|  | Slamvan | truck | Civilian | [Light Truck Wheel](Light-Truck-Wheel) | 60 L | 36 | 6 |
+| ![](images/vehicles/578_dft30.png) | Steamroller | truck | Unique | [Truck Wheel](Truck-Wheel) | 60 L | 0 | 0.3 |
+|  | Sweeper | truck | Industrial | [Steel Rim Wheel](Steel-Rim-Wheel) | 20 L | 4 | 6 |
+|  | Tow Truck | truck | Industrial | [Light Truck Wheel](Light-Truck-Wheel) | 70 L | 20 | 8 |
+|  | Tractor | truck | Industrial | [Tractor Wheel](Tractor-Wheel) | 40 L | 8 | 6 |
+| ![](images/vehicles/611_utiltr1.png) | Trailer | truck | Industrial | [Truck Wheel](Truck-Wheel) | 0 L | 50 | 20 |
+|  | Trashmaster | truck | Industrial | [Truck Wheel](Truck-Wheel) | 110 L | 40 | 8 |
+| ![](images/vehicles/403_linerun.png) | Truckfort | truck | Unique | [Truck Wheel](Truck-Wheel) | 265 L | 76 | 1.1 |
+| ![](images/vehicles/583_tug.png) | Tug | truck | Industrial | [Steel Rim Wheel](Steel-Rim-Wheel) | 10 L | 8 | 10 |
+|  | Tug Stairs | truck | Industrial | [Steel Rim Wheel](Steel-Rim-Wheel) | 0 L | 8 | 4 |
+|  | Utility | truck | Industrial | [Light Truck Wheel](Light-Truck-Wheel) | 60 L | 40 | 16 |
+| ![](images/vehicles/478_walton.png) | Walton | truck | Civilian | [Light Truck Wheel](Light-Truck-Wheel) | 60 L | 46 | 40 |
+| ![](images/vehicles/456_yankee.png) | Yankee | truck | Industrial | [Truck Wheel](Truck-Wheel) | 60 L | 80 | 40 |
+| ![](images/vehicles/554_yosemite.png) | Yosemite | truck | Civilian | [Light Truck Wheel](Light-Truck-Wheel) | 60 L | 44 | 70 |
 <!-- /table:vehicles -->
 
 ## Map

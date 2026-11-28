@@ -18,13 +18,15 @@
 |:--|:--|--:|
 | Saque do mundo, industrial | 2 431 pontos de aparecimento: 791 em Los Santos, 406 em Las Venturas, 386 em San Fierro, 273 em Flint County, 270 em Red County, 233 em Bone County, 72 em Tierra Robada | 3,0 % |
 | Saque do mundo, militar | 106 pontos de aparecimento: 56 em Bone County, 32 em San Fierro, 18 em Las Venturas | 2,6 % |
-| Saque do mundo, sobrevivente | 825 pontos de aparecimento: 227 em San Fierro, 225 em Los Santos, 113 em Las Venturas, 85 em Red County, 77 em Flint County, 66 em Bone County, 32 em Tierra Robada; também as malas de 9 tipos de veículo (APC-30, Bandito, Doomride, Freeway, Roadpain e mais 4) | 1,9 % |
+| Saque do mundo, sobrevivente | 825 pontos de aparecimento: 227 em San Fierro, 225 em Los Santos, 113 em Las Venturas, 85 em Red County, 77 em Flint County, 66 em Bone County, 32 em Tierra Robada; também as malas de 22 tipos de veículo (APC-30, Bandito, Berkley RC Van, Doomride, Freeway e mais 17) | 1,9 % |
 | Saque do mundo, polícia | 52 pontos de aparecimento: 15 em San Fierro, 11 em Las Venturas, 9 em Los Santos, 9 em Red County, 4 em Bone County, 3 em Flint County, 1 em Tierra Robada | 1,7 % |
 | Saque do mundo, civil | 7 674 pontos de aparecimento: 3 006 em Los Santos, 2 632 em San Fierro, 1 373 em Las Venturas, 285 em Red County, 164 em Bone County, 143 em Flint County, 71 em Tierra Robada (116 delas dentro de casas) | 1,6 % |
-| Malas de veículos, industrial | As malas de 14 tipos de veículo (Articulated, Baggage, Bobcat, Boxville, Coastguard e mais 9) | 3,0 % |
-| Malas de veículos, militar | As malas de 4 tipos de veículo (Barracks, Launch, Patriot, Rhino) | 2,5 % |
-| Malas de veículos, polícia | As malas de 5 tipos de veículo (Enforcer, FBI Truck, HPV1000, Police Car, Ranger) | 1,8 % |
-| Malas de veículos, civil | As malas de 31 tipos de veículo (BF Injection, Blista Compact, Bloodring Banger, Clover, Comet e mais 26) | 1,1 % |
+| Malas de veículos, industrial | As malas de 38 tipos de veículo (Articulated, Articulated Trailer, Articulated Trailer 2, Baggage, Baggage Box A e mais 33) | 3,0 % |
+| Malas de veículos, militar | As malas de 6 tipos de veículo (Barracks, Hunter, Hydra, Launch, Patriot e mais 1) | 2,5 % |
+| Malas de veículos, polícia | As malas de 9 tipos de veículo (Enforcer, FBI Rancher, FBI Truck, HPV1000, Police Car e mais 4) | 1,8 % |
+| Malas de veículos, civil | As malas de 132 tipos de veículo (AT-400, Admiral, Alpha, Andromada, BF Injection e mais 127) | 1,1 % |
+
+- Como saque aparece sempre como a roda de um estilo de veículo, e um veículo só leva a roda do seu estilo: a coluna Roda de [Veículos](Vehicles) diz qual é.
 
 ## Fabrico
 
@@ -36,4 +38,4 @@ Não dá sucata: uma Máquina de sucata destrói-o, ver [Sucata](Scrap).
 
 ## Ver também
 
-[Reparações e fechaduras](Repairing-and-Locks)
+[Reparações e fechaduras](Repairing-and-Locks), [Veículos](Vehicles)

@@ -23,8 +23,8 @@
 | Source | Where | Share of the table |
 |:--|:--|--:|
 | World loot, military | 106 spawn points: 56 in Bone County, 32 in San Fierro, 18 in Las Venturas | 0.9 % |
-| World loot, survivor | 825 spawn points: 227 in San Fierro, 225 in Los Santos, 113 in Las Venturas, 85 in Red County, 77 in Flint County, 66 in Bone County, 32 in Tierra Robada; also the trunks of 9 vehicle types (APC-30, Bandito, Doomride, Freeway, Roadpain and 4 more) | 0.6 % |
-| Vehicle trunks, civilian | The trunks of 31 vehicle types (BF Injection, Blista Compact, Bloodring Banger, Clover, Comet and 26 more) | 0.2 % |
+| World loot, survivor | 825 spawn points: 227 in San Fierro, 225 in Los Santos, 113 in Las Venturas, 85 in Red County, 77 in Flint County, 66 in Bone County, 32 in Tierra Robada; also the trunks of 22 vehicle types (APC-30, Bandito, Berkley RC Van, Doomride, Freeway and 17 more) | 0.6 % |
+| Vehicle trunks, civilian | The trunks of 132 vehicle types (AT-400, Admiral, Alpha, Andromada, BF Injection and 127 more) | 0.2 % |
 | Supply drop "Military Weapons" | 36 drop points; also the weapon caches (186 in San Fierro) | 4.4 % |
 
 ## Crafting

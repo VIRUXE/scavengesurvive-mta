@@ -14,6 +14,10 @@
 
 Not found as loot.
 
+- Found wherever a [Wheel](Wheel) is listed as loot: 15.3 % of those finds are this wheel.
+- Taken off a vehicle it fits with a [Tyre Wrench](Tyre-Wrench).
+- The only wheel these 24 vehicle types take: Blade, Bloodring Banger, Broadway, Buccaneer, Cabbie, Clover, Esperanto, Glendale, Glendale Damaged, Hermes, Hotknife, Hustler, Oceanic, Remington, Romero, Sabre, Savanna, Scimitar, Stallion, Tampa, Tornado, Virgo, Voodoo, Windsor.
+
 ## Crafting
 
 No recipe makes or uses it.
@@ -21,3 +25,7 @@ No recipe makes or uses it.
 ## Scrap
 
 Cannot be scrapped: a Scrap Machine destroys it, see [Scrap](Scrap).
+
+## See also
+
+[Vehicles](Vehicles)

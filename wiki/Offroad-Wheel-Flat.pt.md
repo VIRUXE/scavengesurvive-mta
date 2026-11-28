@@ -14,6 +14,9 @@
 
 Não aparece como saque.
 
+- É como sai um pneu furado, com [Chave de rodas](Tyre-Wrench); montada outra vez, o pneu continua furado.
+- A única roda que estes 5 tipos de veículo levam: BF Injection, Bandito, Mesa, Patriot, Sandking.
+
 ## Fabrico
 
 Nenhuma receita o faz ou usa.

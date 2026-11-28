@@ -18,11 +18,11 @@
 
 | Origem | Onde | Parte da tabela |
 |:--|:--|--:|
-| Saque do mundo, sobrevivente | 825 pontos de aparecimento: 227 em San Fierro, 225 em Los Santos, 113 em Las Venturas, 85 em Red County, 77 em Flint County, 66 em Bone County, 32 em Tierra Robada; também as malas de 9 tipos de veículo (APC-30, Bandito, Doomride, Freeway, Roadpain e mais 4) | 7,5 % |
+| Saque do mundo, sobrevivente | 825 pontos de aparecimento: 227 em San Fierro, 225 em Los Santos, 113 em Las Venturas, 85 em Red County, 77 em Flint County, 66 em Bone County, 32 em Tierra Robada; também as malas de 22 tipos de veículo (APC-30, Bandito, Berkley RC Van, Doomride, Freeway e mais 17) | 7,5 % |
 | Saque do mundo, militar | 106 pontos de aparecimento: 56 em Bone County, 32 em San Fierro, 18 em Las Venturas | 5,3 % |
 | Saque do mundo, civil | 7 674 pontos de aparecimento: 3 006 em Los Santos, 2 632 em San Fierro, 1 373 em Las Venturas, 285 em Red County, 164 em Bone County, 143 em Flint County, 71 em Tierra Robada (116 delas dentro de casas) | 0,6 % |
-| Malas de veículos, militar | As malas de 4 tipos de veículo (Barracks, Launch, Patriot, Rhino) | 6,2 % |
-| Malas de veículos, civil | As malas de 31 tipos de veículo (BF Injection, Blista Compact, Bloodring Banger, Clover, Comet e mais 26) | 0,3 % |
+| Malas de veículos, militar | As malas de 6 tipos de veículo (Barracks, Hunter, Hydra, Launch, Patriot e mais 1) | 6,2 % |
+| Malas de veículos, civil | As malas de 132 tipos de veículo (AT-400, Admiral, Alpha, Andromada, BF Injection e mais 127) | 0,3 % |
 | Entrega de abastecimentos "Comida e medicamentos" | 36 pontos de entrega | 2,5 % |
 
 ## Fabrico

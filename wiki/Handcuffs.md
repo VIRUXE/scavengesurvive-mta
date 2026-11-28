@@ -16,7 +16,7 @@
 | Source | Where | Share of the table |
 |:--|:--|--:|
 | World loot, police | 52 spawn points: 15 in San Fierro, 11 in Las Venturas, 9 in Los Santos, 9 in Red County, 4 in Bone County, 3 in Flint County, 1 in Tierra Robada | 7.6 % |
-| Vehicle trunks, police | The trunks of 5 vehicle types (Enforcer, FBI Truck, HPV1000, Police Car, Ranger) | 8.2 % |
+| Vehicle trunks, police | The trunks of 9 vehicle types (Enforcer, FBI Rancher, FBI Truck, HPV1000, Police Car and 4 more) | 8.2 % |
 
 ## Crafting
 

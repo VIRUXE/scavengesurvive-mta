@@ -18,7 +18,7 @@
 | Saque do mundo, polícia | 52 pontos de aparecimento: 15 em San Fierro, 11 em Las Venturas, 9 em Los Santos, 9 em Red County, 4 em Bone County, 3 em Flint County, 1 em Tierra Robada | 3,4 % |
 | Saque do mundo, civil | 7 674 pontos de aparecimento: 3 006 em Los Santos, 2 632 em San Fierro, 1 373 em Las Venturas, 285 em Red County, 164 em Bone County, 143 em Flint County, 71 em Tierra Robada (116 delas dentro de casas) | 1,3 % |
 | Malas de veículos, porta-luvas | Ainda em lado nenhum | 7,6 % |
-| Malas de veículos, civil | As malas de 31 tipos de veículo (BF Injection, Blista Compact, Bloodring Banger, Clover, Comet e mais 26) | 2,2 % |
+| Malas de veículos, civil | As malas de 132 tipos de veículo (AT-400, Admiral, Alpha, Andromada, BF Injection e mais 127) | 2,2 % |
 
 ## Fabrico
 

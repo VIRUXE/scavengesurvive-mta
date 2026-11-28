@@ -14,6 +14,9 @@
 
 Não aparece como saque.
 
+- É como sai um pneu furado, com [Chave de rodas](Tyre-Wrench); montada outra vez, o pneu continua furado.
+- A única roda que estes 24 tipos de veículo levam: Blade, Bloodring Banger, Broadway, Buccaneer, Cabbie, Clover, Esperanto, Glendale, Glendale Damaged, Hermes, Hotknife, Hustler, Oceanic, Remington, Romero, Sabre, Savanna, Scimitar, Stallion, Tampa, Tornado, Virgo, Voodoo, Windsor.
+
 ## Fabrico
 
 Nenhuma receita o faz ou usa.

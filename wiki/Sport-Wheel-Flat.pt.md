@@ -14,6 +14,9 @@
 
 Não aparece como saque.
 
+- É como sai um pneu furado, com [Chave de rodas](Tyre-Wrench); montada outra vez, o pneu continua furado.
+- A única roda que estes 18 tipos de veículo levam: Alpha, Banshee, Buffalo, Bullet, Cheetah, Comet, Elegy, Euros, Feltzer, Infernus, Jester, Phoenix, Stratum, Sultan, Super GT, Turismo, Uranus, ZR-350.
+
 ## Fabrico
 
 Nenhuma receita o faz ou usa.

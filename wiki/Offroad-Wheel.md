@@ -14,6 +14,10 @@
 
 Not found as loot.
 
+- Found wherever a [Wheel](Wheel) is listed as loot: 4.0 % of those finds are this wheel.
+- Taken off a vehicle it fits with a [Tyre Wrench](Tyre-Wrench).
+- The only wheel these 5 vehicle types take: BF Injection, Bandito, Mesa, Patriot, Sandking.
+
 ## Crafting
 
 No recipe makes or uses it.
@@ -21,3 +25,7 @@ No recipe makes or uses it.
 ## Scrap
 
 Cannot be scrapped: a Scrap Machine destroys it, see [Scrap](Scrap).
+
+## See also
+
+[Vehicles](Vehicles)

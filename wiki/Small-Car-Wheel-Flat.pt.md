@@ -14,6 +14,9 @@
 
 Não aparece como saque.
 
+- É como sai um pneu furado, com [Chave de rodas](Tyre-Wrench); montada outra vez, o pneu continua furado.
+- A única roda que estes 8 tipos de veículo levam: Baggage, Blista Compact, Cadrona, Club, Flash, Manana, Perennial, Previon.
+
 ## Fabrico
 
 Nenhuma receita o faz ou usa.

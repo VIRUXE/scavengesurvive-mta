@@ -16,7 +16,7 @@
 | Origem | Onde | Parte da tabela |
 |:--|:--|--:|
 | Saque do mundo, polícia | 52 pontos de aparecimento: 15 em San Fierro, 11 em Las Venturas, 9 em Los Santos, 9 em Red County, 4 em Bone County, 3 em Flint County, 1 em Tierra Robada | 7,6 % |
-| Malas de veículos, polícia | As malas de 5 tipos de veículo (Enforcer, FBI Truck, HPV1000, Police Car, Ranger) | 8,2 % |
+| Malas de veículos, polícia | As malas de 9 tipos de veículo (Enforcer, FBI Rancher, FBI Truck, HPV1000, Police Car e mais 4) | 8,2 % |
 
 ## Fabrico
 

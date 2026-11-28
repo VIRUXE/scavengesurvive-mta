@@ -14,6 +14,9 @@
 
 Não aparece como saque.
 
+- É como sai um pneu furado, com [Chave de rodas](Tyre-Wrench); montada outra vez, o pneu continua furado.
+- A única roda que estes 14 tipos de veículo levam: Airstream, Ambulance, Berkley RC Van, BoxBurg, Boxville, Burrito, Camper, Hotdog, Journey, Moonbeam, Mr Whoopee, Newsvan, Pony, Rumpo.
+
 ## Fabrico
 
 Nenhuma receita o faz ou usa.

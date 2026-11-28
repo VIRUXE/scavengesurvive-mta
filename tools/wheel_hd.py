@@ -6,7 +6,9 @@
     python -m tools.wheel_hd render --phase after --output DIR
     python -m tools.wheel_hd compare --output DIR
 
-Rendering imports the actual DFFs and TXDs with DragonFF in background Blender. Both
+The dictionaries are wheel.txd (the generic Wheel), stock_wheels.txd (the ten stock styles) and
+special_wheels.txd (the five special vehicle wheels). Rendering imports the actual DFFs and TXDs with DragonFF
+in background Blender. Both
 phases use identical framing and shading; compare joins the saved renders. Run the
 before phase before replacing the dictionaries. No item, registration or collision
 files are written. Source provenance and repaint instructions live beside the PNGs.
@@ -29,13 +31,26 @@ FILES = ROOT / "resources" / "[scavengesurvive]" / "prop_models" / "files"
 SOURCE = ROOT / "tools" / "data" / "wheel_hd"
 DEFAULT_OUTPUT = Path(os.environ.get("TEMP", "/tmp")) / "codex_tyres"
 STYLES = ("smallcar", "offroad", "truck", "rim", "alloy", "lightvan", "lighttruck", "classic", "saloon", "sport")
-ASSETS = ["wheel"] + [f"wheel_{s}{suffix}" for suffix in ("", "_flat") for s in STYLES]
+SPECIAL_STYLES = ("heavy", "monster", "tractor", "kart", "racing")
+ASSETS = ["wheel"] + [f"wheel_{s}{suffix}" for styles in (STYLES, SPECIAL_STYLES)
+                      for suffix in ("", "_flat") for s in styles]
 SIZES = {
     "stock_wheels": {**{f"wheel_{s}64": (256, 256) for s in STYLES if s != "rim"},
                      "whee_rim64": (256, 256), "tyre64a": (256, 256)},
     "wheel": {"vehicletyres128": (256, 512), "vehiclegeneric256": (1024, 1024),
               "vehiclespecdot64": (256, 256)},
+    # rendered from the vehicles' own wheels by python -m tools.stock_wheels textures
+    "special_wheels": {**{f"wheel_{s}_face": (256, 256) if s == "kart" else (512, 512) for s in SPECIAL_STYLES},
+                       **{f"wheel_{s}_tread": (256, 256) for s in SPECIAL_STYLES}},
 }
+
+
+def dictionary_of(asset):
+    """The TXD an asset's DFF uses."""
+    if asset == "wheel":
+        return "wheel"
+    style = asset.removeprefix("wheel_").removesuffix("_flat")
+    return "special_wheels" if style in SPECIAL_STYLES else "stock_wheels"
 
 
 def native_dxt1(name, image):
@@ -169,7 +184,7 @@ def render_blender(output, phase, selected, asset_files):
         scn.world = bpy.data.worlds.new("WheelQA")
         scn.world.color = (0.065, 0.07, 0.08)
         scn.view_settings.view_transform = "Standard"
-        dictionary = "wheel" if asset == "wheel" else "stock_wheels"
+        dictionary = dictionary_of(asset)
         images = txd_importer.import_txd({"file_name": str(asset_files / f"{dictionary}.txd"),
                                           "skip_mipmaps": True, "pack": False}).images
         dff_importer.import_dff({"file_name": str(asset_files / f"{asset}.dff"), "txd_images": images,
@@ -204,7 +219,8 @@ def render_blender(output, phase, selected, asset_files):
         cam.data.type = "ORTHO"
         cam.data.ortho_scale = diameter * 1.13
         cam.data.clip_start, cam.data.clip_end = 0.001, 100
-        for view, direction in (("face", (0.65, -0.9, 1.7)), ("tread", (0.65, -1.0, 0.5))):
+        # face and tread are three-quarter views from above and from the side, top the face seen straight on
+        for view, direction in (("face", (0.65, -0.9, 1.7)), ("tread", (0.65, -1.0, 0.5)), ("top", (0.0, -0.001, 1.0))):
             cam.location = mid + Vector(direction).normalized() * diameter * 3
             cam.rotation_euler = (mid - cam.location).to_track_quat("-Z", "Y").to_euler()
             scn.render.filepath = str(dest / f"{asset}_{view}.png")
@@ -232,7 +248,7 @@ def compare(output):
                 sheet.paste(image, (x, y + 40))
                 draw.text((x + 12, y + 7), f"{asset} | {phase.upper()} | {view}", fill="white", font=font)
         sheet.save(output / f"compare_{asset}.png")
-    print(f"21 before/after comparisons: {output}")
+    print(f"{len(ASSETS)} before/after comparisons: {output}")
 
 
 def main(argv=None):

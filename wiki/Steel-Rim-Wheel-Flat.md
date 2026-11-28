@@ -14,6 +14,9 @@
 
 Not found as loot.
 
+- What a burst tyre comes off as, with a [Tyre Wrench](Tyre-Wrench); fitted again, the tyre is still burst.
+- The only wheel these 8 vehicle types take: Baggage Box A, Baggage Box B, Caddy, Forklift, Mower, Sweeper, Tug, Tug Stairs.
+
 ## Crafting
 
 No recipe makes or uses it.

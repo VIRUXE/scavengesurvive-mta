@@ -14,6 +14,9 @@
 
 Not found as loot.
 
+- What a burst tyre comes off as, with a [Tyre Wrench](Tyre-Wrench); fitted again, the tyre is still burst.
+- The only wheel these 18 vehicle types take: Alpha, Banshee, Buffalo, Bullet, Cheetah, Comet, Elegy, Euros, Feltzer, Infernus, Jester, Phoenix, Stratum, Sultan, Super GT, Turismo, Uranus, ZR-350.
+
 ## Crafting
 
 No recipe makes or uses it.

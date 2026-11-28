@@ -301,6 +301,8 @@ Several different items can share a name (there are, for example, three kinds of
 | ![](images/items/19418_handcuffs01.png) | [Handcuffs](Handcuffs) | 1 |
 | ![](images/items/328_gun_boxbig.png) | [Hard Drive](Hard-Drive) | 1 |
 | ![](images/items/19280_carrooflight1.png) | [Headlight](Headlight) | 1 |
+| ![](images/items/20313_wheel_heavy.png) | [Heavy Plant Wheel](Heavy-Plant-Wheel) | 5 |
+| ![](images/items/20318_wheel_heavy_flat.png) | [Heavy Plant Wheel (Flat)](Heavy-Plant-Wheel-Flat) | 5 |
 | ![](images/items/19036_hockeymask1.png) | [Hockey Mask](Hockey-Mask) | 1 |
 | ![](images/items/20277_io_unit.png) | [I/O Unit](IO-Unit) | 1 |
 | ![](images/items/20273_ied.png) | [IED](IED) | 2 |
@@ -308,6 +310,8 @@ Several different items can share a name (there are, for example, three kinds of
 | ![](images/items/2711_tatoo_needle.png) | [Injector](Injector) | 1 |
 | ![](images/items/19398_wall046.png) | [Insulated Doorway](Insulated-Doorway) | 10 |
 | ![](images/items/19371_wall019.png) | [Insulated Panel](Insulated-Panel) | 8 |
+| ![](images/items/20316_wheel_kart.png) | [Kart Wheel](Kart-Wheel) | 5 |
+| ![](images/items/20321_wheel_kart_flat.png) | [Kart Wheel (Flat)](Kart-Wheel-Flat) | 5 |
 | ![](images/items/11746_doorkey1.png) | [Key](Key) | 1 |
 | ![](images/items/19792_sampkeycard1.png) | [Keycard](Keycard) | 1 |
 | ![](images/items/19273_keypadnondynamic.png) | [Keypad](Keypad) | 2 |
@@ -331,6 +335,8 @@ Several different items can share a name (there are, for example, three kinds of
 | ![](images/items/19843_metalpanel1.png) | [Metal Panel](Metal-Panel-MetalFrame) | 10 |
 | ![](images/items/19610_microphone1.png) | [Microphone](Microphone) | 1 |
 | ![](images/items/18865_mobilephone1.png) | [Mobile Phone](Mobile-Phone) | 1 |
+| ![](images/items/20314_wheel_monster.png) | [Monster Truck Wheel](Monster-Truck-Wheel) | 5 |
+| ![](images/items/20319_wheel_monster_flat.png) | [Monster Truck Wheel (Flat)](Monster-Truck-Wheel-Flat) | 5 |
 | ![](images/items/327_gun_boxwee.png) | [Motion Sensor](Motion-Sensor) | 1 |
 | ![](images/items/18976_motorcyclehelmet2.png) | [Motocross Helmet](Motocross-Helmet) | 1 |
 | ![](images/items/20268_motor.png) | [Motor](Motor) | 2 |
@@ -364,6 +370,8 @@ Several different items can share a name (there are, for example, three kinds of
 | ![](images/items/19320_pumpkin01.png) | [Pumpkin](Pumpkin) | 5 |
 | ![](images/items/18979_motorcyclehelmet5.png) | [Purple Motorcycle Helmet](Purple-Motorcycle-Helmet) | 1 |
 | ![](images/items/19557_sexymask1.png) | [Pussy Mask](Pussy-Mask) | 1 |
+| ![](images/items/20317_wheel_racing.png) | [Racing Wheel](Racing-Wheel) | 5 |
+| ![](images/items/20322_wheel_racing_flat.png) | [Racing Wheel (Flat)](Racing-Wheel-Flat) | 5 |
 | ![](images/items/2966_mobile1993b.png) | [Radio](Radio) | 1 |
 | ![](images/items/20006_cwmyfr_hat.png) | [Rancher's Hat](Ranchers-Hat) | 1 |
 | ![](images/items/20236_ratchet.png) | [Ratchet](Ratchet) | 1 |
@@ -412,6 +420,8 @@ Several different items can share a name (there are, for example, three kinds of
 | ![](images/items/19352_tophat01.png) | [Top Hat](Top-Hat) | 2 |
 | ![](images/items/2907_kmb_deadtorso.png) | [Torso](Torso) | 6 |
 | ![](images/items/20266_tow_bar.png) | [Tow Bar](Tow-Bar) | 4 |
+| ![](images/items/20315_wheel_tractor.png) | [Tractor Wheel](Tractor-Wheel) | 5 |
+| ![](images/items/20320_wheel_tractor_flat.png) | [Tractor Wheel (Flat)](Tractor-Wheel-Flat) | 5 |
 | ![](images/items/20293_emp_trip.png) | [Trip Mine EMP](Trip-Mine-EMP) | 2 |
 | ![](images/items/20289_ied_trip.png) | [Trip Mine IED](Trip-Mine-IED) | 2 |
 | ![](images/items/20285_tnt_trip.png) | [Trip Mine TNT](Trip-Mine-TNT) | 2 |

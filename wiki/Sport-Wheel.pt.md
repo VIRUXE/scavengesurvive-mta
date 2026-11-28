@@ -14,6 +14,10 @@
 
 Não aparece como saque.
 
+- Aparece onde quer que [Roda](Wheel) esteja na lista de saque: 3,2 % desses achados são esta roda.
+- Tira-se de um veículo onde serve com [Chave de rodas](Tyre-Wrench).
+- A única roda que estes 18 tipos de veículo levam: Alpha, Banshee, Buffalo, Bullet, Cheetah, Comet, Elegy, Euros, Feltzer, Infernus, Jester, Phoenix, Stratum, Sultan, Super GT, Turismo, Uranus, ZR-350.
+
 ## Fabrico
 
 Nenhuma receita o faz ou usa.
@@ -21,3 +25,7 @@ Nenhuma receita o faz ou usa.
 ## Sucata
 
 Não dá sucata: uma Máquina de sucata destrói-o, ver [Sucata](Scrap).
+
+## Ver também
+
+[Reparações e fechaduras](Repairing-and-Locks), [Veículos](Vehicles)

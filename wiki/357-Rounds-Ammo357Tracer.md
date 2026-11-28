@@ -26,8 +26,8 @@ Other items called .357 Rounds: [.357 Rounds (`Ammo357`)](357-Rounds-Ammo357).
 |:--|:--|--:|
 | World loot, police | 52 spawn points: 15 in San Fierro, 11 in Las Venturas, 9 in Los Santos, 9 in Red County, 4 in Bone County, 3 in Flint County, 1 in Tierra Robada | 2.0 % |
 | World loot, military | 106 spawn points: 56 in Bone County, 32 in San Fierro, 18 in Las Venturas | 1.3 % |
-| Vehicle trunks, military | The trunks of 4 vehicle types (Barracks, Launch, Patriot, Rhino) | 1.5 % |
-| Vehicle trunks, police | The trunks of 5 vehicle types (Enforcer, FBI Truck, HPV1000, Police Car, Ranger) | 0.9 % |
+| Vehicle trunks, military | The trunks of 6 vehicle types (Barracks, Hunter, Hydra, Launch, Patriot and 1 more) | 1.5 % |
+| Vehicle trunks, police | The trunks of 9 vehicle types (Enforcer, FBI Rancher, FBI Truck, HPV1000, Police Car and 4 more) | 0.9 % |
 | Supply drop "Low Grade Weapons" | 36 drop points | 3.5 % |
 | Supply drop "Military Weapons" | 36 drop points; also the weapon caches (186 in San Fierro) | 3.2 % |
 

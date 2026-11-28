@@ -25,7 +25,7 @@ Outros itens chamados Balas .50: [Balas .50 (`Ammo50`)](50-Rounds-Ammo50).
 | Origem | Onde | Parte da tabela |
 |:--|:--|--:|
 | Saque do mundo, militar | 106 pontos de aparecimento: 56 em Bone County, 32 em San Fierro, 18 em Las Venturas | 0,3 % |
-| Malas de veículos, militar | As malas de 4 tipos de veículo (Barracks, Launch, Patriot, Rhino) | 0,3 % |
+| Malas de veículos, militar | As malas de 6 tipos de veículo (Barracks, Hunter, Hydra, Launch, Patriot e mais 1) | 0,3 % |
 | Entrega de abastecimentos "Armas militares" | 36 pontos de entrega; também os esconderijos de armas (186 em San Fierro) | <0,1 % |
 
 ## Fabrico

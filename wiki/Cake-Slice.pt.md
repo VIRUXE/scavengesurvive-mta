@@ -19,7 +19,7 @@
 
 | Origem | Onde | Parte da tabela |
 |:--|:--|--:|
-| Malas de veículos, civil | As malas de 31 tipos de veículo (BF Injection, Blista Compact, Bloodring Banger, Clover, Comet e mais 26) | <0,1 % |
+| Malas de veículos, civil | As malas de 132 tipos de veículo (AT-400, Admiral, Alpha, Andromada, BF Injection e mais 127) | <0,1 % |
 
 ## Fabrico
 

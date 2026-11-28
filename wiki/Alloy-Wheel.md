@@ -14,6 +14,10 @@
 
 Not found as loot.
 
+- Found wherever a [Wheel](Wheel) is listed as loot: 7.9 % of those finds are this wheel.
+- Taken off a vehicle it fits with a [Tyre Wrench](Tyre-Wrench).
+- The only wheel these 7 vehicle types take: Huntley, Landstalker, Merit, Sentinel, Stafford, Stretch, Washington.
+
 ## Crafting
 
 No recipe makes or uses it.
@@ -21,3 +25,7 @@ No recipe makes or uses it.
 ## Scrap
 
 Cannot be scrapped: a Scrap Machine destroys it, see [Scrap](Scrap).
+
+## See also
+
+[Vehicles](Vehicles)

@@ -14,6 +14,9 @@
 
 Não aparece como saque.
 
+- É como sai um pneu furado, com [Chave de rodas](Tyre-Wrench); montada outra vez, o pneu continua furado.
+- A única roda que estes 19 tipos de veículo levam: Admiral, Bravura, Elegant, Emperor, Fortune, Greenwood, Intruder, Majestic, Nebula, Police Car, Premier, Primo, Regina, Solair, Sunrise, Tahoma, Taxi, Vincent, Willard.
+
 ## Fabrico
 
 Nenhuma receita o faz ou usa.

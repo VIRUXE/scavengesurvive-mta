@@ -18,7 +18,7 @@
 |:--|:--|--:|
 | World loot, police | 52 spawn points: 15 in San Fierro, 11 in Las Venturas, 9 in Los Santos, 9 in Red County, 4 in Bone County, 3 in Flint County, 1 in Tierra Robada | 1.7 % |
 | World loot, civilian | 7,674 spawn points: 3,006 in Los Santos, 2,632 in San Fierro, 1,373 in Las Venturas, 285 in Red County, 164 in Bone County, 143 in Flint County, 71 in Tierra Robada (116 of them inside houses) | 0.5 % |
-| Vehicle trunks, civilian | The trunks of 31 vehicle types (BF Injection, Blista Compact, Bloodring Banger, Clover, Comet and 26 more) | 1.7 % |
+| Vehicle trunks, civilian | The trunks of 132 vehicle types (AT-400, Admiral, Alpha, Andromada, BF Injection and 127 more) | 1.7 % |
 
 ## Crafting
 

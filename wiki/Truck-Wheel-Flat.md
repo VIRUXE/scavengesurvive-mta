@@ -14,6 +14,9 @@
 
 Not found as loot.
 
+- What a burst tyre comes off as, with a [Tyre Wrench](Tyre-Wrench); fitted again, the tyre is still burst.
+- The only wheel these 29 vehicle types take: APC-30, Articulated, Articulated Trailer, Articulated Trailer 2, Barracks, Bus, Cement Truck, Coach, DFT-30, Doomride, Duneride, Enforcer, FBI Truck, Firetruck, Firetruck LA, Flatbed, Linerunner, Packer, Petrol, Petrol Trailer, Rhino, Roadpain, S.W.A.T., Securicar, Steamroller, Trailer, Trashmaster, Truckfort, Yankee.
+
 ## Crafting
 
 No recipe makes or uses it.

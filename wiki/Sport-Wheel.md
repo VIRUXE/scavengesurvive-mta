@@ -14,6 +14,10 @@
 
 Not found as loot.
 
+- Found wherever a [Wheel](Wheel) is listed as loot: 3.2 % of those finds are this wheel.
+- Taken off a vehicle it fits with a [Tyre Wrench](Tyre-Wrench).
+- The only wheel these 18 vehicle types take: Alpha, Banshee, Buffalo, Bullet, Cheetah, Comet, Elegy, Euros, Feltzer, Infernus, Jester, Phoenix, Stratum, Sultan, Super GT, Turismo, Uranus, ZR-350.
+
 ## Crafting
 
 No recipe makes or uses it.
@@ -21,3 +25,7 @@ No recipe makes or uses it.
 ## Scrap
 
 Cannot be scrapped: a Scrap Machine destroys it, see [Scrap](Scrap).
+
+## See also
+
+[Repairing & Locks](Repairing-and-Locks), [Vehicles](Vehicles)

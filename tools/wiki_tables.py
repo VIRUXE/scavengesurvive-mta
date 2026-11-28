@@ -42,6 +42,8 @@ APPAREL = RES / "items" / "shared" / "logic" / "apparel.lua"
 LIQUIDS = RES / "items" / "shared" / "logic" / "liquids.lua"
 CRAFT = RES / "crafting" / "shared" / "logic" / "craft.lua"
 DROPS = RES / "loot" / "shared" / "logic" / "drops.lua"
+ROLL = RES / "loot" / "shared" / "logic" / "roll.lua"
+WHEELS = RES / "vehicles" / "shared" / "logic" / "wheels.lua"
 BOXES = RES / "world" / "data" / "boxes.lua"
 FIXTURES = RES / "world" / "data" / "features.lua"
 SEEDS = ROOT / "sql" / "seed"
@@ -342,6 +344,21 @@ def world_spots() -> tuple[Counter, Counter]:
     return boxes, fixtures
 
 
+def wheel_styles() -> tuple[dict, dict]:
+    """vehicle model -> wheel style stem (wheels.lua STYLE_MODELS), and each style's share of the wheels loot rolls."""
+    block = lua_block(WHEELS.read_text(encoding="utf8"), "local STYLE_MODELS = {")
+    models = {int(n): stem for stem, ids in re.findall(r"(\w+) = \{([^}]*)\}", block) for n in re.findall(r"\d+", ids)}
+    weights = {stem: int(w) for stem, w in re.findall(r'\{ "(\w+)", (\d+) \}', lua_block(ROLL.read_text(encoding="utf8"), "roll.WHEEL_STYLES = {"))}
+    total = sum(weights.values())
+    return models, {stem: w / total * 100 for stem, w in weights.items()}
+
+
+def wheel_of(d, v: dict) -> str | None:
+    """The wheel item a vehicle type takes; only cars, trucks and trailers have one."""
+    stem = d.wheel_models.get(v["model"])
+    return "Wheel" + stem if stem and v["category"] in ("car", "truck") else None
+
+
 def is_generated(path: Path) -> bool:
     with path.open(encoding="utf8") as f:
         f.readline()
@@ -406,6 +423,7 @@ def load(wiki: Path, img: str) -> SimpleNamespace:
     d.liquids = liquid_names()
     d.presets = explosive_presets()
     d.boxes, d.fixtures = world_spots()
+    d.wheel_models, d.wheel_shares = wheel_styles()
     d.topics = topic_pages(wiki)
     d.pages = plan_pages(d.items, d.topics)
     d.see_also = {}
@@ -579,6 +597,18 @@ def where(d, u: str) -> str:
         extras.append(t("A Water Purifier turns one holding Sea Water into one holding Water, see [Machines](Machines)."))
     if any(r["result"] == u for r in d.recipes):
         extras.append(t("Crafted, see below."))
+    if u == "Wheel":
+        extras.append(t("As loot it always lands as the wheel of one vehicle style, and a vehicle only takes the wheel of its own style: the Wheel column of [Vehicles](Vehicles) names it."))
+    style = u[5:-4] if u.endswith("Flat") else u[5:]
+    if u.startswith("Wheel") and style in d.wheel_shares:
+        whole = "Wheel" + style
+        fits = sorted({v["name"] for v in d.vehicles.values() if wheel_of(d, v) == whole})
+        if u == whole:
+            extras.append(t("Found wherever a %s is listed as loot: %s of those finds are this wheel.") % (link(d, "Wheel"), pct(d.wheel_shares[style])))
+            extras.append(t("Taken off a vehicle it fits with a %s.") % link(d, "Wrench"))
+        else:
+            extras.append(t("What a burst tyre comes off as, with a %s; fitted again, the tyre is still burst.") % link(d, "Wrench"))
+        extras.append(t("The only wheel these %d vehicle types take: %s.") % (len(fits), ", ".join(fits)))
     if extras:
         out.append("\n" + "\n".join("- " + x for x in extras) + "\n")
     return "".join(out)
@@ -804,9 +834,10 @@ def table_vehicles(d):
     rows = []
     for u, v in d.vehicles.items():
         pic = "![](images/vehicles/" + d.vehicle_pictures[u] + ")" if u in d.vehicle_pictures else ""
-        rows.append([pic, v["name"], t(v["category"]), t(v["group"]), num(v["maxFuel"]) + " L", v["trunkSize"], num(v["spawnChance"])])
+        wheel = wheel_of(d, v)
+        rows.append([pic, v["name"], t(v["category"]), t(v["group"]), link(d, wheel) if wheel else "", num(v["maxFuel"]) + " L", v["trunkSize"], num(v["spawnChance"])])
     rows.sort(key=lambda r: (r[2], r[1]))
-    return md(["", "Vehicle", "Type", "Group", "Fuel tank", "Trunk slots", "Spawn chance"], rows, "llllrrr")
+    return md(["", "Vehicle", "Type", "Group", "Wheel", "Fuel tank", "Trunk slots", "Spawn chance"], rows, "lllllrrr")
 
 
 def table_salvage(d):

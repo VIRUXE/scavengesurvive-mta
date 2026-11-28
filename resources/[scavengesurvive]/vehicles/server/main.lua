@@ -2870,6 +2870,18 @@ net.handler("vehicleInteractRequested", function(player, vehicle, capX, capY, ca
         local function refuse(code, message)
             log.event("vehicle.wheelRefused", vehicleLine(vehicle, { player = player, ok = false, code = code }))
             toast(player, message)
+        -- only the vehicle's own wheel style fits: a wheel of another style is refused here, in the hand
+        local stem = wheels.styleFor(getElementModel(vehicle), getVehicleType(vehicle) == "Automobile")
+        if not wheels.fitsStyle(uname, stem) then
+            log.event(
+                "vehicle.wheelRefused",
+                vehicleLine(vehicle, { player = player, ok = false, code = "WRONG_STYLE", uname = uname })
+            )
+            return toast(
+                player,
+                lang.formatFor(player, "This vehicle takes a %s", lang.itemName("Wheel" .. stem, player))
+            )
+        end
         end
         if activeActions[player] or bodySrv.busy(vehicle) then
             return refuse("BUSY", lang.textFor(player, "Finish the current vehicle work first"))

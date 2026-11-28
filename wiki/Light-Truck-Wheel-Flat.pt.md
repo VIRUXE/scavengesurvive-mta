@@ -14,6 +14,9 @@
 
 Não aparece como saque.
 
+- É como sai um pneu furado, com [Chave de rodas](Tyre-Wrench); montada outra vez, o pneu continua furado.
+- A única roda que estes 15 tipos de veículo levam: Benson, Bobcat, FBI Rancher, Mule, Picador, Rancher, Rancher Lure, Ranger, Sadler, Sadler Damaged, Slamvan, Tow Truck, Utility, Walton, Yosemite.
+
 ## Fabrico
 
 Nenhuma receita o faz ou usa.

@@ -19,7 +19,7 @@
 
 | Source | Where | Share of the table |
 |:--|:--|--:|
-| Vehicle trunks, civilian | The trunks of 31 vehicle types (BF Injection, Blista Compact, Bloodring Banger, Clover, Comet and 26 more) | <0.1 % |
+| Vehicle trunks, civilian | The trunks of 132 vehicle types (AT-400, Admiral, Alpha, Andromada, BF Injection and 127 more) | <0.1 % |
 
 ## Crafting
 

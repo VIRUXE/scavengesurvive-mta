@@ -814,3 +814,16 @@ INSERT INTO item_types (uname,name,model,size,max_hitpoints,category,category_da
 ('WheelSportFlat','Sport Wheel (Flat)',20256,5,5,'generic',NULL),
 ('FloodLight','Flood Light',20300,8,3,'generic',NULL)
 ON DUPLICATE KEY UPDATE name=VALUES(name), model=VALUES(model), size=VALUES(size), max_hitpoints=VALUES(max_hitpoints), category=VALUES(category), category_data=VALUES(category_data);
+
+INSERT INTO item_types (uname,name,model,size,max_hitpoints,category,category_data) VALUES
+('WheelHeavy','Heavy Plant Wheel',20313,5,5,'generic',NULL),
+('WheelMonster','Monster Truck Wheel',20314,5,5,'generic',NULL),
+('WheelTractor','Tractor Wheel',20315,5,5,'generic',NULL),
+('WheelKart','Kart Wheel',20316,5,5,'generic',NULL),
+('WheelRacing','Racing Wheel',20317,5,5,'generic',NULL),
+('WheelHeavyFlat','Heavy Plant Wheel (Flat)',20318,5,5,'generic',NULL),
+('WheelMonsterFlat','Monster Truck Wheel (Flat)',20319,5,5,'generic',NULL),
+('WheelTractorFlat','Tractor Wheel (Flat)',20320,5,5,'generic',NULL),
+('WheelKartFlat','Kart Wheel (Flat)',20321,5,5,'generic',NULL),
+('WheelRacingFlat','Racing Wheel (Flat)',20322,5,5,'generic',NULL)
+ON DUPLICATE KEY UPDATE name=VALUES(name), model=VALUES(model), size=VALUES(size), max_hitpoints=VALUES(max_hitpoints), category=VALUES(category), category_data=VALUES(category_data);

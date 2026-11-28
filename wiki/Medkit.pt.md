@@ -16,14 +16,14 @@
 | Origem | Onde | Parte da tabela |
 |:--|:--|--:|
 | Saque do mundo, médico | 94 pontos de aparecimento: 36 em San Fierro, 21 em Bone County, 16 em Las Venturas, 8 em Los Santos, 7 em Red County, 5 em Tierra Robada, 1 em Flint County; também a mala do Ambulance | 12,3 % |
-| Saque do mundo, sobrevivente | 825 pontos de aparecimento: 227 em San Fierro, 225 em Los Santos, 113 em Las Venturas, 85 em Red County, 77 em Flint County, 66 em Bone County, 32 em Tierra Robada; também as malas de 9 tipos de veículo (APC-30, Bandito, Doomride, Freeway, Roadpain e mais 4) | 6,6 % |
+| Saque do mundo, sobrevivente | 825 pontos de aparecimento: 227 em San Fierro, 225 em Los Santos, 113 em Las Venturas, 85 em Red County, 77 em Flint County, 66 em Bone County, 32 em Tierra Robada; também as malas de 22 tipos de veículo (APC-30, Bandito, Berkley RC Van, Doomride, Freeway e mais 17) | 6,6 % |
 | Saque do mundo, militar | 106 pontos de aparecimento: 56 em Bone County, 32 em San Fierro, 18 em Las Venturas | 4,3 % |
 | Saque do mundo, polícia | 52 pontos de aparecimento: 15 em San Fierro, 11 em Las Venturas, 9 em Los Santos, 9 em Red County, 4 em Bone County, 3 em Flint County, 1 em Tierra Robada | 2,7 % |
 | Saque do mundo, civil | 7 674 pontos de aparecimento: 3 006 em Los Santos, 2 632 em San Fierro, 1 373 em Las Venturas, 285 em Red County, 164 em Bone County, 143 em Flint County, 71 em Tierra Robada (116 delas dentro de casas) | 1,1 % |
-| Malas de veículos, militar | As malas de 4 tipos de veículo (Barracks, Launch, Patriot, Rhino) | 5,0 % |
+| Malas de veículos, militar | As malas de 6 tipos de veículo (Barracks, Hunter, Hydra, Launch, Patriot e mais 1) | 5,0 % |
 | Malas de veículos, porta-luvas | Ainda em lado nenhum | 3,8 % |
-| Malas de veículos, polícia | As malas de 5 tipos de veículo (Enforcer, FBI Truck, HPV1000, Police Car, Ranger) | 2,7 % |
-| Malas de veículos, civil | As malas de 31 tipos de veículo (BF Injection, Blista Compact, Bloodring Banger, Clover, Comet e mais 26) | 0,6 % |
+| Malas de veículos, polícia | As malas de 9 tipos de veículo (Enforcer, FBI Rancher, FBI Truck, HPV1000, Police Car e mais 4) | 2,7 % |
+| Malas de veículos, civil | As malas de 132 tipos de veículo (AT-400, Admiral, Alpha, Andromada, BF Injection e mais 127) | 0,6 % |
 | Entrega de abastecimentos "Comida e medicamentos" | 36 pontos de entrega | 5,1 % |
 
 ## Fabrico

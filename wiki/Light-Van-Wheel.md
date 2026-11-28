@@ -14,6 +14,10 @@
 
 Not found as loot.
 
+- Found wherever a [Wheel](Wheel) is listed as loot: 9.1 % of those finds are this wheel.
+- Taken off a vehicle it fits with a [Tyre Wrench](Tyre-Wrench).
+- The only wheel these 14 vehicle types take: Airstream, Ambulance, Berkley RC Van, BoxBurg, Boxville, Burrito, Camper, Hotdog, Journey, Moonbeam, Mr Whoopee, Newsvan, Pony, Rumpo.
+
 ## Crafting
 
 No recipe makes or uses it.
@@ -21,3 +25,7 @@ No recipe makes or uses it.
 ## Scrap
 
 Cannot be scrapped: a Scrap Machine destroys it, see [Scrap](Scrap).
+
+## See also
+
+[Vehicles](Vehicles)

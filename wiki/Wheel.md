@@ -18,13 +18,15 @@
 |:--|:--|--:|
 | World loot, industrial | 2,431 spawn points: 791 in Los Santos, 406 in Las Venturas, 386 in San Fierro, 273 in Flint County, 270 in Red County, 233 in Bone County, 72 in Tierra Robada | 3.0 % |
 | World loot, military | 106 spawn points: 56 in Bone County, 32 in San Fierro, 18 in Las Venturas | 2.6 % |
-| World loot, survivor | 825 spawn points: 227 in San Fierro, 225 in Los Santos, 113 in Las Venturas, 85 in Red County, 77 in Flint County, 66 in Bone County, 32 in Tierra Robada; also the trunks of 9 vehicle types (APC-30, Bandito, Doomride, Freeway, Roadpain and 4 more) | 1.9 % |
+| World loot, survivor | 825 spawn points: 227 in San Fierro, 225 in Los Santos, 113 in Las Venturas, 85 in Red County, 77 in Flint County, 66 in Bone County, 32 in Tierra Robada; also the trunks of 22 vehicle types (APC-30, Bandito, Berkley RC Van, Doomride, Freeway and 17 more) | 1.9 % |
 | World loot, police | 52 spawn points: 15 in San Fierro, 11 in Las Venturas, 9 in Los Santos, 9 in Red County, 4 in Bone County, 3 in Flint County, 1 in Tierra Robada | 1.7 % |
 | World loot, civilian | 7,674 spawn points: 3,006 in Los Santos, 2,632 in San Fierro, 1,373 in Las Venturas, 285 in Red County, 164 in Bone County, 143 in Flint County, 71 in Tierra Robada (116 of them inside houses) | 1.6 % |
-| Vehicle trunks, industrial | The trunks of 14 vehicle types (Articulated, Baggage, Bobcat, Boxville, Coastguard and 9 more) | 3.0 % |
-| Vehicle trunks, military | The trunks of 4 vehicle types (Barracks, Launch, Patriot, Rhino) | 2.5 % |
-| Vehicle trunks, police | The trunks of 5 vehicle types (Enforcer, FBI Truck, HPV1000, Police Car, Ranger) | 1.8 % |
-| Vehicle trunks, civilian | The trunks of 31 vehicle types (BF Injection, Blista Compact, Bloodring Banger, Clover, Comet and 26 more) | 1.1 % |
+| Vehicle trunks, industrial | The trunks of 38 vehicle types (Articulated, Articulated Trailer, Articulated Trailer 2, Baggage, Baggage Box A and 33 more) | 3.0 % |
+| Vehicle trunks, military | The trunks of 6 vehicle types (Barracks, Hunter, Hydra, Launch, Patriot and 1 more) | 2.5 % |
+| Vehicle trunks, police | The trunks of 9 vehicle types (Enforcer, FBI Rancher, FBI Truck, HPV1000, Police Car and 4 more) | 1.8 % |
+| Vehicle trunks, civilian | The trunks of 132 vehicle types (AT-400, Admiral, Alpha, Andromada, BF Injection and 127 more) | 1.1 % |
+
+- As loot it always lands as the wheel of one vehicle style, and a vehicle only takes the wheel of its own style: the Wheel column of [Vehicles](Vehicles) names it.
 
 ## Crafting
 
@@ -36,4 +38,4 @@ Cannot be scrapped: a Scrap Machine destroys it, see [Scrap](Scrap).
 
 ## See also
 
-[Repairing & Locks](Repairing-and-Locks)
+[Repairing & Locks](Repairing-and-Locks), [Vehicles](Vehicles)

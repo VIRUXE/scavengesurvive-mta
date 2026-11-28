@@ -26,8 +26,8 @@ Outros itens chamados Balas .357: [Balas .357 (`Ammo357`)](357-Rounds-Ammo357).
 |:--|:--|--:|
 | Saque do mundo, polícia | 52 pontos de aparecimento: 15 em San Fierro, 11 em Las Venturas, 9 em Los Santos, 9 em Red County, 4 em Bone County, 3 em Flint County, 1 em Tierra Robada | 2,0 % |
 | Saque do mundo, militar | 106 pontos de aparecimento: 56 em Bone County, 32 em San Fierro, 18 em Las Venturas | 1,3 % |
-| Malas de veículos, militar | As malas de 4 tipos de veículo (Barracks, Launch, Patriot, Rhino) | 1,5 % |
-| Malas de veículos, polícia | As malas de 5 tipos de veículo (Enforcer, FBI Truck, HPV1000, Police Car, Ranger) | 0,9 % |
+| Malas de veículos, militar | As malas de 6 tipos de veículo (Barracks, Hunter, Hydra, Launch, Patriot e mais 1) | 1,5 % |
+| Malas de veículos, polícia | As malas de 9 tipos de veículo (Enforcer, FBI Rancher, FBI Truck, HPV1000, Police Car e mais 4) | 0,9 % |
 | Entrega de abastecimentos "Armas de baixa qualidade" | 36 pontos de entrega | 3,5 % |
 | Entrega de abastecimentos "Armas militares" | 36 pontos de entrega; também os esconderijos de armas (186 em San Fierro) | 3,2 % |
 

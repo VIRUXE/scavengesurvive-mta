@@ -14,6 +14,10 @@
 
 Não aparece como saque.
 
+- Aparece onde quer que [Roda](Wheel) esteja na lista de saque: 15,3 % desses achados são esta roda.
+- Tira-se de um veículo onde serve com [Chave de rodas](Tyre-Wrench).
+- A única roda que estes 24 tipos de veículo levam: Blade, Bloodring Banger, Broadway, Buccaneer, Cabbie, Clover, Esperanto, Glendale, Glendale Damaged, Hermes, Hotknife, Hustler, Oceanic, Remington, Romero, Sabre, Savanna, Scimitar, Stallion, Tampa, Tornado, Virgo, Voodoo, Windsor.
+
 ## Fabrico
 
 Nenhuma receita o faz ou usa.
@@ -21,3 +25,7 @@ Nenhuma receita o faz ou usa.
 ## Sucata
 
 Não dá sucata: uma Máquina de sucata destrói-o, ver [Sucata](Scrap).
+
+## Ver também
+
+[Veículos](Vehicles)

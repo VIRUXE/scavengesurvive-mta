@@ -14,6 +14,9 @@
 
 Not found as loot.
 
+- What a burst tyre comes off as, with a [Tyre Wrench](Tyre-Wrench); fitted again, the tyre is still burst.
+- The only wheel these 8 vehicle types take: Baggage, Blista Compact, Cadrona, Club, Flash, Manana, Perennial, Previon.
+
 ## Crafting
 
 No recipe makes or uses it.

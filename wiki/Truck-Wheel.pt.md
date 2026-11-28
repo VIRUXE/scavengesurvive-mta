@@ -14,6 +14,10 @@
 
 Não aparece como saque.
 
+- Aparece onde quer que [Roda](Wheel) esteja na lista de saque: 7,3 % desses achados são esta roda.
+- Tira-se de um veículo onde serve com [Chave de rodas](Tyre-Wrench).
+- A única roda que estes 29 tipos de veículo levam: APC-30, Articulated, Articulated Trailer, Articulated Trailer 2, Barracks, Bus, Cement Truck, Coach, DFT-30, Doomride, Duneride, Enforcer, FBI Truck, Firetruck, Firetruck LA, Flatbed, Linerunner, Packer, Petrol, Petrol Trailer, Rhino, Roadpain, S.W.A.T., Securicar, Steamroller, Trailer, Trashmaster, Truckfort, Yankee.
+
 ## Fabrico
 
 Nenhuma receita o faz ou usa.
@@ -21,3 +25,7 @@ Nenhuma receita o faz ou usa.
 ## Sucata
 
 Não dá sucata: uma Máquina de sucata destrói-o, ver [Sucata](Scrap).
+
+## Ver também
+
+[Reparações e fechaduras](Repairing-and-Locks), [Veículos](Vehicles)

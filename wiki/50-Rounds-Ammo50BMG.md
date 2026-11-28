@@ -25,7 +25,7 @@ Other items called .50 Rounds: [.50 Rounds (`Ammo50`)](50-Rounds-Ammo50).
 | Source | Where | Share of the table |
 |:--|:--|--:|
 | World loot, military | 106 spawn points: 56 in Bone County, 32 in San Fierro, 18 in Las Venturas | 0.3 % |
-| Vehicle trunks, military | The trunks of 4 vehicle types (Barracks, Launch, Patriot, Rhino) | 0.3 % |
+| Vehicle trunks, military | The trunks of 6 vehicle types (Barracks, Hunter, Hydra, Launch, Patriot and 1 more) | 0.3 % |
 | Supply drop "Military Weapons" | 36 drop points; also the weapon caches (186 in San Fierro) | <0.1 % |
 
 ## Crafting

@@ -17,9 +17,9 @@
 |:--|:--|--:|
 | World loot, industrial | 2,431 spawn points: 791 in Los Santos, 406 in Las Venturas, 386 in San Fierro, 273 in Flint County, 270 in Red County, 233 in Bone County, 72 in Tierra Robada | 2.3 % |
 | Vehicle trunks, glovebox | Nowhere yet | 5.7 % |
-| Vehicle trunks, industrial | The trunks of 14 vehicle types (Articulated, Baggage, Bobcat, Boxville, Coastguard and 9 more) | 3.5 % |
-| Vehicle trunks, police | The trunks of 5 vehicle types (Enforcer, FBI Truck, HPV1000, Police Car, Ranger) | 2.2 % |
-| Vehicle trunks, civilian | The trunks of 31 vehicle types (BF Injection, Blista Compact, Bloodring Banger, Clover, Comet and 26 more) | 1.4 % |
+| Vehicle trunks, industrial | The trunks of 38 vehicle types (Articulated, Articulated Trailer, Articulated Trailer 2, Baggage, Baggage Box A and 33 more) | 3.5 % |
+| Vehicle trunks, police | The trunks of 9 vehicle types (Enforcer, FBI Rancher, FBI Truck, HPV1000, Police Car and 4 more) | 2.2 % |
+| Vehicle trunks, civilian | The trunks of 132 vehicle types (AT-400, Admiral, Alpha, Andromada, BF Injection and 127 more) | 1.4 % |
 
 ## Crafting
 

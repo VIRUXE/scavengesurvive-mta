@@ -14,6 +14,9 @@
 
 Not found as loot.
 
+- What a burst tyre comes off as, with a [Tyre Wrench](Tyre-Wrench); fitted again, the tyre is still burst.
+- The only wheel these 7 vehicle types take: Huntley, Landstalker, Merit, Sentinel, Stafford, Stretch, Washington.
+
 ## Crafting
 
 No recipe makes or uses it.

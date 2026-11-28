@@ -14,6 +14,9 @@
 
 Not found as loot.
 
+- What a burst tyre comes off as, with a [Tyre Wrench](Tyre-Wrench); fitted again, the tyre is still burst.
+- The only wheel these 19 vehicle types take: Admiral, Bravura, Elegant, Emperor, Fortune, Greenwood, Intruder, Majestic, Nebula, Police Car, Premier, Primo, Regina, Solair, Sunrise, Tahoma, Taxi, Vincent, Willard.
+
 ## Crafting
 
 No recipe makes or uses it.

@@ -14,6 +14,10 @@
 
 Não aparece como saque.
 
+- Aparece onde quer que [Roda](Wheel) esteja na lista de saque: 15,1 % desses achados são esta roda.
+- Tira-se de um veículo onde serve com [Chave de rodas](Tyre-Wrench).
+- A única roda que estes 15 tipos de veículo levam: Benson, Bobcat, FBI Rancher, Mule, Picador, Rancher, Rancher Lure, Ranger, Sadler, Sadler Damaged, Slamvan, Tow Truck, Utility, Walton, Yosemite.
+
 ## Fabrico
 
 Nenhuma receita o faz ou usa.
@@ -21,3 +25,7 @@ Nenhuma receita o faz ou usa.
 ## Sucata
 
 Não dá sucata: uma Máquina de sucata destrói-o, ver [Sucata](Scrap).
+
+## Ver também
+
+[Veículos](Vehicles)

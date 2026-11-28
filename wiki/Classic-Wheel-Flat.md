@@ -14,6 +14,9 @@
 
 Not found as loot.
 
+- What a burst tyre comes off as, with a [Tyre Wrench](Tyre-Wrench); fitted again, the tyre is still burst.
+- The only wheel these 24 vehicle types take: Blade, Bloodring Banger, Broadway, Buccaneer, Cabbie, Clover, Esperanto, Glendale, Glendale Damaged, Hermes, Hotknife, Hustler, Oceanic, Remington, Romero, Sabre, Savanna, Scimitar, Stallion, Tampa, Tornado, Virgo, Voodoo, Windsor.
+
 ## Crafting
 
 No recipe makes or uses it.

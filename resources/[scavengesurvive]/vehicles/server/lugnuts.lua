@@ -177,7 +177,8 @@ return function(ctx)
         end, 200, 0)
     end
 
-    -- Taking a wheel off starts at once. Fitting needs a wheel laid within 3 m: a good one goes on before a flat one
+    -- Taking a wheel off starts at once. Fitting needs a wheel of the vehicle's style laid within 3 m: a good one goes
+    -- on before a flat one
     -- (a flat just taken off lies at the player's feet), the nearest of its kind, and
     -- the job is refused up front when there is none, so nobody turns every nut for nothing.
     local function begin(player, vehicle, wheel, removing, held, px, py, pz, tires)
@@ -210,7 +211,8 @@ return function(ctx)
                 end
                 local row = rows and rows[1]
                 if not row then
-                    -- a wheel of another style lying there is told apart from no wheel at all
+                    -- no wheel of this style lies there: the player is told which one the vehicle takes, and the
+                    -- log tells a wheel of another style lying there from no wheel at all
                     db.query(
                         "SELECT id FROM items WHERE type_uname IN (" .. wheels.sqlList() .. ")" .. near .. " LIMIT 1",
                         { getElementInterior(player), getElementDimension(player), px, py, pz },
@@ -218,21 +220,19 @@ return function(ctx)
                             if not isElement(player) then
                                 return
                             end
-                            if other and other[1] then
-                                log.event(
-                                    "vehicle.wheelRefused",
-                                    vehicleLine(vehicle, { player = player, ok = false, code = "WRONG_STYLE" })
-                                )
-                                return toast(
+                            local code = other and other[1] and "WRONG_STYLE" or "NO_WHEEL"
+                            log.event(
+                                "vehicle.wheelRefused",
+                                vehicleLine(vehicle, { player = player, ok = false, code = code })
+                            )
+                            toast(
+                                player,
+                                lang.formatFor(
                                     player,
-                                    lang.formatFor(
-                                        player,
-                                        "This vehicle takes a %s",
-                                        lang.itemName("Wheel" .. stem, player)
-                                    )
+                                    "This vehicle takes a %s",
+                                    lang.itemName("Wheel" .. stem, player)
                                 )
-                            end
-                            toast(player, "WHEEL_LAY")
+                            )
                         end
                     )
                     return

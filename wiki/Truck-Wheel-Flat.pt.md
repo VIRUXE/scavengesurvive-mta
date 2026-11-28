@@ -14,6 +14,9 @@
 
 Não aparece como saque.
 
+- É como sai um pneu furado, com [Chave de rodas](Tyre-Wrench); montada outra vez, o pneu continua furado.
+- A única roda que estes 29 tipos de veículo levam: APC-30, Articulated, Articulated Trailer, Articulated Trailer 2, Barracks, Bus, Cement Truck, Coach, DFT-30, Doomride, Duneride, Enforcer, FBI Truck, Firetruck, Firetruck LA, Flatbed, Linerunner, Packer, Petrol, Petrol Trailer, Rhino, Roadpain, S.W.A.T., Securicar, Steamroller, Trailer, Trashmaster, Truckfort, Yankee.
+
 ## Fabrico
 
 Nenhuma receita o faz ou usa.

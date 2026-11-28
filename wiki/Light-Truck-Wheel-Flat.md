@@ -14,6 +14,9 @@
 
 Not found as loot.
 
+- What a burst tyre comes off as, with a [Tyre Wrench](Tyre-Wrench); fitted again, the tyre is still burst.
+- The only wheel these 15 vehicle types take: Benson, Bobcat, FBI Rancher, Mule, Picador, Rancher, Rancher Lure, Ranger, Sadler, Sadler Damaged, Slamvan, Tow Truck, Utility, Walton, Yosemite.
+
 ## Crafting
 
 No recipe makes or uses it.

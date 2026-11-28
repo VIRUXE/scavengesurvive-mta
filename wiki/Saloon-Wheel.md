@@ -14,6 +14,10 @@
 
 Not found as loot.
 
+- Found wherever a [Wheel](Wheel) is listed as loot: 26.7 % of those finds are this wheel.
+- Taken off a vehicle it fits with a [Tyre Wrench](Tyre-Wrench).
+- The only wheel these 19 vehicle types take: Admiral, Bravura, Elegant, Emperor, Fortune, Greenwood, Intruder, Majestic, Nebula, Police Car, Premier, Primo, Regina, Solair, Sunrise, Tahoma, Taxi, Vincent, Willard.
+
 ## Crafting
 
 No recipe makes or uses it.
@@ -21,3 +25,7 @@ No recipe makes or uses it.
 ## Scrap
 
 Cannot be scrapped: a Scrap Machine destroys it, see [Scrap](Scrap).
+
+## See also
+
+[Repairing & Locks](Repairing-and-Locks), [Vehicles](Vehicles)

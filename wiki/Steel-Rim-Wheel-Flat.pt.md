@@ -14,6 +14,9 @@
 
 Não aparece como saque.
 
+- É como sai um pneu furado, com [Chave de rodas](Tyre-Wrench); montada outra vez, o pneu continua furado.
+- A única roda que estes 8 tipos de veículo levam: Baggage Box A, Baggage Box B, Caddy, Forklift, Mower, Sweeper, Tug, Tug Stairs.
+
 ## Fabrico
 
 Nenhuma receita o faz ou usa.

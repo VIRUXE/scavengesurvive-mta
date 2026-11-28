@@ -14,7 +14,7 @@
 | Origem | Onde | Parte da tabela |
 |:--|:--|--:|
 | Saque do mundo, industrial | 2 431 pontos de aparecimento: 791 em Los Santos, 406 em Las Venturas, 386 em San Fierro, 273 em Flint County, 270 em Red County, 233 em Bone County, 72 em Tierra Robada | 0,4 % |
-| Malas de veículos, industrial | As malas de 14 tipos de veículo (Articulated, Baggage, Bobcat, Boxville, Coastguard e mais 9) | 0,6 % |
+| Malas de veículos, industrial | As malas de 38 tipos de veículo (Articulated, Articulated Trailer, Articulated Trailer 2, Baggage, Baggage Box A e mais 33) | 0,6 % |
 
 ## Fabrico
 
@@ -23,3 +23,7 @@ Nenhuma receita o faz ou usa.
 ## Sucata
 
 Não dá sucata: uma Máquina de sucata destrói-o, ver [Sucata](Scrap).
+
+## Ver também
+
+[Casas e reboques](Houses-and-Trailers), [Reboques e rebocar](Trailers-and-Towing), [Veículos](Vehicles)

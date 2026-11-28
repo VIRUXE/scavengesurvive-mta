@@ -389,10 +389,20 @@ Vários itens diferentes podem partilhar o mesmo nome (há, por exemplo, três t
 | ![](images/items/20252_wheel_lightvan_flat.png) | [Roda de carrinha ligeira (furada)](Light-Van-Wheel-Flat) | 5 |
 | ![](images/items/20237_wheel_smallcar.png) | [Roda de carro pequeno](Small-Car-Wheel) | 5 |
 | ![](images/items/20247_wheel_smallcar_flat.png) | [Roda de carro pequeno (furada)](Small-Car-Wheel-Flat) | 5 |
+| ![](images/items/20317_wheel_racing.png) | [Roda de competição](Racing-Wheel) | 5 |
+| ![](images/items/20322_wheel_racing_flat.png) | [Roda de competição (furada)](Racing-Wheel-Flat) | 5 |
 | ![](images/items/20240_wheel_rim.png) | [Roda de jante de aço](Steel-Rim-Wheel) | 5 |
 | ![](images/items/20250_wheel_rim_flat.png) | [Roda de jante de aço (furada)](Steel-Rim-Wheel-Flat) | 5 |
 | ![](images/items/20241_wheel_alloy.png) | [Roda de jante de liga leve](Alloy-Wheel) | 5 |
 | ![](images/items/20251_wheel_alloy_flat.png) | [Roda de jante de liga leve (furada)](Alloy-Wheel-Flat) | 5 |
+| ![](images/items/20316_wheel_kart.png) | [Roda de kart](Kart-Wheel) | 5 |
+| ![](images/items/20321_wheel_kart_flat.png) | [Roda de kart (furada)](Kart-Wheel-Flat) | 5 |
+| ![](images/items/20314_wheel_monster.png) | [Roda de monster truck](Monster-Truck-Wheel) | 5 |
+| ![](images/items/20319_wheel_monster_flat.png) | [Roda de monster truck (furada)](Monster-Truck-Wheel-Flat) | 5 |
+| ![](images/items/20313_wheel_heavy.png) | [Roda de máquina pesada](Heavy-Plant-Wheel) | 5 |
+| ![](images/items/20318_wheel_heavy_flat.png) | [Roda de máquina pesada (furada)](Heavy-Plant-Wheel-Flat) | 5 |
+| ![](images/items/20315_wheel_tractor.png) | [Roda de trator](Tractor-Wheel) | 5 |
+| ![](images/items/20320_wheel_tractor_flat.png) | [Roda de trator (furada)](Tractor-Wheel-Flat) | 5 |
 | ![](images/items/20246_wheel_sport.png) | [Roda desportiva](Sport-Wheel) | 5 |
 | ![](images/items/20256_wheel_sport_flat.png) | [Roda desportiva (furada)](Sport-Wheel-Flat) | 5 |
 | ![](images/items/20238_wheel_offroad.png) | [Roda todo-o-terreno](Offroad-Wheel) | 5 |

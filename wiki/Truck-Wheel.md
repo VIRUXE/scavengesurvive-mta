@@ -14,6 +14,10 @@
 
 Not found as loot.
 
+- Found wherever a [Wheel](Wheel) is listed as loot: 7.3 % of those finds are this wheel.
+- Taken off a vehicle it fits with a [Tyre Wrench](Tyre-Wrench).
+- The only wheel these 29 vehicle types take: APC-30, Articulated, Articulated Trailer, Articulated Trailer 2, Barracks, Bus, Cement Truck, Coach, DFT-30, Doomride, Duneride, Enforcer, FBI Truck, Firetruck, Firetruck LA, Flatbed, Linerunner, Packer, Petrol, Petrol Trailer, Rhino, Roadpain, S.W.A.T., Securicar, Steamroller, Trailer, Trashmaster, Truckfort, Yankee.
+
 ## Crafting
 
 No recipe makes or uses it.
@@ -21,3 +25,7 @@ No recipe makes or uses it.
 ## Scrap
 
 Cannot be scrapped: a Scrap Machine destroys it, see [Scrap](Scrap).
+
+## See also
+
+[Repairing & Locks](Repairing-and-Locks), [Vehicles](Vehicles)

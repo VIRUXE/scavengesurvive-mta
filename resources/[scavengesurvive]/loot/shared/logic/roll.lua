@@ -17,16 +17,21 @@ roll.ROOF_BANNED = { Wheel = true }
 -- fits only the vehicles of that style. Weights are the vehicle types' spawnChance summed per style (data/generated/
 -- vehicle_types.lua, models by vehicles/shared/logic/wheels.lua), so wheels drop in step with the cars that need them.
 roll.WHEEL_STYLES = {
-    { "Saloon", 315 },
-    { "Lighttruck", 297 },
-    { "Lightvan", 170 },
-    { "Classic", 160 },
-    { "Truck", 135 },
-    { "Alloy", 135 },
-    { "Offroad", 121 },
-    { "Smallcar", 104 },
-    { "Sport", 25 },
-    { "Rim", 10 },
+    { "Saloon", 747 },
+    { "Classic", 429 },
+    { "Lighttruck", 424 },
+    { "Lightvan", 255 },
+    { "Smallcar", 236 },
+    { "Alloy", 222 },
+    { "Truck", 205 },
+    { "Offroad", 111 },
+    { "Sport", 90 },
+    { "Rim", 54 },
+    { "Tractor", 8 },
+    { "Heavy", 6 },
+    { "Monster", 5 },
+    { "Racing", 5 },
+    { "Kart", 2 },
 }
 
 -- "Wheel" becomes an inflated "Wheel<Style>" picked by those weights; every other uname passes through.

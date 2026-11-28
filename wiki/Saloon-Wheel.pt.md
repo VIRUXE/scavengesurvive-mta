@@ -14,6 +14,10 @@
 
 Não aparece como saque.
 
+- Aparece onde quer que [Roda](Wheel) esteja na lista de saque: 26,7 % desses achados são esta roda.
+- Tira-se de um veículo onde serve com [Chave de rodas](Tyre-Wrench).
+- A única roda que estes 19 tipos de veículo levam: Admiral, Bravura, Elegant, Emperor, Fortune, Greenwood, Intruder, Majestic, Nebula, Police Car, Premier, Primo, Regina, Solair, Sunrise, Tahoma, Taxi, Vincent, Willard.
+
 ## Fabrico
 
 Nenhuma receita o faz ou usa.
@@ -21,3 +25,7 @@ Nenhuma receita o faz ou usa.
 ## Sucata
 
 Não dá sucata: uma Máquina de sucata destrói-o, ver [Sucata](Scrap).
+
+## Ver também
+
+[Reparações e fechaduras](Repairing-and-Locks), [Veículos](Vehicles)

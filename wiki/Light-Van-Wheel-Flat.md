@@ -14,6 +14,9 @@
 
 Not found as loot.
 
+- What a burst tyre comes off as, with a [Tyre Wrench](Tyre-Wrench); fitted again, the tyre is still burst.
+- The only wheel these 14 vehicle types take: Airstream, Ambulance, Berkley RC Van, BoxBurg, Boxville, Burrito, Camper, Hotdog, Journey, Moonbeam, Mr Whoopee, Newsvan, Pony, Rumpo.
+
 ## Crafting
 
 No recipe makes or uses it.
