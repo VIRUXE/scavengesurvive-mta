@@ -125,7 +125,11 @@ def build_model(job, out, used):
         entry = {}
         for suffix, src in (("ok", ok), ("dam", dam)):
             asset = f"{job['name']}_{mesh}_{suffix}"
-            obj = bpy.data.objects.new(asset + "_part", src.data.copy())
+            # The object name becomes the DFF's frame name, which GTA cuts at 23 characters: a cut name ending in
+            # "_dam" ("sentinel_bump_front_dam|_part") is loaded as a damaged atomic and MTA then writes past the
+            # model info it allocated (heap corruption, client crashes). So no "_dam" in the frame name at all.
+            tag = "dmg" if suffix == "dam" else suffix
+            obj = bpy.data.objects.new(f"{job['name']}_{mesh}_{tag}_part", src.data.copy())
             coll.objects.link(obj)
             obj.data.transform(src.matrix_world)
             pts = [v.co for v in obj.data.vertices]
