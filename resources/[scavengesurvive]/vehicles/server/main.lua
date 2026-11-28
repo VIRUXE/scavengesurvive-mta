@@ -1041,7 +1041,19 @@ local function loadOrRoll()
         for truck, trailerDbId in pairs(pendingTrailers) do
             for otherV, inf in pairs(info) do
                 if inf.id == trailerDbId and isElement(truck) and isElement(otherV) then
-                    attachTrailerToVehicle(truck, otherV)
+                    local fits = vlogic.canAttachTrailer(
+                        towSrv.hitch(truck),
+                        exports.data:vehicleType(inf.uname),
+                        nil,
+                        nil,
+                        towSrv.only(truck)
+                    )
+                    if fits then
+                        attachTrailerToVehicle(truck, otherV)
+                    else
+                        db.exec("UPDATE vehicles SET trailer_id = NULL WHERE id = ?", { info[truck].id })
+                        info[truck].trailerId = nil
+                    end
                     break
                 end
             end
@@ -1794,7 +1806,8 @@ local function trailerInReach(v, _)
     local best, bestDist = nil, math.huge
     for otherV, otherInf in pairs(info) do
         local free = otherV ~= v and isElement(otherV) and not getVehicleTowingVehicle(otherV)
-        if free and vlogic.canAttachTrailer(hitch, exports.data:vehicleType(otherInf.uname)) then
+        if free and vlogic.canAttachTrailer(hitch, exports.data:vehicleType(otherInf.uname), nil, nil, only) then
+    local only = hitch and towSrv.only(v)
             local tx, ty, tz = getElementPosition(otherV)
             local dist = getDistanceBetweenPoints3D(px, py, pz, tx, ty, tz)
             local reach = vlogic.towReach(getElementModel(v), getElementModel(otherV))
@@ -1962,7 +1975,9 @@ addEventHandler("onTrailerAttach", root, function(truck)
     if inf.trailerId == tinf.id then
         return logTrailer("vehicle.trailerAttached", truck, source, "known")
     end
-    if vlogic.canAttachTrailer(towSrv.hitch(truck), exports.data:vehicleType(tinf.uname)) then
+    if
+        vlogic.canAttachTrailer(towSrv.hitch(truck), exports.data:vehicleType(tinf.uname), nil, nil, towSrv.only(truck))
+    then
         setTrailerRecord(truck, tinf.id)
         markUsed(source)
         logTrailer("vehicle.trailerAttached", truck, source, "kept")
@@ -1976,7 +1991,14 @@ addEventHandler("onTrailerAttach", root, function(truck)
 end)
 
 -- A trailer came off on a client (the hitch key, a jackknife, a crash): with a driver the record goes, as upstream;
+        -- GTA's own scan hooked a trailer to a vehicle with no hitch for it (only a Tow Bar or a tractor tows it)
 -- an unoccupied truck gets its trailer back (someone dragging it away, or desync). The cargo rides on until the
+        local driver = getVehicleController(truck)
+        if driver then
+            triggerClientEvent(driver, "trailerHitchOrdered", driver, truck, false)
+        else
+            detachTrailerFromVehicle(truck)
+        end
 -- trailer stands still (the cargo timer): stored now, a trailer torn off in a crash would leave it mid-tumble.
 addEventHandler("onTrailerDetach", root, function(truck)
     carmourSrv.towEnded(truck)

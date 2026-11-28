@@ -70,7 +70,7 @@ Estes reboques parados estão fixos ao chão: não podem ser rebocados.
 ## O Airstream rebocável {#the-towable-airstream}
 Um Airstream à parte é um veículo: uma caravana que se pode engatar, levar embora e habitar.
 
-- **Reboque.** Um carro ou pickup com o pequeno engate reboca-o: faz marcha-atrás junto dele e prime a tecla de fogo secundário (`Ctrl` / `Num 0`); prime-a outra vez para o largar. Ver [Veículos](Vehicles). Não tem motor, combustível nem mala e não pode ser conduzido sozinho.
+- **Reboque.** Um veículo com o engate pequeno (um carro ou pick-up com [barra de reboque](Tow-Bar) montada, ou o Tractor) reboca-o: faz marcha-atrás junto dele e prime a tecla de fogo secundário (`Ctrl` / `Num 0`); prime-a outra vez para o largar. Ver [Veículos](Vehicles). Não tem motor, combustível nem mala e não pode ser conduzido sozinho.
 - **Porta.** Põe-te à porta a pé e prime `F` para a abrir ou fechar. A porta é sólida quando fechada.
 - **Fechadura.** A fechadura fica na porta, não do lado do condutor: chaves, kits de serralheiro, correntes e ferramentas de arrombamento funcionam ao alcance da porta, por dentro ou por fora. Uma porta trancada pode sempre ser aberta por dentro, para ninguém ficar preso. Pode instalar-se um [Teclados numéricos](Keypads) na porta. Ver [Reparações e fechaduras](Repairing-and-Locks).
 - **Defesas.** Podem instalar-se e soldar-se painéis metálicos nele, para que a porta não possa ser forçada ([Defesas](Defences)). A blindagem torna o reboque mais pesado e a viagem mais lenta; uma explosão come primeiro os painéis.

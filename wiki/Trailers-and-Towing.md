@@ -2,13 +2,13 @@
 
 ![The towable Airstream hitched behind a Bobcat](images/scenes/airstream.png)
 
-A few vehicles have a hitch, and three trailers can be hooked onto one: the small utility **Trailer**, the **Articulated** trailer and the **Airstream**, a caravan you can walk into. The trailers standing around the countryside that can be entered but not moved are on [Houses & Trailers](Houses-and-Trailers).
+Only a few vehicles come with a hitch, and any car or truck can be given one with a [Tow Bar](Tow-Bar). Three trailers can be hooked onto it: the small utility **Trailer**, the **Articulated** trailer and the **Airstream**, a caravan you can walk into. The trailers standing around the countryside that can be entered but not moved are on [Houses & Trailers](Houses-and-Trailers).
 
 <!-- shot:shot-trailer-tow -->
 
 ## Hitching
 
-The hitch comes in two sizes and only matches a trailer of its own class: cars and pickups with the small hitch (the Bobcat, Patriot and Yosemite among them) tow the Trailer and the Airstream, the Linerunner's large hitch tows the Articulated trailer.
+The hitch comes in two sizes and only matches a trailer of its own class. Few vehicles have one of their own, as in GTA: the Utility tows its Trailer, the Tractor the Airstream, the Tug and the Baggage the airport carts, and the Linerunner and Petrol (the large hitch) the Articulated trailer. Every other car or pickup, the Bobcat and the Tow Truck included, tows only once a [Tow Bar](Tow-Bar) is bolted to its rear (hold it there and keep `F` down): that gives it the small hitch, which tows the Trailer and the Airstream. A trailer that ends up against a vehicle with no hitch for it comes off again by itself.
 
 1. Back the towing vehicle up to the trailer. A trailer is in reach while the two vehicles' centres are closer than both their lengths plus a metre.
 2. Press the vehicle secondary fire key, `LCtrl` or `Num 0` on the default bindings (see [Controls](Controls)). The key list shows `Hitch trailer` while a free trailer is in reach and `Unhitch trailer` while you tow one; pressing it again drops the trailer.

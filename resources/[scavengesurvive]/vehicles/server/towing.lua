@@ -43,6 +43,12 @@ return function(ctx)
         return inf and vlogic.hitchOf(vehicleType(v), inf.towbar) or nil
     end
 
+    -- the trailers that hitch is limited to (type unames), nil when any of its size goes
+    function M.only(v)
+        local inf = info[v]
+        return inf and vlogic.hitchTrailers(vehicleType(v), inf.towbar) or nil
+    end
+
     local function publish(v)
         local inf = info[v]
         if inf and isElement(v) then

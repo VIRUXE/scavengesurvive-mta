@@ -73,7 +73,7 @@ These standing trailers are fixed to the ground: they cannot be towed.
 
 A separate Airstream is a vehicle: a caravan that can be hitched, driven away and lived in.
 
-- **Towing.** A car or pickup with the small hitch tows it: back up next to it and press the secondary fire key (`Ctrl` / `Num 0`), press it again to drop it. See [Vehicles](Vehicles). It has no engine, fuel or trunk and cannot be driven by itself.
+- **Towing.** A vehicle with the small hitch (a car or pickup with a [Tow Bar](Tow-Bar) fitted, or the Tractor) tows it: back up next to it and press the secondary fire key (`Ctrl` / `Num 0`), press it again to drop it. See [Vehicles](Vehicles). It has no engine, fuel or trunk and cannot be driven by itself.
 - **Door.** Stand at the door on foot and press `F` to open or shut it. The door is solid when shut.
 - **Lock.** Its lock is at the door, not on a driver's side: keys, Locksmith kits, chains and break-in tools work within reach of the door, inside or outside. A locked door can always be opened from inside, so nobody is trapped. A [Keypad](Keypads) can be fitted to the door. See [Repairing & Locks](Repairing-and-Locks).
 - **Defences.** Metal panels can be fitted and welded onto it, so its door cannot be forced ([Defences](Defences)). The armour makes the trailer heavier and the tow slower; a blast eats the panels first.

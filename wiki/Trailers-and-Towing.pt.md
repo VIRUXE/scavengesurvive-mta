@@ -2,7 +2,7 @@
 
 ![O Airstream rebocável engatado atrás de um Bobcat](images/scenes/airstream.png)
 
-Alguns veículos têm engate, e três reboques podem ser acoplados a um: o pequeno **Reboque** utilitário, o reboque **Articulado** e o **Airstream**, uma caravana onde se pode entrar. Os reboques espalhados pelo campo onde se pode entrar mas que não se movem estão em [Casas e reboques](Houses-and-Trailers).
+Só alguns veículos vêm com engate, e qualquer carro ou camião pode receber um com uma [barra de reboque](Tow-Bar). Três reboques podem ser acoplados a ele: o pequeno **Reboque** utilitário, o reboque **Articulado** e o **Airstream**, uma caravana onde se pode entrar. Os reboques espalhados pelo campo onde se pode entrar mas que não se movem estão em [Casas e reboques](Houses-and-Trailers).
 
 <!-- shot:shot-trailer-tow -->
 

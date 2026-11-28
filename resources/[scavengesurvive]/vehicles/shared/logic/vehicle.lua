@@ -510,6 +510,16 @@ function M.hitchOf(vehicleType, towbar)
     return vehicleType.trailerHitch or (towbar and "small") or nil
 end
 
+-- The trailers a stock hitch is limited to (type unames, as GTA's own towers: the Utility its Trailer, the Tug and the
+-- Baggage the baggage carts, the Tractor the Airstream), nil for the large hitches and a fitted Tow Bar (any trailer of
+-- its size).
+function M.hitchTrailers(vehicleType, towbar)
+    if not vehicleType or towbar then
+        return nil
+    end
+    return vehicleType.hitchTrailers
+end
+
 -- A Tow Bar fits the rear of a wheeled car or truck that came without a hitch (no bikes, boats or aircraft, no
 -- trailers, and no type that hitches already).
 function M.canFitTowbar(vehicleType)
@@ -519,13 +529,22 @@ function M.canFitTowbar(vehicleType)
     return vehicleType.category == "car" or vehicleType.category == "truck"
 end
 
--- `hitch`: the truck's hitch, M.hitchOf of its type and tow bar
-function M.canAttachTrailer(hitch, trailerType, distance, maxDist)
+-- `hitch`: the truck's hitch, M.hitchOf of its type and tow bar; `only`: M.hitchTrailers of them
+function M.canAttachTrailer(hitch, trailerType, distance, maxDist, only)
     if not hitch or not trailerType then
         return false
     end
     if not trailerType.trailer then
         return false
+    end
+    if only then
+        local listed = false
+        for _, uname in ipairs(only) do
+            listed = listed or uname == trailerType.uname
+        end
+        if not listed then
+            return false
+        end
     end
     if hitch ~= trailerType.size then
         return false
