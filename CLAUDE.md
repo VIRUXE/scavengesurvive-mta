@@ -91,6 +91,10 @@ production and the dev box run 13.2.0 outside packages (`docs/runbooks/upgrade-m
   needs a rebuild first.
 - Never call `engineSetPoolCapacity("building", …)`: MTA grows the building pool on demand, and re-applying a capacity on a resource restart shrank a pool in use and crashed the client (2026-10-22).
 - Style: `stylua` and `luacheck` clean before every commit. Conventional commits (`feat(items): …`).
+- A DFF's frame names stay under 24 characters and never hold `_dam`: GTA keeps 23 characters and loads a (cut) name
+  ending in `_dam` as a damaged part, which on a model from `engineRequestModel` corrupts the client's heap (the
+  2026-11 crashes). A tool that exports DFFs names its objects accordingly, and `python -m tools.dff_qa` is clean before
+  every commit that adds or rebuilds a model.
 - Git: commit straight to `main`; never create a branch unless asked. On prod the resources are a symlink into this
   clone, so switching branches there swaps the files the live server runs.
 - Never commit `server-config/local.settings.xml` (holds the DB password).
@@ -121,7 +125,7 @@ production and the dev box run 13.2.0 outside packages (`docs/runbooks/upgrade-m
 ## Commands
 
 - `pwsh tools/setup-dev.ps1` — hererocks Lua 5.1 + luacheck, stylua, Python deps.
-- `.lua/bin/luacheck.bat resources` · `stylua --check resources`
+- `.lua/bin/luacheck.bat resources` · `stylua --check resources` · `python -m tools.dff_qa` (frame names of every DFF)
 - `python -m tools.site_assets` (WebP assets for `site/`) · `python -m tools.site_i18n` (translation coverage) · `python -m tools.wiki_tables` (wiki tables and item pages into `wiki/`)
 - `pwsh server-config/run-local.ps1` — create DB, apply `sql/schema.sql` and seeds, link resources into the MTA server, start it.
 - `pwsh server-config/rcon.ps1 <command>` — drive the running server over its HTTP port (`help`, `players`, `rr items`,
