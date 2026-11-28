@@ -68,6 +68,16 @@ local function steady(dx, dy, dz, fx, fy)
     return math.cos(yaw) * c, math.sin(yaw) * c, math.sin(pitch)
 end
 
+-- The lens' glow (a corona) for a camera `toward` the beam: the cosine of the angle between the aim and the way to
+-- the camera. Nothing from behind or side on, all of GLOW_ALPHA from GLOW_FULL on.
+local GLOW_ALPHA = 170
+local GLOW_FROM, GLOW_FULL = 0.15, 0.5
+
+local function glowAlpha(toward)
+    local t = math.max(0, math.min(1, (toward - GLOW_FROM) / (GLOW_FULL - GLOW_FROM)))
+    return math.floor(GLOW_ALPHA * t + 0.5)
+end
+
 return {
     UNAME = UNAME,
     POSE = POSE,
@@ -85,4 +95,5 @@ return {
     blend = blend,
     lensPose = lensPose,
     steady = steady,
+    glowAlpha = glowAlpha,
 }

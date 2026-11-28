@@ -1,4 +1,5 @@
--- luacheck: read globals createLight playSFX getPedSimplestTask getElementBoneRotation
+-- luacheck: read globals createLight playSFX getPedSimplestTask getElementBoneRotation getCameraMatrix
+-- luacheck: read globals setMarkerColor
 -- The Flashlight on every client (shared/logic/flashlight.lua has the numbers, server/flashlight.lua who has one on:
 -- "items.torch" element data). While a player's is on, client/attach.lua calls in here each frame:
 --   pose: the right arm comes up to point it ahead (bone rotations blended in over the animation playing, so the legs
@@ -6,7 +7,7 @@
 --   shine: the beam leaves the placed object's lens along its axis (held near the way the player faces, so a run's
 --     lean does not throw it at their feet): walls, ground and objects through the world
 --     resource's blackout shader (world:setLight), peds and vehicles through a GTA point light down the beam
---     (createLight), and the lens glows (a corona).
+--     (createLight), and the lens glows (a corona) for whoever it looks toward.
 -- The goggles key (the "goggles" command, J unless rebound) switches a held one on or off. With goggles worn as well
 -- the key is shared: a tap is the Flashlight's, holding it HOLD_MS switches the goggles (client/goggles.lua leaves
 -- the key alone while takesKey() says so).
@@ -135,7 +136,8 @@ return function(ctx)
             moved = true
         end
         if not isElement(b.corona) then
-            b.corona = createMarker(x, y, z, "corona", 0.12, 255, 244, 220, 170) or nil
+            b.corona = createMarker(x, y, z, "corona", 0.12, 255, 244, 220, 0) or nil
+            b.alpha = 0
             moved = true
         end
         if b.light then
@@ -143,6 +145,17 @@ return function(ctx)
         end
         if b.corona then
             setElementPosition(b.corona, x + dx * 0.02, y + dy * 0.02, z + dz * 0.02)
+            -- GTA draws a corona through peds: the glow is only for a camera the lens looks toward, or it would
+            -- show through the holder's own body from behind
+            local cx, cy, cz = getCameraMatrix()
+            local vx, vy, vz = cx - x, cy - y, cz - z
+            local dist = math.sqrt(vx * vx + vy * vy + vz * vz)
+            local toward = dist > 0.001 and (vx * dx + vy * dy + vz * dz) / dist or 0
+            local alpha = flashlight.glowAlpha(toward)
+            if alpha ~= b.alpha then
+                b.alpha = alpha
+                setMarkerColor(b.corona, 255, 244, 220, alpha)
+            end
         end
         if moved then
             for _, e in ipairs({ b.light or false, b.corona or false }) do
